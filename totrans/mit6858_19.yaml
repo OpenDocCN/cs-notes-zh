@@ -1,1481 +1,2117 @@
 - en: Android security
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: Android安全
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记略有修改，来自2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的内容。'
 - en: Why [this](http://css.csail.mit.edu/6.858/2014/readings/android.pdf) paper?
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 为什么选择[这篇](http://css.csail.mit.edu/6.858/2014/readings/android.pdf)论文？
 - en: Real system, widely used.
+  id: totrans-3
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 真实系统，被广泛使用。
 - en: Careful security design (more so than for web or desktop applications).
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 谨慎的安全设计（比Web或桌面应用程序更重要）。
 - en: Principals = Applications (not users)
+  id: totrans-5
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 原则=应用程序（而不是用户）
 - en: Policy separate from code (manifests)
+  id: totrans-6
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 策略与代码（清单）分离
 - en: Some problems inevitable, and instructive to see where problems come up.
+  id: totrans-7
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些问题是不可避免的，并且看到问题出现的地方是有启发性的。
 - en: But also interesting to see how to design a reasonable security plan.
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但也有趣的是看如何设计一个合理的安全计划。
 - en: Threat model
+  id: totrans-9
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 威胁模型
 - en: '**Goal:** Anyone can write an app that anyone can install'
+  id: totrans-10
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**目标：** 任何人都可以编写任何人都可以安装的应用程序'
 - en: '**Threats:**'
+  id: totrans-11
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**威胁：**'
 - en: Apps may have bugs
+  id: totrans-12
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序可能存在错误
 - en: Apps may be malicious
+  id: totrans-13
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序可能是恶意的
 - en: CVE database
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: CVE数据库
 - en: '[http://www.cvedetails.com/vulnerability-list/vendor*id-1224/product*id-19997/Google-Android.html](http://css.csail.mit.edu/6.858/2014/readings/android.pdf)'
+  id: totrans-15
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[http://www.cvedetails.com/vulnerability-list/vendor*id-1224/product*id-19997/Google-Android.html](http://css.csail.mit.edu/6.858/2014/readings/android.pdf)'
 - en: Some bugs but not overwhelming---is the security plan working?
+  id: totrans-16
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些错误但不是压倒性的---安全计划有效吗？
 - en: Buffer overrun (still happens ....)
+  id: totrans-17
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 缓冲区溢出（仍然发生....）
 - en: Of course, Android runs on Linux, and this includes Linux kernel problems
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当然，Android运行在Linux上，这也包括Linux内核问题
 - en: Overall plan
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 总体计划
 - en: First understand how Android applications look like and work.
+  id: totrans-20
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 首先了解Android应用程序的外观和工作原理。
 - en: Then discuss security mechanisms and policies.
+  id: totrans-21
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然后讨论安全机制和策略。
 - en: What does an Android application look like?
+  id: totrans-22
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Android应用程序是什么样子的？
 - en: 'Four types of components:'
+  id: totrans-23
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 四种组件类型：
 - en: '**Activity:** UI component of app, typically one activity per "screen".'
+  id: totrans-24
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**活动：** 应用程序的UI组件，通常每个“屏幕”一个活动。'
 - en: '**Service:** background processing, can be invoked by other components.'
+  id: totrans-25
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**服务：** 后台处理，可以被其他组件调用。'
 - en: '**Content provider:** a SQL database that can be accessed by other components.'
+  id: totrans-26
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**内容提供程序：** 可被其他组件访问的SQL数据库。'
 - en: '**Broadcast receiver:** gets broadcast announcements from other components.'
+  id: totrans-27
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**广播接收器：** 接收来自其他组件的广播通知。'
 - en: Each application also has private file storage.
+  id: totrans-28
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序还有私有文件存储。
 - en: Application typically written in Java.
+  id: totrans-29
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序通常用Java编写。
 - en: Runs on a Linux kernel + Android "platform" (will get to it shortly).
+  id: totrans-30
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 运行在Linux内核+Android“平台”上（稍后会介绍）。
 - en: Application also has a manifest declaring its permissions (later).
+  id: totrans-31
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序还有一个声明其权限的清单（稍后）。
 - en: Entire application is signed by the developer.
+  id: totrans-32
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 整个应用程序由开发者签名。
 - en: 'Activity: can draw on the screen, get user input, etc.'
+  id: totrans-33
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 活动：可以在屏幕上绘制，获取用户输入等。
 - en: Only one activity is running at a time.
+  id: totrans-34
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一次只有一个活动在运行。
 - en: Helps users reason about security of inputs.
+  id: totrans-35
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 帮助用户推理输入的安全性。
 - en: If user is running bank app (activity), no other activity gets user's input.
+  id: totrans-36
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果用户正在运行银行应用程序（活动），则没有其他活动获取用户的输入。
 - en: 'Intent: basic messaging primitive in Android.'
+  id: totrans-37
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 意图：Android中的基本消息原语。
 - en: Represents app's intent to do something / interact with another component.
+  id: totrans-38
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 代表应用程序意图做某事/与另一个组件交互。
 - en: 'Intent fields:'
+  id: totrans-39
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 意图字段：
 - en: 'Component: name of component to route the request to (just a string).'
+  id: totrans-40
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 组件：将请求路由到的组件名称（只是一个字符串）。
 - en: E.g., `com.google.someapp/ComponentName`
+  id: totrans-41
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`com.google.someapp/ComponentName`
 - en: 'Action: the opcode for this message (just a string).'
+  id: totrans-42
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 操作：此消息的操作码（只是一个字符串）。
 - en: E.g., `android.intent.action.MAIN`, `android.intent.action.DIAL`, ...
+  id: totrans-43
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`android.intent.action.MAIN`，`android.intent.action.DIAL`，...
 - en: 'Data: URI of data for the action (just a string).'
+  id: totrans-44
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 数据：用于动作的数据的URI（只是一个字符串）。
 - en: E.g., `tel:16172536005`, `content://contacts/people/1` (for DIAL).
+  id: totrans-45
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`tel:16172536005`，`content://contacts/people/1`（用于拨号）。
 - en: Also includes the MIME type of the data.
+  id: totrans-46
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 还包括数据的MIME类型。
 - en: 'Category: a filtering mechanism for finding where to send intent.'
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 类别：用于查找发送意图的过滤机制。
 - en: E.g., `android.intent.category.BROWSABLE` means safe to invoke from browser,
     for action `android.intent.action.VIEW`, which views the URI in data.
+  id: totrans-48
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`android.intent.category.BROWSABLE`表示可以从浏览器调用，用于动作`android.intent.action.VIEW`，该动作查看数据中的URI。
 - en: 'Explicit intents: component name specified.'
+  id: totrans-49
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 显式意图：指定组件名称。
 - en: 'Implicit intents: no component name, so the system must figure it out.'
+  id: totrans-50
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 隐式意图：没有组件名称，因此系统必须找出。
 - en: Looks at action, data, category.
+  id: totrans-51
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 查看动作，数据，类别。
 - en: Could also ask the user what app to use, if multiple components match.
+  id: totrans-52
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果有多个组件匹配，也可以询问用户要使用哪个应用程序。
 - en: E.g., user clicks on an address -- what map application to open?
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，用户点击地址 - 要打开哪个地图应用程序？
 - en: RPC to services
+  id: totrans-54
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 对服务的RPC
 - en: Initial communication to a service happens by sending an intent.
+  id: totrans-55
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 初始与服务的通信通过发送意图进行。
 - en: Service can also define an RPC protocol for clients to use.
+  id: totrans-56
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务还可以为客户端定义一个RPC协议。
 - en: More efficient than sending intents each time.
+  id: totrans-57
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 比每次发送意图更有效。
 - en: Client "binds" a connection to a service.
+  id: totrans-58
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端将连接“绑定”到服务。
 - en: Networking -- accessing the Internet.
+  id: totrans-59
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 网络 - 访问互联网。
 - en: Work just as in any other Linux system.
+  id: totrans-60
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与任何其他Linux系统中一样工作。
 - en: Application can use sockets directly, or via Java's networking libraries.
+  id: totrans-61
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序可以直接使用套接字，也可以通过Java的网络库。
 - en: Why do we need a new app model? (Or, what's wrong with existing models?)
+  id: totrans-62
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 为什么我们需要一个新的应用程序模型？（或者，现有模型有什么问题？）
 - en: 'Desktop applications:'
+  id: totrans-63
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 桌面应用程序：
 - en: '**--** Not much isolation between applications.'
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**--** 应用程序之间的隔离不够。'
 - en: '**--** Every app has full privileges, any one malicious app can take over.'
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**--** 每个应用程序都拥有完整的特权，任何一个恶意应用程序都可以接管。'
 - en: '**++** Applications can easily interact with one another, share files.'
+  id: totrans-66
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**++** 应用程序可以轻松互相交互，共享文件。'
 - en: '**++** User can choose app for each task (email app, image viewer, etc).'
+  id: totrans-67
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**++** 用户可以为每个任务选择应用程序（电子邮件应用程序、图像查看器等）。'
 - en: 'Web/browser-based applications:'
+  id: totrans-68
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 基于Web/浏览器的应用程序：
 - en: '**++** No need to install applications or worry about local state.'
+  id: totrans-69
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**++** 无需安装应用程序或担心本地状态。'
 - en: '**--** Requires a server in the typical model (hard to use offline).'
+  id: totrans-70
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**--** 在典型模型中需要服务器（离线使用困难）。'
 - en: '**--** Limited interactions between applications.'
+  id: totrans-71
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**--** 应用程序之间的互动有限。'
 - en: '**--** Interactions that do exist are typically hard-wired to particular URLs.'
+  id: totrans-72
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**--** 存在的互动通常是硬编码到特定的URL。'
 - en: 'E.g., links to a contact manager app''s URL: user cannot choose new one.'
+  id: totrans-73
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，链接到联系管理器应用程序的URL：用户无法选择新的。
 - en: 'Getting better: "Web intents" are trying to solve this problem.'
+  id: totrans-74
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 越来越好：尝试解决此问题的“Web意图”。
 - en: '**--** Somewhat limited functionality for purely client-side applications.'
+  id: totrans-75
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**--** 纯客户端应用程序的功能有些受限。'
 - en: 'Getting better: camera, location info, local storage, worker threads, ..'
+  id: totrans-76
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 越来越好：相机、位置信息、本地存储、工作线程等。
 - en: Android access control
+  id: totrans-77
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Android访问控制
 - en: How does Android's application model handle app interaction, user choosing app?
+  id: totrans-78
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Android的应用程序模型如何处理应用程序互动、用户选择应用程序？
 - en: Mostly based on intents.
+  id: totrans-79
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 主要基于意图。
 - en: If multiple apps could perform an operation, send implicit intent.
+  id: totrans-80
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果多个应用程序可以执行一个操作，发送隐式意图。
 - en: Android framework decides which app gets the intent; could ask user.
+  id: totrans-81
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Android框架决定哪个应用程序获得意图；可以询问用户。
 - en: How does Android's application model handle app isolation?
+  id: totrans-82
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Android的应用程序模型如何处理应用程序隔离？
 - en: Each application's processes run under a separate UID in Linux.
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序的进程在Linux中运行在单独的UID下。
 - en: 'Exception: one developer can stick multiple applications into one UID.'
+  id: totrans-84
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例外：一个开发者可以将多个应用程序捆绑到一个UID中。
 - en: Each application gets its own Java runtime (but that's mostly by convention).
+  id: totrans-85
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序都有自己的Java运行时（但这主要是按照惯例）。
 - en: Java interpreter not trusted or even required; kernel enforces isolation.
+  id: totrans-86
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Java解释器不受信任，甚至不是必需的；内核强制执行隔离。
 - en: What are per-app UIDs good for?
+  id: totrans-87
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 每个应用程序UID有什么好处？
 - en: One app cannot directly manipulate another app's processes, files.
+  id: totrans-88
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个应用程序不能直接操作另一个应用程序的进程、文件。
 - en: Each app has private directory (`/data/data/appname`).
+  id: totrans-89
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序都有私有目录（`/data/data/appname`）。
 - en: Stores preferences, sqlite DBs for content providers, cached files, etc.
+  id: totrans-90
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 存储首选项、内容提供程序的sqlite数据库、缓存文件等。
 - en: 'What''s missing from UID isolation: access control to shared resources.'
+  id: totrans-91
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: UID隔离缺少什么：对共享资源的访问控制。
 - en: Network access.
+  id: totrans-92
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 网络访问。
 - en: Removable sd card.
+  id: totrans-93
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可移动的sd卡。
 - en: Devices (camera, compass, etc).
+  id: totrans-94
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 设备（相机、指南针等）。
 - en: 'Intents: who can send, what intents, to whom?'
+  id: totrans-95
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 意图：谁可以发送，什么意图，发送给谁？
 - en: And we also need to somehow determine the policy for all of this.
+  id: totrans-96
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们还需要以某种方式确定所有这些的策略。
 - en: 'First, mechanism: how does Android control access to all of the above?'
+  id: totrans-97
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 首先，机制：Android如何控制对上述所有内容的访问？
 - en: 'Network access: GIDs.'
+  id: totrans-98
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 网络访问：GIDs。
 - en: Special group IDs define what apps can talk to the network.
+  id: totrans-99
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 特殊的组ID定义了应用程序可以与网络通信的内容。
 - en: 'GID `AID_NET_BT_ADMIN (3001)`: can create low-level bluetooth sockets'
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 'GID `AID_NET_BT_ADMIN (3001)`: 可以创建低级蓝牙套接字'
 - en: 'GID `AID_NET_BT (3002)`: can create bluetooth socket'
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 'GID `AID_NET_BT (3002)`: 可以创建蓝牙套接字'
 - en: 'GID `AID_INET (3003)`: can create IP socket'
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 'GID `AID_INET (3003)`: 可以创建IP套接字'
 - en: 'GID `AID_NET_RAW (3004)`: can create raw socket'
+  id: totrans-103
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 'GID `AID_NET_RAW (3004)`: 可以创建原始套接字'
 - en: 'GID `AID_NET_ADMIN (3005)`: can change network config (ifconfig, ..)'
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 'GID `AID_NET_ADMIN (3005)`: 可以更改网络配置（ifconfig，..）'
 - en: Requires kernel changes to do this.
+  id: totrans-105
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要内核更改才能实现这一点。
 - en: Each app gets a subset of these group IDs, depending on its privileges.
+  id: totrans-106
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序根据其特权获得这些组 ID 的子集。
 - en: No finer-grained control of network communication.
+  id: totrans-107
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有对网络通信进行更精细的控制。
 - en: E.g., could have imagined per-IP-addr or per-origin-like policies.
+  id: totrans-108
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，可以想象按 IP 地址或按来源类似的策略。
 - en: Access to removable sd card.
+  id: totrans-109
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 访问可移动 SD 卡。
 - en: Why not use file system permissions?
+  id: totrans-110
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么不使用文件系统权限？
 - en: Want to use FAT file system on SD card, to allow access on other devices.
+  id: totrans-111
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 希望在 SD 卡上使用 FAT 文件系统，以允许在其他设备上访问。
 - en: FAT file system has no notion of file ownership, permissions, etc.
+  id: totrans-112
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: FAT 文件系统没有文件所有权、权限等概念。
 - en: Kernel treats all SD card files as owned by special group sdcard_rw (1015).
+  id: totrans-113
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核将所有 SD 卡文件视为特殊组 sdcard_rw（1015）拥有。
 - en: Apps that should have access to SD card have this GID in their group list.
+  id: totrans-114
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应该访问 SD 卡的应用程序在其组列表中具有此 GID。
 - en: No finer-grained isolation within the entire SD card.
+  id: totrans-115
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在整个 SD 卡内没有更精细的隔离。
 - en: Devices.
+  id: totrans-116
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 设备。
 - en: Device files (`/dev/camera`, `/dev/compass`, etc) owned by special groups.
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 设备文件（`/dev/camera`、`/dev/compass` 等）由特殊组拥有。
 - en: Apps run with appropriate groups in their group list.
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序在其组列表中以适当的组运行。
 - en: Intents.
+  id: totrans-119
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 意图。
 - en: All intents are routed via a single trusted "reference monitor".
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 所有意图都经过单个可信的“参考监视器”路由。
 - en: Runs in the system_server process.
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 运行在 system_server 进程中。
 - en: Reference monitor performs intent resolution (where to send intent?),
+  id: totrans-122
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考监视器执行意图解析（将意图发送到哪里？），
 - en: 'for implicit intents. `[ref: ActivityStack.startActivityMayWait]`'
+  id: totrans-123
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '用于隐式意图。`[ref: ActivityStack.startActivityMayWait]`'
 - en: 'Reference monitor checks permissions, based on intent and who sent it. `[ref:
     ActivityStack.startActivityLocked]`'
+  id: totrans-124
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '参考监视器检查权限，基于意图和发送者。`[ref: ActivityStack.startActivityLocked]`'
 - en: Routes intent to the appropriate application process, or starts a new one.
+  id: totrans-125
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将意图路由到适当的应用程序进程，或启动一个新的进程。
 - en: Why not just use intents for everything, instead of special groups?
+  id: totrans-126
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么不只使用意图来处理一切，而不是使用特殊组？
 - en: 'Efficiency: want direct access to camera, network, SD card files.'
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 效率：希望直接访问相机、网络、SD 卡文件。
 - en: Sending everything via intents could impose significant overhead.
+  id: totrans-128
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过意图发送所有内容可能会带来重大开销。
 - en: How does the reference monitor decide whether to allow an intent?
+  id: totrans-129
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 参考监视器如何决定是否允许一个意图？
 - en: '"Labels" assigned to applications and components.'
+  id: totrans-130
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 分配给应用程序和组件的“标签”。
 - en: Each label is a free-form string.
+  id: totrans-131
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个标签都是一个自由格式的字符串。
 - en: Commonly written as Java-style package names, for uniqueness.
+  id: totrans-132
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通常以 Java 风格的包名称编写，以确保唯一性。
 - en: E.g., `com.android.phone.DIALPERM`.
+  id: totrans-133
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`com.android.phone.DIALPERM`。
 - en: Each component has a single label that protects it.
+  id: totrans-134
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个组件都有一个保护它的单个标签。
 - en: Any intents to that component must be sent by app that has that label.
+  id: totrans-135
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对该组件的任何意图必须由具有该标签的应用程序发送。
 - en: E.g., phone dialer service is labeled with `...DIALPERM`.
+  id: totrans-136
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，电话拨号服务标记为 `...DIALPERM`。
 - en: 'For content providers, two labels: one for read, one for write.'
+  id: totrans-137
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于内容提供程序，有两个标签：一个用于读取，一个用于写入。
 - en: An application has a list of labels it is authorized to use.
+  id: totrans-138
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序有一个授权使用的标签列表。
 - en: E.g., if app can dial the phone, `...DIALPERM` is in its label set.
+  id: totrans-139
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，如果应用程序可以拨打电话，则 `...DIALPERM` 在其标签集中。
 - en: Other permissions (network, devices, SD card) map to special label strings.
+  id: totrans-140
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 其他权限（网络、设备、SD 卡）映射到特殊的标签字符串。
 - en: E.g., android.permission.INTERNET translates to app running w/ GID 3003.
+  id: totrans-141
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，android.permission.INTERNET 被翻译为应用程序在 GID 3003 下运行。
 - en: How does an application get permissions for a certain set of labels?
+  id: totrans-142
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 应用程序如何获得一组特定标签的权限？
 - en: Each app comes with a manifest declaring permissions (labels) the app needs.
+  id: totrans-143
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序都有一个声明其所需权限（标签）的清单。
 - en: Also declares the labels that should protect each of its components.
+  id: totrans-144
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 还声明了应该保护每个组件的标签。
 - en: When app is installed, Android system asks user if it's ok to install app.
+  id: totrans-145
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当应用程序安装时，Android 系统会询问用户是否允许安装应用程序。
 - en: Provides list of permissions that the application is requesting.
+  id: totrans-146
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 提供应用程序正在请求的权限列表。
 - en: At one point, Android allowed users to set fine-grained permission choices.
+  id: totrans-147
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 曾经，Android 允许用户设置细粒度的权限选择。
 - en: Android 4.3 introduced the "permission manager".
+  id: totrans-148
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Android 4.3 引入了“权限管理器”。
 - en: Apparently this was removed in Android 4.4.
+  id: totrans-149
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 显然，这在 Android 4.4 中被移除了。
 - en: 'Possible reason: developers want predictable access to things.'
+  id: totrans-150
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能的原因：开发人员希望对事物有可预测的访问。
 - en: Who defines permissions?
+  id: totrans-151
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 谁定义权限？
 - en: 'Apps define permissions themselves (recall: just free-form strings).'
+  id: totrans-152
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序自己定义权限（回想：只是自由格式的字符串）。
 - en: Android system defines perms for built-in resources (camera, network, etc).
+  id: totrans-153
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Android 系统为内置资源（相机、网络等）定义权限。
 - en: Can list with 'adb shell pm list permissions -g'.
+  id: totrans-154
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以使用 'adb shell pm list permissions -g' 列出。
 - en: Built-in applications define permissions for services they provide.
+  id: totrans-155
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内置应用程序为其提供的服务定义权限。
 - en: E.g., read/write contacts, send SMS message, etc.
+  id: totrans-156
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，读取/写入联系人、发送短信等。
 - en: 'Defining a permission means specifying:'
+  id: totrans-157
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 定义权限意味着指定：
 - en: User-visible name of the permission.
+  id: totrans-158
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限的用户可见名称。
 - en: Description of the permission for the user.
+  id: totrans-159
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户的权限描述。
 - en: Grouping permission into some categories (costs money, private data, etc).
+  id: totrans-160
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将权限分组到一些类别中（花费、私人数据等）。
 - en: 'Type of permission: "normal", "dangerous", and "signature".'
+  id: totrans-161
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限类型：“正常”、“危险”和“签名”。
 - en: What do the three types of permission mean?
+  id: totrans-162
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 三种权限类型的含义是什么？
 - en: 'Normal:'
+  id: totrans-163
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 正常：
 - en: Benign permissions that could let an app annoy the user, but not drastic.
+  id: totrans-164
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能会让应用程序烦扰用户，但不会造成严重后果的良性权限。
 - en: E.g., `SET_WALLPAPER`.
+  id: totrans-165
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`SET_WALLPAPER`。
 - en: diff $(pm list permissions -g -d) and $(pm list permissions -g)
+  id: totrans-166
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 比较 $(pm list permissions -g -d) 和 $(pm list permissions -g)
 - en: System doesn't bother asking the user about "normal" permissions.
+  id: totrans-167
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统不会询问用户有关“正常”权限。
 - en: Why bother having them at all?
+  id: totrans-168
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么要有这些权限？
 - en: Can review if really interested.
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以在真正感兴趣时进行审查。
 - en: Least-privilege, if application is compromised later.
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 最小权限原则，如果应用程序以后被破坏。
 - en: 'Dangerous:'
+  id: totrans-171
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 危险：
 - en: Could allow an app to do something dangerous.
+  id: totrans-172
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能允许应用程序执行危险操作。
 - en: E.g., internet access, access to contact information, etc.
+  id: totrans-173
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，访问互联网、访问联系信息等。
 - en: 'Signature:'
+  id: totrans-174
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 签名：
 - en: Can only be granted to apps signed by the same developer.
+  id: totrans-175
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只能授予由同一开发人员签名的应用程序。
 - en: 'Think ForceHTTPS: want to prevent user from accidentally giving it away.'
+  id: totrans-176
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 想要强制使用HTTPS：希望防止用户意外泄露。
 - en: Why do this checking in the reference monitor, rather than in each app?
+  id: totrans-177
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 为什么在引用监视器中进行此检查，而不是在每个应用程序中？
 - en: Convenience, so programmers don't forget.
+  id: totrans-178
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 便利性，以防程序员忘记。
 - en: Could do it in a library on the application side.
+  id: totrans-179
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以在应用程序端的库中执行。
 - en: Intent might be routed to different components based on permissions.
+  id: totrans-180
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 根据权限可能将意图路由到不同的组件。
 - en: Don't want to send an intent to component A that will reject it, if another
     component B is willing to accept it.
+  id: totrans-181
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不想发送一个意图给组件A，而另一个组件B却愿意接受它。
 - en: 'Mandatory access control (MAC): permissions specified separately from code.'
+  id: totrans-182
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 强制访问控制（MAC）：权限与代码分开指定。
 - en: 'Aside: annoyance, MAC is an overloaded acronym.'
+  id: totrans-183
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 附注：烦恼，MAC是一个多义词缩写。
 - en: Media Access Control -- MAC address in Ethernet.
+  id: totrans-184
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 媒体访问控制 -- 以太网中的MAC地址。
 - en: Message Authentication Code -- the thing that Kerberos v4 lacked.
+  id: totrans-185
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 消息认证码 -- Kerberos v4缺少的东西。
 - en: Want to understand security properties of system without looking at code.
+  id: totrans-186
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 希望了解系统的安全属性而不查看代码。
 - en: 'Contrast: discretionary access control (DAC) in Unix.'
+  id: totrans-187
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对比：Unix中的自主访问控制（DAC）。
 - en: Each app sets its own permissions on files.
+  id: totrans-188
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序都可以在文件上设置自己的权限。
 - en: Permissions can be changed by the app over time.
+  id: totrans-189
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限可以随时间由应用程序更改。
 - en: Hard to tell what will happen just by looking at current file perms.
+  id: totrans-190
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 看当前文件权限无法准确预测会发生什么。
 - en: 'Apps can also perform their own checks. `[ref: checkCallingPermission()]`'
+  id: totrans-191
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '应用程序也可以执行自己的检查。`[ref: checkCallingPermission()]`'
 - en: 'Breaks the MAC model a bit: can''t just look at manifest.'
+  id: totrans-192
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有点破坏了MAC模型：不能只看清单。
 - en: Necessary because one service may export different RPC functions,
+  id: totrans-193
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有必要，因为一个服务可能导出不同的RPC函数，
 - en: want different level of protection for each.
+  id: totrans-194
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 想要为每个权限设置不同级别的保护。
 - en: Reference monitor just checks if client can access the entire service.
+  id: totrans-195
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 引用监视器只检查客户端是否可以访问整个服务。
 - en: Who can register to receive intents?
+  id: totrans-196
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 谁可以注册接收意图？
 - en: Any app can specify it wants to receive intents with arbitrary parameters.
+  id: totrans-197
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何应用程序都可以指定要接收具有任意参数的意图。
 - en: 'E.g., can create activity with an intent filter (in manifest):'
+  id: totrans-198
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，可以在意图过滤器中创建活动（在清单中）：
 - en: '*Example:*'
+  id: totrans-199
   prefs: []
   type: TYPE_NORMAL
+  zh: '*示例：*'
 - en: '[PRE0]'
+  id: totrans-200
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: Is this a problem?
+  id: totrans-201
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是一个问题吗？
 - en: Why or why not?
+  id: totrans-202
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么或为什么不？
 - en: System will prompt user whenever they click on a link to http://web.mit.edu/.
+  id: totrans-203
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每当用户点击链接到 http://web.mit.edu/ 时，系统会提示用户。
 - en: Only "top-level" user clicks translate to intents, not web page components.
+  id: totrans-204
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有“顶层”用户点击转换为意图，而不是网页组件。
 - en: Might be OK if user is prompted.
+  id: totrans-205
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果提示用户可能会没问题。
 - en: 'Even then, what if your only map app is "bad": steals addresses sent to it?'
+  id: totrans-206
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使如此，如果您唯一的地图应用程序是“不好的”：窃取发送给它的地址？
 - en: Not so great for broadcast intents, which go to all possible recipients.
+  id: totrans-207
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于广播意图来说并不是很好，因为会发送给所有可能的接收者。
 - en: Controlling the distribution of broadcast intents.
+  id: totrans-208
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 控制广播意图的分发。
 - en: In paper's example, want `FRIEND_NEAR` intents to not be disclosed to everyone.
+  id: totrans-209
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在文档的示例中，希望`FRIEND_NEAR`意图不被所有人披露。
 - en: 'Solution: sender can specify extra permission label when sending bcast intent.'
+  id: totrans-210
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 解决方案：发送方在发送广播意图时可以指定额外的权限标签。
 - en: Reference monitor only sends this intent to recipients that have that label.
+  id: totrans-211
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考监视器只将此意图发送给具有该标签的接收方。
 - en: How to authenticate the source of intents?
+  id: totrans-212
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 如何验证意图的来源？
 - en: Generally using a permission label on the receiving component.
+  id: totrans-213
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通常在接收组件上使用权限标签。
 - en: Don't necessarily care who sender is, as long as it had the right perms.
+  id: totrans-214
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只要发送方具有正确的权限，就不一定关心发送方是谁。
 - en: Turns out apps often forgot to put perm restrictions on broadcast receivers.
+  id: totrans-215
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 结果应用程序经常忘记在广播接收器上设置权限限制。
 - en: 'Paper at Usenix Security 2011: "permission re-delegation attacks".'
+  id: totrans-216
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 2011年Usenix安全论文："权限再委托攻击"。
 - en: E.g., can create an alarm that beeps and vibrates forever.
+  id: totrans-217
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，可以创建一个永远响铃和震动的闹钟。
 - en: E.g., can send messages to the settings bcast receiver to toggle wifi, etc.
+  id: totrans-218
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，可以向设置广播接收器发送消息以切换wifi等。
 - en: 'One solution in android: "protected broadcasts" (not complete, but..)'
+  id: totrans-219
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 安卓中的一个解决方案："受保护的广播"（不完整，但是..）
 - en: Reference monitor special-cases some intent actions (e.g., system bootup).
+  id: totrans-220
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考监视器特殊处理一些意图操作（例如，系统启动）。
 - en: Only system processes can send those broadcast intents.
+  id: totrans-221
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有系统进程可以发送那些广播意图。
 - en: Can a sender rely on names to route intents to a specific component?
+  id: totrans-222
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 发送方是否可以依赖名称将意图路由到特定组件？
 - en: More broadly, how does android authenticate names? (App names, perm names.)
+  id: totrans-223
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更广泛地说，安卓如何验证名称？（应用程序名称，权限名称。）
 - en: No general plan, just first-come-first-served.
+  id: totrans-224
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有一般计划，只是先到先得。
 - en: System names (apps, permissions, etc) win in this model.
+  id: totrans-225
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统名称（应用程序，权限等）在这个模型中获胜。
 - en: Other apps could be preempted by a malicious app that comes first.
+  id: totrans-226
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 其他应用程序可能会被先到的恶意应用程序抢占。
 - en: Could send sensitive data to malicious app, by using app's name.
+  id: totrans-227
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以通过使用应用程序的名称向恶意应用程序发送敏感数据。
 - en: Could trust intent from malicious app, by looking at its sender name.
+  id: totrans-228
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以通过查看发送者名称信任恶意应用程序的意图。
 - en: Could set lax permissions by using a malicious app's perm by name.
+  id: totrans-229
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以通过使用恶意应用程序的权限名称设置宽松权限。
 - en: What happens if two apps define the same permission name?
+  id: totrans-230
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 如果两个应用程序定义了相同的权限名称会发生什么？
 - en: First one wins.
+  id: totrans-231
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 先到先得。
 - en: Malicious app could register some important perm name as "normal".
+  id: totrans-232
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 恶意应用程序可以将一些重要权限名称注册为"正常"。
 - en: Any app (including malicious app) can get this permission now.
+  id: totrans-233
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何应用程序（包括恶意应用程序）现在都可以获得此权限。
 - en: Other apps that rely on this perm will be vulnerable to malicious app.
+  id: totrans-234
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 其他依赖此权限的应用程序将容易受到恶意应用程序的攻击。
 - en: Even if victim app defines its own perms and is the only one that uses it. (E.g.,
     signature perms.)
+  id: totrans-235
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使受害应用程序定义了自己的权限并且是唯一使用它的应用程序。（例如，签名权限。）
 - en: 'Possibly better: reject installing an app if perm is already defined.'
+  id: totrans-236
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能更好的做法：如果权限已经定义，则拒绝安装应用程序。
 - en: Allows an app to assume its own perms are correctly defined.
+  id: totrans-237
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 允许应用程序假设其自己的权限已经正确定义。
 - en: Still does not allow an app to assume anything about other app/perm names.
+  id: totrans-238
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 仍然不允许应用程序假设其他应用程序/权限名称的任何内容。
 - en: If app names are not authenticated, why do applications need signatures?
+  id: totrans-239
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 如果应用程序名称没有经过验证，为什么应用程序需要签名？
 - en: Representing a developer.
+  id: totrans-240
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 代表开发者。
 - en: No real requirement for a CA.
+  id: totrans-241
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对CA没有真正的要求。
 - en: 'Helps Android answer three questions:'
+  id: totrans-242
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 帮助安卓回答三个问题：
 - en: Did this new version of an app come from the same developer as the old one?
     (if so, can upgrade.)
+  id: totrans-243
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这个新版本的应用程序是否来自与旧版本相同的开发者？（如果是，可以升级。）
 - en: Did these two apps come from the same developer? (if so, can request same UID.)
+  id: totrans-244
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这两个应用程序是否来自同一开发者？（如果是，可以请求相同UID。）
 - en: Did the app come from same developer as the one that defined a permission? (if
     so, can get access to signature-level perms.)
+  id: totrans-245
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序是否来自定义权限的相同开发者？（如果是，可以获得访问签名级别权限。）
 - en: How to give another app temporary permissions?
+  id: totrans-246
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 如何给另一个应用程序临时权限？
 - en: URI delegation.
+  id: totrans-247
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: URI委托。
 - en: Capability-style delegation of URI read/write access.
+  id: totrans-248
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: URI读/写访问的能力式委托。
 - en: System keeps track of delegated access by literal string URI.
+  id: totrans-249
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统通过文字字符串URI跟踪委托访问。
 - en: E.g., `content://gmail/attachment/7`
+  id: totrans-250
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`content://gmail/attachment/7`
 - en: Must remember to revoke delegated access!
+  id: totrans-251
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 必须记得撤销委托访问！
 - en: 'E.g., URI may mean another record at a later time.. `[ref: grantUriPermission(),
     revokeUriPermission()]`'
+  id: totrans-252
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '例如，URI可能表示稍后的另一条记录..`[ref: grantUriPermission(), revokeUriPermission()]`'
 - en: 'Reference monitor keeps granted URIs in memory. `[ref: ActivityManagerService.mGrantedUriPermissions]`'
+  id: totrans-253
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '参考监视器将授予的URI保留在内存中。`[ref: ActivityManagerService.mGrantedUriPermissions]`'
 - en: Grants are ephemeral, only last until a reboot.
+  id: totrans-254
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 授权是短暂的，只持续到重新启动。
 - en: Pending intents.
+  id: totrans-255
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 待定意图。
 - en: 'Use case: callbacks into your application (e.g., from alarm/time service).'
+  id: totrans-256
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用例：从闹钟/时间服务回调到您的应用程序。
 - en: 'system_server keeps track of pending intents in memory; ephemeral. `[ref: PendingIntentRecord.java]`'
+  id: totrans-257
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: system_server在内存中跟踪挂起的意图；短暂的。[参考：PendingIntentRecord.java]
 - en: 'Revocation problem, as with URI delegation. "Breaks" the MAC model: can''t
     quite reason about all security from manifest.'
+  id: totrans-258
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 撤销问题，与URI委托一样。“破坏”了MAC模型：无法完全从清单中推理出所有安全性。
 - en: Where are apps stored?
+  id: totrans-259
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 应用程序存储在哪里？
 - en: 'Two options: internal phone memory or SD card.'
+  id: totrans-260
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 两个选项：内部手机存储器或SD卡。
 - en: Internal memory is always controlled by Android, so can assume it's safe.
+  id: totrans-261
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内部存储器始终由Android控制，因此可以假设它是安全的。
 - en: Installing apps on SD card is more complicated, but desirable due to space.
+  id: totrans-262
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在SD卡上安装应用程序更加复杂，但由于空间原因更可取。
 - en: 'Threat models:'
+  id: totrans-263
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 威胁模型：
 - en: Worried about malicious app modifying SD card data.
+  id: totrans-264
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 担心恶意应用程序修改SD卡数据。
 - en: Worried about malicious user making copies of a paid app.
+  id: totrans-265
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 担心恶意用户复制付费应用程序。
 - en: SD card uses FAT file system, no file permissions.
+  id: totrans-266
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: SD卡使用FAT文件系统，没有文件权限。
 - en: 'Approach: encrypt/authenticate app code with a per-phone random key.'
+  id: totrans-267
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 方法：使用每部手机的随机密钥对应用代码进行加密/认证。
 - en: Key stored in phone's internal flash, unique to phone.
+  id: totrans-268
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密钥存储在手机的内部闪存中，对应手机唯一。
 - en: How secure is the Android "platform"?
+  id: totrans-269
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Android“平台”的安全性有多高？
 - en: 'TCB: kernel + anything running as root.'
+  id: totrans-270
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: TCB：内核+任何以root身份运行的东西。
 - en: 'Better than desktop applications:'
+  id: totrans-271
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优于桌面应用程序：
 - en: Most applications are not part of the TCB.
+  id: totrans-272
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大多数应用程序不属于TCB的一部分。
 - en: Many fewer things running as root.
+  id: totrans-273
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 作为root运行的东西要少得多。
 - en: Some vulnerabilities show up in practice.
+  id: totrans-274
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些漏洞在实践中显现。
 - en: Bugs in the Linux kernel or in setuid-root binaries allow apps to get root.
+  id: totrans-275
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Linux内核或setuid-root二进制文件中的错误允许应用程序获取root权限。
 - en: How to do better?
+  id: totrans-276
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何做得更好？
 - en: Syscall filtering / seccomp to make it harder to exploit kernel bugs?
+  id: totrans-277
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统调用过滤/ seccomp使利用内核漏洞变得更加困难？
 - en: Not clear.
+  id: totrans-278
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不清楚。
 - en: Users inadvertently install malware applications with dangerous permissions.
+  id: totrans-279
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户无意中安装具有危险权限的恶意软件应用程序。
 - en: 'Actual common malware: send SMS messages to premium numbers.'
+  id: totrans-280
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实际常见的恶意软件：向高价号码发送短信。
 - en: Attackers directly get money by deploying such malware.
+  id: totrans-281
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者通过部署此类恶意软件直接获得金钱。
 - en: Why do users make such mistakes?
+  id: totrans-282
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户为什么会犯这样的错误？
 - en: 'One cause: some permissions necessary for both mundane + sensitive tasks.'
+  id: totrans-283
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个原因：某些权限对于平凡任务和敏感任务都是必要的。
 - en: E.g., accessing phone state / identity required to get a unique device ID.
+  id: totrans-284
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，访问电话状态/身份需要获取唯一设备ID。
 - en: Causes unnecessary requests for dangerous permissions, de-sensitizes user.
+  id: totrans-285
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 导致不必要请求危险权限，使用户麻木不仁。
 - en: 'Another cause: apps ask for permissions upfront "just in case".'
+  id: totrans-286
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个原因：应用程序提前要求权限“以防万一”。
 - en: E.g., might need them later, but changing perms requires manual update.
+  id: totrans-287
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，可能以后需要它们，但更改权限需要手动更新。
 - en: 'Another cause: cannot say "no" to certain permissions.'
+  id: totrans-288
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个原因：无法拒绝某些权限。
 - en: 'Another cause: copies of existing Android apps containing malware.'
+  id: totrans-289
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个原因：包含恶意软件的现有Android应用程序的副本。
 - en: How to fix?
+  id: totrans-290
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何修复？
 - en: Find ways to allow more permissions "non-dangerous" without asking user.
+  id: totrans-291
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 找到允许更多“非危险”权限而无需询问用户的方法。
 - en: Allow user to selectively disable certain permissions. (Some research work on
     this, see refs below.)
+  id: totrans-292
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 允许用户有选择地禁用某些权限。（有关此方面的一些研究工作，请参见下面的参考资料。）
 - en: Static/runtime analysis and auditing -- implemented by Google now.
+  id: totrans-293
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 静态/运行时分析和审计--现在由Google实施。
 - en: Looks for near-identical clones of existing popular apps.
+  id: totrans-294
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 寻找现有热门应用程序的几乎相同的克隆。
 - en: Runs apps for a little bit to determine what they do.
+  id: totrans-295
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 运行应用程序一小段时间以确定它们的功能。
 - en: Security researchers got a (non-root) shell on Google's app scanner.
+  id: totrans-296
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 安全研究人员在Google的应用程序扫描程序上获得了（非root）shell。
 - en: 'Reasonably expected in retrospect: app scanner just runs the app..'
+  id: totrans-297
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 事后合理预期：应用程序扫描程序只运行应用程序。
 - en: Android's app market (Google Play) allows Google to remotely kill an app.
+  id: totrans-298
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Android的应用市场（Google Play）允许Google远程停用应用程序。
 - en: 'Other model for security in mobile phone apps: iOS/iPhone.'
+  id: totrans-299
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 移动电话应用程序中的安全性的另一种模型：iOS/iPhone。
 - en: 'Security mechanism: all apps run two possible UIDs.'
+  id: totrans-300
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 安全机制：所有应用程序运行两个可能的UID。
 - en: One UID for Apple apps, another for all other apps.
+  id: totrans-301
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 苹果应用程序一个UID，其他所有应用程序另一个UID。
 - en: 'Historically made sense: only one app was active at a time.'
+  id: totrans-302
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从历史上看是有道理的：一次只有一个应用程序处于活动状态。
 - en: With switch to multi-tasking apps, didn't change the UID model.
+  id: totrans-303
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 随着多任务应用程序的切换，未更改UID模型。
 - en: Instead, isolate apps using Apple's sandbox ("Seatbelt"?).
+  id: totrans-304
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 反而，使用苹果的沙盒隔离应用程序（“Seatbelt”？）。
 - en: Apple applications not isolated from each other originally (unclear now?).
+  id: totrans-305
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 最初苹果应用程序之间没有隔离（现在不清楚？）。
 - en: Thus, exploit of vulnerability in browser left all Apple apps "exposed".
+  id: totrans-306
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，浏览器中的漏洞利用使所有苹果应用程序“暴露”。
 - en: Prompt for permissions at time of use.
+  id: totrans-307
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在使用时提示权限。
 - en: Users can run app and not give it permissions (unlike Android).
+  id: totrans-308
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户可以运行应用程序而不授予权限（不像安卓）。
 - en: '"Normal" permissions not very meaningful in this model.'
+  id: totrans-309
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在这个模型中，“普通”权限并不是很有意义。
 - en: Apple approves apps in its app store, in part based on security eval.
+  id: totrans-310
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 苹果在其应用商店中批准应用程序，部分基于安全评估。
 - en: '"Reputation-based" system: hard to exploit many phones and avoid detection.'
+  id: totrans-311
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “基于声誉”的系统：难以利用许多手机并避免被检测。
 - en: References
+  id: totrans-312
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 参考资料
 - en: '[Android security](http://developer.android.com/guide/topics/security/security.html)'
+  id: totrans-313
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[安卓安全](http://developer.android.com/guide/topics/security/security.html)'
 - en: '[AppFence](http://research.microsoft.com/pubs/149596/AppFence.pdf)'
+  id: totrans-314
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[AppFence](http://research.microsoft.com/pubs/149596/AppFence.pdf)'
 - en: '[Internal input event handling in the Linux kernel and in the Android userspace](http://cjix.info/blog/misc/internal-input-event-handling-in-the-linux-kernel-and-the-android-userspace/)'
+  id: totrans-315
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[Linux内核和Android用户空间中的内部输入事件处理](http://cjix.info/blog/misc/internal-input-event-handling-in-the-linux-kernel-and-the-android-userspace/)'
 - en: '[iOS security](http://css.csail.mit.edu/6.858/2012/readings/ios-security-may12.pdf)'
+  id: totrans-316
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[iOS安全](http://css.csail.mit.edu/6.858/2012/readings/ios-security-may12.pdf)'
 - en: '[Apple Sandbox Guide](http://reverse.put.as/wp-content/uploads/2011/09/Apple-Sandbox-Guide-v1.0.pdf)'
+  id: totrans-317
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[苹果沙盒指南](http://reverse.put.as/wp-content/uploads/2011/09/Apple-Sandbox-Guide-v1.0.pdf)'

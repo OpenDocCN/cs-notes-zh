@@ -1,641 +1,915 @@
 - en: Taint tracking
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 污点跟踪
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记是从2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的笔记上稍作修改的。'
 - en: Android security policies
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 安卓安全策略
 - en: What problem does the paper try to solve?
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 这篇论文试图解决什么问题？
 - en: Applications can exfiltrate a user's private data and send it to some server.
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序可以外泄用户的私人数据并发送到某个服务器。
 - en: 'High-level approach: keep track of which data is sensitive, and prevent it
     from leaving the device!'
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 高层次方法：跟踪哪些数据是敏感的，并防止其离开设备！
 - en: Why aren't Android permissions enough?
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么安卓权限不够用？
 - en: Android permissions control whether application can read/write data, or access
     devices or resources (e.g., the Internet).
+  id: totrans-7
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 安卓权限控制应用程序是否可以读取/写入数据，或访问设备或资源（例如，互联网）。
 - en: Using Android permissions, it's hard to specify a policy about *particular*
     types of data (*Example:* "Even if the app has access to the network, it should
     never be able to send user data over the network").
+  id: totrans-8
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用安卓权限，很难指定关于*特定*类型数据的策略。 （*例子：* “即使应用程序有网络访问权限，也不应该能够通过网络发送用户数据”）。
 - en: '**Q:** Aha! What if we never install apps that both read data *and* have network
     access?'
+  id: totrans-9
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 啊哈！如果我们从不安装既读取数据又具有网络访问权限的应用程序呢？'
 - en: '**A:** This would prevent some obvious leaks, but it would also break many
     legitimate apps! (*Example:* email app)'
+  id: totrans-10
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A:** 这将阻止一些明显的泄漏，但也会破坏许多合法的应用程序！ （*例子：* 电子邮件应用程序）'
 - en: Information can still leak via side channels. (*Example:* browser cache leaks
     whether an object has been fetched in the past)
+  id: totrans-11
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 信息仍然可以通过侧信道泄漏。 （*例子：* 浏览器缓存泄漏了一个对象是否在过去被获取过）
 - en: Apps can collude! (*Example:* An app without network privileges can pass data
     to an app that does have network privileges.)
+  id: totrans-12
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序可以勾结！ （*例子：* 没有网络权限的应用程序可以将数据传递给具有网络权限的应用程序。）
 - en: A malicious app might trick another app into sending data. (*Example:* Sending
     an intent to the Gmail app?)
+  id: totrans-13
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 恶意应用程序可能会欺骗另一个应用程序发送数据。 （*例子：* 发送一个意图到 Gmail 应用程序？）
 - en: What does Android malware actually do?
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 安卓恶意软件实际上做了什么？
 - en: Use location or IMEI for advertisements. (IMEI is a unique per-device identifier.)
+  id: totrans-15
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用位置或IMEI进行广告。 （IMEI是每台设备的唯一标识符。）
 - en: 'Credential stealing: send your contact list, IMEI, phone number to remote server.'
+  id: totrans-16
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 窃取凭据：将您的联系人列表、IMEI、电话号码发送到远程服务器。
 - en: Turn your phone into a bot, use your contact list to send spam emails/SMS messages!
     ['Sophisticated' Android malware hits phones](http://www.bbc.com/news/technology-30143283)
+  id: totrans-17
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将您的手机变成一个僵尸，使用您的联系人列表发送垃圾邮件/短信！ ['Sophisticated' Android malware hits phones](http://www.bbc.com/news/technology-30143283)
 - en: Preventing data exfiltration is useful, but taint tracking by itself is insufficient
     to keep your device from getting hacked!
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防止数据外泄是有用的，但仅靠污点跟踪是不足以防止设备被黑客攻击的！
 - en: TaintDroid overview
+  id: totrans-19
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: TaintDroid 概述
 - en: '*TaintDroid* tracks sensitive information as it propagates through the system.'
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: '*TaintDroid* 跟踪敏感信息在系统中传播的过程。'
 - en: '*TaintDroid* distinguishes between information sources and information sinks'
+  id: totrans-21
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*TaintDroid* 区分信息源和信息汇'
 - en: 'Sources generate sensitive data: *Example:* Sensors, contacts, IMEI'
+  id: totrans-22
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 源生成敏感数据：*例子：* 传感器、联系人、IMEI
 - en: 'Sinks expose sensitive data: *Example:* network.'
+  id: totrans-23
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 汇点暴露敏感数据：*例子：* 网络。
 - en: '*TaintDroid* uses a 32-bit bitvector to represent taint, so there can be at
     most 32 distinct taint sources.'
+  id: totrans-24
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*TaintDroid* 使用32位位向量表示污点，因此最多可以有32个不同的污点来源。'
 - en: Roughly speaking, taint flows from rhs to lhs of assignments.
+  id: totrans-25
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大致上，污点从赋值的右手边流向左手边。
 - en: '*Examples:*'
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: '*例子：*'
 - en: '[PRE0]'
+  id: totrans-27
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: 'Interesting special case, arrays:'
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 有趣的特殊情况，数组：
 - en: '[PRE1]'
+  id: totrans-29
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: To minimize storage overheads, an array receives a single taint tag, and all
     of its elements have the same taint tag.
+  id: totrans-30
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了最小化存储开销，一个数组接收一个单一的污点标记，其所有元素都具有相同的污点标记。
 - en: '**Q:** Why is it safe to associate just one label with arrays or IPC messages?'
+  id: totrans-31
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 为什么将数组或IPC消息仅关联一个标签是安全的？'
 - en: '**A:** It should be safe to *over*-estimate taint. This may lead to false positives,
     but not false negatives.'
+  id: totrans-32
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A:** 估计污点应该是安全的。 这可能会导致误报，但不会导致漏报。'
 - en: 'Another special case: native methods (i.e., internal VM methods like `System.arraycopy()`,
     and native code exposed via JNI).'
+  id: totrans-33
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个特殊情况：本地方法（即，内部VM方法如 `System.arraycopy()`，以及通过JNI公开的本地代码）。
 - en: '**Problem:** Native code doesn''t go through the Dalvik interpreter, so *TaintDroid*
     can''t automatically propagate taint!'
+  id: totrans-34
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题：** 本地代码不经过 Dalvik 解释器，所以 *TaintDroid* 无法自动传播污点！'
 - en: '**Solution:** Manually analyze the native code, provide a summary of its taint
     behavior.'
+  id: totrans-35
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**解决方案：**手动分析本机代码，提供其污点行为的摘要。'
 - en: Effectively, need to specify how to copy taints from args to return values.
+  id: totrans-36
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实际上，需要指定如何将参数的污点复制到返回值。
 - en: '**Q:** How well does this scale?'
+  id: totrans-37
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问：**这种扩展效果如何？'
 - en: '**A:** Authors argue this works OK for internal VM functions (e.g., `arraycopy`).
     For "easy" calls, the analysis can be automated---if only integers or strings
     are passed, assign the union of the input taints to the return value.'
+  id: totrans-38
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**答：**作者认为这对内部 VM 函数（例如，`arraycopy`）效果不错。对于“简单”调用，分析可以自动化---如果只传递整数或字符串，则将输入污点的并集分配给返回值。'
 - en: 'IPC messages are like treated like arrays: each message is associated with
     a single taint that is the union of the taints of the constituent parts.'
+  id: totrans-39
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: IPC 消息类似于数组：每个消息与一个污点相关联，该污点是组成部分的污点的并集。
 - en: Data which is extracted from an incoming message is assigned the taint of that
     message.
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从传入消息中提取的数据被分配为该消息的污点。
 - en: Each file is associated with a single taint flag that is stored in the file's
     metadata.
+  id: totrans-41
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个文件都与一个存储在文件元数据中的单个污点标志相关联。
 - en: Like with arrays and IPC messages, this is a conservative scheme that may lead
     to false positives.
+  id: totrans-42
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与数组和 IPC 消息一样，这是一个保守的方案，可能会导致误报。
 - en: How are taint flags represented in memory?
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 污点标记在内存中是如何表示的？
 - en: 'Five kinds of things need to have taint tags:'
+  id: totrans-44
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 五种东西需要有污点标记：
 - en: Local variables in a method
+  id: totrans-45
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 方法中的局部变量
 - en: Method arguments
+  id: totrans-46
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 方法参数
 - en: Object instance fields
+  id: totrans-47
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 对象实例字段
 - en: Static class fields
+  id: totrans-48
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 静态类字段
 - en: Arrays
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 数组
 - en: 'Basic idea: Store the flags for a variable near the variable itself.'
+  id: totrans-50
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 基本思想：将变量的标志存储在变量附近。
 - en: '**Q:** Why?'
+  id: totrans-51
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问：**为什么？'
 - en: '**A:** Preserves spatial locality---this hopefully improves caching behavior.'
+  id: totrans-52
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**答：**保留空间局部性---这有望改善缓存行为。'
 - en: For method arguments and local variables that live on the stack, allocate the
     taint flags immediately next to the variable.
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于生活在堆栈上的方法参数和局部变量，立即在变量旁边分配污点标志。
 - en: '*Example:*'
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: '*例子：*'
 - en: '[PRE2]'
+  id: totrans-55
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: 'So, given all of this, the basic idea in *TaintDroid* is simple: taint sensitive
     data as it flows through the system, and raise an alarm if that data tries to
     leave via the network!'
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，鉴于所有这些，*TaintDroid*中的基本思想很简单：当敏感数据通过系统流动时标记污点，并在数据试图通过网络离开时发出警报！
 - en: 'The authors find various ways that apps misbehave:'
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 作者发现应用程序的各种不当行为：
 - en: Sending location data to advertisers
+  id: totrans-58
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将位置数据发送给广告商
 - en: Sending a user's phone number to the app servers
+  id: totrans-59
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将用户的电话号码发送到应用服务器
 - en: '*TaintDroid*''s rules for information flow might lead to counterintuitive/interesting
     results. Imagine that an application implements its own linked list class.'
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: '*TaintDroid*的信息流规则可能导致反直觉/有趣的结果。想象一个应用程序实现自己的链表类。'
 - en: '[PRE3]'
+  id: totrans-61
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: Suppose that the application assigns tainted values to the "data" field. If
     we calculate the length of the list, is the length value tainted?
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设应用程序将受污染的值分配给“data”字段。如果我们计算列表的长度，长度值是否受污染？
 - en: 'Adding to a linked list involves:'
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 向链表添加元素涉及：
 - en: Allocating a `ListNode`
+  id: totrans-64
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 分配一个`ListNode`
 - en: Assigning to the `data` field
+  id: totrans-65
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 分配给`data`字段
 - en: Patching up `next` pointers
+  id: totrans-66
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修补`next`指针
 - en: Note that **Step 3** doesn't involve tainted data! So, "next" pointers are tainted,
     meaning that counting the number of elements in the list would not generate a
     tainted value for length.
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 请注意，**步骤 3**不涉及受污染的数据！因此，“next”指针是受污染的，这意味着计算列表中元素数量不会生成受污染的长度值。
 - en: What are the performance overheads of *TaintDroid*?
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: '*TaintDroid*的性能开销是多少？'
 - en: Additional memory to store taint tags.
+  id: totrans-69
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用于存储污点标记的额外内存。
 - en: Additional CPU cost to assign, propagate, check taint tags.
+  id: totrans-70
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 分配额外的 CPU 成本来分配、传播、检查污点标记。
 - en: 'Overheads seem to be moderate: ~3--5% memory overhead, 3--29% CPU overhead'
+  id: totrans-71
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 开销似乎适中：内存开销约为 3--5%，CPU 开销为 3--29%
 - en: 'However, on phones, users are very concerned about battery life: 29% less CPU
     performance may be tolerable, but 29% less battery life is bad.'
+  id: totrans-72
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然而，在手机上，用户非常关心电池寿命：29% 的 CPU 性能下降可能是可以接受的，但电池寿命下降 29% 是不好的。
 - en: Questions and answers
+  id: totrans-73
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 问题和答案
 - en: '**Q:** Why not track taint at the level of x86 instructions or ARM instructions?'
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: '**问：**为什么不在 x86 指令或 ARM 指令级别跟踪污点？'
 - en: '**A:** It''s too expensive, and there are too many false positives.'
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: '**答：**这太昂贵了，而且误报太多。'
 - en: '*Example:* If kernel data structures are improperly assigned taint, then the
     taint will improperly flow to user-mode processes. This results in taint explosion:
     it''s impossible to tell which state has *truly* been affected by sensitive data.'
+  id: totrans-76
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*例子:* 如果内核数据结构被错误地分配了污点，那么污点将错误地流向用户模式进程。这会导致污点爆炸：无法确定哪个状态*真正*受到敏感数据的影响。'
 - en: 'One way that this might happen is if the stack pointer or the break pointer
     are incorrectly tainted. Once this happens, taint rapidly explodes:'
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这可能发生的一种方式是如果堆栈指针或断点指针被错误地标记。一旦发生这种情况，污点会迅速扩散：
 - en: Local variable accesses are specified as offsets from the break pointer.
+  id: totrans-78
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 本地变量访问被指定为相对于断点指针的偏移量。
 - en: Stack instructions like `pop` use the stack pointer.
+  id: totrans-79
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`pop`等堆栈指令使用堆栈指针。'
 - en: '[Pointless Tainting? Evaluating the Practicality of Pointer Tainting](http://www.ssrg.nicta.com.au/publications/papers/Slowinska_Bos_09.pdf)'
+  id: totrans-80
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[毫无意义的污点？评估指针污点的实用性](http://www.ssrg.nicta.com.au/publications/papers/Slowinska_Bos_09.pdf)'
 - en: '**Q:** Taint tracking seems expensive---can''t we just examine inputs and outputs
     to look for values that are known to be sensitive?'
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q:** 污点跟踪似乎很昂贵---我们不能只检查输入和输出以查找已知敏感值吗？'
 - en: '**A:** This might work as a heuristic, but it''s easy for an adversary to get
     around it.'
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A:** 这可能作为一种启发式方法，但对于对手来说很容易绕过它。'
 - en: There are many ways to encode data, e.g., URL-quoting, binary versus text formats,
     etc.
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有许多编码数据的方式，例如，URL编码、二进制与文本格式等。
 - en: Implicit flows
+  id: totrans-84
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 隐式流
 - en: As described, taint tracking cannot detect *implicit flows*.
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 如描述的，污点跟踪无法检测*隐式流*。
 - en: Implicit flows happen when a tainted value affects another variable without
     directly assigning to that variable.
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 隐式流发生在一个受污染的值影响另一个变量而不直接分配给该变量时。
 - en: '[PRE4]'
+  id: totrans-87
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: Instead of assigning to `x`, we could try to leak information about the IMEI
     over the network!
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可以尝试通过网络泄露IMEI的信息，而不是分配给`x`！
 - en: Implicit flows often arise because of tainted values affecting control flow.
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 隐式流通常是由于受污染的值影响控制流而产生的。
 - en: Can try to catch implicit flows by assigning a taint tag to the PC, updating
     it with taint of branch test, and assigning PC taint to values inside if-else
     clauses, but this can lead to a lot of false positives.
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以尝试通过给程序计数器（PC）分配一个污点标记来捕捉隐式流，更新它与分支测试的污点，并将PC的污点分配给if-else子句内的值，但这可能会导致很多误报。
 - en: '*Example:*'
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: '*例子:*'
 - en: '[PRE5]'
+  id: totrans-92
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: Applications
+  id: totrans-93
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 应用程序
 - en: 'Interesting application of taint tracking: keeping track of data copies.'
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 污点跟踪的有趣应用：跟踪数据副本。
 - en: Often want to make sure sensitive data (keys, passwords) is erased promptly.
+  id: totrans-95
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通常希望确保敏感数据（密钥、密码）及时擦除。
 - en: If we're not worried about performance, we can use x86-level taint tracking
     to see how sensitive information flows through a machine. [Ref](http://www-cs-students.stanford.edu/~blp/taintbochs.pdf)
+  id: totrans-96
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们不担心性能，我们可以使用x86级别的污点跟踪来查看敏感信息如何在机器中流动。[参考](http://www-cs-students.stanford.edu/~blp/taintbochs.pdf)
 - en: 'Basic idea: Create an x86 simulator that interprets each x86 instruction in
     a full system (OS + applications).'
+  id: totrans-97
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 基本思想：创建一个x86模拟器，解释完整系统（操作系统+应用程序）中的每个x86指令。
 - en: 'You''ll find that software often keeps data for longer than necessary. For
     example, keystroke data stays around in:'
+  id: totrans-98
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您会发现软件通常会保存比必要时间更长的数据。例如，按键数据会保留在：
 - en: Keyboard device driver's buffers
+  id: totrans-99
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 键盘设备驱动程序的缓冲区
 - en: Kernel's random number generator
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核的随机数生成器
 - en: X server's event queue
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: X服务器的事件队列
 - en: Kernel socket/pipe buffers used to pass messages containing keystroke
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用于传递包含按键消息的消息的内核套接字/管道缓冲区
 - en: '`tty` buffers for terminal apps'
+  id: totrans-103
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 终端应用程序的`tty`缓冲区
 - en: etc...
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 等等...
 - en: Tightlip
+  id: totrans-105
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Tightlip
 - en: '*TaintDroid* detects leaks of sensitive data, but requires language support
     for the Java VM -- the VM must implement taint tags. Can we track sensitive information
     leaks without support from a managed runtime? What if we want to detect leaks
     in legacy C or C++ applications?'
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: '*TaintDroid*检测敏感数据泄漏，但需要Java VM的语言支持--VM必须实现污点标记。我们能否在没有受管运行时支持的情况下跟踪敏感信息泄漏？如果我们想要检测遗留的C或C++应用程序中的泄漏怎么办？'
 - en: 'One approach: use doppelganger processes as introduced by the [TightLip system](https://www.usenix.org/legacy/event/nsdi07/tech/full_papers/yumerefendi/yumerefendi.pdf)'
+  id: totrans-107
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一种方法：使用[TightLip系统](https://www.usenix.org/legacy/event/nsdi07/tech/full_papers/yumerefendi/yumerefendi.pdf)中引入的双重进程
 - en: '**Step 1**: Periodically, *Tightlip* runs a daemon which scans a user''s file
     system and looks for sensitive information like mail files, word processing documents,
     etc.'
+  id: totrans-108
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**步骤1**: 定期，*Tightlip*运行一个守护进程，扫描用户的文件系统，并查找类似邮件文件、文字处理文档等敏感信息。'
 - en: For each of these files, *Tightlip* generates a shadow version of the file.
     The shadow version is non-sensitive, and contains scrubbed data.
+  id: totrans-109
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于这些文件中的每一个，*Tightlip* 生成文件的影子版本。影子版本是非敏感的，并包含清洁后的数据。
 - en: '*Tightlip* associates each type of sensitive file with a specialized scrubber.
     *Example:* email scrubber overwrites to: and from: fields with an equivalent number
     of dummy characters.'
+  id: totrans-110
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*Tightlip* 将每种类型的敏感文件与专门的清洁器相关联。 *示例:* 电子邮件清洁器用等量的虚拟字符覆盖 to: 和 from: 字段。'
 - en: '**Step 2**: At some point later, a process starts executing. Initially, it
     touches no sensitive data. If it touches sensitive data, then *Tightlip* spawns
     a doppelganger process.'
+  id: totrans-111
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**第二步**：在稍后的某个时刻，一个进程开始执行。最初，它不接触任何敏感数据。如果它接触到敏感数据，那么 *Tightlip* 会生成一个复制者进程。'
 - en: The doppelganger is a sandboxed version of the original process.
+  id: totrans-112
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 复制者是原始进程的沙盒版本。
 - en: Inherits most state from the original process...
+  id: totrans-113
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 继承大部分状态从原始进程...
 - en: '...but reads the scrubbed data instead of sensitive data'
+  id: totrans-114
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '...但读取清洁后的数据而不是敏感数据'
 - en: '*Tightlip* lets the two processes run in parallel, and observes the system
     calls that the two processes make.'
+  id: totrans-115
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*Tightlip* 让两个进程并行运行，并观察这两个进程所做的系统调用。'
 - en: If the doppelganger makes the same system calls with the same arguments as the
     original process, then with high probability, the outputs do not depend on sensitive
     data.
+  id: totrans-116
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果复制者与原始进程做出相同的系统调用并带有相同的参数，那么很可能输出不依赖于敏感数据。
 - en: '**Step 3**: If the system calls diverge, and the doppelganger tries to make
     a network call, *Tightlip* flags a potential leak of sensitive data.'
+  id: totrans-117
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**第三步**：如果系统调用发散，复制者试图进行网络调用，*Tightlip* 将标记潜在的敏感数据泄漏。'
 - en: At this point, *Tightlip* or the user can terminate the process, fail the network
     write, or do something else.
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在这一点上，*Tightlip* 或用户可以终止进程，失败网络写入，或执行其他操作。
 - en: 'Nice things about *Tightlip*:'
+  id: totrans-119
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*Tightlip* 的优点：'
 - en: Works with legacy applications
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 适用于传统应用程序
 - en: Requires minor changes to standard OSes to compare order of system calls and
     their arguments
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要对标准操作系统进行轻微更改，以比较系统调用的顺序及其参数
 - en: Low overhead (basically, the overhead of running an additional process)
+  id: totrans-122
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 低开销（基本上是运行额外进程的开销）
 - en: Limitations of *Tightlip*
+  id: totrans-123
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*Tightlip* 的局限性'
 - en: Scrubbers are in the trusted computing base.
+  id: totrans-124
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 清洁器位于受信任的计算基础上。
 - en: They have to catch all instances of sensitive data.
+  id: totrans-125
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 他们必须捕捉所有敏感数据的实例。
 - en: They also have to generate reasonable dummy data -- otherwise, a doppelganger
     might crash on ill-formed inputs!
+  id: totrans-126
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 他们还必须生成合理的虚拟数据--否则，复制者可能会在格式不正确的输入上崩溃！
 - en: If a doppelganger reads sensitive data from multiple sources, and a system call
     divergence occurs, *Tightlip* can't tell why.
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果复制者从多个来源读取敏感数据，并且发生系统调用分歧，*Tightlip* 无法判断原因。
 - en: Decentralized information flow control
+  id: totrans-128
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 分散式信息流控制
 - en: '*TaintDroid* and *Tightlip* assume no assistance from the developer ...but
     what if developers were willng to explicitly add taint labels to their code?'
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: '*TaintDroid* 和 *Tightlip* 假设开发人员不提供任何帮助...但如果开发人员愿意在其代码中明确添加污点标签呢？'
 - en: '[PRE6]'
+  id: totrans-130
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: '*Input channels:* The read values get the label of the channel.'
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: '*输入通道:* 读取值获取通道的标签。'
 - en: '*Output channels:* Labels on the channel must match a label on the value being
     written.'
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: '*输出通道:* 通道上的标签必须与写入值上的标签匹配。'
 - en: Static (i.e., compile-time) checking can catch many bugs involving inappropriate
     data flows.
+  id: totrans-133
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 静态（即编译时）检查可以捕捉许多涉及不当数据流的错误。
 - en: Loosely speaking, labels are like strong types which the compiler can reason
     about.
+  id: totrans-134
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 粗略地说，标签就像编译器可以推理的强类型。
 - en: 'Static checks are much better than dynamic checks: runtime failures (or their
     absence) can be a covert channel!'
+  id: totrans-135
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 静态检查比动态检查要好得多：运行时失败（或其缺失）可能是一种隐蔽通道！
 - en: For more details, see the [Jif paper](http://pmg.csail.mit.edu/papers/iflow-sosp97.pdf)
+  id: totrans-136
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更多细节，请参阅[Jif paper](http://pmg.csail.mit.edu/papers/iflow-sosp97.pdf)

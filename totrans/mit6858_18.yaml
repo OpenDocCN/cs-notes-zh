@@ -1,1375 +1,1981 @@
 - en: Tor
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: Tor
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记是从2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的笔记中稍作修改的。'
 - en: What's the goal of the paper (or Tor)?
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 论文的目标是什么（或Tor的目标是什么）？
 - en: Anonymity for clients, which want to connect to servers on the internet.
+  id: totrans-3
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了客户端的匿名性，他们想要连接到互联网上的服务器。
 - en: Anonymity for servers, which want to service requests from users.
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于希望为用户提供服务的服务器的匿名性。
 - en: What is anonymity?
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是匿名性？
 - en: Adversary cannot tell which users are communicating with which servers.
+  id: totrans-6
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手无法确定哪些用户正在与哪些服务器通信。
 - en: Adversary (most likely) knows that users, servers are communicating via Tor.
+  id: totrans-7
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手（最有可能）知道用户，服务器是通过Tor进行通信的。
 - en: That is, Tor not designed to prevent adversary from finding Tor users.
+  id: totrans-8
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 换句话说，Tor并不是为了防止对手找到Tor用户而设计的。
 - en: How to achieve anonymity?
+  id: totrans-9
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 如何实现匿名性？
 - en: Must encrypt traffic to/from the person that wants to be anonymous.
+  id: totrans-10
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 必须加密要匿名的人的流量。
 - en: Otherwise, adversary looks at packets and figures out what's going on.
+  id: totrans-11
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 否则，对手会查看数据包并弄清楚发生了什么。
 - en: 'But encryption is not enough: could still trace where encrypted packets went.'
+  id: totrans-12
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但加密并不足够：仍然可以追踪加密数据包的去向。
 - en: Mix one user's traffic with traffic from other users (or "cover traffic").
+  id: totrans-13
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将一个用户的流量与其他用户的流量混合（或“掩盖流量”）。
 - en: Anonymity for one user requires having many other users like the first one.
+  id: totrans-14
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个用户的匿名性需要有许多其他像第一个用户一样的用户。
 - en: If all other users just run BitTorrent, then Wikipedia user is easy to spot.
+  id: totrans-15
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果所有其他用户只运行BitTorrent，那么维基百科用户很容易被发现。
 - en: If all other users use Firefox, then a Chrome user would be easy to spot.
+  id: totrans-16
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果所有其他用户使用Firefox，那么Chrome用户很容易被发现。
 - en: '...'
+  id: totrans-17
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '...'
 - en: Adversary would not be able to tell which user initiated what connections.
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手将无法确定哪个用户发起了什么连接。
 - en: The mixing component must change the packets (e.g., encrypt/decrypt).
+  id: totrans-19
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 混合组件必须更改数据包（例如，加密/解密）。
 - en: Otherwise, can look for where the exact same packet shows up later.
+  id: totrans-20
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 否则，可以查找相同数据包稍后出现的位置。
 - en: 'So, approach: relay traffic via intermediary that encrypts/decrypts.'
+  id: totrans-21
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，方法是：通过加密/解密的中间人中继流量。
 - en: Why do we need more than one node?
+  id: totrans-22
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 为什么我们需要多个节点？
 - en: 'Scalability: handle more traffic than a single node.'
+  id: totrans-23
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可扩展性：处理比单个节点更多的流量。
 - en: 'Compromise: attacker learns info about direct clients of compromised node.'
+  id: totrans-24
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 妥协：攻击者了解有关受损节点的直接客户端的信息。
 - en: With many indep. nodes, this affects only a small fraction of traffic.
+  id: totrans-25
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有许多独立节点，这只影响了一小部分流量。
 - en: With onion routing, attacker must compromise all nodes in the chain.
+  id: totrans-26
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用洋葱路由，攻击者必须妥协链中的所有节点。
 - en: 'Traffic analysis: attacker can correlate incoming / outgoing traffic.'
+  id: totrans-27
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 流量分析：攻击者可以相关联传入/传出的流量。
 - en: Can look at timing between packets, or volume of packets.
+  id: totrans-28
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以查看数据包之间的时间间隔或数据包的数量。
 - en: Chaining makes timing/volume analysis attack more difficult to mount.
+  id: totrans-29
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 链接使时间/数据量分析攻击更难实施。
 - en: Can attacker still succeed?
+  id: totrans-30
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者仍然能够成功吗？
 - en: Yes, if they observe or compromise enough nodes.
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是的，如果他们观察或者妥协足够多的节点。
 - en: For instance, may suffice to observe first and last node.
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，可能足以观察第一个和最后一个节点。
 - en: Attacker can also inject timing info (by delaying packets) to analyze.
+  id: totrans-33
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者还可以注入时间信息（通过延迟数据包）进行分析。
 - en: 'Main idea: onion routing'
+  id: totrans-34
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 主要思想：洋葱路由
 - en: Mesh of onion routers (ORs) in the network.
+  id: totrans-35
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 网络中的洋葱路由器（ORs）的网格。
 - en: 'Assumption: client knows public keys of all ORs.'
+  id: totrans-36
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设：客户端知道所有ORs的公钥。
 - en: Client picks some path through this network.
+  id: totrans-37
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端选择通过这个网络的某条路径。
 - en: 'Naive strawman of onion routing (not quite Tor):'
+  id: totrans-38
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 洋葱路由的天真草人（不完全是Tor）：
 - en: Client encrypts message in public key of each OR in path in turn.
+  id: totrans-39
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端依次在路径中的每个OR的公钥中加密消息。
 - en: Send message to first OR in path, which decrypts & relays, and so on.
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将消息发送到路径中的第一个OR，该OR解密并中继，依此类推。
 - en: '"Exit node" (last OR in path) sends the data out into the real network.'
+  id: totrans-41
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “出口节点”（路径中的最后一个OR）将数据发送到真实网络中。
 - en: Why is this a good design?
+  id: totrans-42
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么这是一个好的设计？
 - en: Each OR knows previous & next hop, not ultimate source or destination.
+  id: totrans-43
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个OR都知道前一个和下一个跳跃，而不知道最终源或目的地。
 - en: With two ORs, compromising a single OR does not break anonymity.
+  id: totrans-44
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过两个ORs，妥协一个OR并不会破坏匿名性。
 - en: At what level should we relay things?
+  id: totrans-45
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 在哪个级别应该中继事物？
 - en: Could do any level -- IP packets, TCP connections, application-level (HTTP)
+  id: totrans-46
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以在任何级别进行--IP数据包，TCP连接，应用级别（HTTP）
 - en: What's the advantage / disadvantage?
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势/劣势是什么？
 - en: 'Lower-level (IP): more general, fewer app. changes, works with more apps.'
+  id: totrans-48
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 低级别（IP）：更一般，更少的应用程序更改，适用于更多应用程序。
 - en: 'Higher-level (TCP, HTTP): more efficient (overhead for a single TCP frame,
     rather than overhead for multiple IP frames that store a single TCP frame), more
     anonymous.'
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更高级别（TCP，HTTP）：更高效（单个TCP帧的开销，而不是存储单个TCP帧的多个IP帧的开销），更匿名。
 - en: What does Tor do?
+  id: totrans-50
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor做了什么？
 - en: TCP-level relaying, using SOCKS (intercepts libc calls).
+  id: totrans-51
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用SOCKS进行TCP级中继，拦截libc调用。
 - en: 'Examples of efficiency: no need for TCP flow-control, Tor does re-xmit'
+  id: totrans-52
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 效率的例子：不需要TCP流量控制，Tor进行重传
 - en: 'Examples of lost generality: UDP doesn''t work, can''t traceroute, ..'
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 丢失通用性的例子：UDP无法工作，无法进行路由跟踪，..
 - en: How does DNS work with Tor, if no UDP support?
+  id: totrans-54
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor如何处理DNS，如果不支持UDP？
 - en: SOCKS can capture the destination's hostname, not just IP address
+  id: totrans-55
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: SOCKS可以捕获目的地的主机名，而不仅仅是IP地址
 - en: Exit node performs DNS lookup, establishes TCP connection
+  id: totrans-56
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 出口节点执行DNS查找，建立TCP连接
 - en: Examples of anonymity that's lost at lower layers?
+  id: totrans-57
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 丢失在较低层的匿名性的例子？
 - en: If we did IP, would leak lots of TCP info (seq#, timestamp)
+  id: totrans-58
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们使用IP，将泄漏大量TCP信息（序列号，时间戳）
 - en: If we did TCP, would leak all kinds of HTTP headers and cookies
+  id: totrans-59
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们使用TCP，将泄漏各种HTTP头和cookie。
 - en: If we did HTTP, can violate anonymity via Javascript, Flash, ..
+  id: totrans-60
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们使用HTTP，可以通过Javascript，Flash等违反匿名性。
 - en: Lots of identifiable features in Javascript environment.
+  id: totrans-61
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Javascript环境中有许多可识别的特征。
 - en: Browser version, history sniffing, local network addrs/servers..
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 浏览器版本，历史嗅探，本地网络地址/服务器..
 - en: '"Protocol normalization": fix all degrees of freedom in higher protocol.'
+  id: totrans-63
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “协议规范化”：在更高级别协议中修复所有自由度。
 - en: Hard to do in practice; app-specific proxies are useful (e.g., Privoxy).
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在实践中很难做到；特定于应用程序的代理很有用（例如，Privoxy）。
 - en: 'Demo of browser "identification": https://panopticlick.eff.org/'
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 浏览器“识别”的演示：https://panopticlick.eff.org/
 - en: Tor design
+  id: totrans-66
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Tor设计
 - en: 'Mesh of ORs: every OR connected via SSL/TLS to every other OR.'
+  id: totrans-67
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OR的网格：每个OR通过SSL/TLS连接到其他每个OR。
 - en: Don't need CA-signed SSL/TLS certs.
+  id: totrans-68
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不需要CA签名的SSL/TLS证书。
 - en: Tor has its own public key checking plan using directory servers.
+  id: totrans-69
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor有自己的公钥检查计划，使用目录服务器。
 - en: 'ORs mostly run by volunteers: e.g., MIT runs several.'
+  id: totrans-70
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OR主要由志愿者运行：例如，MIT运行几个。
 - en: End-users run an onion proxy (OP) that implements SOCKS.
+  id: totrans-71
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 终端用户运行实现SOCKS的洋葱代理（OP）。
 - en: 'OR has two public keys: identity key and onion key.'
+  id: totrans-72
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OR有两个公钥：身份密钥和洋葱密钥。
 - en: Identity key registered with directory, signs OR state.
+  id: totrans-73
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 身份密钥在目录中注册，签署OR状态。
 - en: Onion key used by OPs to connect to ORs, build circuits.
+  id: totrans-74
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Onion密钥由OP用于连接OR，建立电路。
 - en: Client downloads list of ORs from directory.
+  id: totrans-75
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端从目录下载OR列表。
 - en: Chooses a chain of ORs to form circuit, contacts each OR in turn.
+  id: totrans-76
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 选择一系列OR形成电路，依次联系每个OR。
 - en: Clients building circuits is expensive. - Why do it this way?
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端建立电路是昂贵的。- 为什么要这样做？
 - en: Any single server might be compromised, can't trust it.
+  id: totrans-78
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何单个服务器可能被 compromise，无法信任它。
 - en: Unavoidable to trust the client machine, however.
+  id: totrans-79
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 无法避免信任客户端机器。
 - en: Why do we need an onion key in addition to an identity key?
+  id: totrans-80
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么我们需要洋葱密钥以及身份密钥？
 - en: Might be able to protect identity key from long-term compromises.
+  id: totrans-81
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能能够保护身份密钥免受长期损害。
 - en: Each OR uses identity key to sign its current onion key.
+  id: totrans-82
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个OR使用身份密钥签署其当前的洋葱密钥。
 - en: Why does Tor need a directory?
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor为什么需要目录？
 - en: Someone needs to approve ORs.
+  id: totrans-84
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要有人批准OR。
 - en: Otherwise attacker can create many ORs, monitor traffic.
+  id: totrans-85
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 否则攻击者可以创建许多OR，监视流量。
 - en: Does having a directory compromise anonymity?
+  id: totrans-86
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 目录是否会损害匿名性？
 - en: No, don't need to query it online.
+  id: totrans-87
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不，不需要在线查询。
 - en: What if a directory is compromised?
+  id: totrans-88
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果一个目录被 compromise 了怎么办？
 - en: Clients require majority of directories to agree.
+  id: totrans-89
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端需要大多数目录同意。
 - en: What if many directories are compromised?
+  id: totrans-90
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果许多目录被 compromise 了怎么办？
 - en: Attacker can inject many ORs, monitor traffic.
+  id: totrans-91
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者可以注入许多OR，监视流量。
 - en: What if directories are out-of-sync?
+  id: totrans-92
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果目录不同步怎么办？
 - en: Attacker may narrow down user's identity based on dir info.
+  id: totrans-93
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者可能根据目录信息缩小用户身份范围。
 - en: User that saw one set of directory messages will use certain ORs.
+  id: totrans-94
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 看到一组目录消息的用户将使用特定的OR。
 - en: 'Terminology: circuits and streams.'
+  id: totrans-95
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 术语：电路和流。
 - en: 'Circuit: a path through a list of ORs that a client builds up.'
+  id: totrans-96
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 电路：客户端建立的通过OR列表的路径。
 - en: Circuits exist for some period of time (perhaps a few minutes).
+  id: totrans-97
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 电路存在一段时间（也许几分钟）。
 - en: New circuits opened periodically to foil attacks.
+  id: totrans-98
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 定期打开新的电路以防止攻击。
 - en: Stream is effectively a TCP connection.
+  id: totrans-99
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 流实际上是一个TCP连接。
 - en: Many streams run over the same circuit (each with separate stream ID).
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 许多流在同一电路上运行（每个具有单独的流ID）。
 - en: 'Streams are an important optimization: no need to rebuild circuit.'
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 流是一个重要的优化：无需重建电路。
 - en: Why does Tor need circuits?
+  id: totrans-102
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor为什么需要电路？
 - en: What goes wrong if we have long-lived circuits?
+  id: totrans-103
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果电路存在时间很长会出现什么问题？
 - en: Adversary may correlate multiple streams in a single circuit.
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可能将多个流关联到一个电路中。
 - en: Tie a single user's connections to different sites, break anonymity.
+  id: totrans-105
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将单个用户的连接与不同站点联系起来，破坏匿名性。
 - en: Tor circuits
+  id: totrans-106
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Tor电路
 - en: Circuit is a sequence of ORs, along with shared (symmetric AES) keys.
+  id: totrans-107
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 电路是OR序列，以及共享的（对称AES）密钥。
 - en: ORs `c_1, c_2, .., c_n`
+  id: totrans-108
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ORs `c_1, c_2, .., c_n`
 - en: Keys `k_1, k_2, .., k_n`
+  id: totrans-109
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 键 `k_1, k_2, .., k_n`
 - en: 'Cell format:'
+  id: totrans-110
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 单元格格式：
 - en: '`+---------+---------------+-----------+`'
+  id: totrans-111
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`+---------+---------------+-----------+`'
 - en: '`| Circuit | Control/Relay | - DATA |`'
+  id: totrans-112
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`| 电路 | 控制/中继 | - 数据 |`'
 - en: '`+---------+---------------+-----------+`'
+  id: totrans-113
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`+---------+---------------+-----------+`'
 - en: '`2 bytes + 1 byte + 509 bytes`'
+  id: totrans-114
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`2字节 + 1字节 + 509字节`'
 - en: Think of the "Circuit" and "Control/Relay" fields as link-layer headers.
+  id: totrans-115
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将"Circuit"和"Control/Relay"字段视为链路层头部。
 - en: Circuit IDs are per-link (between pairs of ORs).
+  id: totrans-116
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 电路ID是每对OR之间的。
 - en: Used to multiplex many circuits on the same TLS connection between ORs.
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用于在OR之间的同一TLS连接上多路复用许多电路。
 - en: 'Control messages are "link-local": sent only to an immediate neighbor.'
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 控制消息是"链路本地的"：仅发送给直接邻居。
 - en: 'Relay messages are "end-to-end": relayed along the circuit.'
+  id: totrans-119
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 中继消息是"端到端的"：沿着电路中继。
 - en: Why is all traffic in fixed-size cells?
+  id: totrans-120
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么所有流量都是固定大小的单元格？
 - en: Makes traffic analysis harder.
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使流量分析更加困难。
 - en: What are control commands?
+  id: totrans-122
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 控制命令是什么？
 - en: 'padding: keepalive or link padding.'
+  id: totrans-123
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 填充：保持活动或链路填充。
 - en: 'create/created/destroy: creating and destroying circuits.'
+  id: totrans-124
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: create/created/destroy：创建和销毁电路。
 - en: What are relay commands (what's in the DATA)?
+  id: totrans-125
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 中继数据包中有哪些中继命令（DATA中有什么）？
 - en: 'If the relay packet is destined to the current node:'
+  id: totrans-126
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果中继数据包目标是当前节点：
 - en: '`+----------+--------+-----+-----+-----------+`'
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`+----------+--------+-----+-----+-----------+`'
 - en: '`| StreamID | Digest | Len | CMD | RelayData |`'
+  id: totrans-128
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`| StreamID | Digest | Len | CMD | RelayData |`'
 - en: '`+----------+--------+-----+-----+-----------+`'
+  id: totrans-129
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`+----------+--------+-----+-----+-----------+`'
 - en: '`2 bytes + 6 bytes+ 2 + 1 + 498 bytes`'
+  id: totrans-130
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`2字节 + 6字节+ 2 + 1 + 498字节`'
 - en: 'If the relay packet is destined for another node:'
+  id: totrans-131
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果中继数据包目标是另一个节点：
 - en: '`+-------------------------------------------+`'
+  id: totrans-132
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`+-------------------------------------------+`'
 - en: '`| Encrypted, opaque data + + + + + |`'
+  id: totrans-133
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`| 加密的、不透明的数据 + + + + + |`'
 - en: '`+-------------------------------------------+`'
+  id: totrans-134
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`+-------------------------------------------+`'
 - en: '`+ + + + 509 bytes`'
+  id: totrans-135
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`+ + + + 509 字节`'
 - en: CMD field for TCP data is "relay data".
+  id: totrans-136
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: TCP数据的CMD字段是"中继数据"。
 - en: Other values like "relay begin", .. used to set up streams.
+  id: totrans-137
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 其他值如"relay begin"等用于建立流。
 - en: How does the OP send data via circuit?
+  id: totrans-138
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OP如何通过电路发送数据？
 - en: Compose relay packet as above (not encrypted yet).
+  id: totrans-139
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如上所述组成中继数据包（尚未加密）。
 - en: Compute a valid checksum (digest).
+  id: totrans-140
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 计算有效的校验和（摘要）。
 - en: Digest is based on the target OR that should decrypt packet.
+  id: totrans-141
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 摘要基于应解密数据包的目标OR。
 - en: Hash is taken over some function of key + all msgs exchanged with that OR.
+  id: totrans-142
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 哈希是通过某个键的函数和与该OR交换的所有消息进行的。
 - en: Prevents replay attacks and active attacks
+  id: totrans-143
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防止重放攻击和主动攻击
 - en: First 2 bytes of digest are zeroes, other 4 bytes come from the hash.
+  id: totrans-144
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 摘要的前2个字节为零，其他4个字节来自哈希。
 - en: Encrypt with `AES(k_n)`, then `AES(k_{n-1}), .., AES(k_1).`
+  id: totrans-145
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用`AES(k_n)`加密，然后使用`AES(k_{n-1}), .., AES(k_1)`加密。
 - en: Send encrypted cell to the first OR (`c_1`).
+  id: totrans-146
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 发送加密单元格到第一个OR（`c_1`）。
 - en: (Effectively reverse process for OP receiving data via circuit.)
+  id: totrans-147
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （OP通过电路接收数据的逆过程。）
 - en: What does an OR do with relay packets?
+  id: totrans-148
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OR如何处理中继数据包？
 - en: If it's coming from OP's direction, decrypt and forward away from OP
+  id: totrans-149
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果来自OP的方向，解密并远离OP转发。
 - en: If it's coming not from OP's direction, encrypt and forward towards OP
+  id: totrans-150
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果不是来自OP的方向，加密并转发至OP
 - en: How does an OR know if a relay packet is destined to it or not?
+  id: totrans-151
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OR如何知道中继数据包是否适用于它？
 - en: 'Verify checksum: if matches, most likely meant for the current OR.'
+  id: totrans-152
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 验证校验和：如果匹配，则很可能适用于当前OR。
 - en: 'Optimization: first 2 bytes of digest should be zero.'
+  id: totrans-153
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优化：摘要的前2个字节应为零。
 - en: 'If the first two bytes are non-zero, can skip hashing: not our packet.'
+  id: totrans-154
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果前两个字节不为零，则可以跳过哈希：不是我们的数据包。
 - en: If checksum does not match, not meant for this OR, keep relaying.
+  id: totrans-155
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果校验和不匹配，则不适用于此OR，继续中继。
 - en: 'Nice properties:'
+  id: totrans-156
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 美好的特性：
 - en: Packet size independent of path length.
+  id: totrans-157
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 数据包大小与路径长度无关。
 - en: Only the last OR knows the destination.
+  id: totrans-158
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有最后一个OR知道目的地。
 - en: How to establish a new stream?
+  id: totrans-159
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 如何建立一个新的流？
 - en: OP sends a "relay begin" via circuit. - Contains target hostname, port.
+  id: totrans-160
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OP通过电路发送"relay begin"。- 包含目标主机名、端口。
 - en: Who picks stream ID? - OP can choose arbitrary stream ID in its circuit.
+  id: totrans-161
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 谁选择流ID？- OP可以在其电路中选择任意流ID。
 - en: What is the "leaky pipe" topology?
+  id: totrans-162
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 什么是"漏水管"拓扑？
 - en: OP can send relay messages to any OR along its circuit (not just the last OR).
+  id: totrans-163
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OP可以向其电路中的任何OR发送中继消息（不仅仅是最后一个OR）。
 - en: Can build stream (i.e., TCP connection) via any OR, to foil traffic analysis.
+  id: totrans-164
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以通过任何OR构建流（即，TCP连接），以防止流量分析。
 - en: Initializing circuits
+  id: totrans-165
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 初始化电路
 - en: OP picks the sequence of ORs to use for its circuit.
+  id: totrans-166
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OP选择要用于其电路的OR序列。
 - en: Why have the OP do this? - Resistance to other ORs "diverting" the circuit.
+  id: totrans-167
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么要让OP这样做？- 抵抗其他OR“转移”电路。
 - en: Connect to first OR, issue "create" operation to create circuit.
+  id: totrans-168
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 连接到第一个OR，发出“创建”操作以创建电路。
 - en: Create includes a DH key-exchange message.
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 创建包括DH密钥交换消息。
 - en: Created response includes DH key-exchange reply.
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 创建响应包括DH密钥交换回复。
 - en: 'Key exchange protocol:'
+  id: totrans-171
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密钥交换协议：
 - en: '[ OP, OR agree on prime p, generator g ]'
+  id: totrans-172
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[OP，OR同意素数p，生成器g]'
 - en: OP chooses random x.
+  id: totrans-173
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OP选择随机x。
 - en: OP sends `E_{PK_OR}(g^x)`.
+  id: totrans-174
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OP发送`E_{PK_OR}(g^x)`。
 - en: OR chooses random y.
+  id: totrans-175
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OR选择随机y。
 - en: OR computes `K=g^xy`.
+  id: totrans-176
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OR计算`K=g^xy`。
 - en: OR replies with `g^y, H(K || "handshake")`.
+  id: totrans-177
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OR回复`g^y, H(K || "handshake")`。
 - en: OP computes `K=g^xy`.
+  id: totrans-178
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OP计算`K=g^xy`。
 - en: How do we authenticate the parties here?
+  id: totrans-179
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们如何在这里验证各方身份？
 - en: First DH message encrypted with OR's onion key.
+  id: totrans-180
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 第一个DH消息使用OR的洋葱密钥加密。
 - en: Hash of key in DH response proves to client that correct OR decrypted msg.
+  id: totrans-181
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DH响应中密钥的哈希证明向客户端证明正确的OR解密了消息。
 - en: Server does not authenticate client -- anonymity!
+  id: totrans-182
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器不验证客户端-匿名性！
 - en: 'Forward secrecy: what? how?'
+  id: totrans-183
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 前向保密：是什么？如何实现？
 - en: 'Key freshness: why? how?'
+  id: totrans-184
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密钥新鲜度：为什么？如何实现？
 - en: Who chooses the circuit ID?
+  id: totrans-185
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 谁选择电路ID？
 - en: The client end of the TLS connection (not the overall circuit's OP).
+  id: totrans-186
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: TLS连接的客户端端点（而不是整个电路的OP）。
 - en: Each circuit has a different circuit ID for each link it traverses.
+  id: totrans-187
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个电路对于其穿越的每个链接具有不同的电路ID。
 - en: What's in the DATA for Control packets?
+  id: totrans-188
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 控制数据包中的数据是什么？
 - en: Control operations (create, destroy) or responses (e.g. created).
+  id: totrans-189
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 控制操作（创建，销毁）或响应（例如，已创建）。
 - en: Arguments (e.g., DH key-exchange data).
+  id: totrans-190
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参数（例如，DH密钥交换数据）。
 - en: For each subsequent OR, OP sends a "relay extend" message via circuit.
+  id: totrans-191
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于每个后续OR，OP通过电路发送“中继扩展”消息。
 - en: Include the same DH key-exchange message in the "relay extend" cell.
+  id: totrans-192
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在“中继扩展”单元中包含相同的DH密钥交换消息。
 - en: At the end of circuit, "relay extend" transforms into "create".
+  id: totrans-193
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在电路结束时，“中继扩展”转变为“创建”。
 - en: Client ends up with shared (symmetric AES) key for each OR in circuit.
+  id: totrans-194
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端最终获得每个电路中每个OR的共享（对称AES）密钥。
 - en: Why does Tor have separate control cells vs relay cells?
+  id: totrans-195
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor为什么有单独的控制单元和中继单元？
 - en: Ensures cells are always fixed size.
+  id: totrans-196
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 确保单元始终具有固定大小。
 - en: Last OR in the old circuit needs to know the new OR & circuit IDs.
+  id: totrans-197
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 旧电路中的最后一个OR需要知道新OR和电路ID。
 - en: What state does each OR keep for each circuit that passes through it?
+  id: totrans-198
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 每个通过OR的电路保留哪些状态？
 - en: Circuit ID and neighbor OR for two directions in the circuit (to/from OP).
+  id: totrans-199
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 电路中两个方向（从OP到OR）的电路ID和相邻OR。
 - en: Shared key with OP for this circuit and this OR.
+  id: totrans-200
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与此电路和此OR的OP共享密钥。
 - en: SHA-1 state for each circuit.
+  id: totrans-201
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个电路的SHA-1状态。
 - en: Can we avoid storing all of this state in the network?
+  id: totrans-202
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 我们能否避免在网络中存储所有这些状态？
 - en: Not without a variable-length path descriptor in each cell.
+  id: totrans-203
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有每个单元中的可变长度路径描述符。
 - en: Exit node would likewise need a path descriptor to know how to send back.
+  id: totrans-204
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 出口节点同样需要路径描述符才能知道如何发送回去。
 - en: Intermediate nodes would need to perform public-key crypto (expensive).
+  id: totrans-205
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 中间节点需要执行公钥加密（昂贵）。
 - en: Why does Tor need exit policies?
+  id: totrans-206
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Tor为什么需要出口策略？
 - en: Preventing abuse (e.g., anonymously sending spam).
+  id: totrans-207
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防止滥用（例如，匿名发送垃圾邮件）。
 - en: Exit policies similar to firewall rules (e.g., cannot connect to port 25).
+  id: totrans-208
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 出口策略类似于防火墙规则（例如，不能连接到端口25）。
 - en: Each exit node checks the exit policy when new connection opened.
+  id: totrans-209
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个出口节点在打开新连接时检查出口策略。
 - en: Why publish exit policy in directory, along with other node info?
+  id: totrans-210
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么在目录中发布出口策略，以及其他节点信息？
 - en: Not used for enforcement.
+  id: totrans-211
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不用于强制执行。
 - en: OP needs to know what exit nodes are likely to work.
+  id: totrans-212
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OP需要知道哪些出口节点可能有效。
 - en: What if Tor didn't do integrity checking?
+  id: totrans-213
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 如果Tor不进行完整性检查会怎样？
 - en: Need integrity to prevent a tagging attack.
+  id: totrans-214
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要完整性以防止标记攻击。
 - en: Attacker compromises internal node, corrupts data packets.
+  id: totrans-215
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者入侵内部节点，损坏数据包。
 - en: Corrupted packets will eventually get sent out, can watch where they go.
+  id: totrans-216
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 损坏的数据包最终会被发送出去，可以观察它们的去向。
 - en: How does Tor prevent replays?
+  id: totrans-217
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Tor如何防止重放攻击？
 - en: Each checksum is actually checksum of all previous cells between OP & OR.
+  id: totrans-218
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个校验和实际上是OP和OR之间所有先前单元的校验和。
 - en: Checksum for same data sent again would be different.
+  id: totrans-219
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 再次发送相同数据的校验和将不同。
 - en: Works well because underlying transport is reliable (SSL/TLS over TCP).
+  id: totrans-220
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 运行良好，因为底层传输是可靠的（SSL/TLS在TCP上）。
 - en: Anonymous services
+  id: totrans-221
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 匿名服务
 - en: Hidden services named by public keys (pseudo-DNS name "publickey.onion").
+  id: totrans-222
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 隐藏服务由公钥命名（伪DNS名称“publickey.onion”）。
 - en: Why the split between introduction and rendezvous point?
+  id: totrans-223
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么要在介绍点和会面点之间分开？
 - en: Avoid placing traffic load on introduction points.
+  id: totrans-224
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 避免在介绍点上放置流量负载。
 - en: Avoid introduction point transferring known-illegal data.
+  id: totrans-225
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 避免介绍点传输已知非法数据。
 - en: Split prevents both problems.
+  id: totrans-226
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 分割可以防止这两个问题。
 - en: Bob (service) has an introduction point (IP).
+  id: totrans-227
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Bob（服务）有一个介绍点（IP）。
 - en: Alice chooses a rendezvous point (RP), tells Bob's IP about RP.
+  id: totrans-228
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Alice选择一个会面点（RP），告诉Bob的IP关于RP。
 - en: Introduction point does not relay data.
+  id: totrans-229
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 介绍点不中继数据。
 - en: Rendezvous point doesn't know what data it's relaying
+  id: totrans-230
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 会面点不知道它正在中继的数据是什么
 - en: Why does Bob connect back to Alice?
+  id: totrans-231
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么Bob要连接回Alice？
 - en: Admission control, spread load over many rendezvous points.
+  id: totrans-232
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 准入控制，将负载分散到许多会面点。
 - en: What's the rendezvous cookie? - Lets Bob prove to Alice's RP that it's Bob.
+  id: totrans-233
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是会面点cookie？-让Bob向Alice的RP证明它是Bob。
 - en: What's the authorization cookie?
+  id: totrans-234
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是授权cookie？
 - en: Something that might compel Bob to reply, when he otherwise wouldn't.
+  id: totrans-235
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些可能会促使Bob回复的东西，否则他不会回复。
 - en: Maybe a secret word most people don't know.
+  id: totrans-236
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 或许是大多数人不知道的秘密词语。
 - en: Limits DoS attacks on Bob's server (can just send many cookies).
+  id: totrans-237
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 限制对Bob服务器的DoS攻击（只需发送许多cookie）。
 - en: 'Stored in hostname: cookie.pubkey.onion.'
+  id: totrans-238
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 存储在主机名中：cookie.pubkey.onion。
 - en: 'End state: two circuits to the RP, with a stream connected between them.'
+  id: totrans-239
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 最终状态：两个电路连接到RP，之间有一个流连接。
 - en: RP takes relay cells from one circuit's stream and
+  id: totrans-240
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: RP从一个电路的流中获取中继单元，并
 - en: sends them on a stream in the other circuit.
+  id: totrans-241
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将它们发送到另一个电路中的流中。
 - en: Bridged data is encrypted using key shared between Alice & Bob (DH).
+  id: totrans-242
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用Alice和Bob之间共享的密钥（DH）加密桥接数据。
 - en: Each can control their own level of anonymity.
+  id: totrans-243
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个人都可以控制自己的匿名级别。
 - en: Neither knows the full path of the other circuit.
+  id: totrans-244
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 两个电路的完整路径都不知道。
 - en: Potential pitfalls when using Tor?
+  id: totrans-245
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 使用Tor时可能会遇到的潜在问题？
 - en: Application-level leaks (Javascript, HTTP headers, DNS, ..)
+  id: totrans-246
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用层泄漏（Javascript，HTTP头，DNS，..）
 - en: Use an app-level proxy (e.g., Privoxy strips many HTTP headers).
+  id: totrans-247
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用应用级代理（例如，Privoxy剥离许多HTTP头）。
 - en: Fingerprinting based on Tor client behavior (how often new circuit opened).
+  id: totrans-248
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 基于Tor客户端行为的指纹识别（新电路打开的频率）。
 - en: Timing/volume analysis (partial defense is to run your own Tor OR).
+  id: totrans-249
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 时间/量分析（部分防御是运行自己的Tor OR）。
 - en: 'Fingerprinting web sites: number of requests & file sizes of popular sites.'
+  id: totrans-250
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对网站进行指纹识别：流行网站的请求次数和文件大小。
 - en: Quantization from fixed-size cells helps a bit.
+  id: totrans-251
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 固定大小单元的量化有所帮助。
 - en: 'Malicious ORs: join network, advertise lots of bandwidth, open exit policy.'
+  id: totrans-252
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 恶意OR：加入网络，广告大量带宽，开放出口政策。
 - en: Benefits / risks of running an OR?
+  id: totrans-253
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 运行OR的好处/风险？
 - en: '**Benefits:**'
+  id: totrans-254
   prefs: []
   type: TYPE_NORMAL
+  zh: '**好处：**'
 - en: more anonymity
+  id: totrans-255
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更多的匿名性
 - en: '**Risks:**'
+  id: totrans-256
   prefs: []
   type: TYPE_NORMAL
+  zh: '**风险：**'
 - en: resource use
+  id: totrans-257
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 资源使用
 - en: online attacks (DoS, break-ins, ..)
+  id: totrans-258
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在线攻击（DoS，入侵，..）
 - en: offline attacks (e.g., machine seized by law enforcement)
+  id: totrans-259
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 离线攻击（例如，机器被执法部门扣押）
 - en: How hard is it to block Tor?
+  id: totrans-260
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 阻止Tor有多难？
 - en: Find list of OR IPs from directory, block all traffic to them.
+  id: totrans-261
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从目录中找到OR IP列表，阻止所有流量到它们。
 - en: How to defend against such an attack?
+  id: totrans-262
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何防御这种攻击？
 - en: Reveal different ORs to different clients?
+  id: totrans-263
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 向不同的客户端透露不同的OR？
 - en: Allows for client fingerprinting based on ORs used.
+  id: totrans-264
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 允许基于使用的OR对客户端进行指纹识别。
 - en: Maintain some unlisted ORs?
+  id: totrans-265
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 保持一些未列出的OR？
 - en: Want to use unlisted ORs only as the first hop, to avoid fingerprinting.
+  id: totrans-266
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只将未列出的OR用作第一跳，以避免指纹识别。
 - en: Tor has notion of "bridge" node, which is an unlisted OR.
+  id: totrans-267
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor有“桥接”节点的概念，这是一个未列出的OR。
 - en: How to find these unlisted "bridge" ORs?
+  id: totrans-268
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何找到这些未列出的“桥接”OR？
 - en: Want legitimate user to find them, but not let adversary enumerate them.
+  id: totrans-269
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 希望合法用户找到它们，但不让对手枚举它们。
 - en: 'Approach taken by Tor: special bridge directory.'
+  id: totrans-270
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor采取的方法：特殊的桥接目录。
 - en: Reveal 3 bridges to each IP (via HTTP) or email addr (via email).
+  id: totrans-271
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 向每个IP（通过HTTP）或电子邮件地址（通过电子邮件）透露3个桥接。
 - en: Reveal new bridges to same client address only after 24 hours.
+  id: totrans-272
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 仅在24小时后向相同客户端地址透露新的桥接。
 - en: Can rate-limit by IP, find attempts to enumerate bridge database, etc.
+  id: totrans-273
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以按IP限制速率，找到尝试枚举桥接数据库的尝试等。
 - en: For email, easier for adversary to create fake identities (email addrs).
+  id: totrans-274
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于电子邮件，对手更容易创建虚假身份（电子邮件地址）。
 - en: Tor trusts 3 mail providers to rate-limit signup (gmail, yahoo, mit).
+  id: totrans-275
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Tor信任3个邮件提供商来限制注册（gmail，yahoo，mit）。
 - en: Would you use Tor? What applications is it good for?
+  id: totrans-276
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 你会使用Tor吗？它适用于哪些应用程序？
 - en: Might be too slow to use for all traffic (high latency).
+  id: totrans-277
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能对所有流量使用速度太慢（高延迟）。
 - en: But unfortunately that means only sensitive traffic would go via Tor.
+  id: totrans-278
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但不幸的是，这意味着只有敏感流量会通过Tor传输。
 - en: Plausible attacks exist, so not great against very powerful adversaries.
+  id: totrans-279
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能存在可信攻击，因此对抗非常强大的对手不是很好。
 - en: Maybe a good way to avoid denial-of-service attacks (i.e., offload to Tor).
+  id: totrans-280
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 或许是避免拒绝服务攻击的好方法（即，转移到Tor上）。
 - en: Allegedly, Google used Tor to check if servers special-case Google's IPs.
+  id: totrans-281
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 据说，谷歌使用Tor来检查服务器是否特殊处理谷歌的IP地址。
 - en: How active is Tor?
+  id: totrans-282
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Tor有多活跃？
 - en: Much more active use now than what the paper describes.
+  id: totrans-283
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在比论文描述的使用更加活跃。
 - en: ~3000 public ORs, ~1000 exit nodes, ~1000 bridge nodes, ~2GB/s OR bandwidth.
+  id: totrans-284
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ~3000个公共ORs，~1000个出口节点，~1000个桥接节点，~2GB/s的OR带宽。
 - en: 8-9 (?) directory servers, ~1600 directory mirrors.
+  id: totrans-285
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 8-9 (?) 个目录服务器，约1600个目录镜像。
 - en: 'Hard problems: distributing entry point IPs, approving ORs, ..'
+  id: totrans-286
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 困难问题：分发入口点IP地址，批准ORs，..
 - en: 'Some BitTorrent use, but not overwhelming: mostly, too slow for large files.'
+  id: totrans-287
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有些BitTorrent使用，但并不压倒性：主要是因为对于大文件来说太慢了。
 - en: 'Alternative approach: DC-nets ("Dining cryptographer networks").'
+  id: totrans-288
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 另一种方法：DC-nets（“用餐密码学家网络”）。
 - en: N participants, but suppose there's only one sender (not known who).
+  id: totrans-289
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: N个参与者，但假设只有一个发送者（不知道是谁）。
 - en: Every pair of participants shares a secret bit.
+  id: totrans-290
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每对参与者共享一个秘密比特位。
 - en: To transmit a "0" bit, send XOR of all secrets. - Otherwise, send the opposite.
+  id: totrans-291
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要传输“0”比特位，发送所有秘密的异或值。- 否则，发送相反的值。
 - en: 'All transmissions are public: to recover bit, XOR everyone''s transmissions.'
+  id: totrans-292
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 所有传输都是公开的：为了恢复比特位，对所有人的传输进行异或运算。
 - en: Can build up to send multiple bits, use a collision-detection protocol, etc.
+  id: totrans-293
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以建立发送多个比特位，使用冲突检测协议等。
 - en: Costly in terms of performance, but provides much stronger security than Tor.
+  id: totrans-294
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在性能方面代价高昂，但提供比Tor更强大的安全性。
 - en: See the Dissent OSDI 2012 paper for more details on a DCnet-based system.
+  id: totrans-295
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 查看Dissent OSDI 2012论文，了解基于DCnet的系统的更多细节。
 - en: 'References:'
+  id: totrans-296
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 参考：
 - en: '[Tor Project Metrics](https://metrics.torproject.org/)'
+  id: totrans-297
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[Tor项目指标](https://metrics.torproject.org/)'
 - en: '[Tor Consensus Health](https://consensus-health.torproject.org/)'
+  id: totrans-298
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[Tor共识健康](https://consensus-health.torproject.org/)'
 - en: '[Challenges in deploying low-latency anonymity](https://svn.torproject.org/svn/projects/design-paper/challenges.pdf)'
+  id: totrans-299
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[部署低延迟匿名性的挑战](https://svn.torproject.org/svn/projects/design-paper/challenges.pdf)'
 - en: '[Design of a blocking-resistant anonymity system](https://svn.torproject.org/svn/projects/design-paper/blocking.pdf)'
+  id: totrans-300
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[一个抗阻塞匿名系统的设计](https://svn.torproject.org/svn/projects/design-paper/blocking.pdf)'
 - en: '[Dining cryptographers problem](http://en.wikipedia.org/wiki/Dining_cryptographers_problem)'
+  id: totrans-301
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[用餐密码学家问题](http://en.wikipedia.org/wiki/Dining_cryptographers_problem)'
 - en: '[Dissent in Numbers: Making strong anonymity scale](http://dedis.cs.yale.edu/2010/anon/papers/osdi12.pdf)'
+  id: totrans-302
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[数字中的异议：使强大的匿名性扩展](http://dedis.cs.yale.edu/2010/anon/papers/osdi12.pdf)'
