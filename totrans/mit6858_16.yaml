@@ -1,654 +1,890 @@
 - en: User authentication
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 用户认证
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记略有修改，来自2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的内容。'
 - en: '**Core challenge:** How can human users prove their identity to a program?'
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: '**核心挑战：** 人类用户如何向程序证明其身份？'
 - en: Is there any solution that totally dominates passwords?
+  id: totrans-3
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是否有任何完全主导密码的解决方案？
 - en: At first glance, passwords seem wretched.
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 乍一看，密码似乎很糟糕。
 - en: Low entropy `-->` easy for attackers to guess them.
+  id: totrans-5
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 低熵`-->`容易让攻击者猜到它们。
 - en: Back-up security questions for passwords are low entropy too.
+  id: totrans-6
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用于密码的备用安全问题也具有低熵。
 - en: A user often employs a single password for multiple sites.
+  id: totrans-7
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户经常为多个站点使用相同的密码。
 - en: As the paper for today's class states, *"The continued domination of passwords
     over all other methods of end-user authentication is a major embarrassment to
     security researchers."*
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 正如今天课堂上的论文所述，*"密码继续在所有其他终端用户认证方法上占主导地位，这对安全研究人员来说是一个重大尴尬。"*
 - en: But... is there actually an authentication scheme which totally dominates passwords?
+  id: totrans-9
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但是...是否实际上有一种认证方案完全主导密码？
 - en: 'Plan for today''s lecture:'
+  id: totrans-10
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 今天讲座的计划：
 - en: See how current password schemes work.
+  id: totrans-11
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 查看当前密码方案的工作原理。
 - en: Talk about desirable properties for an authentication scheme.
+  id: totrans-12
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 讨论认证方案的理想属性。
 - en: See how other authentication schemes compare to passwords.
+  id: totrans-13
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 查看其他认证方案与密码的比较。
 - en: Passwords
+  id: totrans-14
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 密码
 - en: A password is a secret that is shared between the user and a server.
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 密码是用户和服务器之间共享的秘密。
 - en: '**Naive implementation:** server has a table that maps usernames to plaintext
     passwords.'
+  id: totrans-16
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**天真的实现：** 服务器有一个将用户名映射到明文密码的表。'
 - en: '**Problem:** If attacker compromises the server, can recover all user/password
     pairs.'
+  id: totrans-17
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题：** 如果攻击者入侵服务器，可以恢复所有用户/密码对。'
 - en: '**Improved solution:** Server stores this table: `user_name --> hash(user_password)`'
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**改进方案：** 服务器存储此表：`user_name --> hash(user_password)`'
 - en: User client supplies cleartext password to server, the server hashes the cleartext
     and does a table lookup.
+  id: totrans-19
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户客户端向服务器提供明文密码，服务器对明文进行哈希并进行表查找。
 - en: '**Advantage:** Hash functions are difficult to invert, so it''s difficult for
     attacker to perform a brute force attack. However...'
+  id: totrans-20
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**优势：** 哈希函数难以反转，因此攻击者难以执行暴力攻击。然而...'
 - en: '**Problem:** Attacker doesn''t have to launch an inefficient brute force search
     over all possible passwords -- the set of strings that are actually used as passwords
     is quite small!'
+  id: totrans-21
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题：** 攻击者不必对所有可能的密码启动低效的暴力搜索 -- 实际用作密码的字符串集相当小！'
 - en: 'Skewed distribution: top 5000 password values cover 20% of users.'
+  id: totrans-22
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 偏斜分布：前`5000`个密码值覆盖`20%`的用户。
 - en: 'Yahoo password study: Rule-of-thumb passwords contain 10-20 bits of entropy.'
+  id: totrans-23
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 雅虎密码研究：经验法则密码包含`10-20 bits`的熵。
 - en: Hash functions are optimized performance; this helps attackers!
+  id: totrans-24
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 哈希函数优化性能；这有助于攻击者！
 - en: '*Example:* A laptop can calcuate SHA1s over small blocks at ~2M SHA1 ops/sec.
     Even if password has 20 bits of entropy, can crack one account/sec.'
+  id: totrans-25
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*例子：* 一台笔记本电脑可以以每秒约`2M SHA1 ops/sec`的速度计算SHA1。即使密码具有`20 bits`的熵，也可以每秒破解一个帐户。'
 - en: Server can use a computationally expensive *key-derivation function* (e.g.,
     PBKDF2 or BCrypt).
+  id: totrans-26
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器可以使用计算成本昂贵的*密钥派生函数*（例如，PBKDF2或BCrypt）。
 - en: These functions have adjustable costs, so they can be arbitrarily slow.
+  id: totrans-27
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这些函数具有可调整的成本，因此它们可以任意缓慢。
 - en: 'Ex: can make hash cost be 1 second -- O(1M) times slower than SHA1.'
+  id: totrans-28
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：可以使哈希成本为1秒 -- 比SHA1慢`O(1M)`倍。
 - en: Internally, often performs repeated hashing using a slow hash.
+  id: totrans-29
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内部通常使用慢哈希进行重复哈希。
 - en: '**Problem:** adversary can build "rainbow tables".'
+  id: totrans-30
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题：** 对手可以构建"彩虹表"。'
 - en: Table of password-to-hash mappings.
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码到哈希映射表。
 - en: Expensive to compute, but allows the attacker to efficiently invert hashes afterwards.
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 计算成本高昂，但允许攻击者之后有效地反转哈希。
 - en: To maximize cost/benefit trade-off, the attacker only need to build a rainbow
     table for dictionary of common passwords.
+  id: totrans-33
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了最大化成本/效益权衡，攻击者只需为常见密码字典构建一个彩虹表。
 - en: 'Roughly: 1-second expensive hash `|-> 1M seconds = 10 days` to hash common
     passwords. After that, can very quickly crack common passwords in any password
     db.'
+  id: totrans-34
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大致：1秒昂贵的哈希`|-> 1M秒 = 10天`来哈希常见密码。之后，可以非常快速地破解任何密码数据库中的常见密码。
 - en: '**Better solution:** server can use *password salts*.'
+  id: totrans-35
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**更好的解决方案：** 服务器可以使用*密码盐*。'
 - en: 'Input some additional randomness into the password hash: H(salt, pw).'
+  id: totrans-36
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在密码哈希中输入一些额外的随机性：H(salt, pw)。
 - en: Where does the salt value come from? It's stored on the server in plaintext.
+  id: totrans-37
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 盐值从哪里来？它以明文形式存储在服务器上。
 - en: '**Q:** Why is this better if the adversary can compromise the salt too?'
+  id: totrans-38
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q：** 如果对手也能破解盐，为什么这样做更好？'
 - en: '**A:** The attacker cannot use a single rainbow table to check for hash matches
     -- the same password with different salts will have a different hash value!'
+  id: totrans-39
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A：** 攻击者无法使用单个彩虹表来检查哈希匹配 -- 相同密码使用不同盐将具有不同的哈希值！'
 - en: '**Best practices:**'
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**最佳实践：**'
 - en: Choose a long random salt.
+  id: totrans-41
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 选择一个长的随机盐。
 - en: Choose a fresh salt each time user changes password.
+  id: totrans-42
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每次用户更改密码时选择一个新的盐。
 - en: How should a client *transmit a password to a server?*
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 客户端应该如何将密码传输到服务器？
 - en: '**Bad idea:** send the password in the clear.'
+  id: totrans-44
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**不好的主意：** 明文发送密码。'
 - en: '**Slightly better:** send password over an encrypted connection.'
+  id: totrans-45
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**稍微好一点：** 通过加密连接发送密码。'
 - en: '**Drawback:** Connection may be intercepted by an attacker who pretends to
     be the server (encryption doesn''t necessarily mean that the server has authenticated
     to the client!). MITM attacker can then use the stolen password to impersonate
     the user.'
+  id: totrans-46
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**缺点：** 连接可能被假冒服务器的攻击者拦截（加密并不一定意味着服务器已经向客户端进行了身份验证！）。中间人攻击者然后可以使用窃取的密码冒充用户。'
 - en: '**Q:** What if client sends the hash of the password instead of the raw password?'
+  id: totrans-47
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q：** 如果客户端发送密码的哈希而不是原始密码呢？'
 - en: '**A:** Doesn''t provide us with any extra power, since the hash can still be
     replayed by the attacker.'
+  id: totrans-48
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A：** 并不会为我们提供额外的权力，因为哈希仍然可以被攻击者重放。'
 - en: '**Moral of the story:** Encryption and hashing do not automatically add security
     -- you need to think about what security properties you want to achieve, and specific
     ways that encryption and hashing can achieve those goals.'
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**故事寓意：** 加密和哈希并不会自动增加安全性 -- 你需要考虑你想要实现的安全性质，并具体的加密和哈希可以实现这些目标的方式。'
 - en: '**Better idea:** Challenge/response protocol.'
+  id: totrans-50
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**更好的主意：** 挑战/响应协议。'
 - en: '*Example:*'
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: '*例子：*'
 - en: '[PRE0]'
+  id: totrans-52
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: Ignoring man-in-the-middle (MITM) attacks, the server is now confident that
     the user is Alice.
+  id: totrans-53
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 忽略中间人（MITM）攻击，服务器现在确信用户是Alice。
 - en: If server is an attacker and didn't already know password, the attacker still
     doesn't know password.
+  id: totrans-54
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果服务器是攻击者并且之前不知道密码，那么攻击者仍然不知道密码。
 - en: '**Q:** How can we prevent server from brute-force guessing password based on
     `H()` value?'
+  id: totrans-55
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q：** 我们如何防止服务器基于`H()`值进行暴力猜测密码？'
 - en: '**A1:** Expensive hash + salting.'
+  id: totrans-56
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A1：** 昂贵的哈希+盐。'
 - en: '**A2:** Allow client to choose some randomness too: guard against rainbow tables.'
+  id: totrans-57
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A2：** 允许客户端也选择一些随机性：防范彩虹表。'
 - en: To avoid storing the real password on the server, use a protocol like [SRP](http://en.wikipedia.org/wiki/Secure_Remote_Password_protocol)
+  id: totrans-58
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了避免在服务器上存储真实密码，使用类似[SRP](http://en.wikipedia.org/wiki/Secure_Remote_Password_protocol)的协议。
 - en: '**High-level idea:** Given a security parameter `g`, the client computes `v
     = g^(hash(salt, password))` and sends `v` and the `salt` to the server. The client
     and the server can then establish an ephemeral key with their shared knowledge
     of `g` and `v` (protocol takes advantage of the fact that it''s difficult for
     the attacker to perform discrete logarithms modulo `N`; RSA also takes advantage
     of this observation).'
+  id: totrans-59
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**高级思想：** 给定安全参数`g`，客户端计算`v = g^(hash(salt, password))`并将`v`和`salt`发送到服务器。客户端和服务器可以利用对`g`和`v`的共享知识建立临时密钥（该协议利用了攻击者难以执行模`N`下的离散对数的事实；RSA也利用了这一观察结果）。'
 - en: Implementing challenge/response often means changing the client and the server.
+  id: totrans-60
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实施挑战/响应通常意味着改变客户端和服务器。
 - en: To prevent brute force attacks, we can implement *anti-hammering defenses*.
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了防止暴力破解攻击，我们可以实施*反锤击防御*。
 - en: '*Example*: Rate-limit the number of password guesses; implement time-out periods
     after too many incorrect guesses.'
+  id: totrans-62
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*例子：* 限制密码猜测次数；在太多错误猜测后实施超时期。'
 - en: It's really important to throttle guess rate because passwords have so little
     entropy!
+  id: totrans-63
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 限制猜测速率非常重要，因为密码的熵很低！
 - en: Many sites impose requirements on passwords (e.g., length, the use of special
     chars like punctuation).
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 许多网站对密码施加要求（例如长度，使用标点等特殊字符）。
 - en: In reality, what matters is *entropy*! Format requirements rarely translate
     into higher entropy.
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实际上，重要的是*熵*！格式要求很少转化为更高的熵。
 - en: A competent dictionary attacker can model password constraints and still generate
     rainbow tables; even with constraints, people will still pick passwords that adhere
     to a priori character distributions.
+  id: totrans-66
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个称职的字典攻击者可以模拟密码约束并生成彩虹表；即使有约束，人们仍会选择符合先验字符分布的密码。
 - en: '*Telepathwords:* [https://telepathwords.research.microsoft.com/](https://telepathwords.research.microsoft.com/)'
+  id: totrans-67
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*Telepathwords:* [https://telepathwords.research.microsoft.com/](https://telepathwords.research.microsoft.com/)'
 - en: As you type in a potential password letter, tries to guess the next letter using
     heuristics!
+  id: totrans-68
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当您输入潜在的密码字母时，尝试使用启发式猜测下一个字母！
 - en: Common passwords (e.g., via leaks of password databases)
+  id: totrans-69
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 常见密码（例如，通过密码数据库泄漏）
 - en: Popular phrases from web sites
+  id: totrans-70
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 来自网站的流行短语
 - en: Common user biases in selecting characters (e.g., using adjacent keys for adjacent
     password characters)
+  id: totrans-71
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户在选择字符时常见的偏见（例如，使用相邻键来输入相邻的密码字符）
 - en: 'Kerberos v4, and v5 without preauth were vulnerable to offline guessing: [http://www.gnu.org/software/shishi/wu99realworld.pdf](http://www.gnu.org/software/shishi/wu99realworld.pdf)'
+  id: totrans-72
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Kerberos v4和v5在没有预身份验证的情况下容易受到离线猜测的影响：[http://www.gnu.org/software/shishi/wu99realworld.pdf](http://www.gnu.org/software/shishi/wu99realworld.pdf)
 - en: Anyone could ask the KDC for a ticket encrypted with the user's password, i.e.,
     the KDC did not authenticate requests (although the response would be encrypted
     with `K_c`).
+  id: totrans-73
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何人都可以向KDC请求使用用户密码加密的票证，即KDC不会验证请求（尽管响应将使用`K_c`加密）。
 - en: Attacker can try brute-force to guess the user's password -- this is easy to
     parallelize. Since the ticket-granting-ticket has a known format, the attacker
     can determine when a decryption is successful.
+  id: totrans-74
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者可以尝试暴力破解猜测用户的密码--这很容易并行化。由于票据授予票据具有已知格式，攻击者可以确定解密何时成功。
 - en: In Kerberos v5, ticket requestor must include `{ timestamp }_{K_c}` along with
     request, to prove knowledge of `K_c`.
+  id: totrans-75
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在Kerberos v5中，票证请求者必须在请求中包含`{ timestamp }_{K_c}`，以证明对`K_c`的了解。
 - en: '**Password recovery** is extremely important, but often overlooked.'
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: '**密码恢复**非常重要，但经常被忽视。'
 - en: People often focus on the entropy of passwords, but if recovery questions can
     be used to reset passwords, the strength of a password authentication scheme is
     `min(password_entropy, recovery_question_entropy)`.
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 人们经常关注密码的熵，但如果恢复问题可以用来重置密码，密码认证方案的强度为`min(password_entropy, recovery_question_entropy)`。
 - en: Recovery questions are often easily guessable. In one famous example, somebody
     got access to Sarah Palin's Yahoo address by guessing answers to her security
     questions.
+  id: totrans-78
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 恢复问题通常很容易被猜到。在一个著名的例子中，有人通过猜测萨拉·佩林的安全问题的答案获得了对她的雅虎地址的访问权限。
 - en: Intrinsically low entropy (*"What's your favorite color?" "What's the name of
     your best friend?"*)
+  id: totrans-79
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 固有低熵（*"你最喜欢的颜色是什么？" "你最好朋友的名字是什么？"*）
 - en: Answers leaked via social media profiles (*"What's your favorite movie?"*)
+  id: totrans-80
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过社交媒体资料泄露的答案（*"你最喜欢的电影是什么？"*）
 - en: Self-generated questions are typically easy to answer (*"What is 5 + 5?"*)
+  id: totrans-81
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 自动生成的问题通常很容易回答（*"5 + 5等于多少？"*）
 - en: The quest to replace passwords
+  id: totrans-82
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 取代密码的追求
 - en: 'In the reading for today, the authors propose a bunch of factors that can be
     used to evaluate authentication schemes (the goal is to determine whether passwords
     are as bad as they seem). The authors consider three high-level metrics: usability,
     deployability, and security.'
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 在今天的阅读中，作者提出了一堆可以用来评估认证方案的因素（目标是确定密码是否像它们看起来那样糟糕）。作者考虑了三个高级指标：可用性、部署性和安全性。
 - en: '**Usability:** How easy is it for users to interact with the authentication
     scheme?'
+  id: totrans-84
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**可用性：**用户与认证方案交互的难易程度如何？'
 - en: '*Easy-to-Learn:*'
+  id: totrans-85
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*易学性：*'
 - en: '"Users who don''t know the scheme can figure it out and learn it without too
     much trouble."'
+  id: totrans-86
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"不了解方案的用户可以轻松地弄清楚并学会它。"'
 - en: This is a key reason why password schemes are so popular!
+  id: totrans-87
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是密码方案如此受欢迎的一个关键原因！
 - en: '*Infrequent errors:*'
+  id: totrans-88
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*不经常出现的错误：*'
 - en: '"The task that users must perform to log in usually succeeds when performed
     by a legitimate and honest user."'
+  id: totrans-89
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"用户必须执行的登录任务通常在由合法和诚实的用户执行时成功。"'
 - en: This is an important reason why users pick easy-to-guess passwords.
+  id: totrans-90
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是用户选择易于猜测密码的重要原因。
 - en: '*Scalable-for-Users:*'
+  id: totrans-91
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*用户可扩展性：*'
 - en: '"Using the scheme for hundreds of accounts does not increase the burden on
     the user."'
+  id: totrans-92
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"使用方案登录数百个帐户不会增加用户的负担。"'
 - en: '... explains why people often reuse passwords or create a simple per-site uniquifying
     scheme for a base password.'
+  id: totrans-93
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '...解释了为什么人们经常重复使用密码或为基本密码创建一个简单的每个站点唯一化方案。'
 - en: '*Easy recovery from loss of the authentication token:*'
+  id: totrans-94
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*轻松从认证令牌丢失中恢复：*'
 - en: A win for passwords -- they're easy to reset.
+  id: totrans-95
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码的优势在于它们易于重置。
 - en: '*Nothing to carry*'
+  id: totrans-96
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*无需携带*'
 - en: Another win for passwords.
+  id: totrans-97
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码的另一个优势。
 - en: '**Deployability:** How easy is it to incorporate the authentication method
     into real systems?'
+  id: totrans-98
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**可部署性：** 将身份验证方法整合到实际系统中有多容易？'
 - en: '*Server-Compatible:*'
+  id: totrans-99
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*与服务器兼容：*'
 - en: '"At the verifier''s end, the scheme is compatible with text-based passwords.
     Providers don''t have to change their existing authentication setup to support
     the scheme."'
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"在验证者端，该方案与基于文本的密码兼容。提供者不必更改其现有的身份验证设置以支持该方案。"'
 - en: '*Browser-Compatible:*'
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*与浏览器兼容：*'
 - en: '"Users don''t have to change their client to support the scheme. Schemes fail
     to provide this benefit if they require the installation of plugins or any kind
     of software whose installation requires administrative privileges."'
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"用户不必更改他们的客户端以支持该方案。如果方案要求安装插件或任何需要管理员权限的软件，则无法提供这种好处。"'
 - en: '*Accessible:*'
+  id: totrans-103
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*易访问：*'
 - en: '"Users who can use passwords are not prevented from using the scheme by disabilities
     or other physical (not cognitive) conditions."'
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"能够使用密码的用户不会因残疾或其他身体（非认知）状况而无法使用该方案。"'
 - en: 'Deployability is extremely difficult: it''s difficult to get users or servers
     to update en masse!'
+  id: totrans-105
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可部署性非常困难：很难让用户或服务器大规模更新！
 - en: Passwords do well in this category by default, since the authors define "deployability"
     as how well a system integrates with current password infrastructure. However,
     passwords don't do very well in the next category...
+  id: totrans-106
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码在这一类别中表现良好，默认情况下，因为作者将“可部署性”定义为系统与当前密码基础设施整合程度。然而，密码在下一个类别中表现不佳……
 - en: '**Security:** What kinds of attacks can the authentication scheme prevent?'
+  id: totrans-107
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**安全性：** 身份验证方案可以防范哪些攻击？'
 - en: '*Resilient-to-Physical-Observation:*'
+  id: totrans-108
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对物理观察具有弹性：*'
 - en: '"An attacker cannot impersonate a user after observing them authenticate one
     or more times. We grant Quasi-Resilient-to- Physical-Observation if the scheme
     could be broken only by repeating the observation more than, say, 10-20 times.
     Attacks include shoulder surfing, filming the keyboard, recording keystroke sounds,
     or thermal imaging of keypad."'
+  id: totrans-109
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"在观察用户进行一次或多次身份验证后，攻击者无法冒充用户。如果方案只能通过重复观察10-20次以上才能被破解，我们授予准弹性对物理观察的方案。攻击包括肩窥、拍摄键盘、录制按键声音或热成像键盘。"'
 - en: Passwords fail this test, since, e.g., they can be captured by filming the keyboard
     or recording keystroke sounds.
+  id: totrans-110
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码未通过此测试，例如，可以通过拍摄键盘或录制按键声音来捕获密码。
 - en: '*Resilient-to-Targeted-Impersonation:*'
+  id: totrans-111
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对有针对性的冒充具有弹性：*'
 - en: '"It is not possible for an acquanitance (or skilled investigator) to impersonate
     a specific user by exploiting knowledge of personal details (birth date, names
     of relatives etc.). Personal knowledge questions are the canonical scheme that
     fails on this point."'
+  id: totrans-112
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"通过利用个人细节（出生日期、亲属姓名等）的知识，熟人（或熟练的调查员）无法冒充特定用户。个人知识问题是在这一点上失败的典型方案。"'
 - en: The authors say that passwords are "quasi-resistant" b/c they couldn't find
     any studies saying that your friends or acquaintances can easily guess your password.
+  id: totrans-113
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 作者表示密码是“准抗性”的，因为他们找不到任何研究表明您的朋友或熟人可以轻松猜出您的密码。
 - en: '*Resilient-to-Throttled-Guessing:*'
+  id: totrans-114
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对受限制的猜测具有弹性：*'
 - en: '"An attacker whose rate of guessing is constrained by the verifier cannot successfully
     guess the secrets of a significant fraction of users . . . Lack of this benefit
     is meant to penalize schemes in which it is frequent for user-chosen secrets to
     be selected from a small and well-known subset."'
+  id: totrans-115
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '"一个攻击者的猜测速率受到验证者的限制，不能成功猜测出大部分用户的秘密……缺乏这种好处意味着惩罚那些经常让用户选择的秘密从一个小而众所周知的子集中选择的方案。"'
 - en: Passwords fail because they have low entropy + skewed distributions.
+  id: totrans-116
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码失败是因为熵值低 + 分布倾斜。
 - en: '*Resilient-to-Unthrottled-Guessing:*'
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对不受限制的猜测具有弹性：*'
 - en: '"An attacker whose rate of guessing is constrained only by available computing
     resources cannot successfully guess the secrets of a significant fraction of users.
     We might for example grant this benefit if an attacker capable of attempting up
@@ -656,22 +892,28 @@
     of accounts. Lack of this benefit is meant to penalize schemes where the space
     of credentials is not large enough to withstand brute force search from a small
     and well-known subset."'
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “只受可用计算资源限制的猜测速率的攻击者无法成功猜测出大部分用户的秘密。例如，如果一个能够尝试每个账户最多2^40甚至2^64次猜测的攻击者仍然只能达到不到1%的账户，我们可能会授予这一好处。缺乏这一好处旨在惩罚那些凭证空间不足以抵御来自一个小而众所周知的子集的暴力搜索的方案。”
 - en: Passwords fail because they have low entropy + skewed distributions.
+  id: totrans-119
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码失败是因为它们具有低熵和偏斜分布。
 - en: '*Resilient-to-Internal-Observation:*'
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对内部观察具有弹性：*'
 - en: '"An attacker cannot impersonate a user by intercepting the user''s input from
     inside the user''s device (e.g., by keylogging malware) or eavesdropping on the
     cleartext communication between prover and verifier (we assume that the attacker
@@ -681,87 +923,110 @@
     This benefit assumes that general-purpose devices like software-updatable personal
     computers and mobile phones may contain malware, but that hardware devices dedicated
     exclusively to the scheme can be made malware-free."'
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “攻击者无法通过拦截用户设备内的用户输入（例如，通过键盘记录恶意软件）或窃听证明者和验证者之间的明文通信来冒充用户（我们假设攻击者也可以击败TLS，也许通过CA）。这惩罚了那些不具备重放抵抗性的方案，无论是因为它们发送静态响应还是因为它们的动态响应对策可以通过少数观察被破解。这一好处假定通用设备（如软件可更新的个人计算机和手机）可能包含恶意软件，但专门用于该方案的硬件设备可以做到无恶意软件。”
 - en: 'Passwords fail because they are static tokens: once you have one, you can use
     it until it expires or is revoked.'
+  id: totrans-122
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码失败是因为它们是静态令牌：一旦你有了一个，你可以使用它直到它过期或被撤销。
 - en: '*Resilient-to-Phishing:*'
+  id: totrans-123
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对网络钓鱼具有弹性：*'
 - en: '"An attacker who simulates a valid verifier (including by DNS manipulation)
     cannot collect credentials that can later be used to impersonate the user to the
     actual verifier. This penalizes schemes allowing phishers to get victims to authenticate
     to look-alike sites and later use the harvested credentials against the genuine
     sites."'
+  id: totrans-124
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “模拟有效验证器的攻击者（包括通过DNS操纵）无法收集以后可以用来冒充用户向实际验证器进行身份验证的凭据。这惩罚了允许网络钓鱼者让受害者在类似网站上进行身份验证，然后将收集的凭据用于真正网站的方案。”
 - en: 'Passwords fail: phishing attacks are very common!'
+  id: totrans-125
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码失败：网络钓鱼攻击非常普遍！
 - en: '*No-Trusted-Third-Party:*'
+  id: totrans-126
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*无信任第三方：*'
 - en: '"The scheme does not rely on a trusted third party (other than the prover and
     the verifier) who could, upon being attacked or otherwise becoming untrustworthy,
     compromise the prover''s security or privacy."'
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “该方案不依赖于一个可信任的第三方（除了证明者和验证者），后者在遭受攻击或变得不可信任时，可能会危及证明者的安全或隐私。”
 - en: 'This property makes an important point: a lot of authentication problems would
     become easier if we could just trust one party to store passwords, run the password
     servers, etc. However, single points of failure are bad, since attackers can focus
     all of their energy on that point!'
+  id: totrans-128
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这一属性提出了一个重要观点：如果我们可以信任一个方当来存储密码、运行密码服务器等，许多身份验证问题将变得更容易。然而，单点故障是不好的，因为攻击者可以将所有精力集中在那一点上！
 - en: '*Resilient-to-Leaks-from-Other-Verifiers:*'
+  id: totrans-129
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对其他验证者泄露具有弹性：*'
 - en: '"Nothing that a verifier could possibly leak can help an attacker impersonate
     the user to another verifier. This penalizes schemes where insider fraud at one
     provider, or a successful attack on one back-end, endangers the user''s accounts
     at other sites."'
+  id: totrans-130
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “验证者可能泄露的任何信息都不能帮助攻击者冒充用户向另一个验证者进行身份验证。这惩罚了那些在一个提供者内部欺诈或对一个后端的成功攻击危及用户在其他网站账户的方案。”
 - en: 'This property is related to No-Trusted-Third-Party. To avoid a central point
     of failure, we''d like to introduced some notion of distributed authentication:
     however, does this mean that the system is only as strong as its weakest link?'
+  id: totrans-131
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这一属性与无信任第三方有关。为了避免中心化故障点，我们希望引入一些分布式身份验证的概念：然而，这是否意味着系统的强度仅取决于其最薄弱的环节？
 - en: Think back to HTTPS, and how a bad certificate authority can convince a browser
     to accept fake certificates for arbitrary sites. Security depends on the strength
     of the least secure CA!
+  id: totrans-132
   prefs:
   - PREF_IND
   - PREF_IND
@@ -769,274 +1034,387 @@
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 回想一下 HTTPS，以及一个糟糕的证书颁发机构如何说服浏览器接受任意站点的伪证书。安全性取决于最不安全的 CA 的强度！
 - en: Authors say that passwords fail because people often reuse passwords across
     sites.
+  id: totrans-133
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 作者表示，密码失败是因为人们经常在不同网站上重复使用密码。
 - en: Biometrics
+  id: totrans-134
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 生物特征识别
 - en: '**Biometrics:** Leverage the unique aspects of a person''s physical appearance
     or behavior.'
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: '**生物特征识别：** 利用个人外貌或行为的独特方面。'
 - en: How big is the keyspace?
+  id: totrans-136
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密钥空间有多大？
 - en: '*Fingerprints:* ~13.3 bits.'
+  id: totrans-137
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*指纹：* ~13.3 位。'
 - en: '*Iris scan:* ~19.9 bits.'
+  id: totrans-138
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*虹膜扫描：* ~19.9 位。'
 - en: '*Voice recognition:* ~11.7 bits.'
+  id: totrans-139
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*语音识别：* ~11.7 位。'
 - en: So, bits of entropy are roughly the same as passwords.
+  id: totrans-140
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，熵的位数大致与密码相同。
 - en: Biometrics vs. passwords
+  id: totrans-141
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 生物特征识别与密码
 - en: '[PRE1]'
+  id: totrans-142
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: So, final score is 8 vs 6.5\. Of course, one could assign non-unity weights
     to each category, but the point is that it's not obvious that biometrics are "better"
     than passwords!
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，最终得分是 8 对 6.5。当然，每个类别可以分配非单位权重，但关键是生物特征识别并不明显比密码“更好”！
 - en: Some sets of goals seem difficult to achieve at the same time.
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 有些目标似乎很难同时实现。
 - en: '[PRE2]'
+  id: totrans-145
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: 'Multi-factor authentication (MFA): defense using depth'
+  id: totrans-146
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 多因素认证（MFA）：深度防御
 - en: Requires users to authenticate themselves using two or more authentication mechanisms.
+  id: totrans-147
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要用户使用两种或更多身份验证机制进行身份验证。
 - en: The mechanisms should involve different modalities!
+  id: totrans-148
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 机制应涉及不同的模态！
 - en: Something you know (e.g., a password)
+  id: totrans-149
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您所知道的东西（例如，密码）
 - en: Something you possess (e.g., a cellphone, a hardware token)
+  id: totrans-150
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您拥有的东西（例如，手机，硬件令牌）
 - en: Something you are (e.g., biometrics)
+  id: totrans-151
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您是什么（例如，生物特征）
 - en: Idea is that an attacker must steal/subvert multiple authentication mechanisms
     to impersonate a user (e.g., attacker might guess a password, but lack access
     to a user's phone).
+  id: totrans-152
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 思路是攻击者必须窃取/破坏多个身份验证机制才能冒充用户（例如，攻击者可能猜测密码，但无法访问用户的手机）。
 - en: 'Example: Google''s two-factor authentication requires a password plus a cellphone
     which can receive authorization codes via text message.'
+  id: totrans-153
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：谷歌的双因素认证需要密码加上一个可以通过短信接收授权码的手机。
 - en: 'Example: AWS two-factor authentication requires a password and an "MFA device"
     (a smartphone running an authentication app, or a special-purpose security token
     or security card). [Amazon MFA](http://aws.amazon.com/iam/details/mfa/)'
+  id: totrans-154
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：AWS 的双因素认证需要密码和一个“MFA 设备”（运行身份验证应用程序的智能手机，或专用安全令牌或安全卡）。[Amazon MFA](http://aws.amazon.com/iam/details/mfa/)
 - en: MFA is a good idea, but empirical studies show that if users are given a second
     authentication factor in addition to passwords, users pick much weaker passwords!
+  id: totrans-155
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 多因素认证是个好主意，但实证研究表明，如果用户除了密码外还提供第二个身份验证因素，用户会选择更弱的密码！
 - en: Homework Q
+  id: totrans-156
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 家庭作业问题
 - en: What are potential answers to the homework questions? What factors matter?
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 家庭作业问题的潜在答案是什么？哪些因素很重要？
 - en: Logging into public Athena machine?
+  id: totrans-158
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 登录公共 Athena 机器？
 - en: 'Resilient-to-Internal-Observation: easy to install malware on machine.'
+  id: totrans-159
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对内部观察具有弹性：在机器上轻松安装恶意软件。
 - en: Resilient-to-Physical-Observation? + MIT IDs could be a good thing to leverage
     (use them as a smartcard).
+  id: totrans-160
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对物理观察具有弹性？+ MIT ID 可能是一个值得利用的好东西（将其用作智能卡）。
 - en: Biometrics? Untrusted terminals, probably not a great plan.
+  id: totrans-161
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 生物特征识别？不受信任的终端，可能不是一个很好的计划。
 - en: Accessing Facebook from Internet cafe?
+  id: totrans-162
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从网吧访问 Facebook？
 - en: Password managers not a good idea here.
+  id: totrans-163
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在这里不是一个好主意使用密码管理器。
 - en: How sensitive is the data?
+  id: totrans-164
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 数据的敏感程度有多高？
 - en: Might be leveraged to authenticate to other sites! (Either "Login with Facebook"
     or by answering personal security questions to reset a password.)
+  id: totrans-165
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能被用于认证到其他网站！（要么是“使用 Facebook 登录”，要么是通过回答个人安全问题来重置密码。）
 - en: Withdrawing cash from ATM?
+  id: totrans-166
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从 ATM 取款？
 - en: Security matters highly.
+  id: totrans-167
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 安全性非常重要。
 - en: Resilient-to-Physical-Observation.
+  id: totrans-168
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对物理观察具有弹性。
 - en: Resilient-to-Theft.
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对盗窃具有弹性。
 - en: 'Possibly trusted terminal: biometrics might be worth considering. (However,
     in practice, bank may not want to trust the terminals.)'
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能是可信的终端：生物特征识别可能值得考虑。（然而，在实践中，银行可能不想信任终端。）
 - en: You also might care about authenticating individual transactions!
+  id: totrans-171
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您可能还关心对个别交易进行身份验证！
 - en: Prevent the adversary from using stolen credentials for different, attacker-chosen
     operations.
+  id: totrans-172
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防止对手使用被盗的凭证进行不同的、由攻击者选择的操作。
 - en: 'Ex: Maybe user can examine balance using just a password, but if she wants
     to withdraw money, she uses two-factor authentication using her phone.'
+  id: totrans-173
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：也许用户只需使用密码就能查看余额，但如果她想要取款，她就需要使用手机进行双因素认证。
 - en: Conclusions
+  id: totrans-174
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 结论
 - en: 'Conclusion of paper: There is no authentication scheme which clearly dominates
     passwords! For example, according to the authors, the CAP reader has perfect scores
     on security!'
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: 论文结论：没有一个认证方案明显优于密码！例如，根据作者的说法，CAP 读卡器在安全性方面得分完美！
 - en: The CAP reader was designed by Mastercard to protect online banking transactions.
+  id: totrans-176
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: CAP 读卡器是由万事达卡设计用来保护在线银行交易。
 - en: 'Usage:'
+  id: totrans-177
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用法：
 - en: Put your credit card into the CAP reader (which looks like a hand-held calculator).
+  id: totrans-178
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 将您的信用卡插入看起来像手持计算器的 CAP 读卡器中。
 - en: Enter PIN (bypassing keyloggers!).
+  id: totrans-179
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 输入 PIN 码（绕过键盘记录器！）。
 - en: Reader talks to the card's embedded processor, outputs an 8-digit code which
     the user supplies to the web site.
+  id: totrans-180
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 读卡器与卡片的嵌入式处理器通信，输出一个8位数码，用户将其提供给网站。
 - en: '*Analysis:*'
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: '*分析：*'
 - en: '[PRE3]'
+  id: totrans-182
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: So, `passwords=8` and `CAP reader=10.5`. However, there are reasons why CAP
     readers haven't taken over the world (see the low usability and deployability
     scores).
+  id: totrans-183
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，`密码=8`，`CAP 读卡器=10.5`。然而，CAP 读卡器没有占领世界的原因（请参阅低可用性和可部署性得分）。
 - en: In practice, deployability and usability are often more important than security.
+  id: totrans-184
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在实践中，可部署性和可用性通常比安全性更重要。
 - en: Migration costs (coding+debugging effort, user training) make developers nervous!
+  id: totrans-185
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 迁移成本（编码+调试工作，用户培训）让开发人员感到紧张！
 - en: The less usable a scheme is, the more that users will complain (and try to pick
     easier authentication tokens that are more vulnerable to attackers).
+  id: totrans-186
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 方案越不可用，用户就越会抱怨（并尝试选择更容易受攻击者攻击的认证令牌）。
 - en: Some situations may assign different weights to different evaluation metrics.
+  id: totrans-187
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些情况可能会给不同的评估指标分配不同的权重。
 - en: '*Example*: On a military base, the security benefits of a hardware-based token
     might outweigh the problems with usability and deployability.'
+  id: totrans-188
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*例子*：在军事基地上，基于硬件的令牌的安全性优势可能超过可用性和可部署性的问题。'

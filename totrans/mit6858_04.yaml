@@ -1,1650 +1,2325 @@
 - en: Capabilities and other protection mechanisms
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 能力和其他保护机制
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记是从 2014 年 6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    上发布的笔记稍作修改而来。'
 - en: Confused deputy problem
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 混淆的副手问题
 - en: What's the problem the authors of "confused deputy" encountered?
+  id: totrans-3
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: '"混淆的副手"的作者遇到了什么问题？'
 - en: Their system had a Fortran compiler, `/sysx/fort` (in Unix filename syntax)
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 他们的系统有一个 Fortran 编译器，`/sysx/fort`（Unix 文件名语法）
 - en: They wanted the Fortran compiler to record usage statistics, but where?
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 他们希望 Fortran 编译器记录使用统计信息，但在哪里？
 - en: Created a special statistics file, `/sysx/stat`.
+  id: totrans-6
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 创建了一个特殊的统计文件，`/sysx/stat`。
 - en: Gave `/sysx/fort` "home files license" (kind-of like setuid w.r.t. /sysx)
+  id: totrans-7
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 给了`/sysx/fort`“家庭文件许可证”（类似于关于/sysx的 setuid）
 - en: What goes wrong?
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 出了什么问题？
 - en: User can invoke the compiler asking it to write output to `/sysx/stat`.
+  id: totrans-9
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户可以调用编译器，要求将输出写入`/sysx/stat`。
 - en: e.g. `/sysx/fort` /my/code.f -o `/sysx/stat`
+  id: totrans-10
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如`/sysx/fort` /my/code.f -o `/sysx/stat`
 - en: Compiler opens supplied path name, and succeeds, because of its license.
+  id: totrans-11
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 编译器打开提供的路径名，并成功，因为它的许可证。
 - en: User alone couldn't have written to that `/sysx/stat` file.
+  id: totrans-12
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户本身不能写入那个`/sysx/stat`文件。
 - en: Why isn't the `/sysx/fort` thing just a bug in the compiler?
+  id: totrans-13
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么`/sysx/fort`只是编译器中的一个错误？
 - en: Could, in principle, solve this by adding checks all over the place.
+  id: totrans-14
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 原则上，可以通过在各个地方添加检查来解决这个问题。
 - en: 'Problem: need to add checks virtually everywhere files are opened.'
+  id: totrans-15
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题：需要在几乎所有打开文件的地方添加检查。
 - en: Perfectly correct code becomes buggy once it's part of a setuid binary.
+  id: totrans-16
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 完全正确的代码一旦成为 setuid 二进制文件的一部分就会变得有 bug。
 - en: So what's the "confused deputy"?
+  id: totrans-17
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 那么什么是“混淆的副手”？
 - en: 'The compiler is running on behalf of two principals:'
+  id: totrans-18
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 编译器代表两个主体运行：
 - en: the user principal (to open user's files)
+  id: totrans-19
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户主体（用于打开用户的文件）
 - en: the compiler principal (to open compiler's files)
+  id: totrans-20
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 编译器主体（用于打开编译器的文件）
 - en: Not clear what principal's privileges should be used at any given time.
+  id: totrans-21
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不清楚在任何给定时间应该使用主体权限。
 - en: Can we solve this confused deputy problem in Unix?
+  id: totrans-22
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 我们能在 Unix 中解决这个混淆的副手问题吗？
 - en: Suppose gcc wants to keep statistics in `/etc/gcc.stats`
+  id: totrans-23
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设 gcc 想要在`/etc/gcc.stats`中保留统计信息
 - en: Could have a special setuid program that only writes to that file
+  id: totrans-24
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以有一个特殊的 setuid 程序，只能写入该文件
 - en: 'Not so convenient: can''t just open the file like any other.'
+  id: totrans-25
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不太方便：不能像打开其他文件那样简单地打开文件。
 - en: What if we make gcc setuid to some non-root user (owner of stats file)?
+  id: totrans-26
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们让 gcc 成为某个非根用户（统计文件所有者）的 setuid，会怎样？
 - en: Hard to access user's original files.
+  id: totrans-27
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 难以访问用户的原始文件。
 - en: What if gcc is setuid-root? (Bad idea, but let's figure out why..)
+  id: totrans-28
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果 gcc 是 setuid-root？（坏主意，但让我们弄清楚为什么..）
 - en: Lots of potential for buffer overflows leading to root access.
+  id: totrans-29
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大量潜在的缓冲区溢出可能导致 root 访问权限。
 - en: Need to instrument every place where gcc might open a file.
+  id: totrans-30
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要在 gcc 可能打开文件的每个地方进行检测。
 - en: What check should we perform when gcc is opening a file?
+  id: totrans-31
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当 gcc 打开文件时，我们应该执行什么检查？
 - en: If it's an "internal" file (e.g. `/etc/gcc.stats`), maybe no check.
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果是“内部”文件（例如`/etc/gcc.stats`），也许不需要检查。
 - en: If it's a user-supplied file, need to make sure user can access it.
+  id: totrans-33
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果是用户提供的文件，需要确保用户可以访问它。
 - en: Can look at the permissions for the file in question.
+  id: totrans-34
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以查看相关文件的权限。
 - en: Need to also check permissions on directories leading up to this file.
+  id: totrans-35
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 还需要检查导致该文件的目录的权限。
 - en: 'Potential problem: race conditions.'
+  id: totrans-36
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 潜在问题：竞争条件。
 - en: What if the file changes between the time we check it and use it?
+  id: totrans-37
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果文件在我们检查和使用之间发生更改会怎么样？
 - en: 'Common vulnerability: attacker replaces legit file with symlink'
+  id: totrans-38
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 常见的漏洞：攻击者用符号链接替换合法文件
 - en: Symlink could point to, say, `/etc/gcc.stats`, or `/etc/passwd`, or ...
+  id: totrans-39
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 符号链接可能指向，比如`/etc/gcc.stats`，或`/etc/passwd`，或...
 - en: Known as "time-of-check to time-of-use" bugs (TOCTTOU).
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 被称为“检查时间到使用时间”的错误（TOCTTOU）。
 - en: 'Several possible ways of thinking of this problem:'
+  id: totrans-41
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 对这个问题有几种可能的思考方式：
 - en: '*Ambient authority:* privileges that are automatically used by process are
     the problem here. No privileges should ever be used automatically. Name of an
     object should be also the privileges for accessing it.'
+  id: totrans-42
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '*环境权限：* 进程自动使用的权限是问题所在。任何权限都不应该自动使用。对象的名称也应该是访问它的权限。'
 - en: '*Complex permission checks:* hard for privileged app to replicate. With simpler
     checks, privileged apps might be able to correctly check if another user should
     have access to some object.'
+  id: totrans-43
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '*复杂的权限检查：* 特权应用程序难以复制。通过简化的检查，特权应用程序可能能够正确检查另一个用户是否应该访问某个对象。'
 - en: What are examples of ambient authority?
+  id: totrans-44
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 什么是环境权限的例子？
 - en: Unix UIDs, GIDs.
+  id: totrans-45
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix用户ID，组ID。
 - en: Firewalls (IP address vs. privileges for accessing it)
+  id: totrans-46
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防火墙（IP地址与访问权限）
 - en: HTTP cookies (e.g. going to a URL like http://gmail.com)
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: HTTP cookies（例如，访问 http://gmail.com 这样的URL）
 - en: How does naming an object through a capability help?
+  id: totrans-48
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 通过能力给对象命名有什么帮助？
 - en: Pass file descriptor instead of passing a file name.
+  id: totrans-49
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 传递文件描述符而不是传递文件名。
 - en: No way to pass a valid FD unless caller was authorized to open that file.
+  id: totrans-50
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 除非调用者被授权打开该文件，否则无法传递有效的FD。
 - en: Could we use file descriptors to solve our problem with a setuid gcc?
+  id: totrans-51
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 我们能否使用文件描述符解决通过setuid gcc设置的问题？
 - en: 'Sort-of: could make the compiler only accept files via FD passing.'
+  id: totrans-52
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 类似：可以使编译器仅通过FD传递接受文件。
 - en: Or, could create a setuid helper that opens the `/etc/gcc.stats` file, passes
     an open file descriptor back to our compiler process.
+  id: totrans-53
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 或者，可以创建一个setuid辅助程序，打开`/etc/gcc.stats`文件，将一个打开的文件描述符传递回我们的编译器进程。
 - en: Then, can continue using this open file much like any other file.
+  id: totrans-54
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然后，可以继续像处理任何其他文件一样使用这个打开的文件。
 - en: How to ensure only gcc can run this helper?
+  id: totrans-55
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何确保只有gcc可以运行这个辅助程序？
 - en: Make gcc setgid to some special group.
+  id: totrans-56
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使gcc设置为某个特殊组的setgid。
 - en: Make the helper only executable to that special group.
+  id: totrans-57
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使辅助程序仅对该特殊组可执行。
 - en: Make sure that group has no other privileges given to it.
+  id: totrans-58
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 确保该组没有其他授予的特权。
 - en: What is the problem that the Capsicum authors are trying to solve with capabilities?
+  id: totrans-59
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Capsicum作者试图通过能力解决什么问题？
 - en: Reducing privileges of untrustworthy code in various applications.
+  id: totrans-60
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在各种应用程序中降低不可信代码的特权。
 - en: 'Overall plan:'
+  id: totrans-61
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 总体计划：
 - en: Break up an application into smaller components.
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将应用程序分解为较小的组件。
 - en: Reduce privileges of components that are most vulnerable to attack.
+  id: totrans-63
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 减少最容易受攻击的组件的特权。
 - en: Carefully design interfaces so one component can't compromise another.
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 仔细设计接口，以便一个组件无法危害另一个组件。
 - en: Why is this difficult?
+  id: totrans-65
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么这么困难？
 - en: Hard to reduce privileges of code ("sandbox") in traditional Unix system.
+  id: totrans-66
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在传统的Unix系统中难以降低代码的特权（“沙盒”）。
 - en: Hard to give sandboxed code some limited access (to files, network, etc).
+  id: totrans-67
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 难以为沙盒化代码提供有限的访问权限（对文件、网络等）。
 - en: What sorts of applications might use sandboxing?
+  id: totrans-68
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 什么样的应用程序可能会使用沙盒化？
 - en: OKWS
+  id: totrans-69
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OKWS
 - en: 'Programs that deal with network input:'
+  id: totrans-70
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 处理网络输入的程序：
 - en: Put input handling code into sandbox.
+  id: totrans-71
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将输入处理代码放入沙盒中。
 - en: 'Programs that manipulate data in complex ways: (gzip, Chromium, media codecs,
     browser plugins, ...)'
+  id: totrans-72
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 复杂操作数据的程序：（gzip，Chromium，媒体编解码器，浏览器插件，...）
 - en: Put complex (& likely buggy) part into sandbox.
+  id: totrans-73
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将复杂（且可能有错误）的部分放入沙盒中。
 - en: How about arbitrary programs downloaded from the Internet?
+  id: totrans-74
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从互联网下载的任意程序怎么样？
 - en: 'Slightly different problem: need to isolate unmodified application code.'
+  id: totrans-75
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 稍微不同的问题：需要隔离未修改的应用程序代码。
 - en: 'One option: programmer writes their application to run inside sandbox.'
+  id: totrans-76
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个选择：程序员编写他们的应用程序以在沙盒中运行。
 - en: 'Works in some cases: Javascript, Java, Native Client, ...'
+  id: totrans-77
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在某些情况下有效：Javascript，Java，Native Client，...
 - en: Need to standardize on an environment for sandboxed code.
+  id: totrans-78
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要在沙盒代码上制定一个环境标准。
 - en: 'Another option: impose new security policy on existing code.'
+  id: totrans-79
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个选择：对现有代码施加新的安全策略。
 - en: Probably need to preserve all APIs that programmer was using.
+  id: totrans-80
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能需要保留程序员正在使用的所有API。
 - en: Need to impose checks on existing APIs, in that case.
+  id: totrans-81
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要对现有API施加检查，在那种情况下。
 - en: Unclear what the policy should be for accessing files, network, etc.
+  id: totrans-82
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不清楚访问文件、网络等的策略应该是什么。
 - en: Applications that want to avoid being tricked into misusing privileges?
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 希望避免被欺骗误用特权的应用程序？
 - en: Suppose two Unix users, Alice and Bob, are working on some project.
+  id: totrans-84
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设两个Unix用户，Alice和Bob，正在某个项目上工作。
 - en: Both are in some group `G`, and project `dir` allows access by that group.
+  id: totrans-85
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 两者都在某个组`G`中，并且项目`dir`允许该组访问。
 - en: Let's say Alice emails someone a file from the project directory.
+  id: totrans-86
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设Alice从项目目录向某人发送一个文件。
 - en: 'Risk: Bob could replace the file with a symlink to Alice''s private file.'
+  id: totrans-87
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 风险：Bob可能用符号链接替换文件为Alice的私人文件。
 - en: Alice's process will implicitly use Alice's ambient privileges to open.
+  id: totrans-88
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Alice的进程将隐式使用Alice的环境特权来打开。
 - en: Can think of this as sandboxing an individual file operation.
+  id: totrans-89
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以将这看作对单个文件操作进行沙盒化。
 - en: What sandboxing plans (mechanisms) are out there (advantages, limitations)?
+  id: totrans-90
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 有哪些沙盒化计划（机制）存在（优势，限制）？
 - en: OS typically provides some kind of security mechanism ("primitive").
+  id: totrans-91
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 操作系统通常提供某种安全机制（“原语”）。
 - en: E.g., user/group IDs in Unix, as we saw in the previous lecture.
+  id: totrans-92
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，在Unix中的用户/组ID，正如我们在上一堂课中看到的。
 - en: For today, we will look at OS-level security primitives/mechanisms.
+  id: totrans-93
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 今天，我们将研究操作系统级别的安全原语/机制。
 - en: Often a good match when you care about protecting resources the OS manages.
+  id: totrans-94
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当您关心保护操作系统管理的资源时通常是一个很好的选择。
 - en: E.g., files, processes, coarse-grained memory, network interfaces, etc.
+  id: totrans-95
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，文件，进程，粗粒度内存，网络接口等。
 - en: Many OS-level sandboxing mechanisms work at the level of processes.
+  id: totrans-96
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 许多操作系统级别的沙箱机制在进程级别工作。
 - en: Works well for an entire process that can be isolated as a unit.
+  id: totrans-97
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 适用于可以作为一个单元进行隔离的整个进程。
 - en: Can require re-architecting application to create processes for isolation.
+  id: totrans-98
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能需要重新设计应用程序以创建用于隔离的进程。
 - en: Other techniques can provide finer-grained isolation (e.g., threads in proc).
+  id: totrans-99
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 其他技术可以提供更细粒度的隔离（例如，在proc中的线程）。
 - en: Language-level isolation (e.g., Javascript).
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 语言级别的隔离（例如，Javascript）。
 - en: Binary instrumentation (e.g., Native Client).
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 二进制仪器化（例如，Native Client）。
 - en: Why would we need these other sandboxing techniques?
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么我们需要这些其他的沙箱技术？
 - en: Easier to control access to non-OS / finer-grained objects.
+  id: totrans-103
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更容易控制对非操作系统/更细粒度对象的访问。
 - en: Or perhaps can sandbox in an OS-independent way. OS-level isolation often used
     in conjunction with finer-grained isolation.
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 或者也许可以以与操作系统无关的方式进行沙箱化。操作系统级别的隔离通常与更细粒度的隔离结合使用。
 - en: Finer-grained isolation is often hard to get right (Javascript, NaCl). E.g.,
     Native Client uses both a fine-grained sandbox + OS-level sandbox.
+  id: totrans-105
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更细粒度的隔离通常很难做到正确（Javascript，NaCl）。例如，Native Client同时使用了细粒度沙箱和操作系统级别的沙箱。
 - en: Will look at these in more detail in later lectures.
+  id: totrans-106
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将在后续讲座中更详细地讨论这些问题。
 - en: 'Plan 0: Virtualize everything (e.g., VMs).'
+  id: totrans-107
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 计划0：虚拟化所有内容（例如，VMs）。
 - en: Run untrustworthy code inside of a virtualized environment.
+  id: totrans-108
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在虚拟化环境中运行不可信代码。
 - en: 'Many examples: x86 qemu, FreeBSD jails, Linux LXC, ..'
+  id: totrans-109
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 许多示例：x86 qemu，FreeBSD jails，Linux LXC，..
 - en: 'Almost a different category of mechanism: strict isolation.'
+  id: totrans-110
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 几乎是一种不同类别的机制：严格隔离。
 - en: 'Advantage: sandboxed code inside VM has almost no interactions with outside.'
+  id: totrans-111
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势：VM内部的沙箱代码几乎与外部没有交互。
 - en: 'Advantage: can sandbox unmodified code that''s not expecting to be isolated.'
+  id: totrans-112
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势：可以沙箱未经修改的代码，不期望被隔离。
 - en: 'Advantage: some VMs can be started by arbitrary users (e.g., qemu).'
+  id: totrans-113
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势：一些VM可以由任意用户启动（例如，qemu）。
 - en: 'Advantage: usually composable with other isolation techniques, extra layer.'
+  id: totrans-114
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势：通常与其他隔离技术可组合，提供额外层次。
 - en: 'Disadvantage: hard to allow some sharing: no shared processes, pipes, files.'
+  id: totrans-115
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 缺点：难以允许一些共享：没有共享进程，管道，文件。
 - en: 'Disadvantage: virtualizing everything often makes VMs relatively heavyweight.'
+  id: totrans-116
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 缺点：虚拟化所有内容通常会使VM相对较重。
 - en: Non-trivial CPU/memory overheads for each sandbox.
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个沙箱都会带来非常重要的CPU/内存开销。
 - en: 'Plan 1: Discretionary Access Control (DAC).'
+  id: totrans-118
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 计划1：自主访问控制（DAC）。
 - en: Each object has a set of permissions (an access control list).
+  id: totrans-119
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个对象都有一组权限（访问控制列表）。
 - en: E.g., Unix files, Windows objects.
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，Unix文件，Windows对象。
 - en: '*"Discretionary"* means applications set permissions on objects (e.g., `chmod`).'
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “自主”意味着应用程序在对象上设置权限（例如，`chmod`）。
 - en: Each program runs with privileges of some principals.
+  id: totrans-122
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个程序都以某些主体的权限运行。
 - en: E.g., Unix user/group IDs, Windows SIDs.
+  id: totrans-123
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，Unix用户/组ID，Windows SIDs。
 - en: 'When program accesses an object, check the program''s privileges to decide.:'
+  id: totrans-124
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当程序访问对象时，检查程序的权限以决定。
 - en: '*"Ambient privilege":* privileges used implicitly for each access.'
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: “环境特权”：每次访问都隐式使用的权限。
 - en: '[PRE0]'
+  id: totrans-126
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: How would you sandbox a program on a DAC system (e.g., Unix)?
+  id: totrans-127
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何在DAC系统上（例如，Unix）沙箱化程序？
 - en: 'Must allocate a new principal (user ID):'
+  id: totrans-128
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 必须分配一个新的主体（用户ID）：
 - en: Otherwise, existing principal's privileges will be used implicitly!
+  id: totrans-129
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 否则，现有主体的权限将被隐式使用！
 - en: 'Prevent process from reading/writing other files:'
+  id: totrans-130
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防止进程读取/写入其他文件：
 - en: Change permissions on every file system-wide? Cumbersome, impractical, requires
     root.
+  id: totrans-131
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在整个文件系统上更改权限？繁琐，不切实际，需要root权限。
 - en: Even then, new program can create important world-writable file.
+  id: totrans-132
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使如此，新程序也可以创建重要的可全球写入文件。
 - en: 'Alternative: `chroot` (again, have to be root).'
+  id: totrans-133
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 替代方案：`chroot`（同样，必须是root）。
 - en: 'Allow process to read/write a certain file:'
+  id: totrans-134
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 允许进程读/写某个文件：
 - en: Set permissions on that file appropriately, if possible.
+  id: totrans-135
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果可能的话，适当设置文件的权限。
 - en: Link/move file into the `chroot` directory for the sandbox?
+  id: totrans-136
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将文件链接/移动到沙箱的`chroot`目录中？
 - en: 'Prevent process from accessing the network:'
+  id: totrans-137
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防止进程访问网络：
 - en: No real answer for this in Unix.
+  id: totrans-138
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix中没有真正的答案。
 - en: Maybe configure firewall? But not really process-specific.
+  id: totrans-139
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能配置防火墙？但不是真正针对进程的。
 - en: 'Allow process to access particular network connection:'
+  id: totrans-140
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 允许进程访问特定的网络连接：
 - en: See above, no great plan for this in Unix.
+  id: totrans-141
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如上所述，在Unix中没有很好的计划。
 - en: 'Control what processes a sandbox can kill / debug / etc:'
+  id: totrans-142
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 控制沙盒可以杀死 / 调试 / 等的进程：
 - en: Can run under the same UID, but that may be too many privileges.
+  id: totrans-143
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以在相同的 UID 下运行，但可能特权太多。
 - en: That UID might also have other privileges..
+  id: totrans-144
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 该 UID 也可能具有其他特权..
 - en: '**Problem:** only root can create new principals, on most DAC systems.'
+  id: totrans-145
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题：**在大多数 DAC 系统上，只有 root 可以创建新的主体。'
 - en: E.g., Unix, Windows.
+  id: totrans-146
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，Unix，Windows。
 - en: '**Problem:** some objects might not have a clear configurable access control
     list.'
+  id: totrans-147
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题：**一些对象可能没有明确可配置的访问控制列表。'
 - en: 'Unix: processes, network, ...'
+  id: totrans-148
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix：进程，网络，..
 - en: '**Problem:** permissions on files might not map to policy you want for sandbox.'
+  id: totrans-149
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题：**文件上的权限可能与沙盒所需的策略不匹配。'
 - en: Can sort-of work around using `chroot` for files, but awkward.
+  id: totrans-150
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以通过使用`chroot`对文件进行某种程度的解决，但很麻烦。
 - en: '**Related problem:** performing some operations with a subset of privileges.'
+  id: totrans-151
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**相关问题：**使用子特权执行某些操作。'
 - en: Recall example with Alice emailing a file out of shared group directory.
+  id: totrans-152
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 回想一下 Alice 通过电子邮件将文件发送到共享组目录的示例。
 - en: '"Confused deputy problem": program is a "deputy" for multiple principals.'
+  id: totrans-153
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “混淆副手问题”：程序是多个主体的“副手”。
 - en: '*One solution:* check if group permissions allow access (manual, error-prone).'
+  id: totrans-154
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*一个解决方案：*检查组权限是否允许访问（手动，容易出错）。'
 - en: '*Alternative solution:* explicitly specify privileges for each operation.'
+  id: totrans-155
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*替代方案：*明确为每个操作指定特权。'
 - en: 'Capabilities can help: capability (e.g., fd) combines object + privileges.'
+  id: totrans-156
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限可以帮助：能力（例如，fd）结合了对象 + 特权。
 - en: Some Unix features incompat. w/ pure capability design (symlinks by name).
+  id: totrans-157
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些 Unix 功能与纯能力设计不兼容（按名称创建符号链接）。
 - en: 'Plan 2: Mandatory Access Control (MAC).'
+  id: totrans-158
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 计划 2：强制访问控制（MAC）。
 - en: In DAC, security policy is set by applications themselves (chmod, etc).
+  id: totrans-159
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在 DAC 中，安全策略由应用程序自身设置（chmod 等）。
 - en: MAC tries to help users / administrators specify policies for applications.
+  id: totrans-160
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: MAC 试图帮助用户/管理员为应用程序指定策略。
 - en: '*"Mandatory"* in the sense that applications can''t change this policy.'
+  id: totrans-161
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*“强制”*意味着应用程序无法更改此策略。'
 - en: Traditional MAC systems try to enforce military classified levels.
+  id: totrans-162
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 传统的 MAC 系统试图强制执行军事机密级别。
 - en: '*Example:* Ensure top-secret programs can''t reveal classified information.'
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: '*示例：*确保绝密程序无法泄露机密信息。'
 - en: '[PRE1]'
+  id: totrans-164
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: '*Note:* many systems have aspects of both DAC + MAC in them.'
+  id: totrans-165
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*注意：*许多系统在其中具有 DAC + MAC 的方面。'
 - en: E.g., Unix user IDs are "DAC", but one can argue firewalls are "MAC".
+  id: totrans-166
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，Unix 用户 ID 是“DAC”，但可以争论防火墙是“MAC”。
 - en: Doesn't really matter -- good to know the extreme points in design space.
+  id: totrans-167
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 并不重要--了解设计空间中的极端点是很好的。
 - en: Windows Mandatory Integrity Control (MIC) / LOMAC in FreeBSD.
+  id: totrans-168
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Windows 强制完整性控制（MIC）/ FreeBSD 中的 LOMAC。
 - en: Keeps track of an "integrity level" for each process.
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为每个进程跟踪“完整性级别”。
 - en: Files have a minimum integrity level associated with them.
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件与其关联的最低完整性级别。
 - en: Process cannot write to files above its integrity level.
+  id: totrans-171
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 进程无法写入高于其完整性级别的文件。
 - en: Internet Explorer in Windows Vista runs as low integrity, cannot overwrite system
     files.
+  id: totrans-172
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Windows Vista 中的 Internet Explorer 以低完整性运行，无法覆盖系统文件。
 - en: FreeBSD LOMAC also tracks data read by processes.
+  id: totrans-173
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: FreeBSD LOMAC 还跟踪进程读取的数据。
 - en: (Similar to many information-flow-based systems.)
+  id: totrans-174
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （类似于许多基于信息流的系统。）
 - en: When process reads low-integrity data, it becomes low integrity too.
+  id: totrans-175
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当进程读取低完整性数据时，它也变得低完整性。
 - en: Transitive, prevents adversary from indirectly tampering with files.
+  id: totrans-176
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 传递性，防止对手间接篡改文件。
 - en: 'Not immediately useful for sandboxing: only a fixed number of levels.'
+  id: totrans-177
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于沙盒化不是立即有用：只有固定数量的级别。
 - en: SElinux
+  id: totrans-178
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: SElinux
 - en: '*Idea:* system administrator specifies a system-wide security policy.'
+  id: totrans-179
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*想法：*系统管理员指定系统范围的安全策略。'
 - en: Policy file specifies whether each operation should be allowed or denied.
+  id: totrans-180
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 策略文件指定是否应允许或拒绝每个操作。
 - en: To help decide whether to allow/deny, files labeled with "types".
+  id: totrans-181
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了帮助决定是否允许/拒绝，文件标记为“类型”。
 - en: (Yet another integer value, stored in inode along w/ uid, gid, ..)
+  id: totrans-182
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （另一个整数值，与 inode 中的 uid、gid 等一起存储。）
 - en: Mac OS X sandbox ("Seatbelt") and Linux `seccomp_filter`.
+  id: totrans-183
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Mac OS X 沙盒（“Seatbelt”）和 Linux `seccomp_filter`。
 - en: Application specifies policy for whether to allow/deny each syscall.
+  id: totrans-184
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序为是否允许/拒绝每个系统调用指定策略。
 - en: (Written in LISP for MacOSX's mechanism, or in BPF for Linux's.)
+  id: totrans-185
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （在 MacOSX 的机制中用 LISP 编写，或者在 Linux 中用 BPF 编写。）
 - en: Can be difficult to determine security impact of syscall based on args.
+  id: totrans-186
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 根据参数确定系统调用的安全影响可能很困难。
 - en: What does a pathname refer to? Symlinks, hard links, race conditions, ..
+  id: totrans-187
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 路径名指的是什么？符号链接，硬链接，竞争条件，..
 - en: (Although MacOSX's sandbox provides a bit more information)
+  id: totrans-188
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （尽管 MacOSX 的沙盒提供了更多信息）
 - en: '**Advantage:** any user can sandbox an arbitrary piece of code, finally!'
+  id: totrans-189
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**优势:** 任何用户都可以对任意代码片段进行沙盒化！'
 - en: '**Limitation:** programmer must separately write the policy + application code.'
+  id: totrans-190
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**限制:** 程序员必须分别编写策略和应用代码。'
 - en: '**Limitation:** some operations can only be filtered at coarse granularity.'
+  id: totrans-191
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**限制:** 有些操作只能以粗粒度进行过滤。'
 - en: E.g., POSIX `shm` in MacOSX's filter language, according to Capsicum paper.
+  id: totrans-192
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，在 MacOSX 的过滤语言中的 POSIX `shm`，根据 Capsicum 论文。
 - en: 'Limitation: policy language might be awkward to use, stateless, etc.'
+  id: totrans-193
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 限制：策略语言可能使用起来很尴尬，无状态等。
 - en: E.g., what if app should have exactly one connection to some server?
+  id: totrans-194
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，如果应用程序应该与某个服务器建立精确的一个连接？
 - en: '*Note:* `seccomp_filter` is quite different from regular/old `seccomp`, and
     the Capsicum paper talks about the regular/old `seccomp`.'
+  id: totrans-195
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*注意:* `seccomp_filter` 与常规/旧版 `seccomp` 有很大不同，而 Capsicum 论文讨论的是常规/旧版 `seccomp`。'
 - en: Is it a good idea to separate policy from application code?
+  id: totrans-196
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将策略与应用代码分离是否是个好主意？
 - en: Depends on overall goal.
+  id: totrans-197
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 取决于总体目标。
 - en: Potentially good if user/admin wants to look at or change policy.
+  id: totrans-198
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果用户/管理员想查看或更改策略，可能会很有用。
 - en: Problematic if app developer needs to maintain both code and policy.
+  id: totrans-199
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果应用程序开发人员需要同时维护代码和策略，这将成为问题。
 - en: For app developers, might help clarify policy.
+  id: totrans-200
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对应用程序开发人员来说，可能有助于澄清策略。
 - en: Less-centralized "MAC" systems (Seatbelt, `seccomp`) provide a compromise.
+  id: totrans-201
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 较少集中的“MAC”系统（Seatbelt、`seccomp`）提供了一种折衷方案。
 - en: '**TODO:** Also take a look at [The Chinese Wall Security Policy](papers/chinese-wall-sec-pol.pdf)'
+  id: totrans-202
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**待办事项:** 还要看看[《中国墙安全策略》](papers/chinese-wall-sec-pol.pdf)'
 - en: 'Plan 3: Capabilities (Capsicum).'
+  id: totrans-203
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 计划 3：能力（Capsicum）。
 - en: 'Different plan for access control: capabilities.'
+  id: totrans-204
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不同的访问控制计划：能力。
 - en: If process has a handle for some object ("capability"), can access it.
+  id: totrans-205
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果进程有某个对象的句柄（“能力”），就可以访问它。
 - en: '`Capability --> Object`'
+  id: totrans-206
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`能力 --> 对象`'
 - en: No separate question of privileges, access control lists, policies, etc.
+  id: totrans-207
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有特权、访问控制列表、策略等的单独问题。
 - en: 'E.g.: file descriptors on Unix are a capability for a file.'
+  id: totrans-208
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：Unix 上的文件描述符是文件的能力。
 - en: Program can't make up a file descriptor it didn't legitimately get.
+  id: totrans-209
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 程序无法制造未经合法获取的文件描述符。
 - en: '**Why not?** OS creates and manages FDs. No way for an application to forge
     a file descriptor. It would have to write OS memory via a vulnerability.'
+  id: totrans-210
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**为什么不？** 操作系统创建和管理文件描述符。应用程序无法伪造文件描述符。它必须通过漏洞写入操作系统内存。'
 - en: Once file is open, can access it; checks happened at open time.
+  id: totrans-211
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一旦文件打开，就可以访问它；检查发生在打开时。
 - en: Can pass open files to other processes.
+  id: totrans-212
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以将打开的文件传递给其他进程。
 - en: FDs also help solve "time-of-check to time-of-use" (TOCTTOU) bugs.
+  id: totrans-213
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件描述符也有助于解决“检查时间与使用时间”（TOCTTOU）漏洞。
 - en: 'Capabilities are usually ephemeral: not part of on-disk inode.'
+  id: totrans-214
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 能力通常是短暂的：不是磁盘上的 inode 的一部分。
 - en: Whatever starts the program needs to re-create capabilities each time.
+  id: totrans-215
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 启动程序的任何内容都需要每次重新创建能力。
 - en: Global namespaces
+  id: totrans-216
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 全局命名空间
 - en: Why are these guys so fascinated with eliminating global namespaces?
+  id: totrans-217
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么这些人如此着迷于消除全局命名空间？
 - en: Global namespaces require some access control story (e.g., ambient privileges).
+  id: totrans-218
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 全局命名空间需要一些访问控制策略（例如，环境权限）。
 - en: Hard to control sandbox's access to objects in global namespaces.
+  id: totrans-219
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 难以控制沙盒对全局命名空间中对象的访问。
 - en: Kernel changes
+  id: totrans-220
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核更改
 - en: 'Just to double-check: why do we need kernel changes?'
+  id: totrans-221
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只是为了再次确认：为什么我们需要内核更改？
 - en: Can we implement everything in a library (and LD_PRELOAD it)?
+  id: totrans-222
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们能否将所有内容都实现在一个库中（并通过 LD_PRELOAD 加载）？
 - en: Need OS to deny the application access to the global namespace once it entered
     capability mode
+  id: totrans-223
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要操作系统在进入能力模式后拒绝应用程序访问全局命名空间
 - en: 'Represent more things as file descriptors: processes (pdfork).'
+  id: totrans-224
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将更多内容表示为文件描述符：进程（pdfork）。
 - en: Good idea in general.
+  id: totrans-225
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一般来说是个好主意。
 - en: '*Capability mode:* once process enters *cap mode*, cannot leave it (including
     all children).'
+  id: totrans-226
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*能力模式:* 一旦进程进入 *cap 模式*，就无法离开（包括所有子进程）。'
 - en: In capability mode, can only use file descriptors -- no global namespaces.
+  id: totrans-227
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在能力模式下，只能使用文件描述符 -- 没有全局命名空间。
 - en: 'Cannot open files by full path name: no need for `chroot` as in OKWS.'
+  id: totrans-228
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不能通过完整路径名打开文件：不需要像 OKWS 中的 `chroot`。
 - en: Can still open files by relative path name, given fd for dir (`openat`).
+  id: totrans-229
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 仍然可以通过相对路径名打开文件，给定目录的 fd（`openat`）。
 - en: 'Cannot use ".." in path names or in symlinks: why not?'
+  id: totrans-230
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不能在路径名或符号链接中使用“..”：为什么？
 - en: In principle, ".." might be fine, as long as ".." doesn't go too far.
+  id: totrans-231
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 原则上，“..” 可能没问题，只要“..” 不走得太远。
 - en: Hard to enforce correctly.
+  id: totrans-232
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 难以正确执行。
 - en: 'Hypothetical design:'
+  id: totrans-233
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设设计：
 - en: Prohibit looking up ".." at the root capability.
+  id: totrans-234
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 禁止在根能力中查找“..”。
 - en: No more ".." than non-".." components in path name, ignoring ".".
+  id: totrans-235
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 路径名中的非“..”组件不得比“..”多，忽略“.”。
 - en: Assume a process has capability `C1` for `/foo`.
+  id: totrans-236
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设一个进程对 `/foo` 拥有能力 `C1`。
 - en: 'Race condition, in a single process with 2 threads:'
+  id: totrans-237
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在单个进程中的竞争条件，有 2 个线程：
 - en: 'Race condition example:'
+  id: totrans-238
   prefs: []
   type: TYPE_NORMAL
+  zh: 竞争条件示例：
 - en: '[PRE2]'
+  id: totrans-239
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: '...'
+  id: totrans-240
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '...'
 - en: Do Unix permissions still apply?
+  id: totrans-241
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix 权限仍然适用吗？
 - en: Yes -- can't access all files in dir just because you have a cap for dir.
+  id: totrans-242
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是的 -- 仅因为你对目录有一个 cap，就不能访问目录中的所有文件。
 - en: But intent is that sandbox shouldn't rely on Unix permissions.
+  id: totrans-243
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但意图是沙盒不应依赖 Unix 权限。
 - en: For file descriptors, add a wrapper object that stores allowed operations.
+  id: totrans-244
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于文件描述符，添加一个存储允许操作的包装对象。
 - en: Where does the kernel check capabilities?
+  id: totrans-245
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核在哪里检查能力？
 - en: One function in kernel looks up fd numbers -- modified it to check caps.
+  id: totrans-246
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核中的一个函数查找 fd 号码 -- 修改它以检查能力。
 - en: Also modified `namei` function, which looks up path names.
+  id: totrans-247
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 还修改了查找路径名的 `namei` 函数。
 - en: '**Good practice:** look for narrow interfaces, otherwise easy to miss checks'
+  id: totrans-248
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**良好实践：** 寻找窄接口，否则容易忽略检查。'
 - en: libcapsicum
+  id: totrans-249
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: libcapsicum
 - en: Why do application developers need this library?
+  id: totrans-250
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序开发人员为什么需要这个库？
 - en: 'Biggest functionality: starting a new process in a sandbox.'
+  id: totrans-251
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 最大的功能：在沙盒中启动新进程。
 - en: fd lists
+  id: totrans-252
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: fd 列表
 - en: Mostly a convenient way to pass lots of file descriptors to child process.
+  id: totrans-253
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 主要是将大量文件描述符传递给子进程的便捷方式。
 - en: Name file descriptors by string instead of hard-coding an fd number
+  id: totrans-254
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过字符串命名文件描述符，而不是硬编码的 fd 号码。
 - en: '`cap_enter()` vs `lch_start()`'
+  id: totrans-255
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`cap_enter()` vs `lch_start()`'
 - en: What are the advantages of sandboxing using `exec` instead of `cap_enter`?
+  id: totrans-256
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用 `exec` 而不是 `cap_enter` 进行沙盒化的优势是什么？
 - en: 'Leftover data in memory: e.g., private keys in OpenSSL/OpenSSH.'
+  id: totrans-257
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内存中的残留数据：例如 OpenSSL/OpenSSH 中的私钥。
 - en: Leftover file descriptors that application forgot to close.
+  id: totrans-258
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序忘记关闭的残留文件描述符。
 - en: 'Figure 7 in paper: `tcpdump` had privileges on `stdin`, `stdout`, `stderr`.'
+  id: totrans-259
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 论文中的图 7：`tcpdump` 在 `stdin`、`stdout`、`stderr` 上具有特权。
 - en: 'Figure 10 in paper: `dhclient` had a raw socket, `syslogd` pipe, lease file.'
+  id: totrans-260
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 论文中的图 10：`dhclient` 具有原始套接字，`syslogd` 管道，租约文件。
 - en: '**Advantages:** any process can create a new sandbox.'
+  id: totrans-261
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**优点：** 任何进程都可以创建一个新的沙盒。'
 - en: (Even a sandbox can create a sandbox.)
+  id: totrans-262
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （即使沙盒也可以创建沙盒。）
 - en: '**Advantages:** fine-grained control of access to resources (if they map to
     FDs).'
+  id: totrans-263
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**优点：** 对资源访问的细粒度控制（如果它们映射到 FD）。'
 - en: Files, network sockets, processes.
+  id: totrans-264
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件、网络套接字、进程。
 - en: '**Disadvantage:** weak story for keeping track of access to persistent files.'
+  id: totrans-265
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**缺点：** 对持久文件访问跟踪的故事较弱。'
 - en: '**Disadvantage:** prohibits global namespaces, requires writing code differently.'
+  id: totrans-266
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**缺点：** 禁止全局命名空间，需要以不同方式编写代码。'
 - en: 'Alternative capability designs: pure capability-based OS (KeyKOS, etc).'
+  id: totrans-267
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 替代性的能力设计：纯能力为基础的操作系统（KeyKOS 等）。
 - en: Kernel only provides a message-passing service.
+  id: totrans-268
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核只提供消息传递服务。
 - en: Message-passing channels (very much like file descriptors) are capabilities.
+  id: totrans-269
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 消息传递通道（非常类似文件描述符）是能力。
 - en: Every application has to be written in a capability style.
+  id: totrans-270
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个应用程序都必须以能力样式编写。
 - en: 'Capsicum claims to be more pragmatic: some applications need not be changed.'
+  id: totrans-271
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Capsicum 声称更加务实：一些应用程序无需更改。
 - en: 'Linux capabilities: solving a different problem.'
+  id: totrans-272
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Linux 能力：解决不同的问题。
 - en: Trying to partition root's privileges into finer-grained privileges.
+  id: totrans-273
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 尝试将根的特权划分为更细粒度的特权。
 - en: 'Represented by various capabilities: `CAP_KILL, CAP_SETUID`, `CAP_SYS_CHROOT`,
     ..'
+  id: totrans-274
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 由各种能力表示：`CAP_KILL, CAP_SETUID`, `CAP_SYS_CHROOT`, ..
 - en: Process can run with a specific capability instead of all of root's privs.
+  id: totrans-275
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 进程可以以特定能力运行，而不是以 root 的所有特权。
 - en: 'Ref: [capabilities(7)](http://linux.die.net/man/7/capabilities)'
+  id: totrans-276
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：[capabilities(7)](http://linux.die.net/man/7/capabilities)
 - en: Using Capsicum in applications
+  id: totrans-277
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 在应用程序中使用 Capsicum
 - en: '*Plan:* ensure sandboxed process doesn''t use path names or other global NSes.'
+  id: totrans-278
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*计划：* 确保沙盒化进程不使用路径名或其他全局 NS。'
 - en: For every directory it might need access to, open FD ahead of time.
+  id: totrans-279
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于可能需要访问的每个目录，提前打开 FD。
 - en: To open files, use `openat()` starting from one of these directory FDs.
+  id: totrans-280
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要打开文件，请使用从这些目录 FD 开始的 `openat()`。
 - en: .. programs that open lots of files all over the place may be cumbersome.
+  id: totrans-281
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: .. 打开大量文件的程序可能会很麻烦。
 - en: '`tcpdump`'
+  id: totrans-282
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`tcpdump`'
 - en: '2-line version: just `cap_enter()` after opening all FDs.'
+  id: totrans-283
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 2 行版本：在打开所有 FD 后只需 `cap_enter()`。
 - en: Used `procstat` to look at resulting capabilities.
+  id: totrans-284
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用 `procstat` 查看生成的能力。
 - en: '8-line version: also restrict `stdin`/`stdout`/`stderr`.'
+  id: totrans-285
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 8 行版本：还限制 `stdin`/`stdout`/`stderr`。
 - en: Why? Avoid reading `stderr` log, changing terminal settings, ...
+  id: totrans-286
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么？避免读取 `stderr` 日志，更改终端设置，...
 - en: '`dhclient`'
+  id: totrans-287
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`dhclient`'
 - en: Already privilege-separated, using Capsicum to reinforce sandbox (2 lines).
+  id: totrans-288
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 已经进行了特权分离，使用 Capsicum 来加强沙盒（2 行）。
 - en: '`gzip`'
+  id: totrans-289
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`gzip`'
 - en: Fork/exec sandboxed child process, feed it data using RPC over pipes.
+  id: totrans-290
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 分叉/执行沙盒化的子进程，通过管道使用RPC向其提供数据。
 - en: 'Non-trivial changes, mostly to marshal/unmarshal data for RPC: 409 LoC.'
+  id: totrans-291
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 非平凡的更改，主要是为了为RPC编组/解组数据：409行代码。
 - en: '*Interesting bug:* forgot to propagate compression level at first.'
+  id: totrans-292
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*有趣的错误：*一开始忘记传播压缩级别。'
 - en: '`Chromium`'
+  id: totrans-293
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`Chromium`'
 - en: Already privilege-separated on other platforms (but not on FreeBSD).
+  id: totrans-294
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在其他平台上已经进行了特权分离（但在FreeBSD上没有）。
 - en: ~100 LoC to wrap file descriptors for sandboxed processes.
+  id: totrans-295
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ~100行代码用于为沙盒化进程包装文件描述符。
 - en: '`OKWS`'
+  id: totrans-296
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`OKWS`'
 - en: What are the various answers to the homework question?
+  id: totrans-297
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 家庭作业问题有哪些不同的答案？
 - en: Does Capsicum achieve its goals?
+  id: totrans-298
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Capsicum是否实现了其目标？
 - en: How hard/easy is it to use?
+  id: totrans-299
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用起来有多难/容易？
 - en: Using Capsicum in an application almost always requires app changes.
+  id: totrans-300
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在应用程序中使用Capsicum几乎总是需要应用程序更改。
 - en: (Many applications tend to open files by pathname, etc.)
+  id: totrans-301
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （许多应用程序倾向于通过路径名打开文件等。）
 - en: 'One exception: Unix pipeline apps (filters) that just operate on FDs.'
+  id: totrans-302
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个例外：Unix管道应用程序（过滤器）只操作FD。
 - en: Easier for streaming applications that process data via FDs.
+  id: totrans-303
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对通过FD处理数据的流式应用程序更容易。
 - en: Other sandboxing requires similar changes (e.g., `dhclient`, Chromium).
+  id: totrans-304
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 其他隔离需要类似的更改（例如，`dhclient`，Chromium）。
 - en: For existing applications, lazy initialization seems to be a problem.
+  id: totrans-305
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于现有应用程序，延迟初始化似乎是一个问题。
 - en: No general-purpose solution -- either change code or initialize early.
+  id: totrans-306
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有通用解决方案——要么更改代码，要么早期初始化。
 - en: 'Suggested plan: sandbox and see what breaks.'
+  id: totrans-307
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 建议的计划：沙盒化并查看哪些地方出问题。
 - en: 'Might be subtle: `gzip` compression level bug.'
+  id: totrans-308
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能会有微妙之处：`gzip`压缩级别错误。
 - en: What are the security guarantees it provides?
+  id: totrans-309
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 它提供了哪些安全保证？
 - en: 'Guarantees provided to app developers: sandbox can operate only on open FDs.'
+  id: totrans-310
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 提供给应用程序开发人员的保证：沙盒只能在打开的FD上操作。
 - en: Implications depend on how app developer partitions application, FDs.
+  id: totrans-311
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 结果取决于应用程序开发人员如何划分应用程序、FD。
 - en: User/admin doesn't get any direct guarantees from Capsicum.
+  id: totrans-312
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户/管理员无法从Capsicum获得任何直接保证。
 - en: Guarantees assume no bugs in FreeBSD kernel (lots of code), and that the Capsicum
     developers caught all ways to access a resource not via FDs.
+  id: totrans-313
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 保证假设FreeBSD内核没有错误（大量代码），并且Capsicum开发人员捕获了所有通过FD而非资源访问的方式。
 - en: What are the performance overheads? (CPU, memory)
+  id: totrans-314
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 性能开销是多少？（CPU，内存）
 - en: Minor overheads for accessing a file descriptor.
+  id: totrans-315
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 访问文件描述符的轻微开销。
 - en: Setting up a sandbox using `fork`/`exec` takes `O(1msec)`, non-trivial.
+  id: totrans-316
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用`fork`/`exec`设置沙盒需要花费`O(1msec)`，非平凡的。
 - en: Privilege separation can require RPC / message-passing, perhaps noticeable.
+  id: totrans-317
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 特权分离可能需要RPC / 消息传递，可能会引起注意。
 - en: Adoption?
+  id: totrans-318
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 采用情况？
 - en: In FreeBSD's kernel now, enabled by default (as of FreeBSD 10).
+  id: totrans-319
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在FreeBSD的内核中，现在默认启用（从FreeBSD 10开始）。
 - en: A handful of applications have been modified to use Capsicum. `dhclient`, `tcpdump`,
     and a few more since the paper was written. [Ref](http://www.cl.cam.ac.uk/research/security/capsicum/freebsd.html)
+  id: totrans-320
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 少数应用程序已经修改为使用Capsicum。`dhclient`，`tcpdump`，自论文撰写以来还有几个。[参考](http://www.cl.cam.ac.uk/research/security/capsicum/freebsd.html)
 - en: Casper daemon to help applications perform non-capability operations. E.g.,
     DNS lookups, look up entries in `/etc/passwd`, etc. [Ref](http://people.freebsd.org/~pjd/pubs/Capsicum_and_Casper.pdf)
+  id: totrans-321
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Casper守护程序帮助应用程序执行非能力操作。例如，DNS查找，查找`/etc/passwd`中的条目等。[参考](http://people.freebsd.org/~pjd/pubs/Capsicum_and_Casper.pdf)
 - en: There's a port of Capsicum to Linux (but not in upstream kernel repo).
+  id: totrans-322
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Capsicum已经移植到Linux（但不在上游内核存储库中）。
 - en: What applications wouldn't be a good fit for Capsicum?
+  id: totrans-323
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 有哪些应用程序不适合Capsicum？
 - en: Apps that need to control access to non-kernel-managed objects.
+  id: totrans-324
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要控制对非内核管理对象的访问的应用程序。
 - en: 'E.g.: X server state, DBus, HTTP origins in a web browser, etc.'
+  id: totrans-325
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：X服务器状态，DBus，在Web浏览器中的HTTP来源等。
 - en: 'E.g.: a database server that needs to ensure DB file is in correct format.'
+  id: totrans-326
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：需要确保DB文件格式正确的数据库服务器。
 - en: Capsicum treats pipe to a user-level server (e.g., X server) as one cap.
+  id: totrans-327
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Capsicum将管道视为用户级服务器（例如，X服务器）的一个能力。
 - en: Apps that need to connect to specific TCP/UDP addresses/ports from sandbox.
+  id: totrans-328
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要从沙盒连接到特定的TCP/UDP地址/端口的应用程序。
 - en: Capsicum works by only allowing operations on existing open FDs.
+  id: totrans-329
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Capsicum通过仅允许对现有打开的FD进行操作来工作。
 - en: Need some other mechanism to control what FDs can be opened.
+  id: totrans-330
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要其他机制来控制可以打开哪些FD。
 - en: 'Possible solution: helper program can run outside of capability mode, open
     TCP/UDP sockets for sandboxed programs based on policy.'
+  id: totrans-331
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能的解决方案：辅助程序可以在能力模式之外运行，根据策略为沙盒化程序打开TCP/UDP套接字。
 - en: References
+  id: totrans-332
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 参考
 - en: '[Apple sandbox guide](http://reverse.put.as/wp-content/uploads/2011/09/Apple-Sandbox-Guide-v1.0.pdf)'
+  id: totrans-333
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[苹果沙盒指南](http://reverse.put.as/wp-content/uploads/2011/09/Apple-Sandbox-Guide-v1.0.pdf)'
 - en: '[seccomp_filter](http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/prctl/seccomp_filter.txt;hb=HEAD)'
+  id: totrans-334
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[seccomp_filter](http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/prctl/seccomp_filter.txt;hb=HEAD)'
 - en: '[Mandatory integrity control](http://en.wikipedia.org/wiki/Mandatory_Integrity_Control)'
+  id: totrans-335
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[强制完整性控制](http://en.wikipedia.org/wiki/Mandatory_Integrity_Control)'
 - en: '[The Chinese Wall Security Policy](papers/chinese-wall-sec-pol.pdf)'
+  id: totrans-336
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[中国防火墙安全政策](papers/chinese-wall-sec-pol.pdf)'

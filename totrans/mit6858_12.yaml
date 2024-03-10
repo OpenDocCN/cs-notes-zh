@@ -1,1319 +1,1877 @@
 - en: TCP/IP security
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: TCP/IP安全
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记略有修改，来自2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的内容。'
 - en: Threat model for network security
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 网络安全的威胁模型
 - en: Adversary can intercept / modify network traffic.
+  id: totrans-3
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可以拦截/修改网络流量。
 - en: Adversary can send packets.
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可以发送数据包。
 - en: Adversary has full control of their own machines.
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手完全控制自己的机器。
 - en: Adversary can participate in protocols (usually).
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可以参与协议（通常）。
 - en: Often not feasible to keep bad guys out of a large systems.
+  id: totrans-7
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通常不可行将坏人排除在大型系统之外。
 - en: Eavesdropping on packets.
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 窃听数据包。
 - en: Important to keep in mind, but relatively well understood.
+  id: totrans-9
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 重要的是要记住，但相对来说已经被很好地理解。
 - en: Any data sent over the network can be observed by an adversary.
+  id: totrans-10
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过网络发送的任何数据都可以被对手观察。
 - en: Sending / spoofing packets.
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 发送/伪造数据包。
 - en: IP allows sender to construct an arbitrary packet.
+  id: totrans-12
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: IP允许发送方构造任意数据包。
 - en: In particular, sender can fill in any source address.
+  id: totrans-13
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 特别是，发送方可以填写任何源地址。
 - en: Can pretend that a packet is coming from any address.
+  id: totrans-14
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以假装数据包来自任何地址。
 - en: What can an adversary do with this?
+  id: totrans-15
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可以利用这个做什么？
 - en: A Look Back at "Security Problems in the TCP/IP Protocol Suite"
+  id: totrans-16
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 回顾一下"TCP/IP协议套件中的安全问题"
 - en: '[Paper here](http://css.csail.mit.edu/6.858/2014/readings/lookback-tcpip.pdf)'
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: '[论文在这里](http://css.csail.mit.edu/6.858/2014/readings/lookback-tcpip.pdf)'
 - en: 'Easy target: trigger bugs in some implementation.'
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 易受攻击：触发某些实现中的错误。
 - en: Author isn't so interested in this class of problems.
+  id: totrans-19
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 作者对这类问题不太感兴趣。
 - en: Instead, want to look at **"protocol-level problems"**.
+  id: totrans-20
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 相反，希望看看**"协议级问题"**。
 - en: What is a protocol-level problem?
+  id: totrans-21
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是协议级问题？
 - en: A problem inherent in the design.
+  id: totrans-22
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 设计固有的问题。
 - en: A correct implementation will have this problem.
+  id: totrans-23
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 正确的实现会有这个问题。
 - en: Why is it so important?
+  id: totrans-24
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么这么重要？
 - en: Can fix implementation bugs.
+  id: totrans-25
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以修复实现中的错误。
 - en: To fix protocol-level bugs, might need to change protocol!
+  id: totrans-26
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要修复协议级错误，可能需要更改协议！
 - en: Might be incompatible with existing systems.
+  id: totrans-27
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能与现有系统不兼容。
 - en: (As we will see, sometimes possible to come up with compatible fixes.)
+  id: totrans-28
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （正如我们将看到的，有时可能提出兼容的修复方法。）
 - en: TCP sequence number attack
+  id: totrans-29
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: TCP序列号攻击
 - en: 'Standard handshake (figure on the right side of page 2):'
+  id: totrans-30
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 标准握手（第2页右侧的图）：
 - en: '`C: SRC=C, DST=S, SYN(SNc)`'
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`C: 源=C, 目的=S, SYN(SNc)`'
 - en: '`S: SRC=S, DST=C, SYN(SNs), ACK(SNc)`'
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`S: 源=S, 目的=C, SYN(SNs), ACK(SNc)`'
 - en: '`C: SRC=C, DST=S, ACK(SNs)`'
+  id: totrans-33
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`C: 源=C, 目的=S, ACK(SNs)`'
 - en: '`C: SRC=C, DST=S, data(SNc), ACK(SNs)`'
+  id: totrans-34
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`C: 源=C, 目的=S, 数据(SNc), ACK(SNs)`'
 - en: How does the adversary know the data is coming from the client?
+  id: totrans-35
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手如何知道数据来自客户端？
 - en: Only the client should have been able to receive the second message.
+  id: totrans-36
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有客户端应该能够接收第二条消息。
 - en: Thus, **only the client should know SNs**.
+  id: totrans-37
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，**只有客户端应该知道序列号**。
 - en: Third message is rejected, unless it has the right SNs value.
+  id: totrans-38
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 第三条消息将被拒绝，除非具有正确的SNs值。
 - en: Suppose adversary A wants to simulate a connection to S from C. (Assume A knows
     C's IP address -- usually not a big deal in practice.)
+  id: totrans-39
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设对手A想要模拟从C到S的连接。（假设A知道C的IP地址--在实践中通常不是大问题。）
 - en: '`A: SRC=C, DST=S, SYN(SNc)`'
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`A: 源=C, 目的=S, SYN(SNc)`'
 - en: '`S: SRC=S, DST=C, SYN(SNs), ACK(SNc)` -- but this goes to C, not A'
+  id: totrans-41
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`S: 源=S, 目的=C, SYN(SNs), ACK(SNc)` -- 但这将发送到C，而不是A'
 - en: '`A: SRC=C, DST=S, ACK(SNs)` -- but how to guess SNs?'
+  id: totrans-42
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`A: 源=C, 目的=S, ACK(SNs)` -- 但如何猜测SNs？'
 - en: '`A: SRC=C, DST=S, data(SNc)`'
+  id: totrans-43
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`A: 源=C, 目的=S, 数据(SNc)`'
 - en: Where does the adversary get SNs?
+  id: totrans-44
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手从哪里获取SNs？
 - en: TCP specification suggested a specific way to choose them.
+  id: totrans-45
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: TCP规范建议了一种选择它们的特定方式。
 - en: 'In particular, increment at a ~constant rate: ~250,000 per second.'
+  id: totrans-46
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 特别是，以大约恒定的速率增加：每秒约250,000个。
 - en: Why so specific?
+  id: totrans-47
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么这么具体？
 - en: Subtle interactions with reused connections (src/dst port numbers).
+  id: totrans-48
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与重用连接（源/目的端口号）的微妙交互。
 - en: Want to avoid old packets (from past conns) interfering with new conn.
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 希望避免旧数据包（来自过去的连接）干扰新连接。
 - en: 'Ref: RFC 1185 appendix'
+  id: totrans-50
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：RFC 1185 附录
 - en: If adversary knows a recent sequence number, can guess the next one.
+  id: totrans-51
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果对手知道最近的序列号，就可以猜测下一个序列号。
 - en: Implemention would actually bump ISN every second, making it easy to guess.
+  id: totrans-52
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实现实际上会每秒增加ISN，使其易于猜测。
 - en: What happens to the real packet that S sends to C (second pkt)?
+  id: totrans-53
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: S发送给C的真实数据包发生了什么（第二个数据包）？
 - en: C would assume the packet is from an old conn, send `RST` in response.
+  id: totrans-54
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: C会假设数据包来自旧连接，发送`RST`作为响应。
 - en: Even if that `RST` was sent, adversary could try to race before `RST` arrives.
+  id: totrans-55
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使发送了`RST`，对手也可以在`RST`到达之前尝试竞争。
 - en: Luckily, there was another curious bug; will get to it later.
+  id: totrans-56
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 幸运的是，还有另一个奇怪的错误；稍后会讨论。
 - en: But why do sequence number attacks turn into a security problem?
+  id: totrans-57
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但是为什么序列号攻击会变成安全问题？
 - en: 1\. Spoof connections to applications that rely on IP addresses
+  id: totrans-58
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 1. 伪造依赖IP地址的应用程序的连接
 - en: 'E.g., Berkeley remote access tools: rlogin, rsh, rcp.'
+  id: totrans-59
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，伯克利远程访问工具：rlogin、rsh、rcp。
 - en: Allowed login without a password, if connection came from a "trusted" system.
+  id: totrans-60
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果连接来自“受信任”系统，则允许无密码登录。
 - en: Required connection to come from a trusted source port (512-1023).
+  id: totrans-61
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要求连接来自受信任的源端口（512-1023）。
 - en: Why this requirement?
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么有这个要求？
 - en: Trusted rlogin/rsh/rcp program sent the client's username.
+  id: totrans-63
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 受信任的rlogin/rsh/rcp程序发送客户端的用户名。
 - en: If username was the same as the account on the server, no password needed.
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果用户名与服务器上的帐户相同，则无需密码。
 - en: 'E.g.: "rsh athena.dialup.mit.edu ls".'
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如："rsh athena.dialup.mit.edu ls"。
 - en: Made a bad assumption about what the TCP layer provided.
+  id: totrans-66
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对TCP层提供的内容做出了错误的假设。
 - en: '*Assumed TCP conn from an IP address meant it really came from that host.*'
+  id: totrans-67
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*假设来自IP地址的TCP连接意味着它确实来自该主机。*'
 - en: If adversary can guess SNs, then can simulate connection from trusted host.
+  id: totrans-68
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果对手可以猜测SN，则可以模拟来自受信任主机的连接。
 - en: Issue any command using rsh.
+  id: totrans-69
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用rsh发出任何命令。
 - en: Could change the user's .rhosts file to allow login from attacker's host.
+  id: totrans-70
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以更改用户的.rhosts文件以允许从攻击者主机登录。
 - en: Then connect directly without having to simulate a connection.
+  id: totrans-71
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然后直接连接，而无需模拟连接。
 - en: Host-based authentication seems like a bad plan.
+  id: totrans-72
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 基于主机的身份验证似乎是一个糟糕的计划。
 - en: Especially relying on "trusted" vs "untrusted" ports on a machine.
+  id: totrans-73
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 特别是依赖于主机上的“受信任”与“不受信任”端口。
 - en: 'Still in some use today: e.g., SMTP for outgoing mail.'
+  id: totrans-74
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 今天仍在使用：例如，用于传出邮件的SMTP。
 - en: 'Actually rlogin authentication was even worse: they authenticated by hostname.'
+  id: totrans-75
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实际上，rlogin身份验证甚至更糟：他们通过主机名进行身份验证。
 - en: Where does hostname come from? Reverse DNS lookup.
+  id: totrans-76
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 主机名从哪里来？反向DNS查找。
 - en: 'E.g., 18.26.4.9: find the PTR record of 9.4.26.18.in-addr.arpa.'
+  id: totrans-77
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，18.26.4.9：查找9.4.26.18.in-addr.arpa的PTR记录。
 - en: Owner of that domain can set PTR record to any hostname!
+  id: totrans-78
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 该域的所有者可以将PTR记录设置为任何主机名！
 - en: '(Can make a slight improvement: check if host resolves to same addr.)'
+  id: totrans-79
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （可以稍微改进：检查主机是否解析为相同的地址。）
 - en: 'Similar problems show up in log files: log resolved (untrusted) hostname.'
+  id: totrans-80
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 类似的问题出现在日志文件中：记录解析（不受信任）主机名。
 - en: '2\. Denial of service attack: connection reset'
+  id: totrans-81
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 2. 拒绝服务攻击：连接重置
 - en: Once we know SNc, can send a RST packet.
+  id: totrans-82
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一旦我们知道SNc，就可以发送一个RST数据包。
 - en: 'Worse yet: server will accept a RST packet for any SNc value within window.'
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更糟糕的是：服务器将接受任何在窗口内的SNc值的RST数据包。
 - en: With a large window (~32K=2^15), only need 2^32/2^15 = 2^17 guesses.
+  id: totrans-84
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 具有大窗口（~32K=2^15）时，只需要2^32/2^15 = 2^17次猜测。
 - en: How bad is a connection reset?
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 连接重置有多糟糕？
 - en: One target of such attacks were the TCP connections between BGP routers.
+  id: totrans-86
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 此类攻击的一个目标是BGP路由器之间的TCP连接。
 - en: Causes routers to assume link failure, could affect traffic for minutes.
+  id: totrans-87
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 导致路由器假定链路故障，可能会影响几分钟的流量。
 - en: 'Solutions:'
+  id: totrans-88
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 解决方案：
 - en: 'TTL hack (255): make sure BGP nodes only talk to direct neighbors by setting
     `TTL = 1` in the TCP packets'
+  id: totrans-89
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: TTL黑客（255）：通过在TCP数据包中设置`TTL = 1`，确保BGP节点只与直接邻居通信
 - en: MD5 header authentication (very specialized for router-to-router links).
+  id: totrans-90
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: MD5头部身份验证（非常专门用于路由器之间的链接）。
 - en: 3\. Hijack existing connections
+  id: totrans-91
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 3. 劫持现有连接
 - en: In similar vein, can also inject data into an existing connection.
+  id: totrans-92
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 类似地，还可以向现有连接中注入数据。
 - en: All adversary needs to know is the current SNc.
+  id: totrans-93
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手只需要知道当前的SNc。
 - en: How to mitigate this problem?
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 如何缓解这个问题？
 - en: 'Baseline: don''t rely on IP addresses for authentication.'
+  id: totrans-95
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 基线：不要依赖IP地址进行身份验证。
 - en: Use encryption / authentication at a higher level.
+  id: totrans-96
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在更高级别使用加密/身份验证。
 - en: 'Next lecture: Kerberos.'
+  id: totrans-97
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 下一讲：Kerberos。
 - en: But still, want to fix the situation we're in, for TCP.
+  id: totrans-98
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但是，我们仍然希望为TCP解决当前的情况。
 - en: ISPs can filter packets sent by their customers.
+  id: totrans-99
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ISP可以过滤其客户发送的数据包。
 - en: Often done today for small customers, but not consistently.
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 今天经常为小客户执行，但不一致。
 - en: Not straightforward for customers with complex networks, multihoming, ..
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于具有复杂网络、多重主机等的客户来说并不直接。
 - en: How to patch up TCP?
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 如何修补TCP？
 - en: Can't choose ISN's in a completely random way, without violating TCP spec.
+  id: totrans-103
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不能以完全随机的方式选择ISN，而不违反TCP规范。
 - en: Might break connection (port) reuse guarantees.
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能会破坏连接（端口）重用的保证。
 - en: ISN is 32 bits, means after ~2^16 = 65,000 connections you could get a collision
     and reuse an ISN that matches an old connection.
+  id: totrans-105
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ISN是32位，意味着在约2^16 = 65,000个连接后，您可能会发生冲突并重用与旧连接匹配的ISN。
 - en: old packets from that connection can be interpreted as being part of the new
     connection
+  id: totrans-106
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 旧连接的数据包可能被解释为新连接的一部分
 - en: Thus, it might be better if the ISNs *progress* incrementally with wrap-around,
     so as to make collisions much less probable.
+  id: totrans-107
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，最好ISNs *递增* 以环绕方式递增，以使碰撞变得不太可能。
 - en: Random increments?
+  id: totrans-108
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 随机增量？
 - en: Should preserve increment rate (~250k/second).
+  id: totrans-109
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应保留增量速率（~250k/秒）。
 - en: Not a huge amount of randomness (say, low 8 bits per increment).
+  id: totrans-110
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有大量的随机性（比如，每次增加低8位）。
 - en: 'Aside: must be careful about how we generate random numbers!'
+  id: totrans-111
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 旁注：必须小心我们如何生成随机数！
 - en: 'Common PRNG: linear congruential generator: `R_k = A*R_{k-1}+B mod N`.'
+  id: totrans-112
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 常见PRNG：线性同余生成器：`R_k = A*R_{k-1}+B mod N`。
 - en: 'Not secure: given one pseudo-random value, can guess the next one!'
+  id: totrans-113
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不安全：给定一个伪随机值，可以猜测下一个！
 - en: Lots of better cryptographically secure PRNGs are available.
+  id: totrans-114
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有许多更好的密码学安全PRNG可用。
 - en: Ideally, use your kernel's built-in PRNG (/dev/random, /dev/urandom)
+  id: totrans-115
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 理想情况下，使用内核内置的PRNG（/dev/random，/dev/urandom）
 - en: 'Ref: http://en.wikipedia.org/wiki/Fortuna_(PRNG), or any stream cipher like
     http://en.wikipedia.org/wiki/RC4'
+  id: totrans-116
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：http://en.wikipedia.org/wiki/Fortuna_(PRNG)，或任何流密码，如http://en.wikipedia.org/wiki/RC4
 - en: However, SN values for different src/dst pairs never interact!
+  id: totrans-117
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然而，不同的源/目的地对的SN值永远不会相互作用！
 - en: So, can choose the ISN using a random offset for each src/dst pair.
+  id: totrans-118
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，可以为每个源/目的地对选择使用随机偏移量来选择ISN。
 - en: 'Nice trick: `ISN = ISN_oldstyle + F(srcip, srcport, dstip, dstport, secret)`'
+  id: totrans-119
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不错的技巧：`ISN = ISN_oldstyle + F(srcip, srcport, dstip, dstport, secret)`
 - en: '`F` is some pseudo-random function; roughly, think SHA1.'
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`F`是某个伪随机函数；大致上，可以认为是SHA1。'
 - en: Requires no extra state to keep track of per-connection ISNs.
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不需要额外的状态来跟踪每个连接的ISNs。
 - en: Are sequence number attacks still relevant?
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 序列号攻击仍然相关吗？
 - en: Most operating systems implement the per-connection ISN workaround above.
+  id: totrans-123
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大多数操作系统实现了上述每个连接ISN的解决方法。
 - en: 'Ref: Linux `secure_tcp_sequence_number` in `net/core/secure_seq.c`'
+  id: totrans-124
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：Linux `secure_tcp_sequence_number` in `net/core/secure_seq.c`
 - en: But other protocols suffer from almost identical problems -- e.g., DNS.
+  id: totrans-125
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但其他协议遭受几乎相同的问题--例如，DNS。
 - en: DNS runs over UDP, no seq numbers, just ports, and dst port fixed (53).
+  id: totrans-126
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DNS在UDP上运行，没有序列号，只有端口，目的端口固定（53）。
 - en: If adversary knows client is making a query, can fake a response.
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果对手知道客户端正在进行查询，可以伪造响应。
 - en: Just need to guess src port, often predictable.
+  id: totrans-128
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只需要猜测src端口，通常是可预测的。
 - en: Problem gained popularity in 2008, though well-understood by djb before.
+  id: totrans-129
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题在2008年变得流行，尽管在此之前djb已经很好地理解了。
 - en: 'Ref: http://cr.yp.to/djbdns/forgery.html'
+  id: totrans-130
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：http://cr.yp.to/djbdns/forgery.html
 - en: 'Ref: http://unixwiz.net/techtips/iguide-kaminsky-dns-vuln.html'
+  id: totrans-131
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：http://unixwiz.net/techtips/iguide-kaminsky-dns-vuln.html
 - en: 'Solution: carefully take advantage of all possible randomness!'
+  id: totrans-132
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 解决方案：仔细利用所有可能的随机性！
 - en: DNS queries contain 16-bit query ID, and can randomize ~16 bit src port.
+  id: totrans-133
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DNS查询包含16位查询ID，并且可以随机化约16位src端口。
 - en: 'Solution: deploy DNSSEC (signed DNS records, including missing records).'
+  id: totrans-134
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 解决方案：部署DNSSEC（签名的DNS记录，包括缺失记录）。
 - en: 'One problem: key distribution (who is allowed to sign each domain?)'
+  id: totrans-135
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个问题：密钥分发（谁被允许为每个域签名？）
 - en: 'Another problem: name enumeration (to sign "no such name" responses).'
+  id: totrans-136
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个问题：名称枚举（以签署“没有这样的名称”响应）。
 - en: 'Partially mitigated by NSEC3: http://tools.ietf.org/html/rfc5155'
+  id: totrans-137
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 部分通过NSEC3缓解：http://tools.ietf.org/html/rfc5155
 - en: Slow adoption, not much incentive to upgrade, non-trivial costs.
+  id: totrans-138
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 采用缓慢，没有太多升级的动力，非微不足道的成本。
 - en: Costs include both performance and administrative (key/cert management).
+  id: totrans-139
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 成本包括性能和管理（密钥/证书管理）。
 - en: SYN flooding
+  id: totrans-140
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: SYN洪水攻击
 - en: Note that server must store some state when it receives a SYN packet.
+  id: totrans-141
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 请注意，服务器在接收到SYN数据包时必须存储一些状态。
 - en: It needs to store the `SN_s` sequence number it sent to that client
+  id: totrans-142
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 它需要存储发送给该客户端的`SN_s`序列号
 - en: 'Called a half-open connection: replied with SYN-ACK, waiting for the ACK.'
+  id: totrans-143
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 被称为半开放连接：回复了SYN-ACK，等待ACK。
 - en: What if it receives SYN messages from many sources?
+  id: totrans-144
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果它从许多来源接收到SYN消息会怎样？
 - en: Many implementations try to keep state for all half-open connections.
+  id: totrans-145
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 许多实现尝试为所有半开放连接保留状态。
 - en: But eventually run out of memory, must reject connections!
+  id: totrans-146
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但最终会耗尽内存，必须拒绝连接！
 - en: 'Annoying problem: we don''t even know who we''re keeping state for!'
+  id: totrans-147
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 恼人的问题：我们甚至不知道我们为谁保留状态！
 - en: Adversary could have a single host, and generate SYNs from many src IPs.
+  id: totrans-148
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可能有一个单一主机，并从许多src IP生成SYN。
 - en: 'Denial-of-service attack: big asymmetry between client + server resources.'
+  id: totrans-149
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 拒绝服务攻击：客户端+服务器资源之间存在巨大的不对称性。
 - en: Client spoofs a single packet (less than 1 millisecond).
+  id: totrans-150
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端伪造一个单个数据包（少于1毫秒）。
 - en: Server wastes memory until connection times out (minutes).
+  id: totrans-151
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器会浪费内存直到连接超时（几分钟）。
 - en: 'Defense for SYN flooding: SYN cookies.'
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 防御SYN洪水攻击：SYN cookies。
 - en: '**Idea:** make the server stateless, until it receives that third packet (ACK).'
+  id: totrans-153
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**思路：** 使服务器无状态，直到收到第三个数据包（ACK）。'
 - en: Why is this tricky?
+  id: totrans-154
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这为什么很棘手？
 - en: Need to ensure an adversary can't make up a conn from any src address.
+  id: totrans-155
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要确保对手无法从任何源地址捏造一个连接。
 - en: Previously, this was done by storing ISNs, and expecting it in the ACK.
+  id: totrans-156
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 以前，这是通过存储ISNs并期望在ACK中收到来实现的。
 - en: Use a bit of cryptography to achieve similar goal.
+  id: totrans-157
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用一点密码学来实现类似的目标。
 - en: Encode server-side state into sequence number.
+  id: totrans-158
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将服务器端状态编码到序列号中。
 - en: ISNs = `MAC_k(src/dst addr+port, timestamp) || timestamp`
+  id: totrans-159
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ISNs = `MAC_k（源/目的地址+端口，时间戳）|| 时间戳`
 - en: Timestamp is coarse-grained (e.g., minutes).
+  id: totrans-160
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 时间戳是粗粒度的（例如，分钟）。
 - en: Server stores secret key `k`, not shared with anyone else.
+  id: totrans-161
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器存储秘钥`k`，不与其他人共享。
 - en: 'Detailed ref: http://cr.yp.to/syncookies.html'
+  id: totrans-162
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 详细参考：http://cr.yp.to/syncookies.html
 - en: Server computes seq as above when sending SYN-ACK response.
+  id: totrans-163
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当发送SYN-ACK响应时，服务器计算如上述的序列号。
 - en: Server can verify state is intact by verifying hash (MAC) on ACK's seq.
+  id: totrans-164
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器可以通过验证ACK的序列上的哈希（MAC）来验证状态是否完整。
 - en: 'Not quite ideal: need to think about replay attacks within timestamp.'
+  id: totrans-165
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不太理想：需要考虑时间戳内的重放攻击。
 - en: 'Another problem: if third packet lost, noone retransmits.'
+  id: totrans-166
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个问题：如果第三个数据包丢失，没有人会重传。
 - en: Only a problem for protocols where server speaks first.
+  id: totrans-167
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有在服务器先发言的协议中才会有问题。
 - en: Because server does **NOT** keep the connection state anymore, so it does not
     know there's a *hanging connection*, so it will never retransmit its SYN message
     to the client after waiting too long for the client's ACK.
+  id: totrans-168
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因为服务器不再保留连接状态，所以它不知道有一个*悬挂连接*，所以在等待客户端的ACK太久后，它永远不会重新传输其SYN消息给客户端。
 - en: Similarly, the client will not know its ACK packet got lost (it's never ACK'd
     back, and since the client is waiting on the server to send the first message
     (assumption), the client will not send any other data either.
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '同样，客户端不会知道其ACK数据包丢失了（它从未被ACK回来，而且由于客户端正在等待服务器发送第一个消息（假设），客户端也不会发送任何其他数据）。 '
 - en: Maybe not a big deal in case of a DoS attack.
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在DoS攻击的情况下可能不是一个大问题。
 - en: 'Another DoS attack vector: bandwidth amplification.'
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个DoS攻击向量：带宽放大。
 - en: Send ICMP echo request (ping) packets to the broadcast address of a network.
+  id: totrans-172
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 向网络的广播地址发送ICMP回显请求（ping）数据包。
 - en: E.g., 18.26.7.255.
+  id: totrans-173
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，18.26.7.255。
 - en: Used to be that you'd get an ICMP echo reply from all machines on network.
+  id: totrans-174
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 以前，你会从网络上的所有机器收到ICMP回显回复。
 - en: What if you fake a packet from victim's address? Victim gets all replies.
+  id: totrans-175
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果你伪造一个来自受害者地址的数据包怎么办？受害者会收到所有回复。
 - en: 'Find a subnet with 100 machines on a fast network: 100x amplification!'
+  id: totrans-176
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在一个快速网络上找到一个有100台机器的子网：100倍放大！
 - en: 'Ref: http://en.wikipedia.org/wiki/Smurf_attack'
+  id: totrans-177
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：http://en.wikipedia.org/wiki/Smurf_attack
 - en: Can we fix this?
+  id: totrans-178
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们能修复这个问题吗？
 - en: Routers now block "directed broadcast" (packets sent to broadcast address).
+  id: totrans-179
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 路由器现在阻止“定向广播”（发送到广播地址的数据包）。
 - en: 'Modern-day variant: DNS amplification.'
+  id: totrans-180
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现代变种：DNS放大。
 - en: DNS is also a request-response service.
+  id: totrans-181
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DNS也是一个请求-响应服务。
 - en: With a small query, server might send back a large response.
+  id: totrans-182
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器可能会用一个小查询发送回一个大响应。
 - en: With DNSSEC, responses contain lots of signatures, so they're even larger!
+  id: totrans-183
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用DNSSEC，响应包含大量签名，所以它们甚至更大！
 - en: Since DNS runs over UDP, source address is completely unverified.
+  id: totrans-184
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 由于DNS运行在UDP上，源地址完全未经验证。
 - en: 'Ref: http://blog.cloudflare.com/deep-inside-a-dns-amplification-ddos-attack'
+  id: totrans-185
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：http://blog.cloudflare.com/deep-inside-a-dns-amplification-ddos-attack
 - en: Can we fix the DNS attack?
+  id: totrans-186
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们能修复DNS攻击吗？
 - en: Actually quite hard! Root name servers must answer to queries from anyone.
+  id: totrans-187
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实际上相当困难！根域名服务器必须回答任何人的查询。
 - en: What if we had a chance to re-design DNS from scratch?
+  id: totrans-188
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们有机会从头开始重新设计DNS会怎样？
 - en: 'One possible plan: query must be as big as response (require padding).'
+  id: totrans-189
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个可能的计划：查询必须和响应一样大（需要填充）。
 - en: 'General technique: force client to expend at least as much work.'
+  id: totrans-190
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一般技术：迫使客户端至少花费同样多的工作。
 - en: TCP congestion control.
+  id: totrans-191
   prefs: []
   type: TYPE_NORMAL
+  zh: TCP拥塞控制。
 - en: Receiver can get the sender to speed up, by ACKing unreceived segments.
+  id: totrans-192
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 接收方可以通过ACK未接收的段来促使发送方加速。
 - en: Or send more ACKs (e.g., send ACK for each byte instead of every packet).
+  id: totrans-193
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 或者发送更多的ACK（例如，每个字节发送一个ACK而不是每个数据包）。
 - en: 'Routing protocols: overly-trusting of participants.'
+  id: totrans-194
   prefs: []
   type: TYPE_NORMAL
+  zh: 路由协议：对参与者过于信任。
 - en: 'ARP: within a single Ethernet network.'
+  id: totrans-195
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ARP：在单个以太网网络内。
 - en: To send IP packet, need the Ethernet MAC address of router / next hop.
+  id: totrans-196
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要发送IP数据包，需要路由器/下一跳的以太网MAC地址。
 - en: 'Address Resolution Protocol (ARP): broadcast a request for target''s MAC.'
+  id: totrans-197
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 地址解析协议（ARP）：广播一个请求目标MAC地址的请求。
 - en: Anyone can listen to broadcast, send a reply; no authentication.
+  id: totrans-198
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何人都可以监听广播，发送回复；没有认证。
 - en: Adversary can impersonate router, intercept packets, even on switched net.
+  id: totrans-199
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可以冒充路由器，拦截数据包，甚至在交换网络上。
 - en: 'Potential solution: make the switch in charge of ARP.'
+  id: totrans-200
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 潜在解决方案：让交换机负责 ARP。
 - en: 'Not widely deployed: would require managing MAC/IP addresses carefully.'
+  id: totrans-201
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有广泛部署：需要仔细管理 MAC/IP 地址。
 - en: 'DHCP: again, within a single Ethernet network.'
+  id: totrans-202
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DHCP：同样，在一个以太网网络中。
 - en: Client asks for IP address by sending a broadcast request.
+  id: totrans-203
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端通过发送广播请求来请求 IP 地址。
 - en: Server responds, no authentication (some specs exist but not widely used).
+  id: totrans-204
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器响应，没有认证（一些规范存在但并不广泛使用）。
 - en: If you just plugged into a network, might not know what to expect.
+  id: totrans-205
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果你刚刚插入一个网络，可能不知道会发生什么。
 - en: 'Lots of fields: IP address, router address, DNS server, DNS domain list, ..'
+  id: totrans-206
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 很多字段：IP 地址，路由器地址，DNS 服务器，DNS 域列表，..
 - en: Adversary can impersonate DHCP server to new clients on the network.
+  id: totrans-207
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可以冒充网络上的新客户端的 DHCP 服务器。
 - en: Can choose their DNS servers, DNS domains, router, etc.
+  id: totrans-208
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以选择他们的 DNS 服务器，DNS 域，路由器等。
 - en: 'Also, DoS attack on server: ask for lots of leases, from many MAC addrs.'
+  id: totrans-209
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 同样，对服务器的 DoS 攻击：请求大量租约，来自许多 MAC 地址。
 - en: 'Solution: make the switch in charge of DHCP (forward reqs to real server).'
+  id: totrans-210
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 解决方案：让交换机负责 DHCP（将请求转发给真实服务器）。
 - en: 'Not widely deployed: would require careful switch configuration.'
+  id: totrans-211
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有广泛部署：需要仔细的交换机配置。
 - en: Even more complicated on a wireless network.
+  id: totrans-212
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在无线网络上更加复杂。
 - en: 'BGP: Internet-wide (similar to RIP attacks described in paper).'
+  id: totrans-213
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: BGP：全球范围内（类似于论文中描述的 RIP 攻击）。
 - en: Any BGP participant router can announce route to a prefix.
+  id: totrans-214
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何 BGP 参与者路由器都可以宣布到一个前缀的路由。
 - en: What if adversary has a router? Can announce any prefix or route.
+  id: totrans-215
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果对手有一个路由器怎么办？可以宣布任何前缀或路由。
 - en: Is this problem still relevant?
+  id: totrans-216
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这个问题还有意义吗？
 - en: 'Spammers often exploit this: announce an unused address, and send spam.'
+  id: totrans-217
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 垃圾邮件发送者经常利用这一点：宣布一个未使用的地址，并发送垃圾邮件。
 - en: 'Gets around IP-level blacklisting of spam senders: choose almost any IP!'
+  id: totrans-218
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 绕过 IP 级别的垃圾邮件发送者黑名单：选择几乎任何 IP！
 - en: How to fix?
+  id: totrans-219
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何解决？
 - en: 'SBGP: cryptographic signing of route announcements.'
+  id: totrans-220
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: SBGP：对路由公告进行加密签名。
 - en: Must know who is allowed to announce every particular IP prefix.
+  id: totrans-221
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 必须知道谁被允许宣布每个特定的 IP 前缀。
 - en: Requires someone to distribute keys / certificates for every IP prefix.
+  id: totrans-222
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要有人为每个 IP 前缀分发密钥/证书。
 - en: Bootstrapping problem is tricky; some performance overheads too.
+  id: totrans-223
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 引导问题很棘手；也会有一些性能开销。
 - en: Getting some traction but still not widely deployed.
+  id: totrans-224
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有些进展，但仍未广泛部署。
 - en: Many other problems too.
+  id: totrans-225
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有许多其他问题。
 - en: 'ICMP messages like redirect: no authentication, basically unused now.'
+  id: totrans-226
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 像重定向这样的 ICMP 消息：没有认证，基本上现在不再使用。
 - en: 'Exposing too much information (netstat, SNMP, finger): mostly fixed. identd
     ("Authentication Service"): bad design, no real authentication.'
+  id: totrans-227
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 暴露太多信息（netstat，SNMP，finger）：大部分已修复。identd（“认证服务”）：设计不佳，没有真正的认证。
 - en: 'Email: real problem but no practical solutions yet.'
+  id: totrans-228
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 电子邮件：真正的问题，但目前没有实际解决方案。
 - en: Authentication vs authorization.
+  id: totrans-229
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 认证与授权。
 - en: E.g., PGP would not solve the spam problem.
+  id: totrans-230
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，PGP 无法解决垃圾邮件问题。
 - en: 'Passwords in protocols: supporting ONLY passwords isn''t so great.'
+  id: totrans-231
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 协议中的密码：仅支持密码并不是很好。
 - en: We'll talk about alternatives in a few weeks.
+  id: totrans-232
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们将在几周后讨论替代方案。
 - en: FTP data transfer protocol.
+  id: totrans-233
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: FTP 数据传输协议。
 - en: Server connects back to client to send a file to the client.
+  id: totrans-234
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器连接回客户端以向客户端发送文件。
 - en: Client tells the server what IP address and port number to use.
+  id: totrans-235
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端告诉服务器要使用的 IP 地址和端口号。
 - en: Could be used for port-scanning from server's IP.
+  id: totrans-236
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以用来从服务器的 IP 进行端口扫描。
 - en: Could be used to send any traffic (embedded in file) from server's IP.
+  id: totrans-237
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以用来从服务器的 IP 发送任何流量（嵌入文件中）。
 - en: 'E.g., back to IP authentication problems: rlogin, spam, etc.'
+  id: totrans-238
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，回到 IP 认证问题：rlogin，垃圾邮件等。
 - en: How do adversaries know what software / protocol you are running?
+  id: totrans-239
   prefs: []
   type: TYPE_NORMAL
+  zh: 对手如何知道你正在运行什么软件/协议？
 - en: 'Probing:'
+  id: totrans-240
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 探测：
 - en: Check if a system is listening on a well-known port.
+  id: totrans-241
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 检查系统是否在一个众所周知的端口上监听。
 - en: Protocols / systems often send an initial banner message.
+  id: totrans-242
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 协议/系统通常会发送初始的横幅消息。
 - en: nmap can guess OS by measuring various impl-specific details.
+  id: totrans-243
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: nmap 可以通过测量各种实现特定的细节来猜测操作系统。
 - en: 'Ref: http://nmap.org/book/man-os-detection.html'
+  id: totrans-244
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 参考：http://nmap.org/book/man-os-detection.html
 - en: Use DNS to look up the hostname for an IP address; may give hints.
+  id: totrans-245
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用 DNS 查找 IP 地址的主机名；可能会给出一些提示。
 - en: 'Guessing: assume system is vulnerable, try to exploit bug.'
+  id: totrans-246
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 猜测：假设系统存在漏洞，尝试利用漏洞。
 - en: How do adversaries know the IP address of the system to attack?
+  id: totrans-247
   prefs: []
   type: TYPE_NORMAL
+  zh: 对手如何知道要攻击的系统的 IP 地址？
 - en: traceroute to find routers along the way, for BGP attacks.
+  id: totrans-248
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用 traceroute 查找沿途的路由器，用于 BGP 攻击。
 - en: 'Can also just scan the entire Internet: only 2^32 addresses.'
+  id: totrans-249
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 也可以扫描整个互联网：只有2^32个地址。
 - en: 1 Gbps (100 MB/s) network link, 64 byte minimum packets.
+  id: totrans-250
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 1 Gbps（100 MB/s）的网络链路，64字节最小数据包。
 - en: ~1.5M packets per second.
+  id: totrans-251
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每秒约1.5百万个数据包。
 - en: '`2^32 = 4 Billion` packets in ~2500 seconds, or 45 minutes.'
+  id: totrans-252
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`2^32 = 40亿`个数据包在约2500秒内，或45分钟内。'
 - en: '[zmap](https://zmap.io/): implementation of this'
+  id: totrans-253
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[zmap](https://zmap.io/)：这个的实现'
 - en: Why are things so insecure at the TCP/IP level?
+  id: totrans-254
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么TCP/IP层的安全性如此不足？
 - en: Historically, designers did not worry as much about security.
+  id: totrans-255
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从历史上看，设计者并没有太担心安全性。
 - en: 'Even Bellovin says: "The Internet in 1989 was a much friendlier place".'
+  id: totrans-256
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使Bellovin也说：“1989年的互联网是一个更友好的地方”。
 - en: Original Internet had a small number of relatively trustworthy users.
+  id: totrans-257
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 最初的互联网有一小部分相对可信赖的用户。
 - en: Design requirements changed over time.
+  id: totrans-258
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 设计要求随时间改变。
 - en: End-to-end argument in action.
+  id: totrans-259
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 端到端论点在实践中发挥作用。
 - en: Must provide security at the application level anyway.
+  id: totrans-260
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 无论如何必须在应用层提供安全性。
 - en: Things are "good enough" at the transport level to let application work.
+  id: totrans-261
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在传输层上的事情足够“好”，可以让应用程序正常工作。
 - en: Some fixes do get added, but only for the worst problems / easier solutions.
+  id: totrans-262
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些修复确实被添加，但仅针对最严重的问题/更容易的解决方案。
 - en: How to improve security?
+  id: totrans-263
   prefs: []
   type: TYPE_NORMAL
+  zh: 如何提高安全性？
 - en: Protocol-compatible fixes to TCP implementations.
+  id: totrans-264
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对TCP实现的协议兼容修复。
 - en: Firewalls.
+  id: totrans-265
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 防火墙。
 - en: Partial fix, but widely used.
+  id: totrans-266
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 部分修复，但被广泛使用。
 - en: 'Issue: adversary may be within firewalled network.'
+  id: totrans-267
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题：对手可能在防火墙网络内。
 - en: 'Issue: hard to determine if packet is "malicious" or not.'
+  id: totrans-268
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题：很难确定数据包是否“恶意”。
 - en: 'Issue: even for fields that are present (src/dst), hard to authenticate.'
+  id: totrans-269
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题：即使对于存在的字段（源/目的地），也很难进行身份验证。
 - en: TCP/IP's design not a good match for firewall-like filtering techniques.
+  id: totrans-270
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: TCP/IP的设计与防火墙过滤技术不太匹配。
 - en: 'E.g., IP packet fragmentation: TCP ports in one packet, payload in another.'
+  id: totrans-271
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，IP数据包分段：TCP端口在一个数据包中，有效载荷在另一个数据包中。
 - en: 'Implement security on top of TCP/IP: SSL/TLS, Kerberos, SSH, etc.'
+  id: totrans-272
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在TCP/IP之上实现安全性：SSL/TLS，Kerberos，SSH等。
 - en: 'Beware: this paper isn''t clear on encryption vs. authentication.'
+  id: totrans-273
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 注意：这篇论文在加密与认证方面并不清晰。
 - en: Will talk about this more in next lecture on Kerberos.
+  id: totrans-274
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 下一讲将更详细地讨论Kerberos。
 - en: Use cryptography (encryption, signing, MACs, etc).
+  id: totrans-275
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用密码学（加密、签名、MAC等）。
 - en: 'Quite a hard problem: protocol design, key distribution, trust, etc.'
+  id: totrans-276
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是一个相当困难的问题：协议设计，密钥分发，信任等。
 - en: 'Some kinds of security hard to provide on top: DoS-resistance, routing.'
+  id: totrans-277
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有些安全性很难在顶层提供：DoS抵抗，路由。
 - en: 'Deployment of replacement protocols: SBGP, DNSSEC.'
+  id: totrans-278
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 部署替代协议：SBGP，DNSSEC。

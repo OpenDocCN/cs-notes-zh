@@ -1,98 +1,142 @@
 - en: Buffer overflows, baggy bounds
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 缓冲区溢出，松散的边界
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记略有修改，来自 2014 年 6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)。'
 - en: Review of buffer overflow attacks
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 缓冲区溢出攻击回顾
 - en: 'Last lecture, we looked at the basics of performing a buffer overflow attack.
     That attack leveraged several observations:'
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 在上一讲中，我们看了执行缓冲区溢出攻击的基础知识。该攻击利用了几个观察结果：
 - en: Systems software is often written in C (operating systems, file systems, databases,
     compilers, network servers, command shells and console utilities)
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统软件通常用 C 编写（操作系统、文件系统、数据库、编译器、网络服务器、命令外壳和控制台实用程序）
 - en: C is essentially high-level assembly, so...
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: C 本质上是高级汇编语言，所以...
 - en: Exposes raw pointers to memory
+  id: totrans-6
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 暴露原始指针到内存
 - en: Does not perform bounds-checking on arrays (b/c the hardware doesn't do this,
     and C wants to get you as close to the hardware as possible)
+  id: totrans-7
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不对数组执行边界检查（因为硬件不这样做，而 C 希望让你尽可能接近硬件）
 - en: 'Attack also leveraged architectural knowledge about how x86 code works:'
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击还利用了关于 x86 代码如何工作的架构知识：
 - en: The direction that the stack grows
+  id: totrans-9
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 栈增长的方向
 - en: Layout of stack variables (esp. arrays and return addresses for functions)
+  id: totrans-10
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 栈变量的布局（尤其是数组和函数的返回地址）
 - en: '`read_req.c:`'
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: '`read_req.c:`'
 - en: '[PRE0]'
+  id: totrans-12
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: 'What does the compiler generate in terms of memory layout? x86 stack looks
     like this:'
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 编译器在内存布局方面生成了什么？x86 栈看起来像这样：
 - en: '[PRE1]'
+  id: totrans-14
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: How does the adversary take advantage of this code?
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 对手如何利用这段代码？
 - en: Supply long input, overwrite data on stack past buffer.
+  id: totrans-16
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 提供长输入，覆盖缓冲区后的栈数据。
 - en: '**Key observation 1:** attacker can overwrite the *return address*, make the
     program jump to a place of the attacker''s choosing!'
+  id: totrans-17
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**关键观察 1：** 攻击者可以覆盖*返回地址*，使程序跳转到攻击者选择的位置！'
 - en: '**Key observation 2:** attacker can set return address to the buffer itself,
     include some x86 code in there!'
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**关键观察 2：** 攻击者可以将返回地址设置为缓冲区本身，在其中包含一些 x86 代码！'
 - en: What can the attackers do once they are executing code?
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 攻击者在执行代码后可以做什么？
 - en: Use any privileges of the process! If the process is running as root or Administrator,
     it can do whatever it wants on the system. Even if the process is not running
     as root, it can send spam, read files, and interestingly, attack or subvert other
     machines behind the firewall.
+  id: totrans-20
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 利用进程的任何权限！如果进程以 root 或管理员身份运行，它可以在系统上做任何想做的事情。即使进程不以 root 身份运行，它也可以发送垃圾邮件、读取文件，有趣的是，攻击或破坏防火墙后面的其他机器。
 - en: Hmmm, but why didn't the OS notice that the buffer has been overrun?
+  id: totrans-21
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 嗯，但为什么操作系统没有注意到缓冲区已经溢出？
 - en: As far as the OS is aware, nothing strange has happened! Remember that, to a
     first approximation, the OS only gets invoked by the web server when the server
     does IO or IPC. Other than that, the OS basically sits back and lets the program
@@ -100,1843 +144,2624 @@
     each other's memory. However, page table protections don't prevent buffer overruns
     launched by a process "against itself," since the overflowed buffer and the return
     address and all of that stuff are inside the process's valid address space.
+  id: totrans-22
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 就操作系统而言，没有发生任何奇怪的事情！请记住，粗略地说，操作系统只在 Web 服务器进行 IO 或 IPC 时才被调用。除此之外，操作系统基本上只是坐下来让程序执行，依靠硬件页表防止进程篡改彼此的内存。然而，页表保护无法防止进程“针对自身”发起的缓冲区溢出，因为溢出的缓冲区、返回地址和所有相关内容都在进程的有效地址空间内。
 - en: Later in this lecture, we'll talk about things that the OS *can* do to make
     buffer overflows more difficult.
+  id: totrans-23
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在本讲座的后面，我们将讨论操作系统*可以*采取的措施使缓冲区溢出更加困难。
 - en: Fixing buffer overflows
+  id: totrans-24
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 修复缓冲区溢出
 - en: '**Approach #1:** Avoid bugs in C code.'
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: '**方法 #1：** 避免 C 代码中的错误。'
 - en: Hard / impossible to achieve.
+  id: totrans-26
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 难以或不可能实现。
 - en: Programmer should carefully check sizes of buffers, strings, arrays, etc. In
     particular, the programmer should use standard library functions that take buffer
     sizes into account (`strncpy()` instead of `strcpy()`, `fgets()` instead of `gets()`,
     etc.).
+  id: totrans-27
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 程序员应仔细检查缓冲区、字符串、数组等的大小。特别是，程序员应使用考虑到缓冲区大小的标准库函数（`strncpy()` 而不是 `strcpy()`，`fgets()`
+    而不是 `gets()` 等）。
 - en: Modern versions of `gcc` and Visual Studio warn you when a program uses unsafe
     functions like gets(). In general, **YOU SHOULD NOT IGNORE COMPILER WARNINGS.**
     Treat warnings like errors!
+  id: totrans-28
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现代版本的 `gcc` 和 Visual Studio 在程序使用不安全函数（如 gets()）时会发出警告。一般来说，**你不应该忽略编译器警告。**
+    将警告视为错误！
 - en: '**Good:** Avoid problems in the first place!'
+  id: totrans-29
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**好处：** 首先避免问题！'
 - en: '**Bad:** It''s hard to ensure that code is bug-free, particularly if the code
     base is large. Also, the application itself may define buffer manipulation functions
     which do not use `fgets()` or `strcpy()` as primitives.'
+  id: totrans-30
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**坏处：** 很难确保代码是无错误的，特别是如果代码库很大。此外，应用程序本身可能定义不使用`fgets()`或`strcpy()`作为基本操作的缓冲区操作函数。'
 - en: '**Approach #2:** Build tools to help programmers find bugs.'
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: '**方法2：** 构建工具来帮助程序员找到错误。'
 - en: 'For example, we can use static analysis to find problems in source code before
     it''s compiled. Imagine that you had a function like this:'
+  id: totrans-32
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，我们可以使用静态分析在编译之前找到源代码中的问题。想象一下，如果你有这样一个函数：
 - en: '`foo.c:`'
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: '`foo.c：`'
 - en: '[PRE2]'
+  id: totrans-34
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: By statically analyzing the control flow, we can tell that offset is used without
     being initialized.
+  id: totrans-35
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过静态分析控制流，我们可以知道offset在未初始化的情况下被使用。
 - en: The `if`-statement also puts bounds on offset that we may be able to propagate
     to bar.
+  id: totrans-36
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`if`语句还限制了我们可能传播到bar的偏移量。'
 - en: We'll talk about static analysis more in later lectures.
+  id: totrans-37
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们将在后续讲座中更多地讨论静态分析。
 - en: '*"Fuzzers"* that supply random inputs can be effective for finding bugs. Note
     that fuzzing can be combined with static analysis to maximize code coverage!'
+  id: totrans-38
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 提供随机输入的“模糊器”可以有效地发现错误。请注意，模糊化可以与静态分析结合以最大化代码覆盖率！
 - en: '**Bad:** Difficult to prove the complete absence of bugs, esp. for unsafe code
     like C.'
+  id: totrans-39
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**坏处：** 很难证明完全没有错误，尤其是对于像C这样的不安全代码。'
 - en: '**Good:** Even partial analysis is useful, since programs should become strictly
     less buggy. For example, baggy bounds checking cannot catch all memory errors,
     but it can detect many important kinds.'
+  id: totrans-40
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**好处：** 即使是部分分析也是有用的，因为程序应该变得更少有错误。例如，松散的边界检查可能无法捕捉所有内存错误，但它可以检测到许多重要类型。'
 - en: '**Approach #3:** Use a memory-safe language (JavaScript, C#, Python).'
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: '**方法3：** 使用内存安全语言（JavaScript，C＃，Python）。'
 - en: '**Good:** Prevents memory corruption errors by not exposing raw memory addresses
     to the programmer, and by automatically handling garbage collection.'
+  id: totrans-42
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**好处：** 通过不向程序员暴露原始内存地址，并通过自动处理垃圾回收来防止内存损坏错误。'
 - en: '**Bad:** Low-level runtime code **does** use raw memory addresses. So, that
     runtime core still needs to be correct. For example, *heap spray attacks*:'
+  id: totrans-43
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**坏处：** 低级运行时代码**确实**使用原始内存地址。因此，运行时核心仍然需要正确。例如，*堆喷射攻击*：'
 - en: '[NOZZLE: A Defense Against Heap-spraying Code Injection Attacks](https://www.usenix.org/legacy/event/sec09/tech/full_papers/ratanaworabhan.pdf)'
+  id: totrans-44
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[NOZZLE：防御堆喷射代码注入攻击](https://www.usenix.org/legacy/event/sec09/tech/full_papers/ratanaworabhan.pdf)'
 - en: '[Exploit writing tutorial part 11 : Heap Spraying Demystified](https://www.corelan.be/index.php/2011/12/31/exploit-writing-tutorial-part-11-heap-spraying-demystified/)'
+  id: totrans-45
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[撰写利用教程第11部分：堆喷射揭秘](https://www.corelan.be/index.php/2011/12/31/exploit-writing-tutorial-part-11-heap-spraying-demystified/)'
 - en: '**Bad:** Still have a lot of legacy code in unsafe languages (FORTRAN and COBOL
     oh noes).'
+  id: totrans-46
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**坏处：** 仍然有很多使用不安全语言（FORTRAN和COBOL）的遗留代码。'
 - en: '**Bad:** Maybe you need access to low-level hardware features (e.g., you''re
     writing a device driver)'
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**坏处：** 也许你需要访问低级硬件功能（例如，你正在编写设备驱动程序）'
 - en: '**Bad:** Perf. is worse than a fine-tuned C application?'
+  id: totrans-48
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**坏处：** 性能比调优良好的C应用程序差？'
 - en: Used to be a bigger problem, but hardware and high-level languages are getting
     better.
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 过去是一个更大的问题，但硬件和高级语言变得更好了。
 - en: JIT compilation FTW!
+  id: totrans-50
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: JIT编译万岁！
 - en: '[asm.js](http://asmjs.org/faq.html) is within 2x of native C++ performance!'
+  id: totrans-51
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[asm.js](http://asmjs.org/faq.html)的性能接近本机C++性能的2倍！'
 - en: Use careful coding to avoid garbage collection jitter in critical path.
+  id: totrans-52
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用谨慎的编码来避免关键路径中的垃圾回收抖动。
 - en: Maybe you're a bad person / *language chauvinist* who doesn't know how to pick
     the right tool for the job. If your task is I/O-bound, raw compute speed is much
     less important. Also, don't be the chump who writes text manipulation programs
     in C.
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 也许你是一个不懂得如何选择合适工具的坏人/ *语言沙文主义者*。如果你的任务是I/O绑定的，原始计算速度就不那么重要了。另外，不要成为那个用C语言编写文本处理程序的笨蛋。
 - en: All 3 above approaches are effective and widely used, but buffer overflows are
     still a problem in practice.
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 上述3种方法都是有效且广泛使用的，但在实践中缓冲区溢出仍然是一个问题。
 - en: Large/complicated legacy code written in C is very prevalent.
+  id: totrans-55
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大量/复杂的用C语言编写的遗留代码非常普遍。
 - en: Even newly written code in C/C++ can have memory errors.
+  id: totrans-56
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使是用C/C++编写的新代码也可能存在内存错误。
 - en: How can we mitigate buffer overflows despite buggy code?
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 尽管存在有缺陷的代码，我们如何减轻缓冲区溢出？
 - en: 'Two things going on in a "traditional" buffer overflow:'
+  id: totrans-58
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在“传统”缓冲区溢出中发生了两件事：
 - en: Adversary gains control over execution (program counter).
+  id: totrans-59
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手控制执行（程序计数器）。
 - en: Adversary executes some malicious code.
+  id: totrans-60
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手执行一些恶意代码。
 - en: What are the difficulties to these two steps?
+  id: totrans-61
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这两个步骤存在哪些困难？
 - en: Requires overwriting a code pointer (which is later invoked). Common target
     is a return address using a buffer on the stack. Any memory error could potentially
     work, in practice. Function pointers, C++ vtables, exception handlers, etc.
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要覆盖一个代码指针（稍后被调用）。常见目标是使用堆栈上的缓冲区的返回地址。在实践中，任何内存错误都可能起作用。函数指针，C++ vtables，异常处理程序等。
 - en: 'Requires some interesting code in process''s memory. This is often easier than
     #1, because:'
+  id: totrans-63
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要一些有趣的代码在进程的内存中。这通常比#1更容易，因为：
 - en: it's easy to put code in a buffer, and
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在缓冲区中放置代码很容易，因此
 - en: the process already contains a lot of code that might be exploitable.
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 进程中已经包含了许多可能被利用的代码。
 - en: however, the attacker needs to put this code in a predictable location, so that
     the attacker can set the code pointer to point to the evil code!
+  id: totrans-66
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然而，攻击者需要将这段代码放在可预测的位置，以便攻击者可以将代码指针设置为指向恶意代码！
 - en: 'Mitigation approach 1: canaries (e.g., StackGuard, gcc''s SSP)'
+  id: totrans-67
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 缓解方法1：金丝雀（例如，StackGuard，gcc的SSP）
 - en: 'Idea: OK to overwrite code pointer, as long as we catch it before invocation.'
+  id: totrans-68
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 理念：覆盖代码指针是可以接受的，只要我们在调用之前捕捉到它。
 - en: 'One of the earlier systems: StackGuard'
+  id: totrans-69
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 较早的一个系统：StackGuard
 - en: Place a canary on the stack upon entry, check canary value before return.
+  id: totrans-70
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在进入时在堆栈上放置一个金丝雀，在返回前检查金丝雀值。
 - en: Usually requires source code; compiler inserts canary checks.
+  id: totrans-71
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通常需要源代码；编译器插入金丝雀检查。
 - en: '**Q:** Where is the canary on the stack diagram? **A:** Canary must go "in
     front of" return address on the stack, so that any overflow which rewrites return
     address will also rewrite canary.'
+  id: totrans-72
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q：** 堆栈图中的金丝雀在哪里？ **A：** 金丝雀必须放在堆栈上返回地址的“前面”，这样任何溢出重写返回地址也将重写金丝雀。'
 - en: '`stack layout:`'
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: '`堆栈布局：`'
 - en: '[PRE3]'
+  id: totrans-74
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: '**Q:** Suppose that the compiler always made the canary 4 bytes of the `''a''`
     character. What''s wrong with this?'
+  id: totrans-75
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q：** 假设编译器总是将金丝雀设为4个字节的`''a''`字符。这有什么问题吗？'
 - en: '**A:** Adversary can include the appropriate canary value in the buffer overflow!'
+  id: totrans-76
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A：** 对手可以在缓冲区溢出中包含适当的金丝雀值！'
 - en: So, the canary must be either hard to guess, or it can be easy to guess but
     still resilient against buffer overflows. Here are examples of these approaches.
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，金丝雀必须要么难以猜测，要么可以容易猜测但仍然能够抵御缓冲区溢出。以下是这些方法的示例。
 - en: '*"Terminator canary"*: four bytes (0, CR, LF, -1)'
+  id: totrans-78
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*"终结符金丝雀"*：四个字节（0，CR，LF，-1）'
 - en: 'Idea: Many C functions treat these characters as terminators(e.g., `gets()`,
     `sprintf()`). As a result, if the canary matches one of these terminators, then
     further writes won''t happen.'
+  id: totrans-79
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 理念：许多 C 函数将这些字符视为终结符（例如，`gets()`，`sprintf()`）。因此，如果金丝雀与这些终结符之一匹配，那么进一步的写入将不会发生。
 - en: 'Random canary generated at program init time: Much more common today (but,
     you need good randomness!).'
+  id: totrans-80
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在程序初始化时生成随机金丝雀：今天更常见（但是，你需要良好的随机性！）。
 - en: What kinds of vulnerabilities will a stack canary not catch?
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 堆栈金丝雀不会捕捉到哪些类型的漏洞？
 - en: Overwrites of function pointer variables before the canary.
+  id: totrans-82
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在金丝雀之前覆盖函数指针变量。
 - en: Attacker can overwrite a data pointer, then leverage it to do arbitrary mem
     writes.
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者可以覆盖数据指针，然后利用它进行任意内存写入。
 - en: '`data pointer example:`'
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: '`数据指针示例：`'
 - en: '[PRE4]'
+  id: totrans-85
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: Heap object overflows (function pointers, C++ vtables).
+  id: totrans-86
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 堆对象溢出（函数指针，C++ vtables）。
 - en: '`malloc`/`free` overflows'
+  id: totrans-87
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`malloc`/`free`溢出'
 - en: '`malloc example:`'
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: '`malloc示例：`'
 - en: '[PRE5]'
+  id: totrans-89
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: Assume that the two blocks of memory belonging to `p` and `q` are adjacent/nearby
     in memory.
+  id: totrans-90
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设属于`p`和`q`的两个内存块在内存中是相邻/附近的。
 - en: 'Assume that `malloc` and `free` represent memory blocks like this:'
+  id: totrans-91
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设`malloc`和`free`表示内存块如下：
 - en: '`malloc memory blocks:`'
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: '`malloc内存块：`'
 - en: '[PRE6]'
+  id: totrans-93
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: So, the buffer overrun in `p` will overwrite the size value in `q`'s memory
     block! Why is this a problem?
+  id: totrans-94
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，在`p`的缓冲区溢出将覆盖`q`内存块中的大小值！为什么这是一个问题？
 - en: When `free()` merges two adjacent free blocks, it needs to manipulate `bkwd`
     and `fwd` pointers...
+  id: totrans-95
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当`free()`合并两个相邻的空闲块时，需要操作`bkwd`和`fwd`指针...
 - en: '...and the pointer calculation uses size to determine where the free memory
     block structure lives!'
+  id: totrans-96
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '...并且指针计算使用大小来确定空闲内存块结构的位置！'
 - en: '`free() internals:`'
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: '`free()`内部： '
 - en: '[PRE7]'
+  id: totrans-98
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: The free memory block is represented as a C `struct`; by corrupting the size
     value, the attacker can force `free()` to operate on a fake `struct` that resides
     in attacker-controlled memory and has attacker-controlled values for the forward
     and backwards pointers.
+  id: totrans-99
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 空闲内存块表示为C `struct`；通过破坏大小值，攻击者可以强制`free()`在位于攻击者控制的内存中的伪造`struct`上操作，并具有攻击者控制的值用于前向和后向指针。
 - en: If the attacker knows how `free()` updates the pointers, he can use that update
     code to write an arbitrary value to an arbitrary place. For example, the attacker
     can overwrite a return address.
+  id: totrans-100
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果攻击者知道`free()`如何更新指针，他可以使用该更新代码将任意值写入任意位置。例如，攻击者可以覆盖返回地址。
 - en: Actual details are a bit more complicated; if you're interested in gory details,
     go [here](http://www.win.tue.nl/~aeb/linux/hh/hh-11.html)
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实际细节更加复杂；如果你对血腥细节感兴趣，请访问[这里](http://www.win.tue.nl/~aeb/linux/hh/hh-11.html)
 - en: The high-level point is that stack canaries won't prevent this attack, because
     the attacker is "skipping over" the canary and writing directly to the return
     address!
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 高层次的观点是，栈金丝雀不会阻止这种攻击，因为攻击者正在“越过”金丝雀并直接写入返回地址！
 - en: 'Mitigation approach 2: bounds checking'
+  id: totrans-103
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: '缓解方法2: 边界检查'
 - en: '**Overall goal:** prevent pointer misuse by checking if pointers are in range.'
+  id: totrans-104
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**总体目标：** 通过检查指针是否在范围内来防止指针误用。'
 - en: '**Challenge:** In C, it can be hard to differentiate between a valid pointer
     and an invalid pointer. For example, suppose that a program allocates an array
     of characters... `char x[1024];`'
+  id: totrans-105
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**挑战：** 在C语言中，很难区分有效指针和无效指针。例如，假设一个程序分配了一个字符数组... `char x[1024];`'
 - en: '... as well as a pointer to some place in that array, e.g., `char *y = &x[107];`'
+  id: totrans-106
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '... 以及该数组中的某个位置的指针，例如，`char *y = &x[107];`'
 - en: Is it OK to increment `y` to access subsequent elements?
+  id: totrans-107
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 增加`y`以访问后续元素是否可以？
 - en: If `x` represents a string buffer, maybe yes.
+  id: totrans-108
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果`x`代表一个字符串缓冲区，也许是。
 - en: If `x` represents a network message, maybe no.
+  id: totrans-109
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果`x`代表一个网络消息，也许不。
 - en: Life is even more complicated if the program uses unions.
+  id: totrans-110
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果程序使用联合体，情况会变得更加复杂。
 - en: '`union example:`'
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: '`联合体示例:`'
 - en: '[PRE8]'
+  id: totrans-112
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: '**The problem** is that, in C, *a pointer does not encode information about
     the intended usage semantics for that pointer.*'
+  id: totrans-113
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题** 是，在C语言中，*指针不会编码关于该指针的预期使用语义的信息*。'
 - en: 'So, a lot of tools don''t try to guess those semantics. Instead, the tools
     have a less lofty goal than "totally correct" pointer semantics: the tools just
     enforce the memory bounds on heap objects and stack objects. At a high level,
     here''s the goal:'
+  id: totrans-114
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，很多工具不会尝试猜测这些语义。相反，这些工具的目标并不像“完全正确”的指针语义那样高远：这些工具只是强制执行堆对象和栈对象的内存边界。在高层次上，这是目标：
 - en: For a pointer `p'` that's derived from `p`, `p'` should only be dereferenced
     to access the valid memory region that belongs to `p`.
+  id: totrans-115
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于从`p`派生出的指针`p'`，`p'`只能被解引用以访问属于`p`的有效内存区域。
 - en: '*Enforcing memory bounds* is a **weaker** goal than *enforcing "totally correct"
     pointer semantics*. Programs can still shoot themselves in the foot by trampling
     on their memory in nasty ways (e.g., in the union example, the application may
     write to pointer even though it''s not defined).'
+  id: totrans-116
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*强制执行内存边界*是一个比*强制“完全正确”指针语义*更**弱**的目标。程序仍然可以通过恶意方式践踏其内存而自掘坟墓（例如，在联合体示例中，应用程序可能会写入指针，尽管未定义）。'
 - en: However, bounds checking is still useful because it prevents *arbitrary* memory
     overwrites. The program can only trample its memory if that memory is actually
     allocated! *THIS IS CONSIDERED PROGRESS IN THE WORLD OF C.*
+  id: totrans-117
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然而，边界检查仍然很有用，因为它可以防止*任意*内存覆写。程序只能践踏其内存，如果该内存实际上已分配！*这在C语言世界中被认为是进步。*
 - en: A drawback of bounds checking is that it typically requires changes to the compiler,
     and programs must be recompiled with the new compiler. This is a problem if you
     only have access to binaries.
+  id: totrans-118
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 边界检查的一个缺点是通常需要对编译器进行更改，并且必须使用新编译器重新编译程序。如果只能访问二进制文件，则这是一个问题。
 - en: What are some approaches for implementing bounds checking?
+  id: totrans-119
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 有哪些实现边界检查的方法？
 - en: '**Bounds checking approach #1: Electric fences**'
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: '**边界检查方法 #1: 电子围栏**'
 - en: These are an old approach that had the virtue of being simple.
+  id: totrans-121
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是一个旧方法，其优点在于简单。
 - en: '**Idea:** Align each heap object with a guard page, and use page tables to
     ensure that accesses to the guard page cause a fault.'
+  id: totrans-122
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**思路：** 将每个堆对象与一个守卫页对齐，并使用页表确保对守卫页的访问导致故障。'
 - en: '`electric fence:`'
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: '`电子围栏:`'
 - en: '[PRE9]'
+  id: totrans-124
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: This is a convenient debugging technique, since a heap overflow will immediately
     cause a crash, as opposed to silently corrupting the heap and causing a failure
     at some indeterminate time in the future.
+  id: totrans-125
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是一种方便的调试技术，因为堆溢出会立即导致崩溃，而不是悄无声息地破坏堆并在未来某个不确定的时间导致失败。
 - en: 'Big advantage: Works without source code: don''t need to change compilers or
     recompile programs!'
+  id: totrans-126
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 重要优势：无需源代码即可运行：无需更改编译器或重新编译程序！
 - en: You *do* need to relink them so that they use a new version of `malloc` which
     implements electric fences.
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 你*确实*需要重新链接它们，以便它们使用实现电子围栏的新版本的`malloc`。
 - en: 'Big disadvantage: Huge overhead! There''s only one object per page, and you
     have the overhead of a dummy page which isn''t used for "real" data.'
+  id: totrans-128
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 主要缺点：巨大的开销！每页只有一个对象，并且您有一个未用于“真实”数据的虚拟页面的开销。
 - en: 'Summary: Electric fences can be useful as debugging technique, and they can
     prevent some buffer overflows for heap objects. However, electric fences can''t
     protect the stack, and the memory overhead is too high to use in production systems.'
+  id: totrans-129
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 摘要：电子围栏可以作为调试技术很有用，并且可以防止堆对象的一些缓冲区溢出。然而，电子围栏无法保护堆栈，并且内存开销太高，无法在生产系统中使用。
 - en: '**Bounds checking approach #2: Fat pointer**'
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: '**边界检查方法＃2：**胖指针'
 - en: '**Idea:** Modify the pointer representation to include bounds information.
     Now, a pointer includes a memory address and bounds information about an object
     that lives in that memory region.'
+  id: totrans-131
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**想法：**修改指针表示以包含边界信息。现在，指针包括关于生存在该内存区域中的对象的边界信息。'
 - en: '`example:`'
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: '`示例：`'
 - en: '[PRE10]'
+  id: totrans-133
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: You need to modify the compiler and recompile the programs to use the fat pointers.
     The compiler generates code to abort the program if it dereferences a pointer
     whose address is outside of its own `base ... end` range.
+  id: totrans-134
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您需要修改编译器并重新编译程序以使用胖指针。编译器生成的代码会在它解引用地址超出自己的`base ... end`范围的指针时中止程序。
 - en: '`example:`'
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: '`示例：`'
 - en: '[PRE11]'
+  id: totrans-136
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: '**Problem #1:** It can be expensive to check all pointer dereferences. The
     C community hates things that are expensive, because C is all about SPEED SPEED
     SPEED.'
+  id: totrans-137
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题＃1：**检查所有指针解引用可能很昂贵。C社区讨厌昂贵的东西，因为C就是关于速度速度速度。'
 - en: '**Problem #2:** Fat pointers are incompatible with a lot of existing software.'
+  id: totrans-138
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问题＃2：**胖指针与许多现有软件不兼容。'
 - en: You can't pass a fat pointer to an unmodified library.
+  id: totrans-139
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 你不能将胖指针传递给未修改的库。
 - en: You can't use fat pointers in fixed-size data structures. For example, `sizeof(that_struct)`
     will change!
+  id: totrans-140
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 你不能在固定大小的数据结构中使用胖指针。例如，`sizeof(that_struct)`将会改变！
 - en: '*Updates to fat pointers are not atomic*, because they span multiple words.
     Some programs assume that pointer writes are atomic.'
+  id: totrans-141
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*对胖指针的更新不是原子的*，因为它们跨越多个字。一些程序假设指针写入是原子的。'
 - en: 'Bounds checking approach #3: Shadown data structures'
+  id: totrans-142
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 边界检查方法＃3：影子数据结构
 - en: '**Idea:** Use shadow data structures to keep track of bounds information ([Jones
     and Kelly](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.42.3156), [Baggy
     bounds](https://www.usenix.org/legacy/event/sec09/tech/full_papers/akritidis.pdf)).'
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: '**想法：**使用影子数据结构来跟踪边界信息（[Jones and Kelly](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.42.3156)，[Baggy
+    bounds](https://www.usenix.org/legacy/event/sec09/tech/full_papers/akritidis.pdf)）。'
 - en: 'For each allocated object, store how big the object is. For example:'
+  id: totrans-144
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于每个分配的对象，存储对象的大小。例如：
 - en: 'Record the value passed to malloc:'
+  id: totrans-145
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 记录传递给malloc的值：
 - en: '`char *p = malloc(mem_size);`'
+  id: totrans-146
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`char *p = malloc(mem_size);`'
 - en: 'For static variables, the values are determined by the compiler:'
+  id: totrans-147
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于静态变量，值由编译器确定：
 - en: '`char p[256];`'
+  id: totrans-148
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`char p[256];`'
 - en: 'For each pointer, we need to interpose on two operations:'
+  id: totrans-149
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于每个指针，我们需要对两个操作进行干预：
 - en: 'pointer arithmetic: `char *q = p + 256;`'
+  id: totrans-150
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 指针算术：`char *q = p + 256;`
 - en: 'pointer dereferencing: `char ch = *q;`'
+  id: totrans-151
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 指针解引用：`char ch = *q;`
 - en: '**Q:** Why do we need to interpose on dereference? Can''t we do just arithmetic?'
+  id: totrans-152
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q：** 为什么我们需要对解引用进行干预？不能只进行算术吗？'
 - en: '**A:** An invalid pointer isn''t always a bug! For example, a pointer to one
     element past the last item of an array might be used as a stopping test in a loop.
     Applications can also do goofy stuff like:'
+  id: totrans-153
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A：** 无效指针并不总是一个错误！例如，数组最后一个元素之外的一个元素的指针可能被用作循环中的停止测试。应用程序还可以执行一些愚蠢的操作，如：'
 - en: Simulating 1-indexed arrays
+  id: totrans-154
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 模拟从1开始的数组
 - en: Computing p+(a-b) as (p+a)-b
+  id: totrans-155
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 计算p+(a-b)为(p+a)-b
 - en: Generating OOB pointers that are later checked for validity
+  id: totrans-156
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 生成稍后检查有效性的OOB指针
 - en: So, the mere creation of invalid pointer shouldn't cause program to fail.
+  id: totrans-157
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，仅仅创建无效指针不应该导致程序失败。
 - en: '**Q:** Why do we need to interpose on arithmetic? Can''t we do just dereference?'
+  id: totrans-158
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q：** 为什么我们需要对算术进行干预？不能只进行解引用吗？'
 - en: '**A:** Interposing on arithmetic is what allows us to track the provenance
     of pointers and set the OOB bit. Without the OOB, we won''t be able to tell when
     a derived pointer goes outside of the bounds of its base object.'
+  id: totrans-159
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A：** 干预算术是允许我们跟踪指针的来源并设置OOB位的原因。没有OOB，我们将无法确定派生指针何时超出其基本对象的边界。'
 - en: '**Challenge 1:** How do we find the bounds information for a regular pointer,
     i.e., a pointer that''s in-bounds?'
+  id: totrans-160
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**挑战1:** 我们如何找到常规指针（即在边界内的指针）的边界信息？'
 - en: '*Naive:* Use a hash table or interval tree to map addresses to bounds.'
+  id: totrans-161
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*天真:* 使用哈希表或区间树将地址映射到边界。'
 - en: 'Good: Space efficient (only store info for in-use pointers, not all possible
     addresses).'
+  id: totrans-162
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '好: 空间高效（仅存储正在使用的指针的信息，而不是所有可能的地址）。'
 - en: 'Bad: Slow lookup (multiple memory accesses per look-up).'
+  id: totrans-163
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '不好: 查找慢（每次查找多次内存访问）。'
 - en: '*Naive:* Use an array to store bounds info for *every* memory address.'
+  id: totrans-164
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*天真:* 使用数组存储*每个*内存地址的边界信息。'
 - en: 'Good: Fast!'
+  id: totrans-165
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '好: 快速！'
 - en: 'Bad: Really high memory overhead.'
+  id: totrans-166
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '不好: 内存开销很高。'
 - en: '**Challenge 2:** How do we force out-of-bounds pointer dereferences to fail?'
+  id: totrans-167
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**挑战2:** 我们如何强制越界指针解引用失败？'
 - en: '*Naive:* Instrument every pointer dereference.'
+  id: totrans-168
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*天真:* 对每个指针解引用进行检测。'
 - en: 'Good: Uh, it works.'
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '好: 哦，它有效。'
 - en: 'Bad: Expensive. We have to execute extra code for every dereference!'
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '不好: 昂贵。我们必须为每次解引用执行额外的代码！'
 - en: 'The baggy bounds approach: 5 tricks'
+  id: totrans-171
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: Baggy bounds方法：5个技巧
 - en: '**Trick 1:** Round up each allocation to a power of 2, and align the start
     of the allocation to that power of 2.'
+  id: totrans-172
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Trick 1:** 将每个分配向上舍入为2的幂，并将分配的起始对齐到该2的幂。'
 - en: '**Trick 2:** Express each range limit as `log_2(alloc_size).`'
+  id: totrans-173
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Trick 2:** 将每个范围限制表示为`log_2(alloc_size)`。'
 - en: 'For 32-bit pointers, only need 5 bits to express the possible ranges: we can
     only allocate objects of a set of 32 different sizes: `2^1 = 2 bytes, 2^2 = 4
     bytes ..., 2^31 bytes or 2^32 bytes`, and we store the log base 2 of the allocation
     size, which is a number between 1 and 32, so we only need 5 bits for it.'
+  id: totrans-174
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于32位指针，只需要5位来表示可能的范围：我们只能分配32种不同大小的对象：`2^1 = 2字节，2^2 = 4字节...，2^31字节或2^32字节`，并且我们存储分配大小的以2为底的对数，这是一个介于1和32之间的数字，因此我们只需要5位来表示它。
 - en: '**Trick 3:** Store limit info in a linear array: fast lookup with one byte
     per entry. Also, we can use virtual memory to allocate the array on-demand!'
+  id: totrans-175
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Trick 3:** 在线性数组中存储限制信息：每个条目一个字节的快速查找。此外，我们可以使用虚拟内存按需分配数组！'
 - en: '**Trick 4:** Allocate memory at slot granularity (e.g., 16 bytes): **fewer
     array entries.**'
+  id: totrans-176
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Trick 4:** 以插槽粒度（例如，16字节）分配内存：**更少的数组条目。**'
 - en: That means **min. alloc. size** is 16 bytes
+  id: totrans-177
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这意味着**最小分配大小**为16字节
 - en: '...and, since pointers will be aligned to their allocation size boundary, it
     means the last 4 bits of the pointer are all zero'
+  id: totrans-178
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '...而且，由于指针将对齐到其分配大小边界，这意味着指针的最后4位都是零'
 - en: '`example:`'
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: '`示例:`'
 - en: '[PRE12]'
+  id: totrans-180
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: '**Trick 4 (continued):**'
+  id: totrans-181
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Trick 4 (续):**'
 - en: Now, given a known good pointer `p`, and a derived pointer `p'`, we can test
     whether `p'` is valid by checking whether both pointers have the same prefix in
     their address bits, and they only differ in their `e` least significant bits,
     where `e` is equal to the logarithm of the *allocation size*.
+  id: totrans-182
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在，给定一个已知的好指针`p`，和一个派生指针`p'`，我们可以通过检查这两个指针的地址位中是否有相同的前缀，并且它们只在它们的`e`个最低有效位上有所不同，其中`e`等于*分配大小*的对数，来测试`p'`是否有效。
 - en: '`example:`'
+  id: totrans-183
   prefs: []
   type: TYPE_NORMAL
+  zh: '`示例:`'
 - en: '[PRE13]'
+  id: totrans-184
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: '**Trick 5:** Use virtual memory system to prevent out-of-bound derefs: set
     most significant bit in an OOB pointer, and then mark pages in the upper half
     of the address space as inaccessible. So, we don''t have to instrument pointer
     dereferences to prevent bad memory accesses!'
+  id: totrans-185
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Trick 5:** 使用虚拟内存系统来防止越界解引用：在OOB指针中设置最高有效位，然后将地址空间上半部分的页面标记为不可访问。这样，我们就不必对指针解引用进行检测以防止错误的内存访问！'
 - en: '**Example code** (assume that `slot_size=16`):'
+  id: totrans-186
   prefs: []
   type: TYPE_NORMAL
+  zh: '**示例代码**（假设`slot_size=16`）'
 - en: '[PRE14]'
+  id: totrans-187
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE14]'
 - en: For OOB pointers, the high bit is set (if OOB within half a slot). - Typically,
     OS kernel lives in upper half, protects itself via paging hardware. - **Q:** Why
     half a slot for out-of-bounds?
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于OOB指针，高位被设置（如果OOB在半个插槽内）。- 通常，操作系统内核位于上半部分，通过分页硬件保护自身。- **问:** 为什么越界是半个插槽？
 - en: So what's the answer to the homework problem?
+  id: totrans-189
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么作业问题的答案是什么？
 - en: '[PRE15]'
+  id: totrans-190
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE15]'
 - en: Baggy bounds paper errata
+  id: totrans-191
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: Baggy bounds论文勘误
 - en: 'Some bugs in the baggy bounds paper:'
+  id: totrans-192
   prefs: []
   type: TYPE_NORMAL
+  zh: Baggy bounds论文中的一些错误：
 - en: 'Figure 3, explicit bounds check should generate the size like this:'
+  id: totrans-193
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 图3，显式边界检查应该生成如下大小：
 - en: '`size = 1 << table[p >> log_of_slot_size]`'
+  id: totrans-194
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`size = 1 << table[p >> log_of_slot_size]`'
 - en: 'Figure 3, optimized bounds check should be:'
+  id: totrans-195
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 图3，优化的边界检查应该是：
 - en: '`(p^p'') >> table[p >> log_of_slot_size] == 0`'
+  id: totrans-196
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`(p^p'') >> table[p >> log_of_slot_size] == 0`'
 - en: 'Figures 5 and 18, pointer arithmetic code should be either one of the following:'
+  id: totrans-197
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 图5和18，指针算术代码应该是以下之一：
 - en: '`char *p = &buf[i];`'
+  id: totrans-198
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`char *p = &buf[i];`'
 - en: '`char *p = buf + i;`'
+  id: totrans-199
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`char *p = buf + i;`'
 - en: Baggy bounds (continued)
+  id: totrans-200
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Baggy bounds（续）
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-201
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记是从2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的笔记中稍作修改而来。'
 - en: '**Example code:** (assume that `slot_size = 16`):'
+  id: totrans-202
   prefs: []
   type: TYPE_NORMAL
+  zh: '**示例代码：**（假设`slot_size = 16`） '
 - en: '[PRE16]'
+  id: totrans-203
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE16]'
 - en: For OOB pointers, the high bit is set (if OOB within half a slot).
+  id: totrans-204
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于越界指针，高位被设置（如果在半个插槽内越界）。
 - en: Typically, OS kernel lives in upper half, protects itself via paging hardware.
+  id: totrans-205
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通常，操作系统内核位于上半部分，通过分页硬件保护自身。
 - en: '**Q:** Why half a slot for out-of-bounds?'
+  id: totrans-206
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 为什么要为越界分配半个插槽？'
 - en: So what's the answer to the homework problem?
+  id: totrans-207
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么作业问题的答案是什么？
 - en: '[PRE17]'
+  id: totrans-208
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE17]'
 - en: Does baggy bounds checking have to instrument *every* memory address computation
     and access?
+  id: totrans-209
   prefs: []
   type: TYPE_NORMAL
+  zh: 宽松边界检查是否必须检测*每个*内存地址计算和访问？
 - en: '*No*, static analysis can prove that some addresses are always safe to use.
     However, some address calculations are "unsafe" in the sense that there''s no
     way to statically determine bounds on their values. Such unsafe variables need
     checks.'
+  id: totrans-210
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*不*，静态分析可以证明某些地址始终是安全的。但是，某些地址计算是“不安全”的，因为无法静态确定其值的边界。这些不安全的变量需要检查。'
 - en: Handling function call arguments is a bit tricky, because the x86 calling convention
     is fixed, i.e., the hardware expects certain things to be in certain places on
     the stack.
+  id: totrans-211
   prefs: []
   type: TYPE_NORMAL
+  zh: 处理函数调用参数有点棘手，因为x86调用约定是固定的，即硬件期望栈上的某些内容放在特定位置。
 - en: However, we can copy unsafe arguments to a separate area, and make sure that
     the copied arguments are aligned and protected.
+  id: totrans-212
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但是，我们可以将不安全的参数复制到一个单独的区域，并确保复制的参数对齐和受保护。
 - en: '**Q:** Do we have to overwrite the original arguments with the copies values
     upon function return?'
+  id: totrans-213
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 我们是否必须在函数返回时用复制的值覆盖原始参数？'
 - en: '**A:** No, because everything is pass-by-value in C!'
+  id: totrans-214
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A:** 不，因为在C语言中一切都是按值传递的！'
 - en: How does baggy bounds checking ensure binary compatibility with existing libraries?
+  id: totrans-215
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 宽松边界检查如何确保与现有库的二进制兼容性？
 - en: In particular, how does baggy bounds code interact with pointers to memory that
     was allocated by uninstrumented code?
+  id: totrans-216
   prefs: []
   type: TYPE_NORMAL
+  zh: 特别是，宽松边界代码如何与由未经检测的代码分配的内存指针交互？
 - en: '**Solution:** Each entry in the bounds table is initialized to the value 31,
     meaning that the corresponding pointer has a memory bound of 2^31 (which is all
     of the addressable memory).'
+  id: totrans-217
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**解决方案：** 边界表中的每个条目都初始化为值31，这意味着相应的指针具有2^31的内存边界（这是所有可寻址内存）。'
 - en: On memory allocation in *instrumented* code, bounds entries are set as previously
     discussed, and reset to 31 when the memory is deallocated.
+  id: totrans-218
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在*经过检测*的代码中进行内存分配时，边界条目如前所述设置，并在释放内存时重置为31。
 - en: Memory allocated to uninstrumented code will never change bounds table entries
     from their default values of 31; so, when instrumented code interacts with those
     pointers, bound errors will never
+  id: totrans-219
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 分配给未经检测的代码的内存永远不会改变边界表条目的默认值31；因此，当经过检测的代码与这些指针交互时，边界错误永远不会发生
 - en: '*Example:*'
+  id: totrans-220
   prefs: []
   type: TYPE_NORMAL
+  zh: '*例子：*'
 - en: '[PRE18]'
+  id: totrans-221
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE18]'
 - en: What does this all mean?
+  id: totrans-222
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这一切意味着什么？
 - en: Can't detect out-of-bounds pointers generated in uninstrumented code.
+  id: totrans-223
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 无法检测在未经检测的代码中生成的越界指针。
 - en: Can't detect when OOB pointer passed into library goes in-bounds again.
+  id: totrans-224
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 无法检测传递给库的越界指针何时再次进入边界内。
 - en: '**Q:** Why?'
+  id: totrans-225
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 为什么？'
 - en: '**A:** Because there is no pointer inspection in the uninstrumented code which
     could clear the high-order OOB bit!'
+  id: totrans-226
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A:** 因为未经检测的代码中没有指针检查可以清除高位越界位！'
 - en: '**Q:** Why do they instrument `strcpy()` and `memcpy()`?'
+  id: totrans-227
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 为什么要检测`strcpy()`和`memcpy()`？'
 - en: '**A:** Because otherwise, those functions are uninstrumented code, and suffer
     from the same problems that we just discussed. For example, off-the-shelf `strcpy()`
     does not ensure that dest has enough space to store src!'
+  id: totrans-228
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A:** 否则，这些函数就是未经检测的代码，并且会遇到我们刚刚讨论过的相同问题。例如，现成的`strcpy()`不能确保目标有足够的空间来存储源！'
 - en: How can baggy bits leverage 64-bit address spaces?
+  id: totrans-229
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 宽松位如何利用64位地址空间？
 - en: Can get rid of the table storing bounds information, and put it in the pointer.
+  id: totrans-230
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以摆脱存储边界信息的表，并将其放入指针中。
 - en: '[PRE19]'
+  id: totrans-231
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE19]'
 - en: This is similar to a fat pointer, but has the advantages that...
+  id: totrans-232
   prefs: []
   type: TYPE_NORMAL
+  zh: 这类似于一个胖指针，但具有以下优点……
 - en: tagged pointers are the same size as regular pointers
+  id: totrans-233
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 标记指针与常规指针大小相同
 - en: writes to them are atomic
+  id: totrans-234
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 对它们的写入是原子的
 - en: '...so programmer expectations are not broken, and data layouts stay the same.'
+  id: totrans-235
   prefs: []
   type: TYPE_NORMAL
+  zh: ……以便不破坏程序员的期望，并且数据布局保持不变。
 - en: Also note that, using tagged pointers, we can now keep track of OOB pointers
     that go much further out-of-bounds. This is because now we can tag pointers with
     an offset indicating how far they are from their base pointer. In the 32-bit world,
     we couldn't track OOB offsets without having an additional data structure!
+  id: totrans-236
   prefs: []
   type: TYPE_NORMAL
+  zh: 还要注意，使用标记指针，我们现在可以跟踪远离基本指针多得多的越界指针。这是因为现在我们可以使用偏移量标记指针，指示它们距离基本指针有多远。在32位世界中，如果没有额外的数据结构，我们无法跟踪越界偏移量！
 - en: Can you still launch a buffer overflow attack in a baggy bounds system?
+  id: totrans-237
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 在baggy bounds系统中仍然可以发动缓冲区溢出攻击吗？
 - en: Yes, *because the world is filled with sadness.*
+  id: totrans-238
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，*因为这个世界充满了悲伤。*
 - en: Could exploit a vulnerability in uninstrumented libraries.
+  id: totrans-239
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能会利用未经检测的库中的漏洞。
 - en: Could exploit temporal vulnerabilities (use-after-free).
+  id: totrans-240
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能会利用时间漏洞（使用后释放）。
 - en: Mixed buffers and code pointers
+  id: totrans-241
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 混合缓冲区和代码指针
 - en: '*Example:*'
+  id: totrans-242
   prefs: []
   type: TYPE_NORMAL
+  zh: '*例子：*'
 - en: '[PRE20]'
+  id: totrans-243
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE20]'
 - en: Note that `*f` is not an allocated type, so there are no bounds checks associated
     with its dereference during invocation. Thus, if `s.buf` is overflowed (e.g.,
     by a bug in an uninstrumented library) and `s.f` is corrupted, the invocation
     of `f` will not cause a bounds error!
+  id: totrans-244
   prefs: []
   type: TYPE_NORMAL
+  zh: 请注意`*f`不是分配的类型，因此在调用期间与其解引用相关联的边界检查不存在。因此，如果`s.buf`溢出（例如，由未经检测的库中的错误引起），并且`s.f`被损坏，那么对`f`的调用不会导致边界错误！
 - en: Would re-ordering f and buf help?
+  id: totrans-245
   prefs: []
   type: TYPE_NORMAL
+  zh: 重新排列f和buf会有帮助吗？
 - en: Might break applications that depend on struct layout.
+  id: totrans-246
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能会破坏依赖结构布局的应用程序。
 - en: Might not help if this is an array of (`struct my_type`)'s.
+  id: totrans-247
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果这是一个（`struct my_type`）数组，可能不会有帮助。
 - en: In general, what are the costs of bounds checking?
+  id: totrans-248
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 一般来说，边界检查的成本是什么？
 - en: Space overhead for bounds information (fat pointer or baggy bounds table).
+  id: totrans-249
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 边界信息的空间开销（胖指针或baggy bounds表）。
 - en: Baggy bounds also has space overhead for extra padding memory used by buddy
     allocator (although some amount of overhead is intrinsic to all popular algorithms
     for dynamic memory allocation).
+  id: totrans-250
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Baggy bounds还会为buddy分配器使用的额外填充内存增加空间开销（尽管所有流行的动态内存分配算法都会有一定程度的开销）。
 - en: CPU overheads for pointer arithmetic, dereferencing.
+  id: totrans-251
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 指针算术和解引用的CPU开销。
 - en: False alarms!
+  id: totrans-252
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 虚警！
 - en: Unused out-of-bounds pointers.
+  id: totrans-253
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 未使用的越界指针。
 - en: Temporary out-of-bounds pointers by more than `slot_size/2`.
+  id: totrans-254
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 临时超出边界指针超过`slot_size/2`。
 - en: Conversion from pointer to integers and back.
+  id: totrans-255
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 指针到整数的转换和反向转换。
 - en: Passing out-of-bounds pointer into unchecked code (the high address bit is set,
     so if the unchecked code does arithmetic using that pointer, insanity may ensue).
+  id: totrans-256
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将越界指针传递给未经检查的代码（高地址位被设置，因此如果未经检查的代码使用该指针进行算术运算，可能会导致混乱）。
 - en: Requires a significant amount of compiler support.
+  id: totrans-257
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要大量编译器支持。
 - en: So, baggy bounds checking is an approach for mitigating buffer overflows in
     buggy code.
+  id: totrans-258
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，baggy bounds检查是一种减轻有缺陷代码中缓冲区溢出的方法。
 - en: More approaches for implementing bounds checking
+  id: totrans-259
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 实现边界检查的更多方法
 - en: 'Approach 4: non-executable memory (AMD''s NX bit, Windows DEP, W^X, ...)'
+  id: totrans-260
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 方法4：非可执行内存（AMD的NX位，Windows DEP，W^X等）
 - en: Modern hardware allows specifying read, write, and execute perms for memory.
     (R, W permissions were there a long time ago; execute is recent.)
+  id: totrans-261
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现代硬件允许为内存指定读取、写入和执行权限。（R、W权限很久以前就有了；执行权限是最近才有的。）
 - en: Can mark the stack non-executable, so that adversary cannot run their code.
+  id: totrans-262
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以将堆栈标记为不可执行，这样对手就无法运行他们的代码。
 - en: More generally, some systems enforce "W^X", meaning all memory is either writable,
     or executable, but not both. (Of course, it's OK to be neither.)
+  id: totrans-263
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更一般地，一些系统执行“W^X”，意味着所有内存要么可写，要么可执行，但不能同时。 （当然，既不可写也不可执行也是可以的。）
 - en: '**Advantage:** Potentially works without any application changes.'
+  id: totrans-264
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**优势：** 可能无需进行任何应用程序更改即可运行。'
 - en: '**Advantage:** The hardware is watching you all of the time, unlike the OS.'
+  id: totrans-265
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**优势：** 硬件一直在监视你，不像操作系统。'
 - en: '**Disadvantage:** Harder to dynamically generate code (esp. with W^X).'
+  id: totrans-266
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**缺点：** 动态生成代码更困难（尤其是使用W^X）。'
 - en: JITs like Java runtimes, Javascript engines, generate x86 on the fly.
+  id: totrans-267
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 像Java运行时、Javascript引擎这样的JIT会即时生成x86代码。
 - en: Can work around it, by first writing, then changing to executable.
+  id: totrans-268
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以通过先写入，然后更改为可执行来解决问题。
 - en: 'Approach 5: randomized memory addresses (ASLR, stack randomization, ...)'
+  id: totrans-269
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 方法5：随机化内存地址（ASLR，堆栈随机化等）
 - en: 'Observation: Many attacks use hardcoded addresses in shellcode! [The attacker
     grabs a binary and uses gdb to figure out where stuff lives.]'
+  id: totrans-270
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 观察：许多攻击在shellcode中使用硬编码地址！[攻击者抓取一个二进制文件并使用gdb来找出东西的位置。]
 - en: So, we can make it difficult for the attacker to guess a valid code pointer.
+  id: totrans-271
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，我们可以使攻击者难以猜测有效的代码指针。
 - en: 'Stack randomization: Move stack to random locations, and/or place padding between
     stack variables. This makes it more difficult for attackers to determine:'
+  id: totrans-272
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 堆栈随机化：将堆栈移动到随机位置，并/或在堆栈变量之间放置填充。这使得攻击者更难确定：
 - en: Where the return address for the current frame is located
+  id: totrans-273
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当前帧的返回地址位于何处
 - en: Where the attacker's shellcode buffer will be located
+  id: totrans-274
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者的shellcode缓冲区将位于何处
 - en: 'Randomize entire address space (Address Space Layout Randomization): randomize
     the stack, the heap, location of DLLs, etc.'
+  id: totrans-275
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 随机化整个地址空间（地址空间布局随机化）：随机化堆栈、堆、DLL的位置等。
 - en: Rely on the fact that a lot of code is relocatable.
+  id: totrans-276
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 依赖于很多代码是可重定位的这一事实。
 - en: Dynamic loader can choose random address for each library, program.
+  id: totrans-277
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 动态加载器可以为每个库、程序选择随机地址。
 - en: Adversary doesn't know address of system(), etc.
+  id: totrans-278
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手不知道system()等函数的地址。
 - en: Can this still be exploited?
+  id: totrans-279
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这仍然可以被利用吗？
 - en: Adversary might guess randomness. Especially on 32-bit machines, there aren't
     many random bits (e.g., 1 bit belongs to kernel/user mode divide, 12 bits can't
     be randomized because memory-mapped pages need to be aligned with page boundaries,
     etc.).
+  id: totrans-280
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可能猜测随机性。特别是在32位机器上，没有太多的随机位（例如，1位属于内核/用户模式划分，12位不能被随机化，因为内存映射页面需要与页面边界对齐等）。
 - en: For example, attacker could buffer overflow and try to overwrite the return
     address with the address of `usleep(16)`, and then seeing if the connection hangs
     for 16 seconds, or if it crashes (in which case the server forks a new ASLR process
     with the same ASLR offsets). `usleep()` could be in one of 2^16 or 2^28 places.
     [More details](https://cseweb.ucsd.edu/~hovav/dist/asrandom.pdf).
+  id: totrans-281
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，攻击者可能进行缓冲区溢出并尝试用`usleep(16)`的地址覆盖返回地址，然后查看连接是否在16秒后挂起，或者是否崩溃（在这种情况下，服务器会使用相同的ASLR偏移量fork一个新的ASLR进程）。
+    `usleep()`可能在2^16或2^28个地方之一。[更多细节](https://cseweb.ucsd.edu/~hovav/dist/asrandom.pdf)。
 - en: ASLR is more practical on 64-bit machines (easily 32 bits of randomness).
+  id: totrans-282
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ASLR在64位机器上更实用（很容易有32位的随机性）。
 - en: Adversary might extract randomness.
+  id: totrans-283
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可能提取随机性。
 - en: Programs might generate a stack trace or error message which contains a pointer.
+  id: totrans-284
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 程序可能生成包含指针的堆栈跟踪或错误消息。
 - en: If adversaries can run some code, they might be able to extract real addresses
     (JIT'd code?).
+  id: totrans-285
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果对手可以运行一些代码，他们可能能够提取真实地址（JIT编译的代码？）。
 - en: 'Cute address leak in Flash''s Dictionary (hash table):'
+  id: totrans-286
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Flash的字典（哈希表）中的可爱地址泄漏：
 - en: Get victim to visit your Flash-enabled page (e.g., buy an ad).
+  id: totrans-287
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让受害者访问您的Flash启用页面（例如，购买广告）。
 - en: Hash table internally computes hash value of keys.
+  id: totrans-288
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 哈希表在内部计算键的哈希值。
 - en: Hash value of integers is the integer.
+  id: totrans-289
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 整数的哈希值是整数本身。
 - en: Hash value of object is its memory address.
+  id: totrans-290
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对象的哈希值是其内存地址。
 - en: Iterating over a hash table is done from lowest hash key to highest hash key.
+  id: totrans-291
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 遍历哈希表是从最低哈希键到最高哈希键进行的。
 - en: So, the attacker creates a Dictionary, inserts a string object which has shellcode,
     and then inserts a bunch of numbers into the Dictionary.
+  id: totrans-292
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，攻击者创建一个字典，插入一个包含shellcode的字符串对象，然后向字典中插入一堆数字。
 - en: By iterating through the Dictionary, the attacker can determine where the string
     object lives by seeing which integers the object reference falls between!
+  id: totrans-293
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过遍历字典，攻击者可以确定字符串对象位于何处，看看对象引用落在哪些整数之间！
 - en: Now, overwrite a code pointer with the shellcode address and bypass ASLR!
+  id: totrans-294
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在，用shellcode地址覆盖代码指针并绕过ASLR！
 - en: Adversary might not care exactly where to jump.
+  id: totrans-295
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可能不关心确切要跳转到哪里。
 - en: 'Ex: "Heap spraying": fill memory w/ shellcode so that a random jump is OK!'
+  id: totrans-296
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如："堆喷洒"：填充内存以便随机跳转是可以的！
 - en: Adversary might exploit some code that's not randomized (if such code exists).
+  id: totrans-297
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手可能利用一些未随机化的代码（如果存在这样的代码）。
 - en: 'Some other interesting uses of randomization:'
+  id: totrans-298
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 随机化的一些其他有趣用途：
 - en: System call randomization (each process has its own system call numbers).
+  id: totrans-299
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统调用随机化（每个进程有自己的系统调用号码）。
 - en: Instruction set randomization so that attacker cannot easily determine what
     "shellcode" looks like for a particular program instantiation.
+  id: totrans-300
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 指令集随机化，以便攻击者不能轻易确定特定程序实例的"shellcode"是什么样子。
 - en: '*Example:* Imagine that the processor had a special register to hold a "decoding
     key." Each installation of a particular application is associated with a random
     key. Each machine instruction in the application is XOR''ed with this key. When
     the OS launches the process, it sets the decoding key register, and the processor
     uses this key to decode instructions before executing them.'
+  id: totrans-301
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*例子：* 想象一下，处理器有一个特殊的寄存器来保存“解码密钥”。每个特定应用程序的安装都与一个随机密钥相关联。应用程序中的每条机器指令都与该密钥进行异或运算。当操作系统启动进程时，它设置解码密钥寄存器，处理器使用此密钥解码指令后再执行它们。'
 - en: Which buffer overflow defenses are used in practice?
+  id: totrans-302
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 实际上使用了哪些缓冲区溢出防御措施？
 - en: gcc and MSVC enable stack canaries by default.
+  id: totrans-303
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: gcc和MSVC默认启用栈保护。
 - en: Linux and Windows include ASLR and NX by default.
+  id: totrans-304
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Linux和Windows默认包含ASLR和NX。
 - en: 'Bounds checking is not as common, due to:'
+  id: totrans-305
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 由于：
 - en: Performance overheads
+  id: totrans-306
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 性能开销
 - en: Need to recompile programs
+  id: totrans-307
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要重新编译程序
 - en: 'False alarms: Common theme in security tools: false alarms prevent adoption
     of tools! Often, zero false alarms with some misses better than zero misses but
     false alarms.'
+  id: totrans-308
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 误报：安全工具中的常见主题：误报阻止了工具的采用！通常，一些遗漏但没有误报比零遗漏但有误报更好。
 - en: Return-oriented programming (ROP)
+  id: totrans-309
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 返回导向编程（ROP）
 - en: ASLR and DEP are very powerful defensive techniques.
+  id: totrans-310
   prefs: []
   type: TYPE_NORMAL
+  zh: ASLR和DEP是非常强大的防御技术。
 - en: DEP prevents the attacker from executing stack code of his or her choosing
+  id: totrans-311
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DEP防止攻击者执行自己选择的栈代码。
 - en: ASLR prevents the attacker from determining where shellcode or return addresses
     are located.
+  id: totrans-312
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: ASLR可以防止攻击者确定shellcode或返回地址的位置。
 - en: However, what if the attacker could find PREEXISTING CODE with KNOWN FUNCTIONALITY
     that was located at a KNOWN LOCATION? Then, the attacker could invoke that code
     to do evil.
+  id: totrans-313
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但是，如果攻击者能够找到位于已知位置的具有已知功能的预先存在的代码呢？那么，攻击者可以调用该代码来做坏事。
 - en: Of course, the preexisting code isn't *intentionally* evil, since it is a normal
     part of the application.
+  id: totrans-314
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当然，预先存在的代码并不是*故意*恶意，因为它是应用程序的正常部分。
 - en: However, the attacker can pass that code unexpected arguments, or jump to the
     middle of the code and only execute a desired piece of that code.
+  id: totrans-315
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但是，攻击者可以传递意外的参数给该代码，或者跳转到代码的中间并仅执行该代码的所需部分。
 - en: These kinds of attacks are called *return-oriented programming*, or *ROP*. To
     understand how ROP works, let's examine a simple C program that has a security
     vulnerability. [Example adapted from here](http://codearcana.com/posts/2013/05/28/introduction-to-return-oriented-programming-rop.html).
+  id: totrans-316
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种攻击称为*返回导向编程*，或*ROP*。为了理解ROP的工作原理，让我们看一个具有安全漏洞的简单C程序。[示例改编自此处](http://codearcana.com/posts/2013/05/28/introduction-to-return-oriented-programming-rop.html)。
 - en: '[PRE21]'
+  id: totrans-317
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE21]'
 - en: Let's imagine that the system does not use ASLR or stack canaries, but it does
     use DEP. `process_msg()` has an obvious buffer overflow, but the attacker can't
     use this overflow to execute shellcode in `buf`, since DEP makes the stack non-executable.
     However, that `run_shell()` function looks tempting... how can the attacker execute
     it?
+  id: totrans-318
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设系统不使用ASLR或栈保护，但使用了DEP。`process_msg()`存在明显的缓冲区溢出，但攻击者无法利用此溢出在`buf`中执行shellcode，因为DEP使栈不可执行。然而，`run_shell()`函数看起来很诱人...
+    攻击者如何执行它？
 - en: Attacker disassembles the program and figures out where the starting address
     of `run_shell()`.
+  id: totrans-319
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者反汇编程序并找出`run_shell()`的起始地址在哪里。
 - en: The attacker launches the buffer overflow, and overwrites the return address
     of `process_msg()` with the address of `run_shell()`. Boom! The attacker now has
     access to a shell which runs with the privileges of the application.
+  id: totrans-320
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者发起缓冲区溢出，并用`run_shell()`的地址覆盖`process_msg()`的返回地址。砰！攻击者现在可以访问以应用程序权限运行的shell。
 - en: '*Example:*'
+  id: totrans-321
   prefs: []
   type: TYPE_NORMAL
+  zh: '*例子：*'
 - en: '[PRE22]'
+  id: totrans-322
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE22]'
 - en: That's a straightforward extension of the buffer overflows that we've already
     looked at. But how can we pass arguments to the function that we're jumping to?
+  id: totrans-323
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是我们已经看过的缓冲区溢出的直接扩展。但是我们如何向我们要跳转到的函数传递参数呢？
 - en: '[PRE23]'
+  id: totrans-324
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE23]'
 - en: In this case, the argument that we want to pass to is already located in the
     program code. There's also a preexisting call to `system()`, but that call isn't
     passing the argument that we want.
+  id: totrans-325
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这种情况下，我们要传递的参数已经位于程序代码中。程序中还存在一个对`system()`的调用，但该调用并未传递我们想要的参数。
 - en: We know that `system()` must be getting linked to our program. So, using our
     trusty friend gdb, we can find where the `system()` function is located, and where
     bash_path is located.
+  id: totrans-326
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们知道`system()`必须与我们的程序链接。因此，使用我们可靠的朋友gdb，我们可以找到`system()`函数的位置以及bash_path的位置。
 - en: 'To call `system()` with the `bash_path` argument, we have to set up the stack
     in the way that `system()` expects when we jump to it. Right after we jump to
     `system()`, `system()` expects this to be on the stack:'
+  id: totrans-327
   prefs: []
   type: TYPE_NORMAL
+  zh: 要使用`bash_path`参数调用`system()`，我们必须设置堆栈，以便在跳转到它时，`system()`期望堆栈上有这些内容：
 - en: '[PRE24]'
+  id: totrans-328
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE24]'
 - en: 'So, the buffer overflow needs to set up a stack that looks like this:'
+  id: totrans-329
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，缓冲区溢出需要设置一个看起来像这样的堆栈：
 - en: '[PRE25]'
+  id: totrans-330
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE25]'
 - en: In essence, what we've done is set up a fake calling frame for the `system()`
     call! In other words, we've simulated what the compiler would do if it actually
     wanted to setup a call to `system()`.
+  id: totrans-331
   prefs: []
   type: TYPE_NORMAL
+  zh: 本质上，我们所做的是为`system()`调用设置了一个虚假的调用帧！换句话说，我们模拟了编译器如果真的想要设置一个对`system()`的调用会做什么。
 - en: What if the string `"/bin/bash"` was not in the program?
+  id: totrans-332
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果字符串`"/bin/bash"`不在程序中怎么办？
 - en: We could include that string in the buffer overflow, and then have the argument
     to system() point to the string.
+  id: totrans-333
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以将该字符串包含在缓冲区溢出中，然后使`system()`的参数指向该字符串。
 - en: '[PRE26]'
+  id: totrans-334
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE26]'
 - en: Note that, in these examples, I've been assuming that the attacker used a junk
     return address from `system()`. However, the attacker could set it to something
     useful.
+  id: totrans-335
   prefs: []
   type: TYPE_NORMAL
+  zh: 请注意，在这些示例中，我一直假设攻击者使用了来自`system()`的无用返回地址。然而，攻击者也可以将其设置为有用的内容。
 - en: In fact, by setting it to something useful, the attacker can chain calls together!
+  id: totrans-336
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上，通过将其设置为有用的内容，攻击者可以链接调用在一起！
 - en: '**Goal:** We want to call `system("/bin/bash")` multiple times. Assume that
     we''ve found three addresses:'
+  id: totrans-337
   prefs: []
   type: TYPE_NORMAL
+  zh: '**目标：**我们想要多次调用`system("/bin/bash")`。假设我们找到了三个地址：'
 - en: The address of system()
+  id: totrans-338
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`system()`的地址'
 - en: The address of the string "/bin/bash"
+  id: totrans-339
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 字符串"/bin/bash"的地址
 - en: 'The address of these x86 opcodes:'
+  id: totrans-340
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这些x86操作码的地址：
 - en: '[PRE27]'
+  id: totrans-341
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE27]'
 - en: These opcodes are an example of a "gadget." Gadgets are preexisting instruction
     sequences that can be strung together to create an exploit. Note that there are
     [user-friendly tools](http://www.exploit-db.com/download_pdf/17049/) to help you
     extract gadgets from preexisting binaries (e.g., msfelfscan).
+  id: totrans-342
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些操作码是“小工具”的一个示例。小工具是预先存在的指令序列，可以串联在一起创建一个利用。请注意，有一些[用户友好的工具](http://www.exploit-db.com/download_pdf/17049/)可以帮助您从现有二进制文件中提取小工具（例如，msfelfscan）。
 - en: '[PRE28]'
+  id: totrans-343
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE28]'
 - en: So, how does this work? Remember that the return instruction pops the top of
     the stack and puts it into %eip.
+  id: totrans-344
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，这是如何工作的呢？记住，返回指令弹出栈顶并将其放入%eip。
 - en: The overflowed function terminates by issuing `ret`. `ret` pops off the top-of-the-stack
     (the address of `system()`) and sets `%eip` to it. `system()` starts executing,
     and `%esp` is now at (1), and points to the `pop/ret` gadget.
+  id: totrans-345
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 溢出的函数通过发出`ret`来终止。`ret`弹出栈顶（`system()`的地址）并将`%eip`设置为它。`system()`开始执行，`%esp`现在在（1），并指向`pop/ret`小工具。
 - en: '`system()` finishes execution and calls `ret`. `%esp` goes from (1)-->(2) as
     the `ret` instruction pops the top of the stack and assigns it to `%eip`. `%eip`
     is now the start of the `pop/ret` gadget.'
+  id: totrans-346
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`system()`执行完毕并调用`ret`。`%esp`从（1）->（2），因为`ret`指令弹出栈顶并将其分配给`%eip`。`%eip`现在是`pop/ret`小工具的开始。'
 - en: The pop instruction in the `pop/ret` gadget discards the `bash_path` variable
     from the stack. `%esp` is now at (3). We are still in the `pop/ret` gadget!
+  id: totrans-347
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`pop/ret`小工具中的pop指令从栈中丢弃`bash_path`变量。`%esp`现在在（3）。我们仍然在`pop/ret`小工具中！'
 - en: The `ret` instruction in the `pop/ret` gadget pops the top-of-the-stack and
     puts it into `%eip`. Now we're in `system()` again, and `%esp` is at (4).
+  id: totrans-348
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`pop/ret`小工具中的`ret`指令弹出栈顶并将其放入`%eip`。现在我们再次在`system()`中，并且`%esp`在（4）。'
 - en: And so on and so forth.
+  id: totrans-349
   prefs: []
   type: TYPE_NORMAL
+  zh: 等等。
 - en: Basically, we've created a new type of machine that is driven by the stack pointer
     instead of the regular instruction pointer! As the stack pointer moves down the
     stack, it executes gadgets whose code comes from preexisting program code, and
     whose data comes from stack data created by the buffer overflow.
+  id: totrans-350
   prefs: []
   type: TYPE_NORMAL
+  zh: 基本上，我们创建了一种新类型的机器，它由堆栈指针驱动，而不是常规指令指针！随着堆栈指针沿着堆栈移动，它执行的小工具的代码来自预先存在的程序代码，数据来自缓冲区溢出创建的堆栈数据。
 - en: This attack evades DEP protections--we're not generating any new code, just
     invoking preexisting code!
+  id: totrans-351
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种攻击规避了DEP保护--我们没有生成任何新代码，只是调用了现有的代码！
 - en: 'Stack reading: defeating canaries'
+  id: totrans-352
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 栈读取：打败金丝雀
 - en: 'Assumptions:'
+  id: totrans-353
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设：
 - en: The remote server has a buffer overflow vulnerability.
+  id: totrans-354
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 远程服务器存在缓冲区溢出漏洞。
 - en: Server crashes and restarts if a canary value is set to an incorrect value.
+  id: totrans-355
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器崩溃并重新启动，如果金丝雀值设置为不正确的值。
 - en: When the server respawns, the canary is NOT re-randomized, and the ASLR is NOT
     re-randomized, e.g., because the server uses Linux's PIE mechanism, and `fork()`
     is used to make new workers and not `execve()`.
+  id: totrans-356
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当服务器重新启动时，canary 不会重新随机化，ASLR 也不会重新随机化，例如，因为服务器使用 Linux 的 PIE 机制，并且使用 `fork()`
+    来创建新的工作进程而不是 `execve()`。
 - en: 'So, to determine an 8-byte canary value:'
+  id: totrans-357
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，要确定一个 8 字节的 canary 值：
 - en: '[PRE29]'
+  id: totrans-358
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE29]'
 - en: At this point we have the canary, but remember that the attack assumes that
     the server uses the same canary after a crash.
+  id: totrans-359
   prefs: []
   type: TYPE_NORMAL
+  zh: 此时我们已经有了 canary，但请记住，该攻击假设服务器在崩溃后使用相同的 canary。
 - en: Guessing the correct value for a byte takes 128 guesses on average, so on a
     32-bit system, we only need `4*128=512` guesses to determine the canary (on a
     64-bit system, we need `8*128=1024`).
+  id: totrans-360
   prefs: []
   type: TYPE_NORMAL
+  zh: 猜测一个字节的正确值平均需要 128 次猜测，因此在 32 位系统上，我们只需要 `4*128=512` 次猜测来确定 canary（在 64 位系统上，我们需要
+    `8*128=1024` 次）。
 - en: Much faster than brute force attacks on the canary (`2^15` or `2^27` expected
     guesses on `32/64` bit systems with 16/28 bits of ASLR randomness).
+  id: totrans-361
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 比在 canary 上进行暴力破解攻击要快得多（在具有 16/28 位 ASLR 随机性的 32/64 位系统上，预期猜测次数为 `2^15` 或 `2^27`）。
 - en: Brute force attacks can use the `usleep(16)` probe that we discussed earlier.
+  id: totrans-362
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 暴力破解攻击可以使用我们之前讨论过的 `usleep(16)` 探测。
 - en: Canary reading can be extended to reading arbitrary values that the buffer overflow
     can overwrite!
+  id: totrans-363
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Canary 读取可以扩展到读取缓冲区溢出可以覆盖的任意值！
 - en: So, we've discussed how we can defeat randomized canaries if canaries are not
     changed when a server regenerates. We've also shown how to use gdb and gadgets
     to execute preexisting functions in the program using arguments that the attacker
     controls. But what if the server DOES use ASLR? This prevents you from using offline
     analysis to find where the preexisting functions are?
+  id: totrans-364
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，我们已经讨论了如果服务器在重新生成时不更改 canaries，我们如何能够击败随机化的 canaries。我们还展示了如何使用 gdb 和 gadgets
+    来执行程序中预先存在的函数，使用攻击者控制的参数。但是如果服务器使用 ASLR 呢？这将阻止您使用离线分析来找到预先存在的函数的位置？
 - en: This is what the paper for today's lecture discussed. That paper assumed that
     we're using a 64-bit machine, so that's what we'll assume in this lecture from
     now on. For the purposes of this discussion, the main change is that function
     arguments are now passed in registers instead of on the stack.
+  id: totrans-365
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是今天讲座论文讨论的内容。该论文假设我们使用的是 64 位机器，所以从现在开始，在本讲座中我们也将假设如此。在这次讨论中，主要的变化是函数参数现在是通过寄存器传递而不是通过栈传递。
 - en: Blind return-oriented programming
+  id: totrans-366
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 盲目返回导向编程
 - en: 'Step 1: Find a stop gadget'
+  id: totrans-367
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 步骤 1：找到一个 stop gadget
 - en: A stop gadget is a return address that points to code that will hang the program,
     but not crash it.
+  id: totrans-368
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: stop gadget 是指指向会挂起程序但不会崩溃的代码的返回地址。
 - en: Once the attacker can defeat canaries, he can overwrite the overflown function's
     return address and start guessing locations for a stop gadget. If the client network
     connection suddenly closes, the guessed address was not a stop gadget. If the
     connection stays open, the gadget is a stop gadget.
+  id: totrans-369
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一旦攻击者能够击败 canaries，他就可以覆盖溢出函数的返回地址并开始猜测 stop gadget 的位置。如果客户端网络连接突然关闭，猜测的地址不是
+    stop gadget。如果连接保持打开，那么该 gadget 就是 stop gadget。
 - en: 'Step 2: Find gadgets that pop stack entries'
+  id: totrans-370
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 步骤 2：找到弹出栈中条目的 gadgets
 - en: Once you have a stop gadget, you can use it to find other gadgets that pop entries
     off of the stack and into registers.
+  id: totrans-371
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一旦你有了一个 stop gadget，你可以用它来找到其他将栈中条目弹出并存入寄存器的 gadgets。
 - en: 'There are three building blocks to locate stack popping gadgets:'
+  id: totrans-372
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 定位栈弹出 gadgets 的三个构建块：
 - en: '*probe:* Address of a potential stack popping gadget'
+  id: totrans-373
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*probe:* 潜在的栈弹出 gadget 的地址'
 - en: '*stop:* Address of a stop gadget'
+  id: totrans-374
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*stop:* stop gadget 的地址'
 - en: '*crash:* Address of non-executable code (0x0)'
+  id: totrans-375
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*crash:* 非可执行代码的地址（0x0）'
 - en: '*Example:* Find a gadget that pops one thing off the stack.'
+  id: totrans-376
   prefs: []
   type: TYPE_NORMAL
+  zh: '*示例:* 找到一个弹出栈中一个元素的 gadget。'
 - en: '[PRE30]'
+  id: totrans-377
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE30]'
 - en: After you do this a bunch of times, you'll have a collection of gadgets that
     pop one thing from the stack and then return. However, you won't know which *register*
     those gadgets store the popped value in.
+  id: totrans-378
   prefs: []
   type: TYPE_NORMAL
+  zh: 当你这样做很多次后，你将拥有一系列弹出栈中一个元素然后返回的 gadgets。然而，你不会知道这些 gadgets 将弹出的值存储在哪个 *寄存器* 中。
 - en: You need to know which registers are used to store data so that you can issue
     a system call. Each system call expects its arguments to be in a specific set
     of registers.
+  id: totrans-379
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 你需要知道哪些寄存器用于存储数据，以便您可以发出系统调用。每个系统调用都期望其参数在一组特定的寄存器中。
 - en: Note that we also don't know the location of the `syscall()` library function.
+  id: totrans-380
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 请注意，我们也不知道 `syscall()` 库函数的位置。
 - en: 'Step 3: Find syscall() and determine which registers the pop gadgets use'
+  id: totrans-381
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 步骤 3：找到 syscall() 并确定 pop gadgets 使用哪些寄存器
 - en: '`pause()` is a system call that takes no arguments (and thus ignores everything
     in the registers).'
+  id: totrans-382
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`pause()`是一个不带参数的系统调用（因此忽略寄存器中的所有内容）。'
 - en: To find `pause()`, the attacker chains all of the `"pop x; ret"` gadgets on
     the stack, pushing the system call number for `pause()` as the "argument" for
     each gadget. At the bottom of the chain, the attacker places the guessed address
     for `syscall()`.
+  id: totrans-383
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要找到`pause()`，攻击者在栈上链接所有的`"pop x; ret"`小工具，将`pause()`的系统调用号作为每个小工具的"参数"推送进去。在链的底部，攻击者放置了`syscall()`的猜测地址。
 - en: '[PRE31]'
+  id: totrans-384
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE31]'
 - en: So, at the end of this chain, the pop gadgets have placed the syscall number
     for `pause()` in a bunch of registers, hopefully including `rax`, which is the
     one that `syscall()` looks in to find the syscall number.
+  id: totrans-385
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，在这个链的末端，弹出小工具已经将`pause()`的系统调用号放入了一堆寄存器中，希望包括`rax`，这是`syscall()`查找系统调用号的寄存器。
 - en: 'Once this mega-gadget induces a pause, we know that we''ve determined the location
     of `syscall()`. Now we need to determine which gadget pops the top-of-the stack
     into `rax`. The attacker can figure this out by process-of-elimination: iteratively
     try just one gadget and see if you can invoke `pause()`.'
+  id: totrans-386
   prefs: []
   type: TYPE_NORMAL
+  zh: 一旦这个超级小工具引发了暂停，我们就知道已确定了`syscall()`的位置。现在我们需要确定哪个小工具将栈顶弹出到`rax`中。攻击者可以通过逐步尝试一个小工具并查看是否可以调用`pause()`来弄清楚这一点。
 - en: To identify arbitrary `"pop x; ret"` gadgets, you can use tricks with other
     system calls that use the `x` register that you're trying to find.
+  id: totrans-387
   prefs: []
   type: TYPE_NORMAL
+  zh: 要识别任意的`"pop x; ret"`小工具，可以使用与您试图找到的`x`寄存器相关的其他系统调用的技巧。
 - en: So, the outcome of this phase is knowledge of `"pop x; ret"` gadgets, location
     of `syscall()`.
+  id: totrans-388
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，这个阶段的结果是知道`"pop x; ret"`小工具，`syscall()`的位置。
 - en: 'Step 4: Invoke write()'
+  id: totrans-389
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 第4步：调用write()
 - en: 'Now we want to invoke the write call on the network socket that the server
     has with the attacker''s client. We need the following gadgets:'
+  id: totrans-390
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们想要在服务器与攻击者客户端之间的网络套接字上调用写入调用。我们需要以下小工具：
 - en: '[PRE32]'
+  id: totrans-391
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE32]'
 - en: We have to guess the socket value, but that's fairly easy to do, since Linux
     restricts processes to 1024 simultaneously open file descriptors, and new file
     descriptors have to be the lowest one available (so guessing a small file descriptor
     works well in practice).
+  id: totrans-392
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们必须猜测套接字的值，但这在实践中相当容易，因为Linux将进程限制为同时打开1024个文件描述符，并且新文件描述符必须是可用的最低文件描述符（因此猜测一个小文件描述符在实践中效果很好）。
 - en: To test whether we've guessed the correct file descriptor, simply try the write
     and see if we receive anything!
+  id: totrans-393
   prefs: []
   type: TYPE_NORMAL
+  zh: 要测试我们是否猜对了文件描述符，只需尝试写入并查看是否收到任何内容！
 - en: Once we have the socket number, we issue a write, and for the data to send,
     we send a pointer to the program's `.text` segment! This allows the attacker to
     read the program's code (which was randomized but now totally known to the attacker!).
     Now the attacker can find more powerful gadgets directly, and leverage those gadgets
     to open a shell.
+  id: totrans-394
   prefs: []
   type: TYPE_NORMAL
+  zh: 一旦我们有了套接字号码，我们发出一个写入请求，发送的数据是指向程序的`.text`段的指针！这使得攻击者可以读取程序的代码（虽然已随机化，但现在完全为攻击者所知！）。现在攻击者可以直接找到更强大的小工具，并利用这些小工具打开一个shell。
 - en: Defenses against BROP
+  id: totrans-395
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 防御BROP攻击
 - en: Re-randomize the canaries and the address space after each crash!
+  id: totrans-396
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每次崩溃后重新随机化canaries和地址空间！
 - en: Use `exec()` instead of `fork()` to create processes, since `fork()` copies
     the address space of the parent to the child.
+  id: totrans-397
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用`exec()`代替`fork()`来创建进程，因为`fork()`会将父进程的地址空间复制给子进程。
 - en: Interestingly, Windows is not vulnerable to BROP because Windows has no `fork()`
     equivalent.
+  id: totrans-398
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有趣的是，Windows不容易受到BROP攻击的影响，因为Windows没有`fork()`的等效功能。
 - en: Sleep-on-crash?
+  id: totrans-399
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 崩溃后休眠？
 - en: Now a BROP attack is a denial-of-service!
+  id: totrans-400
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在BROP攻击是一种拒绝服务攻击！
 - en: Bounds-checking?
+  id: totrans-401
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 边界检查？
 - en: Up to 2x performance overhead...
+  id: totrans-402
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 高达2倍的性能开销...
 - en: More info on ROP and x86 calling conventions
+  id: totrans-403
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 有关ROP和x86调用约定的更多信息
 - en: '[A brief introduction to x86 calling conventions](http://codearcana.com/posts/2013/05/21/a-brief-introduction-to-x86-calling-conventions.html)'
+  id: totrans-404
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[x86调用约定简介](http://codearcana.com/posts/2013/05/21/a-brief-introduction-to-x86-calling-conventions.html)'
 - en: '[Introduction to return oriented programming](http://codearcana.com/posts/2013/05/28/introduction-to-return-oriented-programming-rop.html)'
+  id: totrans-405
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[返回导向编程简介](http://codearcana.com/posts/2013/05/28/introduction-to-return-oriented-programming-rop.html)'
 - en: '[Dive into ROP: A quick introduction to return oriented programming](http://www.slideshare.net/saumilshah/dive-into-rop-a-quick-introduction-to-return-oriented-programming)'
+  id: totrans-406
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[深入了解ROP：返回导向编程的快速介绍](http://www.slideshare.net/saumilshah/dive-into-rop-a-quick-introduction-to-return-oriented-programming)'
 - en: '[Return-Oriented Programming: Systems, Languages, and Applications](https://cseweb.ucsd.edu/~hovav/dist/rop.pdf)'
+  id: totrans-407
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[返回导向编程：系统、语言和应用](https://cseweb.ucsd.edu/~hovav/dist/rop.pdf)'

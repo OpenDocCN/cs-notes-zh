@@ -1,1369 +1,1907 @@
 - en: OKWS
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: OKWS
 - en: '**Note:** These lecture notes were slightly modified from the ones posted on
     the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
     from 2014.'
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: '**注意：** 这些讲座笔记略有修改，来自2014年6.858 [课程网站](http://css.csail.mit.edu/6.858/2014/schedule.html)上发布的笔记。'
 - en: 'Today''s lecture: how to build a secure web server on Unix. The design of our
     lab web server, zookws, is inspired by OKWS.'
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 今天的讲座：如何在Unix上构建一个安全的Web服务器。我们实验室Web服务器zookws的设计灵感来自于OKWS。
 - en: Privilege separation
+  id: totrans-3
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 特权分离
 - en: Big security idea
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大型安全理念
 - en: Split system into modules, each with their own privilege
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将系统分割成各自具有特权的模块
 - en: '**Idea:** if one module is compromised, then other modules won''t be'
+  id: totrans-6
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**想法：** 如果一个模块被破坏，那么其他模块就不会被破坏'
 - en: 'Use often:'
+  id: totrans-7
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 经常使用：
 - en: Virtual machines (e.g., run web site in its own virtual machine)
+  id: totrans-8
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 虚拟机（例如，在自己的虚拟机中运行网站）
 - en: SSH (seperates sshd, agent)
+  id: totrans-9
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: SSH（分离sshd、agent）
 - en: 'Challenges:'
+  id: totrans-10
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 挑战：
 - en: Modules need to share
+  id: totrans-11
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 模块需要共享
 - en: Need OS support
+  id: totrans-12
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要操作系统支持
 - en: Need to use OS carefully to set things up correctly
+  id: totrans-13
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要仔细使用操作系统正确设置事物
 - en: Performance
+  id: totrans-14
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 性能
 - en: OKWS
+  id: totrans-15
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: OKWS
 - en: Interesting case study of privilege separation
+  id: totrans-16
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 特权分离的有趣案例研究
 - en: Lots of sharing between services
+  id: totrans-17
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务之间有很多共享
 - en: Strict partitioning doesn't work
+  id: totrans-18
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 严格的分区不起作用
 - en: Lots of code
+  id: totrans-19
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大量的代码
 - en: Not widely used outside of OKcupid
+  id: totrans-20
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在OKcupid之外并不广泛使用
 - en: Many web sites have their privilege separation plan
+  id: totrans-21
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 许多网站都有他们的特权分离计划
 - en: But no papers describing their plans
+  id: totrans-22
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但没有描述他们计划的论文
 - en: 'Background: security and protection in Unix'
+  id: totrans-23
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 背景：Unix中的安全和保护
 - en: 'Typical principals: user IDs, group IDs (32-bit integers).'
+  id: totrans-24
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 典型的主体：用户ID、组ID（32位整数）。
 - en: Each process has a user ID (uid), and a list of group IDs (gid + grouplist).
+  id: totrans-25
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个进程都有一个用户ID（uid）和一组组ID（gid + grouplist）。
 - en: For mostly-historical reasons, a process has a gid + extra grouplist.
+  id: totrans-26
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 出于大多是历史原因，一个进程有一个gid +额外的组列表。
 - en: Superuser principal (root) represented by `uid=0`, bypasses most checks.
+  id: totrans-27
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 超级用户主体（root）由`uid=0`表示，绕过大多数检查。
 - en: What are the objects + ops in Unix, and how does the OS do access control?
+  id: totrans-28
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix中的对象+操作是什么，操作系统如何进行访问控制？
 - en: Files, directories.
+  id: totrans-29
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件、目录。
 - en: 'File operations: read, write, execute, change perms, ..'
+  id: totrans-30
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件操作：读、写、执行、更改权限，..
 - en: 'Directory operations: lookup, create, remove, rename, change perms, ..'
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 目录操作：查找、创建、删除、重命名、更改权限，..
 - en: Each inode has an owner user and group.
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个inode都有一个所有者用户和组。
 - en: Each inode has read, write, execute perms for user, group, others.
+  id: totrans-33
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个inode对于用户、组、其他人都有读、写、执行权限。
 - en: Typically represented as a bit vector written base 8 (octal);
+  id: totrans-34
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通常表示为写入基数8（八进制）的位向量；
 - en: octal works well because each digit is 3 bits (read, write, exec).
+  id: totrans-35
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 八进制很好用，因为每个数字是3位（读、写、执行）。
 - en: Who can change permissions on files?
+  id: totrans-36
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 谁可以更改文件的权限？
 - en: Only user owner (process UID).
+  id: totrans-37
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有用户所有者（进程UID）。
 - en: 'Hard link to file: need write permission to file.'
+  id: totrans-38
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对文件进行硬链接：需要对文件有写权限。
 - en: 'Possible rationale: quotas.'
+  id: totrans-39
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能的理由：配额。
 - en: 'Possible rationale: prevent hard-linking `/etc/passwd` to `/var/mail/root`
     with a world-writable `/var/mail`.'
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能的理由：防止将`/etc/passwd`硬链接到具有全局可写`/var/mail`的`/var/mail/root`。
 - en: Execute for directory means being able to lookup names (but not ls).
+  id: totrans-41
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 目录的执行意味着能够查找名称（但不能ls）。
 - en: 'Checks for process opening file `/etc/passwd`:'
+  id: totrans-42
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 检查进程打开文件`/etc/passwd`：
 - en: Must be able to look up `'etc'` in `/`, `'passwd'` in `/etc`.
+  id: totrans-43
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 必须能够在`/`中查找`'etc'`，在`/etc`中查找`'passwd'`。
 - en: Must be able to open `/etc/passwd` (read or read-write).
+  id: totrans-44
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 必须能够打开`/etc/passwd`（读或读写）。
 - en: Suppose you want file readable to intersection of group1 and group2.
+  id: totrans-45
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设你想要文件对group1和group2的交集可读。
 - en: Is it possible to implement this in Unix?
+  id: totrans-46
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在Unix中是否可能实现这一点？
 - en: File descriptors.
+  id: totrans-47
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件描述符。
 - en: File access control checks performed at file open.
+  id: totrans-48
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件打开时执行的文件访问控制检查。
 - en: Once process has an open file descriptor, can continue accessing.
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一旦进程有一个打开的文件描述符，就可以继续访问。
 - en: Processes can pass file descriptors (via Unix domain sockets).
+  id: totrans-50
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 进程可以传递文件描述符（通过Unix域套接字）。
 - en: Processes.
+  id: totrans-51
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 进程。
 - en: What can you do to a process?
+  id: totrans-52
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 你可以对一个进程做什么？
 - en: Debug (ptrace), send signal, wait for exit & get status,
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 调试（ptrace），发送信号，等待退出并获取状态，
 - en: 'Debugging, sending signals: must have same UID (almost).'
+  id: totrans-54
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 调试，发送信号：必须具有相同的UID（几乎）。
 - en: Various exceptions, this gets tricky in practice.
+  id: totrans-55
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 各种例外，在实践中这变得棘手。
 - en: 'Waiting / getting exit status: must be parent of that process.'
+  id: totrans-56
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 等待/获取退出状态：必须是该进程的父进程。
 - en: Memory.
+  id: totrans-57
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内存。
 - en: One process cannot generally name memory in another process.
+  id: totrans-58
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个进程通常不能命名另一个进程的内存。
 - en: 'Exception: debug mechanisms.'
+  id: totrans-59
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例外：调试机制。
 - en: 'Exception: memory-mapped files.'
+  id: totrans-60
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例外：内存映射文件。
 - en: Networking.
+  id: totrans-61
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 网络。
 - en: Operations.
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 操作。
 - en: Bind to a port.
+  id: totrans-63
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 绑定到一个端口。
 - en: Connect to some address.
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 连接到某个地址。
 - en: Read/write a connection.
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 读/写连接。
 - en: Send/receive raw packets.
+  id: totrans-66
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 发送/接收原始数据包。
 - en: 'Rules:'
+  id: totrans-67
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 规则：
 - en: only root (UID 0) can bind to ports below 1024;
+  id: totrans-68
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有 root（UID 0）可以绑定到低于 1024 的端口；
 - en: (e.g., arbitrary user cannot run a web server on port 80.)
+  id: totrans-69
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （例如，任意用户不能在端口 80 上运行 Web 服务器。）
 - en: only root can send/receive raw packets.
+  id: totrans-70
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有 root 可以发送/接收原始数据包。
 - en: any process can connect to any address.
+  id: totrans-71
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何进程都可以连接到任何地址。
 - en: can only read/write data on connection that a process has an fd for.
+  id: totrans-72
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只能读取/写入进程具有文件描述符的连接上的数据。
 - en: Additionally, firewall imposes its own checks, unrelated to processes.
+  id: totrans-73
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 此外，防火墙施加自己的检查，与进程无关。
 - en: How does the principal of a process get set?
+  id: totrans-74
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 进程的主体是如何设置的？
 - en: 'System calls: `setuid()`, `setgid()`, `setgroups()`.'
+  id: totrans-75
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统调用：`setuid()`、`setgid()`、`setgroups()`。
 - en: Only root (UID 0) can call these system calls (to first approximation).
+  id: totrans-76
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 只有 root（UID 0）可以调用这些系统调用（粗略估计）。
 - en: Where does the user ID, group ID list come from?
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户 ID、组 ID 列表从哪里获取？
 - en: On a typical Unix system, login program runs as root (UID 0)
+  id: totrans-78
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在典型的 Unix 系统上，登录程序以 root（UID 0）身份运行。
 - en: Checks supplied user password against `/etc/shadow`.
+  id: totrans-79
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 检查提供的用户密码是否与`/etc/shadow`中的匹配。
 - en: Finds user's UID based on `/etc/passwd`.
+  id: totrans-80
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 根据`/etc/passwd`找到用户的 UID。
 - en: Finds user's groups based on `/etc/group`.
+  id: totrans-81
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 根据`/etc/group`找到用户的组。
 - en: Calls `setuid()`, `setgid()`, `setgroups()` before running user's shell
+  id: totrans-82
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在运行用户的 shell 之前调用`setuid()`、`setgid()`、`setgroups()`。
 - en: How do you regain privileges after switching to a non-root user?
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在切换到非 root 用户后如何重新获得权限？
 - en: Could use file descriptor passing (but have to write specialized code)
+  id: totrans-84
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以使用文件描述符传递（但必须编写专门的代码）
 - en: 'Kernel mechanism: *setuid/setgid binaries*.'
+  id: totrans-85
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核机制：*setuid/setgid 二进制文件*。
 - en: When the binary is executed, set process UID or GID to binary owner.
+  id: totrans-86
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当执行二进制文件时，将进程 UID 或 GID 设置为二进制文件所有者。
 - en: Specified with a special bit in the file's permissions.
+  id: totrans-87
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过文件权限中的特殊位指定。
 - en: For example, `su` / `sudo` binaries are typically setuid root.
+  id: totrans-88
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，`su` / `sudo` 二进制文件通常是 setuid root。
 - en: Even if your shell is not root, can run `"su otheruser"`
+  id: totrans-89
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 即使您的 shell 不是 root，也可以运行`"su otheruser"`。
 - en: '`su` process will check passwd, run shell as `otheruser` if OK.'
+  id: totrans-90
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`su` 进程会检查密码，如果正确则以`otheruser`身份运行 shell。'
 - en: Many such programs on Unix, since root privileges often needed.
+  id: totrans-91
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix 上有许多这样的程序，因为通常需要 root 权限。
 - en: Why might setuid-binaries be a bad idea, security-wise?
+  id: totrans-92
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么 setuid 二进制文件在安全方面可能是个坏主意？
 - en: Many ways for adversary (caller of binary) to manipulate process.
+  id: totrans-93
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手（二进制调用者）操纵进程的许多方法。
 - en: In Unix, exec'ed process inherits environment vars, file descriptors, ..
+  id: totrans-94
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在 Unix 中，执行的进程会继承环境变量、文件描述符等。
 - en: Libraries that a setuid program might use not sufficiently paranoid
+  id: totrans-95
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: setuid 程序可能使用的库不够谨慎
 - en: Historically, many vulnerabilities (e.g. pass `$LD_PRELOAD`, ..)
+  id: totrans-96
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 历史上存在许多漏洞（例如传递`$LD_PRELOAD`，..）
 - en: How to prevent a malicious program from exploiting setuid-root binaries?
+  id: totrans-97
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何防止恶意程序利用 setuid-root 二进制文件？
 - en: 'Kernel mechanism: *chroot*'
+  id: totrans-98
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核机制：*chroot*
 - en: Changes what '/' means when opening files by path name.
+  id: totrans-99
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过路径名打开文件时更改`/`的含义。
 - en: Cannot name files (e.g. setuid binaries) outside chroot tree.
+  id: totrans-100
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不能在 chroot 树之外命名文件（例如 setuid 二进制文件）。
 - en: For example, OKWS uses chroot to restrict programs to `/var/okws/run`, ..
+  id: totrans-101
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，OKWS 使用 chroot 将程序限制在`/var/okws/run`中，..
 - en: Kernel also ensures that '/../' does not allow escape from chroot.
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内核还确保`/../`不允许从 chroot 中逃脱。
 - en: Why chroot only allowed for root?
+  id: totrans-103
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么只允许 root 使用 chroot？
 - en: setuid binaries (like `su`) can get confused about what's `/etc/passwd`.
+  id: totrans-104
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: setuid 二进制文件（如`su`）可能会混淆`/etc/passwd`的内容。
 - en: many kernel implementations (inadvertently?) allow recursive calls to `chroot()`
     to escape from chroot jail, so chroot is not an effective security mechanism for
     a process running as root.
+  id: totrans-105
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 许多内核实现（无意中？）允许递归调用`chroot()`以从 chroot 监狱中逃脱，因此 chroot 对于以 root 身份运行的进程来说不是一种有效的安全机制。
 - en: Why hasn't chroot been fixed to confine a root process in that dir?
+  id: totrans-106
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么 chroot 没有被修复以限制根进程在该目录中？
 - en: Root can write kern mem, load kern modules, access disk sectors, ..
+  id: totrans-107
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Root 可以写入内核内存，加载内核模块，访问磁盘扇区，..
 - en: 'Background: traditional web server architecture (Apache)'
+  id: totrans-108
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 背景：传统的 Web 服务器架构（Apache）
 - en: Apache runs `N` identical processes, handling HTTP requests.
+  id: totrans-109
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Apache 运行`N`个相同的进程，处理 HTTP 请求。
 - en: All processes run as user `'www'`.
+  id: totrans-110
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 所有进程都以用户`'www'`身份运行。
 - en: Application code (e.g. PHP) typically runs inside each of `N` apache processes.
+  id: totrans-111
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序代码（例如 PHP）通常在每个`N`个 Apache 进程中运行。
 - en: Any accesses to OS state (files, processes, ...) performed by `www`'s UID.
+  id: totrans-112
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 任何对操作系统状态（文件、进程等）的访问都由`www`的 UID 执行。
 - en: 'Storage: SQL database, typically one connection with full access to DB.'
+  id: totrans-113
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 存储：SQL 数据库，通常一个连接具有对整个数据库的完全访问权限。
 - en: Database principal is the entire application.
+  id: totrans-114
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 数据库主体是整个应用程序。
 - en: 'Problem: if any component is compromised, adversary gets all the data.'
+  id: totrans-115
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 问题：如果任何组件被攻破，对手将获得所有数据。
 - en: What kind of attacks might occur in a web application?
+  id: totrans-116
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Web应用可能会发生哪种攻击？
 - en: Unintended data disclosure (getting page source code, hidden files, ..)
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 无意中的数据泄露（获取页面源代码，隐藏文件，..）
 - en: Remote code execution (e.g., buffer overflow in Apache)
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 远程代码执行（例如，Apache中的缓冲区溢出）
 - en: Buggy application code (hard to write secure PHP code), e.g. SQL injection
+  id: totrans-119
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有bug的应用程序代码（难以编写安全的PHP代码），例如SQL注入
 - en: Attacks on web browsers (cross-site scripting attacks)
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对Web浏览器的攻击（跨站脚本攻击）
 - en: 'Back to OKWS: what''s their application / motivation?'
+  id: totrans-121
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 回到OKWS：他们的应用/动机是什么？
 - en: 'Dating web site: worried about data secrecy.'
+  id: totrans-122
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 约会网站：担心数据保密性。
 - en: Not so worried about adversary breaking in and sending spam.
+  id: totrans-123
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不太担心对手闯入并发送垃圾邮件。
 - en: 'Lots of server-side code execution: matching, profile updates, ...'
+  id: totrans-124
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 大量的服务器端代码执行：匹配，配置文件更新，...
 - en: Must have sharing between users (e.g. matching) -- cannot just partition.
+  id: totrans-125
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 必须在用户之间共享（例如匹配）-- 不能只是分区。
 - en: 'Good summary of overall plan:'
+  id: totrans-126
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对整体计划的良好总结：
 - en: '*"aspects most vulnerable to attack are least useful to attackers"*'
+  id: totrans-127
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*"最容易受攻击的方面对攻击者最无用"*'
 - en: Why is this hard?
+  id: totrans-128
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 为什么这么难？
 - en: Unix makes it tricky to reduce privileges (chroot, UIDs, ..)
+  id: totrans-129
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix使降低权限变得棘手（chroot，UID，..）
 - en: Applications need to share state in complicated ways.
+  id: totrans-130
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 应用程序需要以复杂的方式共享状态。
 - en: Unix and SQL databases don't have fine-grained sharing control mechanisms.
+  id: totrans-131
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix和SQL数据库没有细粒度的共享控制机制。
 - en: How does OKWS partition the web server?
+  id: totrans-132
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OKWS如何分割Web服务器？
 - en: Figure 1 in paper.
+  id: totrans-133
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 论文中的图1。
 - en: How does a request flow in this web server?
+  id: totrans-134
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这个Web服务器中的请求是如何流动的？
 - en: '`okd -> oklogd`'
+  id: totrans-135
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okd -> oklogd`'
 - en: '`-> pubd`'
+  id: totrans-136
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`-> pubd`'
 - en: '`-> svc -> dbproxy`'
+  id: totrans-137
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`-> svc -> dbproxy`'
 - en: '`-> oklogd`'
+  id: totrans-138
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`-> oklogd`'
 - en: How does this design map onto physical machines?
+  id: totrans-139
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这种设计如何映射到物理机器？
 - en: Probably many front-end machines (`okld`, `okd`, `pubd`, `oklogd`, `svc`)
+  id: totrans-140
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可能有许多前端机器（`okld`，`okd`，`pubd`，`oklogd`，`svc`）
 - en: Several DB machines (`dbproxy`, DB)
+  id: totrans-141
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 几台DB机器（`dbproxy`，DB）
 - en: How do these components interact?
+  id: totrans-142
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 这些组件如何互动？
 - en: '`okld` sets up `socketpair`s (bidirectional pipes) for each service.'
+  id: totrans-143
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okld`为每个服务设置`socketpair`s（双向管道）。'
 - en: One socketpair for control RPC requests (e.g., "get a new log socketpair").
+  id: totrans-144
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个用于控制RPC请求的套接字对（例如，“获取新的日志套接字对”）。
 - en: One socketpair for logging (`okld` has to get it from `oklogd` first via RPC).
+  id: totrans-145
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用于日志记录的一个套接字对（`okld`首先通过RPC从`oklogd`获取它）。
 - en: 'For HTTP services: one socketpair for forwarding HTTP connections.'
+  id: totrans-146
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于HTTP服务：一个用于转发HTTP连接的套接字对。
 - en: 'For `okd`: the server-side FDs for HTTP services'' socketpairs (HTTP+RPC).'
+  id: totrans-147
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于`okd`：HTTP服务的套接字对的服务器端FD（HTTP+RPC）。
 - en: '`okd` listens on a separate socket for control requests (*repub*, *relaunch*).'
+  id: totrans-148
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okd`监听一个单独的套接字以接收控制请求（*repub*，*relaunch*）。'
 - en: Seems to be port 11277 in Figure 1, but a Unix domain socket in OKWS code.
+  id: totrans-149
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在图1中似乎是端口11277，但在OKWS代码中是Unix域套接字。
 - en: For *repub*, `okd` talks to `pubd` to generate new templates,
+  id: totrans-150
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于*repub*，`okd`与`pubd`通信以生成新模板，
 - en: then sends generated templates to each service via RPC control channel.
+  id: totrans-151
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然后通过RPC控制通道将生成的模板发送给每个服务。
 - en: Services talk to DB proxy over TCP (connect by port number).
+  id: totrans-152
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 服务通过TCP与DB代理通信（通过端口号连接）。
 - en: How does OKWS enforce isolation between components in Figure 1?
+  id: totrans-153
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OKWS如何在图1中的组件之间强制隔离？
 - en: Each service runs as a separate UID and GID.
+  id: totrans-154
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个服务作为单独的UID和GID运行。
 - en: chroot used to confine each process to a separate directory (almost).
+  id: totrans-155
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: chroot用于将每个进程限制在单独的目录中（几乎）。
 - en: Components communicate via pipes (or rather, Unix domain socket pairs).
+  id: totrans-156
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 组件通过管道（或者说Unix域套接字对）进行通信。
 - en: File descriptor passing used to pass around HTTP connections.
+  id: totrans-157
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用于传递HTTP连接的文件描述符传递。
 - en: What's the point of `okld`?
+  id: totrans-158
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okld`的目的是什么？'
 - en: Why isn't `okld` the same as `okd`?
+  id: totrans-159
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么`okld`不同于`okd`？
 - en: Why does `okld` need to run as root? (Port 80, chroot/setuid.)
+  id: totrans-160
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么`okld`需要以root身份运行？（端口80，chroot/setuid。）
 - en: What does it take for `okld` to launch a service?
+  id: totrans-161
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okld`启动服务需要什么？'
 - en: Create socket pairs
+  id: totrans-162
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 创建套接字对
 - en: Get new socket to `oklogd`
+  id: totrans-163
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 获取新的`oklogd`套接字
 - en: '`fork`, `setuid/setgid`, `exec` the service'
+  id: totrans-164
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`fork`，`setuid/setgid`，`exec`服务'
 - en: Pass control sockets to `okd`
+  id: totrans-165
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将控制套接字传递给`okd`
 - en: What's the point of `oklogd`?
+  id: totrans-166
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`oklogd`的目的是什么？'
 - en: What's the point of `pubd`?
+  id: totrans-167
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`pubd`的目的是什么？'
 - en: Why do we need a database proxy?
+  id: totrans-168
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么我们需要数据库代理？
 - en: Ensure that each service cannot fetch other data, if it is compromised.
+  id: totrans-169
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 确保每个服务在受损时无法获取其他数据。
 - en: DB proxy protocol defined by app developer, depending on what app requires.
+  id: totrans-170
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DB代理协议由应用程序开发人员定义，取决于应用程序的要求。
 - en: One likely-common kind of proxy is a templatized SQL query.
+  id: totrans-171
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个可能常见的代理类型是模板化的SQL查询。
 - en: Proxy enforces overall query structure (select, update),
+  id: totrans-172
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 代理强制执行整体查询结构（选择、更新），
 - en: but allows client to fill in query parameters.
+  id: totrans-173
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但允许客户端填写查询参数。
 - en: Where does the 20-byte token come from?
+  id: totrans-174
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 20字节令牌是从哪里来的？
 - en: Passed as arguments to service.
+  id: totrans-175
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 作为服务的参数传递。
 - en: Who checks the token?
+  id: totrans-176
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 谁检查令牌？
 - en: DB proxy has list of tokens (& allowed queries?)
+  id: totrans-177
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: DB代理有令牌列表（和允许的查询？）。
 - en: Who generates token?
+  id: totrans-178
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 谁生成令牌？
 - en: Not clear; manual by system administrator?
+  id: totrans-179
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不清楚；系统管理员手动？
 - en: What if token disclosed?
+  id: totrans-180
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 令牌泄露会怎样？
 - en: Compromised component could issue queries.
+  id: totrans-181
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 受损组件可能会发出查询。
 - en: 'Table 1: why are all services and `okld` in the same chroot?'
+  id: totrans-182
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 表1：为什么所有服务和`okld`都在同一个chroot中？
 - en: Is it a problem?
+  id: totrans-183
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是一个问题吗？
 - en: How would we decide?
+  id: totrans-184
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们如何决定？
 - en: What are the readable, writable files there?
+  id: totrans-185
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 那里有哪些可读写文件？
 - en: 'Readable: shared libraries containing service code.'
+  id: totrans-186
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可读性：包含服务代码的共享库。
 - en: 'Writable: each service can write to its own `/cores/<uid>`.'
+  id: totrans-187
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可写：每个服务都可以写入自己的`/cores/<uid>`。
 - en: Where's the config file? `/etc/okws_config`, kept in memory by `okld`.
+  id: totrans-188
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 配置文件在哪里？`/etc/okws_config`，由`okld`保存在内存中。
 - en: '`oklogd` & `pubd` have separate chroots because they have important state:'
+  id: totrans-189
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`oklogd`和`pubd`有单独的chroots，因为它们具有重要状态：'
 - en: '`oklogd`''s chroot contains the log file, want to ensure it''s not modified.'
+  id: totrans-190
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`oklogd`的chroot包含日志文件，希望确保它没有被修改。'
 - en: '`pubd`''s chroot contains the templates, want to avoid disclosing them (?).'
+  id: totrans-191
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`pubd`的chroot包含模板，希望避免泄露它们（？）。'
 - en: Why does OKWS need a separate GID for every service?
+  id: totrans-192
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么OKWS需要为每个服务单独的GID？
 - en: Need to execute binary, but file ownership allows chmod.
+  id: totrans-193
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要执行二进制文件，但文件所有权允许chmod。
 - en: 'Solution: binaries owned by root, service is group owner, mode 0410.'
+  id: totrans-194
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 解决方案：二进制文件由root所有，服务是组所有者，模式0410。
 - en: Why 0410 (user read, group execute), and not 0510 (user read & exec)?
+  id: totrans-195
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么是0410（用户读取，组执行），而不是0510（用户读取和执行）？
 - en: Why not process per user?
+  id: totrans-196
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么不按用户处理？
 - en: Is per user strictly better?
+  id: totrans-197
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个用户是否严格更好？
 - en: user X service?
+  id: totrans-198
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 用户X服务？
 - en: Per-service isolation probably made sense for okcupid given their apps.
+  id: totrans-199
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于okcupid来说，每个服务的隔离可能是有道理的。
 - en: (i.e., perhaps they need a lot of sharing between users anyway?)
+  id: totrans-200
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: （即，也许他们需要在用户之间进行大量共享？）
 - en: Per-user isolation requires allocating UIDs per user, complicating `okld`
+  id: totrans-201
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个用户隔离需要为每个用户分配UID，使`okld`变得复杂。
 - en: and reducing performance (though may still be OK for some use cases).
+  id: totrans-202
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 并降低性能（尽管对于某些用例可能仍然可以接受）。
 - en: Does OKWS achieve its goal?
+  id: totrans-203
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OKWS是否实现了其目标？
 - en: What attacks from the list of typical web attacks does OKWS solve, and how?
+  id: totrans-204
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OKWS解决了典型Web攻击列表中的哪些攻击，以及如何解决？
 - en: Most things other than XSS are addressed.
+  id: totrans-205
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 除了XSS之外的大多数问题都已解决。
 - en: XSS sort-of addressed through using specialized template routines.
+  id: totrans-206
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过使用专门的模板例程，XSS在某种程度上得到解决。
 - en: What's the effect of each component being compromised, and "attack surface"?
+  id: totrans-207
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个组件被损坏的影响是什么，以及“攻击面”是什么？
 - en: '`okld`: root access to web server machine, but maybe not to DB.'
+  id: totrans-208
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okld`：对Web服务器机器的根访问权限，但也许没有对数据库的访问权限。'
 - en: 'attack surface: small (no user input other than svc exit).'
+  id: totrans-209
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击面：很小（除了svc退出之外没有用户输入）。
 - en: '`okd`: intercept/modify all user HTTP reqs/responses, steal passwords.'
+  id: totrans-210
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okd`：拦截/修改所有用户HTTP请求/响应，窃取密码。'
 - en: 'attack surface: parsing the first line of HTTP request; control requests.'
+  id: totrans-211
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击面：解析HTTP请求的第一行；控制请求。
 - en: '`pubd`: corrupt templates, leverage to maybe exploit bug in some service?'
+  id: totrans-212
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`pubd`：损坏模板，利用可能利用某些服务中的错误？'
 - en: 'attack surface: requests to fetch templates from okd.'
+  id: totrans-213
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击面：从okd获取模板的请求。
 - en: '`oklogd`: corrupt/ignore/remove/falsify log entries'
+  id: totrans-214
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`oklogd`：损坏/忽略/删除/伪造日志条目。'
 - en: 'attack surface: log messages from okd, okld, svcs'
+  id: totrans-215
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击面：来自okd、okld、svcs的日志消息。
 - en: '`service`: send garbage to user, access data for svc (modulo dbproxy)'
+  id: totrans-216
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`service`：向用户发送垃圾，访问svc的数据（模块化dbproxy）。'
 - en: 'attack surface: HTTP requests from users (+ control msgs from okd)'
+  id: totrans-217
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击面：来自用户的HTTP请求（+来自okd的控制消息）。
 - en: '`dbproxy`: access/change all user data in the database it''s talking to'
+  id: totrans-218
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`dbproxy`：访问/更改其所连接的数据库中的所有用户数据。'
 - en: 'attack surface: requests from authorized services'
+  id: totrans-219
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 攻击面：来自授权服务的请求。
 - en: requests from unauthorized services (easy to drop)
+  id: totrans-220
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 未经授权服务的请求（易于丢弃）。
 - en: OS kernel is part of the attack surface once a single service is compromised.
+  id: totrans-221
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一旦单个服务被损坏，操作系统内核就成为攻击面的一部分。
 - en: Linux kernel vulnerabilities rare, but still show up several times a year.
+  id: totrans-222
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Linux内核漏洞很少见，但每年仍然会出现几次。
 - en: 'OKWS assumes developer does the right thing at design level (maybe not impl):'
+  id: totrans-223
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OKWS假设开发人员在设计层面做正确的事情（也许在实现层面不是）：
 - en: Split web application into separate services (not clump all into one).
+  id: totrans-224
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将Web应用程序拆分为单独的服务（而不是全部放在一个服务中）。
 - en: Define precise protocols for DB proxy (otherwise any service gets any data).
+  id: totrans-225
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为DB代理定义精确的协议（否则任何服务都可以获取任何数据）。
 - en: Performance?
+  id: totrans-226
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 性能？
 - en: Seems better than most alternatives.
+  id: totrans-227
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 似乎比大多数替代方案更好。
 - en: Better performance under load (so, resists DoS attacks to some extent)
+  id: totrans-228
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在负载下性能更好（因此在一定程度上抵抗DoS攻击）
 - en: How does OKWS compare to Apache?
+  id: totrans-229
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: OKWS与Apache相比如何？
 - en: Overall, better design.
+  id: totrans-230
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 总体而言，更好的设计。
 - en: '`okld` runs as root, vs. nothing in Apache, but probably minor.'
+  id: totrans-231
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`okld`以root身份运行，与Apache中没有任何东西相比，但可能不重要。'
 - en: Neither has a great solution to client-side vulnerabilities (XSS, ..)
+  id: totrans-232
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 两者都没有很好的解决客户端漏洞（XSS等）
 - en: How might an adversary try to compromise a system like OKWS?
+  id: totrans-233
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对手如何试图破坏类似OKWS系统？
 - en: Exploit buffer overflows or other vulnerabilities in C++ code.
+  id: totrans-234
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 利用C++代码中的缓冲区溢出或其他漏洞。
 - en: Find a SQL injection attack in some `dbproxy`.
+  id: totrans-235
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在某个`dbproxy`中找到SQL注入攻击。
 - en: Find logic bugs in service code.
+  id: totrans-236
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在服务代码中找到逻辑错误。
 - en: Find cross-site scripting vulnerabilities.
+  id: totrans-237
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 发现跨站脚本漏洞。
 - en: How successful is OKWS?
+  id: totrans-238
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: OKWS有多成功？
 - en: Problems described in the paper are still pretty common.
+  id: totrans-239
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 论文中描述的问题仍然相当普遍。
 - en: okcupid.com still runs OKWS, but doesn't seem to be used by other sites.
+  id: totrans-240
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: okcupid.com仍在运行OKWS，但似乎没有被其他网站使用。
 - en: C++ might not be a great choice for writing web applications.
+  id: totrans-241
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: C++可能不是编写Web应用程序的好选择。
 - en: For many web applications, getting C++ performance might not be critical.
+  id: totrans-242
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于许多Web应用程序，获得C++性能可能并不关键。
 - en: Design should be applicable to other languages too (Python, etc).
+  id: totrans-243
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 设计应该适用于其他语言（Python等）。
 - en: Infact, `zookws` for labs in 6.858 is inspired by OKWS, runs Python code.
+  id: totrans-244
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实际上，6.858实验室中的`zookws`受OKWS启发，运行Python代码。
 - en: DB proxy idea hasn't taken off, for typical web applications.
+  id: totrans-245
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于典型的Web应用程序，DB代理的想法并没有起飞。
 - en: But DB proxy is critical to restrict what data a service can access in OKWS.
+  id: totrans-246
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 但是DB代理对于限制服务可以访问的数据至关重要。
 - en: Why?
+  id: totrans-247
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么？
 - en: 'Requires developers to define these APIs: extra work, gets in the way.'
+  id: totrans-248
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要开发人员定义这些API：额外的工作，会妨碍。
 - en: Can be hard to precisely define the allowed DB queries ahead of time.
+  id: totrans-249
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 很难提前精确定义允许的DB查询。
 - en: (Although if it's hard, might be a flag that security policy is fuzzy.)
+  id: totrans-250
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: (尽管如果很困难，可能是安全策略模糊的标志。)
 - en: Some work on privilege separation for Apache (though still hard to use).
+  id: totrans-251
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Apache的特权分离工作（尽管仍然难以使用）。
 - en: Unix makes it hard for non-root users to manipulate user IDs.
+  id: totrans-252
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Unix使非根用户难以操作用户ID。
 - en: Performance is a concern (running a separate process for each request).
+  id: totrans-253
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 性能是一个问题（为每个请求运行一个单独的进程）。
 - en: '`scripts.mit.edu` has a similar design, running scripts under different UIDs.'
+  id: totrans-254
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`scripts.mit.edu`有类似的设计，以不同的UID运行脚本。'
 - en: Mostly worried about isolating users from one another.
+  id: totrans-255
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 主要担心将用户相互隔离。
 - en: Paranoid web app developer can create separate locker for each component.
+  id: totrans-256
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 偏执的Web应用程序开发人员可以为每个组件创建单独的锁。
 - en: Sensitive systems do partitioning at a coarser granularity.
+  id: totrans-257
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 敏感系统在更粗粒度上进行分区。
 - en: Credit card processing companies split credit card data vs. everything else.
+  id: totrans-258
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 信用卡处理公司将信用卡数据与其他所有数据分开。
 - en: Use virtual machines or physical machine isolation to split apps, DBs, ..
+  id: totrans-259
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用虚拟机或物理机器隔离来分割应用程序、数据库等。
 - en: How could you integrate modern Web application frameworks with OKWS?
+  id: totrans-260
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 你如何将现代Web应用程序框架与OKWS集成？
 - en: Need to help okd figure out how to route requests to services.
+  id: totrans-261
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要帮助okd找出如何将请求路由到服务。
 - en: Need to implement DB proxies, or some variant thereof, to protect data.
+  id: totrans-262
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要实现DB代理，或其变体，以保护数据。
 - en: Depends on how amenable the app code is to static analysis.
+  id: totrans-263
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 取决于应用代码对静态分析的适应性。
 - en: Or need to ask programmer to annotate services w/ queries they can run.
+  id: totrans-264
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 或者需要要求程序员为服务注释可以运行的查询。
 - en: Need to ensure app code can run in separate processes (probably OK).
+  id: totrans-265
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要确保应用代码可以在单独的进程中运行（可能没问题）。
 - en: References
+  id: totrans-266
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 参考资料
 - en: '[http://css.csail.mit.edu/6.858/2014/readings/setuid.pdf](http://css.csail.mit.edu/6.858/2014/readings/setuid.pdf)'
+  id: totrans-267
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[http://css.csail.mit.edu/6.858/2014/readings/setuid.pdf](http://css.csail.mit.edu/6.858/2014/readings/setuid.pdf)'
 - en: '[http://httpd.apache.org/docs/trunk/suexec.html](http://httpd.apache.org/docs/trunk/suexec.html)'
+  id: totrans-268
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[http://httpd.apache.org/docs/trunk/suexec.html](http://httpd.apache.org/docs/trunk/suexec.html)'
