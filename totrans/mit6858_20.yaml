@@ -1,0 +1,641 @@
+- en: Taint tracking
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: '**Note:** These lecture notes were slightly modified from the ones posted on
+    the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    from 2014.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Android security policies
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: What problem does the paper try to solve?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Applications can exfiltrate a user's private data and send it to some server.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'High-level approach: keep track of which data is sensitive, and prevent it
+    from leaving the device!'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why aren't Android permissions enough?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Android permissions control whether application can read/write data, or access
+    devices or resources (e.g., the Internet).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using Android permissions, it's hard to specify a policy about *particular*
+    types of data (*Example:* "Even if the app has access to the network, it should
+    never be able to send user data over the network").
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** Aha! What if we never install apps that both read data *and* have network
+    access?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**A:** This would prevent some obvious leaks, but it would also break many
+    legitimate apps! (*Example:* email app)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Information can still leak via side channels. (*Example:* browser cache leaks
+    whether an object has been fetched in the past)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apps can collude! (*Example:* An app without network privileges can pass data
+    to an app that does have network privileges.)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A malicious app might trick another app into sending data. (*Example:* Sending
+    an intent to the Gmail app?)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What does Android malware actually do?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Use location or IMEI for advertisements. (IMEI is a unique per-device identifier.)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Credential stealing: send your contact list, IMEI, phone number to remote server.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Turn your phone into a bot, use your contact list to send spam emails/SMS messages!
+    ['Sophisticated' Android malware hits phones](http://www.bbc.com/news/technology-30143283)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Preventing data exfiltration is useful, but taint tracking by itself is insufficient
+    to keep your device from getting hacked!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: TaintDroid overview
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '*TaintDroid* tracks sensitive information as it propagates through the system.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*TaintDroid* distinguishes between information sources and information sinks'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Sources generate sensitive data: *Example:* Sensors, contacts, IMEI'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Sinks expose sensitive data: *Example:* network.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*TaintDroid* uses a 32-bit bitvector to represent taint, so there can be at
+    most 32 distinct taint sources.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Roughly speaking, taint flows from rhs to lhs of assignments.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Examples:*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Interesting special case, arrays:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: To minimize storage overheads, an array receives a single taint tag, and all
+    of its elements have the same taint tag.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** Why is it safe to associate just one label with arrays or IPC messages?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**A:** It should be safe to *over*-estimate taint. This may lead to false positives,
+    but not false negatives.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Another special case: native methods (i.e., internal VM methods like `System.arraycopy()`,
+    and native code exposed via JNI).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Problem:** Native code doesn''t go through the Dalvik interpreter, so *TaintDroid*
+    can''t automatically propagate taint!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Solution:** Manually analyze the native code, provide a summary of its taint
+    behavior.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Effectively, need to specify how to copy taints from args to return values.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** How well does this scale?'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**A:** Authors argue this works OK for internal VM functions (e.g., `arraycopy`).
+    For "easy" calls, the analysis can be automated---if only integers or strings
+    are passed, assign the union of the input taints to the return value.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'IPC messages are like treated like arrays: each message is associated with
+    a single taint that is the union of the taints of the constituent parts.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Data which is extracted from an incoming message is assigned the taint of that
+    message.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each file is associated with a single taint flag that is stored in the file's
+    metadata.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Like with arrays and IPC messages, this is a conservative scheme that may lead
+    to false positives.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How are taint flags represented in memory?
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Five kinds of things need to have taint tags:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Local variables in a method
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Method arguments
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Object instance fields
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Static class fields
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Arrays
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Basic idea: Store the flags for a variable near the variable itself.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** Why?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**A:** Preserves spatial locality---this hopefully improves caching behavior.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For method arguments and local variables that live on the stack, allocate the
+    taint flags immediately next to the variable.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Example:*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'So, given all of this, the basic idea in *TaintDroid* is simple: taint sensitive
+    data as it flows through the system, and raise an alarm if that data tries to
+    leave via the network!'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'The authors find various ways that apps misbehave:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Sending location data to advertisers
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sending a user's phone number to the app servers
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*TaintDroid*''s rules for information flow might lead to counterintuitive/interesting
+    results. Imagine that an application implements its own linked list class.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: Suppose that the application assigns tainted values to the "data" field. If
+    we calculate the length of the list, is the length value tainted?
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Adding to a linked list involves:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Allocating a `ListNode`
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Assigning to the `data` field
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Patching up `next` pointers
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Note that **Step 3** doesn't involve tainted data! So, "next" pointers are tainted,
+    meaning that counting the number of elements in the list would not generate a
+    tainted value for length.
+  prefs: []
+  type: TYPE_NORMAL
+- en: What are the performance overheads of *TaintDroid*?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Additional memory to store taint tags.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Additional CPU cost to assign, propagate, check taint tags.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Overheads seem to be moderate: ~3--5% memory overhead, 3--29% CPU overhead'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'However, on phones, users are very concerned about battery life: 29% less CPU
+    performance may be tolerable, but 29% less battery life is bad.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Questions and answers
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '**Q:** Why not track taint at the level of x86 instructions or ARM instructions?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A:** It''s too expensive, and there are too many false positives.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Example:* If kernel data structures are improperly assigned taint, then the
+    taint will improperly flow to user-mode processes. This results in taint explosion:
+    it''s impossible to tell which state has *truly* been affected by sensitive data.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One way that this might happen is if the stack pointer or the break pointer
+    are incorrectly tainted. Once this happens, taint rapidly explodes:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Local variable accesses are specified as offsets from the break pointer.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Stack instructions like `pop` use the stack pointer.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Pointless Tainting? Evaluating the Practicality of Pointer Tainting](http://www.ssrg.nicta.com.au/publications/papers/Slowinska_Bos_09.pdf)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** Taint tracking seems expensive---can''t we just examine inputs and outputs
+    to look for values that are known to be sensitive?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A:** This might work as a heuristic, but it''s easy for an adversary to get
+    around it.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: There are many ways to encode data, e.g., URL-quoting, binary versus text formats,
+    etc.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Implicit flows
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: As described, taint tracking cannot detect *implicit flows*.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Implicit flows happen when a tainted value affects another variable without
+    directly assigning to that variable.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: Instead of assigning to `x`, we could try to leak information about the IMEI
+    over the network!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Implicit flows often arise because of tainted values affecting control flow.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Can try to catch implicit flows by assigning a taint tag to the PC, updating
+    it with taint of branch test, and assigning PC taint to values inside if-else
+    clauses, but this can lead to a lot of false positives.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Example:*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: Applications
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Interesting application of taint tracking: keeping track of data copies.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Often want to make sure sensitive data (keys, passwords) is erased promptly.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If we're not worried about performance, we can use x86-level taint tracking
+    to see how sensitive information flows through a machine. [Ref](http://www-cs-students.stanford.edu/~blp/taintbochs.pdf)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Basic idea: Create an x86 simulator that interprets each x86 instruction in
+    a full system (OS + applications).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'You''ll find that software often keeps data for longer than necessary. For
+    example, keystroke data stays around in:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Keyboard device driver's buffers
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kernel's random number generator
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: X server's event queue
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kernel socket/pipe buffers used to pass messages containing keystroke
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`tty` buffers for terminal apps'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: etc...
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Tightlip
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '*TaintDroid* detects leaks of sensitive data, but requires language support
+    for the Java VM -- the VM must implement taint tags. Can we track sensitive information
+    leaks without support from a managed runtime? What if we want to detect leaks
+    in legacy C or C++ applications?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'One approach: use doppelganger processes as introduced by the [TightLip system](https://www.usenix.org/legacy/event/nsdi07/tech/full_papers/yumerefendi/yumerefendi.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Step 1**: Periodically, *Tightlip* runs a daemon which scans a user''s file
+    system and looks for sensitive information like mail files, word processing documents,
+    etc.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For each of these files, *Tightlip* generates a shadow version of the file.
+    The shadow version is non-sensitive, and contains scrubbed data.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Tightlip* associates each type of sensitive file with a specialized scrubber.
+    *Example:* email scrubber overwrites to: and from: fields with an equivalent number
+    of dummy characters.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Step 2**: At some point later, a process starts executing. Initially, it
+    touches no sensitive data. If it touches sensitive data, then *Tightlip* spawns
+    a doppelganger process.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The doppelganger is a sandboxed version of the original process.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Inherits most state from the original process...
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '...but reads the scrubbed data instead of sensitive data'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Tightlip* lets the two processes run in parallel, and observes the system
+    calls that the two processes make.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the doppelganger makes the same system calls with the same arguments as the
+    original process, then with high probability, the outputs do not depend on sensitive
+    data.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Step 3**: If the system calls diverge, and the doppelganger tries to make
+    a network call, *Tightlip* flags a potential leak of sensitive data.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: At this point, *Tightlip* or the user can terminate the process, fail the network
+    write, or do something else.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Nice things about *Tightlip*:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Works with legacy applications
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Requires minor changes to standard OSes to compare order of system calls and
+    their arguments
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Low overhead (basically, the overhead of running an additional process)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Limitations of *Tightlip*
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Scrubbers are in the trusted computing base.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: They have to catch all instances of sensitive data.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: They also have to generate reasonable dummy data -- otherwise, a doppelganger
+    might crash on ill-formed inputs!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If a doppelganger reads sensitive data from multiple sources, and a system call
+    divergence occurs, *Tightlip* can't tell why.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Decentralized information flow control
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '*TaintDroid* and *Tightlip* assume no assistance from the developer ...but
+    what if developers were willng to explicitly add taint labels to their code?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*Input channels:* The read values get the label of the channel.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Output channels:* Labels on the channel must match a label on the value being
+    written.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Static (i.e., compile-time) checking can catch many bugs involving inappropriate
+    data flows.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Loosely speaking, labels are like strong types which the compiler can reason
+    about.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Static checks are much better than dynamic checks: runtime failures (or their
+    absence) can be a covert channel!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For more details, see the [Jif paper](http://pmg.csail.mit.edu/papers/iflow-sosp97.pdf)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

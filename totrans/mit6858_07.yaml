@@ -1,0 +1,1043 @@
+- en: SGX and Haven
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: Why are we reading this paper? **TODO:** Which paper? SGX or Haven?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Advanced hardware isolation mechanism
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Last paper in our tour of isolation mechanisms
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Strong threat model that is relevant in practice
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Many desktops run malware
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Malware may control complete OS
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Uses cutting-edge technology (Intel SGX)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But, no deployed experience with SGX yet
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: May have design and implementation flaws
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: First hardware is available (see ref below)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SGX Goal
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Even when OS is compromised, app can still keep secrets
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Maybe not whole OS compromised
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But maybe attacker is running a key logger
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Target applications:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Logging in to your bank
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Secure: OS/Key logger cannot steal your password+PIN to login'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Video/music player for copyrighted content (DRM)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Secure: OS cannot steal key to decrypt content'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Ambitious goal:*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: App relies on OS
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to defend against a malicious OS?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS interface is wide
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to check for app that OS behaves appropriately?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Much opportunity for "Iago" attacks
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'See paper "Iago Attacks: Why the System Call API is a Bad Untrusted RPC Interface"
+    paper [here](iago) or on our [front page](../index.html).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Iago attacks: attacks that untrusted OS can use to attack an application*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: OS modifies `getpid()` and `time()` to return a different number, same number
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`getpid()` and `time()` often used to seed a pseudo random generator'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS can confuse server running SSL
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS can record packets from a successful connection
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS can cause the next of instance of SSL to use same server nonce
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: By returning same value for `time()` and `getpid()` as for earlier connection
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS can replays packets
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SSL server thinks it is a fresh connection, but it isn't
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Maybe launch a man-in-the-middle attack
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS modifies `mmap()` to map a physical page that the OS controls over app stack
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`malloc()` calls `mmap()`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS can run arbitrary code
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS can read app secrets (e.g., private key of SSL connection)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Lesson:** simple systems calls (e.g., getpid and time) can cause trouble'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: App must be written defensively
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Protecting legacy apps against malicious OS seems hard
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Much research on defending against malicious OS
+  prefs: []
+  type: TYPE_NORMAL
+- en: Some use TPM or late boot
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some use a trusted hypervisor
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some use special processors
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Little impact---mostly an intellectually-challenging exercise
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Now Intel's Skylake includes **SGX** (see ref below)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: It provides hardware mechanism to help defend against Iago attacks
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SGX Threat model
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Attacker controls OS
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attacker can observe traffic between processor and memory
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Every component that is not the processor is untrusted
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Intel is trusted
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Chip works correctly
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Private key isn't compromised
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Side channels cannot be exploited
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**SGX: Software Guard Extensions**'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Enclave:** trusted execution environment inside a process'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processor ensures that enclave memory isn't accessible to OS, BIOS, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Attestation**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processor signs content of enclave with private key baked into chip
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Verifier uses Intel's public key to check signature
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Sealing**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Scheme for sealing enclave on termination, and unsealing later
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**TODO:** Do they mean sort of like "paging out" or stopping, saving to disk
+    and later restoring it and continue running it?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Enclave
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Figure 1 in Haven paper
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ECREATE` creates an empty enclave'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: starting virtual address and size
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*EPC:* enclave page cache'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Region in physical memory
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processor's memory encryption interface
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: encrypts/decrypts when writing/reading to/from EPC
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Also integrity protected
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`EADD` to add an EPC page to enclave'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Processor maintains a map (*EPCM*) that for each EPC page records:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: page type (REG, ...), the enclave ID, the virtual address for the page, and
+    permissions
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: EPCM is accessible only to processor
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Map is consulted on each enclave page access
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is the page in enclave mode?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Does page belong to enclave?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is the page for the accessed virtual address?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Does access agree with page permissions?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Paging an EPC page to external storage
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS executes `EWD` to evict page into buffer
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: encrypted, version number, etc.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS can write buffer to external storage
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS executes `ELDB` to load encrypted page into EPC
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: use version number to detect roll-back attacks
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Starting enclave (`EXTEND`, `EINIT`):'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Processor keeps a cryptographic log of how the enclave was built _ `EXTEND`
+    adds 256-byte region to log
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Log contains content (code, data, stack, heap), location of each page, security
+    flags
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`EINIT` takes as argument a `SIGSTRUCT`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: signed by a sealing authority (enclave writer)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'includes: expected signed hash of enclave and public key of enclave owner'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`EINIT` verifies signature and hash'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Enclave identity stored in `SECS`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Attestation:** Remote party can verify that enclave runs correct code'
+  prefs: []
+  type: TYPE_NORMAL
+- en: An enclave gets its keys use `EGETKEY`
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: keys for encrypting and sealing
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`EREPORT` generates a signed report'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Report contains the hash of log and a public key for enclave
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: public is in enclave-provided data in report?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This report can be communicated to another enclave
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The receiving enclave can verify the report using the public key in the enclave
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A *special Quoting enclave* can create a signed "quote" using processor's private
+    key
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Uses a group signature key so that individual processors cannot be identified
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Entering/exit enclave:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: enter using ENTER with a thread control structure (TCS)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'exit: EEXIT, interrupt, or exception'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: resume an enclave using ERESUME
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Protected bank client (hypothetical and simplified)
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Goal:** Prevent OS from stealing user''s password'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Assume a secure path from keyboard to enclave (Intel ME?)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client downloads bank application and runs it
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Bank application creates enclaves with code+data
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: code includes reading from keyboard, SSL, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: generate a quote
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: connect to server, setup secure channel (e.g., SSL), and send quote
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server verifies quote
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: server knows runs that client started with the right software
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: i.e. not some rogue client that maybe emails user password to adversary
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server sends challenge
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: client uses password to respond to challenge over SSL
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: password inside enclave, encrypted
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS cannot steal it
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server checks challenge
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SGX security discussion
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Difficult to evaluate security
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: processors with SGX just have become available
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: no experience with deployments
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: TCB
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processor
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Fab of processor
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Intel's private key
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Iago attacks
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can OS read/write data inside enclave
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processor's EPC prevents this
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can OS remap memory?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processor's EPCM prevent this attack
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can OS confuse application?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client must be carefully written to rely on few OS functions
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client needs a reliable source of randomness to implement SSL
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`RDRAND`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client must be able to send and receive packets
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: check results
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Side channel attacks
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Excluded by threat model, but possible in practice
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hyperthreading
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Shared L3 cache
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Multi-socket
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Haven
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Use SGX for executing unmodified Windows applications in the cloud securely
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Securely means don't trust cloud provider
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Haven is a research project
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Threat model
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: System admins control cloud software
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Remote attackers may control cloud software
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS may launch "Iago" attacks
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: May pass arbitrary values to Haven
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: May interrupt execution of Haven
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hardware is implemented correctly
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SGX is correct
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Plan: shielded execution'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Run applications in cloud with security equivalent to running application on
+    own hardware
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Don't trust cloud software
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Provide an application environment so that it can interact with untrusted software
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Applications need to send packets
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Applications need to store files
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '...'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Application needs operating systems
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Challenge
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to implement OS on top of host OS while stilling being resistant to Iago
+    attacks
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Haven builds on two components
+  prefs: []
+  type: TYPE_NORMAL
+- en: Intel SGX
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Drawbridge
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Small interface on top of which libOS implements Win32
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Small interface protects host OS from application (similar to native client)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Haven protects application from host OS
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Haven design (figure 2)
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Implement Drawbridge's API so that it protects against Iago attacks
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Shield module implements API inside enclave
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: interacts with host OS using a narrow, untrusted API
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: untrusted API is a subset of drawbridge's API (see figure 3)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Untrusted runtime tunnels between Shield in enclave and host kernel
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Also needed for bootstrap
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Host kernel contains SGX driver and drawbridge host
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: drawbridge host implements the narrow API using OS calls
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Shield services
+  prefs: []
+  type: TYPE_NORMAL
+- en: Virtual memory
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Enclave starts at 0 (to handle null pointer deferences by app, libos)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Tracking memory pages used by application/libos
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adding/removing memory pages from enclave
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Verifies that changes have been made correctly
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Never allows host to pick virtual-memory addresses
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Doesn't allow application and libos to allocate pages outside of enclave
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Storage
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Final lab
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Threads
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: user-level scheduling (e.g., so that mutexes work)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: multiplexes threads on a fixed number of threads created at startup
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Allocate a fixed number of TCSs at start
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Misc
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`RDRAND` for trusted source of randomness'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No fork
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No address space randomization
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Discussion
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Can Haven run unmodified apps?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No fork--minor problem on Windows?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Cannot map an enclave page at several virtual addresses
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Needed to modify applications
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Security?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Fuzzing testing untrusted interface?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: References
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[Iago attacks](https://cseweb.ucsd.edu/~hovav/dist/iago.pdf "Iago attacks")'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[SGX Overview](http://www.pdl.cmu.edu/SDI/2013/slides/rozas-SGX.pdf "SGX Overview")'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[SGX Instructions Overview](https://software.intel.com/sites/default/files/article/413936/hasp-2013-innovative-instructions-and-software-model-for-isolated-execution.pdf
+    "SGX Instructions overview")'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[SGX Hardware](https://jbeekman.nl/blog/2015/10/sgx-hardware-first-look/ "SGX
+    hardware")'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[SGX Security Discussion](https://www.nccgroup.trust/uk/about-us/newsroom-and-events/blogs/2015/january/intel-software-guard-extensions-sgx-a-researchers-primer/
+    "SGX Security discussion")'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[Drawbridge](http://research.microsoft.com/pubs/141071/asplos2011-drawbridge.pdf
+    "Drawbridge")'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL

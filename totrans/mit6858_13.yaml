@@ -1,0 +1,1064 @@
+- en: Kerberos
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: '**Note:** These lecture notes were slightly modified from the ones posted on
+    the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    from 2014.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Kerberos setting
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Distributed architecture, evolved from a single time-sharing system.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Many servers providing services: remote login, mail, printing, file server.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Many workstations, some are public, some are private.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each user logs into their own workstation, has root access.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary may have his/her own workstation too.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Alternatives at the time: rlogin, rsh.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Goal: allow users to access services, by authenticating to servers.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other user information distributed via Hesiod, LDAP, or some other directory.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Widely used: Microsoft Active Directory uses the Kerberos (v5) protocol.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What's the trust model?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: All users, clients, servers trust the Kerberos server.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No apriori trust between any other pairs of machines.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Network is not trusted.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User trusts the local machine.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos architecture
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Central Kerberos server, trusted by all parties (or at least all at MIT).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Users, servers have a private key shared between them and Kerberos.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos server keeps track of everyone's private key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos uses keys to achieve mutual *authentication* between client, server.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Terminology: user, client, server.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client and server know each other's names.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client is convinced it's talking to server and vice-versa.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos does not provide authorization (can user access some resource).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: It's the application's job to decide this.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why do we need this trusted Kerberos server?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Users don't need to set up accounts, passwords, etc on each server.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Overall architecture diagram
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: Kerberos constructs
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Basic Kerberos constructs from the paper:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Ticket**, `T_{c,s} = { s, c, addr, timestamp, life, K_{c,s} }`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: usually encrypted w/ `K_s`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Authenticator**, `A_c = { c, addr, timestamp }`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: usually encrypted w/ `K_{c,s}`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Kerberos protocol mechanics:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Two interfaces to the Kerberos database: "Kerberos" and "TGS" protocols.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Quite similar; few differences:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In Kerberos protocol, can specify any `c`, `s`; client must know `K_c`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In TGS protocol, client's name is implicit (from ticket).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client just needs to know `K_{c,tgs}` to decrypt response (not `K_c`).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where does the client machine get `K_c` in the first place?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For users, derived from a password using, effectively, a hash function.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why do we need these two protocols? Why not just use "Kerberos" protocol?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Client machine can forget user password after it gets TGS ticket.**'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can we just store `K_c` and forget the user password? Password-equivalent.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Naming
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Critical to Kerberos: mapping between keys and principal names.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each principal name consists of `( name, instance, realm )`
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Typically written `name.instance@realm`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What entities have principals?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Users: name is username, instance for special privileges (by convention).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Servers: name is service name, instance is server''s hostname.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'TGS: name is ''krbtgt'', instance is realm name.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where are these names used / where do the names matter?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Users remember their user name.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Servers perform access control based on principal name.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Clients choose a principal they expect to be talking to.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Similar to browsers expecting specific certificate name for HTTPS
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When can a name be reused?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'For user names: ensure no ACL contains that name, difficult.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'For servers (assuming not on any ACL): ensure users forget server name.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Must change the key, to ensure old tickets not valid for new server.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Getting the initial ticket: "Kerberos" protocol'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Client sends pair of principal names `(c, s)`, where `s` is typically `tgs`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server responds with `{ K_{c,s}, { T_{c,s} }_{K_s} }_{K_c}`
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does the Kerberos server authenticate the client?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Doesn't need to -- willing to respond to any request.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does the client authenticate the Kerberos server?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Decrypt the response and check if the ticket looks valid.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only the Kerberos server would know `K_c`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In what ways is this better/worse than sending password to server?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Password doesn't get sent over network, but easier to brute-force.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why is the key included twice in the response from Kerberos/TGS server?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`K_{c,s}` in response gives the client access to this shared key.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`K_{c,s}` in the ticket should convince server the key is legitimate.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**General weakness:** Kerberos 4 assumed encryption provides message integrity.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: There were some attacks where adversary can tamper with ciphertext.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No explicit MAC means that no well-defined way to detect tampering.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One-off solutions: kprop protocol included checksum, hard to match.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The weakness made it relatively easy for adversary to "mint" tickets.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Ref: http://web.mit.edu/kerberos/advisories/MITKRB5-SA-2003-004-krb4.txt'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**General weakness:** adversary can mount offline password-guessing attacks.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Typical passwords don't have a lot of entropy.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Anyone can ask KDC for a ticket encrypted with user's password.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Then try to brute-force the user''s password offline: easy to parallelize.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Better design: require client to interact with server for each login attempt.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**General weakness:** DES hard-coded into the design, packet format.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Difficult to switch to another cryptosystem when DES became too weak.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'DES key space is too small: keys are only 56 bits, 2^56 is not that big.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Cheap to break DES these days ($20--$200 via https://www.cloudcracker.com/).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How could an adversary break Kerberos give this weakness?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Authenticating to a server: "TGS" protocol'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Client sends `( s, {T_{c,tgs}}_{K_tgs}, {A_c}_{K_{c,tgs}} )`
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server replies with `{ K_{c,s}, { T_{c,s} }_{K_s} }_{K_{c,tgs}}`
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does a server authenticate a client based on the ticket?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Decrypt ticket using server's key.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Decrypt authenticator using `K_{c,s}`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only Kerberos server could have generated ticket (knew `K_s`).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only client could have generated authenticator (knew `K_{c,s}`).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why does the ticket include `c`? `s`? `addr`?`life`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server can extract client's principal name from ticket.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Addr tries to prevent stolen ticket from being used on another machine.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Lifetime similarly tries to limit damage from stolen ticket.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does a network protocol use Kerberos?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Encrypt/authenticate all messages with `K_{c,s}`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Mail server commands, documents sent to printer, shell I/O, ..
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., "DELETE 5" in a mail server protocol.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Who generates the authenticator?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client, for each new connection.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why does a client need to send an authenticator, in addition to the ticket?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Prove to the server that an adversary is not replaying an old message.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server must keep last few authenticators in memory, to detect replays.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does Kerberos use time? What happens if the clock is wrong?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Prevent stolen tickets from being used forever.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Bound size of replay cache.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If clock is wrong, adversary can use old tickets or replay messages.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does client authenticate server? Why would it matter?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Connecting to file server: want to know you''re getting legitimate files.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Solution: server can send back `{ timestamp + 1 }_{K_{c,s}}` after it receives
+    ticket and authenticator from client'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**General weakness:** same key, `K_{c,s}`, used for many things'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Adversary can substitute any msg encrypted with `K_{c,s}` for any other.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Example: messages across multiple sessions.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Authenticator does not attest to `K_{c,s}` being fresh!
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary can splice fresh authenticator with old message
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos v5 uses fresh session key each time, sent in authenticator
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Example: messages in different directions'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos v4 included a direction flag in packets `(c->s or s->c)`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Kerberos v5 used separate keys: `K_{c->s}, K_{s->c}`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if users connects to wrong server (analogue of MITM / phishing attack)?
+  prefs: []
+  type: TYPE_NORMAL
+- en: If server is intercepting packets, learns what service user connects to.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if user accidentally types ssh malicious.server?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server learns user's principal name.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server does not get user's TGS ticket or `K_c`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Cannot impersonate user to others.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What happens if the KDC is down?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Cannot log in.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Cannot obtain new tickets.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can keep using existing tickets.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Authenticating to a Unix system.
+  prefs: []
+  type: TYPE_NORMAL
+- en: No Kerberos protocol involved when accessing local files, processes.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If logging in using Kerberos, user must have presented legitimate ticket.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if user logs in using username/password (locally or via SSH using pw)?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User knows whether the password he/she supplied is legitimate.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server has no idea.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Potential attack on a server:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User connects via SSH, types in username, password.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Create legitimate-looking Kerberos response, encrypted with password.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server has no way to tell if this response is really legitimate.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Solution (if server keeps state): server needs its own principal, key.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: First obtain user's TGS, using the user's username and password.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then use TGS to obtain a ticket for server's principal.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If user faked the Kerberos server, the second ticket will not match.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using Kerberos in an application.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Paper suggests using special functions to seal messages, 3 security levels.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Requires moderate changes to an application.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Good for flexibility, performance.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Bad for ease of adoption.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard for developers to understand subtle security guarantees.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Perhaps a better abstraction: secure channel (SSL/TLS).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Password-changing service (administrative interface)
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: How does the Kerberos protocol ensure that client knows password? Why?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Special flag in ticket indicates which interface was used to obtain it.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Password-changing service only accepts tickets obtained by using `K_c`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Ensure that client knows old password, doesn't just have the ticket.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does the client change the user's password?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Connect to password-changing service, send new password to server.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Replication
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: One master server (supports password changes), zero or more slaves.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: All servers can issue tickets, only master can change keys.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why this split?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Only one master ensures consistency: cannot have conflicting changes.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Master periodically updates the slaves (when paper was written, ~once/hour).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'More recent impls have incremental propagation: lower latency (but not 0).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How scalable is this?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Symmetric crypto (DES, AES) is fast -- O(100MB/sec) on current hardware.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Tickets are small, O(100 bytes), so can support 1M tickets/second.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Easy to scale by adding slaves.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Potential problem: password changes take a while to propagate.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary can still use a stolen password for a while after user changes it.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To learn more about how to do replication right, take 6.824.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Security of the Kerberos database
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Master and slave servers are highly sensitive in this design.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Compromised master/slave server means all passwords/keys have to change.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Must be physically secure, no bugs in Kerberos server software, no bugs in any
+    other network service on server machines, etc.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can we do better? SSL CA infrastructure slightly better, but not much.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Will look at it in more detail when we talk about browser security / HTTPS.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Most centralized authentication systems suffer from such problems. .. & globally-unique
+    freeform names require some trusted mapping authority.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why didn't Kerberos use public key crypto?
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Too slow at the time: VAX systems, 10MHz clocks.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Government export restrictions.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Patents.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Network attacks.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Offline password guessing attacks on Kerberos server.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos v5 prevents clients from requesting ticket for any principal.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Must include `{ timestamp }_{K_c} along with request, proves know K_c.`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Still vulnerable to password guessing by network sniffer at that time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Better alternatives are available: SRP, PAKE.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What can adversary do with a stolen ticket?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What can adversary do with a stolen `K_c`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What can adversary do with a stolen `K_s`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Remember: two parties share each key (and rely on it) in Kerberos!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What happens after a password change if `K_c` is compromised?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can decrypt all subsequent exchanges, starting with initial ticket
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can even decrypt password change requests, getting the new password!
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if adversary figures out your old password sometime later?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the adversary saved old packets, can decrypt everything.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can similarly obtain current password.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Forward secrecy (avoiding the password-change problem).
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Abstract problem: establish a shared secret between two parties.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Kerberos approach: someone picks the secret, encrypts it, and sends it.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Weakness: if the encryption key is stolen, can get the secret later.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Diffie-Hellman key exchange protocol:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Two parties pick their own parts of a secret.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Send messages to each other.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Messages do not have to be secret, just authenticated (no tampering).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Two parties use each other's messages to reconstruct shared key.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary cannot reconstruct key by watching network messages.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Diffie-Hellman details:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Prime p, generator g mod p.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Alice and Bob each pick a random, secret exponent (a and b).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Alice and Bob send (g^a mod p) and (g^b mod p) to each other.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each party computes (g^(ab) mod p) = (g^a^b mod p) = (g^b^a mod p).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Use (g^(ab) mod p) as secret key.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Assume discrete log (recovering a from (g^a mod p)) is hard.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Cross-realm in Kerberos.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Shared keys between realms.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kerberos v4 only supported pairwise cross-realm (no transiting).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What doesn't Kerberos address?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Client, server, or KDC machine can be compromised.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Access control or groups (up to service to implement that).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Microsoft "extended" Kerberos to support groups.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Effectively the user's list of groups was included in ticket.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Proxy problem: still no great solution in Kerberos, but ssh-agent is nice.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Workstation security (can trojan login, and did happen in practice).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Smartcard-based approach hasn't taken off.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Two-step authentication (time-based OTP) used by Google Authenticator.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Shared desktop systems not so prevalent: everyone has own phone, laptop, ..'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Follow-ons.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Kerberos v5 fixes many problems in v4 (some mentioned), used widely (MS AD).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OpenID is a similar-looking protocol for authentication in web applications.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Similar messages are passed around via HTTP requests.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL

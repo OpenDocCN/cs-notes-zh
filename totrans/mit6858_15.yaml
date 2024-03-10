@@ -1,0 +1,1490 @@
+- en: Side-channel attacks on RSA
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: '**Note:** These lecture notes were slightly modified from the ones posted on
+    the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    from 2014.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Side channel attacks
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Historically, worried about EM signals leaking. [NSA TEMPEST](http://cryptome.org/nsa-tempest.pdf).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Broadly, systems may need to worry about many unexpected ways in which
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: information can be revealed.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Example setting:* a server (e.g., Apache) has an RSA private key.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Server uses RSA private key (e.g., decrypt message from client).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Something about the server's computation is leaked to the client.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Many information leaks have been looked at:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: How long it takes to decrypt.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How decryption affects shared resources (cache, TLB, branch predictor).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Emissions from the CPU itself (RF, audio, power consumption, etc).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Side-channel attacks don't have to be crypto-related.
+  prefs: []
+  type: TYPE_NORMAL
+- en: E.g., operation time relates to which character of password was incorrect.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or time related to how many common friends you + some user have on Facebook.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or how long it takes to load a page in browser (depends if it was cached).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or recovering printed text based on sound from dot-matrix printer. [Ref](https://www.usenix.org/conference/usenixsecurity10/acoustic-side-channel-attacks-printers)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But attacks on passwords or keys are usually the most damaging.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary can analyze information leaks, use it to reconstruct private key.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Currently, side-channel attacks on systems described in the paper are rare.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., Apache web server running on some Internet-connected machine.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Often some other vulnerability exists and is easier to exploit.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Slowly becoming a bigger concern: new side-channels (VMs), better attacks.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Side-channel attacks are more commonly used to attack trusted/embedded hw.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., chip running cryptographic operations on a smartcard.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Often these have a small attack surface, not many other ways to get in.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: As paper mentions, some crypto coprocessors designed to avoid this attack.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What's the *"Remote timing attacks are practical"* paper's contribution? [Ref](http://css.csail.mit.edu/6.858/2014/readings/brumley-timing.pdf)
+  prefs: []
+  type: TYPE_NORMAL
+- en: Timing attacks known for a while.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'This paper: possible to attack standard Apache web server over the network.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Uses lots of observations/techniques from prior work on timing attacks.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To understand how this works, first let's look at some internals of RSA..
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'RSA: high level plan'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Pick two random primes, `p` and `q`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let `n = p*q`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A reasonable key length, i.e., `|n|` or `|d|`, is 2048 bits today.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Euler''s function `phi(n)`: number of elements of `Z_n^*` relatively prime
+    to `n`.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Theorem** [no proof here]: `a^(phi(n)) = 1 mod n`, for all `a` and `n`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: So, how to encrypt and decrypt?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Pick two exponents `d` and `e`, such that `m^(e*d) = m (mod n)`, which
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: means `e*d = 1 mod phi(n)`.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Encryption will be `c = m^e (mod n)`; decryption will be `m = c^d (mod n)`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to get such `e` and `d`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For `n=pq`, `phi(n) = (p-1)(q-1)`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Easy to compute `d=1/e`, if we know `phi(n)`. [Extended Euclidean algorithm](http://en.wikipedia.org/wiki/Modular_multiplicative_inverse)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In practice, pick small `e` (e.g., 65537), to make encryption fast.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Public key is `(n, e)`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Private key is, in principle, `(n, d)`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Note:** `p` and `q` must be kept secret!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Otherwise, adversary can compute `d` from `e`, as we did above.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Knowing `p` and `q` also turns out to be helpful for fast decryption.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: So, in practice, private key includes `(p, q)` as well.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: RSA is tricky to use "securely" -- be careful if using RSA directly!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Ciphertexts are multiplicative
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`E(a)*E(b) = a^e * b^e = (ab)^e`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can allow adversary to manipulate encryptions, generate new ones.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: RSA is deterministic
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Encrypting the same plaintext will generate the same ciphertext each time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary can tell when the same thing is being re-encrypted.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Typically solved by "padding" messages before encryption. [OAEP](http://en.wikipedia.org/wiki/Optimal_asymmetric_encryption_padding)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Take plaintext message bits, add padding bits before and after plaintext.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Encrypt the combined bits (must be less than `|n|` bits total).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Padding includes randomness, as well as fixed bit patterns.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Helps detect tampering (e.g. ciphertext multiplication).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to implement RSA?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '**Key problem:** fast modular exponentiation.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In general, quadratic complexity.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Multiplying two 1024-bit numbers is slow.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Computing the modulus for 1024-bit numbers is slow (1024-bit divison).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Optimization 1: Chinese Remainder Theorem (CRT).'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Recall what the CRT says:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: if `x==a1 (mod p)` and `x==a2 (mod q)`, where `p` and `q` are relatively prime,
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: then there's a unique solution `x==a (mod pq)`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: and, there's an efficient algorithm for computing `a`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Suppose we want to compute `m = c^d (mod pq)`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can compute `m1 = c^d (mod p)`, and `m2 = c^d (mod q)`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then use CRT to compute `m = c^d (mod n)` from `m1`, `m2`; it's unique and fast.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Computing `m1` (or `m2`) is ~4x faster than computing `m` directly (~quadratic).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Computing `m` from `m1` and `m2` using CRT is ~negligible in comparison.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: So, roughly a 2x speedup.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Optimization 2: Repeated squaring and Sliding windows.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Naive approach to computing `c^d`: multiply `c` by itself, `d` times.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Better approach, called repeated squaring:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c^(2x) = (c^x)^2`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c^(2x+1) = (c^x)^2 * c`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To compute `c^d`, first compute `c^(floor(d/2))`, then use above for `c^d`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Recursively apply until the computation hits `c^0 = 1`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Number of squarings: `|d|` (the number of bits needed to represent `d`)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Number of multiplications: number of 1 bits in `d`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Better yet (sometimes), called *sliding window*:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c^(2x) = (c^x)^2`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c^(32x+1) = (c^x)^32 * c`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c^(32x+3) = (c^x)^32 * c^3`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '...'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c^(32x+z) = (c^x)^32 * c^z`, generally (where `z<=31`)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can pre-compute a table of all necessary `c^z` powers, store in memory.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The choice of power-of-2 constant (e.g., 32) depends on usage.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Costs: extra memory, extra time to pre-compute powers ahead of time.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Note: only pre-compute odd powers of `c` (use first rule for even).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OpenSSL uses 32 (table with 16 pre-computed entries).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Optimization 3: Montgomery representation.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Reducing `mod p` each time (after square or multiply) is expensive.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Typical implementation: do long division, find remainder.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Hard to avoid reduction: otherwise, value grows exponentially.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Idea (by Peter Montgomery): do computations in another representation.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Shift the base (e.g., `c`) into different representation upfront.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Perform modular operations in this representation (will be cheaper).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Shift numbers back into original representation when done.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Ideally, savings from reductions outweigh cost of shifting.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Montgomery representation: multiply everything by some factor R.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`a mod q <-> aR mod q`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`b mod q <-> bR mod q`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c = a*b mod q <-> cR mod q = (aR * bR)/R mod q`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each mul (or sqr) in Montgomery-space requires division by `R`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why is modular multiplication cheaper in Montgomery repr.?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Choose `R` so division by `R` is easy: `R = 2^|q|` (`2^512` for 1024-bit keys).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Because we divide by `R`, we will often not need to do `mod q`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`|aR| = |q|`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`|bR| = |q|`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`|aR * bR| = 2|q|`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`|aR * bR / R| = |q|`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How do we divide by `R` cheaply?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only works if lower bits are zero.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Observation:* since we care about value `mod q`, multiples of `q` don''t matter.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Trick:* add multiples of `q` to the number being divided by `R`, make low
+    bits 0.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For example, suppose `R=2^4 (10000)`, `q=7 (111)`, divide `x=26 (11010)` by
+    R.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`x+2q = (binary) * 101000`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`x+2q+8q = (binary) 1100000`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Now, can easily divide by `R`: result is binary 110 (or 6).'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Generally, always possible:'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Low bit of `q` is 1 (`q` is prime), so can "shoot down" any bits.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To "shoot down" bit `k`, add `2^k * q`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To shoot down low-order bits `l`, add `q*(l*(-q^-1) mod R)`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then, dividing by `R` means simply discarding low zero bits.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*One remaining problem:* result will be `< R`, but might be `> q`.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the result happens to be greater than `q`, need to subtract `q`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This is called the "extra reduction".
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When computing `x^d mod q`, `Pr[extra reduction] = (x mod q) / 2R`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Here, `x` is assumed to be already in Montgomery form.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Intuition:* as we multiply bigger numbers, will overflow more often.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Optimization 4: Efficient multiplication.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: How to multiply 512-bit numbers?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Representation: break up into 32-bit values (or whatever hardware supports).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Naive approach: pair-wise multiplication of all 32-bit components.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Same as if you were doing digit-wise multiplication of numbers on paper.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Requires `O(nm)` time if two numbers have `n` and `m` components respectively.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`O(n^2)` if the two numbers are close.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Karatsuba multiplication:** assumes both numbers have same number of components.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`O(n^log_3(2)) = O(n^1.585)`time.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Split both numbers (`x` and `y`) into two components (`x1`, `x0` and `y1`, `y0`).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`x = x1 * B + x0`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`y = y1 * B + y0`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `B=2^32` when splitting 64-bit numbers into 32-bit components.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Naive: `x*y = x1y1 * B^2 + x0y1 * B + x1y0 * B + x0y0`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Four multiplies: `O(n^2)`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Faster: `x*y = x1y1 * (B^2+B) - (x1-x0)(y1-y0) * B + x0y0 * (B+1)`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '... `= x1y1 * B^2 + ( -(x1-x0)(y1-y0) + x1y1 + x0y0 ) * B + x0y0`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Just three multiplies, and a few more additions.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Recursively apply this algorithm to keep splitting into more halves.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sometimes called "recursive multiplication".
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Meaningfully faster (no hidden big constants)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For 1024-bit keys, "`n`" here is 16 (512/32).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`n^2 = 256`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`n^1.585 = 81`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Multiplication algorithm needs to decide when to use Karatsuba vs. Naive.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Two cases matter: *two large numbers*, and *one large + one small number*.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'OpenSSL: if equal number of components, use Karatsuba, otherwise Naive.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In some intermediate cases, Karatsuba may win too, but OpenSSL ignores it,
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: according to this paper.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does SSL use RSA?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Server's SSL certificate contains public key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server must use private key to prove its identity.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client sends random bits to server, encrypted with server's public key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server decrypts client's message, uses these bits to generate session key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In reality, server also verifies message padding.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: However, can still measure time until server responds in some way.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Figure of **decryption pipeline** on the server:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: Then, compute `m_0 = m'_0/R mod q`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then, combine `m_0` and `m_1` using CRT to get `m`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then verify padding in `m`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Finally, use payload in some way (SSL, etc).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Setup for the attack described in Brumley's paper
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Victim Apache HTTPS web server using OpenSSL, has private key in memory.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Connected to Stanford's campus network.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary controls some client machine on campus network.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary sends specially-constructed ciphertext in msg to server.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server decrypts ciphertext, finds garbage padding, returns an error.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client measures response time to get error message.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Uses the response time to guess bits of `q`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Overall response time is on the order of 5 msec.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Time difference between requests can be around 10 usec.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What causes time variations?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Karatsuba vs. Naive
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: extra reductions
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Once guessed enough bits of `q`, can factor `n=p*q`, compute `d` from `e`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: About 1M queries seem enough to obtain 512-bit `p` and `q` for 1024-bit key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only need to guess the top 256 bits of `p` and `q`, then use another algorithm.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attack from Brumley's paper
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: See the *Remote timing attacks are practical* paper cited in the *References*
+    section at the end for more details.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let `q = q_0 q_1 .. q_N`, where `N = |q|` (say, 512 bits for 1024-bit keys).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Assume we know some number `j` of high-order bits of `q` (`q_0` through `q_j`).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Construct two approximations of q, guessing `q_{j+1}` is either 0 or 1:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`g = q_0 q_1 .. q_j 0 0 0 .. 0`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`g_hi = q_0 q_1 .. q_j 1 0 0 .. 0`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Get the server to perform modular exponentiation (`g^d`) for both guesses.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We know `g` is necessarily less than `q`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If `g` and `g_hi` are both less than `q`, time taken shouldn't change much.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If `g_hi` is greater than `q`, time taken might change noticeably.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`g_hi mod q` is small.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Less time: fewer extra reductions in Montgomery.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'More time: switch from Karatsuba to normal multiplication.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Knowing the time taken can tell us if 0 or 1 was the right guess.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to get the server to perform modular exponentiation on our guess?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Send our guess as if it were the encryption of randomness to server.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One snag: server will convert our message to Montgomery form.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Since Montgomery's `R` is known, send (`g/R mod n`) as message to server.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How do we know if the time difference should be positive or negative?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Paper seems to suggest it doesn''t matter: just look for large diff.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Figure 3a shows the measured time differences for each bit's guess.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Karatsuba vs. normal multiplication happens at 32-bit boundaries.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'First 32 bits: extra reductions dominate.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Next bits: Karatsuba vs normal multiplication dominates.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: At some point, extra reductions start dominating again.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What happens if the time difference from the two effects cancels out?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Figure 3, key 3.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Larger neighborhood changes the balance a bit, reveals a non-zero gap.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does the paper get accurate measurements?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client machine uses processor's timestamp counter (`rdtsc` on x86).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Measure several times, take the median value.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not clear why median; min seems like it would be the true compute time.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One snag: relatively few multiplications by `g`, due to sliding windows.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Solution: get more multiplications by values close to `g` (+ same for `g_hi`).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Specifically, probe a "neighborhood" of `g` (`g, g+1, .., g+400`).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why probe a 400-value neighborhood of `g` instead of measuring `g` 400 times?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Consider the kinds of noise we are trying to deal with.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (1) Noise unrelated to computation (e.g. interrupts, network latency).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This might go away when we measure the same thing many times.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: See Figure 2a in the paper.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (2) "Noise" related to computation.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., multiplying by `g^3` and `g_hi^3` in sliding window takes diff time.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Repeated measurements will return the same value.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Will not help determine whether mul by `g` or `g_hi` has more reductions.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: See Figure 2b in the paper.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Neighborhood values average out 2nd kind of noise.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Since neighborhood values are nearby, still has ~same # reductions.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to avoid these attacks?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Timing attack on decryption time: RSA blinding.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Choose random `r`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Multiply ciphertext by `r^e mod n`: `c'' = c*r^e mod n`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Due to multiplicative property of RSA, `c'` is an encryption of `m*r`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Decrypt ciphertext `c'` to get message `m'`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Divide plaintext by `r`: `m = m''/r`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: About a 10% CPU overhead for OpenSSL, according to Brumley's paper.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Make all code paths predictable in terms of execution time.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard, compilers will strive to remove unnecessary operations.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Precludes efficient special-case algorithms.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Difficult to predict execution time: instructions aren''t fixed-time.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can we take away access to precise clocks?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Yes for single-threaded attackers on a machine we control.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can add noise to legitimate computation, but attacker might average.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can quantize legitimate computations, at some performance cost.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But with "sleeping" quantization, throughput can still leak info.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How worried should we be about these attacks?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Relatively tricky to develop an exploit (but that's a one-time problem).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Possible to notice attack on server (many connection requests).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Though maybe not so easy on a busy web server cluster?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary has to be close by, in terms of network.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not that big of a problem for adversary.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can average over more queries, co-locate nearby (Amazon EC2),
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Run on a nearby bot or browser, etc.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary may need to know the version, optimization flags, etc of OpenSSL.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is it a good idea to rely on such a defense?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How big of an impediment is this?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If adversary mounts attack, effects are quite bad (key leaked).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other types of timing attacks
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '**Page-fault timing for password guessing** [Tenex system]'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Suppose the kernel provides a system call to check user's password.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Checks the password one byte at a time, returns error when finds mismatch.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary aligns password, so that first byte is at the end of a page,
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Rest of password is on next page.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Somehow arrange for the second page to be swapped out to disk.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or just unmap the next page entirely (using equivalent of `mmap`).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Measure time to return an error when guessing password.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If it took a long time, kernel had to read in the second page from disk.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or, if unmapped, if crashed, then kernel tried to read second page. ]
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Means first character was right!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can guess an `N`-character password in `256*N` tries, rather than `256^N`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Cache analysis attacks:** processor''s cache shared by all processes.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'E.g.: accessing one of the sliding-window multiples brings it in cache.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Necessarily evicts something else in the cache.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Malicious process could fill cache with large array, watch what's evicted.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Guess parts of exponent (`d`) based on offsets being evicted.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Cache attacks are potentially problematic with "mobile code".
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: NaCl modules, Javascript, Flash, etc running on your desktop or phone.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Network traffic timing / analysis attacks**.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Even when data is encrypted, its ciphertext size remains ~same as plaintext.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Recent papers show can infer a lot about SSL/VPN traffic by sizes, timing.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., Fidelity lets customers manage stocks through an SSL web site.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Web site displays some kind of pie chart image for each stock.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User's browser requests images for all of the user's stocks.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adversary can enumerate all stock pie chart images, knows sizes.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can tell what stocks a user has, based on sizes of data transfers.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Similar to CRIME attack mentioned in guest lecture earlier this term.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: References
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[Remote timing attacks are practical](http://css.csail.mit.edu/6.858/2014/readings/brumley-timing.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Cache missing for fun and profit](http://css.csail.mit.edu/6.858/2014/readings/ht-cache.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Efficient Cache Attacks on AES, and Countermeasures](http://www.tau.ac.il/~tromer/papers/cache-joc-20090619.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Get Your Hands Off My Laptop: Physical Side-Channel Key-Extraction Attacks
+    on PCs](http://www.tau.ac.il/~tromer/papers/handsoff-20140731.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Cross-VM Side Channels and Their Use to Extract Private Keys](http://www.cs.unc.edu/~reiter/papers/2012/CCS.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Ed25519: high-speed high-security signatures](http://ed25519.cr.yp.to/)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

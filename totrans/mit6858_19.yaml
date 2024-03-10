@@ -1,0 +1,1481 @@
+- en: Android security
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: '**Note:** These lecture notes were slightly modified from the ones posted on
+    the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    from 2014.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Why [this](http://css.csail.mit.edu/6.858/2014/readings/android.pdf) paper?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Real system, widely used.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Careful security design (more so than for web or desktop applications).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Principals = Applications (not users)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Policy separate from code (manifests)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some problems inevitable, and instructive to see where problems come up.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But also interesting to see how to design a reasonable security plan.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Threat model
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '**Goal:** Anyone can write an app that anyone can install'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Threats:**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apps may have bugs
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apps may be malicious
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: CVE database
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[http://www.cvedetails.com/vulnerability-list/vendor*id-1224/product*id-19997/Google-Android.html](http://css.csail.mit.edu/6.858/2014/readings/android.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some bugs but not overwhelming---is the security plan working?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Buffer overrun (still happens ....)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Of course, Android runs on Linux, and this includes Linux kernel problems
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Overall plan
+  prefs: []
+  type: TYPE_NORMAL
+- en: First understand how Android applications look like and work.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then discuss security mechanisms and policies.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What does an Android application look like?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Four types of components:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Activity:** UI component of app, typically one activity per "screen".'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Service:** background processing, can be invoked by other components.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Content provider:** a SQL database that can be accessed by other components.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Broadcast receiver:** gets broadcast announcements from other components.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each application also has private file storage.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Application typically written in Java.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Runs on a Linux kernel + Android "platform" (will get to it shortly).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Application also has a manifest declaring its permissions (later).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Entire application is signed by the developer.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Activity: can draw on the screen, get user input, etc.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Only one activity is running at a time.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Helps users reason about security of inputs.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If user is running bank app (activity), no other activity gets user's input.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Intent: basic messaging primitive in Android.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Represents app's intent to do something / interact with another component.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Intent fields:'
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: 'Component: name of component to route the request to (just a string).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `com.google.someapp/ComponentName`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Action: the opcode for this message (just a string).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `android.intent.action.MAIN`, `android.intent.action.DIAL`, ...
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Data: URI of data for the action (just a string).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `tel:16172536005`, `content://contacts/people/1` (for DIAL).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Also includes the MIME type of the data.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Category: a filtering mechanism for finding where to send intent.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `android.intent.category.BROWSABLE` means safe to invoke from browser,
+    for action `android.intent.action.VIEW`, which views the URI in data.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Explicit intents: component name specified.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Implicit intents: no component name, so the system must figure it out.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Looks at action, data, category.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could also ask the user what app to use, if multiple components match.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., user clicks on an address -- what map application to open?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: RPC to services
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Initial communication to a service happens by sending an intent.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Service can also define an RPC protocol for clients to use.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: More efficient than sending intents each time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client "binds" a connection to a service.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Networking -- accessing the Internet.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Work just as in any other Linux system.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Application can use sockets directly, or via Java's networking libraries.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why do we need a new app model? (Or, what's wrong with existing models?)
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Desktop applications:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**--** Not much isolation between applications.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**--** Every app has full privileges, any one malicious app can take over.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**++** Applications can easily interact with one another, share files.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**++** User can choose app for each task (email app, image viewer, etc).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Web/browser-based applications:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**++** No need to install applications or worry about local state.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**--** Requires a server in the typical model (hard to use offline).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**--** Limited interactions between applications.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**--** Interactions that do exist are typically hard-wired to particular URLs.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'E.g., links to a contact manager app''s URL: user cannot choose new one.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Getting better: "Web intents" are trying to solve this problem.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**--** Somewhat limited functionality for purely client-side applications.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Getting better: camera, location info, local storage, worker threads, ..'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Android access control
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: How does Android's application model handle app interaction, user choosing app?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Mostly based on intents.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If multiple apps could perform an operation, send implicit intent.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Android framework decides which app gets the intent; could ask user.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does Android's application model handle app isolation?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Each application's processes run under a separate UID in Linux.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Exception: one developer can stick multiple applications into one UID.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each application gets its own Java runtime (but that's mostly by convention).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Java interpreter not trusted or even required; kernel enforces isolation.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are per-app UIDs good for?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: One app cannot directly manipulate another app's processes, files.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each app has private directory (`/data/data/appname`).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Stores preferences, sqlite DBs for content providers, cached files, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'What''s missing from UID isolation: access control to shared resources.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Network access.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Removable sd card.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Devices (camera, compass, etc).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Intents: who can send, what intents, to whom?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: And we also need to somehow determine the policy for all of this.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'First, mechanism: how does Android control access to all of the above?'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Network access: GIDs.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Special group IDs define what apps can talk to the network.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'GID `AID_NET_BT_ADMIN (3001)`: can create low-level bluetooth sockets'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'GID `AID_NET_BT (3002)`: can create bluetooth socket'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'GID `AID_INET (3003)`: can create IP socket'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'GID `AID_NET_RAW (3004)`: can create raw socket'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'GID `AID_NET_ADMIN (3005)`: can change network config (ifconfig, ..)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Requires kernel changes to do this.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each app gets a subset of these group IDs, depending on its privileges.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No finer-grained control of network communication.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., could have imagined per-IP-addr or per-origin-like policies.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Access to removable sd card.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why not use file system permissions?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Want to use FAT file system on SD card, to allow access on other devices.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: FAT file system has no notion of file ownership, permissions, etc.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kernel treats all SD card files as owned by special group sdcard_rw (1015).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apps that should have access to SD card have this GID in their group list.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No finer-grained isolation within the entire SD card.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Devices.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Device files (`/dev/camera`, `/dev/compass`, etc) owned by special groups.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apps run with appropriate groups in their group list.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Intents.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: All intents are routed via a single trusted "reference monitor".
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Runs in the system_server process.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Reference monitor performs intent resolution (where to send intent?),
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'for implicit intents. `[ref: ActivityStack.startActivityMayWait]`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Reference monitor checks permissions, based on intent and who sent it. `[ref:
+    ActivityStack.startActivityLocked]`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Routes intent to the appropriate application process, or starts a new one.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why not just use intents for everything, instead of special groups?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Efficiency: want direct access to camera, network, SD card files.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sending everything via intents could impose significant overhead.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does the reference monitor decide whether to allow an intent?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '"Labels" assigned to applications and components.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each label is a free-form string.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Commonly written as Java-style package names, for uniqueness.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `com.android.phone.DIALPERM`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each component has a single label that protects it.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Any intents to that component must be sent by app that has that label.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., phone dialer service is labeled with `...DIALPERM`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'For content providers, two labels: one for read, one for write.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: An application has a list of labels it is authorized to use.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., if app can dial the phone, `...DIALPERM` is in its label set.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other permissions (network, devices, SD card) map to special label strings.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., android.permission.INTERNET translates to app running w/ GID 3003.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does an application get permissions for a certain set of labels?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Each app comes with a manifest declaring permissions (labels) the app needs.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Also declares the labels that should protect each of its components.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When app is installed, Android system asks user if it's ok to install app.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Provides list of permissions that the application is requesting.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: At one point, Android allowed users to set fine-grained permission choices.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Android 4.3 introduced the "permission manager".
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apparently this was removed in Android 4.4.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Possible reason: developers want predictable access to things.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Who defines permissions?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Apps define permissions themselves (recall: just free-form strings).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Android system defines perms for built-in resources (camera, network, etc).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can list with 'adb shell pm list permissions -g'.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Built-in applications define permissions for services they provide.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., read/write contacts, send SMS message, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Defining a permission means specifying:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User-visible name of the permission.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Description of the permission for the user.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Grouping permission into some categories (costs money, private data, etc).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Type of permission: "normal", "dangerous", and "signature".'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What do the three types of permission mean?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Normal:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Benign permissions that could let an app annoy the user, but not drastic.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `SET_WALLPAPER`.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: diff $(pm list permissions -g -d) and $(pm list permissions -g)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: System doesn't bother asking the user about "normal" permissions.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why bother having them at all?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can review if really interested.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Least-privilege, if application is compromised later.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Dangerous:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could allow an app to do something dangerous.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., internet access, access to contact information, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Signature:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can only be granted to apps signed by the same developer.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Think ForceHTTPS: want to prevent user from accidentally giving it away.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why do this checking in the reference monitor, rather than in each app?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Convenience, so programmers don't forget.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could do it in a library on the application side.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Intent might be routed to different components based on permissions.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Don't want to send an intent to component A that will reject it, if another
+    component B is willing to accept it.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Mandatory access control (MAC): permissions specified separately from code.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Aside: annoyance, MAC is an overloaded acronym.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Media Access Control -- MAC address in Ethernet.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Message Authentication Code -- the thing that Kerberos v4 lacked.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Want to understand security properties of system without looking at code.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Contrast: discretionary access control (DAC) in Unix.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each app sets its own permissions on files.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Permissions can be changed by the app over time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard to tell what will happen just by looking at current file perms.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Apps can also perform their own checks. `[ref: checkCallingPermission()]`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Breaks the MAC model a bit: can''t just look at manifest.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Necessary because one service may export different RPC functions,
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: want different level of protection for each.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Reference monitor just checks if client can access the entire service.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Who can register to receive intents?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Any app can specify it wants to receive intents with arbitrary parameters.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'E.g., can create activity with an intent filter (in manifest):'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Example:*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: Is this a problem?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why or why not?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: System will prompt user whenever they click on a link to http://web.mit.edu/.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only "top-level" user clicks translate to intents, not web page components.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Might be OK if user is prompted.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Even then, what if your only map app is "bad": steals addresses sent to it?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not so great for broadcast intents, which go to all possible recipients.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Controlling the distribution of broadcast intents.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In paper's example, want `FRIEND_NEAR` intents to not be disclosed to everyone.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Solution: sender can specify extra permission label when sending bcast intent.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Reference monitor only sends this intent to recipients that have that label.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to authenticate the source of intents?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Generally using a permission label on the receiving component.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Don't necessarily care who sender is, as long as it had the right perms.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Turns out apps often forgot to put perm restrictions on broadcast receivers.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Paper at Usenix Security 2011: "permission re-delegation attacks".'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., can create an alarm that beeps and vibrates forever.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., can send messages to the settings bcast receiver to toggle wifi, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One solution in android: "protected broadcasts" (not complete, but..)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Reference monitor special-cases some intent actions (e.g., system bootup).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only system processes can send those broadcast intents.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can a sender rely on names to route intents to a specific component?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: More broadly, how does android authenticate names? (App names, perm names.)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No general plan, just first-come-first-served.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: System names (apps, permissions, etc) win in this model.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other apps could be preempted by a malicious app that comes first.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could send sensitive data to malicious app, by using app's name.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could trust intent from malicious app, by looking at its sender name.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could set lax permissions by using a malicious app's perm by name.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What happens if two apps define the same permission name?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: First one wins.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Malicious app could register some important perm name as "normal".
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Any app (including malicious app) can get this permission now.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other apps that rely on this perm will be vulnerable to malicious app.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Even if victim app defines its own perms and is the only one that uses it. (E.g.,
+    signature perms.)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Possibly better: reject installing an app if perm is already defined.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Allows an app to assume its own perms are correctly defined.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Still does not allow an app to assume anything about other app/perm names.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If app names are not authenticated, why do applications need signatures?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Representing a developer.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No real requirement for a CA.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Helps Android answer three questions:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Did this new version of an app come from the same developer as the old one?
+    (if so, can upgrade.)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Did these two apps come from the same developer? (if so, can request same UID.)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Did the app come from same developer as the one that defined a permission? (if
+    so, can get access to signature-level perms.)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to give another app temporary permissions?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: URI delegation.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Capability-style delegation of URI read/write access.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: System keeps track of delegated access by literal string URI.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., `content://gmail/attachment/7`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Must remember to revoke delegated access!
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'E.g., URI may mean another record at a later time.. `[ref: grantUriPermission(),
+    revokeUriPermission()]`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Reference monitor keeps granted URIs in memory. `[ref: ActivityManagerService.mGrantedUriPermissions]`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Grants are ephemeral, only last until a reboot.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Pending intents.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Use case: callbacks into your application (e.g., from alarm/time service).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'system_server keeps track of pending intents in memory; ephemeral. `[ref: PendingIntentRecord.java]`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Revocation problem, as with URI delegation. "Breaks" the MAC model: can''t
+    quite reason about all security from manifest.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where are apps stored?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Two options: internal phone memory or SD card.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Internal memory is always controlled by Android, so can assume it's safe.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Installing apps on SD card is more complicated, but desirable due to space.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Threat models:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Worried about malicious app modifying SD card data.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Worried about malicious user making copies of a paid app.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SD card uses FAT file system, no file permissions.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Approach: encrypt/authenticate app code with a per-phone random key.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Key stored in phone's internal flash, unique to phone.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How secure is the Android "platform"?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'TCB: kernel + anything running as root.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Better than desktop applications:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Most applications are not part of the TCB.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Many fewer things running as root.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some vulnerabilities show up in practice.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Bugs in the Linux kernel or in setuid-root binaries allow apps to get root.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to do better?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Syscall filtering / seccomp to make it harder to exploit kernel bugs?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not clear.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Users inadvertently install malware applications with dangerous permissions.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Actual common malware: send SMS messages to premium numbers.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attackers directly get money by deploying such malware.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why do users make such mistakes?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One cause: some permissions necessary for both mundane + sensitive tasks.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., accessing phone state / identity required to get a unique device ID.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Causes unnecessary requests for dangerous permissions, de-sensitizes user.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Another cause: apps ask for permissions upfront "just in case".'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., might need them later, but changing perms requires manual update.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Another cause: cannot say "no" to certain permissions.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Another cause: copies of existing Android apps containing malware.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to fix?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Find ways to allow more permissions "non-dangerous" without asking user.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Allow user to selectively disable certain permissions. (Some research work on
+    this, see refs below.)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Static/runtime analysis and auditing -- implemented by Google now.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Looks for near-identical clones of existing popular apps.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Runs apps for a little bit to determine what they do.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Security researchers got a (non-root) shell on Google's app scanner.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Reasonably expected in retrospect: app scanner just runs the app..'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Android's app market (Google Play) allows Google to remotely kill an app.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Other model for security in mobile phone apps: iOS/iPhone.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Security mechanism: all apps run two possible UIDs.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: One UID for Apple apps, another for all other apps.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Historically made sense: only one app was active at a time.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: With switch to multi-tasking apps, didn't change the UID model.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Instead, isolate apps using Apple's sandbox ("Seatbelt"?).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apple applications not isolated from each other originally (unclear now?).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Thus, exploit of vulnerability in browser left all Apple apps "exposed".
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Prompt for permissions at time of use.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Users can run app and not give it permissions (unlike Android).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '"Normal" permissions not very meaningful in this model.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apple approves apps in its app store, in part based on security eval.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '"Reputation-based" system: hard to exploit many phones and avoid detection.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: References
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[Android security](http://developer.android.com/guide/topics/security/security.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[AppFence](http://research.microsoft.com/pubs/149596/AppFence.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Internal input event handling in the Linux kernel and in the Android userspace](http://cjix.info/blog/misc/internal-input-event-handling-in-the-linux-kernel-and-the-android-userspace/)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[iOS security](http://css.csail.mit.edu/6.858/2012/readings/ios-security-may12.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Apple Sandbox Guide](http://reverse.put.as/wp-content/uploads/2011/09/Apple-Sandbox-Guide-v1.0.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

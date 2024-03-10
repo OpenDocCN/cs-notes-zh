@@ -1,0 +1,1650 @@
+- en: Capabilities and other protection mechanisms
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: '**Note:** These lecture notes were slightly modified from the ones posted on
+    the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    from 2014.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Confused deputy problem
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: What's the problem the authors of "confused deputy" encountered?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Their system had a Fortran compiler, `/sysx/fort` (in Unix filename syntax)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: They wanted the Fortran compiler to record usage statistics, but where?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Created a special statistics file, `/sysx/stat`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Gave `/sysx/fort` "home files license" (kind-of like setuid w.r.t. /sysx)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What goes wrong?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User can invoke the compiler asking it to write output to `/sysx/stat`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: e.g. `/sysx/fort` /my/code.f -o `/sysx/stat`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Compiler opens supplied path name, and succeeds, because of its license.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User alone couldn't have written to that `/sysx/stat` file.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why isn't the `/sysx/fort` thing just a bug in the compiler?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could, in principle, solve this by adding checks all over the place.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Problem: need to add checks virtually everywhere files are opened.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Perfectly correct code becomes buggy once it's part of a setuid binary.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: So what's the "confused deputy"?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'The compiler is running on behalf of two principals:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: the user principal (to open user's files)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: the compiler principal (to open compiler's files)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not clear what principal's privileges should be used at any given time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can we solve this confused deputy problem in Unix?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Suppose gcc wants to keep statistics in `/etc/gcc.stats`
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could have a special setuid program that only writes to that file
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Not so convenient: can''t just open the file like any other.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if we make gcc setuid to some non-root user (owner of stats file)?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard to access user's original files.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if gcc is setuid-root? (Bad idea, but let's figure out why..)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Lots of potential for buffer overflows leading to root access.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to instrument every place where gcc might open a file.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What check should we perform when gcc is opening a file?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If it's an "internal" file (e.g. `/etc/gcc.stats`), maybe no check.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If it's a user-supplied file, need to make sure user can access it.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can look at the permissions for the file in question.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to also check permissions on directories leading up to this file.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Potential problem: race conditions.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if the file changes between the time we check it and use it?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Common vulnerability: attacker replaces legit file with symlink'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Symlink could point to, say, `/etc/gcc.stats`, or `/etc/passwd`, or ...
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Known as "time-of-check to time-of-use" bugs (TOCTTOU).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Several possible ways of thinking of this problem:'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '*Ambient authority:* privileges that are automatically used by process are
+    the problem here. No privileges should ever be used automatically. Name of an
+    object should be also the privileges for accessing it.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Complex permission checks:* hard for privileged app to replicate. With simpler
+    checks, privileged apps might be able to correctly check if another user should
+    have access to some object.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What are examples of ambient authority?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Unix UIDs, GIDs.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Firewalls (IP address vs. privileges for accessing it)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: HTTP cookies (e.g. going to a URL like http://gmail.com)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does naming an object through a capability help?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Pass file descriptor instead of passing a file name.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No way to pass a valid FD unless caller was authorized to open that file.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could we use file descriptors to solve our problem with a setuid gcc?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Sort-of: could make the compiler only accept files via FD passing.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or, could create a setuid helper that opens the `/etc/gcc.stats` file, passes
+    an open file descriptor back to our compiler process.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Then, can continue using this open file much like any other file.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to ensure only gcc can run this helper?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Make gcc setgid to some special group.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Make the helper only executable to that special group.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Make sure that group has no other privileges given to it.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is the problem that the Capsicum authors are trying to solve with capabilities?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Reducing privileges of untrustworthy code in various applications.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Overall plan:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Break up an application into smaller components.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Reduce privileges of components that are most vulnerable to attack.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Carefully design interfaces so one component can't compromise another.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why is this difficult?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard to reduce privileges of code ("sandbox") in traditional Unix system.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard to give sandboxed code some limited access (to files, network, etc).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What sorts of applications might use sandboxing?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: OKWS
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Programs that deal with network input:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Put input handling code into sandbox.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Programs that manipulate data in complex ways: (gzip, Chromium, media codecs,
+    browser plugins, ...)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Put complex (& likely buggy) part into sandbox.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How about arbitrary programs downloaded from the Internet?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Slightly different problem: need to isolate unmodified application code.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One option: programmer writes their application to run inside sandbox.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Works in some cases: Javascript, Java, Native Client, ...'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to standardize on an environment for sandboxed code.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Another option: impose new security policy on existing code.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Probably need to preserve all APIs that programmer was using.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to impose checks on existing APIs, in that case.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Unclear what the policy should be for accessing files, network, etc.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Applications that want to avoid being tricked into misusing privileges?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Suppose two Unix users, Alice and Bob, are working on some project.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Both are in some group `G`, and project `dir` allows access by that group.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let's say Alice emails someone a file from the project directory.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Risk: Bob could replace the file with a symlink to Alice''s private file.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Alice's process will implicitly use Alice's ambient privileges to open.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can think of this as sandboxing an individual file operation.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What sandboxing plans (mechanisms) are out there (advantages, limitations)?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: OS typically provides some kind of security mechanism ("primitive").
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., user/group IDs in Unix, as we saw in the previous lecture.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For today, we will look at OS-level security primitives/mechanisms.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Often a good match when you care about protecting resources the OS manages.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., files, processes, coarse-grained memory, network interfaces, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Many OS-level sandboxing mechanisms work at the level of processes.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Works well for an entire process that can be isolated as a unit.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can require re-architecting application to create processes for isolation.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other techniques can provide finer-grained isolation (e.g., threads in proc).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Language-level isolation (e.g., Javascript).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Binary instrumentation (e.g., Native Client).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why would we need these other sandboxing techniques?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Easier to control access to non-OS / finer-grained objects.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or perhaps can sandbox in an OS-independent way. OS-level isolation often used
+    in conjunction with finer-grained isolation.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Finer-grained isolation is often hard to get right (Javascript, NaCl). E.g.,
+    Native Client uses both a fine-grained sandbox + OS-level sandbox.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Will look at these in more detail in later lectures.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Plan 0: Virtualize everything (e.g., VMs).'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Run untrustworthy code inside of a virtualized environment.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Many examples: x86 qemu, FreeBSD jails, Linux LXC, ..'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Almost a different category of mechanism: strict isolation.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Advantage: sandboxed code inside VM has almost no interactions with outside.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Advantage: can sandbox unmodified code that''s not expecting to be isolated.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Advantage: some VMs can be started by arbitrary users (e.g., qemu).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Advantage: usually composable with other isolation techniques, extra layer.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Disadvantage: hard to allow some sharing: no shared processes, pipes, files.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Disadvantage: virtualizing everything often makes VMs relatively heavyweight.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Non-trivial CPU/memory overheads for each sandbox.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Plan 1: Discretionary Access Control (DAC).'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Each object has a set of permissions (an access control list).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., Unix files, Windows objects.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*"Discretionary"* means applications set permissions on objects (e.g., `chmod`).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each program runs with privileges of some principals.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., Unix user/group IDs, Windows SIDs.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'When program accesses an object, check the program''s privileges to decide.:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*"Ambient privilege":* privileges used implicitly for each access.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: How would you sandbox a program on a DAC system (e.g., Unix)?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Must allocate a new principal (user ID):'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Otherwise, existing principal's privileges will be used implicitly!
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Prevent process from reading/writing other files:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Change permissions on every file system-wide? Cumbersome, impractical, requires
+    root.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Even then, new program can create important world-writable file.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Alternative: `chroot` (again, have to be root).'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Allow process to read/write a certain file:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Set permissions on that file appropriately, if possible.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Link/move file into the `chroot` directory for the sandbox?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Prevent process from accessing the network:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No real answer for this in Unix.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Maybe configure firewall? But not really process-specific.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Allow process to access particular network connection:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: See above, no great plan for this in Unix.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Control what processes a sandbox can kill / debug / etc:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can run under the same UID, but that may be too many privileges.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: That UID might also have other privileges..
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Problem:** only root can create new principals, on most DAC systems.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., Unix, Windows.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Problem:** some objects might not have a clear configurable access control
+    list.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Unix: processes, network, ...'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Problem:** permissions on files might not map to policy you want for sandbox.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can sort-of work around using `chroot` for files, but awkward.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Related problem:** performing some operations with a subset of privileges.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Recall example with Alice emailing a file out of shared group directory.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '"Confused deputy problem": program is a "deputy" for multiple principals.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*One solution:* check if group permissions allow access (manual, error-prone).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Alternative solution:* explicitly specify privileges for each operation.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Capabilities can help: capability (e.g., fd) combines object + privileges.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some Unix features incompat. w/ pure capability design (symlinks by name).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Plan 2: Mandatory Access Control (MAC).'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In DAC, security policy is set by applications themselves (chmod, etc).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: MAC tries to help users / administrators specify policies for applications.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*"Mandatory"* in the sense that applications can''t change this policy.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Traditional MAC systems try to enforce military classified levels.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Example:* Ensure top-secret programs can''t reveal classified information.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*Note:* many systems have aspects of both DAC + MAC in them.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., Unix user IDs are "DAC", but one can argue firewalls are "MAC".
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Doesn't really matter -- good to know the extreme points in design space.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Windows Mandatory Integrity Control (MIC) / LOMAC in FreeBSD.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Keeps track of an "integrity level" for each process.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Files have a minimum integrity level associated with them.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Process cannot write to files above its integrity level.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Internet Explorer in Windows Vista runs as low integrity, cannot overwrite system
+    files.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: FreeBSD LOMAC also tracks data read by processes.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Similar to many information-flow-based systems.)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When process reads low-integrity data, it becomes low integrity too.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Transitive, prevents adversary from indirectly tampering with files.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Not immediately useful for sandboxing: only a fixed number of levels.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SElinux
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Idea:* system administrator specifies a system-wide security policy.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Policy file specifies whether each operation should be allowed or denied.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To help decide whether to allow/deny, files labeled with "types".
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Yet another integer value, stored in inode along w/ uid, gid, ..)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Mac OS X sandbox ("Seatbelt") and Linux `seccomp_filter`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Application specifies policy for whether to allow/deny each syscall.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Written in LISP for MacOSX's mechanism, or in BPF for Linux's.)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can be difficult to determine security impact of syscall based on args.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What does a pathname refer to? Symlinks, hard links, race conditions, ..
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Although MacOSX's sandbox provides a bit more information)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Advantage:** any user can sandbox an arbitrary piece of code, finally!'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Limitation:** programmer must separately write the policy + application code.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Limitation:** some operations can only be filtered at coarse granularity.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., POSIX `shm` in MacOSX's filter language, according to Capsicum paper.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Limitation: policy language might be awkward to use, stateless, etc.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: E.g., what if app should have exactly one connection to some server?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Note:* `seccomp_filter` is quite different from regular/old `seccomp`, and
+    the Capsicum paper talks about the regular/old `seccomp`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is it a good idea to separate policy from application code?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Depends on overall goal.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Potentially good if user/admin wants to look at or change policy.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Problematic if app developer needs to maintain both code and policy.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For app developers, might help clarify policy.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Less-centralized "MAC" systems (Seatbelt, `seccomp`) provide a compromise.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**TODO:** Also take a look at [The Chinese Wall Security Policy](papers/chinese-wall-sec-pol.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Plan 3: Capabilities (Capsicum).'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Different plan for access control: capabilities.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If process has a handle for some object ("capability"), can access it.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`Capability --> Object`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No separate question of privileges, access control lists, policies, etc.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'E.g.: file descriptors on Unix are a capability for a file.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Program can't make up a file descriptor it didn't legitimately get.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Why not?** OS creates and manages FDs. No way for an application to forge
+    a file descriptor. It would have to write OS memory via a vulnerability.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Once file is open, can access it; checks happened at open time.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can pass open files to other processes.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: FDs also help solve "time-of-check to time-of-use" (TOCTTOU) bugs.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Capabilities are usually ephemeral: not part of on-disk inode.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Whatever starts the program needs to re-create capabilities each time.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Global namespaces
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why are these guys so fascinated with eliminating global namespaces?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Global namespaces require some access control story (e.g., ambient privileges).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard to control sandbox's access to objects in global namespaces.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kernel changes
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Just to double-check: why do we need kernel changes?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can we implement everything in a library (and LD_PRELOAD it)?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need OS to deny the application access to the global namespace once it entered
+    capability mode
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Represent more things as file descriptors: processes (pdfork).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Good idea in general.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Capability mode:* once process enters *cap mode*, cannot leave it (including
+    all children).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In capability mode, can only use file descriptors -- no global namespaces.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Cannot open files by full path name: no need for `chroot` as in OKWS.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can still open files by relative path name, given fd for dir (`openat`).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Cannot use ".." in path names or in symlinks: why not?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In principle, ".." might be fine, as long as ".." doesn't go too far.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Hard to enforce correctly.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Hypothetical design:'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Prohibit looking up ".." at the root capability.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No more ".." than non-".." components in path name, ignoring ".".
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Assume a process has capability `C1` for `/foo`.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Race condition, in a single process with 2 threads:'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Race condition example:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: '...'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Do Unix permissions still apply?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Yes -- can't access all files in dir just because you have a cap for dir.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But intent is that sandbox shouldn't rely on Unix permissions.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For file descriptors, add a wrapper object that stores allowed operations.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where does the kernel check capabilities?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: One function in kernel looks up fd numbers -- modified it to check caps.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Also modified `namei` function, which looks up path names.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Good practice:** look for narrow interfaces, otherwise easy to miss checks'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: libcapsicum
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why do application developers need this library?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Biggest functionality: starting a new process in a sandbox.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: fd lists
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Mostly a convenient way to pass lots of file descriptors to child process.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Name file descriptors by string instead of hard-coding an fd number
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`cap_enter()` vs `lch_start()`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are the advantages of sandboxing using `exec` instead of `cap_enter`?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Leftover data in memory: e.g., private keys in OpenSSL/OpenSSH.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Leftover file descriptors that application forgot to close.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Figure 7 in paper: `tcpdump` had privileges on `stdin`, `stdout`, `stderr`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Figure 10 in paper: `dhclient` had a raw socket, `syslogd` pipe, lease file.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Advantages:** any process can create a new sandbox.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Even a sandbox can create a sandbox.)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Advantages:** fine-grained control of access to resources (if they map to
+    FDs).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Files, network sockets, processes.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Disadvantage:** weak story for keeping track of access to persistent files.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Disadvantage:** prohibits global namespaces, requires writing code differently.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Alternative capability designs: pure capability-based OS (KeyKOS, etc).'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Kernel only provides a message-passing service.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Message-passing channels (very much like file descriptors) are capabilities.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Every application has to be written in a capability style.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Capsicum claims to be more pragmatic: some applications need not be changed.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Linux capabilities: solving a different problem.'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Trying to partition root's privileges into finer-grained privileges.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Represented by various capabilities: `CAP_KILL, CAP_SETUID`, `CAP_SYS_CHROOT`,
+    ..'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Process can run with a specific capability instead of all of root's privs.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Ref: [capabilities(7)](http://linux.die.net/man/7/capabilities)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using Capsicum in applications
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '*Plan:* ensure sandboxed process doesn''t use path names or other global NSes.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For every directory it might need access to, open FD ahead of time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To open files, use `openat()` starting from one of these directory FDs.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: .. programs that open lots of files all over the place may be cumbersome.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`tcpdump`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '2-line version: just `cap_enter()` after opening all FDs.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Used `procstat` to look at resulting capabilities.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '8-line version: also restrict `stdin`/`stdout`/`stderr`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why? Avoid reading `stderr` log, changing terminal settings, ...
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`dhclient`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Already privilege-separated, using Capsicum to reinforce sandbox (2 lines).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`gzip`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Fork/exec sandboxed child process, feed it data using RPC over pipes.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Non-trivial changes, mostly to marshal/unmarshal data for RPC: 409 LoC.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Interesting bug:* forgot to propagate compression level at first.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`Chromium`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Already privilege-separated on other platforms (but not on FreeBSD).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: ~100 LoC to wrap file descriptors for sandboxed processes.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`OKWS`'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are the various answers to the homework question?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Does Capsicum achieve its goals?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: How hard/easy is it to use?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using Capsicum in an application almost always requires app changes.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Many applications tend to open files by pathname, etc.)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'One exception: Unix pipeline apps (filters) that just operate on FDs.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Easier for streaming applications that process data via FDs.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other sandboxing requires similar changes (e.g., `dhclient`, Chromium).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For existing applications, lazy initialization seems to be a problem.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No general-purpose solution -- either change code or initialize early.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Suggested plan: sandbox and see what breaks.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Might be subtle: `gzip` compression level bug.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are the security guarantees it provides?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Guarantees provided to app developers: sandbox can operate only on open FDs.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Implications depend on how app developer partitions application, FDs.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: User/admin doesn't get any direct guarantees from Capsicum.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Guarantees assume no bugs in FreeBSD kernel (lots of code), and that the Capsicum
+    developers caught all ways to access a resource not via FDs.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are the performance overheads? (CPU, memory)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Minor overheads for accessing a file descriptor.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Setting up a sandbox using `fork`/`exec` takes `O(1msec)`, non-trivial.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Privilege separation can require RPC / message-passing, perhaps noticeable.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adoption?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In FreeBSD's kernel now, enabled by default (as of FreeBSD 10).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A handful of applications have been modified to use Capsicum. `dhclient`, `tcpdump`,
+    and a few more since the paper was written. [Ref](http://www.cl.cam.ac.uk/research/security/capsicum/freebsd.html)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Casper daemon to help applications perform non-capability operations. E.g.,
+    DNS lookups, look up entries in `/etc/passwd`, etc. [Ref](http://people.freebsd.org/~pjd/pubs/Capsicum_and_Casper.pdf)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There's a port of Capsicum to Linux (but not in upstream kernel repo).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What applications wouldn't be a good fit for Capsicum?
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Apps that need to control access to non-kernel-managed objects.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'E.g.: X server state, DBus, HTTP origins in a web browser, etc.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'E.g.: a database server that needs to ensure DB file is in correct format.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Capsicum treats pipe to a user-level server (e.g., X server) as one cap.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Apps that need to connect to specific TCP/UDP addresses/ports from sandbox.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Capsicum works by only allowing operations on existing open FDs.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need some other mechanism to control what FDs can be opened.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Possible solution: helper program can run outside of capability mode, open
+    TCP/UDP sockets for sandboxed programs based on policy.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: References
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[Apple sandbox guide](http://reverse.put.as/wp-content/uploads/2011/09/Apple-Sandbox-Guide-v1.0.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[seccomp_filter](http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/prctl/seccomp_filter.txt;hb=HEAD)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Mandatory integrity control](http://en.wikipedia.org/wiki/Mandatory_Integrity_Control)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[The Chinese Wall Security Policy](papers/chinese-wall-sec-pol.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

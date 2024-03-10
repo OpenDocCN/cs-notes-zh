@@ -1,0 +1,1369 @@
+- en: OKWS
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: '**Note:** These lecture notes were slightly modified from the ones posted on
+    the 6.858 [course website](http://css.csail.mit.edu/6.858/2014/schedule.html)
+    from 2014.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Today''s lecture: how to build a secure web server on Unix. The design of our
+    lab web server, zookws, is inspired by OKWS.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Privilege separation
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Big security idea
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Split system into modules, each with their own privilege
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Idea:** if one module is compromised, then other modules won''t be'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Use often:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Virtual machines (e.g., run web site in its own virtual machine)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: SSH (seperates sshd, agent)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Challenges:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Modules need to share
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need OS support
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to use OS carefully to set things up correctly
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Performance
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OKWS
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Interesting case study of privilege separation
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Lots of sharing between services
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Strict partitioning doesn't work
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Lots of code
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not widely used outside of OKcupid
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Many web sites have their privilege separation plan
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But no papers describing their plans
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Background: security and protection in Unix'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Typical principals: user IDs, group IDs (32-bit integers).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each process has a user ID (uid), and a list of group IDs (gid + grouplist).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For mostly-historical reasons, a process has a gid + extra grouplist.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Superuser principal (root) represented by `uid=0`, bypasses most checks.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are the objects + ops in Unix, and how does the OS do access control?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Files, directories.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'File operations: read, write, execute, change perms, ..'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Directory operations: lookup, create, remove, rename, change perms, ..'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each inode has an owner user and group.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each inode has read, write, execute perms for user, group, others.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Typically represented as a bit vector written base 8 (octal);
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: octal works well because each digit is 3 bits (read, write, exec).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Who can change permissions on files?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only user owner (process UID).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Hard link to file: need write permission to file.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Possible rationale: quotas.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Possible rationale: prevent hard-linking `/etc/passwd` to `/var/mail/root`
+    with a world-writable `/var/mail`.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Execute for directory means being able to lookup names (but not ls).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Checks for process opening file `/etc/passwd`:'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Must be able to look up `'etc'` in `/`, `'passwd'` in `/etc`.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Must be able to open `/etc/passwd` (read or read-write).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Suppose you want file readable to intersection of group1 and group2.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is it possible to implement this in Unix?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: File descriptors.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: File access control checks performed at file open.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Once process has an open file descriptor, can continue accessing.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processes can pass file descriptors (via Unix domain sockets).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Processes.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What can you do to a process?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Debug (ptrace), send signal, wait for exit & get status,
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Debugging, sending signals: must have same UID (almost).'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Various exceptions, this gets tricky in practice.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Waiting / getting exit status: must be parent of that process.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Memory.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: One process cannot generally name memory in another process.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Exception: debug mechanisms.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Exception: memory-mapped files.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Networking.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Operations.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Bind to a port.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Connect to some address.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Read/write a connection.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Send/receive raw packets.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Rules:'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: only root (UID 0) can bind to ports below 1024;
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (e.g., arbitrary user cannot run a web server on port 80.)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: only root can send/receive raw packets.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: any process can connect to any address.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: can only read/write data on connection that a process has an fd for.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Additionally, firewall imposes its own checks, unrelated to processes.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does the principal of a process get set?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'System calls: `setuid()`, `setgid()`, `setgroups()`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Only root (UID 0) can call these system calls (to first approximation).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where does the user ID, group ID list come from?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: On a typical Unix system, login program runs as root (UID 0)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Checks supplied user password against `/etc/shadow`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Finds user's UID based on `/etc/passwd`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Finds user's groups based on `/etc/group`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Calls `setuid()`, `setgid()`, `setgroups()` before running user's shell
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How do you regain privileges after switching to a non-root user?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Could use file descriptor passing (but have to write specialized code)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Kernel mechanism: *setuid/setgid binaries*.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When the binary is executed, set process UID or GID to binary owner.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Specified with a special bit in the file's permissions.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For example, `su` / `sudo` binaries are typically setuid root.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Even if your shell is not root, can run `"su otheruser"`
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`su` process will check passwd, run shell as `otheruser` if OK.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Many such programs on Unix, since root privileges often needed.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why might setuid-binaries be a bad idea, security-wise?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Many ways for adversary (caller of binary) to manipulate process.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In Unix, exec'ed process inherits environment vars, file descriptors, ..
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Libraries that a setuid program might use not sufficiently paranoid
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Historically, many vulnerabilities (e.g. pass `$LD_PRELOAD`, ..)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How to prevent a malicious program from exploiting setuid-root binaries?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Kernel mechanism: *chroot*'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Changes what '/' means when opening files by path name.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Cannot name files (e.g. setuid binaries) outside chroot tree.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For example, OKWS uses chroot to restrict programs to `/var/okws/run`, ..
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Kernel also ensures that '/../' does not allow escape from chroot.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why chroot only allowed for root?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: setuid binaries (like `su`) can get confused about what's `/etc/passwd`.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: many kernel implementations (inadvertently?) allow recursive calls to `chroot()`
+    to escape from chroot jail, so chroot is not an effective security mechanism for
+    a process running as root.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why hasn't chroot been fixed to confine a root process in that dir?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Root can write kern mem, load kern modules, access disk sectors, ..
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Background: traditional web server architecture (Apache)'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Apache runs `N` identical processes, handling HTTP requests.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: All processes run as user `'www'`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Application code (e.g. PHP) typically runs inside each of `N` apache processes.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Any accesses to OS state (files, processes, ...) performed by `www`'s UID.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Storage: SQL database, typically one connection with full access to DB.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Database principal is the entire application.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Problem: if any component is compromised, adversary gets all the data.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What kind of attacks might occur in a web application?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Unintended data disclosure (getting page source code, hidden files, ..)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Remote code execution (e.g., buffer overflow in Apache)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Buggy application code (hard to write secure PHP code), e.g. SQL injection
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Attacks on web browsers (cross-site scripting attacks)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Back to OKWS: what''s their application / motivation?'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Dating web site: worried about data secrecy.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not so worried about adversary breaking in and sending spam.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Lots of server-side code execution: matching, profile updates, ...'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Must have sharing between users (e.g. matching) -- cannot just partition.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Good summary of overall plan:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*"aspects most vulnerable to attack are least useful to attackers"*'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why is this hard?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Unix makes it tricky to reduce privileges (chroot, UIDs, ..)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Applications need to share state in complicated ways.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Unix and SQL databases don't have fine-grained sharing control mechanisms.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does OKWS partition the web server?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Figure 1 in paper.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does a request flow in this web server?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`okd -> oklogd`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`-> pubd`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`-> svc -> dbproxy`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`-> oklogd`'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does this design map onto physical machines?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Probably many front-end machines (`okld`, `okd`, `pubd`, `oklogd`, `svc`)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Several DB machines (`dbproxy`, DB)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How do these components interact?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '`okld` sets up `socketpair`s (bidirectional pipes) for each service.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: One socketpair for control RPC requests (e.g., "get a new log socketpair").
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: One socketpair for logging (`okld` has to get it from `oklogd` first via RPC).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'For HTTP services: one socketpair for forwarding HTTP connections.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'For `okd`: the server-side FDs for HTTP services'' socketpairs (HTTP+RPC).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`okd` listens on a separate socket for control requests (*repub*, *relaunch*).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Seems to be port 11277 in Figure 1, but a Unix domain socket in OKWS code.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For *repub*, `okd` talks to `pubd` to generate new templates,
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: then sends generated templates to each service via RPC control channel.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Services talk to DB proxy over TCP (connect by port number).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does OKWS enforce isolation between components in Figure 1?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Each service runs as a separate UID and GID.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: chroot used to confine each process to a separate directory (almost).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Components communicate via pipes (or rather, Unix domain socket pairs).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: File descriptor passing used to pass around HTTP connections.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What's the point of `okld`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why isn't `okld` the same as `okd`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why does `okld` need to run as root? (Port 80, chroot/setuid.)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What does it take for `okld` to launch a service?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Create socket pairs
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Get new socket to `oklogd`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`fork`, `setuid/setgid`, `exec` the service'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Pass control sockets to `okd`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What's the point of `oklogd`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What's the point of `pubd`?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why do we need a database proxy?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Ensure that each service cannot fetch other data, if it is compromised.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: DB proxy protocol defined by app developer, depending on what app requires.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: One likely-common kind of proxy is a templatized SQL query.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Proxy enforces overall query structure (select, update),
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: but allows client to fill in query parameters.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where does the 20-byte token come from?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Passed as arguments to service.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Who checks the token?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: DB proxy has list of tokens (& allowed queries?)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Who generates token?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Not clear; manual by system administrator?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What if token disclosed?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Compromised component could issue queries.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Table 1: why are all services and `okld` in the same chroot?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is it a problem?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How would we decide?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are the readable, writable files there?
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Readable: shared libraries containing service code.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Writable: each service can write to its own `/cores/<uid>`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where's the config file? `/etc/okws_config`, kept in memory by `okld`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`oklogd` & `pubd` have separate chroots because they have important state:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`oklogd`''s chroot contains the log file, want to ensure it''s not modified.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`pubd`''s chroot contains the templates, want to avoid disclosing them (?).'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why does OKWS need a separate GID for every service?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to execute binary, but file ownership allows chmod.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Solution: binaries owned by root, service is group owner, mode 0410.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why 0410 (user read, group execute), and not 0510 (user read & exec)?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why not process per user?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is per user strictly better?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: user X service?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Per-service isolation probably made sense for okcupid given their apps.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (i.e., perhaps they need a lot of sharing between users anyway?)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Per-user isolation requires allocating UIDs per user, complicating `okld`
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: and reducing performance (though may still be OK for some use cases).
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Does OKWS achieve its goal?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: What attacks from the list of typical web attacks does OKWS solve, and how?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Most things other than XSS are addressed.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: XSS sort-of addressed through using specialized template routines.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What's the effect of each component being compromised, and "attack surface"?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`okld`: root access to web server machine, but maybe not to DB.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'attack surface: small (no user input other than svc exit).'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`okd`: intercept/modify all user HTTP reqs/responses, steal passwords.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'attack surface: parsing the first line of HTTP request; control requests.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`pubd`: corrupt templates, leverage to maybe exploit bug in some service?'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'attack surface: requests to fetch templates from okd.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`oklogd`: corrupt/ignore/remove/falsify log entries'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'attack surface: log messages from okd, okld, svcs'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`service`: send garbage to user, access data for svc (modulo dbproxy)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'attack surface: HTTP requests from users (+ control msgs from okd)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`dbproxy`: access/change all user data in the database it''s talking to'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'attack surface: requests from authorized services'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: requests from unauthorized services (easy to drop)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: OS kernel is part of the attack surface once a single service is compromised.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Linux kernel vulnerabilities rare, but still show up several times a year.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'OKWS assumes developer does the right thing at design level (maybe not impl):'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Split web application into separate services (not clump all into one).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Define precise protocols for DB proxy (otherwise any service gets any data).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Performance?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Seems better than most alternatives.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Better performance under load (so, resists DoS attacks to some extent)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does OKWS compare to Apache?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Overall, better design.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`okld` runs as root, vs. nothing in Apache, but probably minor.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Neither has a great solution to client-side vulnerabilities (XSS, ..)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How might an adversary try to compromise a system like OKWS?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Exploit buffer overflows or other vulnerabilities in C++ code.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Find a SQL injection attack in some `dbproxy`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Find logic bugs in service code.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Find cross-site scripting vulnerabilities.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How successful is OKWS?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Problems described in the paper are still pretty common.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: okcupid.com still runs OKWS, but doesn't seem to be used by other sites.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: C++ might not be a great choice for writing web applications.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For many web applications, getting C++ performance might not be critical.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Design should be applicable to other languages too (Python, etc).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Infact, `zookws` for labs in 6.858 is inspired by OKWS, runs Python code.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: DB proxy idea hasn't taken off, for typical web applications.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: But DB proxy is critical to restrict what data a service can access in OKWS.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Requires developers to define these APIs: extra work, gets in the way.'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can be hard to precisely define the allowed DB queries ahead of time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: (Although if it's hard, might be a flag that security policy is fuzzy.)
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some work on privilege separation for Apache (though still hard to use).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Unix makes it hard for non-root users to manipulate user IDs.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Performance is a concern (running a separate process for each request).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`scripts.mit.edu` has a similar design, running scripts under different UIDs.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Mostly worried about isolating users from one another.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Paranoid web app developer can create separate locker for each component.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sensitive systems do partitioning at a coarser granularity.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Credit card processing companies split credit card data vs. everything else.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Use virtual machines or physical machine isolation to split apps, DBs, ..
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How could you integrate modern Web application frameworks with OKWS?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Need to help okd figure out how to route requests to services.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to implement DB proxies, or some variant thereof, to protect data.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Depends on how amenable the app code is to static analysis.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Or need to ask programmer to annotate services w/ queries they can run.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need to ensure app code can run in separate processes (probably OK).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: References
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[http://css.csail.mit.edu/6.858/2014/readings/setuid.pdf](http://css.csail.mit.edu/6.858/2014/readings/setuid.pdf)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[http://httpd.apache.org/docs/trunk/suexec.html](http://httpd.apache.org/docs/trunk/suexec.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
