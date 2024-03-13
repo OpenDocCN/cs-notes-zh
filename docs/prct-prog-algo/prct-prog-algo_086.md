@@ -10,7 +10,7 @@
 
 +   *泛型.* 集合 ADT 的一个重要特征是我们应该能够将它们用于任何类型的数据。一种名为 *泛型* 的特定 Java 机制实现了这一功能。在我们的每个 API 中类名后面的 `<Item>` 表示将 `Item` 命名为 *类型参数*，一个用于客户端的具体类型的符号占位符。你可以将 `Stack<Item>` 理解为“项目的堆栈”。例如，你可以编写如下代码
 
-    ```
+    ```java
     Stack<String> stack = new Stack<String>();
     stack.push("Test");
     ...
@@ -22,7 +22,7 @@
 
 +   *自动装箱.* 类型参数必须实例化为引用类型，因此 Java 在赋值、方法参数和算术/逻辑表达式中自动在原始类型和其对应的包装类型之间转换。这种转换使我们能够在原始类型中使用泛型，就像以下代码中所示：
 
-    ```
+    ```java
     Stack<Integer> stack = new Stack<Integer>();
     stack.push(17);        // autoboxing (int -> Integer)
     int i = stack.pop();   // unboxing   (Integer -> int)
@@ -33,7 +33,7 @@
 
 +   *可迭代集合.* 对于许多应用程序，客户端的要求只是以某种方式处理每个项目，或者在集合中 *迭代*。Java 的 *foreach* 语句支持这种范例。例如，假设 `collection` 是一个 `Queue<Transaction>`。那么，如果集合是可迭代的，客户端可以通过一条语句打印交易列表：
 
-    ```
+    ```java
     for (Transaction t : collection)
        StdOut.println(t);
 
@@ -71,7 +71,7 @@
 
 *链表* 是一种递归数据结构，要么为空（*null*），要么是指向具有通用项和指向链表的节点的引用。要实现链表，我们从定义节点抽象的*嵌套类*开始。
 
-```
+```java
 private class Node {
    Item item;
    Node next;
@@ -89,7 +89,7 @@ private class Node {
 
 +   *遍历。* 以下是遍历链表中节点的习惯用法。
 
-    ```
+    ```java
     for (Node x = first; x != null; x = x.next) {
        // process x.item
     }
@@ -108,7 +108,7 @@ private class Node {
 
 要考虑实现迭代的任务，我们从一个客户端代码片段开始，该代码打印字符串集合中的所有项目，每行一个：
 
-```
+```java
 Stack<String> collection = new Stack<String>();
 ...
 for (String s : collection)
@@ -119,7 +119,7 @@ for (String s : collection)
 
 这个*foreach*语句是以下`while`语句的简写：
 
-```
+```java
 Iterator<String> i = collection.iterator();
 while (i.hasNext()) { 
    String s = i.next();
@@ -132,21 +132,21 @@ while (i.hasNext()) {
 
 +   包含以下`import`语句，以便我们的代码可以引用 Java 的[java.util.Iterator](http://download.oracle.com/javase/6/docs/api/java/util/Iterator.html)接口：
 
-    ```
+    ```java
     import java.util.Iterator;
 
     ```
 
 +   将以下内容添加到类声明中，承诺提供一个`iterator()`方法，如[Java.lang.Iterable](http://download.oracle.com/javase/6/docs/api/java/lang/Iterable.html)接口中指定的：
 
-    ```
+    ```java
     implements Iterable<Item>
 
     ```
 
 +   实现一个返回实现`Iterator`接口的类的对象的方法`iterator()`：
 
-    ```
+    ```java
     public Iterator<Item> iterator() {
         return new LinkedIterator();
     }
@@ -163,7 +163,7 @@ while (i.hasNext()) {
 
 **Q.** 自动装箱如何处理以下代码片段？
 
-```
+```java
 Integer a = null;
 int b = a;
 
@@ -173,7 +173,7 @@ int b = a;
 
 **Q.** 为什么第一组语句打印`true`，但第二组打印`false`？
 
-```
+```java
 Integer a1 = 100;
 Integer a2 = 100;
 System.out.println(a1 == a2);   // true
@@ -208,7 +208,7 @@ System.out.println(c1 == c2);   // false
 
 **Q.** 当我尝试创建泛型数组时为什么会出现“无法创建泛型数组”的错误？
 
-```
+```java
 public class ResizingArrayStack<Item> {
    Item[] a = new Item[1];
 
@@ -240,7 +240,7 @@ public class ResizingArrayStack<Item> {
 
 **Q.** 以下代码片段有什么问题？
 
-```
+```java
 String s;
 for (s : listOfStrings)
    System.out.println(s);
@@ -255,7 +255,7 @@ for (s : listOfStrings)
 
 1.  给出`java Stack`对输入打印的输出
 
-    ```
+    ```java
     it was - the best - of times - - - it	was - the - -
 
     ```
@@ -264,7 +264,7 @@ for (s : listOfStrings)
 
 1.  假设执行了一系列交错的（栈）*push*和*pop*操作。push 操作按顺序将整数 0 到 9 推入栈；pop 操作打印返回值。以下哪种序列不可能发生？
 
-    ```
+    ```java
     (a)  4 3 2 1 0 9 8 7 6 5
 
     (b)  4 6 8 7 5 3 2 9 0 1
@@ -289,7 +289,7 @@ for (s : listOfStrings)
 
 1.  当`n`为 50 时，以下代码片段打印什么？给出当给定正整数`n`时它的高级描述。
 
-    ```
+    ```java
     Stack<Integer> s = new Stack<Integer>();
     while (n > 0) {
        s.push(n % 2);
@@ -305,7 +305,7 @@ for (s : listOfStrings)
 
 1.  以下代码片段对队列`q`做了什么？
 
-    ```
+    ```java
     Stack<String> s = new Stack<String>();
     while(!q.isEmpty())
        s.push(q.dequeue());
@@ -324,7 +324,7 @@ for (s : listOfStrings)
 
 1.  假设客户端执行了一系列交错的（队列）*enqueue*和*dequeue*操作。enqueue 操作按顺序将整数 0 到 9 放入队列；dequeue 操作打印返回值。以下哪种序列不可能发生？
 
-    ```
+    ```java
     (a)  0 1 2 3 4 5 6 7 8 9
 
     (b)  4 6 8 7 5 3 2 9 0 1 
@@ -347,7 +347,7 @@ for (s : listOfStrings)
 
 1.  **约瑟夫问题。** 在古代的约瑟夫问题中，*N* 个人陷入困境，并同意采取以下策略来减少人口。 他们围成一个圆圈（位置从 0 到 N-1 编号），沿着圆圈进行，每隔 M 个人就淘汰一个，直到只剩下一个人。 传说中约瑟夫找到了一个位置可以避免被淘汰。编写一个 `Queue` 客户端 Josephus.java，从命令行获取 M 和 N，并打印出人们被淘汰的顺序（从而向约瑟夫展示在圆圈中应该坐在哪里）。
 
-    ```
+    ```java
      % java Josephus 2 7
     1 3 5 0 4 2 6
 
@@ -357,7 +357,7 @@ for (s : listOfStrings)
 
     *递归解决方案:* 为从给定 `Node` 开始的链表创建一个复制构造函数，并使用它来创建新的栈。
 
-    ```
+    ```java
     Node(Node x) {
        item = x.item;
        if (x.next != null) next = new Node(x.next);
@@ -369,7 +369,7 @@ for (s : listOfStrings)
 
     *非递归解决方案:* 为单个 `Node` 对象创建一个复制构造函数。
 
-    ```
+    ```java
     Node(Node x) { this.item = x.item; this.next = x.next; }
 
     public Stack(Stack<Item> s) {
@@ -454,7 +454,7 @@ for (s : listOfStrings)
 
 1.  **冒号。** 有经验的程序员知道，像下面这样写一个循环通常是一个坏主意
 
-    ```
+    ```java
     for (double x = 0.0; x <= N; x += 0.1) {
        ..
     }
@@ -463,7 +463,7 @@ for (s : listOfStrings)
 
     由于浮点精度的结果，如果 N = xxx，则循环将执行 10N 次，如果 N = yyy，则执行 10N + 1 次。创建一个数据类型`Mesh`，使得`x`从`left`到`right`以`delta`的大小增量。假设`right >= left`，则循环应该*恰好*执行`1 + floor((right - left) / delta)`次。
 
-    ```
+    ```java
     for (double x : new Mesh(left, right, delta)) {
        ..
     }
@@ -486,7 +486,7 @@ for (s : listOfStrings)
 
 1.  **将列表添加到自身。** 以下代码片段的结果是什么？
 
-    ```
+    ```java
     List list1 = new ArrayList();
     List list2 = new ArrayList();
     list1.add(list2);
@@ -507,7 +507,7 @@ for (s : listOfStrings)
 
 1.  以下代码会按升序打印出整数 0 到 9 吗？
 
-    ```
+    ```java
     int[] vals = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     for (int val : vals) {
        System.out.print(val + " ");
@@ -543,7 +543,7 @@ for (s : listOfStrings)
 
     *答案*：对于每个查询词，创建一个在文档中出现的索引的排序列表。按照 2 到 k 的顺序扫描列表，删除每个列表前面的索引，直到生成的 k 个列表的第一个元素按升序排列。
 
-    ```
+    ```java
     q[1]: 50 123 555 1002 1066
     q[2]: 33 44 93 333 606 613
     q[3]: 60 200
@@ -604,7 +604,7 @@ for (s : listOfStrings)
 
 1.  以下代码片段做什么？
 
-    ```
+    ```java
     Queue<Integer> q = new Queue<Integer>();
     q.enqueue(0);
     q.enqueue(1);
@@ -624,7 +624,7 @@ for (s : listOfStrings)
 
 1.  假设您在 Stack.java 的链表实现中使用以下代码实现`push`。错误在哪里？
 
-    ```
+    ```java
     public void push(Item item) {
        Node second = first;
        Node first = new Node();

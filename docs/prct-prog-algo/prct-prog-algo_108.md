@@ -77,7 +77,7 @@
 
 1.  **书的索引。** 编写一个程序，从标准输入中读取一个文本文件，并编制一个按字母顺序排列的索引，显示哪些单词出现在哪些行，如下所示的输入。忽略大小写和标点符号。
 
-    ```
+    ```java
     It was the best of times,
     it was the worst of times,
     it was the age of wisdom,

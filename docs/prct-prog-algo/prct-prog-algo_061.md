@@ -12,7 +12,7 @@
 
 要讨论数据类型，我们需要介绍一些术语。为此，我们从以下代码片段开始：
 
-```
+```py
 a = 1234
 b = 99
 c = a + b
@@ -49,7 +49,7 @@ Python 程序中的所有数据值都由*对象*和对象之间的关系表示�
 
 *标识符*是一个名称的 Python 代码表示。每个标识符是一个字母、数字和下划线的序列，第一个不是数字。以下关键字是保留的，你不能将它们用作标识符：
 
-```
+```py
 False      class      finally    is         return
 None       continue   for        lambda     try
 True       def        from       nonlocal   while
@@ -108,7 +108,7 @@ break      except     in         raise
 
 Python 提供了内置函数`str()`来将数字转换为字符串。我们最常用的字符串连接运算符是将计算结果与`stdio.write()`和`stdio.writeln()`一起链在一起进行输出，通常与`str()`函数一起使用，就像这个例子中一样：
 
-```
+```py
 stdio.writeln(str(a) + ' + ' + str(b) + ' = ' + str(a+b))
 
 ```
@@ -233,7 +233,7 @@ Python 包括用于浮点数的常见算术运算符，包括加法`+`，减法`
 
 **A.** 是的。例如，`'hello'` 和 `"hello"` 是相同的文字。双引号可用于指定包含单引号的字符串，这样你就不需要转义它们。例如，`'Python\'s'` 和 `"Python's"` 是相同的字符串文字。你也可以使用匹配的三引号来表示多行字符串。例如，以下代码创建一个两行字符串并将其赋值给变量 `s`：
 
-```
+```py
 s = """Python's "triple" quotes are useful to
 specify string literals that span multiple lines
 """
@@ -336,7 +336,7 @@ specify string literals that span multiple lines
 
 **A.** 这是一个诡计问题。与许多编程语言（如 Java）中的变量不同，Python 变量没有类型。相反，变量绑定的对象才有类型。你可以将同一个变量绑定到不同类型的对象，就像这个代码片段中：
 
-```
+```py
 x = 'Hello, World'
 x = 17
 x = True
@@ -349,7 +349,7 @@ x = True
 
 **A.** Python 提供了用于此目的的内置函数。函数`type()`返回对象的类型；函数`id()`返回对象的标识；函数`repr()`返回对象的一个明确的字符串表示。
 
-```
+```py
 >>> import math
 >>> a = math.pi
 >>> id(a)
@@ -391,7 +391,7 @@ x = True
 
 1.  假设`a`和`b`是整数。以下语句序列做什么？绘制该计算的对象级跟踪。
 
-    ```
+    ```py
     t = a
     b = t
     a = b
@@ -404,7 +404,7 @@ x = True
 
 *解决方案（来自 Hassan Alam 和 Lee Jong Gil）：*
 
-> ```
+> ```py
 > import sys
 > import math
 > 
@@ -421,14 +421,14 @@ x = True
 
 1.  假设`a`和`b`是布尔值。展示这个表达式的计算结果为`True`：
 
-    ```
+    ```py
     (not (a and b) and (a or b)) or ((a and b) or not (a or b))
 
     ```
 
 1.  假设`a`和`b`是整数。简化以下表达式：
 
-    ```
+    ```py
     (not (a < b) and not (a > b))
 
     ```
@@ -437,7 +437,7 @@ x = True
 
 1.  每个语句会写入什么？解释每个结果。
 
-    ```
+    ```py
     stdio.writeln(2 + 3)
     stdio.writeln(2.2 + 3.3)
     stdio.writeln('2' + '3')
@@ -461,7 +461,7 @@ x = True
 
 1.  假设`a`是`3.14159`。每个语句会写入什么？解释每个结果。
 
-    ```
+    ```py
     stdio.writeln(a)
     stdio.writeln(a + 1.0)
     stdio.writeln(8 // int(a))
@@ -480,7 +480,7 @@ x = True
 
 1.  在执行以下序列后，`a`的值是多少：
 
-    ```
+    ```py
     a = 1                 a = True              a = 2
     a = a + a             a = not a             a = a * a
     a = a + a             a = not a             a = a * a
@@ -490,7 +490,7 @@ x = True
 
 1.  一个物理学生在使用代码时得到了意外的结果
 
-    ```
+    ```py
     force = G * mass1 * mass2 / radius * radius
 
     ```
@@ -499,21 +499,21 @@ x = True
 
     *解决方案:* 代码除以`r`，然后乘以`r`。实际上应该除以`r`的平方。使用括号：
 
-    ```
+    ```py
     F = G * mass1 * mass2 / (r * r)
 
     ```
 
     或者使用乘方运算符：
 
-    ```
+    ```py
     F = G * mass1 * mass2 / r ** 2
 
     ```
 
     或者，为了更清晰起见，同时使用括号和乘方运算符：
 
-    ```
+    ```py
     F = (G * mass1 * mass2) / (r ** 2)
 
     ```
@@ -608,7 +608,7 @@ x = True
 
     这是一个示例运行：
 
-    > ```
+    > ```py
     > $ python rgbtocmyk.py 75 0 130       # indigo
     > cyan    = 0.4230769230769229
     > magenta = 1.0

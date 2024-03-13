@@ -106,7 +106,7 @@
 
 1.  给出以下代码片段的运行时间的增长顺序（作为 *N* 的函数）：
 
-    1.  ```
+    1.  ```java
         int sum = 0;
         for (int n = N; n > 0; n /= 2)
            for (int i = 0; i < n; i++) 
@@ -114,7 +114,7 @@
 
         ```
 
-    1.  ```
+    1.  ```java
         int sum = 0;
         for (int i = 1; i < N; i *= 2)
            for(int j = 0; j < i; j++)
@@ -122,7 +122,7 @@
 
         ```
 
-    1.  ```
+    1.  ```java
         int sum = 0;
         for (int i = 1; i < N; i *= 2)
            for (int j = 0; j < N; j++)
@@ -212,7 +212,7 @@
 
 1.  通过尽可能大的常数因子改进以下代码片段，以适应大规模 n。通过性能分析确定瓶颈在哪里。假设`b[]`是一个长度为`n`的整数数组。
 
-    ```
+    ```java
     double[] a = new double[n];
     for (int i = 0; i < n; i++)
        for (int j = 0; j < n; j++)
@@ -264,7 +264,7 @@
 
     *解决方案*：
 
-    ```
+    ```java
     double best = 0.0;
     double min = a[0];
     for (int i = 0; i < n; i++) {

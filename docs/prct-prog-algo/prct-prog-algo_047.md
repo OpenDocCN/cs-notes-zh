@@ -14,7 +14,7 @@
 
 **协议.**
 
-```
+```java
 telnet www.nytimes.com 80
 Trying 199.239.136.200...
 Connected to www.nytimes.com.
@@ -27,7 +27,7 @@ Referer: http://news.google.com
 
 **Web 服务器.** Java 使与 Web 服务器通信变得容易。数据类型`URL`代表的是*统一资源定位符*。资源可以是文件或网站。要读取网站的内容，请使用我们的`In`类。
 
-```
+```java
 In in = new In("http://www.cnn.com");
 while (in.hasNextLine()) {
     String line = in.readLine();
@@ -40,7 +40,7 @@ while (in.hasNextLine()) {
 
 > |
 > 
-> ```
+> ```java
 > % traceroute cornell.edu
 > traceroute to cornell.edu (132.236.56.6), 30 hops max, 40 byte packets
 >  1  ignition (128.112.139.1)  0.860 ms  0.599 ms  0.653 ms
@@ -62,21 +62,21 @@ while (in.hasNextLine()) {
 > 
 > **邮件.** 程序 Mail.java 使用套接字在端口 25 上创建一个 SMTP（简单邮件传输协议）客户端。这是一个用于发送电子邮件的简陋程序。如果您更改电子邮件中的发件人和回复地址会发生什么？您可能会惊讶地发现，SMTP 没有身份验证机制，因此您可以使电子邮件看起来像来自任何地方。这被称为*电子邮件欺骗*。欺骗有一些合法用途（例如，希望保持匿名的告密者），但大多数情况下被垃圾邮件发送者用来掩盖他们的身份。如果仔细检查这种伪造电子邮件的邮件头，您可以看到连接到端口 25 的机器的 IP 号码。然而，普通的互联网用户会被欺骗。当然，您不应该在未经收件人事先同意的情况下使用这种欺骗技术。在某些司法管辖区是违法的。*开放中继*是一个 SMTP 电子邮件服务器，处理既不��发件人也不是收件人的邮件。如果`smtp.princeton.edu`是一个开放中继，那么您可以从任何计算机上运行`Mail.java`，即使它在`princeton.edu`域之外。垃圾邮件发送者经常利用这样的开放中继来“洗钱”他们的电子邮件。开放中继使垃圾邮件发送者能够匿名发送大量电子邮件，使用他人的资源。如果您运行 Web 服务器，请确保不要运行开放中继。**回声客户端和服务器.** 程序 EchoClient.java 与服务器建立连接（在端口 4444 上），从标准输入读取行，将它们发送到服务器，并将服务器的响应打印回来。它使用 In.java 和 Out.java。程序 EchoServer.java 是配套的服务器程序。它在端口 4444 上监听来自客户端的连接请求。 （您可以使用从 1024 到 65536 的任何端口；端口 0-1023 保留用于“众所周知”的任务，例如，80 用于 http，21 用于 ftp）。收到请求后，它建立连接，从客户端读取行，并将它们回显给客户端。该语句
 > 
-> ```
+> ```java
 > ServerSocket serverSocket = new ServerSocket(4444);
 > 
 > ```
 > 
 > 创建一个在端口 4444 上监听连接请求的`ServerSocket`。关键行
 > 
-> ```
+> ```java
 > Socket clientSocket = serverSocket.accept();
 > 
 > ```
 > 
 > 使服务器等待直到连接请求到达，然后与客户端创建`Socket`连接。这是一个*阻塞语句*：程序在`accept`方法返回之前停止。服务器代码的另一个关键部分是：
 > 
-> ```
+> ```java
 > String s;
 > while ((s = in.readLine()) != null) {
 >     out.println(s);
@@ -86,7 +86,7 @@ while (in.hasNextLine()) {
 > 
 > 在这种情况下，`in`是来自客户端的输入流，`out`是发送到客户端的输出流。这个循环不断地从客户端读取字符串并将其回显给客户端。调用`readLine()`是*阻塞*的，因此程序会停止，直到它返回一个`String`。当客户端最终断开连接时，`readLine()`返回`null`，服务器可以继续。要执行服务器和客户端，请先启动服务器，然后执行客户端程序：
 > 
-> ```
+> ```java
 > OS X, Linux
 > -----------
 > % java EchoServer &
@@ -109,7 +109,7 @@ while (in.hasNextLine()) {
 > > 
 > *线程。* Java 使处理线程变得尽可能简单，但仍然是一个困难的任务，因为执行流程不再那么清晰。*同步。* `Connection.java` 是生产者/消费者关系的一个例子。每个 `Connection` 从客户端读取消息。`ConnectionListener` 从 `Connection` 中提取消息并将其广播给所有客户端。我们必须小心地同步这个活动，以确保每条消息只广播一次。当一条消息从客户端到达时，会调用 `setMessage()` 并设置变量 `message`。当准备将其广播给所有客户端时，会调用 `getMessage()` 来检索字符串。完成后，将 `message` 设置为 `null` 表示已完成消息。为了确保在中间没有 `getMessage()` 之前不会连续调用两次 `setMessage()`，我们使用 `wait()` 和 `notifyAll()` 锁定对象。如果在 `getMessage()` 广播上一条消息之前调用 `setMessage()`，那么 `message` 不是 `null`，因此 `setMessage()` 执行 `wait()` 语句。这会阻止 `setMessage()` 进一步执行，直到另一个方法调用 `notifyAll()`。当 `getMessage()` 处理完一条消息后，将 `message` 设置为 `null` 并调用 `notifyAll()` 解除 `setMessage()` 的阻塞。`synchronized` 关键字确保在特定时间内只有 `getMessage()` 和 `setMessage()` 中的一个方法执行。
 > 
-> ```
+> ```java
 > public synchronized String getMessage() {
 >     if (message == null) return null;
 >     String temp = message;

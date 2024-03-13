@@ -94,7 +94,7 @@
 
 1.  在运行以下代码片段后，变量`count`的值作为\(n\)的函数是多少？
 
-    ```
+    ```java
     int count = 0;
     for (int i = 0; i < n; i++)
         for (int j = i+1; j < n; j++)
@@ -107,7 +107,7 @@
 
 1.  确定`ThreeSum`中此语句的运行时间作为标准输入上整数数量*n*的函数的增长阶数：
 
-    ```
+    ```java
     int[] a = StdIn.readAllInts();
 
     ```
@@ -120,7 +120,7 @@
 
 1.  运用科学方法，针对以下两个代码片段的运行时间作为\(n\)的函数，发展和验证一个关于增长阶数的假设。
 
-    ```
+    ```java
     String s = ""; 
     for (int i = 0; i < n; i++) {
         if (StdRandom.bernoulli(0.5)) s += "0"; 
@@ -142,7 +142,7 @@
 
     *解决方案*：
 
-    ```
+    ```java
     public static String reverse(String s) {
         int n = s.length();
         char[] a = new char[n];
@@ -174,7 +174,7 @@
 
 1.  分析以下代码片段的数学特性，并确定其运行时间的增长顺序是线性、二次还是立方的关于*n*的函数。
 
-    ```
+    ```java
     for (int i = 0; i < n; i++)
        for (int j = 0; j < n; j++)
           for (int k = 0; k < n; k++)
@@ -184,7 +184,7 @@
 
 1.  以下函数返回一个长度为*n*的随机字符串。作为*n*的函数，其运行时间的增长顺序是多少？
 
-    ```
+    ```java
     public static String random(int n) {
         if (n == 0) return "";
         int r = StdRandom.uniform(26);     // between 0 and 25

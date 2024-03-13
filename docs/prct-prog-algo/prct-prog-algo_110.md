@@ -18,7 +18,7 @@ Validate.java。
 
 大多数正则表达式库实现使用*回溯算法*，在某些输入上可能需要指数级的时间。这样的输入可能非常简单。例如，确定长度为 N 的字符串是否与正则表达式`(a|aa)*b`匹配，如果选择字符串得当，可能需要指数级的时间。下表展示了 Java 1.4.2 正则表达式的失败情况。
 
-```
+```java
 java Validate "(a|aa)*b" aaaaaaaaaaaaaaaaaaaaaaaaaaaaaac             1.6 seconds
 java Validate "(a|aa)*b" aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac           3.7 seconds
 java Validate "(a|aa)*b" aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac         9.7 seconds
@@ -28,7 +28,7 @@ java Validate "(a|aa)*b" aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac 161.6 seconds
 
 ```
 
-```
+```java
 java Validate "(a*)*|b*" aaaaaaaaaaaaaaaaaaaaac           1.28
 java Validate "(a*)*|b*" aaaaaaaaaaaaaaaaaaaaaac          2.45
 java Validate "(a*)*|b*" aaaaaaaaaaaaaaaaaaaaaaac         4.54
@@ -42,14 +42,14 @@ java Validate "(a*)*|b*" aaaaaaaaaaaaaaaaaaaaaaaaaaaac  134.73
 
 上述示例是人为的，但它们展示了大多数正则表达式库中的一个令人担忧��缺陷。在实践中确实会出现不良输入。根据[Crosby 和 Wallach](http://www.cs.rice.edu/~scrosby/hash/CrosbyWallach_UsenixSec2003.pdf)的说法，以下正则表达式出现在 SpamAssassin 的一个版本中，这是一个功能强大的垃圾邮件过滤程序。
 
-```
+```java
 [a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+
 
 ```
 
 它试图匹配某些电子邮件地址，但在许多正则表达式库中，包括 Sun 的 Java 1.4.2 中，匹配某些字符串需要指数级的时间。
 
-```
+```java
 java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 ```
@@ -180,7 +180,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  编写一个 Java 正则表达式，匹配有效的 Windows XP 文件名。这样的文件名由除了冒号以外的任意字符序列组成。
 
-    ```
+    ```java
     / \ : * ? " < > |
 
     ```
@@ -221,7 +221,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  使用正则表达式提取在`<title>`和`<\title>`标签之间的所有文本。`(?i)`是另一种使匹配不区分大小写的方法。`$2`指的是第二个捕获的子序列，即`title`标签之间的内容。
 
-    ```
+    ```java
     String pattern = "(?i)(<title.*?>)(.+?)(</title>)"; 
     String updated =  s.replaceAll(pattern, "$2");
 
@@ -239,7 +239,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  **PROSITE 到 Java 正则表达式。** 编写一个程序，读取 PROSITE 模式并打印出相应的 Java 正则表达式。PROSITE 是蛋白质家族和结构域的“第一个和最著名”的数据库。其主要用途是确定从基因组序列翻译而来的未知功能蛋白质的功能。生物学家使用[PROSITE](http://us.expasy.org/tools/scanprosite/scanprosite-doc.html) 模式语法规则在生物数据中搜索模式。这是[CBD FUNGAL](http://us.expasy.org/cgi-bin/get-prosite-raw.pl?PS00562)（访问代码 PS00562）的原始数据。每行包含各种信息。也许最有趣的一行是以 PA 开头的行 - 它包含描述蛋白质基序的模式。这些模式很有用，因为它们通常对应于功能或结构特征。
 
-    ```
+    ```java
     PA   C-G-G-x(4,7)-G-x(3)-C-x(5)-C-x(3,5)-[NHG]-x-[FYWM]-x(2)-Q-C.
 
     ```
@@ -278,7 +278,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  **解析 HTML。** 一个>，可选地跟随空格，后跟`a`，后跟空格，后跟`href`，可选地跟随空格，后跟`=，可选地跟随空格，后跟`"http://`，后跟字符直到`"，可选地跟随空格，然后是一个<。
 
-    ```
+    ```java
     < \s* a \s+ href \s* = \s* \\"http://[^\\"]* \\" \s* >
 
     ```
@@ -293,7 +293,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  **字符过滤器。** 给定一个包含*坏字符*的字符串`t`，例如`t = "!@#$%^&*()-_=+"`，编写一个函数来读取另一个字符串`s`并返回删除所有坏字符后的结果。
 
-    ```
+    ```java
     String pattern = "[" + t + "]";
     String result  = s.replaceAll(pattern, "");
 
@@ -307,7 +307,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  **密码验证器。** 假设出于安全原因，您要求所有密码至少包含以下字符之一
 
-    ```
+    ```java
     ~ ! @ # $ % ^ & * | 
 
     ```
@@ -316,7 +316,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  **字母数字过滤器。** 编写一个程序 Filter.java，从标准输入中读取文本，并消除所有不是空格或字母数字的字符。*答案* 这是关键行。
 
-    ```
+    ```java
     String output = input.replaceAll("[^\\s0-9a-zA-Z]", "");
 
     ```
@@ -325,7 +325,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  **解析分隔文本文件。** 存储数据库的一种流行方式是将其存储在一个文本文件中，每行一个记录，每个字段由称为分隔符的特殊字符分隔。
 
-    ```
+    ```java
     19072/Narberth/PA/Pennsylvania
     08540/Princeton/NJ/New Jersey
 
@@ -339,7 +339,7 @@ java Validate "[a-z]+@[a-z]+([a-z\.]+\.)+[a-z]+" spammer@x......................
 
 1.  **拼写错误。** 编写一个 Java 程序，验证这个常见拼写错误列表中只包含形式为的行
 
-    ```
+    ```java
     misdemenors (misdemeanors)
     mispelling (misspelling)
     tennisplayer (tennis player)

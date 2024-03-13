@@ -98,7 +98,7 @@ A. 尝试[Java numerics](http://math.nist.gov/javanumerics/)。
 
     |
 
-    ```
+    ```java
     dx/dt = α x - β x y
     dy/dt = γ x y - δ y
 

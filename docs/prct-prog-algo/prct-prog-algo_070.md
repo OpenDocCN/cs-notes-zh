@@ -112,7 +112,7 @@
 
 **A.** 是的。最直接的方法是在不同的子目录中保留多个名为`percolation.py`的文件。然后从一个子目录中复制所需的`percolation.py`文件到你的工作目录，从而选择一个特定的实现。另一种方法是使用 Python 的`import as`语句来定义一个标识符来引用模块：
 
-```
+```py
 import percolationv as percolation
 
 ```
@@ -149,7 +149,7 @@ import percolationv as percolation
 
 1.  给出以下输入时 percolation.py 的递归调用：
 
-    ```
+    ```py
     3 3
     1 0 1
     0 0 0

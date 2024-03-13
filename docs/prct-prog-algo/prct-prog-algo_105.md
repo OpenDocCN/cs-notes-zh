@@ -72,7 +72,7 @@ EdgeWeightedDigraph.java 使用邻接表表示实现了该 API。
 
 +   *边松弛。* 对边 v->w 进行松弛意味着测试从 s 到 w 的已知最佳路径是否是从 s 到 v，然后沿着从 v 到 w 的边，如果是，则更新我们的数据结构。
 
-    ```
+    ```java
     private void relax(DirectedEdge e) {
         int v = e.from(), w = e.to();
         if (distTo[w] > distTo[v] + e.weight()) {
@@ -87,7 +87,7 @@ EdgeWeightedDigraph.java 使用邻接表表示实现了该 API。
 
 +   *顶点松弛。* 我们所有的实现实际上都会松弛从给定顶点指向的所有边。
 
-    ```
+    ```java
     private void relax(EdgeWeightedDigraph G, int v) {
         for (DirectedEdge e : G.adj(v)) {
             int w = e.to();
@@ -152,7 +152,7 @@ DijkstraSP.java 是戴克斯特拉算法的高效实现。它使用 IndexMinPQ.j
 
 +   *贝尔曼-福特算法*。将`distTo[s]`初始化为 0，将所有其他`distTo[]`值初始化为无穷大。然后，以任意顺序考虑有向图的边，并放松所有边。进行 V 次这样的遍历。
 
-    ```
+    ```java
     for (int pass = 0; pass < G.V(); pass++)
        for (int v = 0; v < G.V(); v++)
           for (DirectedEdge e : G.adj(v))

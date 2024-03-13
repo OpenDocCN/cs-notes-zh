@@ -94,7 +94,7 @@
 
 1.  考虑`String`的`compareTo()`方法的以下实现。第三行如何提高效率？
 
-    ```
+    ```java
     public int compareTo(String t) {
        String s = this;
        if (s == t) return 0;  // this line
@@ -112,7 +112,7 @@
 
 1.  批评下面的类实现，该类旨在表示客户账户余额。为什么`compareTo()`是`Comparable`接口的一个有缺陷的实现？
 
-    ```
+    ```java
     public class Customer implements Comparable<Customer> {
         private String name;
         private double balance;
@@ -152,7 +152,7 @@
 
 1.  **公正选举。** 为了防止对字母表末尾出现的候选人产生偏见，加利福尼亚州通过以下顺序对其 2003 年州长选票上出现的候选人进行排序：
 
-    ```
+    ```java
     R W Q O J M V A H B S G Z X N T C I E K U P D Y F L
 
     ```
@@ -185,7 +185,7 @@
 
 1.  **不区分大小写的顺序。**编写一个代码片段，读取一系列字符串并按升序排序，忽略大��写。
 
-    ```
+    ```java
     String[] a = new String[N];
     for (int i = 0; i < N. i++) {
        a[i] = StdIn.readString();
@@ -196,7 +196,7 @@
 
 1.  **不区分大小写的比较器。**实现自己版本的比较器`String.CASE_INSENSITIVE_ORDER`。
 
-    ```
+    ```java
     public class CaseInsensitive implements Comparator<String> {
        public int compare(String a, String b) {
           return a.compareToIgnoreCase(b);
@@ -207,7 +207,7 @@
 
 1.  **降序字符串比较器。**实现一个比较器，按降序而不是升序对字符串进行排序。
 
-    ```
+    ```java
     public class Descending implements Comparator<String> {
        public int compare(String a, String b) {
           return b.compareToIgnoreCase(a);
@@ -222,7 +222,7 @@
 
     *提示*：使用 Java 的[java.text.Collator](http://docs.oracle.com/javase/6/docs/api/java/text/Collator.html) API。例如，在 UNICODE 中，`Rico`在`Réal`之前按字典顺序出现，但在法语中，`Réal`首先出现。
 
-    ```
+    ```java
     import java.util.Arrays;
     import java.text.Collator;
     ...

@@ -56,14 +56,14 @@
 
 格式字符串中任何不是转换说明的部分都会简单地传递到输出。例如，语句
 
-```
+```py
 stdio.writef('pi is approximately %.2f\n', math.pi)
 
 ```
 
 写入行
 
-```
+```py
 pi is approximately 3.14
 
 ```
@@ -146,7 +146,7 @@ pi is approximately 3.14
 
 指定了随机序列.py 的标准输出流和平均值.py 的标准输入流是*相同*的流。也就是说，结果与以下命令序列具有相同效果：
 
-> ```
+> ```py
 > % python randomseq.py 1000 > data.txt
 > % python average.py < data.txt
 > 
@@ -160,7 +160,7 @@ pi is approximately 3.14
 
 一些为 Unix 设计的标准过滤器仍然存在（有时使用不同的名称）作为现代操作系统中的命令。例如，`sort`过滤器从标准输入读取行并按排序顺序写入标准输出：
 
-```
+```py
 % python randomseq.py 9 | sort
 0.0472650078535
 0.0681950168757
@@ -176,7 +176,7 @@ pi is approximately 3.14
 
 另一个有用的过滤器是`more`，它从标准输入读取数据，并在您的终端窗口中一次显示一个屏幕。例如，如果您键入
 
-```
+```py
 % python randomseq.py 1000 | more
 
 ```
@@ -225,7 +225,7 @@ pi is approximately 3.14
 
 例如，当您调用函数 `stddraw.setXscale(0, n)` 时，您告诉绘图设备您将使用 0 到 `n` 之间的 x 坐标。请注意，两次调用序列
 
-```
+```py
 stddraw.setXscale(x0, x1)
 stddraw.setYscale(y0, y1)
 
@@ -311,7 +311,7 @@ stdaudio 模块可以播放、操作和合成声音。它允许你播放`.wav`�
 
 例如，假设你想要播放升降调 A 音符 10 秒钟。以每秒 44,100 个样本的速度，你需要一个包含 441,001 个浮点值的数组。为了填充数组，使用一个`for`循环，在其中对函数 sin(2π*t* × 440)在 *t* = 0/44100, 1/44100, 2/44100, 3/44100, ..., 441000 / 44100 进行采样。一旦我们用这些值填充了数组，我们就可以准备好使用`stdaudio.playSamples()`，就像下面的代码一样：
 
-```
+```py
 import math
 import stdaudio
 import stdarray
@@ -453,7 +453,7 @@ stdaudio.wait()
 
 1.  假设文件`input.txt`包含两个字符串 F 和 F。以下命令做什么？更多关于龙曲线的信息，请参见第 1.2 节的练习。这是 Python 程序 dragon3.py。
 
-    ```
+    ```py
     python dragon3.py < input.txt | python dragon3.py | python dragon3.py
 
     ```
@@ -545,7 +545,7 @@ stdaudio.wait()
 
 1.  **螺线图。** 编写一个程序，接受三个命令行参数*R*、*r*和*a*，并绘制结果的*螺线图*。一个[螺线图](https://en.wikipedia.org/wiki/Spirograph)（技术上，是一个外摆线）是通过围绕半径为*r*的圆在一个固定半径为*R*的大圆周围滚动形成的曲线。如果笔偏离滚动圆心(*r*+*a*)，那么在时间*t*时得到的曲线方程为
 
-    ```
+    ```py
     *x*(*t*) = (*R*+*r*)cos(*t*) - (*r*+*a*)cos((*R*+*r*)*t*/*r*)
     *y*(*t*) = (*R*+*r*)sin(*t*) - (*r*+*a*)sin((*R*+*r*)*t*/*r*)
 
@@ -563,7 +563,7 @@ stdaudio.wait()
 
 1.  **示波器。** 编写一个程序来模拟示波器的输出并产生利萨如图案。这些图案以法国物理学家朱尔斯·A·利萨如的名字命名，他研究了当两个相互垂直的周期性干扰同时发生时产生的图案。假设输入是正弦的，因此以下参数方程描述曲线：
 
-    ```
+    ```py
     *x*(*t*) = *A[x]* sin (*w[x]t* + θ*[x]*)
     *y*(*t*) = *A[y]* sin (*w[y]t* + θ*[y]*)
 

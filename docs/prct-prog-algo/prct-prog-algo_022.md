@@ -30,7 +30,7 @@
 
 *单链表*由一系列*节点*组成，每个节点包含对其后继节点的引用（或*链接*）。按照惯例，最后一个节点中的链接为*null*，表示终止列表。通过面向对象编程，实现链表并不困难。我们定义了一个递归性质的节点抽象类：
 
-```
+```java
 class Node { 
    String item; 
    Node next; 
@@ -54,7 +54,7 @@ class Node {
 
 +   *遍历。*为了检查链表中的每个项目，我们初始化一个循环索引变量`x`，它引用链表的第一个`Node`。然后，我们通过访问`x.item`找到与`x`关联的项目的值，然后更新`x`以引用链表中的下一个`Node`，将其赋值为`x.next`的值，并重复此过程，直到`x`为`null`（表示我们已经到达链表的末尾）。这个过程被称为*遍历*列表，并在这段代码片段中简洁地表达：
 
-    ```
+    ```java
     for (Node x = first; x != null; x = x.next) 
         StdOut.println(x.item);
 
@@ -94,7 +94,7 @@ class Node {
 
 +   *使用通用集合。* 要使用通用集合，客户端必须在创建栈时指定*类型参数*：
 
-    ```
+    ```java
     Stack<Integer> stack = new Stack<Integer>();
 
     ```
@@ -103,7 +103,7 @@ class Node {
 
 我们设计我们的栈是*通用*的，因此它们可以存���任何类型的对象。Java 语言提供的*自动装箱*和*拆箱*功能使我们能够重用*通用*代码与原始类型。Java 提供了称为*包装类型*的内置对象类型，每个原始类型对应一个：[Boolean](https://docs.oracle.com/javase/8/docs/api/java/lang/Boolean.html)、[Integer](https://docs.oracle.com/javase/8/docs/api/java/lang/Integer.html)、[Double](https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html)、[Character](https://docs.oracle.com/javase/8/docs/api/java/lang/Character.html)等。Java 自动在这些引用类型和相应的原始类型之间进行转换，以便我们可以编写如下代码：
 
-```
+```java
 Stack<Integer> stack = new Stack<Integer>();
 stack.push(17);            // autoboxing  (int -> Integer)
 int a = stack.pop();       // unboxing    (Integer -> int)
@@ -114,7 +114,7 @@ int a = stack.pop();       // unboxing    (Integer -> int)
 
 有时客户端需要逐个访问集合中的所有项目，而不删除它们。为了保持封装性，我们不希望向客户端透露队列（数组或链表）的内部表示。为了适应这种设计模式，Java 提供了*foreach*语句。您应该将以下代码片段中的`for`语句解释为*对于集合中的每个字符串 s，打印 s*。
 
-```
+```java
 Stack collection = new Stack<string>();
 ...
 for (String s : stack)
@@ -129,7 +129,7 @@ for (String s : stack)
 
 +   *算术表达式求值。* 栈的一个重要应用是在*解析*中。例如，编译器必须解析使用*中缀表示法*编写的算术表达式。例如，以下中缀表达式求值为 212。
 
-    ```
+    ```java
     ( 2 + ( ( 3 + 4 ) * ( 5 * 6 ) ) )
 
     ```
@@ -160,7 +160,7 @@ for (String s : stack)
 
 1.  当`n`为 50 时，以下代码片段会打印什么？给出当给定正整数*n*时，代码片段的高级描述。
 
-    ```
+    ```java
     Stack stack = new Stack<integer>();
     while (n > 0) {
         stack.push(n % 2);
@@ -175,7 +175,7 @@ for (String s : stack)
 
 1.  以下代码片段对队列`queue`做了什么？
 
-    ```
+    ```java
     Stack stack = new Stack<string>();
     while (!queue.isEmpty())
        stack.push(queue.dequeue());
@@ -203,7 +203,7 @@ for (String s : stack)
 
 1.  假设`x`是一个链表节点。以下代码片段的效果是什么？
 
-    ```
+    ```java
     x.next = x.next.next;
 
     ```
@@ -214,7 +214,7 @@ for (String s : stack)
 
     *解决方案*：
 
-    ```
+    ```java
     // we assume that first is a reference to the first Node in the list
     public void delete(int k) {
         if (k <= 0) throw new RuntimeException("Invalid value of k");
@@ -245,7 +245,7 @@ for (String s : stack)
 
 1.  假设`x`是一个链表节点。以下代码片段的效果是什么？
 
-    ```
+    ```java
     t.next = x.next;
     x.next = t;     
 
@@ -255,7 +255,7 @@ for (String s : stack)
 
 1.  为什么以下代码片段的效果与前一个问题不同？
 
-    ```
+    ```java
     x.next = t;
     t.next = x.next;
 
@@ -273,7 +273,7 @@ for (String s : stack)
 
     *递归解决方案*: 为`Node`创建一个复制构造函数，并使用它来创建新的堆栈。
 
-    ```
+    ```java
     public Node(Node x) {
         item = x.item;
         if (x.next != null)
@@ -288,7 +288,7 @@ for (String s : stack)
 
     *非递归解决方案*（未经测试）：
 
-    ```
+    ```java
     public Node(Node x, Node next) {
         this.x = x;
         this.next = next;
@@ -306,7 +306,7 @@ for (String s : stack)
 
 1.  **引用。** 开发一个实现以下 API 的数据类型 Quote.java：![引用 API](img/9cab1281db9b9c77fa47205ef3834f15.png)为此，定义一个嵌套类`Card`，它保存引语的一个单词，并链接到引语中的下一个单词：
 
-    ```
+    ```java
     private class Card {
         private String word;
         private Card next;
@@ -329,7 +329,7 @@ for (String s : stack)
 
     ![逆转链表](img/ac417471b9391ae85ab6fb36a55af701.png)
 
-    ```
+    ```java
     public static Node reverse(Node list) {
         if (first == null || first.next == null) return first;
         Node first   = list;
@@ -349,7 +349,7 @@ for (String s : stack)
 
     *解决方案*: 假设链表有 n 个元素，我们递归地颠倒最后 n-1 个元素，然后将第一个元素附加到末尾。
 
-    ```
+    ```java
     public Node reverse(Node first) {
         if (first == null || first.next == null) return first;
         Node second = first.next;
@@ -373,7 +373,7 @@ for (String s : stack)
 
 1.  以下代码片段做什么？
 
-    ```
+    ```java
     IntQueue q = new IntQueue();
     q.enqueue(0);
     q.enqueue(1);
@@ -395,7 +395,7 @@ for (String s : stack)
 
 1.  假设您在`StackList`的链表实现中使用以下代码实现了`push`。错误在哪里？
 
-    ```
+    ```java
     public void push(Object value) {
        Node second = first;
        Node first = new Node();

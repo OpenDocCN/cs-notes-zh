@@ -108,7 +108,7 @@ Count.java 是一个客户端程序，它在命令行上指定一个字母表，
 
 1.  **N 个 x 的字符串。**描述以下函数返回的字符串，给定一个正整数`N`？
 
-    ```
+    ```java
     public static String mystery(int N) {
        String s = "";
        while(N > 0) {
@@ -129,7 +129,7 @@ Count.java 是一个客户端程序，它在命令行上指定一个字母表，
 
 1.  **完美洗牌。**给定长度相同的两个字符串`s`和`t`，以下递归函数返回什么？
 
-    ```
+    ```java
     public static String mystery(String s, String t) {
        int N = s.length();
        if (N <= 1) return s + t;
@@ -144,7 +144,7 @@ Count.java 是一个客户端程序，它在命令行上指定一个字母表，
 
 1.  **反转字符串。**编写一个递归函数来反转一个字符串。不要使用任何循环。*提示*：使用 String 方法`substring()`。
 
-    ```
+    ```java
     public static String reverse(String s) {
        int N = s.length();
        if (N <= 1) return s;
@@ -159,7 +159,7 @@ Count.java 是一个客户端程序，它在命令行上指定一个字母表，
 
 1.  **随机字符串。**编写一个递归函数，创建一个由字符'A'和'Z'之间的随机字符组成的字符串。
 
-    ```
+    ```java
     public static String random(int N) {
        if (N == 0) return "";
        if (N == 1) return 'A' + StdRandom.uniform(26);
@@ -178,7 +178,7 @@ Count.java 是一个客户端程序，它在命令行上指定一个字母表，
 
 1.  **从十六进制转换为十进制。** Hex2Decimal.java 包含一个函数，该函数接受一个十六进制字符串（使用 A-F 表示数字 11-15）并返回相应的十进制整数。它使用了一些字符串库方法和霍纳方法。
 
-    ```
+    ```java
     public static int hex2decimal(String s) {
        String digits = "0123456789ABCDEF";  
        s = s.toUpperCase();

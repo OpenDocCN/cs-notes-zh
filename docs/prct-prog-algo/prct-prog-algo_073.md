@@ -26,7 +26,7 @@
 
 构造函数创建指定类型的对象并返回对该对象的引用。对于我们的示例，客户端代码
 
-```
+```py
 c = Charge(x0, y0, q0)
 
 ```
@@ -47,7 +47,7 @@ c = Charge(x0, y0, q0)
 
 右侧的内存图详细描述了当客户端使用代码创建新的`Charge`对象时发生的精确事件顺序
 
-```
+```py
 c1 = Charge(0.51, 0.63, 21.3)
 
 ```
@@ -265,7 +265,7 @@ Python 语言提供了一个 `complex`（小写 `c`）数据类型。在实际�
 
 现代系统通常使用文本文件，即使是用于数据，以减少对任何一个程序定义的格式的依赖。为简单起见，我们使用直接表示，其中列出了账户持有人的姓名（字符串）、现金余额（浮点数）和持有的股票数量（整数），然后是每支股票的一行，列出了股票数量和股票代码。例如，文件 turing.txt 包含了这些数据：
 
-```
+```py
 % more turing.txt
 Turing, Alan
 10.24
@@ -367,7 +367,7 @@ Turing, Alan
 
 1.  考虑下面显示的（轴对齐）矩形的数据类型实现，它用矩形的中心点坐标、宽度和高度表示每个矩形。组合一个这种数据类型的 API，并填写`perimeter()`、`intersects()`、`contains()`和`draw()`的代码。*注意*：将重合的线视为相交，因此，例如`a.intersects(a)`为 True，`a.contains(a)`为 True。
 
-    ```
+    ```py
     class Rectangle:
 
         # Construct self with center (x, y), width w, and height h.
@@ -408,7 +408,7 @@ Turing, Alan
 
 以下代码有什么问题？
 
-```
+```py
 class Charge:
     def __init__(self, x0, y0, q0):
         _rx = x0  # Position
@@ -420,7 +420,7 @@ class Charge:
 
 *解决方案*。构造函数中的赋值语句创建了本地变量`_rx`、`_ry`和`_q`，它们从参数变量中分配值，但从未被使用。它们在构造函数执行完毕时消失。相反，构造函数应该通过在每个变量前加上`self`后跟点运算符来创建实例变量，如下所示：
 
-```
+```py
 class Charge:
     def __init__(self, x0, y0, q0):
         self._rx = x0  # Position
@@ -478,7 +478,7 @@ class Charge:
 
 1.  **可变电荷**。修改 charge.py 中定义的`Charge`类，使得电荷值`q0`可以改变，通过添加一个接受浮点参数并将给定值加到`q0`的方法`increaseCharge()`。然后，编写一个客户端，初始化一个数组：
 
-    ```
+    ```py
     a = stdarray.create1D(3)
     a[0] = Charge(.4, .6, 50)
     a[1] = Charge(.5, .5, -5)
@@ -488,7 +488,7 @@ class Charge:
 
     然后显示通过将计算图片的代码包装在类似以下循环中，逐渐减少`a[1]`的电荷值的结果：
 
-    ```
+    ```py
     for t in range(100):
         # Compute the picture p.
         stddraw.clear()

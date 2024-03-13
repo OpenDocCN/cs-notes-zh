@@ -8,7 +8,7 @@
 
 目标：给定函数 f(x)，找到 x*使得 f(x*) = 0。非线性方程可以有任意数量的解。
 
-```
+```java
 x2 + y2 = -1 no real solutions
 e-x  =  17 one real solution
 x2 -4x + 3 = 0  has two solutions (1, 3)
@@ -22,7 +22,7 @@ sin(x) = 0 has infinitely many solutions
 
 **牛顿法。** 二次逼近。如果距离答案足够接近，收敛速度快。下面的更新公式用于找到 f(x)和 f'(x)的根。
 
-```
+```java
 root finding:  xk+1 = xk - f'(xk)-1 f(xk)
 optimization:  xk+1 = xk - f''(xk)-1 f'(xk)
 
@@ -32,7 +32,7 @@ optimization:  xk+1 = xk - f''(xk)-1 f'(xk)
 
 为了处理一维一般可微或两次可微函数，我们可以声明一个接口
 
-```
+```java
 public interface Function {
     public double eval(double x);
     public double deriv(double x);
@@ -46,7 +46,7 @@ public interface Function {
 
 **高维牛顿法。** [可能省略或留作练习] 用于解决非线性方程组。一般来说，解决非线性方程组没有好的方法
 
-```
+```java
 xk+1 = xk - J(xk)-1 f(xk)
 
 ```
@@ -55,7 +55,7 @@ xk+1 = xk - J(xk)-1 f(xk)
 
 为了说明这种方法，假设我们想要找到两个非线性方程组的解(x, y)。
 
-```
+```java
 x3 - 3xy2 - 1 = 0
 3x2y - y3 = 0
 
@@ -63,7 +63,7 @@ x3 - 3xy2 - 1 = 0
 
 在这个例子中，雅可比矩阵如下
 
-```
+```java
 J  = [ 3x2 - 3y2     -6xy      ]
      [ 6x           3x2 - 3y2  ]
 
@@ -73,7 +73,7 @@ J  = [ 3x2 - 3y2     -6xy      ]
 
 *优化。* 使用相同的方法来优化多个变量的函数。如果多变量函数足够平滑，那么存在很好的方法。
 
-```
+```java
 xk+1 = xk - H(xk)-1 g(xk)
 
 ```
@@ -102,7 +102,7 @@ xk+1 = xk - H(xk)-1 g(xk)
 
 1.  使用牛顿法找到解决方程的(x, y)
 
-    ```
+    ```java
     x + y - xy  = -2
     x exp(-y) = 1
 
@@ -112,7 +112,7 @@ xk+1 = xk - H(xk)-1 g(xk)
 
 1.  使用牛顿法找到解决方程的(x, y)
 
-    ```
+    ```java
     x + 2y = 2
     x2 + 4y2 = 4
 
@@ -122,7 +122,7 @@ xk+1 = xk - H(xk)-1 g(xk)
 
 1.  使用牛顿法找到解决方程的(x, y)
 
-    ```
+    ```java
     x + y  = 3
     x2 + y2 = 9
 
@@ -134,7 +134,7 @@ xk+1 = xk - H(xk)-1 g(xk)
 
 1.  使用牛顿法找到以下两个变量函数的所有最小值、最大值和鞍点。
 
-    ```
+    ```java
     f(x,y) = 3(1-x)2 exp(-x2-(y+1)2) -  10((y/6)-y3) exp(-x2-y2)
 
     ```

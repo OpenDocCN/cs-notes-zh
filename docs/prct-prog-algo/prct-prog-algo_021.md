@@ -38,7 +38,7 @@
 
 插入排序是一种基于人们经常用来整理扑克牌的简单方法的蛮力排序算法：逐个考虑卡片并将每张卡片插入到已考虑的卡片中的适当位置（保持它们排序）。以下代码在一个 Java 方法中模拟了这个过程，用于对数组中的字符串进行排序：
 
-```
+```java
 public static void sort(String[] a) {
     int n = a.length;
     for (int i = 1; i < n; i++) {
@@ -96,14 +96,14 @@ FrequencyCount.java 从标准输入读取一系列字符串，然后按照频率
 
 +   *计算频率。* 我们的第一步是对标准输入中的字符串进行排序。在这种情况下，我们不太关心字符串被排序，而是关心排序将相同的字符串放在一起。如果输入是
 
-    ```
+    ```java
     to be or not to be to 
 
     ```
 
     然后排序的结果是
 
-    ```
+    ```java
     be be not or to to to 
 
     ```
@@ -124,14 +124,14 @@ FrequencyCount.java 从标准输入读取一系列字符串，然后按照频率
 
 1.  **整数排序。** 编写一个*线性时间*过滤器 IntegerSort.java，从标准输入读取介于 0 和 99 之间的整数序列，并按排序顺序将相同的整数打印到标准输出。例如，给定输入序列
 
-    ```
+    ```java
     98 2 3 1 0 0 0 3 98 98 2 2 2 0 0 0 2
 
     ```
 
     您的程序应该打印输出序列
 
-    ```
+    ```java
     0 0 0 0 0 0 1 2 2 2 2 2 3 3 98 98 98
 
     ```
@@ -243,7 +243,7 @@ FrequencyCount.java 从标准输入读取一系列字符串，然后按照频率
 
 1.  **二分查找。** 证明以下修改版本的`binarySearch()`为什么有效。证明如果关键字在数组中，则它正确返回最小索引`i`，使得 a[i] = key；如果关键字不在数组中，则返回-i，其中 i 是使得 a[i] > key 的最小索引。
 
-    ```
+    ```java
     // precondition array a in ascending order
     public static int binarySearch(long[] a, long key) {
        int bot = -1;
@@ -269,7 +269,7 @@ FrequencyCount.java 从标准输入读取一系列字符串，然后按照频率
 
 1.  **非递归二分查找。** 编写二分查找的非递归版本。
 
-    ```
+    ```java
     public static int binarySearch(long[] a, long key) {
        int bot = 0;
        int top = a.length - 1;

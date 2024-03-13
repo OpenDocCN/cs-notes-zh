@@ -46,7 +46,7 @@
 
 1.  下面的代码片段计算后缀排序的所有后缀有什么问题？
 
-    ```
+    ```java
     suffix = ""; 
     for (int i = s.length() - 1; i >= 0; i--) {
         suffix = s.charAt(i) + suffix;
@@ -59,7 +59,7 @@
 
 1.  下面的代码片段计算后缀排序的所有循环后缀有什么问题？
 
-    ```
+    ```java
     int n = s.length();
     for (int i = 0; i < n; i++)
         suffixes[i] = s.substring(i, n) + s.substring(0, i);
@@ -70,7 +70,7 @@
 
 1.  下面的代码片段计算后缀排序的所有循环后缀有什么问题？
 
-    ```
+    ```java
     int n = s.length;
     StringBuilder ss = new StringBuilder();
     ss.append(s).append(s);

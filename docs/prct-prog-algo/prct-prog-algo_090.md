@@ -8,7 +8,7 @@
 
 我们的主要关注点是重新排列包含*关键字*的项目数组的算法，目标是重新排列项目，使它们的关键字按升序排列。在 Java 中，关键字的抽象概念在内置机制中���现为`Comparable`接口。除了少数例外，我们的排序代码只通过两个操作引用数据：比较对象的方法`less()`和交换它们的方法`exch()`。
 
-```
+```java
 private static boolean less(Comparable v, Comparable w) {
    return (v.compareTo(w) < 0);
 }
@@ -89,7 +89,7 @@ ShellBars.java 生成希尔排序的可视化效果。
 
 **Q.** 当我编译 Insertion.java 时，编译器会发出警告。有没有办法避免这种情况？
 
-```
+```java
 Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
                    as a member of the raw type java.lang.Comparable
         return (v.compareTo(w) < 0);
@@ -102,7 +102,7 @@ Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
 
 1.  以选择排序示例跟踪的方式展示选择排序如何对数组进行排序。
 
-    ```
+    ```java
     E A S Y Q U E S T I O N
 
     ```
@@ -119,7 +119,7 @@ Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
 
 1.  以插入排序示例跟踪的方式展示插入排序如何对数组进行排序。
 
-    ```
+    ```java
     E A S Y Q U E S T I O N
 
     ```
@@ -138,7 +138,7 @@ Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
 
 1.  以希尔排序示例跟踪的方式展示希尔排序如何对数组进行排序。
 
-    ```
+    ```java
     E A S Y S H E L L S O R T Q U E S T I O N
 
     ```
@@ -175,7 +175,7 @@ Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
 
 1.  **排序网络。** 编写一个程序 Sort3.java，其中有三个`if`语句（没有循环），从命令行读取三个整数*a*、*b*和*c*，并按升序打印它们。
 
-    ```
+    ```java
     if (a > b) swap a and b
     if (a > c) swap a and c
     if (b > c) swap b and c
@@ -184,7 +184,7 @@ Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
 
 1.  **无视排序网络。** 说服自己，以下代码片段重新排列存储在变量 A、B、C 和 D 中的整数，使得 A <= B <= C <= D。
 
-    ```
+    ```java
     if (A > B) { t = A; A = B; B = t; }
     if (B > C) { t = B; B = C; C = t; }
     if (A > B) { t = A; A = B; B = t; }
@@ -214,7 +214,7 @@ Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
 
 1.  **Stupidsort。** 分析以下排序算法的运行时间（最坏情况和最佳情况）、正确性和稳定性。从左到右扫描数组，直到找到两个连续的位置不正确的项。交换它们，并从头开始。重复直到扫描到数组的末尾。
 
-    ```
+    ```java
     for (int i = 1; i < N; i++) {
        if (less(a[i], a[i-1])) {
           exch(i, i-1);
@@ -226,7 +226,7 @@ Insertion.java:73: warning: [unchecked] unchecked call to compareTo(T)
 
     考虑以下递归变体并分析最坏情况下的内存使用情况。
 
-    ```
+    ```java
     public static void sort(Comparable[] a) {
        for (int i = 1; i < a.length; i++) {
           if (less(a[i], a[i-1])) {

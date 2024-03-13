@@ -122,7 +122,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
     *解决方案*：
 
-    ```
+    ```java
     public static int max3(int a, int b, int c) {
        int max = a;
        if (b > max) max = b;
@@ -143,7 +143,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
     *解决方案*：
 
-    ```
+    ```java
     public static boolean majority(boolean a, boolean b, boolean c) {
        return (a && b) || (a && c) || (b && c);
     }
@@ -160,7 +160,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  考虑下面的静态方法`cube()`。
 
-    ```
+    ```java
     public static void cube(int i) { 
         i = i * i * i; 
     } 
@@ -169,7 +169,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
     以下`for`循环迭代了多少次？
 
-    ```
+    ```java
     for (int i = 0; i < 1000; i++) 
        cube(i); 
 
@@ -191,7 +191,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  **日历。** 编写一个程序 Calendar.java，它接受两个整数命令行参数`m`和`y`，并打印出月份`m`和年份`y`的月度日历，如下例所示：
 
-    ```
+    ```java
        February 2009
      S  M Tu  W Th  F  S
      1  2  3  4  5  6  7
@@ -243,7 +243,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  **共线点。** 编写一个函数
 
-    ```
+    ```java
     public boolean areCollinear(int x1, int y1, int x2, int y2, int x3, int y3)
 
     ```
@@ -282,7 +282,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  **素数测试。**创建一个名为`isPrime()`的函数，它接受一个整数参数 N，并根据 N 是否为素数返回 true 或 false。
 
-    ```
+    ```java
     public static boolean isPrime(long N) {
        if (N < 2) return false;
        for (long i = 2; i*i <= N; i++) {
@@ -313,7 +313,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  编写一个程序 Factorial.java，接受一个整数命令行输入 n，并打印出 n! = 1 * 2 * ... * n。编写一个具有以下签名的函数：
 
-    ```
+    ```java
     public static long factorial(int n)
 
     ```
@@ -322,7 +322,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  以下函数有什么问题？
 
-    ```
+    ```java
     static int sum(int n) {
         if (n < 0) return;
         double sum = 0.0;
@@ -337,7 +337,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  以下代码是做什么的？
 
-    ```
+    ```java
     public static void negate(int a) {
         a = -a;
     }
@@ -357,7 +357,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  以下函数中哪个返回其四个输入中的最小值？哪个最容易理解和验证其正确性？
 
-    ```
+    ```java
     public static int min(int a, int b, int c, int d) {
        // if a is the smallest return it
        if (a <= b && a <= c && a <= d) return a;
@@ -418,7 +418,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  以下方法调用有什么问题？
 
-    ```
+    ```java
     double y = 2.0;
     double x = sqrt(double y);
 
@@ -432,7 +432,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  编写一个程序来打印 Old McDonald 的歌词。
 
-    ```
+    ```java
     public static String sing(String animals, String sound) {
        String s = "";
        s += "Old MacDonald had a farm\n";
@@ -463,7 +463,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  当我有两个重载函数时，`f(1, 2)`调用哪个函数？
 
-    ```
+    ```java
     public static void f(int x, double y) {
        System.out.println("f(int, double)");
     }
@@ -478,7 +478,7 @@ PlayThatTuneDeluxe.java 是 PlayThatTune 的一个版本，封装了声波计算
 
 1.  **高斯随机值。** 尝试使用以下方法生成服从高斯分布的随机变量，该方法基于在单位圆内生成一个随机点，并使用一种 [Box-Muller 变换](http://en.wikipedia.org/wiki/Box-Muller_transform) 的形式。（参见练习 1.2.27 和第 1.3 节末尾关于 do-while 的讨论）。
 
-    ```
+    ```java
     public static double gaussian() {
        double r, x, y;
        do {

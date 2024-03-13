@@ -52,7 +52,7 @@
 
 *多项式 API。* 第一步是为多项式 ADT 定义 API。我们从系数和指数为整数的多项式开始。对于像多项式这样被充分理解的数学抽象，规范是如此清晰以至于无需言明：我们希望 ADT 的实例行为与充分理解的数学抽象完全相同。不可变。
 
-```
+```java
 public Polynomial(int coef, int exp)
 public Polynomial plus(Polynomial b)
 public Polynomial minus(Polynomial b)
@@ -69,7 +69,7 @@ public String toString()
 
 *一个示例客户端。* 程序 Binomial.java 从命令行读取一个整数 N，并打印出(1+x)^N 的展开式。
 
-```
+```java
 Polynomial one      = new Polynomial(1, 0);   // 1 = 1 * x⁰
 Polynomial x        = new Polynomial(1, 1);   // x = 1 * x¹
 Polynomial binomial = one;
@@ -81,7 +81,7 @@ System.out.println(binomial);
 
 *实现。* 程序 Polynomial.java 使用整数数组`coef[]`表示一个具有整数次数`deg`的一元多项式，其中`coef[i]`记录*x^i*的系数。
 
-```
+```java
 public class Polynomial {
     private int[] coef;      // coefficients
     private int deg;         // degree of polynomial
@@ -90,7 +90,7 @@ public class Polynomial {
 
 我们提供一个构造函数，它接受两个参数`a`和`b`，并创建单项式 ax^b。辅助方法`degree()`计算多项式的实际次数（如果`a`为零，则为零）。
 
-```
+```java
 public Polynomial(int a, int b) {
     coef = new int[b+1];
     coef[b] = a;
@@ -101,7 +101,7 @@ public Polynomial(int a, int b) {
 
 要添加两个多项式`a`和`b`，我们循环遍历这两个数组并相加它们的系数。结果多项式的最大次数是`a.deg + b.deg`。我们将`c`初始化为次数为`N`且所有系数为零的多项式。我们要小心地保持不变式，即`c.deg`是多项式的实际次数（如果两个被加数的首项系数互相抵消，则可能与`a.deg + b.deg`不同）。
 
-```
+```java
 public Polynomial plus(Polynomial b) {
    Polynomial a = this;
    Polynomial c = new Polynomial(0, Math.max(a.deg, b.deg));
@@ -121,7 +121,7 @@ public Polynomial plus(Polynomial b) {
 
 以下代码片段使用霍纳法则执行多项式评估。
 
-```
+```java
 public int evaluate(int x) {
    int p = 0;
    for (int i = deg; i >= 0; i--)
@@ -135,7 +135,7 @@ public int evaluate(int x) {
 
 程序 Rational.java 是一个非负有理数的抽象数据类型。它实现了以下接口��为了简化分数，我们使用欧几里得的最大公约数算法作为子程序来找到两个整数的最小公倍数（lcm）。
 
-```
+```java
 Rational(int num, int dem)        // initialize
 public double num()                // return numerator
 public double den()                // return denominator
@@ -155,7 +155,7 @@ Maple 是一个流行的符号数学计算系统。它由滑铁卢大学的一�
 
 以下会展示基本算术和内置函数。请注意，给出的答案是精确的，除非我们明确转换为浮点数，否则不会进行浮点数近似。所有语句以分号结尾（在这种情况下结果会打印到屏幕上）或冒号结尾（在这种情况下结果会被抑制）。
 
-```
+```java
 % maple
     |\^/|     Maple V Release 5 (WMI Campus Wide License)
 ._|\|   |/|_. Copyright (c) 1981-1997 by Waterloo Maple Inc. All rights
@@ -213,7 +213,7 @@ quit;
 
 Maple 最强大的功能之一是支持符号变量。Maple 使用`:=`表示赋值语句，因为`=`保留用于数学相等。
 
-```
+```java
 # assignment statements
 > m := 10:
 > a := 9.8:
@@ -259,7 +259,7 @@ factor(sum(i, i = 1..N));
 
 方程求解、数组、条件、循环、函数、库、矩阵，
 
-```
+```java
 > # solve equation
 > solve(x⁴ - 5*x² + 6*x = 2);
                                         1/2        1/2
@@ -342,7 +342,7 @@ factor(sum(i, i = 1..N));
 
 见证 Maple 的实际操作，
 
-```
+```java
 > infolevel[int] := 2;
 > int(1 / (x³ + x + 1), x);
 int/indef1:   first-stage indefinite integration
@@ -403,7 +403,7 @@ int/risch:   exit Risch integration
 
 *使用 Maple。*
 
-```
+```java
 set Digits := 50;   // 50 digits of floating point precision
 evalf(exp(1), 30);  
 fsolve()...
@@ -443,14 +443,14 @@ argmin
 
 1.  **切比雪夫多项式。** *切比雪夫多项式*由以下方程的解定义
 
-    ```
+    ```java
     Tn(x) = cos(n arccos x)
 
     ```
 
     尽管解看起来是三角函数的，但其解是 x 的多项式。以下是前几个这样的多项式。一般来说，T(n) = 2x * T(n-1) - T(n-2)。
 
-    ```
+    ```java
     T0(x) = 1
     T1(x) = x
     T2(x) = 2x2 - 1
@@ -460,7 +460,7 @@ argmin
 
     切比雪夫多项式在插值理论、逼近理论、数值积分、遍历理论、数论、信号处理和计算机音乐中具有许多特殊的算术性质，它们也源自微分方程：
 
-    ```
+    ```java
     (1 - x2) y''  - x y' + n2y = 0
 
     ```
@@ -469,7 +469,7 @@ argmin
 
 1.  **厄米特多项式。** 编写一个程序 Hermite.java，接受一个整数输入 N，并打印出前 N 个厄米特多项式。以下是前几个厄米特多项式。一般来说，H(n) = 2x * H(n-1) - 2(n-1) * H(n-2)。
 
-    ```
+    ```java
     H(0) = 1
     H(1) = 2x
     H(2) = 4x2 - 2
@@ -479,7 +479,7 @@ argmin
 
 1.  **斐波那契多项式。** 编写一个程序`Fibonacci.java`，接受一个整��输入 N，并打印出前 N 个斐波那契多项式。以下是前几个斐波那契多项式。一般来说，F(n) = xF(n-1) + F(n-2)。
 
-    ```
+    ```java
     F(1) = 1
     F(2) = x
     F(3) = x2 + 1
@@ -499,7 +499,7 @@ argmin
 
 1.  **费雷序列。** 阶数为 N 的[Farey 序列](http://mathworld.wolfram.com/FareySequence.html)是所有介于 0 和 1 之间的有理数（以最简分数形式表示），其分子和分母是介于 0 和 N 之间的整数的递增序列。
 
-    ```
+    ```java
     1:  0/1  1/1  
     2:  0/1  1/2  1/1  
     3:  0/1  1/3  1/2  2/3  1/1  
@@ -512,7 +512,7 @@ argmin
 
     要计算费雷序列，您可以使用以下惊人的关系：如果 m/n 和 m'/n'是费雷序列中顺序的两个元素，其阶数为 N，则下一个元素是 m''/n''，可以按照以下方式计算（其中除法是整数除法）：
 
-    ```
+    ```java
     m'' = ((n + N) / n') * m' - m
     n'' = ((n + N) / n') * n' - n
 
@@ -520,7 +520,7 @@ argmin
 
 1.  **最佳有理逼近。** 新闻播音员经常试图将难以处理的比率（如 0.4286328721345）简化为一个近似的有理数，如 4/7，其分子和分母较小。如何做到这一点？答案取决于您愿意容忍的分母大小，因此我们的目标是列出最佳逼近值，让记者选择所需的一个。以下是数学常数 e 的最佳几个有理逼近值：
 
-    ```
+    ```java
     0/1 1/1 2/1 3/1 5/2 8/3 11/4 19/7 49/18 68/25
     87/32 106/39 193/71 685/252 878/323 1071/394 
 

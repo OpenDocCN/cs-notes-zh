@@ -20,7 +20,7 @@
 
 +   *字符串。* 模块化哈希也适用于长键，如字符串：我们只需将它们视为巨大的整数。例如，下面的代码计算了一个 String s 的模块化哈希函数，其中 R 是一个小素数（Java 使用 31）。
 
-    ```
+    ```java
     int hash = 0;
     for (int i = 0; i < s.length(); i++)
         hash = (R * hash + s.charAt(i)) % M;
@@ -29,7 +29,7 @@
 
 +   *复合键。* 如果键类型具有多个整数字段，我们通常可以像刚才描述的`String`值一样将它们混合在一起。例如，假设搜索键的类型为 USPhoneNumber.java，其中包含三个整数字段：区域（3 位区号）、交换（3 位交换）和分机（4 位分机）。在这种情况下，我们可以计算数字
 
-    ```
+    ```java
     int hash = (((area * R + exch) % M) * R + ext) % M; 
 
     ```
@@ -38,7 +38,7 @@
 
 +   *将`hashCode()`转换为数组索引。* 由于我们的目标是一个数组索引，而不是 32 位整数，因此我们在实现中将`hashCode()`与模块化哈希结合起来，以产生 0 到 M-1 之间的整数，如下所示：
 
-    ```
+    ```java
     private int hash(Key key) {
        return (key.hashCode() & 0x7fffffff) % M;
     }
@@ -111,7 +111,7 @@
 
 1.  下面的`hashCode()`实现是否合法？
 
-    ```
+    ```java
     public int hashCode() {
        return 17;
     }
@@ -134,7 +134,7 @@
 
 1.  **哈希攻击。** 找到 2^N 个长度为 N 的字符串，它们具有相同的`hashCode()`值，假设`String`的`hashCode()`实现（如[Java 标准](http://docs.oracle.com/javase/6/docs/api/java/lang//String.html#hashCode())中指定的）如下：
 
-    ```
+    ```java
     public int hashCode() {
        int hash = 0;
        for (int i = 0; i < length(); i++)
@@ -148,7 +148,7 @@
 
 1.  **糟糕的哈希函数。** 考虑以下用于早期 Java 版本的`String`的`hashCode()`实现：
 
-    ```
+    ```java
     public int hashCode() {
        int hash = 0;
        int skip = Math.max(1, length() / 8);
@@ -169,7 +169,7 @@
 
 1.  为以下数据类型实现`hashCode()`和`equals()`。要小心，因为很可能许多点的 x、y 和 z 都是小整数。
 
-    ```
+    ```java
     public class Point2D {
         private final int x, y;
         ...
@@ -181,7 +181,7 @@
 
 1.  以下点的`equals()`实现有什么问题？
 
-    ```
+    ```java
     public boolean equals(Point q) {
         return x == q.x && y == q.y;
     }
@@ -192,7 +192,7 @@
 
 1.  以下代码片段将打印什么？
 
-    ```
+    ```java
     import java.util.HashMap;
     import java.util.GregorianCalendar;
 
@@ -223,7 +223,7 @@
 
 1.  **CRC-32。** 哈希的另一个应用是计算*校验和*以验证某个数据文件的完整性。要计算字符串 `s` 的校验和，
 
-    ```
+    ```java
     import java.util.zip.CRC32;
     ...
     CRC32 checksum = new CRC32();

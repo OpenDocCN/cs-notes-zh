@@ -20,7 +20,7 @@
 
 **程序组织。** 为了编写可重复使用的积分例程，我们希望能够创建一个类`TrapezoidalRule`并传递一个要被积分的任意连续函数。实现这一目标的一种方法是声明一个连续函数的接口，该接口具有一个名为`eval`的方法，该方法接受一个实数参数 x 并返回 f(x)。
 
-```
+```java
 public interface ContinuousFunction {
     public double eval(double x);
 }
@@ -29,7 +29,7 @@ public interface ContinuousFunction {
 
 然后，我们可以实现误差函数为
 
-```
+```java
 public class NormalPDF implements ContinuousFunction {
     private double mu;
     private double sigma;
@@ -46,7 +46,7 @@ public class NormalPDF implements ContinuousFunction {
 
 **自适应积分。** Matlab 函数`quad`使用外推辛普森法则的自适应积分。[参考第六章，Cleve Moler。]
 
-```
+```java
 Q1 = h/6  (f(a) + 4f(c) + f(b)), where c = (a + b)/2  [Simpson]
 Q2 = h/12 (f(a) + 4f(d) + 2f(c) + 4f(e) + f(b)),      [Simpson over two subintervals]
      where d = (a + c)/2, e = (c + b)/2
@@ -70,7 +70,7 @@ Q  = Q2 + (Q2 - Q1) / 15         [ 6th order Newton-Cotes / Weddle's Rule]
 
 为了估计 f 在多维体积 V 上的积分，我们在体积中随机选择 N 个点 x[1]、x[2]、...、x[N]。我们对积分的估计是随机点落在 f 以下的比例乘以体积 = V <f>，其中
 
-```
+```java
 <f> =  1/N * (f(x1) + ... + f(x2))
 <f2> = 1/N * (f2(x1) + ... + f2(x2))
 
@@ -80,7 +80,7 @@ Q  = Q2 + (Q2 - Q1) / 15         [ 6th order Newton-Cotes / Weddle's Rule]
 
 *圆环的质心。* 举个例子（摘自《数值食谱》第 221 页），假设我们想要估计一个圆环和两个平面的交点的重量和质心，由满足点 (x, y, z) 的定义
 
-```
+```java
 z2 + (sqrt(x2 + y2) - 3)2 ≤ 1
 x ≥ 1
 y ≥ -3

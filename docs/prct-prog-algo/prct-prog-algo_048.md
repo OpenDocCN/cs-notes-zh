@@ -8,14 +8,14 @@
 
 **JAR 文件。** *Java 存档*，简称 JAR，使您能够将各种文件打包到单个存档中。它类似于 ZIP 或 tar 文件。要创建一个存档，请在命令行中键入以下内容：
 
-```
+```java
 jar cf *jar-file* *input-files*
 
 ```
 
 要从 JAR 中提取所有文件，请键入：
 
-```
+```java
 jar xf *jar-file*
 
 ```

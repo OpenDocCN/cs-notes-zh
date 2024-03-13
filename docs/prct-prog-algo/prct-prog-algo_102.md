@@ -209,7 +209,7 @@ CC.java 使用 DFS 实现此 API。
 
 1.  **走出迷宫。** 给定一个 n×n 的迷宫（就像在前一个练习中创建的那样），编写一个程序，如果存在路径，则从起始单元格（1, 1）到终点单元格（n, n）找到一条路径。要找到迷宫的解决方案，请运行以下算法，从（1, 1）开始，并在到达单元格（n, n）时停止。
 
-    ```
+    ```java
     explore(x, y)
     -------------
       - Mark the current cell (x, y) as "visited."
@@ -230,7 +230,7 @@ CC.java 使用 DFS 实现此 API。
 
 1.  **单词梯子。** 编写一个程序 WordLadder.java，从命令行中获取两个 5 个字母的字符串，并从标准输入中读取一个 5 个字母的单词列表，然后打印出连接这两个字符串的最短[单词梯子](http://www.wordplay.fsnet.co.uk/wl/ladders.htm)（如果存在）。如果两个单词在一个字母上不同，那么它们可以在一个单词梯子链中连接起来。例如，以下单词梯子连接了 green 和 brown。
 
-    ```
+    ```java
     green greet great groat groan grown brown
 
     ```
@@ -285,7 +285,7 @@ CC.java 使用 DFS 实现此 API。
 
     这是 Bin Jiang 在 1990 年代初提出的另一种实现。唯一额外的内存是用于顶点堆栈，但该堆栈必须支持任意删除（或至少将任意项移动到堆栈顶部）。
 
-    ```
+    ```java
     private void dfs(Graph G, int s) {
         SuperStack<Integer> stack = new SuperStack<Integer>();
         stack.push(s);
@@ -311,7 +311,7 @@ CC.java 使用 DFS 实现此 API。
 
     这里是另一种实现。这可能是最简单的非递归实现，但在最坏情况下使用的空间与 E + V 成比例（因为一个顶点的多个副本可能在堆栈上），并且以标准递归 DFS 的相反顺序探索与 v 相邻的顶点。此外，`edgeTo[v]` 条目可能被更新多次，因此可能不适用于回溯应用。
 
-    ```
+    ```java
     private void dfs(Graph G, int s) {
         Stack<Integer> stack = new Stack<Integer>();
         stack.push(s);
@@ -333,7 +333,7 @@ CC.java 使用 DFS 实现此 API。
 
 1.  **非递归深度优先搜索。** 解释为什么以下非递归方法（类似于 BFS，但使用堆栈而不是队列）*不*实现深度优先搜索。
 
-    ```
+    ```java
     private void dfs(Graph G, int s) {
         Stack<Integer> stack = new Stack<Integer>();
         stack.push(s);

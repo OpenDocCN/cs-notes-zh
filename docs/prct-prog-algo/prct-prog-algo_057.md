@@ -10,7 +10,7 @@
 
 **生成随机数。** 数学库函数`Math.random`生成大于或等于 0.0 且小于 1.0 的伪随机数。如果要生成随机整数或布尔值，最好的方法是使用库`Random`。程序 RandomDemo.java 演示了如何使用它。
 
-```
+```java
 Random random = new Random();
 boolean a = random.nextBoolean();   // true or false
 int     b = random.nextInt();       // between -2³¹ and 2³¹ - 1
@@ -22,7 +22,7 @@ double  e = random.nextGaussian();  // Gaussian with mean 0 and stddev = 1
 
 请注意，您应该在程序中只创建一个新的`Random`对象。通过创建多个对象，您不会获得更多“随机”的结果。对于调试，您可能希望每次程序执行时生成相同的伪随机数序列。要做到这一点，请使用带有`long`参数的构造函数。
 
-```
+```java
 Random random = new Random(1234567L);
 
 ```
@@ -31,7 +31,7 @@ Random random = new Random(1234567L);
 
 **线性同余随机数生成器。** 对于整数类型，我们必须注意溢出。考虑 a * b (mod m)作为一个例子（无论是在 a^b (mod m)的上下文中还是线性同余随机数生成器中：给定常数 a、c、m 和种子 x[0]，迭代：x = (a * x + c) mod m。Park 和 Miller 建议 a = 16807，m = 2147483647，c = 0 适用于 32 位有符号整数。为避免溢出，使用 Schrage 的方法。
 
-```
+```java
 Precompute:  q = m / a, r = m % a
 Iterate:     x = a * (x - x/ q) * q) - r * (x / q)
 
@@ -41,7 +41,7 @@ Iterate:     x = a * (x - x/ q) * q) - r * (x / q)
 
 **概率函数库。** OR-Objects 包含许多经典的[概率分布和随机数生成器](http://opsresearch.com/OR-Objects/api/drasys/or/prob/package-summary.html)，包括正态分布、F 分布、卡方分布、伽玛分布、二项分布、泊松分布。您可以在这里下载[jar 文件](http://opsresearch.com/cgi-bin/freeware.cgi/or124.jar)。程序 ProbDemo.java 演示了如何使用它。它从伽玛分布生成一个随机值和从二项分布生成 5 个随机值。请注意，该方法称为`getRandomScaler`而不是`getRandomScalar`。
 
-```
+```java
 GammaDistribution x = new GammaDistribution(2, 3);
 System.out.println(x.getRandomScaler());
 
@@ -123,7 +123,7 @@ Ising 模型被提出来描述晶体材料中的磁性。还模拟其他自然�
 
 1.  **随机数生成。** 计算介于 0 和 N-1 之间的伪随机整数时，以下方法会失败吗？`Math.random`保证返回大于或等于 0.0 且严格小于 1.0 的浮点数。
 
-    ```
+    ```java
     double x = Math.random();
     int r = (int) (x * N);
 
@@ -172,7 +172,7 @@ Ising 模型被提出来描述晶体材料中的磁性。还模拟其他自然�
 
 1.  **泊松分布。** 泊松分布在描述任何特定小时间间隔内衰变的核数的波动方面非常有用。
 
-    ```
+    ```java
     public static int poisson(double c) {
        double t = 0.0;
        for (int x = 0; true; x++) {
@@ -201,7 +201,7 @@ Ising 模型被提出来描述晶体材料中的磁性。还模拟其他自然�
 
     |
 
-    ```
+    ```java
     (x1)2 + ... + (xN)2 ≤ 1
 
     ```
@@ -214,7 +214,7 @@ Ising 模型被提出来描述晶体材料中的磁性。还模拟其他自然�
 
     |
 
-    ```
+    ```java
     ( x1/r, x2/r, ..., xN/r ), where r = sqrt((x1)2 + ... + (xN)2)
 
     ```
@@ -231,7 +231,7 @@ Ising 模型被提出来描述晶体材料中的磁性。还模拟其他自然�
 
 1.  **彩虹。** 1637 年，勒内·笛卡尔发现了对彩虹形成的第一个科学解释。他的方法涉及跟踪光线穿过球形雨滴时的内部反射。根据大量平行光线击中球形雨滴的模型，模拟[彩虹的生成](http://astro.temple.edu/~dhill001/MCRain/MCRain.html)。当光线击中雨滴时，光线会反射和折射。我们使用 HSB 颜色格式，并随机选择色调 h 在 0（红色）和 1（紫色）之间。我们使用 1.33 + 0.06 * h 作为色调 h 的折射率。对于每条光线，我们根据折射和反射的物理定律绘制一个光点。然后，观察者将看到每个光点以随机颜色绘制，无论是在主彩虹还是次彩虹中。为了进行模拟，我们均匀随机选择 7 种颜色中的一种。然后，我们选择单位圆中心为 (0, 0) 的点 (x, y)，并设置冲击参数 r = sqrt(x² + y²)。入射角 θ[i] = arcsin(r)，根据斯涅尔定律，折射角 θ[r] = arcsin (r / n)，其中 *n* 是折射率。如果光线完全反射一次，它以 θ[p] = 4θ[r] - 2θ[i] 的角度出射，贡献于主彩虹。如果光线完全反射第二次，它以 θ[p] = 6θ[r] - 2θ[i] - π 的角度出射，贡献于次彩虹。根据两个介质边界上的电磁波的传输和反射公式，计算主光线和次光线的强度 I[p] 和 I[s]。
 
-    ```
+    ```java
     Ip = 1/2 (s(1-s)2 + p(1-p)2)
     Is = 1/2 (s2(1-s)2 + p2(1-p)2)
     p = (sin(θi-θr)/sin(θi+θr))2

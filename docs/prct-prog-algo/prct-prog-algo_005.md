@@ -98,7 +98,7 @@
 
 +   *条件运算符.* 条件运算符`?:`是一个三元运算符（三个操作数），它使您能够在表达式中嵌入一个条件。这三个操作数由`?`和`:`符号分隔。如果第一个操作数（一个布尔表达式）为`true`，则结果具有第二个表达式的值；否则具有第三个表达式的值。
 
-    ```
+    ```java
     int min = (x < y) ? x : y;
 
     ```
@@ -119,7 +119,7 @@
 
 1.  在执行以下代码后，`m`和`n`的值是多少？
 
-    ```
+    ```java
     int n = 123456789;
     int m = 0;
     while (n != 0) {
@@ -131,7 +131,7 @@
 
 1.  以下代码打印出什么？
 
-    ```
+    ```java
     int f = 0, g = 1;
     for (int i = 0; i <= 15; i++) {
        System.out.println(f);
@@ -143,7 +143,7 @@
 
 1.  与调和��不同，和 1/1 + 1/4 + 1/9 + 1/16 + ... + 1/n² *确实*会收敛到一个常数，随着*n*趋向无穷。 （实际上，常数是π² / 6，因此可以使用这个公式来估计π的值。）以下哪个 for 循环计算这个和？ 假设`n`是一个初始化为 1000000 的`int`，`sum`是一个初始化为 0 的`double`。
 
-    ```
+    ```java
     (a) for (int i = 1; i <= n; i++) 
            sum = sum + 1 / (i * i);
 
@@ -200,7 +200,7 @@
 
 1.  以下循环有什么问题？
 
-    ```
+    ```java
     boolean done = false;
     while (done = false) {
         ...
@@ -210,7 +210,7 @@
 
     while 循环条件使用`=`而不是`==`，因此是一个赋值语句（这使得`done`始终为`false`，循环体永远不会被执行）。最好避免使用`==`。
 
-    ```
+    ```java
     boolean done = false;
     while (!done) {
         ...
@@ -220,7 +220,7 @@
 
 1.  以下循环有什么问题，它旨在计算 1 到 100 之间整数的总和？
 
-    ```
+    ```java
     for (int i = 1; i <= N; i++) {
        int sum = 0;
        sum = sum + i;
@@ -243,7 +243,7 @@
 
 1.  以下代码片段有什么问题？
 
-    ```
+    ```java
     double x = -32.2;
     boolean isPositive = (x > 0);
     if (isPositive = true) System.out.println(x + " is positive");
@@ -255,7 +255,7 @@
 
 1.  改变/添加一个字符，使得以下程序打印出 20 个 x。有两种不同的解决方案。
 
-    ```
+    ```java
     int i = 0, n = 20;
     for (i = 0; i < n; i--)
         System.out.print("x");
@@ -266,7 +266,7 @@
 
 1.  以下代码片段做什么？
 
-    ```
+    ```java
     if (x > 0);
         System.out.println("positive");
 
@@ -280,7 +280,7 @@
 
 1.  以下程序做什么？
 
-    ```
+    ```java
     public static void main(String[] args) {
        int N = Integer.parseInt(args[0]);
        int x = 1;
@@ -301,7 +301,7 @@
 
 1.  给定两个正整数`a`和`b`，以下代码片段在`c`中留下什么结果
 
-    ```
+    ```java
     c = 0;
     while (b > 0) {
        if (b % 2 == 1) c = c + a;
@@ -315,7 +315,7 @@
 
 1.  使用循环和四个条件语句编写一个程序来打印
 
-    ```
+    ```java
     12 midnight
     1am
     2am
@@ -329,7 +329,7 @@
 
 1.  以下程序打印什么？
 
-    ```
+    ```java
     public class Test {
        public static void main(String[] args) {
           if (10 > 5); 
@@ -371,7 +371,7 @@
 
 1.  以下两个代码片段分别做什么？
 
-    ```
+    ```java
     for (int i = 0; i < N; i++)
        for (int j = 0; j < N; j++)
            if (i != j) System.out.println(i + ", " + j);
@@ -384,7 +384,7 @@
 
 1.  不使用计算机确定打印出的值是多少。从 0、100、101、517 或 1000 中选择正确答案。
 
-    ```
+    ```java
     int cnt = 0;
     for (int i = 0; i < 10; i++)
        for (int j = 0; j < 10; j++)
@@ -417,7 +417,7 @@
 
 1.  以下代码片段做什么？
 
-    ```
+    ```java
     int digits = 0;
     do {
        digits++;
@@ -440,7 +440,7 @@
 
 1.  在执行以下代码后，s 的值是多少？
 
-    ```
+    ```java
     int M = 987654321;
     String s = "";
     while (M != 0) {
@@ -453,7 +453,7 @@
 
 1.  在执行以下混乱的代码后，i 的值是多少？
 
-    ```
+    ```java
     int i = 10;
     i = i++;
     i = ++i;
@@ -479,7 +479,7 @@
 
 1.  **找零钱。** 编写一个程序，读取一个命令行整数 N（便士数），并打印使用美国硬币（仅限 25 美分、10 美分、5 美分和 1 美分）找零的最佳方式（硬币数量最少）。例如，如果 N = 73，则打印
 
-    ```
+    ```java
     2 quarters
     2 dimes
     3 pennies
@@ -490,7 +490,7 @@
 
 1.  编写一个程序 Triangle.java，接受一个命令行参数 N 并打印一个 N-by-N 的三角形图案。
 
-    ```
+    ```java
     * * * * * *
     . * * * * *
     . . * * * *
@@ -502,7 +502,7 @@
 
 1.  编写一个程序 Ex.java，接受一个命令行参数 N 并打印一个(2N + 1)-by-(2N + 1)的 X 图案。使用两个`for`循环和一个`if-else`语句。
 
-    ```
+    ```java
     * . . . . . *
     . * . . . * .
     . . * . * . .
@@ -515,7 +515,7 @@
 
 1.  编写一个程序 BowTie.java，接受一个命令行参数 N 并打印一个(2N + 1)-by-(2N + 1)的蝴蝶结图案。使用两个`for`循环和一个`if-else`语句。
 
-    ```
+    ```java
     * . . . . . * 
     * * . . . * * 
     * * * . * * * 
@@ -528,7 +528,7 @@
 
 1.  编写一个程序 Diamond.java，接受一个命令行参数 N 并打印一个(2N + 1)-by-(2N + 1)的菱形图案。
 
-    ```
+    ```java
     % java Diamond 4
     . . . . * . . . . 
     . . . * * * . . . 
@@ -546,7 +546,7 @@
 
 1.  当 N = 5 时，程序 Circle.java 打印出什么？
 
-    ```
+    ```java
     for (int i = -N; i <= N; i++) {
        for (int j = -N; j <= N; j++) {
           if (i*i + j*j <= N*N) System.out.print("* ");
@@ -619,7 +619,7 @@
 
 1.  **排序网络。** 编写一个程序 Sort3.java，其中有三个`if`语句（没有循环），从命令行读取三个整数*a*、*b*和*c*，并按升序打印它们。
 
-    ```
+    ```java
     if (a > b) swap a and b
     if (a > c) swap a and c
     if (b > c) swap b and c
@@ -628,7 +628,7 @@
 
 1.  **遗忘排序网络。** 说服自己以下代码片段重新排列存储在变量 A、B、C 和 D 中的整数，使得 A <= B <= C <= D。
 
-    ```
+    ```java
     if (A > B) { t = A; A = B; B = t; }
     if (B > C) { t = B; B = C; C = t; }
     if (A > B) { t = A; A = B; B = t; }
@@ -660,7 +660,7 @@
 
 1.  以下代码片段会编译吗？如果会，它会做什么？
 
-    ```
+    ```java
     int a = 10, b = 18;
     if (a = b) System.out.println("equal");
     else       System.out.println("not equal");
@@ -671,7 +671,7 @@
 
 1.  **陷阱 1。** 以下代码片段做什么？
 
-    ```
+    ```java
     boolean a = false;
     if (a = true) System.out.println("yes");
     else          System.out.println("no");
@@ -682,7 +682,7 @@
 
 1.  **陷阱 2。** 以下代码片段做什么？
 
-    ```
+    ```java
     int a = 17, x = 5, y = 12;
     if (x > y);
     {
@@ -697,7 +697,7 @@
 
 1.  **陷阱 3。** 以下代码片段做什么？
 
-    ```
+    ```java
     for (int x = 0; x < 100; x += 0.5) {
         System.out.println(x);
     }
@@ -708,7 +708,7 @@
 
 1.  以下代码片段做什么？
 
-    ```
+    ```java
     int income = Integer.parseInt(args[0]);
     if (income >= 311950) rate = .35;
     if (income >= 174700) rate = .33;
@@ -727,7 +727,7 @@
 
 1.  在 N = 1、2、3、4 和 5 时运行以下循环后，变量 s 的值是多少。
 
-    ```
+    ```java
     String s = "";
     for (int i = 1; i <= N; i++) {
        if (i % 2 == 0) s = s + i + s;
@@ -768,7 +768,7 @@
 
 1.  当你尝试编译以下代码片段时会发生什么？
 
-    ```
+    ```java
     double x;  
     if (a >= 0) x = 3.14;
     if (a <  0) x = 2.71;

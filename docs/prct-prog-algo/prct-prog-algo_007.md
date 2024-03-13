@@ -88,7 +88,7 @@ Java 的`print()`和`println()`方法是您一直在使用的方法。`printf()`
 
     您的操作系统还提供了许多过滤器。例如，`sort`过滤器将标准输入中的行按排序顺序放置：
 
-    ```
+    ```java
     % java RandomSeq 5 | sort
     0.035813305516568916 
     0.14306638757584322 
@@ -100,7 +100,7 @@ Java 的`print()`和`println()`方法是您一直在使用的方法。`printf()`
 
     另一个有用的过滤器是`more`，它从标准输入读取数据，并在终端窗口中一次显示一个屏幕。例如，如果您键入
 
-    ```
+    ```java
     % java RandomSeq 1000 | more
 
     ```
@@ -125,7 +125,7 @@ Java 的`print()`和`println()`方法是您一直在使用的方法。`printf()`
 
     例如，两次调用序列
 
-    ```
+    ```java
     StdDraw.setXscale(x0, x1);
     StdDraw.setYscale(y0, y1); 
 
@@ -191,7 +191,7 @@ Java 的`print()`和`println()`方法是您一直在使用的方法。`printf()`
 
 +   *用户交互。* 我们的标准绘图库还包括方法，以便用户可以使用鼠标与窗口进行交互。
 
-    ```
+    ```java
     double mouseX()          return x-coordinate of mouse
     double mouseY()          return y-coordinate of mouse
     boolean mousePressed()   is the mouse currently being pressed?
@@ -229,7 +229,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
     例如，以下代码片段演奏 10 秒钟的 A 音调。
 
-    ```
+    ```java
     int SAMPLING_RATE = 44100;
     double hz = 440.0;
     double duration = 10.0;
@@ -258,7 +258,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  给定一系列对象的位置和质量，编写一个程序来计算它们的质心或*质心*。质心是*n*个对象的平均位置，按质量加权。如果位置和质量由(*x[i]*, *y[i]*, *m[i]*)给出，则质心(*x*, *y*, *m*)由以下公式给出：
 
-    ```
+    ```java
     m  = *m[1]* + *m[2]* + ... + *m[n]*
     x  = (*m[1]x[1]* +  ... + *m[n]x[n]*) / m
     y  = (*m[1]y[1]* +  ... + *m[n]y[n]*) / m
@@ -287,7 +287,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **斯派罗图。** 编写一个程序 Spirograph.java，接受三个命令行参数 R，r 和 a，并绘制生成的斯派罗图。[斯派罗图](https://en.wikipedia.org/wiki/Spirograph)（技术上，是一个外摆线）是通过围绕半径为 r 的固定大圆滚动一个圆形而形成的曲线。如果笔从滚动圆的中心偏移（r+a），则在时间 t 时得到的曲线方程如下
 
-    ```
+    ```java
     x(t) = (R+r)*cos(t) - (r+a)*cos(((R+r)/r)*t)
     y(t) = (R+r)*sin(t) - (r+a)*sin(((R+r)/r)*t)
 
@@ -303,7 +303,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **示波器。** 编写一个程序 Oscilloscope.java 来模拟示波器的输出并产生利萨如图案。这些图案以法国物理学家朱尔斯·A·利萨如的名字命名，他研究了两个相互垂直的周期性干扰同时发生时产生的图案。假设输入是正弦的，因此以下参数方程描述了曲线：
 
-    ```
+    ```java
     x = Ax sin (wxt + θx)
     y = Ay sin (wyt + θy)
     Ax, Ay = amplitudes
@@ -335,7 +335,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **凯撒密码。** 尤利乌斯·凯撒使用一种方案向西塞罗发送秘密消息，现在被称为*凯撒密码*。每个字母都被替换为字母表中比它前进 k 个位置的字母（如果需要，可以循环）。下表给出了当 k = 3 时的凯撒密码。
 
-    ```
+    ```java
     Original:  A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     Caesar:    D E F G H I J K L M N O P Q R S T U V W X Y Z A B C
 
@@ -347,7 +347,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **奇偶校验。** 当每行和每列的和都是偶数时，布尔矩阵具有*奇偶校验属性*。这是一种简单的纠错码，因为如果在传输中一个位被损坏（位从 0 翻转到 1 或从 1 翻转到 0），它可以被检测和修复。这是一个具有奇偶校验属性的 4 x 4 输入文件：
 
-    ```
+    ```java
     1 0 1 0
     0 0 0 0
     1 1 1 1
@@ -406,7 +406,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **带阻力的抛体运动。** 编写一个程序 BallisticMotion.java，绘制以速度 v 和角度θ射出的球的轨迹。考虑重力和阻力力。假设阻力力与速度的平方成正比。使用牛顿的运动方程和欧拉-克罗默方法，根据以下方程更新位置、速度和加速度：
 
-    ```
+    ```java
     v  = sqrt(vx*vx + vy*vy) 
     ax = - C * v * vx          ay = -G - C * v * vy
     vx = vx + ax * dt          vy = vy + ay * dt
@@ -426,7 +426,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **Bresenham 直线绘制算法。** 要在显示器上绘制从（x1，y1）到（x2，y2）的线段，比如 1024x1024，您需要对连续线进行离散近似，并确定要打开哪些像素。[Bresenham 直线绘制算法](http://www.cs.helsinki.fi/group/goa/mallinnus/lines/bresenh.html)是一个聪明的解决方案，适用于斜率在 0 和 1 之间且 x1 < x2 时。
 
-    ```
+    ```java
     int dx  = x2 - x1;
     int dy  = y2 - y1;
     int y   = y1;
@@ -447,7 +447,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **米勒的疯狂。** 编写一个程序 Madness.java 来绘制参数方程：
 
-    ```
+    ```java
     x = sin(0.99 t) - 0.7 cos( 3.01 t)
     y = cos(1.01 t) + 0.1 sin(15.03 t)
 
@@ -457,7 +457,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  **Fay 的蝴蝶。** 编写一个程序 Butterfly.java 来绘制极坐标方程：
 
-    ```
+    ```java
     r = e^(cos t) - 2 cos(4t) + (sin(t/12)⁵)
 
     ```
@@ -482,7 +482,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
     |
 
-    ```
+    ```java
     public class Mystery {
        public static void main(String[] args) {
           int N = Integer.parseInt(args[0]);
@@ -508,7 +508,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
     |
 
-    ```
+    ```java
     8 8 3 5 1 7 0 9 2 6 9 7 4 0 5 3 9 3 7 6
 
     ```
@@ -519,7 +519,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
     |
 
-    ```
+    ```java
     java Mystery 10 < input.txt
 
     ```
@@ -558,7 +558,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  编写一个名为`DeleteX.java`的程序，从标准输入读取文本并删除所有字母 X 的出现。要过滤文件并删除所有 X，请使用以下命令运行您的程序：
 
-    ```
+    ```java
     % java DeleteX < input.txt > output.txt
 
     ```
@@ -569,7 +569,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
 1.  考虑以下 Java 程序。
 
-    ```
+    ```java
     public class Mystery {
        public static void main(String[] args) {
           int i = StdIn.readInt();
@@ -583,28 +583,28 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
     假设文件`input.txt`包含
 
-    ```
+    ```java
     5 1
 
     ```
 
     以下命令做什么？
 
-    ```
+    ```java
     java Mystery < input.txt
 
     ```
 
 1.  重复上一个练习，但使用以下命令代替
 
-    ```
+    ```java
     java Mystery < input.txt | java Mystery | java Mystery | java Mystery
 
     ```
 
 1.  考虑以下 Java 程序。
 
-    ```
+    ```java
     public class Mystery {
        public static void main(String[] args) {
           int i = StdIn.readInt();
@@ -619,14 +619,14 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
     假设文件`input.txt`包含整数 1 和 1。以下命令会做什么？
 
-    ```
+    ```java
     java Mystery < input.txt | java Mystery | java Mystery | java Mystery
 
     ```
 
 1.  考虑 Java 程序 Ruler.java。
 
-    ```
+    ```java
     public class Ruler { 
        public static void main(String[] args) { 
           int n = StdIn.readInt();
@@ -639,7 +639,7 @@ StdAudio 是一个可以用来播放和操作声音文件的库。它允许您�
 
     假设文件`input.txt`包含整数 1 和 1。以下命令会做什么？
 
-    ```
+    ```java
     java Ruler < input.txt | java Ruler | java Ruler | java Ruler
 
     ```

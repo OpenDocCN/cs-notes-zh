@@ -83,7 +83,7 @@ PathFinder.java 使用一种被称为*广度优先搜索*的经典算法计算�
 
 给定表演者的名称，*凯文·贝肯游戏*是找到一��交替的电影和表演者序列，最终回到凯文·贝肯。令人惊讶的是，PathFinder.java 提供了一个解决方案。
 
-```
+```java
 % java PathFinder movies.txt "/" "Bacon, Kevin"
 Kidman, Nicole
    Bacon, Kevin 
@@ -150,7 +150,7 @@ Performer.java 从我们的电影-演员输入格式的文件中创建一个表�
 
 1.  **直方图。** 编写一个程序 BaconHistogram.java，打印出凯文·贝肯数的直方图，指示有多少表演者来自 movies.txt 的贝肯数为 0、1、2、3、...。包括那些与凯文·贝肯完全没有联系的人的类别。
 
-    ```
+    ```java
       #     Freq
     ------------
       0        1
@@ -168,7 +168,7 @@ Performer.java 从我们的电影-演员输入格式的文件中创建一个表�
 
 1.  **单词阶梯。** 编写一个程序 WordLadder.java，以两个 5 个字母的字符串作为命令行参数，从标准输入读取 5 个字母单词列表，并打印出一个最短的[单词阶梯](http://en.wikipedia.org/wiki/Word_ladder)，使用标准输入上的单词连接这两个字符串（如果存在）。在单词阶梯链中，两个单词如果只相差一个字母，则相邻。例如，以下单词阶梯连接了`green`和`brown`：
 
-    ```
+    ```java
     green greet great groat groan grown brown
 
     ```
@@ -205,7 +205,7 @@ Performer.java 从我们的电影-演员输入格式的文件中创建一个表�
 
 1.  修改`Graph.java`，包括一个返回图顶点的`Iterator`的方法`iterator()`。此外，使`Graph`实现`Iterable<String>`接口，以便您可以使用 foreach 遍历图的顶点。
 
-    ```
+    ```java
     public Iterator<String> iterator() {
        return st.iterator();
     }

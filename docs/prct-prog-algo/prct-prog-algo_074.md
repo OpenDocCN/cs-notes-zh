@@ -100,7 +100,7 @@
 
 假设我们希望开发一个名为`Vector`的不可变数据类型，其构造函数接受一个浮点数数组作为参数来初始化一个实例变量。考虑以下尝试：
 
-```
+```py
 class Vector:
     def __init__(self, a):
         self._coords = a   # array of coordinates
@@ -110,7 +110,7 @@ class Vector:
 
 这段代码使`Vector`成为一个可变数据类型。客户程序可以通过指定数组中的元素来创建一个`Vector`对象，然后（绕过 API）在创建后更改 Vector 的元素：
 
-```
+```py
 a = [3.0, 4.0]
 v = Vector(a)
 a[0] = 17.0  # bypasses the public API
@@ -119,7 +119,7 @@ a[0] = 17.0  # bypasses the public API
 
 为了确保包含可变类型实例变量的数据类型的不可变性，实现需要进行本地复制，称为*防御性复制*。回想一下第 1.4 节中，表达式`a[:]`创建了数组`a[]`的一个副本。因此，这段代码创建了一个防御性复制：
 
-```
+```py
 class Vector:
     def __init__(self, a):
         self._coords = a[:]   # array of coordinates
@@ -181,7 +181,7 @@ Python 的内置`tuple`数据类型表示一个*不可变*对象序列。它类�
 
 使用元组可以改善程序的设计。例如，如果我们用以下语句替换 vector.py 构造函数中的第一条语句
 
-```
+```py
 self._coords = tuple(a)
 
 ```
@@ -190,7 +190,7 @@ self._coords = tuple(a)
 
 Python 还提供了一个强大的元组赋值功能，称为*元组打包*和*元组解包*，它允许你将右侧赋值运算符上的表达式元组分配给左侧的变量元组（前提是左侧的变量数量与右侧的表达式数量相匹配）。你可以使用这个功能同时赋值多个变量。例如，以下语句交换了变量`x`和`y`中的对象引用：
 
-```
+```py
 x, y = y, x
 
 ```
@@ -227,7 +227,7 @@ x, y = y, x
 
 现在，假设一个客户通过将`complex`对象数组传递给构造函数来创建具有复数分量的`Vector`。向量加法或标量乘法没有问题，但点积操作的实现（以及依赖于点积的幅度和方向的实现）却失败得惊人。这里是一个例子：
 
-```
+```py
 a = [1 + 2j, 2 + 0j, 4 + 0j]
 x = Vector(a)
 b = abs(x)
@@ -260,7 +260,7 @@ Python 为其每个算术运算符关联一个特殊方法，因此您可以通�
 
 *对象相等性*（*值相等性*）。当两个对象相等时，它们具有相同的数据类型值。您应该使用`==`和`!=`运算符，这些运算符是使用特殊方法`__eq__()`和`__ne__()`定义的，用于测试对象的相等性。如果您没有定义`__eq__()`方法，那么 Python 会使用`is`运算符。也就是说，默认情况下，`==`实现引用相等性。因此，在我们之前的例子中，即使`c1`和`c2`具有相同的位置和电荷值，`c1 == c2`也是`False`。如果我们希望将具有相同位置和电荷值的两个电荷视为相等，则可以通过在 charge.py（来自第 3.2 节）中包含以下代码来确保这一结果：
 
-```
+```py
     def __eq__(self, other):
         if self._rx != other._rx: return False
         if self._ry != other._ry: return False
@@ -285,7 +285,7 @@ Python 为其每个算术运算符关联一个特殊方法，因此您可以通�
 
 在典型应用中，我们使用哈希码将对象`x`映射到一个小范围内的整数，例如在 0 和`m`-1 之间，使用哈希函数
 
-```
+```py
 hash(x) % m
 
 ```
@@ -302,7 +302,7 @@ hash(x) % m
 
 例如，以下是`Charge`数据类型（在 charge.py 中定义，来自第 3.2 节）的`__hash__()`实现，以配合我们刚刚考虑的`__eq__()`实现：
 
-```
+```py
 def __hash__(self):
     a = (self._rx, self._ry, self._q)
     return hash(a)
@@ -317,7 +317,7 @@ def __hash__(self):
 
 作为一种风格，如果你定义了任何一个比较方法，那么你应该以一致的方式定义所有这些方法。你可以通过实现六个特殊方法使用户定义的类型*可比较*，就像我们在 counter.py 中为`Counter`类所做的那样：
 
-```
+```py
 def __lt__(self, other): return self._count <  other._count
 def __le__(self, other): return self._count <= other._count
 def __eq__(self, other): return self._count == other._count
@@ -347,7 +347,7 @@ Python 中几乎每个运算符都可以被重载。如果你想重载一个运�
 
 举个例子，考虑估计正实值函数*f*的*黎曼积分*（即曲线下的面积）的问题。也许最简单的方法是称为*矩形法*，在这种方法中，我们通过计算曲线下*n*个等宽矩形的总面积来近似积分的值。下面定义的`integrate()`函数评估了在区间(*a*, *b*)中实值函数*f*()的积分，使用*n*个矩形的矩形法：
 
-```
+```py
 def square(x):
     return x*x
 
@@ -412,14 +412,14 @@ Python 提供了定义类之间关系的语言支持，称为*继承*。软件�
 
 *异常*是程序运行时发生的中断性事件，通常用于表示错误。所采取的行动称为*引发异常*（或*错误*）。在学习编程过程中，我们已经遇到了 Python 标准模块引发的异常：`IndexError`和`ZeroDivisionError`是典型例子。您也可以引发自己的异常。最简单的一种是中断程序执行并写入错误消息的`Exception`：
 
-```
+```py
 raise Exception('Error message here.')
 
 ```
 
 当异常对客户端有帮助时，使用异常是一个好的实践。例如，在 vector.py 中，如果要相加的两个`Vector`具有不同的维度，我们应该在`__add__()`中引发异常。为此，我们在`__add__()`的开头插入以下语句：
 
-```
+```py
 if len(self) != len(other):
     raise Exception('vectors have different dimensions')
 
@@ -429,14 +429,14 @@ if len(self) != len(other):
 
 *断言*是一个布尔表达式，你在程序中断言在那一点是`True`。如果表达式是`False`，程序将在运行时引发`AssertionError`。程序员使用断言来检测错误并增加对程序正确性的信心。断言还用于记录程序员的意图。例如，在 counter.py 中，我们可以通过在`increment()`的最后一条语句中添加以下断言来检查计数器永远不会为负：
 
-```
+```py
 assert self._count >= 0
 
 ```
 
 这个声明会引起负计数的注意。您还可以添加一个可选的详细消息，例如
 
-```
+```py
 assert self._count >= 0, 'Negative count detected!'
 
 ```
@@ -503,7 +503,7 @@ assert self._count >= 0, 'Negative count detected!'
 
     *解决方案*：
 
-    ```
+    ```py
     def __sub__(self, other):
         return self + (other * -1.0)
 
@@ -539,7 +539,7 @@ assert self._count >= 0, 'Negative count detected!'
 
     *解决方案*：这个算法被称为*扩展欧几里得算法*：
 
-    ```
+    ```py
     def gcd(p, q):
         if q == 0: return (p, 1, 0)
         (d, a, b) = gcd(q, p % q)

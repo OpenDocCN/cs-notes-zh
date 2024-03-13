@@ -16,7 +16,7 @@
 
 我们通过在数组名称后面的方括号中放置其索引来引用数组元素：代码`a[i]`表示数组`a[]`的第`i`个元素。例如，以下代码创建了一个类型为 double 的 n 个数字的数组，所有元素都初始化为 0：
 
-```
+```java
 double[] a;                    // declare the array
 a = new double[n];             // create the array
 for (int i = 0; i < n; i++)    // elements are indexed from 0 to n-1
@@ -40,7 +40,7 @@ ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
 +   *默认数组初始化。* 为了节省代码，我们经常利用 Java 的默认数组初始化约定。例如，以下语句等同于本页顶部的四行代码：
 
-    ```
+    ```java
     double[] a = new double[n]; 
 
     ```
@@ -53,7 +53,7 @@ ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
 +   *在编译时设置数组值。* 当我们有一小组我们想要保留在数组中的文字值时，我们可以通过在大括号中列出用逗号分隔的值来初始化它。例如，我们可以在处理扑克牌的程序中使用以下代码。
 
-    ```
+    ```java
     String[] SUITS = {
         "Clubs", "Diamonds", "Hearts", "Spades"
     }; 
@@ -67,7 +67,7 @@ ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
     创建这两个数组后，我们可以使用它们来打印一个随机的卡片名称，比如`梅花皇后`，如下所示。
 
-    ```
+    ```java
     int i = (int) (Math.random() * RANKS.length); 
     int j = (int) (Math.random() * SUITS.length); 
     System.out.println(RANKS[i] + " of " + SUITS[j]); 
@@ -76,7 +76,7 @@ ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
 +   *在运行时设置数组值。* 更典型的情况是，当我们希望计算要存储在数组中的值时。例如，我们可以使用以下代码初始化一个长度为 52 的数组，表示一副扑克牌，使用刚刚定义的数组`RANKS[]`和`SUITS[]`。
 
-    ```
+    ```java
     String[] deck = new String[RANKS.length * SUITS.length];
     for (int i = 0; i < RANKS.length; i++) 
         for (int j = 0; j < SUITS.length; j++) 
@@ -91,7 +91,7 @@ ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
 +   *交换。* 经常，我们希望在数组中交换两个值。继续我们的扑克牌示例，以下代码交换了位置`i`处的卡片和位置`j`处的卡片：
 
-    ```
+    ```java
     String temp = deck[i]; 
     deck[i] = deck[j]; 
     deck[j] = temp; 
@@ -100,7 +100,7 @@ ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
 +   *洗牌。* 以下代码洗牌我们的牌组：
 
-    ```
+    ```java
     int n = deck.length; 
     for (int i = 0; i < n; i++) { 
        int r = i + (int) (Math.random() * (n-i)); 
@@ -119,7 +119,7 @@ ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
 数组的一个简单应用是保存你计算过的值，以供以后使用。例如，假设你正在编写一个使用调和数小值进行计算的程序。实现这样一个任务的一种简单方法是将值保存在一个数组中，代码如���
 
-```
+```java
 double[] harmonic = new double[n]; 
 for (int i = 1; i < n; i++) 
     harmonic[i] = harmonic[i-1] + 1.0/i; 
@@ -132,7 +132,7 @@ for (int i = 1; i < n; i++)
 
 作为数组的另一个简单应用的示例，考虑以下代码片段，根据月份的数字（1 代表一月，2 代表二月，依此类推）打印月份的名称。
 
-```
+```java
 if      (m ==  1) System.out.println("Jan");
 else if (m ==  2) System.out.println("Feb");
 else if (m ==  3) System.out.println("Mar");
@@ -150,7 +150,7 @@ else if (m == 12) System.out.println("Dec");
 
 我们也可以使用 `switch` 语句，但一个更紧凑的替代方案是使用一个包含每个月份名称的字符串数组：
 
-```
+```java
 String[] MONTHS = {
     "", "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -176,7 +176,7 @@ System.out.println(MONTHS[m]);
 
 +   *Java 中的二维数组*。要引用二维数组 `a[][]` 中第 `i` 行和第 `j` 列的元素，我们使用记法 `a[i][j]`；要声明一个二维数组，我们在类型名称后添加另一对方括号；要创建数组，我们在类型名称后指定行数，然后是列数（都在方括号内），如下所示：
 
-    ```
+    ```java
     double[][] a = new double[m][n]; 
 
     ```
@@ -185,7 +185,7 @@ System.out.println(MONTHS[m]);
 
 +   *默认初始化。* 与一维数组一样，Java 将数字数组中的所有条目初始化为 0，布尔数组中的所有条目初始化为`false`。二维数组的默认初始化很有用，因为它比一维数组需要更多的代码。要访问二维数组中的每个元素，我们需要嵌套循环：
 
-    ```
+    ```java
     double[][] a; 
     a = new double[m][n]; 
     for (int i = 0; i < m; i++) 
@@ -198,7 +198,7 @@ System.out.println(MONTHS[m]);
 
 +   *在编译时设置值。* 以下代码初始化了 11 行 4 列的数组`a[][]`：
 
-    ```
+    ```java
     double[][] a = { 
         { 99.0, 85.0, 98.0, 0.0 }, 
         { 98.0, 57.0, 79.0, 0.0 }, 
@@ -217,7 +217,7 @@ System.out.println(MONTHS[m]);
 
 +   *不规则数组。* 二维数组中的所有行不需要具有相同的长度要求，一个具有非统一长度行的数组称为*不规则数组*。不规则数组的可能性需要更多的注意来编写数组处理代码。例如，这段代码打印了一个不规则数组的内容：
 
-    ```
+    ```java
     for (int i = 0; i < a.length; i++) { 
         for (int j = 0; j < a[i].length; j++) {
             System.out.print(a[i][j] + " ");
@@ -229,7 +229,7 @@ System.out.println(MONTHS[m]);
 
 +   *多维数组。* 相同的���示法适用于具有任意维数的数组。例如，我们可以使用以下代码声明和初始化一个三维数组
 
-    ```
+    ```java
     double[][][] a = new double[n][n][n];
 
     ```
@@ -242,7 +242,7 @@ System.out.println(MONTHS[m]);
 
 在科学和工程中的典型应用中，涉及使用矩阵操作数执行各种数学操作。例如，我们可以如下*相加*两个*n*乘*n*的矩阵：
 
-```
+```java
 double[][] c = new double[n][n];
 for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
@@ -254,7 +254,7 @@ for (int i = 0; i < n; i++) {
 
 类似地，我们可以*相乘*两个矩阵。矩阵`a[]`和`b[]`的乘积中的每个条目`c[i][j]`是通过计算`a[]`的第 i 行与`b[]`的第 j 列的点积来计算的。
 
-```
+```java
 double[][] c = new double[n][n];
 for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++)  {
@@ -274,7 +274,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  描述并解释当您尝试编译一个程序 HugeArray.java 时会发生什么，其中包含以下语句：
 
-    ```
+    ```java
     int n = 1000;
     int[] a = new int[n*n*n*n];
 
@@ -284,7 +284,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
     *解决方案。*
 
-    ```
+    ```java
     int n = a.length;
     for (int i = 0; i < n/2; i++) {
         String temp = a[n-i-1];
@@ -296,7 +296,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  以下代码片段有什么问题？
 
-    ```
+    ```java
     int[] a;
     for (int i = 0; i < 10; i++)
        a[i] = i * i;
@@ -307,7 +307,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  以下代码片段打印什么？
 
-    ```
+    ```java
     int[] a = { 1, 2, 3 };
     int[] b = { 1, 2, 3 };
     System.out.println(a == b);
@@ -340,7 +340,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **哈达玛矩阵。** n 阶哈达玛矩阵 H(n)是一个布尔矩阵，具有这样一个显著的特性，即任意两行在恰好 n/2 位上不同。（这个特性使其在设计*纠错码*时非常有用。）H(1)是一个 1 阶矩阵，其中唯一的元素为 true，对于 n > 1，H(2n)通过将四个 H(n)的副本对齐在一个大正方形中获得，然后反转右下角的 n 阶副本中的所有元素，如下例所示（T 代表 true，F 代表 false，如常）。
 
-    ```
+    ```java
     H(1)  H(2)    H(4)
     -------------------
      T    T T   T T T T
@@ -358,7 +358,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **二项式系数。** 编写一个程序 BinomialDistribution.java，构建并打印一个二维不规则数组 a，使得`a[n][k]`包含抛掷 n 次硬币时获得恰好 k 个正面的概率。接受一个命令行参数以指定 n 的最大值。这些数字被称为*二项分布*：如果将第 i 行中的每个条目乘以 2^n，就得到*二项式系数*—(x+1)^n 中 x^k 的系数—排列在*帕斯卡三角形*中。要计算它们，从`a[n][0] = 0.0`开始对所有 n，`a[1][1] = 1.0`，然后按行从左到右计算值，`a[n][k] = (a[n-1][k] + a[n-1][k-1]) / 2`。
 
-    ```
+    ```java
     Pascal's triangle   Binomial distribution
     --------------------------------------------
     1                   1 
@@ -377,7 +377,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **随机排列。** 编写一个程序 Permutation.java，使其接受一个命令行参数 N，并打印整数 0 到 N-1 的一个随机排列。同时打印排列的*棋盘可视化*。例如，排列{ 4, 1, 3, 0, 2 }对应于：
 
-    ```
+    ```java
     4 1 3 0 2
     * * * Q * 
     * Q * * * 
@@ -389,7 +389,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **8 皇后检查器。** 整数 0 到 n-1 的排列对应于在 n×n 的棋盘上放置皇后，以便没有两个皇后在同一行或列中。编写一个程序`QueensChecker.java`，确定排列是否对应于放置皇后的位置，以便没有两个皇后在同一行、列或*对角线*上。例如，排列{ 4, 1, 3, 0, 2 }是一个合法的放置：
 
-    ```
+    ```java
     * * * Q * 
     * Q * * * 
     * * * * Q 
@@ -420,7 +420,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **泰拳。** 编写一个程序 KickBoxer.java，接受一个整数体重 w 作为命令行输入，并根据下表打印相应的泰拳体重级别。
 
-    ```
+    ```java
     weight class              from    to
     ------------------------------------
     Fly Weight                   0   112
@@ -452,7 +452,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **幻方。** 编写��个名为 MagicSquare.java 的程序，从命令行读取一个奇数整数 N，并打印出一个 N×N 的幻方。该方格包含 1 到 N² 之间的每个整数，使得所有行总和、列总和和对角线总和相等。
 
-    ```
+    ```java
     4  9  2    11 18 25  2  9
     3  5  7    10 12 19 21  3
     8  1  6     4  6 13 20 22
@@ -465,7 +465,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **横幅。** 编写一个名为`Banner.java`的程序，接受一个字符串作为命令行参数，并按照以下方式打印出大字母的字符串。
 
-    ```
+    ```java
     % java Banner "Kevin"
      #    #  ######  #    #     #    #    #
      #   #   #       #    #     #    ##   #
@@ -486,7 +486,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **斯皮尔曼的脚距离。** 给定两个排列，斯皮尔曼的脚距离是排列作为向量之间的 L1 距离。在前 k 个列表中很有用。
 
-    ```
+    ```java
     int footrule = 0;
     for (int i = 0; i < N; i++)
         footrule = footrule + Math.abs(p[i] - q[i]);
@@ -510,7 +510,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
     添加第六个校验和数字：通过对原始五位数字进行模 10 求和来计算。此外，将一条长线添加到开头并附加到末尾。编写一个名为 ZipBarCoder.java 的程序，从命令行参数读取一个五位数邮政编码，并打印相应的[邮政条形码](http://www.ams.org/new-in-math/cover/barcodes3.html)。垂直打印代码，而不是水平打印，例如，以下编码 08540（校验位为 7）。
 
-    ```
+    ```java
     *****
     *****
     *****
@@ -560,7 +560,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **螺旋 2D 数组。** 给定一个 2D 数组，编写一个程序 Spiral.java 以螺旋顺序打印出来。
 
-    ```
+    ```java
      1  2  3  4
      5  6  7  8
      9 10 11 12
@@ -572,7 +572,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **数独验证器。** 给定一个 9x9 的整数数组，检查它是否是数独谜题的有效解：每行、每列和每个块应该包含 9 个整数，且仅出现一次。
 
-    ```
+    ```java
      5 3 4 | 6 7 8 | 9 1 2 
      6 7 2 | 1 9 5 | 3 4 8 
      1 9 8 | 3 4 2 | 5 6 7
@@ -591,7 +591,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  **哈尔小波变换。** 给定长度为 2^n 的数组`a[]`，其[1D 哈尔变换](http://online.redwoods.cc.ca.us/instruct/darnold/LAPROJ/Fall2002/ames/paper.pdf)如下获得：计算 a[2i]和 a[2i+1]的平均值和差值，计算相同长度的数组，包含平均值，然后是差值。然后对平均值（前 2^n-1 个条目）应用相同的技术，依此类推。下面展示了一个有 2³ 个条目的示例。
 
-    ```
+    ```java
      448  768  704  640 1280 1408 1600 1600  (original)
      608  672 1344 1600 -160   32  -64    0  (step 1)
      640 1472  -32 -128 -160   32  -64    0  (step 2)
@@ -603,7 +603,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
 1.  当您尝试编译具有以下语句的程序时会发生什么？
 
-    ```
+    ```java
     int[] a = new int[-17];
 
     ```
@@ -622,7 +622,7 @@ SelfAvoidingWalk.java 是将二维数组应用于化学的一个应用。详情�
 
     |
 
-    ```
+    ```java
     for (j = 0; j < N; j++)
        b[a[j]]++;
 

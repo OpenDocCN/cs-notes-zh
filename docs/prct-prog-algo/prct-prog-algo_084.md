@@ -118,7 +118,7 @@
 
 +   *别名。* 数组名称指代整个数组——如果我们将一个数组名称分配给另一个数组名称，则两者都指代同一个数组，如下面的代码片段所示。
 
-    ```
+    ```java
     int[] a = new int[N];
     ...
     a[i] = 1234;
@@ -273,7 +273,7 @@
 
 StdIn.java 和 StdOut.java 是用于从标准输入读取数字和文本并将数字和文本打印到标准输出的库。我们的版本比相应的 Java 版本具有更简单的接口（并提供一些技术改进）。RandomSeq.java 生成给定范围内的随机数。Average.java 从标准输入读取一系列实数，并在标准输出上打印它们的平均值。
 
-```
+```java
 % java Average
 10.0 5.0 6.0 3.0 7.0 32.0
 3.14 6.67 17.71
@@ -294,7 +294,7 @@ Draw.java 是支持在多个窗口中绘图的面向对象版本。
 
 StdAudio.java 是一个易于使用的合成声音库。Tone.java 从命令行读取频率和持续时间，并为给定持续时间的给定频率声音化正弦波。
 
-```
+```java
 % java Tone 440.0 3.0
 
 ```
@@ -333,7 +333,7 @@ Picture.java 是一个易于使用的图像处理库。Scale.java 接受图片�
 
 1.  **Wget.** 编写一个程序 Wget.java，从命令行指定的 URL 读取数据并将其保存在同名文件中。
 
-    ```
+    ```java
     % java Wget http://introcs.cs.princeton.edu/data/codes.csv
     % more codes.csv
     United States,USA,00

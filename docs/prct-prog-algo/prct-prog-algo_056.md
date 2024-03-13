@@ -16,7 +16,7 @@
 
 置信区间衡量了我们对未知常数估计的不确定性。这意味着如果我们多次执行相同的实验，我们预计估计的均值会在给定的区间内出现的概率为 95%。数字 1.96 出现是因为正态随机变量在 -1.96 和 1.96 之间的概率恰好为 95%。如果我们想要 90% 或 99% 的置信区间，分别替换为 1.645 或 2.575。上述置信区间并非精确。这是因为我们正在估计标准差。如果 n 较小（比如小于 50），我们应该使用具有 n-1 自由度的学生 t 分布的精确 95% 置信区间。例如，如果有 n = 25 个样本，则我们应该使用 2.06 而不是 1.96。这些数字可以使用 [or124.jar](http://opsresearch.com/cgi-bin/freeware.cgi/or124.jar) 计算，其中包含 [OR-Objects library](http://opsresearch.com/OR-Objects/api/drasys/or/prob/package-summary.html)。程序 ProbDemo.java 演示了如何使用它。
 
-```
+```java
 NormalDistribution normal = new NormalDistribution(0, 1);
 System.out.println(normal.cdf(1.9605064392089844));
 System.out.println(normal.inverseCdf(0.975));
@@ -105,7 +105,7 @@ System.out.println(students.inverseCdf(0.975));
 
 *按键电话。* *触摸音* ® 电话使用称为*双音多频*（DTMF）的系统将按键编码为音频信号。根据下表，每个按键按键与两个音频频率相关联
 
-```
+```java
 Freqs   1209 Hz   1336 Hz   1477 Hz   1633Hz
 --------------------------------------------
 697 Hz    1          2        3         A
@@ -135,14 +135,14 @@ Freqs   1209 Hz   1336 Hz   1477 Hz   1633Hz
 
 傅里叶分析的一个基石结果是卷积定理。它表明两个向量卷积的 DFT 是两个向量的 DFT 的逐点乘积。
 
-```
+```java
 DFTN(a ⊗ b) =  DFTN(a) · DFTN(b)
 
 ```
 
 卷积定理很有用，因为*逆 DFT*很容易计算。这意味着我们可以通过进行三次单独的 FFT 来在 N log N 步骤中计算循环卷积（从而进行多项式乘法）。
 
-```
+```java
 a ⊗ b =  (DFTN)-1 (DFTN(a) · DFTN(b))
 
 ```
@@ -151,7 +151,7 @@ a ⊗ b =  (DFTN)-1 (DFTN(a) · DFTN(b))
 
 Matlab 提供了一个名为`conv`的函数，用于执行两个向量的线性卷积。然而，他们的实现需要二次时间。在许多应用中，向量很大，比如有 100 万个条目，使用这个库函数作为黑匣子是不可接受的。通过利用我们对算法和复杂性的理解，我们可以用 FFT 替换库解决方案，从而得到优化的解决方案！
 
-```
+```java
 X = fft( [x zeros(1, length(y) - 1)] )
 Y = fft( [y zeros(1, length(x) - 1)] )
 c = ifft(X .* Y)
@@ -196,7 +196,7 @@ A. 查看[JFreeChart](http://www.jfree.org/jfreechart/)。这里有一些关于�
 
 1.  **一次遍历算法。** 编写一个程序 OnePass.java，使用备用教科书公式一次计算样本均值和方差（而不是两次）。
 
-    ```
+    ```java
     sum  = x1 + ... + xN
     sum2 = x1x1 + ... + xNxN
     σ = sqrt ( (N sum2 - sum * sum) / (N*(N-1)) )
@@ -207,7 +207,7 @@ A. 查看[JFreeChart](http://www.jfree.org/jfreechart/)。这里有一些关于�
 
 1.  **样本方差。** 实现以下稳定的一次遍历算法来计算样本方差。验证公式是否正确。
 
-    ```
+    ```java
     m1 = x1, mk = mk-1 + (xk - mk-1)/k
     s1 = 0, sk = sk-1 + ((k-1)/k)(xk - mk-1)2
     μ = mN

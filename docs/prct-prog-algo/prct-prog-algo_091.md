@@ -86,7 +86,7 @@ MergeBars.java 提供了带有小子数组截止的归并排序可视化。![归
 
 1.  **更快的合并。** 实现一个`merge()`的版本，将`a[]`的后半部分以*递减顺序*复制到`aux[]`，然后将其合并回`a[]`。 这个改变允许你从内部循环中删除测试每个半部分是否已耗尽的代码。 *注意*：结果排序不是稳定的。
 
-    ```
+    ```java
     private static void merge(Comparable[] a, int lo, int mid, int hi) { 
        for (int i = lo; i <= mid; i++)
           aux[i] = a[i]; 

@@ -118,7 +118,7 @@ Eric Alander - “归约提供了一种抽象。如果 A 高效地归约到 B，
 
 +   [Matlab](http://www.mathworks.com/products/matlab/) 包含优化工具箱中的线性规划求解器。
 
-    ```
+    ```java
     [wayne:tombstone] ~> matlab
                                           < M A T L A B (R) >
                                 Copyright 1984-2009 The MathWorks, Inc.
@@ -141,7 +141,7 @@ Eric Alander - “归约提供了一种抽象。如果 A 高效地归约到 B，
 
 +   [AMPL](http://www.ampl.com/) 是数学规划的建模语言。文件 beer.mod 和 beer.dat 指定了酿酒厂问题的模型和数据。
 
-    ```
+    ```java
     [wayne:tombstone] ~> ampl
     ILOG AMPL 9.100
     AMPL Version 20021038 (SunOS 5.8)

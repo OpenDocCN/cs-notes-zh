@@ -44,7 +44,7 @@
 
 经典的[快速排序算法](http://algs4.cs.princeton.edu/23quicksort/)是由 C.A.R. Hoare 于 1962 年发明的：
 
-```
+```java
 public class Quick
 {
    private static int partition(Comparable[] a, int lo, int hi)
@@ -88,7 +88,7 @@ public class Quick
 
 调和数可以通过积分（见第三章）近似为$$H_N \sim \ln N$$，从而得到简单的渐近近似$$C_N \sim 2N\ln N$$。验证我们的数学模型总是一个好主意。这段代码
 
-```
+```java
 public class QuickCheck
 {
    public static void main(String[] args)
@@ -111,7 +111,7 @@ public class QuickCheck
 
 产生这个输出。
 
-```
+```java
 % java QuickCheck 1000000
         10           44.44           26.05
        100          847.85          721.03

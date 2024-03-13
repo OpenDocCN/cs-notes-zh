@@ -14,7 +14,7 @@
 
 请注意，在 Python 中缩进是有意义的。例如，考虑这两个代码片段：
 
-```
+```py
 if x >= 0:                      if x >= 0:
     stdio.write('not ')             stdio.write('not ')
 stdio.writeln('negative')           stdio.writeln('negative')
@@ -37,7 +37,7 @@ stdio.writeln('negative')           stdio.writeln('negative')
 
 许多循环遵循相同的基本方案：将索引变量初始化为某个值，然后使用`while`循环测试涉及索引变量的退出条件，使用`while`循环中的最后一个语句修改索引变量。Python 的`for`语句是表达这种循环的直接方式。例如，以下两行代码等同于 tenhellos.py 中相应的代码行：
 
-```
+```py
 for i in range(4, 11):
     stdio.writeln(str(i) + 'th Hello')
 
@@ -45,7 +45,7 @@ for i in range(4, 11):
 
 如果`range()`只有一个参数，则范围值的起始值默认为 0。例如，以下`for`循环比 powersoftwo.py 中的`while`循环更好：
 
-```
+```py
 power = 1
 for i in range(n+1):
     stdio.writeln(str(i) + ' ' + str(power))
@@ -65,7 +65,7 @@ for i in range(n+1):
 
 作为嵌套的第二个示例，考虑一个包含以下代码的税务准备程序：
 
-```
+```py
 if income < 0.0:
     rate = 0.00
 else:
@@ -83,7 +83,7 @@ else:
 
 Python 允许`if`语句包含`elif`（"else if"）子句。使用`elif`子句会产生更紧凑的代码：
 
-```
+```py
 if   income < 0:      rate = 0.00
 elif income < 8925:   rate = 0.10
 elif income < 36250:  rate = 0.15
@@ -133,7 +133,7 @@ powersoftwo.py 使用的计算范式是您经常会使用的范式之一。它�
 
 例如，考虑生成一个在单位圆盘中随机分布的点的问题。由于我们总是希望生成至少一个点，我们构建一个`while`循环，其循环继续条件总是满足，生成 2x2 方形中的随机点(*x*, *y*)，并使用`break`语句来终止循环，如果(*x*, *y*)在单位圆盘中。
 
-```
+```py
 while True:
     x = -1.0 + 2.0*random.random()
     y = -1.0 + 2.0*random.random()
@@ -150,7 +150,7 @@ while True:
 
 **A.** 我们在这里重复这个问题，提醒您在条件表达式中不要使用`=`而应该使用`==`。语句`x = y`将`y`赋给`x`，而表达式`x == y`测试当前两个变量是否相等。在某些编程语言中，这种差异可能会在程序中造成混乱并难以检测。在 Python 中，赋值语句不是表达式。例如，如果我们在 gambler.py 中犯了错误，将`cash = goal`而不是`cash == goal`，编译器会为我们找到错误：
 
-```
+```py
 % python gambler.py 10 20 1000
 File "gambler.py", line 21
   if cash = goal:
@@ -175,7 +175,7 @@ SyntaxError: invalid syntax
 
 **A.** 是的，但是由于 Python 处理缩进的方式，需要一些小心。如果跨越多行的表达式被括在括号（或方括号或大括号）中，则不需要做任何特殊处理。例如，这是一条跨越三行的单个语句：
 
-```
+```py
 stdio.write(a0 + a1 + a2 + a3 +
             a4 + a5 + a6 + a7 +
             a8 + a9)
@@ -184,7 +184,7 @@ stdio.write(a0 + a1 + a2 + a3 +
 
 然而，如果没有暗示的行继续，你必须在每行末尾使用反斜杠字符以继续。
 
-```
+```py
 total = a0 + a1 + a2 + a3 + \
         a4 + a5 + a6 + a7 + \
         a8 + a9
@@ -215,7 +215,7 @@ total = a0 + a1 + a2 + a3 + \
 
 **A.** 是的，但它不会影响`range()`生成的整数序列。例如，以下循环写入从 0 到 99 的 100 个整数：
 
-```
+```py
 for i in range(100):
     stdio.writeln(i)
     i += 10
@@ -232,7 +232,7 @@ for i in range(100):
 
 **Q.** 是否有一个示例表明以下`for`和`while`循环不等价？
 
-> ```
+> ```py
 > for *variable* in range(*start*, *stop*):
 >     *statement1*
 >     *statement2*
@@ -263,7 +263,7 @@ for i in range(100):
 
 1.  在执行以下代码片段后，`j`的值是多少？
 
-    ```
+    ```py
     a. j = 0
        for i in range(0, 10):
            j += i
@@ -293,7 +293,7 @@ for i in range(100):
 
 1.  当执行以下代码后，`m`和`n`是什么？
 
-    ```
+    ```py
     n = 123456789
     m = 0
     while n != 0:
@@ -306,7 +306,7 @@ for i in range(100):
 
 1.  这段代码会写入什么？
 
-    ```
+    ```py
     f = 0
     g = 1
     for i in range(0, 16):
@@ -326,7 +326,7 @@ for i in range(100):
 
 1.  与调和数不同，和 1/1² + 1/2² + ... + 1/*n*²随着*n*增长到无穷大时会收敛到一个常数。 （实际上，该常数是π²/6，因此可以使用此公式来估计π的值。）以下哪个`for`循环计算这个和？假设`n`是整数 1000000，`total`是初始化为 0.0 的浮点数。
 
-    ```
+    ```py
     a. for i in range(1, n+1):
            total += 1 / (i*i)
 
@@ -365,7 +365,7 @@ for i in range(100):
 
 1.  编写一个程序，接受一个整数命令行参数`n`，并写出一个二维`n`×`n`的棋盘图案，交替使用空格和星号，就像以下 4×4 的图案一样。
 
-    > ```
+    > ```py
     > * * * *
     >  * * * *
     > * * * *
@@ -405,7 +405,7 @@ for i in range(100):
 
 *解决方案*：这个练习的目的是让你思考一个类似 `math.exp()` 这样的库函数如何通过基本运算符实现。尝试解决它，然后将你的解决方案与这里开发的解决方案进行比较。我们首先考虑计算一个项的问题。假设 `x` 是一个浮点数，`n` 是一个整数。以下代码使用直接方法为 `term` 赋值 *x*^(*n*) / *n*!，其中分子和分母分别有一个循环，然后将结果相除：
 
-```
+```py
 num = 1.0
 den = 1.0
 for i in range(1, n+1):
@@ -418,7 +418,7 @@ term = num / den
 
 更好的方法是只使用一个 for 循环：
 
-```
+```py
 term = 1.0
 for i in range(1, n+1):
     term *= x / i
@@ -429,7 +429,7 @@ for i in range(1, n+1):
 
 要计算 *e^x*，我们将这个 `for` 循环嵌套在一个 `while` 循环中：
 
-```
+```py
 term = 1.0
 total = 0.0
 n = 1
@@ -454,7 +454,7 @@ while total != total + term:
 
 `while`
 
-```
+```py
 term = 1.0
 total = 0.0
 n = 1

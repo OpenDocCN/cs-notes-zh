@@ -24,14 +24,14 @@
 
 我们为两个基本操作*put*和*get*重载了`[]`运算符。在客户端代码中，这意味着我们可以将符号表视为一个*关联数组*，其中我们可以使用标准数组语法，方括号内可以是任何类型的数据，而不是介于 0 和长度之间的整数，就像数组一样。因此，我们可以将密码子与氨基酸名称关联起来，客户端代码如下：
 
-```
+```py
 amino['TTA'] = 'Leucine'
 
 ```
 
 我们稍后可以通过客户端代码访问与给定密码子关联的名称
 
-```
+```py
 stdio.writeln(amino['TTA'])
 
 ```
@@ -102,7 +102,7 @@ stdio.writeln(amino['TTA'])
 
 哈希是非常有用的，因此许多编程语言都包含对其的直接支持。正如我们在第 3.3 节中看到的，Python 提供了内置的`hash()`函数，用于此目的，它接受一个可哈希对象作为参数并返回一个整数哈希码。为了将其转换为 0 到*m*-1 之间的哈希值，我们使用表达式
 
-```
+```py
 hash(x) % m
 
 ```
@@ -139,7 +139,7 @@ hashst.py 的效率取决于*m*的值和哈希函数的质量。假设哈希函�
 
 要实现二叉搜索树（BSTs），我们首先从一个节点抽象的类开始，该类具有对键、值以及左右 BSTs 的引用：
 
-```
+```py
 class Node:
     def __init__(self, key, val):
         self.key   = key
@@ -205,7 +205,7 @@ BST 算法的运行时间最终取决于树的形状，而树的形状取决于�
 
 这种方法被称为*中序*树遍历，以区别于*前序*（先处理根）和*后序*（最后处理根），这些在其他应用中出现。例如，以下方法按键排序顺序写入其参数根节点的 BST 中的键：
 
-```
+```py
 def inorder(x):
     if x is None: return
     inorder(x.left)
@@ -220,7 +220,7 @@ def inorder(x):
 
 正如您在第 1.3 节和第 1.4 节中学到的，您可以使用`for`循环来迭代范围中的整数或数组`a[]`中的元素。
 
-```
+```py
 for i in range(n):        for v in a:
     stdio.writeln(i)          stdio.writeln(v)
 
@@ -230,7 +230,7 @@ for i in range(n):        for v in a:
 
 现在，我们的目标是使`SymbolTable`可迭代，这样我们就可以使用`for`循环来遍历其键（并使用索引来获取相应的值）：
 
-```
+```py
 st = SymbolTable()
  ...
 for key in st:
@@ -258,7 +258,7 @@ for key in st:
 
 作为一个简单的例子，以下`dict`客户端从标准输入读取一系列字符串，计算每个字符串出现的次数，并写入字符串及其频率。这些字符串不按排序顺序输出。
 
-```
+```py
 import stdio
 st = dict()
 while not stdio.isEmpty():
@@ -281,7 +281,7 @@ for word, frequency in st.iteritems():
 
 例如，考虑从标准输入读取一系列字符串并写入每个字符串的第一次出现（从而删除重复项）的任务。我们可以使用一个`set`，就像以下客户端代码中所示：
 
-```
+```py
 import stdio
 distinct = set()
 while not stdio.isEmpty():
@@ -320,7 +320,7 @@ while not stdio.isEmpty():
 
 **A.** 是的，你可以通过用花括号括起逗号分隔的项目列表来指定一个`set`。你可以通过用花括号括起逗号分隔的键值对列表，并在每个键和其关联值之间使用冒号来指定一个`dict`。
 
-```
+```py
 stopwords = {'and', 'at', 'of', 'or', on', 'the', 'to'}
 grades = {'A+':4.33, 'A':4.0, 'A-':3.67, 'B+':3.33, 'B':3.0} 
 
@@ -330,7 +330,7 @@ grades = {'A+':4.33, 'A':4.0, 'A-':3.67, 'B+':3.33, 'B':3.0}
 
 **A.** 不是的。如果你只需要有序迭代（具有可比较的键），你可以使用 Python 的`dict`数据类型并对键进行排序（并为排序付出性能损失）。例如，如果你在 index.py 中使用`dict`而不是二叉搜索树，你可以通过类似以下代码来按排序顺序编写键
 
-```
+```py
 for word in sorted(st):
 
 ```
@@ -345,7 +345,7 @@ for word in sorted(st):
 
 1.  修改 lookup.py 以创建一个名为`lookupmultiple.py`的程序，通过将具有相同键的多个值放入数组（如 index.py 中），然后在*get*请求时将它们全部写出，如下所示：
 
-    ```
+    ```py
     % python lookupmultiple.py amino.csv 3 0
     Leucine
     TTA TTG CTT CTC CTA CTG
@@ -362,7 +362,7 @@ for word in sorted(st):
 
 1.  计算单字符键的`hash(x) % 5`
 
-    ```
+    ```py
     E A S Y Q U E S T I O N
 
     ```
@@ -371,7 +371,7 @@ for word in sorted(st):
 
 1.  以下`__hash__()`实现有什么问题？
 
-    ```
+    ```py
     def __hash__(self):
         return -17
 
@@ -385,14 +385,14 @@ for word in sorted(st):
 
 1.  绘制可以表示键序列的所有不同 BST。
 
-    ```
+    ```py
     best of it the time was
 
     ```
 
 1.  插入具有键的项目后绘制的 BST
 
-    ```
+    ```py
     E A S Y Q U E S T I O N
 
     ```
@@ -401,7 +401,7 @@ for word in sorted(st):
 
 1.  假设我们在 BST 中有 1 到 1000 之间的整数键，并搜索 363。以下哪个序列不可能是检查的键序列？
 
-    ```
+    ```py
     2 252 401 398 330 363
     399 387 219 266 382 381 278 363
     3 923 220 911 244 898 258 362 363
@@ -412,7 +412,7 @@ for word in sorted(st):
 
 1.  假设以下 31 个键（以某种顺序）出现在高度为 5 的 BST 中：
 
-    ```
+    ```py
     10 15 18 21 23 24 30 31 38 41 42 45 50 55 59
     60 61 63 71 77 78 83 84 85 86 88 91 92 93 94 98
 
@@ -454,7 +454,7 @@ for word in sorted(st):
 
 1.  假设`a[]`是一个可散列对象的数组。以下语句的效果是什么？
 
-    ```
+    ```py
     a = list(set(a))
 
     ```
@@ -463,7 +463,7 @@ for word in sorted(st):
 
 1.  编写一个`dict`客户端，创建一个将字母等级映射到数字分数的符号表，然后从标准输入读取一个字母等级列表并计算它们的平均值（GPA）。
 
-    ```
+    ```py
      A+   A    A-   B+   B    B-   C+   C    C-   D    F
     4.33 4.00 3.67 3.33 3.00 2.67 2.33 2.00 1.67 1.00 0.00
 
@@ -503,7 +503,7 @@ for word in sorted(st):
 
     *解决方案*：这个任务比看起来要困难一些。使用一个递归辅助函数`_inRange()`，它接受两个额外参数`lo`和`hi`，如果二叉树是 BST 且所有值都在`lo`和`hi`之间，则返回`True`，使用`None`表示最小可能键和最大可能键。
 
-    ```
+    ```py
     def _inRange(node, lo, hi):
         if node is None: return True
         if (lo is not None) and (node.item <= lo):  return False
@@ -520,7 +520,7 @@ for word in sorted(st):
 
 1.  计算`mystery()`在一些示例二叉树上返回的值，然后提出一个关于该值的假设并加以证明。
 
-    ```
+    ```py
     def mystery(node):
         if node is None: return 1
         return mystery(node.left) + mystery(node.right)
@@ -609,7 +609,7 @@ for word in sorted(st):
 
 1.  **赋值语句。** 编写一个程序来解析和评估由完全括号化的算术表达式组成的赋值和写入语句的程序（参见第 4.3 节的 evaluate.py）。例如，给定输入
 
-    ```
+    ```py
     A = 5
     B = 10
     C = A + B
@@ -622,7 +622,7 @@ for word in sorted(st):
 
 1.  **密码子使用表。** 编写一个程序，使用符号表为从标准输入中获取的基因组中的每个密码子编写摘要统计信息（每千个的频率），如下所示：
 
-    ```
+    ```py
     UUU 13.2  UCU 19.6  UAU 16.5  UGU 12.4
     UUC 23.5  UCC 10.6  UAC 14.7  UGC  8.0
     UUA  5.8  UCA 16.1  UAA  0.7  UGA  0.3

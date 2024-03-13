@@ -18,7 +18,7 @@
 
 +   *创建 Java 程序。* 程序只是一系列字符，就像句子、段落或诗歌一样。要创建一个程序，我们只需要像为电子邮件一样使用文本编辑器定义该字符序列。HelloWorld.java 是一个示例程序。将这些字符键入您的文本编辑器并将其保存到名为`HelloWorld.java`的文件中。
 
-    ```
+    ```java
     public class HelloWorld {
        public static void main(String[] args) {
           // Prints "Hello, World" in the terminal window.
@@ -30,7 +30,7 @@
 
 +   *编译 Java 程序。* *编译器*是一个应用程序，它将程序从 Java 语言翻译为更适合在计算机上执行的语言。它以扩展名为`.java`的文本文件（您的程序）作为输入，并生成一个扩展名为`.class`的文件（计算机语言版本）。要编译`HelloWorld.java`，请在终端中键入下面的粗体文本。（我们使用`%`符号来表示命令提示符，但根据您的系统可能会有所不同。）
 
-    ```
+    ```java
     % javac HelloWorld.java
 
     ```
@@ -39,14 +39,14 @@
 
 +   *执行（或运行）Java 程序。* 一旦编译程序，您就可以执行它。这是令人兴奋的部分，计算机遵循您的指示。要运行`HelloWorld`程序，请在终端窗口中键入以下内容：
 
-    ```
+    ```java
     % java HelloWorld
 
     ```
 
     如果一切顺利，您应该看到以下响应
 
-    ```
+    ```java
     Hello, World
 
     ```
@@ -77,7 +77,7 @@
 
 通常，我们希望为我们的程序提供*输入*：它们可以处理以产生结果的数据。提供输入数据的最简单方法在 UseArgument.java 中有所说明。每当执行此程序时，它都会读取您在程序名称后键入的命令行参数，并将其作为消息的一部分打印回终端。
 
-```
+```java
 % javac UseArgument.java
 % java UseArgument Alice
 Hi, Alice. How are you?
@@ -98,7 +98,7 @@ Hi, Bob. How are you?
 
 1.  编写一个程序 Initials.java，使用九行星号打印您的缩写，就像下面的例子一样。
 
-    ```
+    ```java
     **        ***    **********      **             *             **
     **      ***      **        **     **           ***           **
     **    ***        **         **     **         ** **         **
@@ -153,7 +153,7 @@ Hi, Bob. How are you?
 
 1.  我输入了以下程序。它编译正常，但当我执行它时，我得到错误`java.lang.NoSuchMethodError: main`。我做错了什么？
 
-    ```
+    ```java
     public class Hello {
        public static void main() {
           System.out.println("Doesn't execute");   

@@ -28,7 +28,7 @@
 
 现在，我们设计程序`Strange(P)`，以便如果`Halt(P, P)`输出`no`，则它立即停机。否则，我们让`Strange(P)`进入无限循环。在 Java 中，`Strange(P)`的代码可能如下所示：
 
-```
+```java
 if (Halt(P, P) == true)
    while (true)    // infinite loop
       ;
@@ -103,7 +103,7 @@ if (Halt(P, P) == true)
 
 +   *未初始化的变量。* Java 编译器有时会抱怨您可能在变量初始化之前访问局部变量。程序员有时可以保证变量已初始化，但编译器并不“聪明”到能意识到这一点。在下面的示例中，a 将被初始化为 17，因为数组的长度始终是非负的。
 
-    ```
+    ```java
     public static void main(String[] args) {
         int a;
         if (args.length >= 0) a = 17;
@@ -160,7 +160,7 @@ if (Halt(P, P) == true)
 
 1.  （霍普克罗夫特，莫特瓦尼和乌尔曼。）对于两个 PCP 实例中的每一个，要么找到一个解决方案，要么说明为什么不可能有这样的解决方案。
 
-    ```
+    ```java
     0   1    2   3        0    1    2     3
     a   aba  b   bb       abb  ba   bab   bbabaa
     ba  ab   ba  b        bb   bab  abb   babaab
@@ -173,7 +173,7 @@ if (Halt(P, P) == true)
 
 1.  **3x + 1 函数。** 即使函数只有几行，有时也不容易判断特定函数是否在所有输入上终止。例如，考虑以下*Collatz 函数*对输入`x`是否终止。
 
-    ```
+    ```java
     void mystery(int x) {
        while (x > 1) {
           if (x % 2 == 1) x = 3*x + 1;
@@ -185,7 +185,7 @@ if (Halt(P, P) == true)
 
     在许多输入中，包括 8 和 7，程序终���：
 
-    ```
+    ```java
     mystery(8):  8 4 2 1
     mystery(7):  7 22 11 34 17 52 26 13 40 20 10 5 16 8 4 2 1   
 
@@ -223,7 +223,7 @@ if (Halt(P, P) == true)
 
     为了推导矛盾，让我们假设我们可以判断任何图灵机 M 在空白磁带上启动时是否停机。鉴于这样的决策者，我们将展示如何计算 B(n)。
 
-    ```
+    ```java
     INPUT:  integer n
 
     FOREACH n-state Turing machine M

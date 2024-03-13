@@ -20,7 +20,7 @@
 
 +   *空键和空值。* 客户端不允许使用`null`作为键或值。这个约定使我们能够实现`contains()`如下：
 
-    ```
+    ```java
     public boolean contains(Key key) {
         return get(key) != null;
     } 
@@ -31,7 +31,7 @@
 
 +   *遍历键-值对。* `keys()`方法为客户端提供了一种遍历数据结构中键-值对的方法。
 
-    ```
+    ```java
     ST st = new ST<string double="">();
     ...
     for (String key : st.keys())
@@ -88,7 +88,7 @@
 
 +   *哈希函数。* 正如我们在第 3.3 节中看到的，每个 Java 类都有一个`hashCode()`方法，将对象映射到整数。我们使用*哈希函数*
 
-    ```
+    ```java
     private int hash(Key key) {
         return Math.abs(key.hashCode() % m);
     } 
@@ -127,7 +127,7 @@
 
 +   *表示.* 要实现 BST，我们从节点抽象的类开始，该类具有对键、值和左右 BST 的引用。键类型必须是可比较的（以指定键的排序），但值类型是任意的。
 
-    ```
+    ```java
     private class Node {
        private Key   key;
        private Value val;
@@ -186,7 +186,7 @@
 
 这种方法被称为*中序*树遍历，因为它按*键排序顺序*处理 BST 中的节点。以下方法按升序打印其参数根节点的 BST 中的键：
 
-```
+```java
 private static void traverse(Node x) { 
     if (x == null) return; 
     traverse(x.left); 
@@ -252,7 +252,7 @@ private static void traverse(Node x) {
 
 1.  编写一个 ST.java 客户端 GPA.java，创建一个符号表，将字母等级映射到数字分数，如下表所示，然后从标准输入读取字母等级列表并计算它们的平均值（GPA）。
 
-    ```
+    ```java
      A+   A    A-   B+   B    B-   C+   C    C-   D    F 
     4.33 4.00 3.67 3.33 3.00 2.67 2.33 2.00 1.67 1.00 0.00 
 
@@ -264,7 +264,7 @@ private static void traverse(Node x) {
 
 1.  如果两个二叉树只有键值不同（它们具有相同的形状），则它们是*同构*的。实现一个线性时间的静态方法`isomorphic()`，以两个树引用作为参数，并在它们引用同构树时返回`true`，否则返回`false`。然后实现一个线性时间的静态方法`eq()`，以两个树引用作为参数，并在它们引用相同的树（具有相同键值的同构树）时返回`true`，否则返回`false`。
 
-    ```
+    ```java
     public static boolean isomorphic(Node x, Node y) {
         if (x == null && y == null) return true;   // both null
         if (x == null || y == null) return false;  // exactly one null
@@ -279,7 +279,7 @@ private static void traverse(Node x) {
 
 1.  计算`mystery()`在一些示例二叉树上返回的值，然后提出关于其行为的假设并加以证明。
 
-    ```
+    ```java
 
     public int mystery(Node x) {
         if (x == null) return 0;
@@ -316,7 +316,7 @@ private static void traverse(Node x) {
 
 1.  **树上的函数。** 编写一个函数`count()`，接受一个名为`Node`的参数`x`并返回以`x`为根的子树中节点的数量（包括`x`）。空二叉树中元素的数量为 0（基本情况），非空二叉树中元素的数量等于左子树中元素的数量加上右子树中元素的数量再加 1。
 
-    ```
+    ```java
     public static int count(TwoNode x) {
        if (x == null) return 0;
        return 1 + count(x.left) + count(x.right);
@@ -386,7 +386,7 @@ private static void traverse(Node x) {
 
 1.  **书籍的倒排索引。** 编写一个程序，从标准输入中读取文本文件，并编制一个按字母顺序排列的索引，显示哪些单词出现在哪些行中，如下所示的输入。忽略大小写和标点符号。
 
-    ```
+    ```java
     It was the best of times,
     it was the worst of times,
     it was the age of wisdom,
@@ -417,7 +417,7 @@ private static void traverse(Node x) {
 
 1.  **数据库连接。** 给定两个表，[内连接](http://en.wikipedia.org/wiki/Join_(SQL)) 找到两个表之间的“交集”。
 
-    ```
+    ```java
     Name      Dept ID       Dept     Dept ID
     -----------------       ----------------
     Smith       34          Sales        31
@@ -431,7 +431,7 @@ private static void traverse(Node x) {
 
     部门 ID 的内连接如下。
 
-    ```
+    ```java
     Name      Dept ID   Dept
     -------------------------------
     Smith       34      Clerical

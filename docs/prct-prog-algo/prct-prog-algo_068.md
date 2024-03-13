@@ -28,7 +28,7 @@
 
 1.  *在模块中：消除任意全局代码。* 我们不能在 gaussian.py 中留下任意全局代码，因为 Python 每次导入模块时都会执行它。相反，我们将测试代码放在一个`main()`函数中，就像刚才描述的那样。现在，我们可以安排 Python 在我们从命令行执行`gaussian.py`时调用`main()`（仅在那时），使用以下咒语：
 
-```
+```py
 if __name__ == '__main__': main()
 
 ```
@@ -73,7 +73,7 @@ API 应包含多少信息？在这个书站中，我们坚持一个与我们的�
 
 有时，我们希望在一个模块中定义一个不打算由客户端直接调用的辅助函数。我们将这样的函数称为*私有函数*。按照惯例，Python 程序员在私有函数名称的第一个字符中使用下划线。例如，以下是从 gaussian.py 中调用私有函数 _phi()的 pdf()函数的另一种实现：
 
-```
+```py
 def _phi(x):
     return math.exp(-x*x/2.0) / math.sqrt(2*math.pi)
 
@@ -208,7 +208,7 @@ def pdf(x, mu=0.0, sigma=1.0):
 
 设置`PYTHONPATH`环境变量的机制取决于您使用的操作系统。假设您的计算机正在运行 Mac OS X 或 Linux。进一步假设您将`gaussian.py`放在目录`/Users/yourusername/common`中。然后这些命令是适当的：
 
-```
+```py
 export PYTHONPATH=/Users/yourusername/common
 python myprogram.py
 
@@ -218,7 +218,7 @@ python myprogram.py
 
 一般来说，在 Mac OS X 和 Linux 系统上，`PYTHONPATH`变量的值是由冒号分隔的一系列目录。因此，在您发出这个命令之后：
 
-```
+```py
 export PYTHONPATH=*directory1*:*directory2*:*directory3* 
 
 ```
@@ -227,7 +227,7 @@ export PYTHONPATH=*directory1*:*directory2*:*directory3*
 
 另一方面，假设您的计算机正在运行 Microsoft Windows。进一步假设您将`gaussian.py`放在目录`c:\Users\yourusername\common`中。然后这些命令是适当的：
 
-```
+```py
 set PYTHONPATH=c:\Users\yourusername\common
 python myprogram.py
 
@@ -237,7 +237,7 @@ python myprogram.py
 
 一般来说，在 Microsoft Windows 系统上，`PYTHONPATH` 变量的值是由分号分隔的一系列目录。因此，在发出这个命令后：
 
-```
+```py
 set PYTHONPATH=*directory1*;*directory2*;*directory3*
 
 ```
@@ -246,7 +246,7 @@ set PYTHONPATH=*directory1*;*directory2*;*directory3*
 
 **Q.** 我尝试导入 `gaussian` 模块，但收到以下错误消息。出了什么问题？
 
-```
+```py
 ImportError: No module named gaussian
 
 ```
@@ -255,7 +255,7 @@ ImportError: No module named gaussian
 
 **Q.** 我尝试调用 `gaussian.pdf()`，但收到以下错误。出了什么问题？
 
-```
+```py
 NameError: name 'gaussian' is not defined
 
 ```
@@ -314,7 +314,7 @@ Python 的理念是：由于 gaussian.py 在这个程序中被用作模块，很
 
 1.  编写一个`matrix.py`的客户端（来自上一个练习），使用以下代码：
 
-    ```
+    ```py
     moves = int(sys.argv[1])
     p = stdarray.readFloat2D()
     ranks = stdarray.create1D(len(p), 0.0)
@@ -335,7 +335,7 @@ Python 的理念是：由于 gaussian.py 在这个程序中被用作模块，很
 
     *部分解决方案：*
 
-    ```
+    ```py
     ...
     p = stdarray.readFloat2D()
     page = 0   # Start at page 0.

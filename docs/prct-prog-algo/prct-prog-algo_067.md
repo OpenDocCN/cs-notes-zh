@@ -140,7 +140,7 @@ Python 函数可以通过为该参数指定默认值来指定一个参数为可�
 
 每当您将参数传递给函数时，参数和函数的参数变量成为别名。在实践中，这是 Python 中别名的主要用法。为了说明，假设我们需要一个增加整数的函数（我们的讨论也适用于任何更复杂的函数）。一个刚接触 Python 的程序员可能尝试这样定义：
 
-```
+```py
 def inc(j):
     j += 1
 
@@ -150,7 +150,7 @@ def inc(j):
 
 要增加变量`i`，我们可以使用以下定义
 
-```
+```py
 def inc(j):
     j += 1
     return j
@@ -165,7 +165,7 @@ def inc(j):
 
 当函数将数组作为参数时，它实现了一个操作任意数量对象的函数。例如，以下函数计算浮点数或整数数组的平均值：
 
-```
+```py
 def mean(a):
     total = 0.0
     for v in a:
@@ -180,7 +180,7 @@ def mean(a):
 
 由于数组是可变的，通常情况下，接受数组作为参数的函数的目的是产生副作用（例如更改数组元素的顺序）。这样一个函数的典型例子是一个在给定数组中交换两个给定索引处的元素的函数。我们可以调整我们在第 1.4 节开头检查的代码：
 
-```
+```py
 def exchange(a, i, j):
    temp = a[i]
    a[i] = a[j]
@@ -192,7 +192,7 @@ def exchange(a, i, j):
 
 第二个典型的例子是一个接受数组参数并产生副作用的函数，该函数随机打乱数组中的元素，使用我们在第 1.4 节中检查的算法版本（以及刚刚定义的`exchange()`函数）：
 
-```
+```py
 def shuffle(a):
     n = len(a)
     for i in range(n):
@@ -205,7 +205,7 @@ def shuffle(a):
 
 函数可以返回一个数组。例如，考虑以下函数，它返回一个随机浮点数数组：
 
-```
+```py
 def randomarray(n):
     a = stdarray.create1D(n, 0.0)
     for i in range(n):
@@ -270,7 +270,7 @@ def randomarray(n):
 
 **答：** 可以，但可能会导致意外行为。Python 只在函数定义时评估默认值一次（而不是每次调用函数时）。因此，如果函数体修改了默认值，后续函数调用将使用修改后的值。如果通过调用不纯函数来初始化默认值，也会出现类似的困难。例如，在 Python 执行代码片段后
 
-```
+```py
 def append(a=[], x=random.random()):
     a += [x]
     return a
@@ -289,7 +289,7 @@ c = append()
 
     *解决方案*：
 
-    > ```
+    > ```py
     > def max3(a, b, c)
     >     max = a
     >     if b > max:
@@ -306,7 +306,7 @@ c = append()
 
     *解决方案*：这里有两个解决方案。第一个简洁。第二个愚蠢，但遵守规则。
 
-    ```
+    ```py
     def majority(a, b, c):
         return (a and b) or (a and c) or (b and c)
 
@@ -333,7 +333,7 @@ c = append()
 
 1.  考虑这个函数`duplicate()`：
 
-    ```
+    ```py
     def duplicate(s):
         t = s + s
 
@@ -341,7 +341,7 @@ c = append()
 
     以下代码片段写了什么？
 
-    ```
+    ```py
     s = 'Hello'
     s = duplicate(s)
     t = 'Bye'
@@ -352,7 +352,7 @@ c = append()
 
 1.  考虑这个函数`cube()`：
 
-    > ```
+    > ```py
     > def cube(i):
     >     i = i * i * i
     > 
@@ -360,7 +360,7 @@ c = append()
 
     以下`while`循环迭代了多少次？
 
-    > ```
+    > ```py
     > i = 0
     > while i < 1000:
     >     cube(i)
@@ -372,7 +372,7 @@ c = append()
 
 1.  以下代码片段写了什么？
 
-    ```
+    ```py
     for i in range(5):
         stdio.write(i)
     for j in range(5):
@@ -402,7 +402,7 @@ c = append()
 
     *解决方案*：该函数的主体与本页早期表中给出的浮点数二维数组的相应函数几乎相同：
 
-    ```
+    ```py
     def readBool2D():
         m = stdio.readInt()
         n = stdio.readInt()
@@ -440,7 +440,7 @@ c = append()
 
 1.  **高斯随机值。** 尝试使用以下函数生成高斯分布的随机变量，该函数基于在单位圆内生成随机点并使用一种形式的[Box-Muller 变换](http://en.wikipedia.org/wiki/Box-Muller_transform)。（请参阅第 1.2 节末尾的“高斯随机数”练习。）
 
-    ```
+    ```py
     def gaussian():
         r = 0.0
         while (r >= 1.0) or (r == 0.0):
@@ -519,7 +519,7 @@ c = append()
 
 1.  **日历。** 编写一个程序，接受两个命令行参数`m`和`y`，并为年份`y`的第`m`个月写出月历，如下例所示：
 
-    ```
+    ```py
        February 2009
      S  M Tu  W Th  F  S
      1  2  3  4  5  6  7

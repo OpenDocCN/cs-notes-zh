@@ -28,7 +28,7 @@
 
 该程序 helloworld.py 是一个完整 Python 程序的示例。我们在本页重复该程序以便后续描述。行号显示出来是为了方便引用特定行，但它们不是程序的一部分，也不应该出现在您的 helloworld.py 文件中。
 
-```
+```py
 1  import stdio
 2
 3  # Write 'Hello, World' to standard output.
@@ -58,14 +58,14 @@
 
 一旦您编写好程序，您可以运行（或执行）它。为了运行您的程序，Python 编译器将您的 Python 程序转换为更适合在计算机上执行的语言。然后 Python 解释器指导您的计算机按照该语言中表达的指令执行。要运行您的程序，在终端窗口中键入`python`命令，后跟包含 Python 程序的文件名。
 
-```
+```py
 $ python helloworld.py
 
 ```
 
 如果一切顺利，您将看到以下响应：
 
-```
+```py
 Hello, World
 
 ```
@@ -90,7 +90,7 @@ Hello, World
 
 通常，我们希望为我们的程序提供输入，即它们可以处理以产生结果的数据。提供输入数据的最简单方法在 useargument.py 中有所说明。每当您运行该程序时，它都会接受您在程序名称后键入的命令行参数，并将其作为消息的一部分写回终端。
 
-```
+```py
 $ python useargument.py Alice
 Hi, Alice. How are you?
 $ python useargument.py Bob
@@ -144,7 +144,7 @@ Hi, Bob. How are you?
 
 **Q.** 当我运行 helloworld.py 时，Python 生成消息
 
-```
+```py
 ImportError: No module named stdio.
 
 ```
@@ -169,7 +169,7 @@ ImportError: No module named stdio.
 
 **A.** 是的，通过用分号分隔语句。例如，这行代码产生与 helloworld.py 相同的输出：
 
-```
+```py
 import stdio; stdio.writeln('Hello, World')
 
 ```
@@ -180,7 +180,7 @@ import stdio; stdio.writeln('Hello, World')
 
 **A.** 这取决于你具体做什么。这些所谓的*语法错误*通常会被编译器捕获。例如，如果你编写一个程序`bad.py`，与 helloworld.py 完全相同，只是省略了第一个左括号，你���得到以下相当有用的消息：
 
-```
+```py
 % python bad.py
   File "bad.py", line 4
     stdio.write'Hello, World')
@@ -191,7 +191,7 @@ SyntaxError: invalid syntax
 
 从这条消息中，你可能会正确地推测你需要插入一个左括号。但编译器可能无法告诉你确切地犯了哪个错误，所以错误消息可能难以理解。例如，如果你省略了第一个右括号而不是第一个左括号，你会得到以下不太有用的消息，它引用了错误行后面的行：
 
-```
+```py
 % python bad.py
   File "bad.py", line 5
                                 ^
@@ -205,7 +205,7 @@ SyntaxError: unexpected EOF while parsing
 
 **A.** 最有可能的是，你忘记包含一个命令行参数：
 
-```
+```py
 % python useargument.py
 Hi, Traceback (most recent call last):
   File "useargument.py", line 5, in stdio.write(sys.argv[1])
@@ -272,7 +272,7 @@ Python 解释器抱怨你运行了程序，但没有像承诺的那样输入命�
 
 1.  编写一个程序，使用九行星号写出你的姓名首字母，就像下面这样。
 
-    ```
+    ```py
     **        ***    **********      **             *             **
     **      ***      **        **     **           ***           **
     **    ***        **         **     **         ** **         **

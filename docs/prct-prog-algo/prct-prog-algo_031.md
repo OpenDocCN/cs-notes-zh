@@ -88,7 +88,7 @@ Bob 在数字上有两个密钥（或组合）：他的私钥 d 不向任何人�
 
 举例来说，我们可能选择以下参数，尽管在实践中我们需要使用更大的整数来保证安全性。
 
-```
+```java
 p = 11, q = 29
 n = 11 * 29 = 319
 e = 3
@@ -98,7 +98,7 @@ d = 187
 
 *加密.* Alice 想要向 Bob 发送一个 N 位的秘密消息 m。她从互联网上获取 Bob 的公钥（e，n）。然后她使用加密函数 E(m) = m^e (mod n)加密消息 m，并将 E(m)发送给 Bob。
 
-```
+```java
 m    = 100
 E(m) = 1003 (mod 319) 
      = 254
@@ -107,7 +107,7 @@ E(m) = 1003 (mod 319)
 
 *解密.* Bob 从 Alice 那里收到加密消息 c。Bob 回忆起他的私钥（d，n）。然后他通过应用解密函数 D(c) = c^d (mod n)来解密密文。由于 Bob 知道 d，他可以计算这个函数。
 
-```
+```java
 c    = 254
 D(c) = 254187 (mod 319) = 100
 
@@ -143,7 +143,7 @@ D(c) = 254187 (mod 319) = 100
 
 +   *计算一个随机质数*。为了生成密钥，我们必须有一个生成随机 N 位质数的方法，比���N = 1024。一个想法是随机选择一个 N 位整数并检查它是否是质数。如果是，那么停止；否则重复，直到找到一个质数。
 
-    ```
+    ```java
     REPEAT
         x = random N-bit integer
     UNTIL (x is prime)
@@ -158,7 +158,7 @@ D(c) = 254187 (mod 319) = 100
 
     使用 Java 的`BigInteger`库来操作大整数非常容易。
 
-    ```
+    ```java
     private final static SecureRandom random = new SecureRandom();
     BigInteger ONE = new BigInteger("1");
     BigInteger p   = BigInteger.probablePrime(N/2, random);
@@ -222,7 +222,7 @@ D(c) = 254187 (mod 319) = 100
 
 1.  **扩展欧几里得算法。** 扩展欧几里得算法用于计算 p 和 q 的最大公约数，还可以计算系数 a 和 b（可能为零或负），使得 ap + bq = gcd(p, q)。编写一个程序 ExtendedEuclid.java，接受两个命令行参数 p 和 q，并输出 gcd(p, q)以及如上所述的一对整数 a 和 b。
 
-    ```
+    ```java
     EXTENDED-EUCLID(p, q)
        if q = 0
           then return (p, 1, 0)
@@ -256,7 +256,7 @@ D(c) = 254187 (mod 319) = 100
 
 1.  **米勒-拉宾素性测试。** 米勒-拉宾算法是一种用于确定奇数整数 n 是否为素数的随机算法。它接受一个安全参数 t，并输出`prime`或`composite`。如果输出`composite`，则 n 绝对是合数；如果输出`prime`，则 n 可能是素数，但算法可能以 2^(-t)的概率错误。
 
-    ```
+    ```java
     boolean isProbablyPrime(BigInteger n, int t) {
        Compute r and s such that n-1 = 2sr and r is odd
        Repeat from 1 to t {
@@ -283,7 +283,7 @@ D(c) = 254187 (mod 319) = 100
 
 1.  **卡拉兹巴乘法。** 编写一个程序 Karatsuba.java，使用[卡拉兹巴算法](http://mathworld.wolfram.com/KaratsubaMultiplication.html)来计算两个整数的乘积。这种巧妙的算法仅使用三次 N 位乘法（以及线性量的额外工作）来计算两个 2N 位整数的乘积。要将 x 和 y 相乘，将 x 和 y 分解为 N 位块，并使用以下等式：
 
-    ```
+    ```java
     xy = (a + 2Nb) (c + 2N d)
        = ac + [(a+b)(c+d) - ac - bd] 2N + bd 22N
 
@@ -333,7 +333,7 @@ D(c) = 254187 (mod 319) = 100
 
 1.  **密码安全的哈希函数。** SHA-1 和 MD5。可以通过将字符串转换为字节来计算，或者在逐个读取字节时计算。
 
-    ```
+    ```java
     import java.security.MessageDigest;
     ...
     MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
@@ -344,7 +344,7 @@ D(c) = 254187 (mod 319) = 100
 
 1.  **Java 中��RSA。** 用于 RSA 或 DSA 的内置功能。未经测试的代码如下。
 
-    ```
+    ```java
     // key generation
     KeyPairGenerator keygen = KeyPairGenerator.getInstance("DSA");
     SecureRandom random     = new SecureRandom();
@@ -375,7 +375,7 @@ D(c) = 254187 (mod 319) = 100
 
 1.  **帕斯卡三角形。** 计算帕斯卡三角形的第 k 行（对于 k > 2）的一种方法是计算(2^k + 1)^(k+1)，并以 k 位为一组取其二进制表示。
 
-    ```
+    ```java
     10 = 1    (10 = 1 = 1)
     111 = 1 1    (31 = 3 = 1 1)
     10110 = 01 10 01    (52 = 25 = 1 2 1)

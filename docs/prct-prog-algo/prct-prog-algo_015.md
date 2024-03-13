@@ -44,7 +44,7 @@
 
 `Color`数据类型有一个接受三个整数参数的构造函数。例如，您可以编写
 
-```
+```java
 Color red      = new Color(255,   0,   0);
 Color bookBlue = new Color(  9,  90, 166);
 
@@ -116,7 +116,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 +   *别名。*具有引用类型的赋值语句会创建引用的第二个副本。赋值语句不会创建新对象，只是对现有对象的另一个引用。这种情况被称为*别名*：两个变量引用同一个对象。例如，考虑以下代码片段：
 
-    ```
+    ```java
     Picture a = new Picture("mandrill.jpg");
     Picture b = a;
     a.set(col, row, color1);   // a updated
@@ -138,7 +138,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     例如，以下代码创建了一个包含两个`Color`对象的数组：
 
-    ```
+    ```java
     Color[] a = new Color[2];
     a[0] = new Color(255, 255, 0);
     a[1] = new Color(160, 82, 45);
@@ -149,7 +149,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 +   *孤立对象。* 将不同对象分配给引用变量的能力会导致程序可能创建了一个无法再引用的对象。这样的对象被称为*孤立对象*。例如，考虑以下代码片段：
 
-    ```
+    ```java
     Color a, b;
     a = new Color(160, 82, 45);  // sienna
     b = new Color(255, 255, 0);  // yellow
@@ -181,7 +181,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     *解决方案*：
 
-    ```
+    ```java
     public static boolean isValidDNA(String s) {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
@@ -195,7 +195,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     *解决方案*：
 
-    ```
+    ```java
     public static String complementWatsonCrick(String s) {
         s = s.replaceAll("A", "t");
         s = s.replaceAll("T", "a");
@@ -208,7 +208,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  以下代码片段打印什么？
 
-    ```
+    ```java
     String string1 = "hello";
     String string2 = string1;
     string1 = "world";
@@ -220,7 +220,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  以下代码片段打印什么？
 
-    ```
+    ```java
     String s = "Hello World";
     s.toUpperCase();
     s.substring(6, 11);
@@ -234,7 +234,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     *解决方案*：
 
-    ```
+    ```java
     public boolean isCircularShift(String s, String t) {
         String s2 = s + s;
         return s2.contains(t);
@@ -244,7 +244,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  以下递归函数返回什么？
 
-    ```
+    ```java
     public static String mystery(String s) {
         int n = s.length();
         if (n <= 1) return s;
@@ -259,7 +259,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  假设`a[]`和`b[]`都是由数百万个整数组成的整数数组。以下代码做了什么，需要多长时间？
 
-    ```
+    ```java
     int[] temp = a;
     a = b;
     b = temp;
@@ -270,7 +270,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  描述以下函数的效果。
 
-    ```
+    ```java
     public void swap(Color a, Color b) {
         Color temp = a;
         a = b;
@@ -285,7 +285,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **印度密宗密码.** 编写一个过滤器 KamasutraCipher.java，它将两个字符串作为命令行参数（*密钥*字符串），然后从标准输入读取字符串（以空格分隔），按照密钥字符串指定的方式替换每个字母，并将结果打印到标准输出。这个操作是已知的最早的密码系统之一的基础。密钥字符串的条件是��们必须具有相同的长度，并且标准输入中的任何字母必须只出现在其中一个中。例如，如果两个密钥是`THEQUICKBROWN`和`FXJMPSVLAZYDG`，那么我们制作表格
 
-    ```
+    ```java
     T H E Q U I C K B R O W N
     F X J M P S V L A Z Y D G
 
@@ -348,7 +348,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  编写一个程序，将一个月份的名称（3 个字母缩写）作为命令行参数读入，并打印出非闰年中该月份的天数。
 
-    ```
+    ```java
 
     public static void main(String[] args) {
         String[] months = {
@@ -371,7 +371,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  以下哪个或哪些方法将数组`a`中的所有字符串转换为大写？
 
-    ```
+    ```java
     for (int i = 0; i < a.length; i++) {
        String s = a[i];
        s = s.toUpperCase();
@@ -391,7 +391,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  描述以下函数返回的字符串，给定一个正整数`n`？
 
-    ```
+    ```java
     public static String mystery(int n) {
        String s = "";
        while (n > 0) {
@@ -410,7 +410,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  给定两个长度相同的字符串`s`和`t`，以下递归函数返回什么？
 
-    ```
+    ```java
     public static String mystery(String s, String t) {
        int n = s.length();
        if (n <= 1) return s + t;
@@ -439,7 +439,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     *库解决方案*：此解决方案用于在`Picture.java`中将图像保存到适当类型的文件中。
 
-    ```
+    ```java
     String extension = s.substring(s.lastIndexOf('.') + 1);
 
     ```
@@ -454,7 +454,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  当 N = 5 时，程序 LatinSquare.java 会打印什么？
 
-    ```
+    ```java
     String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     for (int i = 0; i < N; i++) {
        for (int j = 0; j < N; j++) {
@@ -470,7 +470,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  以下代码片段会打印什么？
 
-    ```
+    ```java
     String s = "Hello World";
     s.toUpperCase();
     s.substring(6, 11);
@@ -482,7 +482,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  当执行以下代码片段时会发生什么？
 
-    ```
+    ```java
     String s = null;
     int length = s.length();
 
@@ -492,7 +492,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  在下面的两个赋值语句之后，x 和 y 的值是多少？
 
-    ```
+    ```java
     int x = '-'-'-';
     int y = '/'/'/';
 
@@ -500,7 +500,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  当`c`是`char`类型时，以下语句会做什么？
 
-    ```
+    ```java
     System.out.println((c >= 'a' && c <= 'z') ||
                        (c >= 'A' && c <= 'Z'));
 
@@ -510,7 +510,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  编写一个表达式，测试一个字符是否代表数字`'0'`到`'9'`之间的数字，而不使用任何库函数。
 
-    ```
+    ```java
     boolean isDigit = ('0' <= c && c <= '9');
 
     ```
@@ -573,7 +573,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     生命的罗塞塔石。
 
-    ```
+    ```java
     TTT Phe    TCT Ser    TAT Tyr    TGT Cys
     TTC Phe    TCC Ser    TAC Tyr    TGC Cys
     TTA Leu    TCA Ser    TAA ter    TGA ter
@@ -615,7 +615,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **Boggle。** Boggle 游戏在一个 4x4 的字符网格上进行。有 16 个骰子，每个骰子上有 6 个字母。创建一个 4x4 的网格，其中每个骰子以随机方式出现在一个单元格中，每个骰子随机显示其中的一个字母。
 
-    ```
+    ```java
     FORIXB MOQABJ GURILW SETUPL CMPDAE ACITAO SLCRAE ROMASH
     NODESW HEFIYE ONUDTK TEVIGN ANEDVZ PINESH ABILYT GKYLEU
 
@@ -625,7 +625,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **Scrabble。** 编写一个程序来确定可以玩的最长合法 Scrabble 单词是什么？要合法，单词必须在官方锦标赛和俱乐部单词列表（TWL98）中，其中包含 TWL98 中介于 2 到 15 个字母之间的所有 168,083 个单词。每个字母代表的瓷砖数量在下表中给出。此外，还有两个 *空白* 可以用来表示任何字母。
 
-    ```
+    ```java
     a b c d  e f g h i j k l m n o p q r s t u v w x y z -
     9 2 2 4 12 2 3 2 9 1 1 4 2 6 8 2 1 6 4 6 4 2 2 1 2 1 2
 
@@ -639,7 +639,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     1.  使用以下规则为剩余字母分配数字：
 
-        ```
+        ```java
         1:  B, F, P, V
         2:  C, G, J, K, Q, S, X, Z
         3:  D, T
@@ -657,7 +657,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **电话单词。** 编写一个程序 `PhoneWords.java`，它将一个 7 位数字字符串作为命令行输入，从标准输入中读取一个单词列表（例如，字典），并打印出所有可以使用标准电话规则形成的 7 个字母单词（或后跟 4 个字母单词的 3 个���母单词），例如，266-7883 对应于 `compute`。
 
-    ```
+    ```java
     0:  No corresponding letters
     1:  No corresponding letters
     2:  A B C
@@ -690,7 +690,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **VIN 号码。** [VIN 号码](http://www.mathnotes.com/aw_IDnumber.html)是一个用于唯一标识机动车辆的 17 个字符的字符串。它还编码了车辆的制造商和属性。为了防止意外输入错误的 VIN 号码，VIN 号码包含一个检验位（第 9 个字符）。每个字母和数字被分配一个 0 到 9 之间的值。检验位被选择为值的加权和对 11 取模，如果余数为 10，则使用符号`X`。
 
-    ```
+    ```java
     A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     1 2 3 4 5 6 7 8 - 1 2 3 4 5 - 7 - 9 2 3 4 5 6 7 8 9
 
@@ -701,7 +701,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     例如，部分 VIN 号码 1FA-CP45E-?-LF192944 的��验位为 X，因为加权和为 373，373 mod 11 为 10。
 
-    ```
+    ```java
      1   F   A   C   P   4   5   E   X   L   F   1   9   2   9   4   4
      1   6   1   3   7   4   5   5   -   3   6   1   9   2   9   4   4
      8   7   6   5   4   3   2  10   -   9   8   7   6   5   4   3   2
@@ -768,7 +768,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **边缘检测。** 目标：形成图像某些特征的数学模型。为了实现这一目标，我们希望检测边缘或线条。*边缘*是图片中一个像素到下一个像素之间强烈对比的区域。边缘检测是图像处理和计算机视觉中��一个基本问题。*Sobel 方法*是一种流行的边缘检测技术。我们假设图像是灰度的。（如果不是，我们可以通过取红色、绿色和蓝色强度的平均值来转换。）对于每个像素(i, j)，我们通过计算两个 3x3*卷积掩模*来计算*边缘强度*。这涉及计算以(i, j)为中心的 3x3 邻域中九个像素的灰度值，将它们乘以 3x3 掩模中的相应权重，并将乘积相加。  
 
-    ```
+    ```java
     -1 0 +1      +1 +2 +1
     -2 0 +2       0  0  0
     -1 0 +1      -1 -2 -1

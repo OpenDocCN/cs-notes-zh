@@ -12,7 +12,7 @@
 
 数量*n*!可以通过`for`循环轻松计算，但在 Factorial.java 中更简单的方法是使用以下递归函数：
 
-```
+```java
 public static long factorial(int n) { 
     if (n == 1) return 1; 
     return n * factorial(n-1); 
@@ -22,7 +22,7 @@ public static long factorial(int n) {
 
 我们可以以与跟踪任何函数调用序列相同的方式跟踪此计算。
 
-```
+```java
 factorial(5) 
    factorial(4) 
       factorial(3) 
@@ -62,7 +62,7 @@ factorial(5)
 
 Euclid.java 中的静态方法`gcd()`是一个紧凑的递归函数，其减少步骤基于此性质。
 
-```
+```java
 gcd(1440, 408) 
    gcd(408, 216) 
       gcd(216, 192) 
@@ -139,7 +139,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 +   *缺少基本情况。* NoBaseCase.java 中的递归函数应该计算调和数，但缺少一个基本情况：
 
-    ```
+    ```java
     public static double harmonic(int n) {
         return harmonic(n-1) + 1.0/n;
     }
@@ -150,7 +150,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 +   *��有收敛的保证。* 另一个常见问题是在递归函数中包含一个递归调用来解决一个不比原问题更小的子问题。例如，NoConvergence.java 中的递归函数对于其参数的任何值（除了 1）都会进入无限递归循环。
 
-    ```
+    ```java
     public static double harmonic(int n) {
         if (n == 1) return 1.0;
         return harmonic(n) + 1.0/n;
@@ -160,7 +160,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 +   *过度内存需求。* 如果一个函数在返回之前递归调用自身过多次数，Java 需要的内存来跟踪递归调用可能是不可接受的。ExcessiveMemory.java 中的递归函数正确计算第 n 个调和数。然而，用一个巨大的`n`值调用它将导致`StackOverflowError`。
 
-    ```
+    ```java
     public static double harmonic(int n) { 
        if (n == 0) return 0.0;
        return harmonic(n-1) + 1.0/n; 
@@ -178,7 +178,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
     一个初学者程序员可能会实现这个递归函数来计算斐波那契数列中的数字，就像 Fibonacci.java 中所示的那样：
 
-    ```
+    ```java
     // Warning: spectacularly inefficient.
     public static long fibonacci(int n) {
         if (n == 0) return 0;
@@ -200,7 +200,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 +   *自底向上动态规划。* 在*自底向上*动态规划中，我们计算所有子问题的解，从“最简单”的子问题开始，逐渐构建更复杂子问题的解。BottomUpFibonacci.java 演示了用于计算斐波那契数的自底向上动态规划。
 
-    ```
+    ```java
     public static long fibonacci(int n) {
         long[] f = new long[n+1];
         f[0] = 0;
@@ -214,7 +214,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 +   *最长公共子序列问题。* 给定两个字符串*x*和*y*，我们希望计算它们的<em.longest common="" subsequence="">(LCS)。如果我们从*x*中删除一些字符，从*y*中删除一些字符，得到的两个字符串相等，我们称结果字符串为*公共子序列*。LCS 问题是找到两个字符串的一个尽可能长的公共子序列。例如，`GGCACCACG`和`ACGGCGGATACG`的 LCS 是`GGCAACG`，一个长度为 7 的字符串。
 
-    ```
+    ```java
     - - G G C - - A - C C A C G
     A C G G C G G A T - - A C G
 
@@ -228,7 +228,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
     一般来说，如果我们让`opt[i][j]`表示后缀`s[i..m)`和`t[j..n)`的 LCS 的长度，则以下递归成立：
 
-    ```
+    ```java
     opt[i][j] = 0                              if i = m or j = n
               = opt[i+1][j+1] + 1              if s[i] = t[j]
               = max(opt[i][j+1], opt[i+1][j])  otherwise
@@ -255,7 +255,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  用整数和除数的术语解释以下类似于欧几里得函数的效果。
 
-    ```
+    ```java
     public static boolean gcdlike(int p, int q) {
        if (q == 0) return (p == 1);
        return gcdlike(q, p % q);
@@ -267,7 +267,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  考虑以下递归函数。
 
-    ```
+    ```java
     public static int mystery(int a, int b) {
         if (b == 0)     return 0;
         if (b % 2 == 0) return mystery(a+a, b/2);
@@ -292,21 +292,21 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **排列。** 编写一个程序 Permutations.java，接受一个整数命令行参数 *n*，并打印出以 `a` 开头的 *n* 个字母的 *n*! 排列。*n* 元素的排列是元素的 *n*! 种可能排序之一。例如，当 *n* = 3 时，您应该得到以下输出（但不必担心枚举它们的顺序）：
 
-    ```
+    ```java
     bca cba cab acb bac abc
 
     ```</m>
 
 1.  **大小为 k 的排列。** 编写一个程序 PermutationsK.java，接受两个命令行参数 *n* 和 *k*，并打印出包含恰好 *k* 个 *n* 元素的排列的数量 \(P(n, k) = \frac{n!}{(n-k)!}\)。当 *k* = 2 且 *n* = 4 时，以下是期望的输出（再次，不必担心顺序）：
 
-    ```
+    ```java
     ab ac ad ba bc bd ca cb cd da db dc 
 
     ```
 
 1.  **组合。** 编写一个程序 Combinations.java，接受一个整数命令行参数 *n*，并打印出任意大小的 2^(*n*) *组合*。*组合* 是 *n* 元素的子集，与顺序无关。例如，当 *n* = 3 时，您应该得到以下输出：
 
-    ```
+    ```java
      a ab abc ac b bc c
 
     ```
@@ -315,7 +315,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **大小为 k 的组合。** 编写一个程序 CombinationsK.java，接受两个命令行参数 *n* 和 *k*，并打印出大小为 *k* 的组合的数量 \(C(n, k) = \frac{n!}{k! (n-k)!}\)。例如，当 *n* = 5 且 *k* = 3 时，您应该得到以下输出：
 
-    ```
+    ```java
     abc abd abe acd ace ade bcd bce bde cde 
 
     ```
@@ -336,7 +336,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **Collatz 函数。** 考虑以下递归函数 Collatz.java，它与数论中一个著名的未解决问题相关，即 [Collatz 问题](http://mathworld.wolfram.com/CollatzProblem.html) 或 *3n + 1 问题*。
 
-    ```
+    ```java
     public static void collatz(int n) {
         StdOut.print(n + " ");
         if (n == 1) return;
@@ -348,7 +348,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
     例如，调用 `collatz(7)` 打印出序列
 
-    > ```
+    > ```java
     > 7 22 11 34 17 52 26 13 40 20 10 5 16 8 4 2 1 
     > 
     > ```
@@ -365,7 +365,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **一个奇怪的函数。** 考虑麦卡锡的 91 函数：
 
-    ```
+    ```java
     public static int mcCarthy(int n) {
         if (n > 100) return n - 10;
         else return mcCarthy(mcCarthy(n+11));
@@ -385,7 +385,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  编写一个递归程序 GoldenRatio.java，它接受一个整数输入 N，并使用以下递归公式计算[黄金比例](http://en.wikipedia.org/wiki/Golden_ratio)的近似值：
 
-    ```
+    ```java
     f(N) = 1               if N = 0
          = 1 + 1 / f(N-1)  if N > 0
 
@@ -397,7 +397,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  考虑以下递归函数。`mystery(1, 7)` 是什么？
 
-    ```
+    ```java
     public static int mystery(int a, int b) {
        if (0 == b) return 0;
        else return a + mystery(a, b-1);
@@ -413,7 +413,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  考虑以下函数。`mystery(0, 8)` 做什么？
 
-    ```
+    ```java
     public static void mystery(int a, int b) {
        if (a != b) {
            int m = (a + b) / 2;
@@ -429,7 +429,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  考虑以下函数。`mystery(0, 8)` 做什么？
 
-    ```
+    ```java
     public static void mystery(int a, int b) {
        if (a != b) {
            int m = (a + b) / 2;
@@ -447,7 +447,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  `mystery(0, 8)` 做什么？
 
-    ```
+    ```java
     public static int mystery(int a, int b) {
         if (a == b) StdOut.println(a);
         else {
@@ -462,7 +462,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  以下函数计算什么？
 
-    ```
+    ```java
     public static int f(int n) {
        if (n == 0) return 0;
        if (n == 1) return 1;
@@ -473,7 +473,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  编写一个程序 Fibonacci2.java，它接受一个命令行参数 N，并使用以下替代定义打印出前 N 个斐波那契数：
 
-    ```
+    ```java
     F(n)   = 1                            if n = 1 or n = 2
            = F((n+1)/2)2 + F((n-1)/2)2     if n is odd
            = F(n/2 + 1)2 - F(n/2 - 1)2     if n is even
@@ -484,7 +484,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  编写一个程序，它接受一个命令行参数 N，并使用[Dijkstra 提出的方法](http://www.cs.utexas.edu/users/EWD/ewd06xx/EWD654.PDF)打印出前 N 个斐波那契数。
 
-    ```
+    ```java
     F(0) =  0
     F(1) =  1
     F(2n-1) = F(n-1)² + F(n)²
@@ -498,7 +498,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  考虑来自程序 Recursion.java 的以下函数：
 
-    ```
+    ```java
     public static void mystery(int n) {
        if (n == 0 || n == 1) return;
        mystery(n-2);
@@ -512,14 +512,14 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  如果基本情况被替换为以下语句，上一个练习会发生什么？
 
-    ```
+    ```java
     if (n == 0) return;
 
     ```
 
 1.  考虑以下递归函数。
 
-    ```
+    ```java
     public static int square(int n) {
        if (n == 0) return 0;
        return square(n-1) + 2*n - 1;
@@ -536,7 +536,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  考虑下面一对相互递归的函数。`g(g(2))` 的求值结果是什么？
 
-    ```
+    ```java
     public static int f(int n) {     public static int g(int n) {
        if (n == 0) return 0;            if (n == 0) return 0;
        return f(n-1) + g(n-1);          return g(n-1) + f(n);
@@ -548,7 +548,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **通过递增和展开进行转换。** 给定两个整数 a ≤ b，编写一个程序 Sequence.java，通过最小的递增（加 1）和展开（乘以 2）操作将 a 转换为 b。例如，
 
-    ```
+    ```java
     % java Sequence 5 23
     23 = ((5 * 2 + 1) * 2 + 1)
 
@@ -564,7 +564,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **8 皇后问题。** 在这个练习中，您将解决经典的 [8 皇后问题](http://www.acm.org/classics/dec95)：在一个 8x8 的棋盘上放置 8 个皇后，使得没有两个皇后在同一行、列或对角线上。没有两个皇后放在同一行或列的方式有 8! = 40,320 种。整数 0 到 7 的任意排列 p[] 都可以给出这样的放置：将皇后 i 放在第 i 行，第 p[i] 列。您的程序 Queens.java 应该接受一个整数命令行参数 n，并通过绘制皇后的位置来列举解决 n 皇后问题的所有解决方案，就像下面的两个解决方案一样。
 
-    ```
+    ```java
     * * * Q * * * *      * * * * Q * * * 
     * Q * * * * * *      * Q * * * * * * 
     * * * * * * Q *      * * * Q * * * * 
@@ -596,7 +596,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **另一个棘手的递归函数。** 考虑以下递归函数。`f(0)`是多少？
 
-    ```
+    ```java
     public static int f(int x) {
        if (x > 1000) return x - 4;
        else return f(f(x+5));
@@ -608,7 +608,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **随机中缀表达式生成器。** 使用不同的命令行参数 p 在 0 和 1 之间运行 RandomExpression.java。你观察到了什么？
 
-    ```
+    ```java
     public static String expr(double p) {
        double r = Math.random();
        if (r <= 1*p) return "(" + expr(p) + " + " + expr(p) + ")";
@@ -624,7 +624,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **冯·诺伊曼序数。** *冯·诺伊曼整数* i 的定义如下：对于 i = 0，它是空集；对于 i > 0，它是包含冯·诺伊曼整数 0 到 i-1 的集合。
 
-    ```
+    ```java
     0 = {}         = {}
     1 = {0}	       = {{}}
     2 = {0, 1}     = {{}, {{}}}
@@ -636,7 +636,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **字符串的子序列。** 编写一个程序 Subsequence.java，接受一个字符串命令行参数 `s` 和一个整数命令行参数 `k`���并打印出长度为 `k` 的 `s` 的所有子序列。
 
-    ```
+    ```java
     % java Subsequence abcd 3
     abc abd acd bcd
 
@@ -644,7 +644,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **交错两个字符串。** 给定两个不同字符的字符串 `s` 和 `t`，打印出所有 (M+N)! / (M! N!) 交错，其中 M 和 N 是两个字符串中字符的数量。例如，如果
 
-    ```
+    ```java
     s = "ab"  t = "CD"
     abCD   CabD
     aCbD   CaDb
@@ -670,7 +670,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **整数分区。** 编写一个程序 Partition.java，将一个正整数 N 作为命令行参数，并打印出 N 的所有分区。[分区](http://en.wikipedia.org/wiki/Integer_partition)是将 N 写成正整数之和的一种方式。如果两个和仅在其组成部分的顺序上有所不同，则认为它们是相同的。分区在数学和物理中的对称多项式和群表示理论中出现。
 
-    ```
+    ```java
     % java Partition 4      % java Partition 6
     4                       6
     3 1                     5 1
@@ -688,7 +688,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **约翰逊-特罗特排列。** 编写一个程序 JohnsonTrotter.java，接受一个整数命令行参数 n，并以一种方式打印出整数 0 到 n-1 的所有 n! 排列，使得连续的排列仅在一个相邻的转位中有所不同（类似于格雷码在组合中迭代的方式，使得连续的组合仅在一个位上有所不同）。
 
-    ```
+    ```java
     % java JohnsonTrotter 3
     012   (2 1)
     021   (1 0)
@@ -701,7 +701,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
 1.  **按字典顺序排列的排列。** 编写一个程序 PermutationsLex.java，接受一个命令行参数 N，并按字典顺序打印出整数 0 到 N-1 的所有 N! 排列。
 
-    ```
+    ```java
     % java PermutationsLex 3
     012
     021
@@ -779,7 +779,7 @@ Brownian.java 生成一个函数图，近似于称为*布朗桥*的分数布朗�
 
     SlowBinomial.java 在中等规模的 n 或 k 下表现惨不忍睹，不是因为溢出，而是因为同样的子问题被重复解决。
 
-    ```
+    ```java
     // DO NOT RUN THIS CODE FOR LARGE INPUTS
     public static long binomial(int n, int k) {
         if (k == 0) return 1;

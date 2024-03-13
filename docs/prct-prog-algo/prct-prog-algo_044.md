@@ -10,7 +10,7 @@ Java 包含许多由专家设计和实现的库。还可以从网络上下载更
 
 **NumberFormatter。** DecimalFormat 用于格式化实数以便通过 System.out.println 打印。
 
-> ```
+> ```java
 > DecimalFormat df = new DecimalFormat("###.##");
 > System.out.println(df.format("123456.789"));
 > System.out.println(df.format("16.1111111"));
@@ -23,7 +23,7 @@ Java 包含许多由专家设计和实现的库。还可以从网络上下载更
 
 一个常见的性能错误是逐个连接一系列字符（或单词）以形成一个长字符串。以下代码说明了问题。
 
-> ```
+> ```java
 > String s = "";
 > while(!In.isEmpty()) {
 >    char c = In.getChar();
@@ -34,7 +34,7 @@ Java 包含许多由专家设计和实现的库。还可以从网络上下载更
 
 每次将新字符 c 附加到 s 时，会出现问题，因为字符串是不可变的，所以每次都会创建 s 的新副本。构建长度为 N 的字符串可能需要与 N² 成正比的时间。相反，应该使用 StringBuffer，这样时间与 N 成正比。
 
-> ```
+> ```java
 > StringBuffer sb = new StringBuffer();
 > while(!In.isEmpty()) {
 >    char c = In.getChar();
@@ -48,7 +48,7 @@ Java 包含许多由专家设计和实现的库。还可以从网络上下载更
 
 **Javadoc。** 在 Jama 包上运行 Javadoc，自动生成 Java 风格的文档。命令
 
-> ```
+> ```java
 > % javadoc -d Jama/javadoc Jama
 > 
 > ```

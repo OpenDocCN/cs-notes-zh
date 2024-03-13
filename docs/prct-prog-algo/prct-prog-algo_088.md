@@ -72,7 +72,7 @@
 
 1.  给出一个反例，说明快速查找的`union()`的这种直观实现是不正确的：
 
-    ```
+    ```java
     public void union(int p, int q) {
        if (connected(p, q)) return;
        for (int i = 0; i < id.length; i++)
@@ -132,7 +132,7 @@
 
     *解决方案*：
 
-    ```
+    ```java
     public int find(int p) {
        if (p != parent[p])
            parent[p] = find(parent[p]);
