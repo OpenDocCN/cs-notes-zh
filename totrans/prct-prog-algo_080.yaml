@@ -1,154 +1,219 @@
 - en: 4.4 Symbol Tables
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 4.4 符号表
 - en: 原文：[https://introcs.cs.princeton.edu/python/44st](https://introcs.cs.princeton.edu/python/44st)
+  id: totrans-1
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 原文：[https://introcs.cs.princeton.edu/python/44st](https://introcs.cs.princeton.edu/python/44st)
 - en: <title>4.4\. Symbol Tables</title>
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: <title>4.4\. 符号表</title>
 - en: A *symbol table* is a data type that we use to associate *values* with *keys*.
     Clients can store (*put*) an entry into the symbol table by specifying a key-value
     pair and then can retrieve (*get*) the value corresponding to a particular key
     from the symbol table.
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: '*符号表*是一种数据类型，我们用它来将*值*与*键*关联起来。客户端可以通过指定键值对将条目存储（*put*）到符号表中，然后可以从符号表中检索（*get*）与特定键对应的值。'
 - en: In this chapter we consider a basic API for the symbol-table data type. Our
     API adds to the *put* and *get* operations the abilities to test whether any value
     has been associated with a given key (*contains*) and to *iterate* over the keys.
     We also consider an extension to the API for the case where keys are comparable,
     which admits a number of useful operations.
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 在本章中，我们考虑符号表数据类型的基本API。我们的API增加了*put*和*get*操作的能力，以测试是否已将任何值与给定键关联（*contains*），以及在键上*迭代*的能力。我们还考虑了一个扩展API，用于可比较键的情况，这允许许多有用的操作。
 - en: We also consider two classic implementations. The first uses an operation known
     as *hashing*, which transforms keys into array indices that we can use to access
     values. The second is based on a data structure known as the *binary search tree*
     (*BST*).
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们还考虑了两种经典的实现。第一种使用称为*哈希*的操作，将键转换为我们可以用来访问值的数组索引。第二种基于一种称为*二叉搜索树*（*BST*）的数据结构。
 - en: '* * *'
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: API
+  id: totrans-7
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: API
 - en: 'A symbol table is a collection of key-value pairs — every symbol-table entry
     associates a value with a key, as follows:'
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 符号表是一组键值对的集合 — 每个符号表条目将一个值与一个键关联，如下所示：
 - en: '![SymbolTable API](../Images/2fb5340ce14e6f48ed50794e58213ac5.png)'
+  id: totrans-9
   prefs:
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![SymbolTable API](../Images/2fb5340ce14e6f48ed50794e58213ac5.png)'
 - en: The API is consistent with the API for Python's built-in `dict` data type, which
     we consider later in this section. The API already reflects several design decisions,
     which we now enumerate.
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 该API与Python内置的`dict`数据类型的API一致，我们稍后在本节中讨论。API已经反映了几个设计决策，我们现在列举如下。
 - en: Associative arrays.
+  id: totrans-11
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 关联数组。
 - en: We overload the `[]` operator for the two basic operations *put* and *get*.
     In client code this means that we can think of a symbol table as an *associative
     array*, where we can use standard array syntax with any type of data inside the
     square brackets instead of an integer between 0 and the length, as for an array.
     Thus, we can associate a codon with an amino acid name with client code like
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们为两个基本操作*put*和*get*重载了`[]`运算符。在客户端代码中，这意味着我们可以将符号表视为一个*关联数组*，其中我们可以使用标准数组语法，方括号内可以是任何类型的数据，而不是介于0和长度之间的整数，就像数组一样。因此，我们可以将密码子与氨基酸名称关联起来，客户端代码如下：
 - en: '[PRE0]'
+  id: totrans-13
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: and we can later access the name associated with a given codon with client code
     like
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们稍后可以通过客户端代码访问与给定密码子关联的名称
 - en: '[PRE1]'
+  id: totrans-15
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: That is, an associative array reference is a *get* operation, unless it is on
     the left side of an assignment statement, when it is a *put* operation. We can
     support these operations by implementing the special methods `__getitem__()` and
     `__setitem__()`.
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 也就是说，关联数组引用是一个*获取*操作，除非它在赋值语句的左侧，那时它是一个*放置*操作。我们可以通过实现特殊方法`__getitem__()`和`__setitem__()`来支持这些操作。
 - en: Replace-the-old-value policy.
+  id: totrans-17
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 替换旧值策略。
 - en: If a value is to be associated with a key that already has an associated value,
     we adopt the convention that the new value replaces the old one (just as with
     an array assignment statement). Again, this is what one would expect from the
     associative-array abstraction. The `key in st` operation, supported by the special
     method `__contains__()`, gives the client the flexibility to avoid doing so, if
     desired.
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果要将值与已经关联值的键关联起来，我们采用新值替换旧值的约定（就像数组赋值语句一样）。同样，这是从关联数组抽象中所期望的。由特殊方法`__contains__()`支持的`key
+    in st`操作，给予客户端灵活性，如果需要的话可以避免这样做。
 - en: Not found.
+  id: totrans-19
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 未找到。
 - en: The call `st[key]` raises a `KeyError` if no value has been associated with
     key in the table. An alternative design would be to return `None` in such cases.
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 调用`st[key]`会在表中未关联键的情况下引发`KeyError`。另一种设计是在这种情况下返回`None`。
 - en: None keys and values.
+  id: totrans-21
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 无键和值。
 - en: Clients may use `None` as a key or value, though they typically do not do so.
     An alternative design would be to disallow either `None` keys and/or values.
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 客户端可能使用`None`作为键或值，尽管他们通常不这样做。另一种设计是不允许`None`键和/或值。
 - en: Iterable.
+  id: totrans-23
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 可迭代的。
 - en: 'To support the `for key in st`: construct, Python''s convention is that we
     need to implement a special method `__iter__()` that returns an *iterator*, a
     special data type that includes methods that are called at the beginning and for
     each iteration of the `for` loop. We consider Python''s mechanism for iteration
     at the end of this section.'
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了支持`for key in st`的构造，Python的约定是我们需要实现一个特殊方法`__iter__()`，它返回一个*迭代器*，这是一种特殊的数据类型，包括在`for`循环的开始和每次迭代时调用的方法。我们将在本节末尾考虑Python的迭代机制。
 - en: Remove.
+  id: totrans-25
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 移除。
 - en: Our basic API does not include a method for removing keys from the symbol table.
     Some applications do require such a method, and Python provides the special syntax
     `del st[key]` that can be supported by implementing the special method `__delitem__()`.
     We leave implementations as exercises or for a more advanced course in algorithms.
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们基本的API不包括从符号表中删除键的方法。一些应用程序确实需要这样的方法，Python提供了特殊语法`del st[key]`，可以通过实现特殊方法`__delitem__()`来支持。我们将实现留作练习，或者用于更高级的算法课程。
 - en: Immutable keys.
+  id: totrans-27
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 不可变的键。
 - en: We assume the keys do not change their value while in the symbol table. The
     simplest and most commonly used types of keys (integers, floats, and strings)
     are immutable. If you think about it, you will see that is a very reasonable assumption!
     If a client changes a key, how could the symbol table implementation keep track
     of that fact?
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们假设键在符号表中不会更改其值。最简单且最常用的键类型（整数、浮点数和字符串）是不可变的。如果你仔细想一想，你会发现这是一个非常合理的假设！如果客户端更改了一个键，符号表的实现如何跟踪这个事实呢？
 - en: Variations.
+  id: totrans-29
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 变体。
 - en: Computer scientists have identified numerous other useful operations on symbol
     tables, and APIs based on various subsets of them have been widely studied. We
     consider several of these operations throughout this section, and particularly
     in the exercises at the end.
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 计算机科学家已经确定了符号表上许多其他有用的操作，并且基于它们的各种子集的API已经得到广泛研究。我们将在本节中以及特别是最后的练习中考虑其中的几个操作。
 - en: Comparable keys.
+  id: totrans-31
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 可比较的键。
 - en: 'In many applications, the keys may be integers, floats, strings, or other data
     types of data that have a natural order. In Python, as discussed in Section''3.3,
     we expect such keys to be *comparable*. Symbol tables with comparable keys are
@@ -160,27 +225,39 @@
     topic is more appropriate for a book on algorithms and data structures, but we
     examine a typical client and an implementation of such a data type later in this
     section. This is a partial API:'
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 在许多应用程序中，键可以是整数、浮点数、字符串或其他具有自然顺序的数据类型。在Python中，如第3.3节所讨论的，我们期望这些键是*可比较*的。具有可比较键的符号表有两个重要原因。首先，我们可以利用键的顺序来开发*put*和*get*的实现，以保证API中的性能规范。其次，有许多新的操作（并且可以支持）与可比较的键相关。客户端可能想要最小的键，或最大的键，或中位数，或按排序顺序迭代键。这个主题的全面覆盖更适合于算法和数据结构的书籍，但我们稍后在本节中会检查一个典型的客户端和这种数据类型的实现。这是一个部分API：
 - en: '![OrderedSymbolTable API](../Images/0d3c96222f3ab0f405e80781ed8b4856.png)'
+  id: totrans-33
   prefs:
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![OrderedSymbolTable API](../Images/0d3c96222f3ab0f405e80781ed8b4856.png)'
 - en: '* * *'
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Symbol Table Clients
+  id: totrans-35
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 符号表客户端
 - en: We start with two prototypical examples, each of which arises in a large number
     of important and familiar practical applications.
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们从两个原型示例开始，每个示例在许多重要且熟悉的实际应用程序中都会出现。
 - en: Dictionary lookup.
+  id: totrans-37
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 字典查找。
 - en: '![Dictionary applications](../Images/773281c94de4d3979fb2e6f5c3c2804f.png)
     The most basic kind of symbol-table client builds a symbol table with successive
     *put* operations to support *get* requests. The program [lookup.py](lookup.py.html)
@@ -189,8 +266,11 @@
     standard input. The command-line arguments are the file name and two integers,
     one specifying the field to serve as the key and the other specifying the field
     to serve as the value.'
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: '![Dictionary applications](../Images/773281c94de4d3979fb2e6f5c3c2804f.png)
+    最基本的符号表客户端通过连续的*put*操作构建符号表，以支持*get*请求。程序[lookup.py](lookup.py.html)从命令行指定的逗号分隔值文件中构建一组键值对，然后写入与从标准输入读取的键对应的值。命令行参数是文件名和两个整数，一个指定用作键的字段，另一个指定用作值的字段。'
 - en: This booksite provides numerous comma-separated-value (.csv) files that you
     can use as input to [lookup.py](lookup.py.html), including [amino.csv](amino.csv)
     (codon-to-amino-acid encodings), [djia.csv](djia.csv) (opening price, volume,
@@ -203,12 +283,16 @@
     to associate values with a key, the table will remember only the most recent one
     (think about associative arrays). We will consider next the case where we want
     to associate multiple values with a key.
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 本书站点提供了许多逗号分隔值（.csv）文件，您可以将其用作[lookup.py](lookup.py.html)的输入，包括[amino.csv](amino.csv)（密码子到氨基酸编码）、[djia.csv](djia.csv)（股市平均开盘价、成交量和收盘价，历史上的每一天）、[elements.csv](elements.csv)（元素周期表）、[ip.csv](ip.csv)（DNS数据库中的条目选择）、[ip-by-country.csv](ip-by-country.csv)（IP地址按���家）、[morse.csv](morse.csv)（摩尔斯电码）和[phone-na.csv](phone-na.csv)（电话区号）。在选择要用作键的字段时，请记住每个键必须唯一确定一个值。如果有多个*put*操作将值与键关联，表将仅记住最近的一个（考虑关联数组）。接下来我们将考虑希望将多个值与一个键关联的情况。
 - en: Indexing.
+  id: totrans-40
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 索引。
 - en: '![Indexing applications](../Images/15fc1a4f1d0c69c69b3a2546ad322232.png) The
     program [index.py](index.py.html) is a prototypical example of a symbol-table
     client for comparable keys. It reads in a list of strings from standard input
@@ -216,90 +300,122 @@
     for each string specifying the positions where it appears in the input. In this
     case, we seem to be associating multiple values with each key, but we actually
     associating just one: a Python list.'
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: '![Indexing applications](../Images/15fc1a4f1d0c69c69b3a2546ad322232.png) 程序[index.py](index.py.html)是一个用于可比较键的符号表客户端的原型示例。它从标准输入中读取一组字符串，并写入所有不同字符串的排序表，以及为每个字符串指定出现在输入中的位置的整数列表。在这种情况下，我们似乎将多个值与每个键关联起来，但实际上我们只关联了一个值：一个Python列表。'
 - en: 'To cut down on the amount of output, [index.py](index.py.html) takes three
     command-line arguments: a file name and two integers. The first integer is the
     minimum string length to include in the symbol table, and the second is the minimum
     number of occurrences (among the words that appear in the text) to include in
     the printed index. Try running [index.py](index.py.html) on the files [tale.txt](tale.txt)
     and [mobydick.txt](mobydick.txt).'
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了减少输出量，[index.py](index.py.html)接受三个命令行参数：一个文件名和两个整数。第一个整数是要包含在符号表中的最小字符串长度，第二个是要包含在打印索引中的出现次数最少的单词数。尝试在文件[tale.txt](tale.txt)和[mobydick.txt](mobydick.txt)上运行[index.py](index.py.html)。
 - en: '* * *'
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Hash Tables
+  id: totrans-44
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 哈希表
 - en: Symbol-table implementations have been heavily studied, many different algorithms
     and data structures have been invented for this purpose, and modern programming
     environments (including Python) provide direct support. As usual, knowing how
     a basic implementation works will help you appreciate, choose among, and more
     effectively use the advanced ones, or help implement your own version for some
     specialized situation that you might encounter.
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 符号表实现已经得到广泛研究，为此已经发明了许多不同的算法和数据结构，并且现代编程环境（包括Python）提供直接支持。通常情况下，了解基本实现的工作原理将帮助您欣赏、选择并更有效地使用高级实现，或者帮助您为可能遇到的某些专门情况实现自己的版本。
 - en: One way to implement a symbol table is as a *hash table*. A hash table is a
     data structure in which we divide the keys into small groups that can be quickly
     searched. The basic idea is simple. We choose a parameter *m* and divide the keys
     into *m* groups, which we expect to be about equal in size. For each group, we
     keep the keys in a list and use sequential search.
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 实现符号表的一种方法是作为*哈希表*。哈希表是一种数据结构，我们将键分成可以快速搜索的小组。基本思想很简单。我们选择一个参数*m*，将键分成*m*组，我们希望这些组的大小大致相等。对于每个组，我们将键保留在一个列表中，并使用顺序搜索。
 - en: To divide the keys into small groups, we use a function called a *hash function*
     that maps every possible key into a hash value — an integer between 0 and *m*-1\.
     This enables us to model the symbol table as a fixed-length array of lists and
     use the hash value as an array index to access the desired list. In Python, we
     can implement both the fixed-length array and the lists using the built-in `list`
     data type.
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了将键分成小组，我们使用一个称为*哈希函数*的函数，将每个可能的键映射到一个哈希值——一个介于0和*m*-1之间的整数。这使我们能够将符号表建模为一个固定长度的列表数组，并使用哈希值作为数组索引来访问所需的列表。在Python中，我们可以使用内置的`list`数据类型来实现固定长度数组和列表。
 - en: Hashing is widely useful, so many programming languages include direct support
     for it. As we saw in Section 3.3, Python provides the built-in `hash()` function
     for this purpose, which takes a hashable object as an argument returns an integer
     hash code. To convert that to a hash value between 0 and *m*-1, we use the expression
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 哈希是非常有用的，因此许多编程语言都包含对其的直接支持。正如我们在第3.3节中看到的，Python提供了内置的`hash()`函数，用于此目的，它接受一个可哈希对象作为参数并返回一个整数哈希码。为了将其转换为0到*m*-1之间的哈希值，我们使用表达式
 - en: '[PRE2]'
+  id: totrans-49
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: 'Recall that an object is hashable if it satisfies the following three properties:'
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 请记住，如果对象满足以下三个属性，则对象是可哈希的：
 - en: The object can be compared for equality with other objects.
+  id: totrans-51
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对象可以与其他对象进行相等比较。
 - en: Whenever two objects compare as equal, they have the same hash code.
+  id: totrans-52
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每当两个对象比较相等时，它们具有相同的哈希码。
 - en: The object's hash code does not change during its lifetime.
+  id: totrans-53
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对象的哈希码在其生命周期内不会更改。
 - en: Objects that are not equal may have the same hash code. However, for good performance,
     we expect the hash function to divide our keys into m groups of roughly equal
     length.
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 不相等的对象可能具有相同的哈希码。但是，为了获得良好的性能，我们希望哈希函数将我们的键分成大约相等长度的*m*组。
 - en: Implementing an efficient symbol table with hashing is straightforward. For
     the keys, we maintain an array of *m* lists, with element `i` containing a Python
     list of keys whose hash value is `i`. For the values, we maintain a parallel array
     of *m* lists, so that when we have located a key, we can access the corresponding
     value using the same indices. The program [hashst.py](hashst.py.html) is a full
     implementation, using a fixed number of *m* lists (1024 by default).
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 使用哈希实现高效的符号表是直截了当的。对于键，我们维护一个包含*m*个列表的数组，其中元素`i`包含一个Python列表，其中包含哈希值为`i`的键。对于值，我们维护一个平行数组，也包含*m*个列表，这样当我们定位到一个键时，我们可以使用相同的索引访问相应的值。程序[hashst.py](hashst.py.html)是一个完整的实现，使用固定数量的*m*个列表（默认为1024）。
 - en: 'The efficiency of [hashst.py](hashst.py.html) depends on the value of *m* and
     the quality of the hash function. Assuming the hash function reasonably distributes
     the keys, performance is about *m* times faster than that for sequential search,
     at the cost of *m* extra references and lists. This is a classic space-time tradeoff:
     the higher the value of *m*, the more space we use, but the less time we spend.'
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: '[hashst.py](hashst.py.html)的效率取决于*m*的值和哈希函数的质量。假设哈希函数合理地分布键，性能大约比顺序搜索快*m*倍，代价是*m*额外的引用和列表。这是一个经典的时空权衡：*m*值越高，我们使用的空间就越多，但花费的时间就越少。'
 - en: The primary disadvantage of hash tables is that they do not take advantage of
     order in the keys and therefore cannot provide the keys in sorted order or support
     efficient implementations of operations like finding the minimum or maximum. For
@@ -307,45 +423,65 @@
     not the sorted order that is called for. Next, we consider a symbol table implementation
     that can support such operations when keys are comparable, without sacrificing
     much performance.
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 哈希表的主要缺点是它们不利用键的顺序，因此无法按排序顺序提供键或支持像查找最小值或最大值这样的操作的高效实现。例如，在[index.py](index.py.html)中，键将以任意顺序出现，而不是所要求的排序顺序。接下来，我们考虑一种符号表实现，当键可比较时，可以支持这些操作，而不会牺牲太多性能。
 - en: '* * *'
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Binary Search Trees
+  id: totrans-59
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 二叉搜索树
 - en: 'The *binary tree* is a mathematical abstraction that plays a central role in
     the efficient organization of information. For symbol-table implementations, we
     use a special type of binary tree to organize the data and to provide a basis
     for efficient implementations of the symbol-table *put* operations and *get* requests.
     A binary search tree (BST) associates comparable keys with values, in a structure
     defined recursively. A BST is one of the following:'
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: '*二叉树*是在信息高效组织中起着核心作用的数学抽象。对于符号表实现，我们使用一种特殊类型的二叉树来组织数据，并为符号表的*put*操作和*get*请求提供高效实现的基础。二叉搜索树（BST）将可比较的键与值关联在一起，以递归定义的结构。BST是以下之一：'
 - en: '![Binary search tree](../Images/412d01152c8635ea9c7674d27d439bdb.png)'
+  id: totrans-61
   prefs: []
   type: TYPE_IMG
+  zh: '![二叉搜索树](../Images/412d01152c8635ea9c7674d27d439bdb.png)'
 - en: Empty (`None`)
+  id: totrans-62
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 空（`None`)
 - en: A node having a key-value pair and two references to BSTs, a left BST with smaller
     keys and a right BST with larger keys
+  id: totrans-63
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个具有键-值对和两个指向BSTs的引用的节点，一个具有较小键的左BST和一个具有较大键的右BST
 - en: The keys must be comparable via the < operator.
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 键必须可通过<运算符进行比较。
 - en: 'To implement BSTs, we start with a class for the node abstraction, which has
     references to a key, a value, and left and right BSTs:'
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 要实现二叉搜索树（BSTs），我们首先从一个节点抽象的类开始，该类具有对键、值以及左右BSTs的引用：
 - en: '[PRE3]'
+  id: totrans-66
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: This definition is like our definition of nodes for linked lists, except that
     it has two links, not just one. From the recursive definition of BSTs, we can
     represent a BST with a variable of type `Node` by ensuring that its value is either
@@ -353,8 +489,10 @@
     references to BSTs, and by ensuring that the ordering condition is satisfied (keys
     in the left BST are smaller than key and keys in the right BST are larger than
     key).
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个定义类似于我们对链表节点的定义，只是它有两个链接，而不只是一个。从BSTs的递归定义中，我们可以通过确保其值为`None`或引用到左右实例变量为BSTs的`Node`的引用，并确保满足排序条件（左BST中的键小于键，右BST中的键大于键）来表示类型为`Node`的变量的BST。
 - en: We often use tree-based terminology when discussing BSTs. We refer to the node
     at the top as the *root* of the tree, the BST referenced by its left link as the
     *left subtree*, and the BST referenced by its right link as the *right subtree*.
@@ -362,16 +500,20 @@
     top. Nodes whose links are both null are called *leaf* nodes. The *height* of
     a tree is the maximum number of links on any path from the root node to a leaf
     node.
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 在讨论BSTs时，我们经常使用基于树的术语。我们将顶部的节点称为树的*根*，由其左链接引用的BST称为*左子树*，由其右链接引用的BST称为*右子树*。传统上，计算机科学家将树倒置绘制，根在顶部。两个链接都为null的节点称为*叶*节点。树的*高度*是从根节点到叶节点的任意路径上的最大链接数。
 - en: 'Suppose that you want to *search* for a node with a given key in a BST (or
     to get a value with a given key in a symbol table). There are two possible outcomes:
     the search might be successful (we find the key in the BST; in a symbol-table
     implementation, we return the associated value) or it might be unsuccessful (there
     is no key in the BST with the given key; in a symbol-table implementation, we
     raise a run-time error).'
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设你想要在BST中*搜索*具有给定键的节点（或在符号表中获取具有给定键的值）。有两种可能的结果：搜索可能成功（我们在BST中找到键；在符号表实现中，我们返回相关联的值）或者可能不成功（在BST中没有具有给定键的键；在符号表实现中，我们引发运行时错误）。
 - en: 'A recursive searching algorithm is immediate: Given a BST (a reference to a
     `Node`), first check whether the tree is empty (the reference is `None`). If so,
     then terminate the search as unsuccessful (in a symbol-table implementation, raise
@@ -380,16 +522,20 @@
     a symbol-table implementation, return the value associated with the key). If not,
     compare the search key with the key in the node. If it is smaller, search (recursively)
     in the left subtree; if it is greater, search (recursively) in the right subtree.'
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 递归搜索算法很简单：给定一个BST（一个指向`Node`的引用），首先检查树是否为空（引用为`None`）。如果是，则将搜索终止为不成功（在符号表实现中，引发运行时错误）。如果树不为空，则检查节点中的键是否等于搜索键。如果是，则将搜索终止为成功（在符号表实现中，返回与键关联的值）。如果不是，则将搜索键与节点中的键进行比较。如果较小，则在左子树中搜索（递归）；如果较大，则在右子树中搜索（递归）。
 - en: Suppose that you want to *insert* a new node into a BST (in a symbol-table implementation,
     put a new key-value pair into the data structure). The logic is similar to searching
     for a key, but the implementation is trickier. The key to understanding it is
     to realize that only one link must be changed to point to the new node, and that
     link is precisely the link that would be found to be `None` in an unsuccessful
     search for the key in that node.
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设你想要在BST中*插入*一个新节点（在符号表实现中，将一个新的键-值对放入数据结构中）。逻辑与搜索键类似，但实现更加棘手。理解它的关键是意识到只有一个链接必须更改为指向新节点，而且该链接恰好是在对该节点的键进行不成功搜索时发现为`None`的链接。
 - en: If the BST is empty, we create and return a new `Node` containing the key-value
     pair; if the search key is less than the key at the root, we set the left link
     to the result of inserting the key-value pair into the left subtree; if the search
@@ -399,31 +545,43 @@
     the recursive call in this way is usually unnecessary, because the link changes
     only if the subtree is empty, but it is as easy to set the link as it is to test
     to avoid setting it.
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果BST为空，我们创建并返回一个包含键-值对的新`Node`；如果搜索键小于根节点的键，我们将左链接设置为将键-值对插入左子树的结果；如果搜索键大于根节点的键，我们将右链接设置为将键-值对插入右子树的结果；否则，如果搜索键相等，我们用新值覆盖现有值。在递归调用后以这种方式重置左或右链接通常是不必要的，因为链接只有在子树为空时才会更改，但设置链接与测试以避免设置它一样容易。
 - en: The program [bst.py](bst.py.html) is a symbol-table implementation based on
     these two recursive algorithms. As with [linkedstack.py](../43stack/linkedstack.py.html)
     and [linkedqueue.py](../43stack/linkedqueue.py.html) (from Section 4.3), we use
     a private `_Node` class to emphasize that clients of `OrderedSymbolTable` do not
     need to know any of the details of the binary search tree representation.
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 程序[bst.py](bst.py.html)是基于这两个递归算法的符号表实现。与[linkedstack.py](../43stack/linkedstack.py.html)和[linkedqueue.py](../43stack/linkedqueue.py.html)（来自第4.3节）一样，我们使用一个私有的`_Node`类来强调`OrderedSymbolTable`的客户端不需要知道二叉搜索树表示的任何细节。
 - en: '* * *'
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Performance Characteristics of BSTs
+  id: totrans-75
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: BST的性能特征
 - en: The running times of BST algorithms are ultimately dependent on the shape of
     the trees, and the shape of the trees is dependent on the order in which the keys
     are inserted.
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: BST算法的运行时间最终取决于树的形状，而树的形状取决于插入关键字的顺序。
 - en: Best case.
+  id: totrans-77
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 最佳情况。
 - en: In the best case, the tree is perfectly balanced (each `Node` has exactly two
     children that are not `None`, except the nodes at the bottom, which have exactly
     two children that are `None`), with lg *n* nodes between the root node and each
@@ -434,125 +592,183 @@
     to be quite lucky to get a perfectly balanced tree like this by inserting keys
     one by one in practice, but it is worthwhile to know the best possible performance
     characteristics.
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 在最佳情况下，树是完全平衡的（每个`Node`恰好有两个不是`None`的子���点，除了底部的节点，它们恰好有两个是`None`的子节点），根节点和每个叶节点之间有lg
+    *n*个节点。在这样的树中，很容易看出无法成功搜索的成本是对数级的，因为该成本满足与二分查找成本相同的递归关系（参见第4.2节），因此每个*put*操作和*get*请求的成本与lg
+    *n*成正比或更少。在实践中，通过逐个插入关键字来获得这样的完全平衡树是相当幸运的，但了解最佳性能特征是值得的。
 - en: '![Best-case BSTs](../Images/1c3989da216460af50bf30932c058cf5.png)'
+  id: totrans-79
   prefs:
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![最佳情况下的BST](../Images/1c3989da216460af50bf30932c058cf5.png)'
 - en: '![Worse-case BSTs](../Images/5b759482026f4de58310bb2b8eb3e232.png)'
+  id: totrans-80
   prefs: []
   type: TYPE_IMG
+  zh: '![最坏情况下的BST](../Images/5b759482026f4de58310bb2b8eb3e232.png)'
 - en: Average case.
+  id: totrans-81
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 平均情况。
 - en: If we insert random keys, we might expect the search times to be logarithmic
     as well, because the first key becomes the root of the tree and should divide
     the keys roughly in half. Applying the same argument to the subtrees, we expect
     to get about the same result as for the best case.
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们插入随机关键字，我们可能期望搜索时间也是对数级的，因为第一个关键字成为树的根节点，并且应该将关键字大致分为两半。将相同的论点应用于子树，我们期望得到与最佳情况大致相同的结果。
 - en: '![Typical-case BSTs](../Images/f2cc0e813c1dbb8d655eb2b56fb30184.png)'
+  id: totrans-83
   prefs:
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![典型情况下的BST](../Images/f2cc0e813c1dbb8d655eb2b56fb30184.png)'
 - en: Worst case.
+  id: totrans-84
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 最坏情况。
 - en: In the worst case, each node has exactly one `None` link, so the BST is like
     a linked list with an extra wasted link, where *put* operations and *get* requests
     take linear time. Unfortunately, this worst case is not rare in practice — it
     arises, for example, when we insert the keys in order.
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 在最坏的情况下，每个节点都有一个`None`链接，因此BST就像是一个带有额外浪费链接的链表，其中*put*操作和*get*请求需要线性时间。不幸的是，在实践中这种最坏情况并不罕见
+    — 例如，当我们按顺序插入关键字时就会出现这种情况。
 - en: Thus, good performance of the basic BST implementation is dependent on the keys
     being sufficiently similar to random keys that the tree is not likely to contain
     many long paths. If you are not sure that assumption is justified, do not use
     a simple BST. Remarkably, there are BST variants that eliminate this worst case
     and guarantee logarithmic performance per operation, by making all trees nearly
     perfectly balanced. One popular variant is known as a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree).
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，基本BST实现的良好性能取决于关键字与随机关键字足够相似，以使树不太可能包含许多长路径。如果您不确定这种假设是否合理，请不要使用简单的BST。值得注意的是，有一些BST变体可以消除这种最坏情况，并保证每次操作的对数性能，方法是使所有树几乎完全平衡。其中一种流行的变体被称为[红黑树](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree)。
 - en: '* * *'
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Traversing a BST
+  id: totrans-88
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 遍历BST
 - en: 'Perhaps the most basic tree-processing function is known as *tree traversal*:
     given a (reference to) a tree, we want to systematically process every key-value
     pair in the tree. To process every key in a BST we use this recursive approach:'
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 或许最基本的树处理函数被称为*树遍历*：给定一个（对）树的引用，我们希望系统地处理树中的每个键-值对。为了处理BST中的每个关键字，我们使用这种递归方法：
 - en: '![Recursive inorder traversal of a BST](../Images/d4d8176dd4b949a13249ed7d7e78347c.png)'
+  id: totrans-90
   prefs: []
   type: TYPE_IMG
+  zh: '![BST的递归中序遍历](../Images/d4d8176dd4b949a13249ed7d7e78347c.png)'
 - en: Process every key in the left subtree.
+  id: totrans-91
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 处理左子树中的每个关键字。
 - en: Process the key at the root.
+  id: totrans-92
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在根节点处理关键字。
 - en: Process every key in the right subtree.
+  id: totrans-93
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 处理右子树中的每个关键字。
 - en: 'This approach is known as *inorder* tree traversal, to distinguish it from
     *preorder* (do the root first) and *postorder* (do the root last), which arise
     in other applications. For example, the following method writes the keys in the
     BST rooted at its argument in key-sorted order:'
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种方法被称为*中序*树遍历，以区别于*前序*（先处理根）和*后序*（最后处理根），这些在其他应用中出现。例如，以下方法按键排序顺序写入其参数根节点的BST中的键：
 - en: '[PRE4]'
+  id: totrans-95
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: '* * *'
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Iterables
+  id: totrans-97
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 可迭代对象
 - en: As you learned in Section 1.3 and Section 1.4, you can use a `for` loop to iterate
     over either integers in a range or elements in an array `a[]`.
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 正如您在第1.3节和第1.4节中学到的，您可以使用`for`循环来迭代范围中的整数或数组`a[]`中的元素。
 - en: '[PRE5]'
+  id: totrans-99
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: The `for` loop is not just for integer ranges and arrays — you can use it with
     any *iterable* object. An iterable object is an object that is capable of returning
     its *items* one at a time. All of Python's sequence types — including `list`,
     `tuple`, `dict`, `set`, and `str` — are iterable, as is the object returned by
     the built-in `range()` function.
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: '`for`循环不仅适用于整数范围和数组 — 您可以将其与任何*可迭代*对象一起使用。可迭代对象是一种能够逐个返回其*项*的对象。Python的所有序列类型
+    — 包括`list`、`tuple`、`dict`、`set`和`str` — 都是可迭代的，内置`range()`函数返回的对象也是可迭代的。'
 - en: 'Now, our goal is to make `SymbolTable` iterable, so that we can use a `for`
     loop to iterate over its keys (and use indexing to get the corresponding values):'
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，我们的目标是使`SymbolTable`可迭代，这样我们就可以使用`for`循环来遍历其键（并使用索引来获取相应的值）：
 - en: '[PRE6]'
+  id: totrans-102
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: To make a user-defined date type iterable, you must implement the special method
     `__iter__()`, in support of the built-in function `iter()`. The `iter()` function
     creates and returns an *iterator*, which is a data type that includes a special
     method `__next__()` that Python calls at the beginning of each iteration of a
     `for` loop.
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 要使用户定义的数据类型可迭代，必须实现特殊方法`__iter__()`，以支持内置函数`iter()`。`iter()`函数创建并返回一个*迭代器*，它包括一个特殊方法`__next__()`，Python在每次`for`循环迭代开始时调用该方法。
 - en: 'While this appears complicated, we can use a shortcut based on the fact that
     Python lists are iterable: if `a` is a Python list, then `iter(a)` returns an
     iterator over its items. So we can make our hash table and binary search tree
     implementations iterable by collecting the keys in a Python list and returning
     an iterator for that list.'
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 尽管这看起来复杂，但我们可以使用一个基于Python列表可迭代的快捷方式：如果`a`是一个Python列表，那么`iter(a)`会返回一个迭代器，遍历其项。因此，我们可以通过将键收集到Python列表中并返回该列表的迭代器，使我们的哈希表和二叉搜索树实现可迭代。
 - en: To make [hashst.py](hashst.py.html) iterable, we accumulate all keys into a
     Python list, and then return an iterator over the list; the `__iter__()` method
     in [hashst.py](hashst.py.html) does precisely that. To make [bst.py](bst.py.html)
@@ -560,8 +776,10 @@
     keys in a Python list instead of writing them. Then we can return an iterator
     for that list. The `_inorder()` and `__iter__()` methods in [bst.py](bst.py.html)
     use that approach.
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 要使[hashst.py](hashst.py.html)可迭代，我们将所有键累积到一个Python列表中，然后返回该列表上的迭代器；[hashst.py](hashst.py.html)中的`__iter__()`方法正是这样做的。要使[bst.py](bst.py.html)可迭代，我们修改上面显示的递归`inorder()`方法，以收集Python列表中的键而不是写入它们。然后我们可以为该列表返回一个迭代器。[bst.py](bst.py.html)中的`_inorder()`和`__iter__()`方法使用了这种方法。
 - en: The flexibility of BSTs and the ability to compare keys enables the implementation
     of many useful operations beyond those that can be supported efficiently in hash
     tables. For example, with a BST we can efficiently find the minimum or maximum
@@ -569,198 +787,282 @@
     We leave implementations of these operations for exercises and leave further study
     of their performance characteristics and applications for a course in algorithms
     and data structures.
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 二叉搜索树的灵活性和比较键的能力使得我们能够实现许多有用的操作，超出了哈希表能够高效支持的操作范围。例如，使用二叉搜索树，我们可以高效地找到最小或最大键，找到指定范围内的所有键，并找到第*k*小的键。我们将这些操作的实现留给练习，并将它们的性能特征和应用的进一步研究留给算法和数据结构课程。
 - en: '* * *'
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Dictionary Data Type
+  id: totrans-108
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 字典数据类型
 - en: 'Now that you understand how a symbol table works, you are ready to use Python''s
     industrial-strength version. The built-in `dict` data type follows the same basic
     API as `SymbolTable`, but with a richer set of operations, including deletion;
     a version of *get* that returns a default value if the key is not in the dictionary;
     and iteration over the key-value pairs. This is a partial API:'
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在您了解了符号表的工作原理，可以开始使用Python的工业强度版本。内置的`dict`数据类型遵循与`SymbolTable`相同的基本 API，但具有更丰富的操作，包括删除；一个返回默认值的版本，如果键不在字典中；以及遍历键-值对。这是一个部分
+    API：
 - en: '![Dict API](../Images/19c9fc6fdbfdabce7b851b9b730f1cab.png)'
+  id: totrans-110
   prefs:
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![字典 API](../Images/19c9fc6fdbfdabce7b851b9b730f1cab.png)'
 - en: The underlying implementation is a hash table, so ordered operations are not
     supported. As usual, since Python uses a lower-level language and does not impose
     on itself the overhead it imposes on all its users, that implementation will be
     more efficient and is preferred if ordered operations are not important.
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 底层实现是哈希表，因此不支持有序操作。通常情况下，由于Python使用低级语言并且不对所有用户施加其施加的开销，如果有序操作不重要，那么该实现将更有效，并且是首选的。
 - en: As a simple example, the following `dict` client reads a sequence of strings
     from standard input, counts the number of times each string appears, and writes
     the strings and their frequencies. The strings do not come out in sorted order.
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 作为一个简单的例子，以下`dict`客户端从标准输入读取一系列字符串，计算每个字符串出现的次数，并写入字符串及其频率。这些字符串不按排序顺序输出。
 - en: '[PRE7]'
+  id: totrans-113
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: Several examples of `dict` clients appear in the exercises at the end of this
     section.
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 在本节末尾的练习中出现了几个`dict`客户端的示例。
 - en: '* * *'
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Set Data Type
+  id: totrans-116
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 集合数据类型
 - en: 'As a final example, we consider a data type that is simpler than a symbol table,
     still broadly useful, and easy to implement with hashing or with BSTs. A *set*
     is a collection of distinct keys, like a symbol table with no values. For example,
     we could implement a set by deleting references to values in [hashst.py](hashst.py.html)
     or [bst.py](bst.py.html). Again, Python provides a `set` data type that is implemented
     in a lower-level language. This is a partial API:'
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 最后一个例子，我们考虑一个比符号表更简单、仍然广泛有用且易于使用哈希或二叉搜索树实现的数据类型。*集合*是一个包含不同键的集合，类似于没有值的符号表。例如，我们可以通过删除[hashst.py](hashst.py.html)或[bst.py](bst.py.html)中的值引用来实现一个集合。同样，Python提供了一个用低级语言实现的`set`数据类型。这是一个部分
+    API：
 - en: '![Set API](../Images/0cd720d493972d5c7a5fbad74f5b12f8.png)'
+  id: totrans-118
   prefs:
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![集合 API](../Images/0cd720d493972d5c7a5fbad74f5b12f8.png)'
 - en: 'For example, consider the task of reading a sequence of strings from standard
     input and writing the first occurrence of each string (thereby removing duplicates).
     We might use a `set`, as in the following client code:'
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如，考虑从标准输入读取一系列字符串并写入每个字符串的第一次出现（从而删除重复项）的任务。我们可以使用一个`set`，就像以下客户端代码中所示：
 - en: '[PRE8]'
+  id: totrans-120
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: You can find several other examples of set clients in the exercises at the end
     of this section.
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: 在本节末尾的练习中，您可以找到几个其他集合客户端的示例。
 - en: Should you use Python's built-in `dict` and `set` data types? Of course, if
     they support the operations that you need, because they are written in a lower-level
     language, not subject to the overhead Python imposes on user code, and therefore
     are likely to be faster than anything that you could implement yourself. But if
     your application needs order-based operations like finding the minimum or maximum,
     you may wish to consider BSTs.
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 你应该使用Python的内置`dict`和`set`数据类型吗？当然，如果它们支持你需要的操作，因为它们是用低级语言编写的，不受Python对用户代码施加的开销影响，因此可能比你自己实现的任何东西都要快。但是，如果你的应用程序需要基于顺序的操作，如查找最小值或最大值，你可能需要考虑二叉搜索树。
 - en: '* * *'
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Q &amp A
+  id: totrans-124
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: Q &amp A
 - en: '**Q.** Can I use an array (or Python list) as a key in a `dict` or `set`?'
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q.** 我可以将数��（或Python列表）用作`dict`或`set`中的键吗？'
 - en: '**A.** No, the built-in `list` data type is mutable, so you should not use
     arrays as keys in a symbol table or set. In fact, Python lists are not hashable,
     so you cannot use them as keys in a `dict` or `set`. The built-in `tuple` data
     type is immutable (and hashable), so you can that instead.'
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A.** 不，内置的`list`数据类型是可变的，因此你不应该将数组用作符号表或集合中的键。事实上，Python列表不可哈希，因此你不能将它们用作`dict`或`set`中的键。内置的`tuple`数据类型是不可变的（且可哈希的），所以你可以使用它。'
 - en: '**Q.** Why doesn''t my user-defined data type work with `dict` or `set`?'
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q.** 为什么我的用户定义数据类型不能与`dict`或`set`一起使用？'
 - en: '**A.** By default, user-defined types are hashable, with `hash(x)` returning
     `id(x)` and `==` testing reference equality. While these default implementations
     satisfy the hashable requirements, they rarely provide the behavior you want.'
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A.** 默认情况下，用户定义的类型是可哈希的，`hash(x)`返回`id(x)`，`==`测试引用相等性。虽然这些默认实现满足了可哈希的要求，但它们很少提供你想要的行为。'
 - en: '**Q.** Why can''t I return a Python list directly in the special method `__iter__()`?
     Why must I instead call the built-in `iter()` function with the Python list as
     an argument?'
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q.** 为什么我不能直接在特殊方法`__iter__()`中返回Python列表？为什么我必须调用内置的`iter()`函数，并将Python列表作为参数？'
 - en: '**A.** A Python list is an iterable object (because it has an `__iter__()`
     method that returns an iterator) but it is not an iterator.'
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A.** Python列表是可迭代对象（因为它有一个返回迭代器的`__iter__()`方法），但它不是迭代器。'
 - en: '**Q.** Which data structure does Python use to implement `dict` and `set`?'
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q.** Python使用哪种数据结构来实现`dict`和`set`？'
 - en: '**A.** Python uses an *open-addressing* hash table, which is a cousin of the
     separate-chaining hash table we considered in this section. Python''s implementation
     is highly optimized and written in a low-level programming language.'
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A.** Python使用*开放寻址*哈希表，这是我们在本节中考虑的分离链接哈希表的近亲。Python的实现经过高度优化，并用低级编程语言编写。'
 - en: '**Q.** Does Python provide language support for specifying `set` and `dict`
     objects?'
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q.** Python是否提供了用于指定`set`和`dict`对象的语言支持？'
 - en: '**A.** Yes, you can specify a `set` by enclosing in curly braces a comma-separated
     list of its items. You can specify a `dict` by enclosing in curly braces a comma-separated
     list of its key''value pairs, with a colon between each key and its associated
     value.'
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A.** 是的，你可以通过用花括号括起逗号分隔的项目列表来指定一个`set`。你可以通过用花括号括起逗号分隔的键值对列表，并在每个键和其关联值之间使用冒号来指定一个`dict`。'
 - en: '[PRE9]'
+  id: totrans-135
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: '**Q.** Does Python provide a built-in data type for an ordered symbol table
     (or ordered set) that supports ordered iteration, order statistics, and range
     search?'
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q.** Python是否提供了一个内置的有序符号表（或有序集合）的数据类型，支持有序迭代、顺序统计和范围搜索？'
 - en: '**A.** No. If you need only ordered iteration (with comparable keys), you could
     use Python''s `dict` data type and sort the keys (and pay a performance hit for
     sorting). For example, if you use a `dict` instead of a binary search tree in
     [index.py](index.py.html), you can arrange to write the keys in sorted order by
     using code like'
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A.** 不是的。如果你只需要有序迭代（具有可比较的键），你可以使用Python的`dict`数据类型并对键进行排序（并为排序付出性能损失）。例如，如果你在[index.py](index.py.html)中使用`dict`而不是二叉搜索树，你可以通过类似以下代码来按排序顺序编写键'
 - en: '[PRE10]'
+  id: totrans-138
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: If you need other ordered symbol table operations (such as range search or order
     statistics), you can use our binary search tree implementation (and pay a performance
     hit for using a data type that is implemented in Python).
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你需要其他有序符号表操作（如范围搜索或顺序统计），你可以使用我们的二叉搜索树实现（并为使用Python实现的数据类型付出性能损失）。
 - en: '* * *'
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Exercises
+  id: totrans-141
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 练习
 - en: Modify [lookup.py](lookup.py.html) to to make a program `lookupandput.py` that
     allows *put* operations to be specified on standard input. Use the convention
     that a plus sign indicates that the next two strings typed are the key-value pair
     to be inserted.
+  id: totrans-142
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[lookup.py](lookup.py.html)以创建一个名为`lookupandput.py`的程序，允许在标准输入上指定*put*操作。使用约定，加号表示接下来输入的两个字符串是要插入的键值对。
 - en: 'Modify [lookup.py](lookup.py.html) to make a program `lookupmultiple.py` that
     handles multiple values having the same key by putting the values in an array,
     as in [index.py](index.py.html), and then writing them all out on a *get* request,
     as follows:'
+  id: totrans-143
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[lookup.py](lookup.py.html)以创建一个名为`lookupmultiple.py`的程序，通过将具有相同键的多个值放入数组（如[index.py](index.py.html)中），然后在*get*请求时将它们全部写出，如下所示：
 - en: '[PRE11]'
+  id: totrans-144
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: 'Modify [index.py](index.py.html) to make a program `indexbykeyword.py` that
     takes a file name from the command line and makes an index from standard input
     using only the keywords in that file. *Note*: Using the same file for indexing
     and keywords should give the same result as [index.py](index.py.html).'
+  id: totrans-145
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[index.py](index.py.html)以创建一个名为`indexbykeyword.py`的程序，从命令行获取文件名，并仅使用该文件中的关键字从标准输入创建索引。*注意*：使用相同的文件进行索引和关键字应该会产生与[index.py](index.py.html)相同的结果。
 - en: 'Modify [index.py](index.py.html) to make a program `indexlines.py` that considers
     only consecutive sequences of letters as keys (no punctuation or numbers) and
     uses line numbers instead of word position as the value. This functionality is
     useful for programs: when given a python program as input, `indexlines.py` should
     write an index showing each keyword or identifier in the program, along with the
     line numbers on which it occurs.'
+  id: totrans-146
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[index.py](index.py.html)以创建一个程序`indexlines.py`，仅将连续的字母序列视为键（没有标点符号或数字），并使用行号而不是单词位置作为���。这个功能对于程序很有用：当以Python程序作为输入时，`indexlines.py`应该写出一个显示程序中每个关键字或标识符以及其出现行号的索引。
 - en: Develop an implementation `OrderedSymbolTable` of the symbol-table API that
     maintains parallel arrays of keys and values, keeping them in key-sorted order.
     Use binary search for *get*, and move larger elements to the right by one position
@@ -769,143 +1071,196 @@
     and validate the hypothesis that using such an implementation for [index.py](index.py.html)
     takes time proportional to the product of the number of strings and the number
     of distinct strings in the input.
+  id: totrans-147
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 开发一个实现符号表API的`OrderedSymbolTable`实现，它维护键和值的并行数组，并按键排序顺序保持它们。对于*get*使用二分查找，对于*put*将较大的元素向右移动一个位置（使用调整数组大小以使数组长度与表中键值对的数量成线性关系）。使用[index.py](index.py.html)测试您的实现，并验证使用这样的实现对[index.py](index.py.html)进行操作所需的时间与输入中字符串数量和不同字符串数量的乘积成正比的假设。
 - en: Develop an implementation `LinkedSymbolTable` of the symbol-table API that maintains
     a linked list of nodes containing keys and values, keeping them in arbitrary order.
     Test your implementation with [index.py](index.py.html), and validate the hypothesis
     that using such an implementation for [index.py](index.py.html) takes time proportional
     to the product of the number of strings and the number of distinct strings in
     the input.
+  id: totrans-148
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 开发符号表API的`LinkedSymbolTable`实现，维护包含键和值的节点的链表，保持它们以任意顺序。使用[index.py](index.py.html)测试您的实现，并验证使用这样的实现对[index.py](index.py.html)进行操作所需的时间与输入中字符串数量和不同字符串数量的乘积成正比的假设。
 - en: Compute `hash(x) % 5` for the single-character keys
+  id: totrans-149
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 计算单字符键的`hash(x) % 5`
 - en: '[PRE12]'
+  id: totrans-150
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: Draw the hash table created when the `i`th key in this sequence is associated
     with the value `i`, for `i` from 0 to 11.
+  id: totrans-151
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 绘制当这个序列中的第`i`个键与值`i`相关联时创建的哈希表，`i`从0到11。
 - en: What is wrong with the following `__hash__()` implementation?
+  id: totrans-152
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 以下`__hash__()`实现有什么问题？
 - en: '[PRE13]'
+  id: totrans-153
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: '*Solution*: While technically it satisfies the conditions needed for a data
     type to be hashable (if two objects are equal, they have the same hash value),
     it will lead to poor performance because we expect hash(x) % m to divide keys
     into m groups of roughly equal size.'
+  id: totrans-154
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案*：虽然从技术上讲它满足数据类型可哈希的条件（如果两个对象相等，则它们具有相同的哈希值），但这会导致性能不佳，因为我们期望`hash(x)
+    % m`将键均匀地分成大约相等大小的m组。'
 - en: Extend `Complex` (as defined in [complex.py](../32class/complex.py.html) from
     Section 3.2) and `Vector` (as defined in [vector.py](../33design/vector.py.html)
     from Section 3.3) to make them hashable by implementing the special methods `__hash__()`
     and `__eq__()`.
+  id: totrans-155
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 扩展`Complex`（在第3.2节中定义的[complex.py](../32class/complex.py.html)）和`Vector`（在第3.3节中定义的[vector.py](../33design/vector.py.html)）使它们通过实现特殊方法`__hash__()`和`__eq__()`成为可哈希的。
 - en: Modify [hashst.py](hashst.py.html) to use a resizing array so that the average
     length of the list associated with each hash value is between 1 and 8.
+  id: totrans-156
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[hashst.py](hashst.py.html)以使用调整大小的数组，以便与每个哈希值关联的列表的平均长度在1和8之间。
 - en: Draw all the different BSTs that can represent the key sequence
+  id: totrans-157
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 绘制可以表示键序列的所有不同BST。
 - en: '[PRE14]'
+  id: totrans-158
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE14]'
 - en: Draw the BST that results when you insert items with keys
+  id: totrans-159
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 插入具有键的项目后绘制的BST
 - en: '[PRE15]'
+  id: totrans-160
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE15]'
 - en: in that order into an initially empty tree. What is the height of the resulting
     BST?
+  id: totrans-161
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 将这些键按照顺序插入一个初始为空的树中。结果BST的高度是多少？
 - en: Suppose we have integer keys between 1 and 1000 in a BST and search for 363\.
     Which of the following cannot be the sequence of keys examined?
+  id: totrans-162
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 假设我们在BST中有1到1000之间的整数键，并搜索363。以下哪个序列不可能是检查的键序列？
 - en: '[PRE16]'
+  id: totrans-163
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE16]'
 - en: 'Suppose that the following 31 keys appear (in some order) in a BST of height
     5:'
+  id: totrans-164
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 假设以下31个键（以某种顺序）出现在高度为5的BST中：
 - en: '[PRE17]'
+  id: totrans-165
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE17]'
 - en: Draw the top three nodes of the tree (the root and its two children).
+  id: totrans-166
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 绘制树的前三个节点（根节点及其两个子节点）。
 - en: Describe the effect on performance if you replaced [hashst.py](hashst.py.html)
     with [bst.py](bst.py.html) in [lookup.py](lookup.py.html). To protect against
     the worst case, call `stdrandom.shuffle(database)` before populating the symbol
     table.
+  id: totrans-167
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 描述如果您在[lookup.py](lookup.py.html)中用[bst.py](bst.py.html)替换[hashst.py](hashst.py.html)对性能的影响。为了防止最坏情况，调用`stdrandom.shuffle(database)`在填充符号表之前。
 - en: 'True or false: Given a BST, let *x* be a leaf node, and let *p* be its parent.
     Then either (i) the key of *p* is the smallest key in the BST larger than the
     key of *x* or (ii) the key of *p* is the largest key in the BST smaller than the
     key of *x*.'
+  id: totrans-168
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 真或假：给定一个BST，让*x*是一个叶子节点，*p*是它的父节点。那么要么（i）*p*的键是大于*x*的BST中最小的键，要么（ii）*p*的键是小于*x*的BST中最大的键。
 - en: Modify the class `SymbolTable` in [hashst.py](hashst.py.html) to make a class
     `Set` that implements the constant-time operations in the partial API given in
     the text for Python's built-in `set` data type.
+  id: totrans-169
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[hashst.py](hashst.py.html)中的`SymbolTable`类，使其成为一个实现了Python内置`set`数据类型部分API中的常量时间操作的`Set`类。
 - en: Modify the class `OrderedSymbolTable` in [bst.py](bst.py.html) to make a class
     `OrderedSet` that implements the constant-time operations in the partial API given
     in the text for Python's built-in `set` data type, assuming that the keys are
     comparable.
+  id: totrans-170
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[bst.py](bst.py.html)中的`OrderedSymbolTable`类，使其成为一个实现了Python内置`set`数据类型部分API中的常量时间操作的`OrderedSet`类，假设键是可比较的。
 - en: Modify [hashst.py](hashst.py.html) to support the client code `del st[key]`
     by adding a method `__delitem__()` that takes a key argument and removes that
     key (and the corresponding value) from the symbol table, if it exists. Use a resizing
     array to ensure that the average length of the list associated with each hash
     value is between 1 and 8.
+  id: totrans-171
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[hashst.py](hashst.py.html)以支持客户端代码`del st[key]`，通过添加一个接受键参数并从符号表中删除该键（以及相应的值）的方法`__delitem__()`。使用调整大小的数组来确保与每个哈希值关联的列表的平均长度在1到8之间。
 - en: 'Implement `__str__()` for [bst.py](bst.py.html), using a recursive helper method.
     As usual, you can accept quadratic performance because of the cost of string concatenation.
     *Extra credit*: Compose a linear-time `__str__()` method for [bst.py](bst.py.html)
     that uses an array and the `join()` method of Python''s built-in `str` data type.'
+  id: totrans-172
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 为[bst.py](bst.py.html)实现`__str__()`，使用递归辅助方法。通常，由于字符串连接的成本，可以接受二次性能。*额外加分*：为[bst.py](bst.py.html)组成一个使用数组和Python内置`str`数据类型的`join()`方法的线性时间`__str__()`方法。
 - en: A *concordance* is an alphabetical list of the words in a text that gives all
     word positions where each word appears. Thus, `python index.py 0 0` produces a
     concordance. In a famous incident, one group of researchers tried to establish
@@ -913,248 +1268,332 @@
     making public a concordance. Compose a program `invertconcordance.py` that takes
     a command-line argument `n`, reads a concordance from standard input, and writes
     the first `n` words of the corresponding text on standard output.
+  id: totrans-173
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '*词汇表*是文本中单词的按字母顺序排列的列表，显示每个单词出现的所有位置。因此，`python index.py 0 0`生成一个词汇表。在一个著名的事件中，一组研究人员试图在向其他人保密死海古卷的细节的同时建立可信度，通过公开一个词汇表。编写一个程序`invertconcordance.py`，它接受一个命令行参数`n`，从标准输入读取一个词汇表，并在标准输出上写入相应文本的前`n`个单词。'
 - en: Run experiments to validate the claims in the text that the *put* operations
     and *get* requests for [lookup.py](lookup.py.html) are constant-time operations
     when using [hashst.py](hashst.py.html) with resizing arrays, as described in a
     previous exercise. Develop test clients that generate random keys and also run
     tests for various data sets, either from this booksite or of your own choosing.
+  id: totrans-174
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 运行实验来验证文本中关于使用具有调整大小数组的[hashst.py](hashst.py.html)时*put*操作和*get*请求是常数时间操作的说法，如前面的练习所述。开发测试客户端，生成随机键，并对各种数据集进行测试，可以是来自本书站点或您自己选择的数据集。
 - en: Run experiments to validate the claims in the text that the *put* operations
     and *get* requests for [index.py](index.py.html) are logarithmic in the size of
     the symbol table when using [bst.py](bst.py.html). Develop test clients that generate
     random keys and also run tests for various data sets, either from this booksite
     or of your own choosing.
+  id: totrans-175
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 运行实验来验证文本中关于使用[bst.py](bst.py.html)时*put*操作和*get*请求与符号表大小的对数关系的说法。开发测试客户端，生成随机键，并对各种数据集进行测试，可以是来自本书站点或您自己选择的数据集。
 - en: Modify [bst.py](bst.py.html) to add methods `min()` and `max()` that return
     the smallest (or largest) key in the table (or `None` if the table is empty).
+  id: totrans-176
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[bst.py](bst.py.html)以添加返回表中最小（或最大）键的方法`min()`和`max()`（如果表为空，则返回`None`）。
 - en: Modify [bst.py](bst.py.html) to add methods `floor()` and `ceiling()` that take
     as an argument a key and return the largest (smallest) key in the set that is
     no larger (no smaller) than the given key.
+  id: totrans-177
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[bst.py](bst.py.html)以添加`floor()`和`ceiling()`方法，接受一个键作为参数，并返回集合中不大于（不小于）给定键的最大（最小）键。
 - en: Modify [bst.py](bst.py.html) to support the special `len()` function by implementing
     a special method `__len__()` that returns the number of key'value pairs in the
     symbol table. Use the approach of storing within each `_Node` the number of nodes
     in the subtree rooted there.
+  id: totrans-178
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[bst.py](bst.py.html)以支持特殊的`len()`函数，通过实现一个返回符号表中键值对数量的特殊方法`__len__()`来实现。使用在每个`_Node`中存储根节点下子树中节点数量的方法。
 - en: Modify [bst.py](bst.py.html) to add a method `rangeSearch()` that take two keys
     `lo` and `hi` as arguments and return an iterator over all keys that are between
     `lo` and `hi`. The running time should be proportional to the height plus the
     number of keys in the range.
+  id: totrans-179
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[bst.py](bst.py.html)以添加一个`rangeSearch()`方法，接受两个键`lo`和`hi`作为参数，并返回所有位于`lo`和`hi`之间的键的迭代器。运行时间应与高度加上范围内键的数量成比例。
 - en: 'Modify [bst.py](bst.py.html) to add a method `rangeCount()` that takes keys
     as arguments and returns the number of keys in a BST between the two given keys.
     Your method should take time proportional to the height of the tree. *Hint*: First
     complete the previous exercise.'
+  id: totrans-180
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[bst.py](bst.py.html)以添加一个`rangeCount()`方法，接受键作为参数，并返回BST中两个给定键之间的键的数量。您的方法应该花费与树的高度成比例的时间。*提示*：首先完成前一个练习。
 - en: 'Modify [bst.py](bst.py.html) to support the client code `del st[key]` by adding
     a method `__delitem__()` that takes a key argument and removes that key (and the
     corresponding value) from the symbol table, if it exists. *Hint*: This operation
     is more difficult than it might seem. Replace the key and its associated value
     with the next largest key in the BST and its associated value; then remove from
     the BST the node that contained the next largest key.'
+  id: totrans-181
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改[bst.py](bst.py.html)以支持客户端代码`del st[key]`，通过添加一个接受键参数并从符号表中删除该键（以及相应的值）的方法`__delitem__()`来实现。*提示*：这个操作比看起来更困难。用BST中下一个最大键及其相关值替换键及其相关值；然后从BST中删除包含下一个最大键的节点。
 - en: Modify the symbol-table API to handle values with duplicate keys by having `get()`
     return an iterator for the values having a given key. Reimplement [hashst.py](hashst.py.html)
     and [bst.py](bst.py.html) as dictated by this API. Discuss the pros and cons of
     this approach versus the one given in the text.
+  id: totrans-182
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 修改符号表API，通过使`get()`返回具有给定键的值的迭代器来处理具有重复键的值。根据此API重新实现[hashst.py](hashst.py.html)和[bst.py](bst.py.html)。讨论这种方法与文本中给出的方法的优缺点。
 - en: Suppose that `a[]` is an array of hashable objects. What is the effect of the
     following statement?
+  id: totrans-183
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 假设`a[]`是一个可散列对象的数组。以下语句的效果是什么？
 - en: '[PRE18]'
+  id: totrans-184
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE18]'
 - en: Recompose [lookup.py](lookup.py.html) and [index.py](index.py.html) using a
     `dict` instead of using [hashst.py](hashst.py.html) and [bst.py](bst.py.html),
     respectively. Compare performance.
+  id: totrans-185
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 重新编写[lookup.py](lookup.py.html)和[index.py](index.py.html)，使用`dict`代替分别使用[hashst.py](hashst.py.html)和[bst.py](bst.py.html)。比较性能。
 - en: Compose a `dict` client that creates a symbol table mapping letter grades to
     numerical scores, as in the table below, and then reads from standard input a
     list of letter grades and computes their average (GPA).
+  id: totrans-186
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 编写一个`dict`客户端，创建一个将字母等级映射到数字分数的符号表，然后从标准输入读取一个字母等级列表并计算它们的平均值（GPA）。
 - en: '[PRE19]'
+  id: totrans-187
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE19]'
 - en: Implement the `buy()` and `sell()` methods in [stockaccount.py](../32class/stockaccount.py.html)
     (from Section 3.2). Use a `dict` to store the number of shares of each stock.
+  id: totrans-188
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在[stockaccount.py](../32class/stockaccount.py.html)（来自第3.2节）中实现`buy()`和`sell()`方法。使用一个`dict`来存储每只股票的股数。
 - en: '* * *'
+  id: totrans-189
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Binary Tree Exercises
+  id: totrans-190
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 二叉树练习
 - en: '*The following exercises are intended to give you experience in working with
     binary trees that are not necessarily BSTs. They all assume a Node class with
     three instance variables: a positive double value and two Node references. As
     with linked lists, you will find it helpful to make drawings using the visual
     representation shown in the text.*'
+  id: totrans-191
   prefs: []
   type: TYPE_NORMAL
+  zh: '*以下练习旨在让您熟练处理不一定是BST的二叉树。它们都假设一个具有三个实例变量的Node类：一个正的双精度值和两个Node引用。与链表一样，使用文本中显示的可视表示进行绘图会很有帮助。*'
 - en: Implement the following functions, each of which takes as an argument a `Node`
     that is the root of a binary tree.
+  id: totrans-192
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 实现以下函数，每个函数以一个作为参数的`Node`作为二叉树的根。
 - en: '`size(node)`:number of nodes in the tree rooted at `node`'
+  id: totrans-193
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`size(node)`:节点为根的树中的节点数'
 - en: '`leaves(node)`: number of nodes in the tree rooted at `node` whose links are
     both `None`'
+  id: totrans-194
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`leaves(node)`:节点为根的树中链接都为`None`的节点数'
 - en: '`total(node)`: sum of the key values in all nodes in the tree rooted at `node`'
+  id: totrans-195
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`total(node)`:节点为根的树中所有节点键值的总和'
 - en: Your methods should all run in linear time.
+  id: totrans-196
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 您的方法应该都在线性时间内运行。
 - en: Implement a linear-time function `height()` that returns the maximum number
     of nodes on any path from the root to a leaf node (the height of the empty tree
     is 0; the height of a one-node tree is 1).
+  id: totrans-197
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 实现一个线性时间函数`height()`，返回从根到叶节点的任意路径上的节点数的最大值（空树的高度为0；一个节点的树的高度为1）。
 - en: A binary tree is *heap-ordered* if the key at the root is larger than the keys
     in all of its descendants. Implement a linear-time function `heapOrdered()` that
     returns `True` if the tree is heap-ordered, and `False` otherwise.
+  id: totrans-198
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果根节点的键大于其所有后代节点的键，则二叉树是*堆有序*的。实现一个线性时间函数`heapOrdered()`，如果树是堆有序的则返回`True`，否则返回`False`。
 - en: Given a binary tree, a *single-value* subtree is a maximal subtree that contains
     the same value. Design a linear-time algorithm that counts the number of single-value
     subtrees in a binary tree.
+  id: totrans-199
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 给定一个二叉树，*单值*子树是包含相同数值的最大子树。设计一个线性时间算法，计算二叉树中单值子树的数量。
 - en: A binary tree is *balanced* if both its subtrees are balanced and the height
     of its two subtrees differ by at most 1\. Implement a linear-time method `balanced()`
     that returns `True` if the tree is balanced, and `False` otherwise.
+  id: totrans-200
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果一个二叉树的两个子树都是平衡的，并且两个子树的高度最多相差1，则该二叉树是*平衡*的。实现一个线性时间方法`balanced()`，如果树是平衡的则返回`True`，否则返回`False`。
 - en: Two binary trees are *isomorphic* if only their key values differ (that is,
     they have the same shape). Implement a linear-time function `isomorphic()` that
     takes two tree references as arguments and returns `True` if they refer to isomorphic
     trees, and `False` otherwise. Then, implement a linear-time function `eq()` that
     takes two tree references as arguments and returns `True` if they refer to identical
     trees (isomorphic with the same key values), and `False` otherwise.
+  id: totrans-201
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果只有它们的键值不同（即它们具有相同的形状），则两个二叉树是*同构*的。实现一个线性时间函数`isomorphic()`，它以两个树引用作为参数，并在它们引用同构树时返回`True`，否则返回`False`。然后，实现一个线性时间函数`eq()`，它以两个树引用作为参数，并在它们引用相同的树（具有相同键值的同构树）时返回`True`，否则返回`False`。
 - en: 'Compose a function `levelOrder()` that writes BST keys in level order: first
     write the root; then the nodes one level below the root, from left to right; then
     the nodes two levels below the root, from left to right; and so forth. *Hint*:
     Use a `Queue`.'
+  id: totrans-202
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 编写一个函数`levelOrder()`，按层次顺序写入BST键：首先写入根；然后从左到右写入根下一级的节点；然后从左到右写入根下两级的节点；依此类推。*提示*：使用一个`Queue`。
 - en: Implement a linear-time function `isBST()` that returns `True` if the binary
     tree is a BST, and `False` otherwise.
+  id: totrans-203
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 实现一个线性时间函数`isBST()`，如果二叉树是BST则返回`True`，否则返回`False`。
 - en: '*Solution*: This task is a bit more difficult than it might seem. Use a recursive
     helper function `_inRange()` that takes two additional arguments `lo` and `hi`
     and returns `True` if the binary tree is a BST and all its values are between
     `lo` and `hi`, and use `None` to represent both the smallest possible key and
     the largest possible key.'
+  id: totrans-204
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案*：这个任务比看起来要困难一些。使用一个递归辅助函数`_inRange()`，它接受两个额外参数`lo`和`hi`，如果二叉树是BST且所有值都在`lo`和`hi`之间，则返回`True`，使用`None`表示最小可能键和最大可能键。'
 - en: '[PRE20]'
+  id: totrans-205
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE20]'
 - en: We note that this implementation uses both the < and <= operators, whereas our
     binary search tree code uses only the < operator.
+  id: totrans-206
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 我们注意到这个实现同时使用了<和<=运算符，而我们的二叉搜索树代码只使用<运算符。
 - en: Compute the value returned by `mystery()` on some sample binary trees, and then
     formulate a hypothesis about the value and prove it.
+  id: totrans-207
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 计算`mystery()`在一些示例二叉树上返回的值，然后提出一个关于该值的假设并加以证明。
 - en: '[PRE21]'
+  id: totrans-208
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE21]'
 - en: '* * *'
+  id: totrans-209
   prefs: []
   type: TYPE_NORMAL
+  zh: '* * *'
 - en: Creative Exercises
+  id: totrans-210
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 创意练习
 - en: '**Spell checking.** Compose a `set` client `spellchecker.py` that takes as
     a command-line argument the name of a file containing a dictionary of words, and
     then reads strings from standard input and writes any string that is not in the
     dictionary. Use the file [words.utf-8.txt](words.utf-8.txt). *Extra credit*: Augment
     your program to handle common suffixes such as -ing or -ed.'
+  id: totrans-211
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**拼写检查。** 编写一个`set`客户端`spellchecker.py`，以一个包含单词字典的文件名作为命令行参数，然后从标准输入读取字符串，并写入任何不在字典中的字符串。使用文件[words.utf-8.txt](words.utf-8.txt)。*额外加分*：增强程序以处理常见后缀，如-ing或-ed。'
 - en: '**Spell correction.** Compose a `dict` client `spellcorrector.py` that serves
     as a filter that replaces commonly misspelled words on standard input with a suggested
     replacement, writing the result to standard output. Take as a command-line argument
     a file that contains common misspellings and corrections. Use the file [misspellings.txt](misspellings.txt),
     which contains many common misspellings.'
+  id: totrans-212
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**拼写校正。** 编写一个`dict`客户端`spellcorrector.py`，作为一个过滤器，用建议的替换词替换标准输入中常见拼写错误的单词，并将结果写入标准输出。将一个包含常见拼写错误和更正的文件作为命令行参数。使用文件[misspellings.txt](misspellings.txt)，其中包含许多常见拼写错误。'
 - en: '**Web filter.** Compose a `set` client `webblocker.py` that takes as a command-line
     argument the name of a file containing a list of objectionable websites, and then
     reads strings from standard input and writes only those websites not on the list.'
+  id: totrans-213
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**网页过滤器。** 编写一个`set`客户端`webblocker.py`，以一个包含不良网站列表的文件名作为命令行参数，然后从标准输入读取字符串，并仅写入不在列表中的网站。'
 - en: '**Set operations.** Add the methods `union()` and `intersection()` to `OrderedSet`
     (see a previous exercise in this section), each of which takes two sets as arguments
     and that return the union and intersection, respectively, of those two sets.'
+  id: totrans-214
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**集合操作。** 将`union()`和`intersection()`方法添加到`OrderedSet`（请参见本节中的先前练习），每个方法接受两个集合作为参数，并返回这两个集合的并集和交集。'
 - en: '**Frequency symbol table.** Develop a data type `FrequencyTable` that supports
     the following operations: `click()` and `count()`, both of which take string arguments.
     The data-type value is an integer that keeps track of the number of times the
@@ -1163,114 +1602,149 @@
     the value, possibly 0\. Clients of this data type might include a web traffic
     analyzer, a music player that counts the number of times each song has been played,
     phone software for counting calls, and so forth.'
+  id: totrans-215
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**频率符号表。** 开发一个支持以下操作的数据类型`FrequencyTable`：`click()`和`count()`，两者都接受字符串参数。数据类型值是一个整数，用于跟踪使用给定字符串调用`click()`操作的次数。`click()`操作将计数增加1，`count()`操作返回该值，可能为0。此数据类型的客户端可能包括Web流量分析器，计算每首歌曲播放次数的音乐播放器，用于计算通话次数的电话软件等。'
 - en: '**1D range searching.** Develop a data type that supports the following operations:
     insert a date, search for a date, and count the number of dates in the data structure
     that lie in a particular interval. Use Python''s `datetime.Date` data type.'
+  id: totrans-216
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**1D范围搜索。** 开发一个支持以下操作的数据类型：插入日期，搜索日期，并计算数据结构中位于特定区间内的日期数量。使用Python的`datetime.Date`数据类型。'
 - en: '**Non-overlapping interval search.** Given a list of non-overlapping intervals
     of integers, compose a function that takes an integer argument and determines
     in which, if any, interval that value lies. For example, if the intervals are
     1643-2033, 5532-7643, 8999-10332, and 5666653-5669321, then the query point 9122
     lies in the third interval and 8122 lies in no interval.'
+  id: totrans-217
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**非重叠区间搜索。** 给定一个整数的非重叠区间列表，编写一个函数，接受一个整数参数，并确定该值位于哪个（如果有）区间中。例如，如果区间是1643-2033，5532-7643，8999-10332和5666653-5669321，则查询点9122位于第三个区间，8122不在任何区间中。'
 - en: '**IP lookup by country.** Compose a `dict` client that uses the data file [ip-by-country.csv](ip-by-country.csv)
     to determine from which country a given IP address is coming. The data file has
     five fields: beginning of IP address range, end of IP address range, two-character
     country code, three-character country code, and country name. The IP addresses
     are non-overlapping. Such a database tool can be used for credit card fraud detection,
     spam filtering, auto-selection of language on a website, and web server log analysis.'
+  id: totrans-218
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**按国家查找IP。** 编写一个`dict`客户端，使用数据文件[ip-by-country.csv](ip-by-country.csv)来确定给定IP地址来自哪个国家。数据文件有五个字段：IP地址范围的开始，IP地址范围的结束，两个字符的国家代码，三个字符的国家代码和国家名称。IP地址不重叠。这样的数据库工具可用于信用卡欺诈检测，垃圾邮件过滤，网站上语言的自动选择以及Web服务器日志分析。'
 - en: '**Inverted index of web pages with single-word queries.** Given a list of web
     pages, create a symbol table of words contained in the web pages. Associate with
     each word a list of web pages in which that word appears. Compose a program that
     reads in a list of web pages, creates the symbol table, and supports single-word
     queries by returning the list of web pages in which that query word appears.'
+  id: totrans-219
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**具有单词查询的网页倒排索引。** 给定一个网页列表，创建包含网页中包含的单词的符号表。将每个单词与出现该单词的网页列表关联起来。编写一个程序，读取网页列表，创建符号表，并支持通过返回包含查询单词的网页列表来支持单词查询。'
 - en: '**Inverted index of web pages with multi-word queries.** Extend the previous
     exercise so that it supports multi-word queries. In this case, output the list
     of web pages that contain at least one occurrence of each of the query words.'
+  id: totrans-220
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**具有多词查询的网页倒排索引。** 扩展上一个练习，以支持多词查询。在这种情况下，输出包含每个查询单词至少出现一次的网页列表。'
 - en: '**Multiple-word search (unordered).** Compose a program that takes `k` keywords
     from the command line, reads in a sequence of words from standard input, and identifies
     the smallest interval of text that contains all of the `k` keywords (not necessarily
     in the same order). You do not need to consider partial words.'
+  id: totrans-221
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**多词搜索（无序）。** 编写一个程序，从命令行获取`k`个关键字，从标准输入读取一系列单词，并识别包含所有`k`个关键字的最小文本间隔（不一定按照相同顺序）。不需要考虑部分单词。'
 - en: '**Multiple-word search (ordered).** Repeat the previous exercise, but now assume
     the keywords must appear in the same order as specified.'
+  id: totrans-222
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**多词搜索（有序）。** 重复上一个练习，但现在假设关键字必须按指定的顺序出现。'
 - en: '**Repetition draw in chess.** In the game of chess, if a board position is
     repeated three times with the same side to move, the side to move can declare
     a draw. Describe how you could test this condition using a computer program.'
+  id: totrans-223
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**在国际象棋中的重复抽取。** 在国际象棋中，如果一个棋盘位置连续三次出现相同的一方移动，则该方可以宣布平局。描述如何使用计算机程序测试此条件。'
 - en: '**Registrar scheduling.** The registrar at a prominent Northeastern university
     recently scheduled an instructor to teach two different classes at the same exact
     time. Help the registrar prevent future mistakes by describing a method to check
     for such conflicts. For simplicity, assume all classes run for 50 minutes and
     start at 9, 10, 11, 1, 2, or 3.'
+  id: totrans-224
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**注册调度。** 东北一所知名大学的注册处最近安排一名教师在完全相同的时间上教授两门不同的课程。通过描述一种检查此类冲突的方法来帮助注册处避免未来的错误。为简单起见，假设所有课程都持续50分钟，并且从9点、10点、11点、1点、2点或3点开始。'
 - en: '**Entropy.** We define the *relative entropy* of a text corpus with *n* words,
     *k* of which are distinct as'
+  id: totrans-225
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**熵。** 我们定义一个包含*n*个单词的文本语料库的*相对熵*，其中有*k*个是不同的，如下所示'
 - en: '*E* = 1 / (*n* lg *n*) (*p*[0] lg(*k*/*p*[0]) + *p*[1] lg(*k*/*p*[1]) + ...
     + *p*[*k*-1] lg(*k*/*p*[*k*-1]))'
+  id: totrans-226
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*E* = 1 / (*n* lg *n*) (*p*[0] lg(*k*/*p*[0]) + *p*[1] lg(*k*/*p*[1]) + ...
+    + *p*[*k*-1] lg(*k*/*p*[*k*-1]))'
 - en: where *p[i]* is the fraction of times that word *i* appears. Compose a program
     that reads in a text corpus and writes the relative entropy. Convert all letters
     to lowercase and treat punctuation marks as whitespace.
+  id: totrans-227
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 其中*p[i]*是单词*i*出现的次数的分数。编写一个程序，读取文本语料库并写入相对熵。将所有字母转换���小写，并将标点符号视为空格。
 - en: '**Order statistics.** Add to [bst.py](bst.py.html) a method `select()` that
     takes an integer argument `k` and returns the `k`th smallest key in the BST. Maintain
     subtree sizes in each node. The running time should be proportional to the height
     of the tree.'
+  id: totrans-228
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**顺序统计。** 在[bst.py](bst.py.html)中添加一个名为`select()`的方法，该方法接受一个整数参数`k`并返回BST中第`k`个最小的键。在每个节点中维护子树大小。运行时间应与树的高度成比例。'
 - en: '**Rank query.** Add to [bst.py](bst.py.html) a method `rank()` that takes a
     key as an argument and returns the number of keys in the BST that are strictly
     smaller than key. Maintain subtree sizes in each node. The running time should
     be proportional to the height of the tree.'
+  id: totrans-229
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**排名查询。** 在[bst.py](bst.py.html)中添加一个名为`rank()`的方法，该方法以一个键作为参数并返回BST中严格小于该键的键的数量。在每个节点中维护子树大小。运行时间应与树的高度成比例。'
 - en: '**Random element.** Add to [bst.py](bst.py.html) a method `random()` that returns
     a random key. Maintain subtree sizes in each node. The running time should be
     proportional to the height of the tree.'
+  id: totrans-230
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**随机元素。** 在[bst.py](bst.py.html)中添加一个名为`random()`的方法，该方法返回一个随机键。在每个节点中维护子树大小。运行时间应与树的高度成比例。'
 - en: '**Queue with no duplicates.** Create a data type that is a queue, except that
     an element may appear on the queue at most once at any given time. Ignore requests
     to insert an item if it is already on the queue.'
+  id: totrans-231
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**无重复项的队列。** 创建一个数据类型，它是一个队列，但是在任何给定时间一个元素最多只能出现在队列中一次。如果已经在队列中，则忽略插入项的请求。'
 - en: '**Unique substrings of a given length.** Compose a program that reads in text
     from standard input and calculates the number of unique substrings of a given
     length `k` that it contains. For example, if the input is `CGCGGGCGCG`, then there
@@ -1279,34 +1753,44 @@
     to extract the `i`th substring and insert into a symbol table. Test your program
     on the file [pi-10million.txt](pi-10million.txt), which contains the first 10
     million digits of π.'
+  id: totrans-232
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**给定长度的唯一子字符串。** 编写一个程序，从标准输入中读取文本并计算其包含的给定长度`k`的唯一子字符串的数量。例如，如果输入是`CGCGGGCGCG`，则长度为3的唯一子字符串有五个：`CGC`、`CGG`、`GCG`、`GGC`和`GGG`。这种计算在数据压缩中很有用。*提示*：使用字符串切片`s[i:i+k]`提取第`i`个子字符串并插入符号表中。在包含π的前1000万位数字的文件[pi-10million.txt](pi-10million.txt)上测试您的程序。'
 - en: '**Generalized queue.** Implement a class that supports the following API:'
+  id: totrans-233
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**广义队列。** 实现一个支持以下API的类：'
 - en: '![Generalized queue API](../Images/882cc09a421e0039bdf2ffe604b029df.png)'
+  id: totrans-234
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![广义队列 API](../Images/882cc09a421e0039bdf2ffe604b029df.png)'
 - en: Use a BST that associates the *k*th element inserted with the key *k* and maintains
     in each node the total number of nodes in the subtree rooted at that node. To
     find the *i*th least recently added item, search for the *i*th smallest element
     in the BST.
+  id: totrans-235
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 使用BST将插入的第*k*个元素与键*k*关联，并在每个节点中维护以该节点为根的子树中的总节点数。要找到最近添加的第*i*个项，搜索BST中第*i*个最小的元素。
 - en: '**Dynamic discrete distribution.** Create a data type that supports the following
     two operations: `add()` and `random()`. The `add()` method should insert a new
     item into the data structure if it has not been seen before; otherwise, it should
     increase its frequency count by 1\. The `random()` method should return an element
     at random, where the probabilities are weighted by the frequency of each element.
     Use space proportional to the number of items.'
+  id: totrans-236
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**动态离散分布。** 创建一个支持以下两个操作的数据类型：`add()`和`random()`。`add()`方法应在数据结构中插入一个新项（如果之前没有看到过）；否则，应将其频率计数增加1。`random()`方法应按每个元素的频率加权的概率返回一个元素。使用与项数成比例的空间。'
 - en: '**Password checker.** Compose a program that takes a string as a command-line
     argument and a dictionary of words from standard input, and checks whether the
     string is a ''good'' password. Here, assume ''good'' means that it (1) is at least
@@ -1315,6 +1799,7 @@
     in the dictionary concatenated together (e.g., helloworld), and (5) none of (2)
     through (4) hold for reverses of words in the dictionary. The file [words.utf-8.txt](words.utf-8.txt)
     contains a dictionary of words.'
+  id: totrans-237
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
@@ -1322,6 +1807,7 @@
     *n* and writes *n* random phone numbers of the form (xxx) xxx-xxxx. Use a `set`
     to avoid choosing the same number more than once. Use only legal area codes, as
     found in the file [phone-na.csv](phone-na.csv).'
+  id: totrans-238
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
@@ -1330,10 +1816,12 @@
     to its number of nonzeros, and to be able to add two sparse vectors in time proportional
     to the total number of nonzeros. Implement a class that supports the following
     API:'
+  id: totrans-239
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
 - en: '![Sparse vector API](../Images/f7820c2923cf4912eb51a49121f5389b.png)'
+  id: totrans-240
   prefs:
   - PREF_IND
   - PREF_BQ
@@ -1343,36 +1831,43 @@
     proportional to *n*, and to be able to add and multiply two sparse matrices in
     time proportional to the total number of nonzeros (perhaps with an extra log *n*
     factor). Implement a class that supports the following API:'
+  id: totrans-241
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
 - en: '![Sparse matrix API](../Images/4d6af760456a946849f287106665f4c5.png)'
+  id: totrans-242
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
 - en: '**Mutable string.** Create a data type named `MutableString` that is the same
     as the Python `str` data type but is mutable. It should support these operations:'
+  id: totrans-243
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
 - en: '`ms[i]`: return the `i`th character of `MutableString` object `ms`'
+  id: totrans-244
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
 - en: '`ms[i] = c`: change the `i`th character of `MutableString` object `ms` to `c`.'
+  id: totrans-245
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
 - en: '`ms.insert(i, c)`: insert the character `c` into `MutableString` object `ms`
     before index `i`.'
+  id: totrans-246
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
 - en: '`del ms[i]`: delete the `i`th character of `MutableString` object `ms`'
+  id: totrans-247
   prefs:
   - PREF_IND
   - PREF_UL
@@ -1381,6 +1876,7 @@
     methods — a constructor, a `__str__()` method, comparison methods, a `__contains__()`
     method, an `__iter__()` method, and so forth — to make the data type reasonably
     complete.
+  id: totrans-248
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
@@ -1388,25 +1884,32 @@
     consisting of assignment and write statements with fully parenthesized arithmetic
     expressions (see [evaluate.py](../43stack/evaluate.py.html) from Section 4.3).
     For example, given the input'
+  id: totrans-249
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
 - en: '[PRE22]'
+  id: totrans-250
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE22]'
 - en: your program should write the value 225\. Assume that all variables and values
     are floats. Use a symbol table to keep track of variable names.
+  id: totrans-251
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
 - en: '**Codon usage table.** Compose a program that uses a symbol table to write
     summary statistics for each codon in a genome taken from standard input (frequency
     per thousand), like the following:'
+  id: totrans-252
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
 - en: '[PRE23]'
+  id: totrans-253
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE23]'
