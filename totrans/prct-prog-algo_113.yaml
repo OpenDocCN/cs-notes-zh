@@ -1,14 +1,20 @@
 - en: 6.1   Event-Driven Simulation
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 6.1   事件驱动模拟
 - en: 原文：[https://algs4.cs.princeton.edu/61event](https://algs4.cs.princeton.edu/61event)
+  id: totrans-1
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 原文：[https://algs4.cs.princeton.edu/61event](https://algs4.cs.princeton.edu/61event)
 - en: This chapter under construction.
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 本章节正在建设中。
 - en: Simulate the motion of N colliding particles according to the laws of elastic
     collision using event-driven simulation. Such simulations are widely used in molecular
     dynamics (MD) to understand and predict properties of physical systems at the
@@ -18,48 +24,66 @@
     systems, and front propagation. The same techniques apply to other domains that
     involve physical modeling of particle systems including computer graphics, computer
     games, and robotics. We will revisit some of these issues again in Chapter 7.
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 根据弹性碰撞的法则使用事件驱动模拟模拟N个碰撞粒子的运动。这种模拟在分子动力学（MD）中被广泛应用，以理解和预测粒子级别的物理系统的性质。这包括气体中分子的运动，化学反应的动力学，原子扩散，球体堆积，围绕土星的环的稳定性，铈和铯的相变，一维自引力系统以及前沿传播。相同的技术也适用于其他涉及粒子系统的物理建模领域，包括计算机图形学，计算机游戏和机器人技术。我们将在第7章再次讨��其中一些问题。
 - en: '[a good reference](http://arxiv.org/ftp/physics/papers/0405/0405089.pdf)'
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: '[一个好的参考资料](http://arxiv.org/ftp/physics/papers/0405/0405089.pdf)'
 - en: '**Hard sphere model.** The *hard sphere model* (billiard ball model) is an
     idealized model of the motion of atoms or molecules in a container. We focus on
     the two-dimensional version called the *hard disc model*. The salient properties
     of this model are listed below.'
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: '**硬球模型.** *硬球模型*（台球模型）是容器中原子或分子运动的理想化模型。我们关注二维版本称为*硬盘模型*。这个模型的显著特性如下。'
 - en: N particles in motion, confined in the unit box.
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: N个运动中的粒子，限制在单位盒中。
 - en: Particle *i* has known position (*rx[i], ry[i]*), velocity (*vx[i], vy[i]*),
     mass *m[i]*, and radius *σ[i]*.
+  id: totrans-7
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 粒子*i*具有已知位置(*rx[i], ry[i]*)、速度(*vx[i], vy[i]*)、质量*m[i]*和半径*σ[i]*。
 - en: Particles interact via elastic collisions with each other and with the reflecting
     boundary.
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 粒子之间以及与反射边界之间通过弹性碰撞相互作用。
 - en: No other forces are exerted. Thus, particles travel in straight lines at constant
     speed between collisions.
+  id: totrans-9
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 没有其他力的作用。因此，粒子在碰撞之间以恒定速度直线运动。
 - en: This simple model plays a central role in statistical mechanics, a field which
     relates macroscopic observables (e.g., temperature, pressure, diffusion constant)
     to microscopic dynamics (motion of individual atoms and molecules). Maxwell and
     Boltzmann used the model to derive the distribution of speeds of interacting molecules
     as a function of temperature; Einstein used it to explain the Brownian motion
     of pollen grains immersed in water.
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个简单模型在统计力学中起着核心作用，这个领域将宏观可观测量（例如温度、压力、扩散常数）与微观动力学（单个原子和分子的运动）联系起来。麦克斯韦和玻尔兹曼使用这个模型推导出相互作用分子的速度分布与温度的关系；爱因斯坦用它来解释花粉颗粒在水中的布朗运动。
 - en: '**Simulation.** There are two natural approaches to simulating the system of
     particles.'
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: '**模拟.** 有两种自然方法来模拟粒子系统。 '
 - en: '*Time-driven simulation.* Discretize time into quanta of size *dt*. Update
     the position of each particle after every *dt* units of time and check for overlaps.
     If there is an overlap, roll back the clock to the time of the collision, update
@@ -69,9 +93,11 @@
     too large and colliding particles fail to overlap when we are looking. To ensure
     a reasonably accurate simulation, we must choose *dt* to be very small, and this
     slows down the simulation.'
+  id: totrans-12
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*时间驱动模拟.* 将时间离散化为大小为*dt*的量子。在每个*dt*时间单位后更新每个粒子的位置并检查重叠。如果有重叠，将时钟回滚到碰撞时刻，更新碰撞粒子的速度，并继续模拟。这种方法简单，但存在两个重大缺点。首先，我们必须在每个时间量子中执行N²次重叠检查。其次，如果*dt*太大，碰撞粒子在我们查看时未发生重叠，我们可能会错过碰撞。为了确保相对准确的模拟，我们必须选择*dt*非常小，这会减慢模拟速度。'
 - en: '*Event-driven simulation.* With event-driven simulation we focus only on those
     times at which interesting events occur. In the hard disc model, all particles
     travel in straight line trajectories at constant speeds between collisions. Thus,
@@ -84,141 +110,190 @@
     collisions. We adopt a lazy strategy, leaving such invalidated collision on the
     priority queue, waiting to identify and discard them as they are deleted. The
     main event-driven simulation loop works as follows:'
+  id: totrans-13
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*事件驱动模拟.* 通过事件驱动模拟，我们只关注发生有趣事件的时间点。在硬盘模型中，所有粒子在碰撞之间以恒定速度直线运动。因此，我们的主要挑战是确定粒子碰撞的有序序列。我们通过维护一个按时间排序的*优先队列*来解决这个挑战。在任何给定时间，优先队列包含所有未来可能发生的碰撞，假设每个粒子永远沿直线轨迹运动。随着粒子碰撞并改变方向，一些计划在优先队列上的事件变得“过时”或“无效”，不再对应物理碰撞。我们采取一种懒惰策略，将这些无效的碰撞留在优先队列上，等待识别并丢弃它们被删除时。主要的事件驱动模拟循环工作如下：'
 - en: Delete the *impending event*, i.e., the one with the minimum priority *t*.
+  id: totrans-14
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 删除*即将发生的事件*，即具有最小优先级*t*的事件。
 - en: If the event corresponds to an invalidated collision, discard it. The event
     is invalid if one of the particles has participated in a collision since the time
     the event was inserted onto the priority queue.
+  id: totrans-15
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果事件对应于无效的碰撞，将其丢弃。如果其中一个粒子自事件插入优先队列以来已经参与了碰撞，则该事件无效。
 - en: 'If the event corresponds to a physical collision between particles *i* and
     *j*:'
+  id: totrans-16
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果事件对应于粒子*i*和*j*之间的物理碰撞：
 - en: Advance all particles to time *t* along a straight line trajectory.
+  id: totrans-17
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将所有粒子沿直线轨迹推进到时间*t*。
 - en: Update the velocities of the two colliding particles *i* and *j* according to
     the laws of elastic collision.
+  id: totrans-18
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 根据弹性碰撞的法则更新两个碰撞粒子*i*和*j*的速度。
 - en: Determine all future collisions that would occur involving either *i* or *j*,
     assuming all particles move in straight line trajectories from time *t* onwards.
     Insert these events onto the priority queue.
+  id: totrans-19
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 确定所有未来可能涉及*i*或*j*的碰撞事件，假设所有粒子从时间*t*开始沿直线轨迹移动。将这些事件插入优先队列。
 - en: If the event corresponds to a physical collision between particles *i* and a
     wall, do the analogous thing for particle *i*.
+  id: totrans-20
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果事件���应于粒子*i*和墙壁之间的物理碰撞，对粒子*i*执行类似的操作。
 - en: This event-driven approach results in a more robust, accurate, and efficient
     simulation than the time-driven one.
+  id: totrans-21
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 这种事件驱动的方法比时间驱动的方法产生了更健壮、更准确和更高效的模拟。
 - en: '**Collision prediction.** We review the formulas that specify if and when a
     particle will collide with the boundary or with another particle, assuming all
     particles travel in straight-line trajectories.'
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: '**碰撞预测。** 我们回顾了指定粒子是否以及何时与边界或其他粒子碰撞的公式，假设所有粒子都沿直线轨迹移动。'
 - en: '*Collision between particle and a wall.* Given the position (*rx*, *ry*), velocity
     (*vx*, *vy*), and radius *σ* of a particle at time *t*, we wish to determine if
     and when it will collide with a vertical or horizontal wall.![Elastic Collision
     Between Two Particles](../Images/3b56e6da9fd741d1cc05fedffc8ffac5.png)'
+  id: totrans-23
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*粒子与墙壁之间的碰撞.* 给定时间*t*时粒子的位置(*rx*, *ry*)、速度(*vx*, *vy*)和半径*σ*，我们希望确定它是否以及何时会与垂直或水平墙壁碰撞。![两个粒子之间的弹性碰撞](../Images/3b56e6da9fd741d1cc05fedffc8ffac5.png)'
 - en: 'Since the coordinates are between 0 and 1, a particle comes into contact with
     a horizontal wall at time *t* + Δt if the quantity *ry* + Δ*t* *vy* equals either
     σ or (1 - σ). Solving for Δ*t* yields:'
+  id: totrans-24
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 由于坐标在0和1之间，如果*ry* + Δ*t* *vy*等于σ或(1 - σ)，则粒子在时间*t* + Δt时与水平墙面接触。解出Δ*t*得到：
 - en: '![collision with horizontal wall](../Images/074daf18ea563b4e8eb0a4fd224d22c4.png)'
+  id: totrans-25
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![与水平墙面碰撞](../Images/074daf18ea563b4e8eb0a4fd224d22c4.png)'
 - en: An analogous equation predicts the time of collision with a vertical wall.
+  id: totrans-26
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 一个类似的方程预测了与垂直墙壁的碰撞时间。
 - en: '*Collision between two particles.* Given the positions and velocities of two
     particles *i* and *j* at time *t*, we wish to determine if and when they will
     collide with each other.![Elastic Collision Between Two Particles](../Images/b00dcf90f71bee80c5db827bc45de6cb.png)'
+  id: totrans-27
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*两个粒子之间的碰撞.* 给定时间*t*时两个粒子*i*和*j*的位置和速度，我们希望确定它们是否以及何时相互碰撞。![两个粒子之间的弹性碰撞](../Images/b00dcf90f71bee80c5db827bc45de6cb.png)'
 - en: 'Let (*rx[i]''* , *ry[i]''* ) and (*rx[j]''* , *ry[j]''* ) denote the positions
     of particles *i* and *j* at the moment of contact, say *t* + Δ*t*. When the particles
     collide, their centers are separated by a distance of σ = σ[i] + σ[j]. In other
     words:'
+  id: totrans-28
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 让(*rx[i]'* , *ry[i]'* )和(*rx[j]'* , *ry[j]'* )表示粒子*i*和*j*在接触时刻，即*t* + Δ*t*的位置。当粒子碰撞时，它们的中心相距σ
+    = σ[i] + σ[j]的距离。换句话说：
 - en: σ²   =   (*rx[i]' - rx[j]'* )² + (*ry[i]' - ry[j]'* )²
+  id: totrans-29
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: σ²   =   (*rx[i]' - rx[j]'* )² + (*ry[i]' - ry[j]'* )²
 - en: During the time prior to the collision, the particles move in straight-line
     trajectories. Thus,
+  id: totrans-30
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 在碰撞之前的时间内，粒子沿直线轨迹移动。因此，
 - en: '*rx[i]'' = rx[i]* + Δ*t vx[i]*,   *ry [i]'' = ry[i]* + Δ*t vy[i]*'
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: '*rx[i]'' = rx[i]* + Δ*t vx[i]*,   *ry [i]'' = ry[i]* + Δ*t vy[i]*'
 - en: '*rx[j]'' = rx[j]* + Δ*t vx[j]*,   *ry [j]'' = ry[j]* + Δ*t vy[j]*'
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: '*rx[j]'' = rx[j]* + Δ*t vx[j]*,   *ry [j]'' = ry[j]* + Δ*t vy[j]*'
 - en: Substituting these four equations into the previous one, solving the resulting
     quadratic equation for Δ*t*, selecting the physically relevant root, and simplifying,
     we obtain an expression for Δ*t* in terms of the known positions, velocities,
     and radii.
+  id: totrans-33
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 将这四个方程代入前一个方程，解出得到的二次方程的Δ*t*，选择物理相关的根，并简化，我们得到Δ*t*的表达式，其中包括已知位置、速度和半径。
 - en: '![collision between two particles](../Images/527d5dcfeaa787aeaa2dda410cd80603.png)'
+  id: totrans-34
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![两个粒子之间的碰撞](../Images/527d5dcfeaa787aeaa2dda410cd80603.png)'
 - en: '![definition of relevant quantities](../Images/16b00fc09904bb93bbd01e05cc577d24.png)'
+  id: totrans-35
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![相关量的定义](../Images/16b00fc09904bb93bbd01e05cc577d24.png)'
 - en: If either Δ*v* ⋅ Δ*r* ≥ 0 or d < 0, then the quadratic equation has no solution
     for Δ*t* > 0; otherwise we are guaranteed that Δ*t* ≥ 0.
+  id: totrans-36
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 如果Δ*v* ⋅ Δ*r* ≥ 0或d < 0，则二次方程对Δ*t* > 0没有解；否则我们保证Δ*t* ≥ 0。
 - en: '**Collision resolution.** In this section we present the physical formulas
     that specify the behavior of a particle after an elastic collision with a reflecting
     boundary or with another particle. For simplicity, we ignore multi-particle collisions.
@@ -227,223 +302,327 @@
     and (iii) upon collision, the normal force acts perpendicular to the surface at
     the collision point. Physics-ly inclined students are encouraged to derive the
     equations from first principles; the rest of you may keep reading.'
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: '**碰撞解决方案。** 在本节中，我们提供了指定粒子在与反射边界或其他粒子发生弹性碰撞后行为的物理公式。为简单起见，我们忽略多粒子碰撞。有三个方程控制着一对硬盘之间的弹性碰撞：(i)
+    线性动量守恒，(ii) 动能守恒，以及(iii) 碰撞时，法向力作用于碰撞点的表面垂直方向。对物理感兴趣的学生被鼓励从第一原理推导这些方程；其余的可以继续阅读。'
 - en: '*Between particle and wall.* If a particle with velocity (*vx*, *vy*) collides
     with a wall perpendicular to *x*-axis, then the new velocity is (-*vx*, *vy*);
     if it collides with a wall perpendicular to the *y*-axis, then the new velocity
     is (*vx*, -*vy*).'
+  id: totrans-38
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*粒子与墙壁之间。* 如果具有速度（*vx*，*vy*）的粒子与垂直于*x*轴的墙壁碰撞，则新速度为（-*vx*，*vy*）；如果与垂直于*y*轴的墙壁碰撞，则新速度为（*vx*，-*vy*）。'
 - en: '*Between two particles.* When two hard discs collide, the normal force acts
     along the line connecting their centers (assuming no friction or spin). The impulse
     (*Jx*, *Jy*) due to the normal force in the *x* and *y* directions of a perfectly
     elastic collision at the moment of contact is:'
+  id: totrans-39
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*两个粒子之间。* 当两个硬盘碰撞时，法向力沿着连接它们中心的线作用（假设没有摩擦或旋转）。在接触瞬间，完全弹性碰撞的法向冲量（*Jx*，*Jy*）在*x*和*y*方向上的作用是：'
 - en: '![impulse due to normal force of elastic collision](../Images/24e5c261332edcc23254462c47e014cd.png)'
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![弹性碰撞法向力的冲量](../Images/24e5c261332edcc23254462c47e014cd.png)'
 - en: and where *m[i]* and *m[j]* are the masses of particles *i* and *j*, and σ,
     Δ*x*, Δ*y* and Δ *v* ⋅ Δ*r* are defined as above. Once we know the impulse, we
     can apply Newton's second law (in momentum form) to compute the velocities immediately
     after the collision.
+  id: totrans-41
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 其中*m[i]*和*m[j]*分别是粒子*i*和*j*的质量，σ、Δ*x*、Δ*y*和Δ *v* ⋅ Δ*r*如上所定义。一旦我们知道冲量，我们就可以应用牛顿第二定律（以动量形式）来计算碰撞后立即的速度。
 - en: '*vx[i]'' = vx[i] + Jx / m[i],    vx[j]'' = vx[j] - Jx / m[j]*'
+  id: totrans-42
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: '*vx[i]'' = vx[i] + Jx / m[i],    vx[j]'' = vx[j] - Jx / m[j]*'
 - en: '*vy[i]'' = vy[i] + Jy / m[i],    vy[j]'' = vy[j] - Jy / m[j]*'
+  id: totrans-43
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: '*vy[i]'' = vy[i] + Jy / m[i],    vy[j]'' = vy[j] - Jy / m[j]*'
 - en: '**Particle collision simulation in Java.** Our implementation involves the
     following data types: [MinPQ.java](MinPQ.java.html), [Particle.java](Particle.java.html),
     and [CollisionSystem.java](CollisionSystem.java.html).'
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Java中的粒子碰撞模拟。** 我们的实现涉及以下数据类型：[MinPQ.java](MinPQ.java.html)、[Particle.java](Particle.java.html)和[CollisionSystem.java](CollisionSystem.java.html)。'
 - en: '*Particle data type.* Represents particles moving in the unit box.'
+  id: totrans-45
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*粒子数据类型。* 代表在单位盒中移动的粒子。'
 - en: '*Event data type.* Data type that represents collision events. There are four
     different types of events: a collision with a vertical wall, a collision with
     a horizontal wall, a collision between two particles, and a redraw event. This
     would be a fine opportunity to experiment with OOP and polymorphism. We propose
     the following simpler (but somewhat less elegant approach).'
+  id: totrans-46
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*事件数据类型。* 表示碰撞事件的数据类型。有四种不同类型的事件：与垂直墙壁的碰撞、与水平墙壁的碰撞、两个粒子之间的碰撞和重绘事件。这将是一个很好的机会来尝试面向对象编程和多态性。我们提出以下更简单（但略显不够优雅）的方法。'
 - en: In order to implement `isValid`, the event data type should store the collision
     counts of the relevant particles at the time the event was created. The event
     corresponds to a physical collision if the current collision counts of the particles
     are still the same as when the event was created, i.e., no intervening collisions.
+  id: totrans-47
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 为了实现`isValid`，事件数据类型应该在事件创建时存储相关粒子的碰撞计数。如果粒子的当前碰撞计数与事件创建时的相同，则该事件对应于物理碰撞，即没有干预碰撞。
 - en: '**Data files.** We use the following data format. The first line contains the
     number of particles N. Each of the remaining N lines consists of 6 real numbers
     (position, velocity, mass, and radius) followed by three integers (red, green,
     and blue values of color). You may assume that all of the position coordinates
     are between 0 and 1, and the color values are between 0 and 255. Also, you may
     assume that none of the particles intersect each other or the walls.'
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: '**数据文件。** 我们使用以下数据格式。第一行包含粒子数量N。剩下的N行中，每行包含6个实数（位置、速度、质量和半径），后跟三个整数（颜色的红、绿、蓝值）。您可以假设所有位置坐标在0和1之间，颜色值在0和255之间。此外，您可以假设没有粒子相互交叉或与墙壁相交。'
 - en: '[PRE0]'
+  id: totrans-49
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: 'Here are some sample data files:'
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里是一些示例数据文件：
 - en: <blockqoute>| FILE | DESCRIPTION |
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: <blockqoute>| 文件 | 描述 |
 - en: '| [p10.txt](p10.txt) | 10 particles |'
+  id: totrans-52
   prefs: []
   type: TYPE_TB
+  zh: '| [p10.txt](p10.txt) | 10个粒子 |'
 - en: '| [p2000.txt](p2000.txt) | 2000 particles |'
+  id: totrans-53
   prefs: []
   type: TYPE_TB
+  zh: '| [p2000.txt](p2000.txt) | 2000个粒子 |'
 - en: '| [diagonal.txt](diagonal.txt) |  |'
+  id: totrans-54
   prefs: []
   type: TYPE_TB
+  zh: '| [diagonal.txt](diagonal.txt) |  |'
 - en: '| [diagonal1.txt](diagonal1.txt) |  |'
+  id: totrans-55
   prefs: []
   type: TYPE_TB
+  zh: '| [diagonal1.txt](diagonal1.txt) |  |'
 - en: '| [diagonal2.txt](diagonal2.txt) |  |'
+  id: totrans-56
   prefs: []
   type: TYPE_TB
+  zh: '| [diagonal2.txt](diagonal2.txt) |  |'
 - en: '| [wallbouncing.txt](wallbouncing.txt) | 9 particles in a row colliding with
     9 particles in a column |'
+  id: totrans-57
   prefs: []
   type: TYPE_TB
+  zh: '| [wallbouncing.txt](wallbouncing.txt) | 一排有9个粒子与一列有9个粒子碰撞 |'
 - en: '| [wallbouncing2.txt](wallbouncing2.txt) | 10 particles in a row not colliding
     with 9 particles in a column |'
+  id: totrans-58
   prefs: []
   type: TYPE_TB
+  zh: '| [wallbouncing2.txt](wallbouncing2.txt) | 一排有10个粒子不与一列有9个粒子碰撞 |'
 - en: '| [wallbouncing3.txt](wallbouncing3.txt) | 19 particles in a row colliding
     with 19 particles in a column |'
+  id: totrans-59
   prefs: []
   type: TYPE_TB
+  zh: '| [wallbouncing3.txt](wallbouncing3.txt) | 一排有19个粒子与一列有19个粒子碰撞 |'
 - en: '| [p100-.125K.txt](p100-.125K.txt) | 100 particles at 0.125 Kelvin |'
+  id: totrans-60
   prefs: []
   type: TYPE_TB
+  zh: '| [p100-.125K.txt](p100-.125K.txt) | 0.125开尔温下的100个粒子 |'
 - en: '| [p100-.5K.txt](p100-.5K.txt) | 100 particles at 0.5 Kelvin |'
+  id: totrans-61
   prefs: []
   type: TYPE_TB
+  zh: '| [p100-.5K.txt](p100-.5K.txt) | 0.5开尔温下的100个粒子 |'
 - en: '| [p100-2K.txt](p100-2K.txt) | 100 particles at 2.0 Kelvin |'
+  id: totrans-62
   prefs: []
   type: TYPE_TB
+  zh: '| [p100-2K.txt](p100-2K.txt) | 2.0开尔温下的100个粒子 |'
 - en: '| [p1000-.5K.txt](p1000-.5K.txt) | 1000 particles at 0.5 Kelvin |'
+  id: totrans-63
   prefs: []
   type: TYPE_TB
+  zh: '| [p1000-.5K.txt](p1000-.5K.txt) | 0.5开尔温下的1000个粒子 |'
 - en: '| [p1000-2K.txt](p1000-2K.txt) | 1000 particles at 2.0 Kelvin |'
+  id: totrans-64
   prefs: []
   type: TYPE_TB
+  zh: '| [p1000-2K.txt](p1000-2K.txt) | 2.0开尔温下的1000个粒子 |'
 - en: '| [billiards2.txt](billiards2.txt) | cue ball striking pyramid of 3 balls |'
+  id: totrans-65
   prefs: []
   type: TYPE_TB
+  zh: '| [billiards2.txt](billiards2.txt) | 母球撞击3个球的金字塔 |'
 - en: '| [billiards4.txt](billiards4.txt) | cue ball striking pyramid of 10 balls
     |'
+  id: totrans-66
   prefs: []
   type: TYPE_TB
+  zh: '| [billiards4.txt](billiards4.txt) | 母球撞击10个球的金字塔 |'
 - en: '| [billiards5.txt](billiards5.txt) | cue ball striking pyramid of 15 balls
     |'
+  id: totrans-67
   prefs: []
   type: TYPE_TB
+  zh: '| [billiards5.txt](billiards5.txt) | 母球撞击15个球的金字塔 |'
 - en: '| [diffusion.txt](diffusion.txt) | diffusion of particles from one side of
     slit |'
+  id: totrans-68
   prefs: []
   type: TYPE_TB
+  zh: '| [diffusion.txt](diffusion.txt) | 从裂缝一侧扩散的粒子 |'
 - en: '| [diffusion2.txt](diffusion2.txt) | diffusion of particles from one quarter
     |'
+  id: totrans-69
   prefs: []
   type: TYPE_TB
+  zh: '| [diffusion2.txt](diffusion2.txt) | 从一个四分之一处扩散的粒子 |'
 - en: '| [diffusion3.txt](diffusion3.txt) |  |'
+  id: totrans-70
   prefs: []
   type: TYPE_TB
+  zh: '| [diffusion3.txt](diffusion3.txt) |  |'
 - en: '| [brownian.txt](brownian.txt) |  |'
+  id: totrans-71
   prefs: []
   type: TYPE_TB
+  zh: '| [brownian.txt](brownian.txt) |  |'
 - en: '| [brownian2.txt](brownian2.txt) |  |'
+  id: totrans-72
   prefs: []
   type: TYPE_TB
+  zh: '| [brownian2.txt](brownian2.txt) |  |'
 - en: '| [squeeze.txt](squeeze.txt) | one tiny particle sandwiched between two big
     particles |'
+  id: totrans-73
   prefs: []
   type: TYPE_TB
+  zh: '| [squeeze.txt](squeeze.txt) | 一个微小粒子夹在两个大粒子之间 |'
 - en: '| [squeeze2.txt](squeeze2.txt) | one tiny particle sandwiched between two big
     particles |'
+  id: totrans-74
   prefs: []
   type: TYPE_TB
+  zh: '| [squeeze2.txt](squeeze2.txt) | 一个微小粒子夹在两个大颗粒之间 |'
 - en: '| [pendulum.txt](pendulum.txt) | pendulum effect |</blockqoute>'
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: '| [pendulum.txt](pendulum.txt) | 钟摆效应 |'
 - en: Other potential data files
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 其他潜在的数据文件
 - en: One particle in motion.
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个颗粒在运动。
 - en: Two particles in head on collision.
+  id: totrans-78
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 两个颗粒正面碰撞。
 - en: Two particles, one at rest, colliding at an angle.
+  id: totrans-79
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 两个颗粒，一个静止，以角度碰撞。
 - en: One red particle in motion, N blue particles at rest.
+  id: totrans-80
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个红色颗粒在运动，N个蓝色颗粒静止。
 - en: N particles on a lattice with random initial directions (but same speed) so
     that the total kinetic energy is consistent with some fixed temperature T, and
     total linear momentum = 0. Have a different data set for different values of T.
+  id: totrans-81
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: N个粒子在一个具有随机初始方向的晶格上（但速度相同），以使总动能与某个固定温度T一致，总线性动量= 0。 对于不同的T值，有不同的数据集。
 - en: 'Diffusion I: assign N very tiny particles of the same size near the center
     of the container with random velocities.'
+  id: totrans-82
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 扩散I：在容器中心附近分配N个非常小的相同大小的粒子，具有随机速度。
 - en: 'Diffusion II: N blue particles on left, N green particles on right assigned
     velocities so that they are thermalized (e.g., leave partition between them and
     save positions and velocities after a while). Watch them mix. Calculate average
     diffusion rate?'
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 扩散II：左侧有N个蓝色颗粒，右侧有N个绿色颗粒，分配速度使它们热化（例如，离开它们之间的隔板并在一段时间后保存位置和速度）。 观察它们混合。 计算平均扩散速率？
 - en: N big particles so there isn't much room to move without hitting something.
+  id: totrans-84
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: N个大颗粒，所以没有太多空间可以移动而不碰到东西。
 - en: 'Einstein''s explanation of Brownian motion: 1 big red particle in the center,
     N smaller blue particles.'
+  id: totrans-85
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 爱因斯坦对布朗运动的解释：中间有一个大红色颗粒，N个较小的蓝色颗粒。
 - en: Exercises
+  id: totrans-86
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 练习
 - en: '**Particle collision game.** Implement the game [Particles](http://www.addictinggames.com/particles.html):
     you control a red ball with a mouse, trying to avoid colliding with blue balls
     that behave according to the laws of elastic collision. After a certain interval
     of time, introduce a new blue ball at random.'
+  id: totrans-87
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**粒子碰撞游戏。** 实现游戏[Particles](http://www.addictinggames.com/particles.html)：你用鼠标控制一个红色球，试图避免与根据弹性碰撞定律行事的蓝色球碰撞。
+    一段时间后，随机引入一个新的蓝色球。'
 - en: '**Brownian motion.** In 1827, the botanist Robert Brown observed the motion
     of wildflower pollen grains immersed in water using a microscope. He observed
     that the pollen grains were in a random motion, following what would become known
@@ -457,28 +636,42 @@
     Brownian motion enables engineers to compute the diffusion constants of alloys
     by observing the motion of individual particles. Here''s a demo of [Einstein''s
     explanation of Brownian motion](brownian.swf) from [here](http://nanoatlas.ifs.hr/brownian_motion.html).'
+  id: totrans-88
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**布朗运动。** 1827年，植物学家罗伯特·布朗使用显微镜观察了浸泡在水中的野花花粉颗粒的运动。 他观察到花粉颗粒是随机运动的，遵循后来被称为布朗运动的运动。
+    这种现象被讨论过，但直到爱因斯坦在1905年提供了一个数学解释之前，没有提供令人信服的解释。 爱因斯坦的解释：花粉颗粒的运动是由数百万微小分子与较大颗粒碰撞引起的。
+    他给出了描述在给定温度下悬浮在液体中的微小颗粒行为的详细公式。 爱因斯坦的解释旨在帮助证明原子和分子的存在，并可用于估计分子的大小。 爱因斯坦的布朗运动理论使工程师能够通过观察单个粒子的运动来计算合金的扩散常数。
+    这里有一个来自[这里](http://nanoatlas.ifs.hr/brownian_motion.html)的[Einstein''s explanation
+    of Brownian motion](brownian.swf)演示。'
 - en: '**Free path and free time.** Free path = distance a particle travels between
     collisions. Plot histogram. Mean free path = average free path length over all
     particles. As temperature increases, mean free path increases (holding pressure
     constant). Compute *free time length* = time elapsed before a particle collides
     with another particle or wall.'
+  id: totrans-89
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**自由程和自由时间。** 自由程 = 粒子在碰撞之间行进的距离。 绘制直方图。 平均自由程 = 所有粒子的平均自由程长度。 随着温度的升高，平均自由程增加（保持压力恒定）。
+    计算*自由时间长度* = 粒子与另一个粒子或墙壁碰撞之前经过的时间。'
 - en: '**Collision frequency.** Number of collisions per second.'
+  id: totrans-90
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**碰撞频率。** 每秒碰撞次数。'
 - en: '**Root mean-square velocity.** Root mean-square velocity / mean free path =
     collision frequency. Root mean square velocity = sqrt(3RT/M) where molar gas constant
     R = 8.314 J / mol K, T = temperature (e.g., 298.15 K), M = molecular mass (e.g.,
     0.0319998 kg for oxygen).'
+  id: totrans-91
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**均方根速度。** 均方根速度 / 平均自由程 = 碰撞频率。均方根速度 = sqrt(3RT/M)，其中摩尔气体常数R = 8.314 J / mol
+    K，T = 温度（例如，298.15 K），M = 分子质量（例如，氧气为0.0319998 kg）。'
 - en: '**Maxwell-Boltzmann distribution.** Distribution of velocity of particles in
     hard sphere model obey Maxwell-Boltzmann distribution (assuming system has thermalized
     and particles are sufficiently heavy that we can discount quantum-mechanical effects).
@@ -488,32 +681,44 @@
     because it is unwieldy to simulate on the order of 10^23 particles. Reason: velocity
     in x, y, and z directions are normal (if all particles have same mass and radius).
     In 2d, Rayleigh instead of Maxwell-Boltzmann.'
+  id: totrans-92
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**麦克斯韦-玻尔兹曼分布。** 在硬球模型中，粒子速度的分布服从麦克斯韦-玻尔兹曼分布（假设系统已经热化，粒子足够重，我们可以忽略量子效应）。 分布形状取决于温度。
+    每个分量的速度分布与exp(-mv_x^2 / 2kT)成比例。 在d维中速度的大小分布与v^(d-1) exp(-mv^2 / 2kT)成比例。 在统计力学中使用，因为模拟大约10^23个粒子是不方便的。
+    原因：x，y和z方向的速度是正态的（如果所有粒子质量和半径相同）。 在2d中，用Rayleigh代替麦克斯韦-玻尔兹曼。'
 - en: '**Pressure.** Main thermodynamic property of interest = mean pressure. Pressure
     = force per unit area exerted against container by colliding molecules. In 2d,
     pressure = average force per unit length on the wall of the container.'
+  id: totrans-93
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**压力。** 感兴趣的主要热力学性质 = 平均压力。压力 = 分子碰撞对容器施加的单位面积的力。在二维中，压力 = 容器壁上单位长度的平均力。'
 - en: '**Temperature.** Plot temperature over time (should be constant) = 1/N sum(mv^2)
     / (d k), where d = dimension = 2, k = Boltzmann''s constant.'
+  id: totrans-94
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**温度。** 绘制随时间变化的温度（应保持恒定）= 1/N sum(mv^2) / (d k)，其中d = 维度 = 2，k = 玻尔兹曼常数。'
 - en: '**Diffusion.** Molecules travel very quickly (faster than a speeding jet) but
     diffuse slowly because they collide with other molecules, thereby changing their
     direction. Two vessels connected by a pipe containing two different types of particles.
     Measure fraction of particles of each type in each vessel as a function of time.'
+  id: totrans-95
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**扩散。** 分子移动非常迅速（比喷气机更快），但扩散缓慢，因为它们与其他分子碰撞，从而改变它们的方向。两个通过管道连接的容器，其中包含两种不同类型的粒子。随时间变化测量每种类型粒子在每个容器中的比例。'
 - en: '**Time reversibility.** Change all velocities and run system backwards. Neglecting
     roundoff error, the system will return to its original state!'
+  id: totrans-96
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**时间可逆性。** 改变所有速度并向后运行系统。忽略舍入误差，系统将返回到其原始状态！'
 - en: '**Maxwell''s demon.** [Maxwell''s demon](http://en.wikipedia.org/wiki/Maxwell''s_demon)
     is a thought experiment conjured up by James Clerk Maxwell in 1871 to contradict
     the second law of thermodynamics. Vertical wall in middle with molecule size trap
@@ -527,31 +732,44 @@
     and must begin erasing previous accumulated information to make room for new information.
     This erasing of information increases the entropy, requiring kT ln 2 units of
     work.)'
+  id: totrans-97
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**麦克斯韦的恶魔。** [麦克斯韦的恶魔](http://en.wikipedia.org/wiki/Maxwell''s_demon)是詹姆斯·克拉克·麦克斯韦于1871年构想出来的一个思想实验，旨在反驳热力学第二定律。中间有垂直墙壁，带有分子大小的陷阱门，左半部分有N个粒子，右半部分也有N个粒子，只有恶魔允许通过的粒子才能通过陷阱门。恶魔让左到右速度比平均速度快的粒子通过，让右到左速度比平均速度慢的粒子通过。可以利用能量重新分配来运行热机，允许热量从左到右流动。（不违反法则，因为恶魔必须与物理世界互动以观察分子。恶魔必须存储关于分子在陷阱门哪一侧的信息。恶魔最终会耗尽存储空间，必须开始擦除先前积累的信息以为新信息腾出空间。这种信息的擦除增加了熵，需要kT
+    ln 2单位的工作。)'
 - en: '**Metric space.** Extend to support spheres and hyperplanes in an arbitrary
     metric space.'
+  id: totrans-98
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**度量空间。** 扩展以支持任意度量空间中的球体和超平面。'
 - en: '**Cell method.** Useful optimization: divide region into rectangular cells.
     Ensure that particles can only collide with particles in one of 9 adjacent cells
     in any time quantum. Reduces number of binary collision events that must be calculated.
     Downside: must monitor particles as they move from cell to cell.'
+  id: totrans-99
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**细胞方法。** 有用的优化：将区域划分为矩形单元。确保粒子只能在任何时间量子中与九个相邻单元中的粒子发生碰撞。减少必须计算的二元碰撞事件数量。缺点：必须监视粒子在单元之间移动的过程。'
 - en: '**Multi-particle collisions.** Handle multi-particle collisions. Such collisions
     are important when simulating the break in a game of billiards.'
+  id: totrans-100
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**多粒子碰撞。** 处理多粒子碰撞。在模拟台球游戏中的碰撞时，这种碰撞非常重要。'
 - en: '**Kinetic heaps or kinetic data structures.** (Guibas)'
+  id: totrans-101
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**动态堆或动态数据结构。**（Guibas）'
 - en: Creative Exercises
+  id: totrans-102
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 创意练习
