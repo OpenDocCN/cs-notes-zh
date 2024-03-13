@@ -1,4 +1,4 @@
-+   [普林斯顿编程和算法讲义](prct-prog-algo_000.md)
++   [普林斯顿编程和算法讲义](README.md)
 +   [Java](prct-prog-algo_001.md)
 +   [1\.   编程元素](prct-prog-algo_002.md)
 +   [1.1   您的第一个 Java 程序：   Hello World](prct-prog-algo_003.md)
