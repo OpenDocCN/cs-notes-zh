@@ -1,0 +1,996 @@
+- en: 9.9 Cryptography
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/java/99crypto](https://introcs.cs.princeton.edu/java/99crypto)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: This section under major construction.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Cryptology.** *Cryptology* is the science of secret communication. It has
+    two main subfields: *cryptography* is the science of creating secret codes; *cryptanalysis*
+    is the science of breaking codes. There are five pillars of cryptology:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Confidentiality: keep communication private.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Integrity: detect unauthorized alteration to communication.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Authentication: confirm identity of sender.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Authorization: establish level of access for trusted parties.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Non-repudiation: prove that communication was received.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'We will focus primarily on confidentiality, the most romantic of these endeavors.
+    Highly recommended reading for entertainment: The Code Book. Useful Flash demo:
+    [e-Security history](http://www.rsasecurity.com/experience/esecurity/index.html)
+    from rsa.com.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Some applications of crypto.** Phil Zimmermann asserts "Cryptography used
+    to be an obscure science, of little relevance to everyday life. Historically,
+    it always had a special role in military and diplomatic communications. But in
+    the Information Age, cryptography is about political power, and in particular,
+    about the power relationship between a government and its people. It is about
+    the right to privacy, freedom of speech, freedom of political association, freedom
+    of the press, freedom from unreasonable search and seizure, freedom to be left
+    alone." (Code Book, p. 296). Crypo benefits both ordinary citizens and terrorists.
+    Enables e-commerce. Below is a table of activities that we would like to be able
+    to implement digitally and securely. We all list a number of everyday analog implementation
+    of each task.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| Task | Analog Implementations |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Protect information | Code book, lock and key |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Identification | Driver''s license, Social Security number, password, bioinformatics,
+    secret handshake |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Contract | Handwritten signature, notary |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Money transfer | Coin, bill, check, credit card |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Public auction | Sealed envelope |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Public election | Anonymous ballot |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Poker | Cards with concealed backs |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Public lottery | Dice, coins, rock-paper-scissors |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Anonymous communication | Pseudonym, ransom note |'
+  prefs: []
+  type: TYPE_TB
+- en: 'A malicious adversary can sometimes subvert these analog implementations: forgery,
+    lock picks, counterfeiters, card cheats, ballot-stuffing, loaded dice.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Our goal.** Our goal is to implement all of these tasks digitally and securely.
+    We would also like to implement additional tasks that can''t be done with physics!
+    For example: play poker variant where dealer wins if no one has an Ace, have an
+    anonymous election where everyone learns winner, but nothing else. Is any of this
+    possible? If so, how? In the remainder of this section, we will give a flavor
+    of modern (digital) cryptography, implement a few of these tasks, and sketch a
+    few technical details.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**History.** Decryption of Mary Stuart''s encrypted letters revealed her intent
+    to assassinate Elizabeth I. In the 1800s, Edgar Allen Poe boasted that he could
+    break anyone''s cypher using frequency analysis. Alan Turing led a team at Bletchley
+    Park which cracked the German Enigma cipher. Many historians believe this was
+    the turning point of World War II. Here''s an [Enigma applet](http://russells.freeshell.org/enigma).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Security by obscurity.** The Content Scrambling System (CSS) is used by Hollywood
+    to encrypt DVDs. Each disc has three 40-bit keys. Each DVD decoder has unique
+    40-bit key. In principle it is "not possible" to play back on computer without
+    disc. In 1999, two Norwegians (Canman and SoupaFrog, 1999) wrote a decryption
+    algorithm that cracked the CSS system. CSS was a proprietary algorithm and Hollywood
+    was banking on the fact that nobody would discover the algorithm. Moreover, the
+    size of the keys was too small, so brute force attacks were possible. Other high
+    profile failures due to ad hoc approach: GSM cell phones, Windows XP product activiation,
+    RIAA digital music watermarking, VCR+ codes, and Adobe eBooks, Diebold AccuVote-TS
+    electronic voting machines, [ExxonMobil SpeedPass RFIDs](http://rfidanalysis.org/).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'In 1883, The Dutch linguist [Auguste Kerckhoffs von Nieuwenhof](http://en.wikipedia.org/wiki/Auguste_Kerckhoffs)
+    embodied the underlying principle guiding modern cryptography in his paper [Cryptographie
+    militaire](http://www.petitcolas.net/fabien/kerckhoffs/la_cryptographie_militaire_i.htm):'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Il faut qu'il n'exige pas le secret, et qu'il puisse sans inconvenient tomber
+    entre les mains de l'ennemi.
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: The system must not require secrecy and can be stolen by the enemy without causing
+    trouble.
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: This is now known as *Kerckhoffs' Principle*. The security of a cryptosystem
+    should not depend on keeping the algorithm secret, but only on keeping the numeric
+    key secret. There are two primary distinctions between the algorithm and the numeric
+    key. ([Ed Felten](http://www.freedom-to-tinker.com/archives/2004_09.html)) First,
+    since we generate the numeric key at random, we can accurately model and quantify
+    how long it would take an adversary to guess (under general technical conditions);
+    in contrast, it is much harder to predict or quantify how long it would take an
+    adverary to guess our algorithm. Second, it's easy to use different numeric keys
+    for different purposes of people, or to stop using a key that has been compromised;
+    it's more difficult to design new algorithms.
+  prefs: []
+  type: TYPE_NORMAL
+- en: It says that systems based on "security by obscurity" are fatally flawed. This
+    is equivalent to Shannon's maxim is "The enemy knows the system." The design of
+    secure systems should be left to the experts. Despite this, we can still explore
+    the basic ideas of cryptography that the experts use.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**The participants.** In keeping with the rich tradition of cryptographers,
+    Alice and Bob are the two people trying to communicate securely over an insecure
+    communication channel. We will assume that the message is already encoded in binary,
+    so we can treat it as a (potentially huge) integer *m*. We let N denote the number
+    of bits in the message m. Alice applies an encryption function E to the message,
+    which produces another N bit integer E(m). Bob receives E(m) and applies his decryption
+    function D to this. An obvious condition for this to make any sense is that D(E(m))
+    = m. In other words, Bob recovers the original message. Eve is a third party who
+    wishes to intercept the message. Eve can observe E(m), so for the scheme to be
+    secure, it should be prohibitively difficult for Eve to recover m from E(m) alone.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Private key cryptography.** Private key = two parties share a secret key
+    prior to their communication. One-time pads (Chapter 1) are provably secure if
+    the bits in the key are generated from a truly random source. It is also extremely
+    easy to implement. Nevertheless, one-time pads have several mitigating factors
+    that render it impractical in most situations. First, it is a challenge to generate
+    truly random bits, free of biases and correlations. One must go outside the world
+    of digital computers and extract them from some physical source (e.g., time between
+    emission of particles due to radioactive decay, sound from a microphone, elapsed
+    time between keystrokes). Such sources are often biased and we would need to take
+    great care to prevent Eve from observing or tampering with the process. The scheme
+    is called one-time since we need new key for each message or part of the message.
+    If we re-use a one-time pad, then the system is no longer secure. Signature? Non-repudiation?
+    Perhaps the most limiting factor is key distribution. Alice and Bob must know
+    each other and exchange the key sending the secret message. The Kremlin and White
+    House used to communicate with each other using this method. A trusted courier
+    would be sent across the Atlantic Ocean with a briefcase of one-time pads handcuffed
+    to his arm. This method is ridiculously impractical for if Alice wants to purchase
+    a product from Bob over the Internet.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Other private key encryption schemes. Data Encryption Standard (DES). Advanced
+    Encryption Standard (AES, Rijndael algorithm). Blowfish. Methods are not provably
+    secure like one-time pads, but have withstood the test of time of mathematical
+    scrutiny. Efficient. However, these schemes suffer from the same key-distribution
+    problem that plagues one-time pads. One emerging solution to the key distribution
+    problem is to use quantum mechanics. This is known as Quantum Key Distribution.
+    It is an unconditionally secure way for two parties to share a one-time pad. Moreover,
+    there is an intrusion detection component so that if Eve observes even one bit,
+    both parties will learn about the attempted eavesdropping.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Modern cryptography.** The modern theory of cryptography leverages the theory
+    of hard problems. The goal is to show that breaking security system is equivalent
+    to solving some of the world''s greatest unsolved problems! Bruce Schneier, a
+    noted electronic security expert, wrote in Applied Cryptography, "It is insufficient
+    to protect ourselves with laws, we need to protect ourselves with mathematics."
+    The foundations of modern cryptography hinges on three crucial axioms and one
+    important fact.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Axiom 1\. Players can toss coins.* Crypto is impossible without randomness
+    so this axiom is essential. In practice we can generate truly random bits by using
+    quantum phenomenon or the radioactive decay of particles.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Axiom 2\. Players are computationally limited.* We express this notion formally
+    by restricting the participants (communicating parties and malicious adversaries)
+    to use only polynomial time algorithms.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Axiom 3\. Factoring is hard computationally.* We assume that it is not possible
+    to factor an N-bit integer in time polynomial in N. Given an integer (e.g., 1541)
+    it appears difficult to find its prime factorization. However, given the factors
+    (e.g., 23 * 67) it is easy to multiply them out and obtain the original number.
+    This is referred to as a "1-way trapdoor function" since it is easy to go one
+    way (from factors to product), but apparently hard to go the other way (from product
+    to factors).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Fact. Primality testing is easy computationally.* Miller-Rabin primality testing
+    algorithm. PRIMES in P proved in 2002.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the three axioms above are valid, then digital cryptography exists. That
+    is, it is possible to do all of the previous tasks digitally.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Public key cryptography.** Public key cryptography is an amazing scheme that
+    enables two parties to communicate securely, even if they''ve never met. It is
+    the digital analog of a box with a combination lock. Suppose Alice wants to send
+    Bob a message. First, Bob send the box to Alice with the padlock in the open position,
+    without revealing the combination to anyone. Alice puts her message in the box,
+    closes the combination lock, and sends it back to Bob. Eve may intercept the box
+    in transit, but since she doesn''t know the combination, she is unable to open
+    it. She can try to guess the combination, but there are just too many possibilities.
+    When the box arrives, Bob can open it, knowing that nobody else looked inside
+    (unless they knew the combination).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'To do this digitally, Bob has two keys (or combinations): his private key d
+    is not revealed to anybody, his public key e is published in an Internet phonebook.
+    We think of the keys as integers, but they are really just sequences of bits,
+    say 1024. If Alice wants to send a message to Bob, she looks up Bob''s public
+    key e on the Internet. She uses e to encrypt her message and sends it to Bob.
+    Bob uses his private key d to decrypt the message.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The idea of public key cryptography was first published in 1976 by Whitfield
+    Diffie and Martin Hellman in their groundbreaking paper *New Directions in Cryptography*.
+    This paper described a public key cryptosystem for the key distribution problem.
+    The idea was apparently discovered independently by Ellis, Cocks, and Williamson
+    in the UK at the Government Communications Headquarters (GCHQ) in the early 1970s,
+    but their work remained a secret for two decades.
+  prefs: []
+  type: TYPE_NORMAL
+- en: RSA cryptosystem.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We will describe the basic mechanics of the [RSA cryptosystem](http://www.acm.org/turingawardlecture/RSA/),
+    a scheme developed by Adleman, Rivest, and Shamir in 1978. Here's the [RSA paper](../../papers/rsa.pdf).
+    RSA is very widely used today for secure Internet communication (browsers, S/MIME,
+    SSL, S/WAN, PGP, Microsoft Outlook), operating systems (Sun, Microsoft, Apple,
+    Novell) and hardware (cell phones, ATM machines, wireless Ethernet cards, Mondex
+    smart cards, Palm Pilots). Then, we will give intuition for why it works and describe
+    to implement it efficiently. The RSA cryptosystem involves modular arithmetic.
+    Recall .....
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Key generation.* To participate in the RSA cryptosystem, Bob must first generate
+    a public and private key. He only needs to do this once, even if he plans to use
+    the system many times.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Select two large prime numbers p and q at random.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Compute n = p × q.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Select two integers e and d such that (m^e)^d ≡ m (mod n) for all integers m.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: As an example, we might choose the following parameters, although in practice
+    we would need to use much larger integers to guarantee security.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*Encryption.* Alice wants to send an N-bit secret message m to Bob. She obtains
+    Bob''s public key (e, n) from the Internet. Then she encrypts the message m using
+    the encryption function E(m) = m^e (mod n), and sends E(m) to Bob.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*Decryption.* Bob receives the encrypted message c from Alice. Bob recalls
+    his private key (d, n). Then he decrypts the ciphertext by applying the decryption
+    function D(c) = c^d (mod n). Since Bob knows d, he can compute this function.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*RSA simulator.* [RSA simulator](http://www-cs-students.stanford.edu/~tjw/jsbn/rsa2.html).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Correctness.* To make sure that Bob receives the original message, we must
+    check that D(E(m)) = m. It worked in the example above where m = 100, E(100) =
+    254, D(254) = 100, but we need to be sure it works for all possible messages,
+    and for all valid choices of e, d, and n. This follows in a straightforward way
+    from the defintions and the way we chose e and d.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![](../Images/7efd53405c873dd97ddef65722d1d4ff.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: We have supressed one important detail - how to choose e and d so that the magic
+    property holds.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Implementing the RSA cryptosystem.** Implementing the RSA cryptosystem is
+    a formidable engineering challenge. A successful implementation requires many
+    ingenious algorithms and knowledge of several theorems in number theory. We will
+    describe a bare-bones implemenation, but commercial implementations are more sophisticated.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Big integers.* Can''t use built in `int` or `long` types since numbers are
+    too big. Need to re-implement the laws of arithmetic, e.g., addition, subtraction,
+    multiplication, and division. Grade school algorithms are reasonably efficient
+    for all of these operations, although there is always opportunity for improvement
+    using clever algorithms.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Modular exponentation.* How to perform modular exponentation: a^b (mod c).
+    The naive method would be to repeatedly multiply a by itself, b times, and then
+    divide by c and return the remainder. When a, b, and c are N-bit integers, this
+    fails spectacularly for two reasons. First, the intermediate number a^b can be
+    monstrously large. The number of digits can be exponential in N. When N = 50,
+    this consumes 128TB memory. The second problem is that the number of multiplications
+    also takes exponential time. So it will take forever.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'A better alternative is to use *repeated squaring*. This idea dates back to
+    at least 200 BCE according to Knuth. Program [ModExp.java](ModExp.java.html) uses
+    the following recurrence to compute a^b mod n:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: 'if b is zero: 1'
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'if b is even: (a^(b/2) * a^(b/2)) mod n'
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'if b is odd: (a * a^(b/2) * a^(b/2)) mod nThis is analogous to the following
+    recurrence for multiplication.'
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'if b is zero: 1'
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'if b is even: (a * b/2) + (a * b/2)'
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'if b is odd: (a * b/2) + (a * b/2) + a'
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Computing a random prime.* To generate the key, we must have a method for
+    generating a random N-bit prime, say N = 1024. One idea is to choose an N-bit
+    integer at random and check if it is prime. If it is, then stop; otherwise repeat
+    until you stumble upon one that is prime.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This simple idea works, but to implement it requires two crucial ideas. First,
+    the loop may take a very long time if there are not enough prime numbers. Fortunately,
+    the Prime Number Theorem (Hadamard, Vallee Poussin, 1896) asserts that the number
+    of primes between 2 and x is approximately x / ln x. There are over 10^(151) primes
+    with 512 bits or fewer. In other words, roughly 1 out of every ln x x-bit numbers
+    are prime, so we expect to wait only ln x steps before stumbling upon a prime
+    number. But how do we check to see if a number is prime? Attempting to factor
+    it would be prohibitively expensive. Instead, we can use an ingenious algorithm
+    due to Miller-Rabin (or a more recent one due to Agarwal-Kayal-Saxena) that checks
+    if an integer is prime in a polynomial number of steps.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Generating random numbers.* (move to one-time pad?) Physical sources of randomness.
+    The Java library `SecureRandom` is a pseudo-random number generator that generates
+    *cryptographically secure* random numbers. This means that it is computationally
+    intractable to predict future bits. Unlike a LFSR, you can''t reverse-engineer
+    it.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Computing the private exponent.* One final challenge is choosing the public
+    and private keys. In practice it is common use e = 65,537 as the public key. But
+    this means we need to find a private key that makes the magic property hold. This
+    turns out to be a well understood problem in number theory and a unqiue d always
+    exists provided gcd(e, (p-1)(q-1)) = 1. We can use an extension of Euclid''s algorithm
+    (see exercise xyz) for this purpose.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Easy to do using Java's `BigInteger` library for manipulating huge integers.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**RSA Attacks.** Cryptanalysis is the science of breaking secret codes. We
+    describe a few common attacks to the RSA crpytosystem to give you the flavor of
+    modern cryptanalysis.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Factoring.* The most obvious way to break the RSA cryptosystem is by factoring
+    the modulus n. If Eve can factor n = pq, then she has exactly the same information
+    as Bob, so she can efficiently compute his private exponent given the public one
+    (using exactly the same algorithm that Bob used to compute his private exponent
+    in the first place). Using a very sophisticated factoring algorithm known as the
+    [general number field sieve](http://mathworld.wolfram.com/NumberFieldSieve.html),
+    researchers were recently able to [factor RSA-576](http://www.rsasecurity.com/company/news/releases/pr.asp?doc_id=3520),
+    a 576-bit (174 decimal digits) composite integer offered as a challenge problem
+    by RSA Security. This effort required 100 workstations and 3 months of number
+    crunching. The running time of this algorithm is super-polynomial but sub-exponential
+    - O(exp(c (log n)^(1/3) (log log n)^(2/3))).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Improper usage.* The RSA system can also be broken if it is used improperly.
+    For example, if Bob decides to use a small *private* exponent to lessen his computational
+    burden for decryption, then he is sacrificing security. If d < 1/3 n^(1/4), then
+    can recover d in polynomial time (Wiener attack). Note that it is okay to use
+    a small public exponent e, and 65,537 is common in practice. Another mistake is
+    to allow two participants to share the same modulus n (even if neither party knows
+    how to factor n). For example, suppose Bob and Ben have (d1, e1) and (d2, e2)
+    for their private and public exponents, respectively, but they are both using
+    n as their modulus. Then it is possible for either party to discover the other''s
+    private exponent (Simmon''s attack).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Side channel attack.* Exploit physical information leaked from machine, including
+    electromagnetic emanations, power consumption, diffuse visible light from CRT
+    displays, and acoustic emanations. For example, in a *timing attack* Eve gleans
+    information about Bob''s private key by measuring the amount of time it takes
+    for Bob to exponentiate. If Bob is using a highly optimized exponentiation routine,
+    then Eve can discover enough information to reveal Bob''s private key. Recently,
+    Dan Boneh showed how to use this technique to break SSL on a LAN.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: It is a long-standing open research question whether or not there is a way to
+    break the RSA system without factoring or physical access. There is no guarantee
+    that RSA is secure even if factoring is hard. Also, there are currently know guarantees
+    that factoring is hard other Also, currently no mathematical guarantee that factoring
+    is hard! FACTOR and its complementary problem NON-FACTOR are both in NP. This
+    makes it unlikely that FACTOR is NP-complete since this would imply NP = coNP...
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Semantic security.** Other stronger notions of security. A public key cryptosystem
+    is *semantically secure* if anything Eve can compute in polynomial time with the
+    ciphertext can be computed without the ciphertext. Thus, observing the ciphertext
+    provides no useful information. For example, we shouldn''t be able to determine
+    if the last bit of the plaintext is 0 or 1 or if the plaintext has more 1 bits
+    than 0 bits. The RSA system is not semantically secure, and in fact no deterministic
+    scheme can be. This is not just a theoretical shortcoming. To see why, suppose
+    that Eve knows Alice is going to send Bob either the message `ATTACK` or `RETREAT`.
+    Eve can encrypt both message using Bob''s public key and then compare against
+    the encrypted message that Alice sends to Bob. Thus, Alice can learn exactly which
+    message was sent. Naive ideas like appending a random sequence of 0''s and 1''s
+    to the plaintext before encrypting do not typically guarantee additional security.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Provably secure cryptosystems.** It is a bit unsatisfying to be using a cryptosystem
+    that is not provably as difficult as some hard problem, e.g., factoring. Theoretical
+    highground = Blum-Goldwasser (1985). Provably as hard as factoring, semantically
+    secure. Based on the probabilistic encryption scheme of Goldwasser and Micali.
+    Comparable in speed to RSA.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Electronic voting.** Need a crypto scheme that makes it possible to confirm
+    that your vote was correctly counted, without revealing whom the vote was for.
+    Need the second condition to prevent someone from "buying" your vote since if
+    they have no way to verify for whom you voted, they have no incentive to bribe
+    you.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Zero knowledge.** Alice wants to prove to Bob that a graph G is 3 colorable,
+    but doesn''t want to reveal any additional information. Example generalizes to
+    many other problems since 3Color is NP complete.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Digital rights management.** In the traditonal setting, the Alice, Bob, and
+    Eve who are trying to communicate are human beings, and they use a computer to
+    assist with the comptuation. An intriguing variant is when Alice and Bob are computers,
+    and Eve is a human being. This is exactly the setting that the music industry
+    envisions with digital rights management. In this case Alice is your computer,
+    Bob is your speakers, and you are Eve. The music industry wants only your computer
+    to be able to play the legally purchased music on your computer, but does not
+    want you to be able to intercept the raw audio data. We can quickly imagine a
+    world where there are restrictions for copying DVDs, runnig software, printing
+    documents, and forwarding email. All of these restrictions will be enforced via
+    cryptographic algorithms and protocols.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Goal: transform a program into an obfuscated version that computes the same
+    function, but reveals no extra information (e.g., the source code) to a polynomial-bounded
+    adversary. Obfuscation not possible in general.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Security.** Cryptography is only one part of overall computer security. This
+    [survey](http://news.bbc.co.uk/1/hi/technology/3639679.stm) revealed that 70%
+    of people would reveal their computer password in exchange for a chocolate bar.
+    One security expert comments "using encryption on the Internet is the equilvant
+    of arranging an armored car to deliver credit card information from someone living
+    in a cardboard box to someone living on a park bench."'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**CAPTCHAs.** Completely automated public Turing test to tell computers and
+    humans apart. Reverse Turing test where computer is the judge, trying to distinguish
+    between a human and a computer. [New York Times article](http://www.nytimes.com/2002/12/10/science/physical/10COMP.html).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q+A
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Write a program to empirically determine the running time of the methods methods
+    `BigInteger.add`, `BigInteger.multiply`, `BigInteger.mod`, and `BigInteger.modExp`.
+    Try to model the running time of each operation as c N^k seconds for some constants
+    c and k. Use `BigInteger.rand` to generate random input parameters. For add, multiply,
+    and modular exponentiation use N-bit integers for all of the arguments; for division,
+    use a N-bit numerator and an N/2-bit denominator.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program [RandomPrime.java](RandomPrime.java.html) that takes a command-line
+    argument N and prints out an N-bit integer that is (probably) prime. Use `BigInteger.probablePrime`
+    for primality testing and `SecureRandom` to generate cryptographically secure
+    pseudorandom numbers.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Estimate the running time of [RandomPrime.java](RandomPrime.java.html) as a
+    function of the number of bits N.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Suppose that instead of using `RandomPrime.java` to choose a prime with N bits,
+    you used the following strategy: generate all primes with at most N bits, and
+    choose a random one. What will happen if N is large, say 512?'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Suppose that instead of using reapeated squaring to compute a^b mod c, you repeatedly
+    multiply a to itself, b times, modding out by c. Estimate how long will it take
+    if a, b, and c are N bit integers.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'What is the complexity of the following problem: given an even integer x, determine
+    if x has any odd factors greater than one. Answer: polynomial - check whether
+    x is a power of 2.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'What is the complexity of the following problem: Given an even integer x and
+    another integer y, determine whether x has any odd factors between 3 and y. Answer:
+    equivalent to factoring problem.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Extended Euclid''s algorithm.** Extend Euclid''s algorithm for computing
+    the greatest common divisor of p and q to also compute coefficients a and b (possibly
+    zero or negative) such that ap + bq = gcd(p, q). Write a program [ExtendedEuclid.java](ExtendedEuclid.java.html)
+    that takes two command line parameters p and q and outputs gcd(p, q) and a pair
+    of integers a and b as described above.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Hint: since your method needs to return three integers, consider using an array
+    of three elements.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Best rectangle.** Given area A of a rectangle, find a rectangle with integer
+    width and height whose area is A and such that the difference between the height
+    and width are as close to each other as possible. For example, if A = 48, then
+    the best rectangle is 6-by-8 and not 3-by-16 or 4-by-12. Show that if you could
+    solve this problem, you could break the RSA cryptosystem.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Buckets of water.** Given two buckets of capacity p and q, a receptacle of
+    infinite capacity, a water hose, and a drain, devise a method to get exactly k
+    liters of water into the receptacle using the following rules:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: You can fill either of the two buckets with the huse.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: You can empty either bucket to the drain.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'You can transfer water between the two buckets or either bucket and the receptacle
+    until one is full or ther other is empty.Prove that you can solve the problem
+    if and only if k is a multiple of gcd(p, q). Hint: use the fact from previous
+    exercise that there exist integers a and b such that ap + bq = gcd(p, q).'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Multiplicative inverse.** Given a positive integer n, a *multiplicative inverse
+    mod b* of an integer k is an integer x such that (k * x) % n = 1\. Such an inverse
+    exists if and only if gcd(k, n) = 1\. Write a program [Inverse.java](Inverse.java.html)
+    that reads in two command line arguments k and n and computes the modular inverse
+    if it exists. *Hint:* use the answer to the previous exercise. See also `BigInteger.modInverse`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Breaking the RSA cryptosystem.** One potential way to break the RSA cryptosystem
+    is to compute φ(n) given n. Recall that if n = pq, then φ(n) = (p-1)(q-1). Show
+    that computing φ(n) is equivalent to factoring.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: obviously if you can factor n = pq, then computing φ(n) = (p-1)(q-1)
+    is easy. To see the other direction, observer that n + 1 - φ(n) = pq + 1 - (p-1)(q-1)
+    = p + q = n/q + q. Thus q² - (n + 1 - φ(n))q + n = 0. Assuming we know φ(n), we
+    can solve the quadratic equation for q and recover one of the factor of n. We
+    can recover the other factor p by computing n/q.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Generating public and private RSA keys.** Write a program [RSA.java](RSA.java.html)
+    to generate a key pair for use with the RSA cryptosystem, determine two N/2 bit
+    primes p and q. Set e = 65537, compute n = (p-1)(q-1), and find a number d such
+    that (e * d) % n == 0\. Assuming gcd(e, n) = 1, the inverse d will exist. *Hint:*
+    use the [RandomPrime.java](RandomPrime.java.html) to compute p and q, and use
+    [Inverse.java](Inverse.java.html) to compute d.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Sophie Germaine primes.** The security of the RSA cryptosystem appears to
+    be improved if you use special types of primes for p and q. Specifically, a [Sophie
+    Germaine prime](http://www.wikipedia.org/wiki/Sophie_Germain_prime) is a prime
+    number p where (p-1)/2 is also prime. Generate a public and private RSA key where
+    p and q are Sophie Germaine primes. Investigate how long it takes to find such
+    a prime as a function of the number of bits N.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Fermat primality testing.** The Fermat primality test is an algorithm that
+    takes an odd integer n and reports that it is definitely composite or "likely"
+    prime. By "likely", the algorithm is sometimes wrong, but not too often. Fermat''s
+    theorem says that if p is prime and gcd(a, p) = 1, then a^(p-1) = 1 (mod p). A
+    version of the converse is used as a crude primality test in the PGP cryptosystem:
+    if 2^(p-1) = 3^(p-1) = 5^(p-1) = 7^(p-1) = 1 (mod p), then use p as a prime. Unfortunately,
+    there are some numbers that satisfy this Fermat test, but are not prime (e.g.,
+    29341, 46657, 75361).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Miller-Rabin primality testing.** The Miller-Rabin algorithm is a randomized
+    algorithm for determining whether an odd integer n is prime. It takes a security
+    parameter t and outputs either `prime` or `composite`. If it outputs `composite`,
+    then n is definitely composite; if it outputs `prime`, then n is probably prime,
+    but the algorithm could be wrong with probability 2^(-t).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**Factoring.** Win $200,000 from [RSA Security](http://www.rsasecurity.com/rsalabs/challenges/factoring)
+    for factoring a 2048 bit number (616 digits). Factor a 64 bit number (32 bit RSA)
+    using Program xyz in under a minute. How long to factor a 128 bit number?'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Pollard''s rho method.** Pollard''s rho method is a randomized factoring
+    algorithm that can factor 128 bit numbers in a reasonable amount of time, especially
+    if the numbers have some small factors. It is based on the following fact: if
+    d is the smallest nontrivial factor of N and x - y is a nontrivial multiple of
+    d then gcd(x-y, N) = d. A naive method would be to generate a bunch of random
+    values x[1], x[2], ..., x[m] and compute gcd(x[i]-x[j], N) for all pairs i and
+    j. [Pollard''s rho method](http://planetmath.org/encyclopedia/PollardsRhoFactorization.html)
+    is an ingenious method way to find x and y without doing all of the pairwise computations.
+    It works as follows: choose a and b at random between 1 and N-1, and initialize
+    x = y = a. Repeatedly update x = f(x), y = f(f(y)), where f(x) = x² + b as long
+    as gcd(x-y, N) = 1. The gcd is a factor of N, but if you get unlucky, it could
+    be equal to N. By randomly choosing a and b each time, we ensure that we never
+    get too unlucky. Write a program [PollardRho.java](PollardRho.java.html) that
+    takes a command-line argument N and uses the Pollard rho method to compute a prime
+    factorization of N. Estimate the running time as a function of N.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Feit-Thompson Conjecture.** Disprove the [Feit-Thompson conjecture](http://mathworld.wolfram.com/Feit-ThompsonConjecture.html):
+    there are no two primes p and q such that (p^q - 1) / (p - 1) and (q^p - 1) (q
+    - 1) have a common factor other than 1. Counterexample: (17, 3313) with common
+    factor 112643\.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Karatsuba multiplication.** Write a program [Karatsuba.java](Karatsuba.java.html)
+    that multiplies two integers using the [Karatsuba algorithm](http://mathworld.wolfram.com/KaratsubaMultiplication.html).
+    This ingenious algorithm computes the product of two 2N-bit integers using only
+    three N-bit multiplications (and a linear amount of extra work). To multiply x
+    and y, break up x and y into N-bit chunks and use the following identity:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Your recursive algorithm should compute the number of bits N and cutoff to the
+    default `BigInteger.multiply` method when N is small (say 10,000) and apply the
+    Karatsuba divide-and-conquer strategy otherwise. Investigate the optimal cutoff
+    point and compare its effectiveness against `BigInteger.multiply` when N = 10
+    million.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Factoring reduces to finding a factor.** Given a function `factor(N)` that
+    returns 1 if N is prime, and any nontrivial factor of N otherwise, write a function
+    `factorize(N)` that returns the prime factorization of N.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Perfect power.** An integer N is a perfect power if N = p^q for two integers
+    p ≥ 2 and q ≥ 2. Design an efficient algorithm (polynomial in the number of bits
+    in N) to determine if N is a perfect power, and if so, find its prime factorization.
+    *Hint*: for all q ≤ lg N binary search for p satisfying N = p^q.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Euler''s conjecture.** In 1769 Euler conjectured that there are no positive
+    integer solutions to a⁴ + b⁴ + c⁴ = d⁴. Noam Elkies discovered the first counterexample
+    2682440⁴ + 15365639⁴ + 18796760⁴ = 20615673⁴ over 218 years later. Write a program
+    [Euler.java](Euler.java.html) to disprove Euler''s conjecture. The brute force
+    solution outlined in Exercise XYZ won''t work for two reasons: (i) it will take
+    too much time to find the solution using a quadruply nested loop, and (ii) computing
+    a⁴ will overflow a `long` since the smallest such counterexample is 95800⁴ + 217519⁴
+    + 414560⁴ = 422481⁴.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Use the following idea. Iterate over all integers a and b between 1 and N and
+    insert a⁴ + b⁴ into a hash table. Then, iterate over all integers c and d between
+    1 and N and search to see if d⁴ - c⁴ is in the hash table. Use extended precision
+    integers to avoid overflow.
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Using extended precision integers can be a significant overhead over using
+    primitive types. Instead of inserting a⁴ + b⁴ into the hash table, insert a⁴ +
+    b⁴ modulo p, where p is some big prime, say XYZ. Then, iterate over all c and
+    d and search for d⁴ - c⁴ modulo p. If there''s a match, use extended precision
+    arithmetic to check that it isn''t just an coincidental collision. Hint: to avoid
+    overflow when computing a⁴ + b⁴ modulo p, modulo out multiples of p after each
+    multiplication.'
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Fingerprinting.** Alice and Bob maintain two copies of a large genomics database
+    in different locations. For consistency, they want to be ble to compare whether
+    the two databases are identical. We interpret the databases as N-bit integers,
+    say A and B. Because N is very large, they can''t afford to transmit the whole
+    database. Instead, consider the following scheme for sending a *fingerprint* of
+    the data that enables Alice and Bob to check if the data is inconsistent. Alice
+    generates a random prime number p between 2 and, say, N² and sends p and (A %
+    p). This takes only O(log N) bits. Bob declares that A and B are the same if ((A
+    % p) == (B % p)). The probability of having a false negative (a no that should
+    have been a yes) from the scheme is zero. Show that the probability of having
+    a false positive (a yes that should have been a no) goes to 0 as n goes to infinity.
+    *Hint*: Use the fact that the number of primes less than n² is at least c n² /
+    log n, for some constant c > 0. How many bits are sent?'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Flipping a coin over the phone.** Alice and Bob are in the midst of a bitter
+    divorce. They have decided to flip a coin to see who will get custody of their
+    only son Carl. However, they refuse to see each other in person and they don''t
+    want anyone else to know how the resolved the custody dispute. In other, words,
+    we want to devise a method to flip a fair coin over a phone line or the Internet
+    so that neither party can cheat. Here is an elegant protocol:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Alice multiplies together two or three large primes to sends the product N to
+    Bob.
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Bob receives the integer N and responds with the number 2 or 3.
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Alice waits for a valid response from Bob and then sends Bob the prime factorization
+    of N.
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: If Bob guesses the correct number of factors, then he gets custody. Otherwise,
+    assuming Alice follows the protocol, she wins custody.
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Explain why the system works by answering each of the following questions. You
+    may assume that there is no efficient way to determine whether a given integer
+    N has at least 3 nontrivial factors (although this is an unresolved conjecture).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: How can Alice compute N efficiently?
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Why can't Bob efficiently determine the true answer on his own?
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: How can Bob efficiently check that Alice sent him the correct factorization
+    of N? In other words, what's to prevent Alice from revealing two factors (one
+    of which is not prime) if Bob says 3, even if she multiplied three (or more) primes
+    together?
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Poker over the phone.** Use the *bit-commitment* scheme described above to
+    develop a protocol to play poker over the phone, say between two parties.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Discrete log.** Let *p* be a prime number. The *discrete log* of *a* to the
+    base *b* is the unique integer *x* between 0 and *p*-1 such that *a = b^x (mod
+    p)*. For example, if *p* = 97, *b* = 5, and *a* = 35, then log[5] 35 = 32 since
+    5^(32) = 35 (mod 97). Write a program `DiscreteLog.java` that takes three command
+    line inputs a, b, and p, and computes *log[b] a* modulo *p* via brute force search.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Diffie Hellman.** Let *p* be a prime number, and let *a* and *b* be two integers.
+    Given *p*, an *x*, *x^a (mod p)* and *x^b (mod p)*, the *Diffie-Hellman* problem
+    is to compute *x^(ab) (mod p)*.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Rabin''s cryptosystem.** Select p, q to be prime such that p = 3 mod 4 and
+    q = 3 mod 4. The public key is n = pq and the private key is (p, q). To encrypt,
+    compute E(m) = m² mod n. To decrypt compute D(c) = sqrt(c) mod n. How to compute
+    square root: c = x² mod n? Use extended Euclid''s algorithm to find a, b such
+    that ap + bq = 1\. Compute r = c^((p+1)/4) mod p and s = c^((q+1)/4) mod q. Compute
+    m = (aps + bqr) mod n and t = (aps - bqr) mod n. The four square roots of c are
+    m, -m mod n, t, and -t mod n.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Analog private-key exchange.** You are stranded on an island with a box,
+    a padlock with key, and a copy of Introduction to Computer Science. You have a
+    friend on another island who also has a box, a padlock with key, but wants to
+    borrow your copy of the textbook. You can ship stuff via an unscrupulous courier
+    service who will pillage anything inside the box if it is left unlocked. How can
+    you get your book to your friend?'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Cryptographically secure hash functions.** SHA-1 and MD5\. Can compute it
+    by converting string to bytes, or when reading in bytes 1 at a time.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**RSA in Java.** Built-in functionality for RSA or DSA. Untested code below.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**Blum-Blum-Shub pseudorandom bit generator.** Choose two distinct N-bit primes
+    p and q such that p mod 4 = q mod 4 = 3. Set n = pq and choose a starting value
+    x[0] by selecting a random seed 1 < s < n such that gcd(s, n) = 1. Form the sequence
+    of integers x[0] = s² mod n and x[i+1] = x[i] x[i] mod n. Use x[i] % 2 as the
+    sequence of pseudorandom bits. No need to keep n secret. Discovering any pattern
+    (in poly time) is provably as hard as factoring n. Note: we still need to generate
+    p, q, and s at random, but these have only O(N) bits, and we will be able to generate
+    2^N pseudorandom bits. Can use as a one-time pad.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Can also be used for directly for [public-key crypto](http://math.boisestate.edu/~marion/teaching/crypto1f03/bbs_the_system.htm)
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**VCR Plus decoding.** Remote control scheme for recording programs on a VCR
+    using special code printed in newspapers. Bad cryptography so easy to break. [paper](http://citeseer.nj.nec.com/260048.html)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Pascal''s triangle.** One way to compute the kth row of Pascal''s triangle
+    (for k > 2) is to compute (2^k + 1)^(k+1) and take its binary representation k
+    bits at a time.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**Bailey-Borwein-Plouffe algorithm.** Compute the ith binary digit of π without
+    computing the earlier digits using the [BBP algorithm](http://crd.lbl.gov/~dhbailey/expmath/expbook-C.pdf)
+    which requires modular exponentiation.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Secret sharing.** Want to distribute a message to N people so that any 3
+    of them can recover the original message, but any 1 or 2 cannot. [reference](http://www.chiark.greenend.org.uk/pipermail/ukcrypto/1999-November/007055.html).
+    [Scientific American puzzle](http://sciam.com/article.cfm?chanID=sa006&colID=14&articleID=0009F978-0583-1FFB-809C83414B7F0000)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Mersenne prime.** A *Mersenne prime* is a prime of the form M_p = 2^p - 1,
+    where p is an odd prime. To test whether M_p is prime, form the following sequence:
+    s_0 = 4, s_i+1 = (s_i)^2 - 2 mod M_p. M_p is prime iff s_(p-2) = 0 mod M_p. This
+    is method known as the [Lucas-Lehmer primality test](http://en.wikipedia.org/wiki/Lucas-Lehmer_test_for_Mersenne_primes).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL

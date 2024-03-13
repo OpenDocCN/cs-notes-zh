@@ -1,0 +1,700 @@
+- en: 9.2   Symbolic Methods
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/java/92symbolic](https://introcs.cs.princeton.edu/java/92symbolic)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: This section under major construction.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Symbolic integration.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: In introductory calculus, we learn various rules for differentiating and integrating
+    functions. Differentiating is a mechanical process with a half dozen or so general
+    purpose rules.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Sum and difference rule.* (f(x) ± g(x))′ = f′(x) ± g′(x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Product rule.* (f(x) g(x))′ = f(x) g′(x) + g(x)f′(x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Quotient rule.* (f(x)/g(x))′ = (f′(x) g(x) - g′(x) f(x)) / g²(x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Power rule.* (x^k)′ = kx^(k-1).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Chain rule.* (f(g(x))′ = f(g(x)) g′(x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There are also some rules for special functions that are typically derived once
+    and then memorized, e.g., the derivative of sin(x) is cos(x); the derivative of
+    exp(x) is exp(x); the derivative of ln(|x|) is 1/x; the derivative of sec(x) is
+    sec(x) tan(x); the derivative of arcsin(x) is (1 - x²)^(-1/2).
+  prefs: []
+  type: TYPE_NORMAL
+- en: On the other hand, we learn that indefinite integration is a much harder problem.
+    Calculus students typically learn a set of ad hoc pattern matching rules for finding
+    the antiderivative of a function of one variable. (Below, we assume constant term
+    of antiderivative is zero.)
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Constant rule.* The antiderivative of cf(x) is the product of c and the antiderivative
+    of f(x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Sum rule.* The antiderivative of f(x) + g(x) is the sum of the antiderivatives
+    of f(x) and g(x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Polynomials.* The antiderivative of f(x) = x^b (for b &neq; 0 and b &neq;
+    1) is x^(b-1) / (b-1). By combining this rule with the two previous ones, we can
+    determine the antiderivative of any polynomial.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Table lookup.* Memorize the antiderivatives of a variety of simple functions.
+    Ex: sin(x), tan(x), arctan(x). Ex: Antiderivative of a^x is a^x / ln a.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Substitution.* Often useful when f(x) = g(h(x)). Ex: f(x) = sin(√x) or f(x)
+    1/(1 + x^2) then substitute x = tan t. It''s not always obvious what you should
+    substitue. Often when you spot a term like sqrt(x² ± a²), then a trig substituion
+    helps.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Integration by parts.* Antiderivative of f(x)g′(x) equals f(x)g(x) minus the
+    antiderivative of g(x)f′(x). Need to get lucky to have function break up into
+    required terms. Also need to recognize the right pattern. Ex: anitderivative of
+    x e^x or x² sin x. [Interesting example](http://en2.wikipedia.org/wiki/Integration_by_parts)
+    that stresses ad hocness: f(x) = e^x cos x and f(x) = ln(x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Logarithm rule.* If f(x) = g′(x) / g(x), then the antiderivative of f(x) is
+    ln(|g(x)|). Ex: f(x) = tan(x) = sin(x) / cos(x) = -g''(x) / g(x), where g(x) =
+    cos(x). Thus, the antiderivative of f(x) is ln|sec(x)|.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Partial fraction decomposition.* Ex: f(x) = (x⁴ - x³) / (x² + 2)(x - 3). [Reference](http://www.shu.edu/projects/reals/integ/techniqs.html).
+    Need to divide polynomials so that degree of denominator is not less than that
+    of numerator. Need to factor and reduce polynomials to simplest form. (Generalization
+    of Euclid''s algorithm.) Need to solve a system of linear equations. Multiple
+    roots makes things more complicated. Method enables us to integrate all fractions
+    of two polynomials.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*More ad hoc rules.* These rules are not sufficient. Ex: f(x) = 1 / (x³ + x
+    + 1).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Writing a computer program to perform symbolic integration appears to be a daunting
+    task. In the early 1960s, only humans could find the indefinite integral of a
+    function, except in the most trivial of cases. One approach is to mimic the method
+    taught in introductory calculus classes - build a huge table of known integrals
+    and try to pattern match. In the 1800s Liouville sought an algorithm for integrating
+    elementary functions. In the 19th centruy, Hermite discovered an algorithm for
+    integrating *rational functions* - used partial fractions as basic primitive.
+    An *elementary function* is one that can be obtained from rational-valued functions
+    by a finite sequence of nested logarithm, exponential, and algebraic numbers or
+    functions. Since √-1 is elementary, all of the "usual" trig and inverse trig functions
+    (sin, cos, arctan) fall into this category since they can be re-expressed using
+    exponentials and logarithms of imaginary numbers. Not all elementary functions
+    have elementary indefinite integrals, e.g., f(x) = exp(-x²), f(x) = sin(x²), f(x)
+    = x^x, f(x) = sqrt(1 + x³).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Finding a finite method for integrating an elementary function (if it exists)
+    was the central problem in symbolic integration for many decades. Hardy (1916)
+    stated that "there is reason to suppose that no such method can be given", perhaps
+    foreshadowing Turing's subsequent results on undecidability. In 1970, Robert Risch
+    solved the problem, providing a provably correct and finite method for integrating
+    any elementary function whose indefinite integral is elementary. (Actually, his
+    method is not universally applicable. To apply it, you need to solve a hard differential
+    equation. Lots of effort has gone into solving this differential equation for
+    a variety of elementary functions.) Refinements of this method are commonplace
+    in modern symbolic algebra systems like Maple and Mathematica. Work also extended
+    to handle some "special functions." Relies on deep ideas from algebra and number
+    theory. These techniques have enabled mathematicians to find new integrals that
+    were previous not known or tabulated, and also to correct a mistakes in well-known
+    collections of integrals! For exceptionally curious readers, here is a [symbol
+    integration tutorial](../../papers/bronstein.pdf).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Polynomials.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Polynomials are a very special type of elementary functions. Our goal is to
+    be able to write programs that can manipulate polynomials and perform computations
+    such as:![Polynomial](../Images/c2a78bb8e6607d46b006c998a8743820.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: We also want to be able to evaluate the polynomial for a given value of x. For
+    x = 0.5, both sides of this equation have the value 1.1328125\. The operations
+    of multiplying, adding, and evaluating polynomials are at the heart of a great
+    many mathematical calculations. Many applications for simple operations (add,
+    multiply), and surprising applications for more complicated operations (division,
+    gcd), e.g., [Sturm's algorithm](http://mathworld.wolfram.com/SturmFunction.html)
+    for find the number of real roots of a polynomial in a given interval, solving
+    systems of polynomial equations, Groebner bases. Widely used in systems and control
+    theory since Laplace transform of common signals results in ratio of two polynomials.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Polynomial API.* The first step is to define the API for the polynomial ADT.
+    We begin with polynomials whose coefficients and exponents are integers. For a
+    well-understood mathematical abstraction such as a polynomial, the specification
+    is so clear as to be unspoken: We want instances of the ADT to behave precisely
+    in the same manner as the well-understood mathematical abstraction. Immutable.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*A sample client.* Program [Binomial.java](Binomial.java.html) reads in an
+    integer N from the command line and prints out the expansion of (1+x)^N.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*Implementation.* Program [Polynomial.java](Polynomial.java.html) represents
+    a univariate polynomial of degree `deg` using an integer array `coef[]` where
+    `coef[i]` records the coefficient of *x^i*.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: We provide one constructor which takes two arguments `a` and `b` and creates
+    the monomial ax^b. The helper method `degree()` computes the actual degree of
+    the polynomial (zero if `a` is zero).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: To add two polynomials `a` and `b`, we loop through the two arrays and add their
+    coefficients. The maximum degree of the resulting polynomial is `a.deg + b.deg`.
+    We initialize `c` to be the polynomial of degree `N` with all zero coefficients.
+    We are careful to maintain the invariant that `c.deg` is the actual degree of
+    the polynomial (which might be different from `a.deg + b.deg` if the leading coefficients
+    of the two summands cancel each other out).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: To multiply two polynomials, we use the elementary algorithm based on the distributive
+    law. We multiply one polynomial by each term in the other, line up the results
+    so that powers of x match, then add the terms to get the final result.
+  prefs: []
+  type: TYPE_NORMAL
+- en: To evaluate a polynomial at a particular point, say *x* = 3, we can multiply
+    each coefficient by the appropriate power of *x*, and sum them all up. The implementation
+    of the `evaluate` uses a direct optimal algorithm known as *Horner's method*,
+    which is based on parenthesizations
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Horner''s method](../Images/df3cf3ae62e1ada042240d0ff134c6d5.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: The following code fragment performs polynomial evaluation using Horner's method.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: Rational arithmetic.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Program [Rational.java](Rational.java.html) is an abstract data type for nonnegative
+    rational numbers. It implements the following interface. To reduce fractions,
+    we use Euclid's greatest common divisor algorithm as a subroutine to find the
+    least common multiple (lcm) of two integers.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: Arbitrary precision arithmetic.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The `java.math` library provides two ADTs [BigInteger](http://docs.oracle.com/javase/6/docs/api/java/math/BigInteger.html)
+    and [BigDecimal](http://docs.oracle.com/javase/6/docs/api/java/math/BigDecimal.html)
+    that provide support for arbitrary precision arithmetic.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Maple.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Maple is a popular system for symbolic mathematical computation. It was developed
+    by a research group at the University of Waterloo, and is available at many Universities.
+    It can be used for calculus, linear algebra, abstract algebra, differential equations,
+    plotting functions, and numerical calculations. It is also a general purpose programming
+    language with conditionals, loops, arrays, and functions.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The following sessions illustrates basic arithmetic and built-in functions.
+    Note the the answers given are exact, and no floating point approximations are
+    made unless we explicitly convert to floating point. All statements end with a
+    semicolon (in which case the result is printed to the screen) or a colon (in which
+    case the result is suppressed).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs: []
+  type: TYPE_PRE
+- en: One of the most powerful features of Maple is its support of symbolic variables.
+    Maple uses `:=` for assignment statements since `=` is reserved for mathematical
+    equality.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs: []
+  type: TYPE_PRE
+- en: Equation solving, arrays, conditionals, loops, functions, libraries, matrices,
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs: []
+  type: TYPE_PRE
+- en: garbage collection, variables are global so must be careful not to reuse - can
+    reset with `x := 'x'`.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Integration in Maple.* When you integrate a function in Maple, it tries a
+    number of different integration methods.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Polynomials.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Table lookup.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Heuristics: substitutions, integration by parts, partial fractions, special
+    forms involving trig and polynomials'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Risch algorithm: Horowitz reduction, Lazard/Rioboo/Trager method'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: To witness Maple in action,
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs: []
+  type: TYPE_PRE
+- en: '*Using Maple.*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs: []
+  type: TYPE_PRE
+- en: Q + A
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Q. When I get an error in Maple, I don't get back to the Maple prompt.
+  prefs: []
+  type: TYPE_NORMAL
+- en: A. Try typing a semicolon followed by return.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Modify the `toString()` method of `Rational` so that it suppresses the denominator
+    if it is 1, e.g., `5` instead of `5/1`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Add `isOdd()` and `isEven()` methods to the polynomial ADT to indicate if the
+    polynomial is odd (all nonzero coefficients have odd exponents) or even (all nonzero
+    coefficients have even exponents).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Add `equals()` and `compareTo()` methods to `Rational`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Modify the `toString()` method of `Polynomial` so that it suppresses the exponent
+    in the x^1 term and the x^0 in the constant term. Some boundary cases to check:
+    f(x) = 0, 1, and x.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Add an `equals()` method to `Polynomial`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Stave off overflow in `Rational` using the following ideas: .... Check for
+    overflow in `Rational` and throw an exception if the result will overflow.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Add a method `minus()` to `Rational` and support for negative rational numbers.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program [Taylor.java](Taylor.java.html) that creates a polynomial (of
+    rational coefficients) containing the first 10 terms of the Taylor expansion of
+    e^x, sin x and e^x sin x.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Expand (1-x)(1-x^2)(1-x^3)(1-x^4)...(1-x^n). When n = 3, this is 1 -x - x^2
+    + x^4 + x^5 - x^6. In the limit, all of the coefficients are 0, +1, or -1.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Chebyshev polynomials.** The *Chebyshev polynomials* are defined by solutions
+    to the equation'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Although the solution appears to be trigonometric, its solution is a polynomial
+    in x. The first few such polynomials are given below. In general T(n) = 2x * T(n-1)
+    - T(n-2).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'The Chebyshev polynomials have many special arithmetic properties which makes
+    them useful mathematical objects in interpolation theory, approximation theory,
+    numerical integration, ergodic theory, number theory, signal processing, and computer
+    music. They also arise from the differential equation:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Write a program [Chebyshev.java](Chebyshev.java.html) that takes a command-line
+    parameter N and prints out the first N Chebyshev polynomials.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Hermite polynomials.** Write a program [Hermite.java](Hermite.java.html)
+    that takes an integer input N and prints out the first N Hermite polynomials.
+    The first few Hermite polynomials are given below. In general H(n) = 2x * H(n-1)
+    - 2(n-1) * H(n-2).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**Fibonacci polynomials.** Write a program `Fibonacci.java` that takes an integer
+    input N and prints out the first N Fibonacci polynomials. The first few Fibonacci
+    polynomials are given below. In general F(n) = xF(n-1) + F(n-2).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'How does the sequence relate to the Fibonacci sequence? *Hint*: evaluate the
+    polynomials at x = 1.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Composition.** Add method for composing two polynomials, e.g., `f.compose(g)`
+    shoudl return the polynomial f(g(x)).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Laguerre''s method.** Write a program to find a real or complex root of a
+    polynomial using Laguerre''s method. Given a polynomial p(z) of degree N and a
+    *complex* starting estimate z[0], apply the following update rule until convergence.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![](../Images/dbcc41df46e9beb206e9f850fdcb0b0b.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Choose the sign of the term in the denominator to minimize |z[k+1] - z[k]|.
+    Laguerre's method has superior global convergence properties to Newton's method,
+    and guarantees to converge to a root if the polynomial has only real roots.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Farey sequence.** The [Farey sequence](http://mathworld.wolfram.com/FareySequence.html)
+    of order N is the increasing sequence of all rational numbers (in lowest common
+    form) between 0 and 1 whose numerator and denominator are integers between 0 and
+    N.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Write a program [Farey.java](Farey.java.html) that takes a command line parameter
+    N and prints the Farey sequence of order N. Use the rational number data data
+    type created above.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: 'To compute the Farey sequence, you can use the following amazing relationship:
+    If m/n and m''/n'' are two consecutive elements in the Farey sequence of order
+    N, then the next element is m''''/n'''' which can be computed as follows (where
+    the division is integer division):'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**Best rational approximation.** Newscasters often try to simplify unwieldy
+    ratios like 0.4286328721345 to a nearby rational number with small numerator and
+    denominator like 4/7. What is the best way to do this? The answer depends on the
+    size of the denominator that you''re willing to tolerate, so our goal is to list
+    the best approximations and let the reporter choose the desired one. Here are
+    the best few rational approximations to the mathematical constant e:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE19]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Although 27/10 is a decent approximation to e, it is excluded from the list
+    since 19/7 provides a better approximation with an even smaller denominator. The
+    [Stern-Brocot tree method](http://www.cut-the-knot.com/blue/Stern.shtml) gives
+    an elegant mathematical solution. Here''s the algorithm for generating the best
+    upper and lower rational approximations to a real number x:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Set the left endpoint to 0/1 and the right endpoint to 1/0.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Compute the mediant of left and right endpoints. The *mediant* of two rationals
+    a/b and c/d is (a+c)/(c+d).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the mediant is equal to x (up to machine precision) stop. Otherwise, if the
+    mediant is less than x, set the right endpoint to the mediant. Otherwise, set
+    the left endpoint to the mediant.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: As you iterate the above procedure, print out each new term if it provides a
+    better approximation. Write a program [RationalApprox.java](RationalApprox.java.html)
+    to print out these best rational approximations.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Stern Brocot tree](../Images/d1bebd823baca1ef35400f8c40e76523.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: '[www.cut-the-knot.com](http://www.cut-the-knot.com)'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Continued fraction.** A continued fraction is an expression of the form a0
+    + 1 / (a1 + 1 / ( a2 + 1 /a3) where a[i] are integers.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Given a continued fraction expansion a0, a1, ..., an, write a program to determine
+    what rational number it corresponds to.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Given a rational number, find its continued fraction expansion. For example
+    159/46 = 3 + 21/46 = 3 + 1 / (46/21) = 3 + 1 / (2 + 4/21) = 3 + 1 / (2 + 1 / (21/4))
+    = 3 + 1 / (2 + 1 / (5 + 1/4)).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Arbitrary precision rational arithmetic.** Write an ADT [BigRational.java](BigRational.java.html)
+    that imlplements arbitrary precision rational numbers. *Hint*: re-implement [Rational.java](Rational.java.html),
+    but use `BigInteger` instead of `int` to represent the numerator and denominator.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Complex rational numbers.** Implement a data type [RationalComplex.java](RationalComplex.java.html)
+    ComplexRational that supports complex numbers where the real and imaginary parts
+    are rational numbers. Use it for deeply zoomed plots of the Mandelbrot set to
+    avoid floating point precision. (Also check for cycles in the Mandelbrot sequence
+    using the doubling trick.)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Polynomial degree.** Add a method `degree()` that computes the degree of
+    a polynomial. Warning: this may not equal the size of the array if we subtract
+    off two polynomials that original had degree 10, we may end up with a polynomial
+    of degree 4.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Rational polynomials.** Create an ADT [RationalPolynomial.java](RationalPolynomial.java.html)
+    for rational polynomials using arbitrary precision rational coefficients. Include
+    a method `integrate(int a, int b)` that that integrates the invoking polynomial
+    from a to b and returns the resulting rational number.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Polynomial division.** Write methods `div()` and `rem()` for division of
+    two polynomials with rational coefficients. Use the following grade school method
+    to compute the quotient and remainder of dividing u(x) into v(x), assuming v(x)
+    is not zero. The quotient q(x) and remainder r(x) are polynomials which satisfy
+    u(x) = q(x) v(x) + r(x) and degree(r(x)) < degree(v(x)).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: If degree(u(x)) < degree(v(x)) return a quotient of zero.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Multiply v(x) by ax^b such that u'(x) = u(x) - v(x)ax^b has degree less than
+    degree(u(x)) and the highest degree terms cancel out
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Return a quotient of ax^b + u'(x) / v(x), where the division is computed recursively
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To compute the remainder, first compute the quotient q(x), then return the remainder
+    r(x) = u(x) - q(x) v(x).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Sturm''s algorithm.** [Sturm''s algorithm](http://mathworld.wolfram.com/SturmFunction.html)
+    is an elegant method to determine the number of real roots of a rational polynomial
+    over a given interval. Given a polynomial p(x), we define the Sturm chain as follows:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: f[0](x) = p(x)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: f[1](x) = p'(x)
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: f[n](x) = f[n-1](x) % f[n-2](x) where % is polynomial remainderThe chain is
+    continued until f[n](x) is a constant. Sturm's theorem asserts that the number
+    of real roots in the interval (a, b) is equal to the difference in the number
+    of sign changes of the two Sturm chains with x = a and x = b. Using rational arithmetic,
+    we get the exact answer; with floating point we would need to take great care
+    to avoid roundoff error.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Polynomial gcd.** Implement Euclid''s algorithm on rational polynomials to
+    find the greatest common divisor of two polynomials. Use the division algorithm
+    from the previous exercise. As with Euclid''s algorithm for integers, we can use
+    the following recurrence gcd((u(x), v(x)) = gcd(v(x), r(x)) where r(x) is u(x)
+    % v(x) as defined in the previous exercise. The base case is gcd(u(x), 0) = u(x).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Polynomial implementation.** Suppose you need fast access to the individual
+    coefficients, but the polynomial is sparse. Use a symbol table to store the coefficients.
+    Probably BST so that you can print coefficients in order or to get the max degree.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Aribtrary precision integer arithmetic.** Develop your own library `MyBigInteger`
+    that implements aribitrary precision integer arithmetic, just as in the Java library
+    [BigInteger](http://docs.oracle.com/javase/6/docs/api/java/math/BigInteger.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Fibonacci numbers.** Write a program [Fibonacci.java](Fibonacci.java.html)
+    to compute Fibonacci numbers using big integers. Use Dijkstra''s recurrence.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Transfer function.** A *transfer function* models how the output of a system
+    changes according to the input. Transfer functions arise in all areas of engineering,
+    and can model the speaker in cell phone, the lens of a camera, or a nuclear reactor.
+    The transfer functions associated with seismometers (and many other mechanical
+    and analog electronic systems) are ratios of two (frequency domain) polynomials
+    with real coefficients p(s) / q(s). Such transfer functions arise frequently in
+    systems and control theory since the Laplace transform of common signals results
+    in ratio of two polynomials. Zeros are values where numerator is 0, poles are
+    values where denominator is 0. Poles are zeros are of fundmanental importance
+    in understanding the behavior of the underlying system. Poles govern stability.
+    If a system is stable and the input is changed, the output will converge to a
+    constant value; if it is unstable (e.g., nuclear reactor at Chernobyl) the output
+    will grow or fall indefinitely. If system is stable, then the real parts of all
+    poles are positive. Zeros affect design of feedback controller. Ex: (3z - 1) /
+    (z - 1/3)(z^2 - 1), 30(z-6)/ z(z^2+4z+13), (s+1)(s^2 + s + 25)/ s^2(s+3)(s^2+s+36).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Arbitrary precision square root.** Write a program [ArbitraryPrecisionSqrt.java](ArbitraryPrecisionSqrt.java.html)
+    that takes two integer command-line arguments x and n, and prints the square root
+    of x, with n digits of precision. Use Newton''s method and java.math.BigDecimal.
+    Newton''s method converges quadratically: each Newton step doubles the number
+    of digits of accuracy.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL

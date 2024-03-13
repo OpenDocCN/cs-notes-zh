@@ -1,0 +1,1429 @@
+- en: 1.5 Input and Output
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/python/15inout](https://introcs.cs.princeton.edu/python/15inout)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: In this section we extend the set of simple abstractions (command-line input
+    and standard output) that we have been using as the interface between our Python
+    programs and the outside world to include *standard input*, *standard draw*, and
+    *standard audio*. Standard input makes it convenient for us to compose programs
+    that process arbitrary amounts of input and to interact with our programs; standard
+    draw makes it possible for us to work with graphics; and standard audio adds sound.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Bird's-Eye View
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '![Bird''s eye view](../Images/dd46b13eb4b28374035e202c88fb90fa.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: The Python programs that we've seen so far take input values from the command
+    line and write a string of characters as output. By default, both command-line
+    input and the output written by the programs are associated with the application
+    running on your computer that accepts commands (that is, the application in which
+    you have been typing `python` commands). We use the generic term *terminal window*
+    to refer to that application.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'So far the Python programs that we''ve seen have used:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Command-line input.* Any Python program can access an array of strings referenced
+    by `sys.argv`. That array contains the sequence of command-line arguments that
+    we type, provided to Python by the operating system. By convention, both Python
+    and the operating system process the arguments as strings, so if we intend for
+    a command-line argument to be a number, we use a conversion function such as `int()`
+    or `float()` to convert it from a string to the appropriate type.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Standard output.* To write output values, we have been using the functions
+    `stdio.write()` and `stdio.writeln()`. When a program calls those functions, Python
+    puts the results in the form of an abstract stream of characters known as *standard
+    output*. By default, the operating system connects standard output to the terminal
+    window. All of the output in our programs so far has appeared in the terminal
+    window.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The program [randomseq.py](randomseq.py.html) uses this model. It takes an integer
+    command-line argument `n` and writes to standard output a sequence of `n` random
+    numbers between 0 and 1, possibly including 0.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'To complete our programming model, we add the following:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Standard input.* The booksite `stdio.py` module defines several functions
+    in addition to `write()` and `writeln()`. Those additional functions implement
+    a standard input abstraction to complement the standard output abstraction. That
+    is, the `stdio` module contains functions that allow your programs to *read* from
+    standard input. Just as a program can write to standard output at any time, a
+    program can read from standard input at any time.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Standard draw.* The booksite `stddraw` module allows your programs to create
+    and write drawings. It implements a simple graphics model that allows your programs
+    to create and write points, lines, and geometric shapes in a window on your computer.
+    `stddraw` also implements features for animation.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Standard audio.* The booksite `stdaudio` module allows your programs to create
+    and play sound. It uses a standard format to convert arrays of floats into sound.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Standard Output
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'This is the API of the part of the `stdio.py` module that is relevant to standard
+    output:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![API for booksite functions related to standard output](../Images/4d3cc1fd9d6b3d4a79a15ca6b7bcb80b.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: The `stdio.writeln()` and `stdio.write()` functions are the ones that you have
+    been using. The `stdio.writef()` function gives you more control over the appearance
+    of the output, and deserves some explanation.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Formatted writing basics.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The simplest kind of call of `stdio.writef()` passes only one argument; that
+    argument should be a string. In that case `stdio.writef()` simply writes the string
+    to standard output, and so is equivalent to `stdio.write()`. A more common call
+    of `stdio.writef()` passes two arguments. In that context the first argument is
+    called the *format string*. It contains a *conversion specification* that that
+    describes how the second argument is to be converted to a string for output. A
+    conversion specification has the form `%w.pc`, where:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Anatomy of a formatted write statement](../Images/55ee8ae35a4c1bdab5424e78e67fe836.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: '`w` is the *field width*. The field width is the number of characters that
+    should be written. A negative field width indicates that the output should be
+    padded with spaces on the right.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`p` is the *precision*. For floats, the precision is the number of digits that
+    should be written after the decimal point. For strings, the precision is the number
+    of characters of the string that should be written.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`c` is the *conversion code*. The conversion code should be `d` when writing
+    an integer, `f` or `e` when writing a float, and `s` when writing a string.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Writef format conventions](../Images/e3a6862062f278cd1a856a2dbb47c9c9.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: The `stdio.writef()` function can take more than two arguments. In that case,
+    the format string will have a format specifier for each argument, perhaps separated
+    by other characters to pass through to the output.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Any part of the format string that is not a conversion specification is simply
+    passed through to the output. For example, the statement
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: writes the line
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: Multiple arguments.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The `stdio.writef()` function can take more than two arguments. In this case,
+    the format string will have a conversion specification for each argument, perhaps
+    separated by other characters to pass through to the output.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Formatted writing implementation.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Internally the `stdio.writef()` function uses the `%` operator. Specifically,
+    a function call of the form `stdio.writef(*formatString*, *value*)` internally
+    is implemented using an expression of the form `*formatString* % *value*`.
+  prefs: []
+  type: TYPE_NORMAL
+- en: As you know, the `%` operator in an expression of the form `*integer* % *integer*`
+    means "compute the remainder". A `%` operator in an expresson of the form `*formatString*
+    % *value*` means convert `*value*` to a string as directed by `*formatString*`.
+    The [Python documentation for string formatting operations](http://docs.python.org/library/stdtypes.html#string-formatting)
+    describes the `%` operator thoroughly. Thereby, indirectly, it describes the `stdio.writef()`
+    function thoroughly as well.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Standard Input
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Our `stdio.py` module supports standard input, an abstract data stream that
+    may be empty or can contain a sequence of values separated by white space. Each
+    value is a string or a value of one of Python''s primitive types. One of the key
+    features of the standard input stream is that your program *consumes* values when
+    it reads them. Once your program has read a value, it cannot back up and read
+    it again. This is the part of the `stdio` module that is relevant to standard
+    input:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![API for booksite functions related to standard input](../Images/f2bceb0ae2f3601dbc989095dedf2117.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'These functions fall into one of three categories: those for reading individual
+    tokens, one at a time, and converting each to an integer, float, boolean or string;
+    those for reading lines from standard input, one at a time; and those for reading
+    a sequence of values of the same type (returning the values in an array). Generally,
+    it is best not to mix functions from the different categories in the same program.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: We now consider a few example programs that illustrate how to use standard input.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Anatomy of a command](../Images/bd03485a2948affc7ed29326a1e79038.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Typing input.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The program [addints.py](addints.py.html) accepts a command-line argument `n`.
+    Then it reads `n` numbers from standard input, computes their sum, and writes
+    the sum to standard output.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'When you use the `python` command to run a Python program from the command
+    line, you actually are doing three things: (i) issuing a command to start executing
+    your program, (ii) specifying the values of the command-line arguments, and (iii)
+    beginning to define the standard input stream. The string of characters that you
+    type in the terminal window after the command line is the standard input stream.
+    When you type characters, you are interacting with your program. The program *waits*
+    for you to create the standard input stream.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'When you type `python addints.py`, after accepting the command-line argument
+    the program calls `stdio.readInt()` and waits for you to type an integer. Suppose
+    that you want `144` to be the first input: as you type `1`, then `4`, and then
+    `4`, nothing happens, because `stdio` does not know that you are done typing the
+    integer, but when you then type `<return>` to signify the end of your integer,
+    `stdio.readInt()` immediately returns the value 144\. After you have typed four
+    numbers in this way, the program expects no more input and writes the sum to standard
+    output, as desired.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: If you type `abc` or `12.2` or `True` when `stdio.readInt()` is expecting an
+    integer, then it will respond with a `ValueError`. The format for each type is
+    the same as you have been using for literal values within Python programs. `stdio`
+    treats strings of consecutive whitespace characters as identical to one space
+    and allows you to delimit your numbers with such strings. It doesn't matter how
+    many spaces you put between numbers, whether you enter numbers on one line or
+    separate them with tab characters or spread them out over several lines, (except
+    that your terminal application processes standard input one line at a time, so
+    it will wait until you type `<return>` before sending all of the numbers on that
+    line to standard input). You can mix values of different types in an input stream,
+    but each time that the program expects a value of a particular type, there needs
+    to be a value of that type in the input stream.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Interactive user input.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The program [twentyquestions.py](twentyquestions.py.html) plays a simple guessing
+    game. You type numbers, each of which is an implicit question (*Is this the number?*)
+    and the program tells you whether your guess is too high or too low.
+  prefs: []
+  type: TYPE_NORMAL
+- en: That program illustrates interactive user input. That is, it illustrates that
+    a program can interleave writing to standard output and reading from standard
+    input, thereby interacting with the user during program execution.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Processing an arbitrary-size input stream
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The program [average.py](average.py.html) reads a sequence of floats from standard
+    input and writes their average to standard output.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Typically, input streams are finite: your program marches through the input
+    stream, consuming values until the stream is empty. But there is no restriction
+    on the size of the input stream. That program illustrates a key property of using
+    an input stream: the length of the stream is not known to the program. We type
+    all the numbers that we have, then the program averages them. Before reading each
+    number, the program calls `stdio.isEmpty()` to check whether there are any more
+    numbers in standard input.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: How do you signal that we have no more data to type? By convention, we type
+    a special sequence of characters known as the *end-of-file sequence*. It is `<ctrl-d>`
+    on OS X and Linux, and it is `<ctrl-z>` on Windows. On some systems the end-of-file
+    sequence must appear on its own line. Typing the end-of-file sequence indicates
+    that standard input is empty.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Redirection and Piping
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: For many applications, typing input data as a standard input stream from the
+    terminal window is untenable because doing so limits our program's processing
+    power by the amount of data that we can type. Similarly, we often want to save
+    the information printed on the standard output stream for later use. We can use
+    operating system mechanisms to address both issues.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Redirecting standard output to a file.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'By adding a simple directive to the command that invokes a program, we can
+    *redirect* its standard output to a file, for permanent storage or for input to
+    some other program at a later time. For example, the command:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Redirecting standard output to a file](../Images/f81ee3a0c1f7cb00a518882b6eb2129f.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'specifies that the standard output stream is not to be written in the terminal
+    window, but instead is to be written to a text file named `data.txt`. Each call
+    to `stdio.write()` or `stdio.writeln()` appends text at the end of that file.
+    In this example, the end result is a file that contains 1,000 random values. No
+    output appears in the terminal window: it goes directly into the file named after
+    the `>` symbol. Thus, we can save away information for later retrieval.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Redirecting standard input from a file.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Similarly, we can redirect standard input so that a program reads data from
+    a file instead of the terminal application. For example, the command:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Redirecting from a file to standard input](../Images/74a02d6b2dadb77d21cf7da32b14f8de.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: reads a sequence of numbers from the file `data.txt`, computes their average,
+    and writes the average to standard output. Specifically, the `<` symbol is a directive
+    to implement the standard input stream by reading from the file `data.txt` instead
+    of by waiting for the user to type something into the terminal window. When the
+    program calls `stdio.readFloat()`, the operating system reads the value from the
+    file. This facility to redirect standard input from a file enables us to process
+    huge amounts of data from any source with our programs, limited only by the size
+    of the files that we can store.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Connecting two programs.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The most flexible way to implement the standard input and standard output abstractions
+    is to specify that they are implemented by our own programs! This mechanism is
+    called *piping*. For example, the following command:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Piping the output of one program to the input of another](../Images/f7463e2a5da03bcb35a2c2953764a00a.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'specifies that the standard output stream for [randomseq.py](randomseq.py.html)
+    and the standard input stream for [average.py](average.py.html) are the *same*
+    stream. That is, the result has the same effect as the following sequence of commands:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_BQ
+  type: TYPE_PRE
+- en: but the file `data.txt` is not needed.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Filters.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: For many common tasks, it is convenient to think of each program as a filter
+    that converts a standard input stream to a standard output stream in some way,
+    with piping as the command mechanism to connect programs together. For example,
+    [rangefilter.py](rangefilter.py.html) takes two command-line arguments and writes
+    to standard output those numbers from standard input that fall within the specified
+    range.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Several standard filters that were designed for Unix still survive (sometimes
+    with different names) as commands in modern operating systems. For example, the
+    `sort` filter reads the lines from standard input and writes them to standard
+    output in sorted order:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: Another useful filter is `more`, which reads data from standard input and displays
+    it in your terminal window one screenful at a time. For example, if you type
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: you will see as many numbers as fit in your terminal window, but more will wait
+    for you to hit the space bar before displaying each succeeding screenful.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Standard Drawing
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Now we introduce an abstraction for producing drawings as output. We imagine
+    an abstract drawing device capable of drawing lines and points on a two-dimensional
+    "canvas" and then displaying that canvas on your screen in the standard drawing
+    window. The device is capable of responding to the commands that our programs
+    issue in the form of calls to functions in the `stddraw` module. The module''s
+    API consists of two kinds of functions: drawing functions that cause the device
+    to take an action (such as drawing a line or drawing a point) and control functions
+    that control how the drawing is shown and set parameters such as the pen size
+    or the coordinate scales.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Creating drawings.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The basic functions for drawing are described in this API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Stddraw drawing functions](../Images/be5a9d719c6cd328aed3a7d9cacd0406.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'The drawing functions are nearly self-documenting: `stddraw.line()` draws a
+    straight line segment connecting two points whose coordinates are given as arguments
+    and `stddraw.point()` draws a dot centered at the given coordinates. The default
+    coordinate scale is the unit square (all coordinates between 0 and 1). The point
+    (0.0, 0.0) is at the lower left, and the point (1.0, 1.0) is at the upper right
+    — thus corresponding to the first quadrant of the familiar Cartesian coordinate
+    system. The default settings draw black lines and black points on a white background.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The control function stddraw.show() needs a bit more explanation. When your
+    program calls any drawing function such as `stddraw.line()` or `stddraw.point()`,
+    `stddraw` uses an abstraction known as the *background canvas*. The background
+    canvas is not displayed; it exists only in computer memory. All points, lines,
+    and so forth are drawn on the background canvas, not directly in the standard
+    drawing window. Only when you call `stddraw.show()` does your drawing get copied
+    from the background canvas to the standard drawing window, where it is displayed
+    until the user closes the standard drawing window — typically by clicking on the
+    *Close* button in the window's title bar.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Why does `stddraw` need to use a background canvas? The main reason is that
+    use of two canvases instead of one makes the `stddraw` module more efficient.
+    Incrementally displaying a complex drawing as it is being created can be intolerably
+    inefficient on many computer systems. In computer graphics, this technique is
+    known as *double buffering*.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'To summarize the information that you need to know, a typical program using
+    the stddraw module has this structure:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Import the `stddraw` module.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Call drawing functions such as `stddraw.line()` and `stddraw.point()` to create
+    a drawing on the background canvas.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Call `stddraw.show()` to show the background canvas in the standard drawing
+    window and wait until the window is closed.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Your first drawing.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The "Hello, World" equivalent for graphics programming with `stddraw` is to
+    draw a triangle with a point inside. To form the triangle, we draw three lines.
+    The program [triangle.py](triangle.py.html) is the full program.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Saving a drawing.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: You can save the standard drawing window canvas to a file. To do so, right-click
+    anywhere on the window canvas. After you do that, `stddraw` displays a file dialog
+    box which allows you to specify a file name. Then, after you type a file name
+    into the dialog box and click the *Save* button, `stddraw` saves the window canvas
+    to a file with the specified name. The file name must end with either `.jpg` (to
+    save the window canvas in JPEG format) or `.png` (to save the window canvas in
+    "Portable Network Graphics" format). The drawings generated by the graphics programs
+    shown in this chapter were saved to files using this mechanism.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Control commands.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The default coordinate system for standard drawing is the unit square, but
+    we often want to draw plots at different scales. Also, we often want to draw lines
+    of different thickness and points of different size from the standard. To accommodate
+    these needs, stddraw has these functions:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Stddraw control functions](../Images/e5e583116f3a4614dd9b0fd91344160b.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: For example, when you call the function `stddraw.setXscale(0, n)`, you are telling
+    the drawing device that you will be using x-coordinates between 0 and `n`. Note
+    that the two-call sequence
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: sets the drawing coordinates to be within a bounding box whose lower-left corner
+    is at (`x0`, `y0`) and whose upper-right corner is at (`x1`, `y1`).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Filtering data to a standard drawing.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The program [plotfilter.py](plotfilter.py.html) reads a sequence of points defined
+    by (*x*, *y*) coordinates and draws a spot at each point. It adopts the convention
+    that the first four numbers read from standard input specify the bounding box,
+    so that it can scale the plot. Try running it with its standard input redirected
+    to [usa.txt](usa.txt).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Plot Filter](../Images/caafbb4c33928ae3857b4b8320ac0ac2.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Plotting a function graph.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The program functiongraph.py plots the function *y* = sin(4*x*) + sin(20*x*)
+    in the interval (0, π). There are an infinite number of points in the interval,
+    so we have to make do with evaluating the function at a finite number of points
+    within the interval. We sample the function by choosing a set of *x* values, then
+    computing *y* values by evaluating the function at each *x* value. Plotting the
+    function by connecting successive points with lines produces what is known as
+    a *piece-wise linear approximation*.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Function Graph](../Images/dd040dd9c16597b9b779dbf8a70f3e7c.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Outline and filled shapes.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The `stddraw` module also includes functions to draw circles, rectangles, and
+    arbitrary polygons. Each shape defines an outline. When the function name is just
+    the shape name, that outline is traced by the drawing pen. When the name begins
+    with `filled`, the named shape is instead filled solid, not traced. As usual,
+    we summarize the available functions in an API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Stddraw Shape Functions](../Images/be276ec307cada3f34b601e536cffd55.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: The arguments for `stddraw.circle()` define a circle of radius `r` centered
+    at (`x`, `y`); the arguments for `stddraw.square()` define a square of side length
+    2`r` centered at (`x`, `y`); and the arguments for `stddraw.polygon()` define
+    a sequence of points that we connect by lines, including one from the last point
+    to the first point.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Text and color.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: To annotate or highlight various elements in your drawings, `stddraw` includes
+    methods for drawing text, setting the font, and setting the the ink in the pen.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Stddraw Text and Color Functions](../Images/c545ee1ca12c634b0995ddaccf4c392f.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: In this code, color and fonts use types that you will learn about in Section
+    3.1\. Until then, we leave the details to `stddraw`. The available pen colors
+    are `BLACK`, `BLUE`, `CYAN`, `DARK_GRAY`, `GRAY`, `GREEN`, `LIGHT_GRAY`, `MAGENTA`,
+    `ORANGE`, `PINK`, `RED`, `WHITE`, and `YELLOW`, defined as constants within `stddraw`.
+    For example, the call `stddraw.setPenColor(stddraw.GRAY)` changes to gray ink.
+    The default ink color is black; the default font is a 12-point plain Helvetica
+    font.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'These code fragments illustrate some stddraw functions for drawing shapes and
+    text:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Stddraw Examples](../Images/333b2b1ca409cb9834444047a33e2e93.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Animation
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'If we provide an argument to `stddraw.show()`, then that call need not be the
+    last action of a program: it will copy the background canvas to the standard drawing
+    window and then wait for the specified number of milliseconds. As you will soon
+    see, we can use this capability (coupled with the ability to erase, or clear the
+    background canvas) to produce the effect of motion in the `stddraw` window.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Stddraw Animation Functions](../Images/3ee86ef42aaba67179cd0e380b5338ef.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'The "Hello, World" program for animation is to produce a black ball that appears
+    to move around on the canvas. Suppose that the ball is at position (*r[x]* , *r[y]*)
+    and we want to create the impression of moving it to a new position nearby, such
+    as, for example, (*r[x]* + 0.01, *r[y]* + 0.02). We do so in three steps:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Clear the background canvas.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Draw a black ball at the new position.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Show the drawing and wait for a short while.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To create the illusion of movement, we iterate these steps for a whole sequence
+    of positions (one that will form a straight line, in this case). The argument
+    to `stddraw.show()` quantifies "a short while" and controls the apparent speed.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'The program [bouncingball.py](bouncingball.py.html) implements these steps
+    to create the illusion of a ball moving in the 2-by-2 box centered at the origin.
+    The current position of the ball is (*r[x]* , *r[y]*), and we compute the new
+    position at each step by adding *v[x]* to *r[x]* and *v[y]* to *r[y]*. Since (*v[x]*
+    , *v[y]*) is the fixed distance that the ball moves in each time unit, it represents
+    the velocity. To keep the ball in the drawing, we simulate the effect of the ball
+    bouncing off the walls according to the laws of elastic collision. This effect
+    is easy to implement: when the ball hits a vertical wall, we just change the velocity
+    in the *x*-direction from *v[x]* to -*v[x]*, and when the ball hits a horizontal
+    wall, we change the velocity in the *y*-direction from *v[y]* to -*v[y]*. The
+    images below, which show the track of the ball, are produced by a modified version
+    of this code (see an exercise at the end of this section).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Bouncing Ball](../Images/c550daeebfaec00d6fc0fb9079a558c9.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Standard Audio
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'The stdaudio module can play, manipulate, and synthesize sound. It allows you
+    to play `.wav` files, to compose programs to create and manipulate arrays of floats,
+    and to read and write them as .wav files:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![The Stdaudio Module](../Images/2bfde5c07d2c0a04334d0973cd8e096c.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: We first introduce some some basic concepts behind one of the oldest and most
+    important areas of computer science and scientific computing, which is known as
+    *digital signal processing*.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Concert A.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Sound is the perception of the vibration of molecules — in particular, the vibration
+    of our eardrums. Therefore, oscillation is the key to understanding sound. Perhaps
+    the simplest place to start is to consider the musical note A above middle C,
+    which is known as *concert A*. This note is nothing more than a sine wave, scaled
+    to oscillate at a frequency of 440 times per second. The function sin(*t*) repeats
+    itself once every 2π units, so if we measure *t* in seconds and plot the function
+    sin(2π*t* × 440), we get a curve that oscillates 440 times per second. We measure
+    frequency in [hertz](https://en.wikipedia.org/wiki/Hertz) (cycles per second).
+    When you double or halve the frequency, you move up or down one octave on the
+    scale. For example, 880 hertz is one octave above concert A and 110 hertz is two
+    octaves below concert A. For reference, the frequency range of human hearing is
+    about 20 to 20,000 hertz. The amplitude (*y*-value) of a sound corresponds to
+    the volume. We assume it is scaled to be betwen -1 and +1.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Other notes.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: A simple mathematical formula characterizes the other notes on the chromatic
+    scale. There are 12 notes on the chromatic scale, divided equally on a logarithmic
+    (base 2) scale. We get the *i*th note above a given note by multiplying its frequency
+    by the (*i*/12)th power of 2\. In other words, the frequency of each note in the
+    chromatic scale is precisely the frequency of the previous note in the scale multiplied
+    by the twelfth root of 2 (about 1.06). This information suffices to create music!
+    For example, to play the tune *Frere Jacques*, we just need to play each of the
+    notes A B C# A by producing sine waves of the appropriate frequency for about
+    half a second and then repeat the pattern.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Piano](../Images/0253880a42ad78551d58e4e5abeebb4b.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Sampling.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '![Sampling a Sine Wave](../Images/56ad6ea035a54e2c749c1374ca7f2df0.png)For
+    digital sound, we represent a curve by sampling it at regular intervals, in precisely
+    the same manner as when we plot function graphs. We sample sufficiently often
+    that we have an accurate representation of the curve &mdot; a widely used sampling
+    rate for digital sound is 44,100 samples per second. For concert A, that rate
+    corresponds to plotting each cycle of the sine wave by sampling it at about 100
+    points. Since we sample at regular intervals, we need to compute only the *y*
+    coordinates of the sample points. It is that simple: we represent sound as an
+    array of numbers (float values that are between -1 and +1). Our booksite sound
+    module function `stdaudio.playSamples()` takes an array of floats as its argument
+    and plays the sound represented by that array on your computer.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'For example, suppose that you want to play concert A for 10 seconds. At 44,100
+    samples per second, you need an array of 441,001 float values. To fill in the
+    array, use a `for` loop that samples the function sin(2π*t* × 440) at *t* = 0/44100,
+    1/44100, 2/44100, 3/44100, ..., 441000 / 44100\. Once we fill the array with these
+    values, we are ready for `stdaudio.playSamples()`, as in the following code:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: This code is the "Hello, World" of digital audio. Once you use it to get your
+    computer to play this note, you can compose code to play other notes and make
+    music!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Saving to a file.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Music can take up a lot of space on your computer. At 44,100 samples per second,
+    a four-minute song corresponds to 4 × 60 × 44100 = 10,584,000 numbers. Therefore,
+    it is common to represent the numbers corresponding to a song in a binary format
+    that uses less space than the string-of-digits representation that we use for
+    standard input and output. Many such formats have been developed in recent years
+    — `stdaudio` uses the `.wav` format.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Playing tunes.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The program [playthattune.py](playthattune.py.html) is an example that shows
+    how easily we can create music with `stdaudio`. It takes notes from standard input,
+    indexed on the chromatic scale from concert A, and plays them on standard audio.
+    Try running it repeatedly with its standard input redirected to each of these
+    data files (created by various students): [elise.txt](elise.txt), [ascale.txt](ascale.txt),
+    [stairwaytoheaven.txt](stairwaytoheaven.txt), [entertainer.txt](entertainer.txt),
+    [firstcut.txt](firstcut.txt), [freebird.txt](freebird.txt), and [looney.txt](looney.txt).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q & A
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Q.** How can I make the booksite modules stdio, stddraw, and stdaudio available
+    to Python?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** If you followed the step-by-step instructions on this booksite for installing
+    Python, these modules should already be available to Python.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Are there standard Python modules for handling standard output?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Actually, such features are built into Python. In Python 2, you can
+    use the `print` statement to write data to standard output. In Python 3, there
+    is no `print` statement; instead, there is a `print()` function, which is similar.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Why, then, are we using the booksite stdio module for writing to standard
+    output instead of using the features already provided by Python?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Our intention is to compose code that works (as much as possible) with
+    all versions of Python. For example, using the `print` statement in all our programs
+    would mean they would work with Python 2, but not with Python 3\. Since we use
+    `stdio` functions, we just need to make sure that we have the proper library.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** How about standard input?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** There are (different) capabilities in Python 2 and Python 3 that correspond
+    to `stdio.readLine()`, but nothing corresponding to `stdio.readInt()` and similar
+    functions. Again, by using `stdio`, we can compose programs that not just take
+    advantage of these additional capabilities, but also work in both versions of
+    Python.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** How about drawing and sound?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Python does not come with an `audio` library. Python comes with a graphics
+    library named `Tkinter` for producing drawings, but it is too slow for some of
+    the graphics applications in the book. Our `stddraw` and `stdaudio` modules provide
+    easy-to-use APIs, based on the `Pygame` library.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** So, let me get this straight; if I use the format `%2.4f` with `stdio.writef()`
+    to write a float, I get two digits before the decimal point and four digits after
+    the decimal point, right?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** No, that specifies just four digits after the decimal point. The number
+    preceding the decimal point is the width of the whole field. You want to use the
+    format `%7.2f` to specify seven characters in total — four before the decimal
+    point, the decimal point itself, and two digits after the decimal point.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Which other conversion codes are there for `stdio.writef()`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** For integer values, there are `o` for octal, `x` for hexadecimal; for
+    floating point, you can use `e` or `g` to get scientific notation. There are also
+    numerous formats for dates and times. The [Python documentation for string formatting
+    operations](http://docs.python.org/library/stdtypes.html#string-formatting) provides
+    a wealth of information.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Can my program reread data from standard input?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** No. You get only one shot at it, in the same way that you cannot undo
+    a call of `stdio.writeln()`.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** What happens if my program attempts to read data from standard input
+    after it is exhausted?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Python will raise an `EOFError` at run time. The functions `stdio.isEmpty()`
+    and `stdio.hasNextLine()` allow you to avoid such an error by checking whether
+    more input is available.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Why does `stddraw.square(x, y, r)` draw a square of width 2`r` instead
+    of `r`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** This makes it consistent with the function `stddraw.circle(x, y, r)`,
+    where the third argument is the radius of the circle, not the diameter. In this
+    context, `r` is the radius of the biggest circle that can fit inside the square.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** What happens if my program calls `stddraw.show(0)`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** That function call tells stddraw to copy the background canvas to the
+    standard drawing window, and then wait 0 milliseconds (that is, do not wait at
+    all) before proceeding. That function call is appropriate if, for example, you
+    want to run an animation at the fastest rate supported by your computer.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Can I draw curves other than circles with `stddraw`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** We had to draw the line somewhere (pun intended), so we support only
+    the basic shapes discussed in the text. You can draw other shapes one point at
+    a time, as explored in several exercises in the text, but filling them is not
+    directly supported.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** So I use negative integers to go below concert A when making input files
+    for [playthattune.py](playthattune.py.html)?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Right. Actually, our choice to put concert A at 0 is arbitrary. A popular
+    standard, known as the *MIDI Tuning Standard*, starts numbering at the C five
+    octaves below concert A. By that convention, concert A is 69 and you do not need
+    to use negative numbers.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Why do I hear weird results from standard audio when I try to sonify
+    a sine wave with a frequency of 30,000 hertz (or more)?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** The *Nyquist frequency*, defined as one-half the sampling frequency,
+    represents the highest frequency that can be reproduced. For standard audio, the
+    sampling frequency is 44,100, so the Nyquist frequency is 22,050.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** How do I enter the end-of-file sequence if I am redirecting standard
+    input from a file?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** When standard input is bound to your terminal application, you eventually
+    must enter the end-of-file sequence to inform the program that no more data remains
+    to be read from standard input. However when standard input is bound to a file,
+    you need not enter the end-of-file sequence. Instead the operating system automatically
+    informs your program when no more data remains to be read from the file.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** What other conversion codes are there for `stdio.writef()`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** How do I print the `%` character within `stdio.writef()`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Use `%%`.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** What is the symbol for the end of a line?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Different operating systems use different symbols. On Unix systems and
+    Mac OS X, the newline character is `''\n''`. On Windows each line is terminated
+    by a string of two characters `''\r\n''`. On Macs prior to OS X, each line is
+    terminated by the string `''\n\r''`. When composing a program, you should avoid
+    using operating system specific features or else it might not work as expected
+    on other systems. Use `stdio.writeln()` to write a newline.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** How do I create colors for use with the the `stddraw` module?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** The stddraw module uses a class named `Color` that we defined specifically
+    for this booksite. Chapter 3 of the booksite describes that class.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** What are the main differences of the PNG, JPEG, and PostScript graphics
+    formats?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** The graphics on most web pages are in PNG, GIF, or JPEG format. All
+    three formats are *raster-based* — they store the set of pixels and color gradations
+    needed to represent a picture. PNG and GIF are ideal for displaying figures with
+    straight lines and geometric figures, while JPEG is best suited for photographs.
+    PostScript is a *vector-based* format. For example, it represents a circle as
+    a geometric object instead of a collection of thousands of pixels. The quality
+    does not degrade if you enlarge or shrink it. For this reason, most printers use
+    PostScript to print documents and graphics.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** What does the error message `NameError: name ''stdio'' is not defined`
+    mean?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** You probably forgot to install the booksite modules. Of course the same
+    applies to `stdarray.py`, `stddraw.py`, and `stdaudio.py`.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** How can I create an animated GIF?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Compose a program that reads in integers (as many as the user enters) from standard
+    input and writes the maximum and minimum values to standard output.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: See [maxmin.py](maxmin.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Modify your program from the previous exercise to insist that the integers must
+    be positive (by prompting the user to enter positive integers whenever the value
+    entered is not positive).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a program that accepts an integer *n* from the command line, reads *n*
+    floats from standard input, and writes their mean (average value) and standard
+    deviation (square root of the sum of the squares of their differences from the
+    average, divided by *n*).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: See [stats2.py](stats2.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Extend your program from the previous exercise to create a filter that writes
+    all the values that are further than 1.5 standard deviations from the mean.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Compose a program that reads in a sequence of integers and writes both the
+    integer that appears in a longest consecutive run and the length of the run. For
+    example, if the input is `1 2 2 1 5 1 1 7 7 7 7 1 1`, then your program should
+    write `Longest run: 4 consecutive 7s`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: See [longestrun.py](longestrun.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Compose a filter that reads in a sequence of integers and writes the integers,
+    removing repeated values that appear consecutively. For example, if the input
+    is `1 2 2 1 5 1 1 7 7 7 7 1 1 1 1 1 1 1 1 1`, your program should write `1 2 1
+    5 1 7 1`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a program that accepts a command-line argument `n`, reads from standard
+    input `n-1` distinct integers between 1 and `n`, and determines the missing value.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Compose a program that reads in positive real numbers from standard input and
+    writes their geometric and harmonic means. The *geometric mean* of *n* positive
+    numbers *x*[1], *x*[2], ..., *x*[*n*] is (*x*[1] × *x*[2] × ... × *x*[*n*])^(1/*n*).
+    The *harmonic mean* is *n* / (1/*x*[1] + 1/*x*[2] + ... + 1/*x*[*n*]). *Hint*:
+    For the geometric mean, consider taking logarithms to avoid overflow.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Suppose that the file `input.txt` contains the two strings F and F. What does
+    the following command do? See the exercises from Section 1.2 for more information
+    on dragon curves. Here is the Python program [dragon3.py](dragon3.py.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Compose a filter `tenperline.py` that reads a sequence of integers between 0
+    and 99 and writes 10 integers per line, with columns aligned. Then compose a program
+    `randomintseq.py` that takes two command-line arguments `m` and `n` and writes
+    `n` random integers between 0 and `m`-1\. Test your programs with the command
+    `python randomintseq 100 200 | python tenperline.py`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a program named `wordcount.py` that reads text from standard input and
+    writes to standard output the number of words in the text. For the purpose of
+    this exercise, a word is a sequence of non-whitespace characters that is surrounded
+    by whitespace. For example, the command `python wordcount < tale.txt` should write
+    139043.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: See [wordcount.py](wordcount.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Compose a program that reads lines from standard input with each line containing
+    a name and two integers, and then calls `stdio.writef()` to write to standard
+    output a table with a column of the names, the integers, and the result of dividing
+    the first by the second, accurate to three decimal places. You could use a program
+    like this to tabulate batting averages for baseball players or grades for students.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Which of the following *require* saving all the values from standard input (in
+    an array, say), and which could be implemented as a filter using only a fixed
+    number of variables? For each, the input comes from standard input and consists
+    of *n* floats between 0 and 1.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write the maximum and minimum numbers.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write the *k*th smallest value.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write the sum of the squares of the numbers.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write the average of the numbers.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write the percentage of numbers greater than the average.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write the numbers in increasing order.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write the numbers in random order.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Compose a program that writes a table of the monthly payments, remaining principal,
+    and interest paid for a loan, taking three numbers as command-line arguments:
+    the number of years, the principal, and the interest rate. (See a related exercise
+    in Section 1.2.)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a program that takes three command-line arguments *x*, *y*, and *z*,
+    reads from standard input a sequence of point coordinates (*x[i]*, *y[i]*, *z[i]*),
+    and writes the coordinates of the point closest to (*x*, *y*, *z*). Recall that
+    the square of the distance between (*x* , *y* , *z*) and (*x[i]* , *y[i]* , *z[i]*
+    ) is (*x* - *x[i]*)² + (*y* - *y[i]*)² + (*z* - *z[i]*)2\. For efficiency, do
+    not use either `math.sqrt()` or the `**` operator.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: See [closest.py](closest.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Compose a program that, given the positions and masses of a sequence of objects,
+    computes their center-of-mass, or *centroid*. The centroid is the average position
+    of the *n* objects, weighted by mass. If the positions and masses are given by
+    (*x[i]*, *y[i]*, *m[i]*), then the centroid (*x*, *y*, *m*) is given by
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*m* = *m*[1] + *m*[2] + ... + *m[n]* *x* = (*m*[1]*x*[1] + ... + *m[n]x[n]*)
+    / *m* *y* = (*m*[1]*y*[1] + ... + *m[n]y[n]*) / *m*'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Compose a program that reads in a sequence of floats between -1 and 1 and writes
+    their average magnitude, average power, and the number of zero crossings. The
+    *average magnitude* is the average of the absolute values of the data values.
+    The *average power* is the average of the squares of the data values. The *number
+    of zero crossings* is the number of times a data value transitions from a strictly
+    negative number to a strictly positive number, or vice versa. These three statistics
+    are widely used to analyze digital signals.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a program that takes an integer command-line argument `n` and plots
+    an `n`-by-`n` checkerboard with red and black squares. Color the lower left square
+    red.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![5-by-5 checkerboard](../Images/dc915cd7e82e99149c9f979d7b7697c2.png) |
+    ![8-by-8 checkerboard](../Images/3fc2385ef6145881761d8c3c8084166e.png) | ![25-by-25
+    checkerboard](../Images/dd7fef0b179125bf302da039bd3ef0de.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '*Solution*: See [checkerboard.py](checkerboard.py.html)'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Compose a program that takes as command-line arguments an integer `n` and a
+    float `p` (between 0 and 1), plots `n` equally spaced points of size on the circumference
+    of a circle, and then, with probability `p` for each pair of points, draws a gray
+    line connecting them.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![erdos](../Images/023ea815e40c5c9c254daa2561dc9cd9.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: Compose code to draw hearts, spades, clubs, and diamonds. To draw a heart, draw
+    a diamond, then attach two semicircles to the upper left and upper right sides.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a program that takes an integer command-line argument `n` and plots
+    a "flower" with `n` petals (if `n` is odd) or `2n` petals (if `n` is even) by
+    plotting the polar coordinates (*r*, θ) of the function *r* = sin(*n* × θ) for
+    θ ranging from 0 to `2π` radians. Below is the desired output for `n` = 4, 7,
+    and 8.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![rose](../Images/2e84daf4180b13cde2c8a4d97a62afaa.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '*Solution*: See [rose.py](rose.py.html).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Compose a program that takes a string `s` from the command line and displays
+    it in banner style on the screen, moving from left to right and wrapping back
+    to the beginning of the string as the end is reached. Add a second command-line
+    argument to control the speed.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: See [banner.py](banner.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Modify [playthattune.py](playthattune.py.html) to take additional command-line
+    arguments that control the volume (multiply each sample value by the volume) and
+    the tempo (multiply each note's duration by the tempo).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a program that takes the name of a `.wav` file and a playback rate *r*
+    as command-line arguments and plays the file at the given rate. First, use `stdaudio.read()`
+    to read the file into an array `a[]`. If *r* = 1, just play `a[]`; otherwise create
+    a new array `b[]` of approximate size *r* times `len(a)`. If *r < 1*, populate
+    `b[]` by *sampling* from the original; if *r > 1*, populate `b[]` by *interpolating*
+    from the original. Then play `b[]`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose programs that use `stddraw` to create each of these designs.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![geometric designs](../Images/a15b4d142defa47e917b278ba1440848.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'Compose a program that draws filled circles of random size at random positions
+    in the unit square, producing images like those below. Your program should take
+    four command-line arguments: the number of circles, the probability that each
+    circle is black, the minimum radius, and the maximum radius.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![random circles](../Images/acc9096db524d92edc6e8632eda8cec6.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Visualizing audio.** Modify [playthattune.py](playthattune.py.html) to send
+    the values played to standard drawing, so that you can watch the sound waves as
+    they are played. You will have to experiment with plotting multiple curves in
+    the drawing canvas to synchronize the sound and the picture.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Statistical polling.** When collecting statistical data for certain political
+    polls, it is very important to obtain an unbiased sample of registered voters.
+    Assume that you have a file with *n* registered voters, one per line. Compose
+    a filter that writes a random sample of size *m*. (See the [sample.py](../14array/sample.py.html)
+    program from Section 1.4.)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Terrain analysis.** Suppose that a terrain is represented by a two-dimensional
+    grid of elevation values (in meters). A peak is a grid point whose four neighboring
+    cells (left, right, up, and down) have strictly lower elevation values. Compose
+    a program that reads a terrain from standard input and then computes and writes
+    the number of peaks in the terrain.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Histogram.** Suppose that the standard input stream is a sequence of floats.
+    Compose a program that takes an integer `n` and two floats `lo` and `hi` from
+    the command line and uses `stddraw` to plot a histogram of the count of the numbers
+    in the standard input stream that fall in each of the `n` intervals defined by
+    dividing (`lo`, `hi`) into `n` equal-sized intervals.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Spirographs.** Compose a program that accepts three command-line arguments
+    *R*, *r*, and *a* and draws the resulting *spirograph*. A [spirograph](https://en.wikipedia.org/wiki/Spirograph)
+    (technically, an epicycloid) is a curve formed by rolling a circle of radius *r*
+    around a larger fixed circle or radius *R*. If the pen offset from the center
+    of the rolling circle is (*r*+*a*), then the equation of the resulting curve at
+    time *t* is given by'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Such curves were popularized by a best-selling toy that contains discs with
+    gear teeth on the edges and small holes that you could put a pen in to trace spirographs.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Solution*: See [spirograph.py](spirograph.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Clock.** Compose a program that displays an animation of the second, minute,
+    and hour hands of an analog clock. Use the call `stddraw.show(1000)` to update
+    the display roughly once per second.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Hint*: this may be one of the rare times when you want to use the `%` operator
+    with a float; it works the way you would expect.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Solution*: See [clock.py](clock.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Oscilloscope.** Compose a program to simulate the output of an oscilloscope
+    and produce Lissajous patterns. These patterns are named after the French physicist,
+    Jules A. Lissajous, who studied the patterns that arise when two mutually perpendicular
+    periodic disturbances occur simultaneously. Assume that the inputs are sinusoidal,
+    so that the following parametric equations describe the curve:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Take the six parameters *A[x]* and *A[y]* (amplitudes); *w[x]* and *w[y]* (angular
+    velocity); and θ*x* and θ*y* (phase factors) from the command line.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: For example, the first image below has *A[x]* = *A[y]* = 1, *w[x]* = 2, *w[y]*
+    = 3, θ*[x]* = 20 degrees, θ[*y*] = 45 degrees. The other has parameters (1, 1,
+    5, 3, 30, 45)
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '| ![Oscilloscope 2](../Images/685cbd764bcfabbf9e58f88aaec1b45f.png) | ![Oscilloscope
+    3](../Images/61efeb8533a0ef43f16a3bc20564606b.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '*Solution*: See [oscilloscope.py](oscilloscope.py.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Bouncing ball with tracks**. Modify [bouncingball.py](bouncingball.py.html)
+    to produce images like the ones shown earlier in this page, which show the track
+    of the ball on a gray background.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Bouncing ball with gravity.** Modify [bouncingball.py](bouncingball.py.html)
+    to incorporate gravity in the vertical direction. Add calls to `stdaudio.playFile()`
+    to add one sound effect when the ball hits a wall and a different one when it
+    hits the floor.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Random tunes.** Compose a program that uses `stdaudio` to play random tunes.
+    Experiment with keeping in key, assigning high probabilities to whole steps, repetition,
+    and other rules to produce reasonable melodies.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Tile patterns.** In a previous exercise you wrote programs to create tile-like
+    designs. Using your solution that exercise, compose a program `tilepattern.py`
+    that takes a command-line argument `n` and draws an `n`-by-`n` pattern, using
+    the tile of your choice. Add a second command-line argument that adds a checkerboard
+    option. Add a third command-line argument for color selection. Using the patterns
+    below as a starting point, design a tile floor. Be creative!'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![tiles](../Images/cd274a60c340f86e2780bc64dac44d33.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'Note: These are all designs from antiquity that you can find in many ancient
+    (and modern) buildings such as from from San Giovanni in Laterno (Basilica of
+    St. John Latern) in Rome [ [1](images/IMG_0252.jpg) [2](images/IMG_0253.jpg) [3](images/IMG_0255.jpg)
+    [4](images/IMG_0256.jpg) [5](images/IMG_0257.jpg) [6](images/IMG_0260.jpg) ] or
+    from the Tile Museum in Lisbon [ [1](images/IMG_0480.jpg) [2](images/IMG_0481.jpg)
+    [3](images/IMG_0482.jpg) [4](images/IMG_0483.jpg) [5](images/IMG_0484.jpg) [6](images/IMG_0485.jpg)
+    [7](images/IMG_0486.jpg) [8](images/IMG_0487.jpg) [9](images/IMG_0498.jpg) [10](images/IMG_0500.jpg)
+    ]'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL

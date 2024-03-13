@@ -1,0 +1,1412 @@
+- en: 4.4 Symbol Tables
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/python/44st](https://introcs.cs.princeton.edu/python/44st)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: <title>4.4\. Symbol Tables</title>
+  prefs: []
+  type: TYPE_NORMAL
+- en: A *symbol table* is a data type that we use to associate *values* with *keys*.
+    Clients can store (*put*) an entry into the symbol table by specifying a key-value
+    pair and then can retrieve (*get*) the value corresponding to a particular key
+    from the symbol table.
+  prefs: []
+  type: TYPE_NORMAL
+- en: In this chapter we consider a basic API for the symbol-table data type. Our
+    API adds to the *put* and *get* operations the abilities to test whether any value
+    has been associated with a given key (*contains*) and to *iterate* over the keys.
+    We also consider an extension to the API for the case where keys are comparable,
+    which admits a number of useful operations.
+  prefs: []
+  type: TYPE_NORMAL
+- en: We also consider two classic implementations. The first uses an operation known
+    as *hashing*, which transforms keys into array indices that we can use to access
+    values. The second is based on a data structure known as the *binary search tree*
+    (*BST*).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: API
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'A symbol table is a collection of key-value pairs — every symbol-table entry
+    associates a value with a key, as follows:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![SymbolTable API](../Images/2fb5340ce14e6f48ed50794e58213ac5.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: The API is consistent with the API for Python's built-in `dict` data type, which
+    we consider later in this section. The API already reflects several design decisions,
+    which we now enumerate.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Associative arrays.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: We overload the `[]` operator for the two basic operations *put* and *get*.
+    In client code this means that we can think of a symbol table as an *associative
+    array*, where we can use standard array syntax with any type of data inside the
+    square brackets instead of an integer between 0 and the length, as for an array.
+    Thus, we can associate a codon with an amino acid name with client code like
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: and we can later access the name associated with a given codon with client code
+    like
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: That is, an associative array reference is a *get* operation, unless it is on
+    the left side of an assignment statement, when it is a *put* operation. We can
+    support these operations by implementing the special methods `__getitem__()` and
+    `__setitem__()`.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Replace-the-old-value policy.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: If a value is to be associated with a key that already has an associated value,
+    we adopt the convention that the new value replaces the old one (just as with
+    an array assignment statement). Again, this is what one would expect from the
+    associative-array abstraction. The `key in st` operation, supported by the special
+    method `__contains__()`, gives the client the flexibility to avoid doing so, if
+    desired.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Not found.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The call `st[key]` raises a `KeyError` if no value has been associated with
+    key in the table. An alternative design would be to return `None` in such cases.
+  prefs: []
+  type: TYPE_NORMAL
+- en: None keys and values.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Clients may use `None` as a key or value, though they typically do not do so.
+    An alternative design would be to disallow either `None` keys and/or values.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Iterable.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'To support the `for key in st`: construct, Python''s convention is that we
+    need to implement a special method `__iter__()` that returns an *iterator*, a
+    special data type that includes methods that are called at the beginning and for
+    each iteration of the `for` loop. We consider Python''s mechanism for iteration
+    at the end of this section.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Remove.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Our basic API does not include a method for removing keys from the symbol table.
+    Some applications do require such a method, and Python provides the special syntax
+    `del st[key]` that can be supported by implementing the special method `__delitem__()`.
+    We leave implementations as exercises or for a more advanced course in algorithms.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Immutable keys.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: We assume the keys do not change their value while in the symbol table. The
+    simplest and most commonly used types of keys (integers, floats, and strings)
+    are immutable. If you think about it, you will see that is a very reasonable assumption!
+    If a client changes a key, how could the symbol table implementation keep track
+    of that fact?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Variations.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Computer scientists have identified numerous other useful operations on symbol
+    tables, and APIs based on various subsets of them have been widely studied. We
+    consider several of these operations throughout this section, and particularly
+    in the exercises at the end.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Comparable keys.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'In many applications, the keys may be integers, floats, strings, or other data
+    types of data that have a natural order. In Python, as discussed in Section''3.3,
+    we expect such keys to be *comparable*. Symbol tables with comparable keys are
+    important for two reasons. First, we can take advantage of key ordering to develop
+    implementations of *put* and *get* that can guarantee the performance specifications
+    in the API. Second, a whole host of new operations come to mind (and can be supported)
+    with comparable keys. A client might want the smallest key, or the largest, or
+    the median, or to iterate over the keys in sorted order. Full coverage of this
+    topic is more appropriate for a book on algorithms and data structures, but we
+    examine a typical client and an implementation of such a data type later in this
+    section. This is a partial API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![OrderedSymbolTable API](../Images/0d3c96222f3ab0f405e80781ed8b4856.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Symbol Table Clients
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We start with two prototypical examples, each of which arises in a large number
+    of important and familiar practical applications.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Dictionary lookup.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '![Dictionary applications](../Images/773281c94de4d3979fb2e6f5c3c2804f.png)
+    The most basic kind of symbol-table client builds a symbol table with successive
+    *put* operations to support *get* requests. The program [lookup.py](lookup.py.html)
+    builds a set of key-value pairs from a file of comma-separated values as specified
+    on the command line and then writes values corresponding to the keys read from
+    standard input. The command-line arguments are the file name and two integers,
+    one specifying the field to serve as the key and the other specifying the field
+    to serve as the value.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: This booksite provides numerous comma-separated-value (.csv) files that you
+    can use as input to [lookup.py](lookup.py.html), including [amino.csv](amino.csv)
+    (codon-to-amino-acid encodings), [djia.csv](djia.csv) (opening price, volume,
+    and closing price of the stock market average, for every day in its history),
+    [elements.csv](elements.csv) (periodic table of elements), [ip.csv](ip.csv) (a
+    selection of entries from the DNS database), [ip-by-country.csv](ip-by-country.csv)
+    (IP addresses by country), [morse.csv](morse.csv) (Morse code), and [phone-na.csv](phone-na.csv)
+    (telephone area codes). When choosing which field to use as the key, remember
+    that each key must uniquely determine a value. If there are multiple *put* operations
+    to associate values with a key, the table will remember only the most recent one
+    (think about associative arrays). We will consider next the case where we want
+    to associate multiple values with a key.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Indexing.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '![Indexing applications](../Images/15fc1a4f1d0c69c69b3a2546ad322232.png) The
+    program [index.py](index.py.html) is a prototypical example of a symbol-table
+    client for comparable keys. It reads in a list of strings from standard input
+    and writes a sorted table of all the different strings along with a list of integers
+    for each string specifying the positions where it appears in the input. In this
+    case, we seem to be associating multiple values with each key, but we actually
+    associating just one: a Python list.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'To cut down on the amount of output, [index.py](index.py.html) takes three
+    command-line arguments: a file name and two integers. The first integer is the
+    minimum string length to include in the symbol table, and the second is the minimum
+    number of occurrences (among the words that appear in the text) to include in
+    the printed index. Try running [index.py](index.py.html) on the files [tale.txt](tale.txt)
+    and [mobydick.txt](mobydick.txt).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Hash Tables
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Symbol-table implementations have been heavily studied, many different algorithms
+    and data structures have been invented for this purpose, and modern programming
+    environments (including Python) provide direct support. As usual, knowing how
+    a basic implementation works will help you appreciate, choose among, and more
+    effectively use the advanced ones, or help implement your own version for some
+    specialized situation that you might encounter.
+  prefs: []
+  type: TYPE_NORMAL
+- en: One way to implement a symbol table is as a *hash table*. A hash table is a
+    data structure in which we divide the keys into small groups that can be quickly
+    searched. The basic idea is simple. We choose a parameter *m* and divide the keys
+    into *m* groups, which we expect to be about equal in size. For each group, we
+    keep the keys in a list and use sequential search.
+  prefs: []
+  type: TYPE_NORMAL
+- en: To divide the keys into small groups, we use a function called a *hash function*
+    that maps every possible key into a hash value — an integer between 0 and *m*-1\.
+    This enables us to model the symbol table as a fixed-length array of lists and
+    use the hash value as an array index to access the desired list. In Python, we
+    can implement both the fixed-length array and the lists using the built-in `list`
+    data type.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Hashing is widely useful, so many programming languages include direct support
+    for it. As we saw in Section 3.3, Python provides the built-in `hash()` function
+    for this purpose, which takes a hashable object as an argument returns an integer
+    hash code. To convert that to a hash value between 0 and *m*-1, we use the expression
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Recall that an object is hashable if it satisfies the following three properties:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The object can be compared for equality with other objects.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Whenever two objects compare as equal, they have the same hash code.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The object's hash code does not change during its lifetime.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Objects that are not equal may have the same hash code. However, for good performance,
+    we expect the hash function to divide our keys into m groups of roughly equal
+    length.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Implementing an efficient symbol table with hashing is straightforward. For
+    the keys, we maintain an array of *m* lists, with element `i` containing a Python
+    list of keys whose hash value is `i`. For the values, we maintain a parallel array
+    of *m* lists, so that when we have located a key, we can access the corresponding
+    value using the same indices. The program [hashst.py](hashst.py.html) is a full
+    implementation, using a fixed number of *m* lists (1024 by default).
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'The efficiency of [hashst.py](hashst.py.html) depends on the value of *m* and
+    the quality of the hash function. Assuming the hash function reasonably distributes
+    the keys, performance is about *m* times faster than that for sequential search,
+    at the cost of *m* extra references and lists. This is a classic space-time tradeoff:
+    the higher the value of *m*, the more space we use, but the less time we spend.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The primary disadvantage of hash tables is that they do not take advantage of
+    order in the keys and therefore cannot provide the keys in sorted order or support
+    efficient implementations of operations like finding the minimum or maximum. For
+    example, the keys will come out in arbitrary order in [index.py](index.py.html),
+    not the sorted order that is called for. Next, we consider a symbol table implementation
+    that can support such operations when keys are comparable, without sacrificing
+    much performance.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Binary Search Trees
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'The *binary tree* is a mathematical abstraction that plays a central role in
+    the efficient organization of information. For symbol-table implementations, we
+    use a special type of binary tree to organize the data and to provide a basis
+    for efficient implementations of the symbol-table *put* operations and *get* requests.
+    A binary search tree (BST) associates comparable keys with values, in a structure
+    defined recursively. A BST is one of the following:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Binary search tree](../Images/412d01152c8635ea9c7674d27d439bdb.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Empty (`None`)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A node having a key-value pair and two references to BSTs, a left BST with smaller
+    keys and a right BST with larger keys
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The keys must be comparable via the < operator.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'To implement BSTs, we start with a class for the node abstraction, which has
+    references to a key, a value, and left and right BSTs:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: This definition is like our definition of nodes for linked lists, except that
+    it has two links, not just one. From the recursive definition of BSTs, we can
+    represent a BST with a variable of type `Node` by ensuring that its value is either
+    `None` or a reference to a `Node` whose left and right instance variables are
+    references to BSTs, and by ensuring that the ordering condition is satisfied (keys
+    in the left BST are smaller than key and keys in the right BST are larger than
+    key).
+  prefs: []
+  type: TYPE_NORMAL
+- en: We often use tree-based terminology when discussing BSTs. We refer to the node
+    at the top as the *root* of the tree, the BST referenced by its left link as the
+    *left subtree*, and the BST referenced by its right link as the *right subtree*.
+    Traditionally, computer scientists draw trees upside down, with the root at the
+    top. Nodes whose links are both null are called *leaf* nodes. The *height* of
+    a tree is the maximum number of links on any path from the root node to a leaf
+    node.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Suppose that you want to *search* for a node with a given key in a BST (or
+    to get a value with a given key in a symbol table). There are two possible outcomes:
+    the search might be successful (we find the key in the BST; in a symbol-table
+    implementation, we return the associated value) or it might be unsuccessful (there
+    is no key in the BST with the given key; in a symbol-table implementation, we
+    raise a run-time error).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'A recursive searching algorithm is immediate: Given a BST (a reference to a
+    `Node`), first check whether the tree is empty (the reference is `None`). If so,
+    then terminate the search as unsuccessful (in a symbol-table implementation, raise
+    a run-time error). If the tree is nonempty, check whether the key in the node
+    is equal to the search key. If so, then terminate the search as successful (in
+    a symbol-table implementation, return the value associated with the key). If not,
+    compare the search key with the key in the node. If it is smaller, search (recursively)
+    in the left subtree; if it is greater, search (recursively) in the right subtree.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Suppose that you want to *insert* a new node into a BST (in a symbol-table implementation,
+    put a new key-value pair into the data structure). The logic is similar to searching
+    for a key, but the implementation is trickier. The key to understanding it is
+    to realize that only one link must be changed to point to the new node, and that
+    link is precisely the link that would be found to be `None` in an unsuccessful
+    search for the key in that node.
+  prefs: []
+  type: TYPE_NORMAL
+- en: If the BST is empty, we create and return a new `Node` containing the key-value
+    pair; if the search key is less than the key at the root, we set the left link
+    to the result of inserting the key-value pair into the left subtree; if the search
+    key is greater, we set the right link to the result of inserting the key-value
+    pair into the right subtree; otherwise, if the search key is equal, we overwrite
+    the existing value with the new value. Resetting the left or right link after
+    the recursive call in this way is usually unnecessary, because the link changes
+    only if the subtree is empty, but it is as easy to set the link as it is to test
+    to avoid setting it.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The program [bst.py](bst.py.html) is a symbol-table implementation based on
+    these two recursive algorithms. As with [linkedstack.py](../43stack/linkedstack.py.html)
+    and [linkedqueue.py](../43stack/linkedqueue.py.html) (from Section 4.3), we use
+    a private `_Node` class to emphasize that clients of `OrderedSymbolTable` do not
+    need to know any of the details of the binary search tree representation.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Performance Characteristics of BSTs
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The running times of BST algorithms are ultimately dependent on the shape of
+    the trees, and the shape of the trees is dependent on the order in which the keys
+    are inserted.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Best case.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In the best case, the tree is perfectly balanced (each `Node` has exactly two
+    children that are not `None`, except the nodes at the bottom, which have exactly
+    two children that are `None`), with lg *n* nodes between the root node and each
+    leaf node. In such a tree, it is easy to see that the cost of an unsuccessful
+    search is logarithmic, because that cost satisfies the same recurrence relation
+    as the cost of binary search (see Section 4.2) so that the cost of every *put*
+    operation and *get* request is proportional to lg *n* or less. You would have
+    to be quite lucky to get a perfectly balanced tree like this by inserting keys
+    one by one in practice, but it is worthwhile to know the best possible performance
+    characteristics.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Best-case BSTs](../Images/1c3989da216460af50bf30932c058cf5.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '![Worse-case BSTs](../Images/5b759482026f4de58310bb2b8eb3e232.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Average case.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: If we insert random keys, we might expect the search times to be logarithmic
+    as well, because the first key becomes the root of the tree and should divide
+    the keys roughly in half. Applying the same argument to the subtrees, we expect
+    to get about the same result as for the best case.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Typical-case BSTs](../Images/f2cc0e813c1dbb8d655eb2b56fb30184.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Worst case.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In the worst case, each node has exactly one `None` link, so the BST is like
+    a linked list with an extra wasted link, where *put* operations and *get* requests
+    take linear time. Unfortunately, this worst case is not rare in practice — it
+    arises, for example, when we insert the keys in order.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Thus, good performance of the basic BST implementation is dependent on the keys
+    being sufficiently similar to random keys that the tree is not likely to contain
+    many long paths. If you are not sure that assumption is justified, do not use
+    a simple BST. Remarkably, there are BST variants that eliminate this worst case
+    and guarantee logarithmic performance per operation, by making all trees nearly
+    perfectly balanced. One popular variant is known as a [red-black tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Traversing a BST
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Perhaps the most basic tree-processing function is known as *tree traversal*:
+    given a (reference to) a tree, we want to systematically process every key-value
+    pair in the tree. To process every key in a BST we use this recursive approach:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Recursive inorder traversal of a BST](../Images/d4d8176dd4b949a13249ed7d7e78347c.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Process every key in the left subtree.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Process the key at the root.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Process every key in the right subtree.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'This approach is known as *inorder* tree traversal, to distinguish it from
+    *preorder* (do the root first) and *postorder* (do the root last), which arise
+    in other applications. For example, the following method writes the keys in the
+    BST rooted at its argument in key-sorted order:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Iterables
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: As you learned in Section 1.3 and Section 1.4, you can use a `for` loop to iterate
+    over either integers in a range or elements in an array `a[]`.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: The `for` loop is not just for integer ranges and arrays — you can use it with
+    any *iterable* object. An iterable object is an object that is capable of returning
+    its *items* one at a time. All of Python's sequence types — including `list`,
+    `tuple`, `dict`, `set`, and `str` — are iterable, as is the object returned by
+    the built-in `range()` function.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Now, our goal is to make `SymbolTable` iterable, so that we can use a `for`
+    loop to iterate over its keys (and use indexing to get the corresponding values):'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: To make a user-defined date type iterable, you must implement the special method
+    `__iter__()`, in support of the built-in function `iter()`. The `iter()` function
+    creates and returns an *iterator*, which is a data type that includes a special
+    method `__next__()` that Python calls at the beginning of each iteration of a
+    `for` loop.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'While this appears complicated, we can use a shortcut based on the fact that
+    Python lists are iterable: if `a` is a Python list, then `iter(a)` returns an
+    iterator over its items. So we can make our hash table and binary search tree
+    implementations iterable by collecting the keys in a Python list and returning
+    an iterator for that list.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: To make [hashst.py](hashst.py.html) iterable, we accumulate all keys into a
+    Python list, and then return an iterator over the list; the `__iter__()` method
+    in [hashst.py](hashst.py.html) does precisely that. To make [bst.py](bst.py.html)
+    iterable, we modify the recursive `inorder()` method shown above to collect the
+    keys in a Python list instead of writing them. Then we can return an iterator
+    for that list. The `_inorder()` and `__iter__()` methods in [bst.py](bst.py.html)
+    use that approach.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The flexibility of BSTs and the ability to compare keys enables the implementation
+    of many useful operations beyond those that can be supported efficiently in hash
+    tables. For example, with a BST we can efficiently find the minimum or maximum
+    key, find all keys within a specified range, and find the *k*th smallest key.
+    We leave implementations of these operations for exercises and leave further study
+    of their performance characteristics and applications for a course in algorithms
+    and data structures.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Dictionary Data Type
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Now that you understand how a symbol table works, you are ready to use Python''s
+    industrial-strength version. The built-in `dict` data type follows the same basic
+    API as `SymbolTable`, but with a richer set of operations, including deletion;
+    a version of *get* that returns a default value if the key is not in the dictionary;
+    and iteration over the key-value pairs. This is a partial API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Dict API](../Images/19c9fc6fdbfdabce7b851b9b730f1cab.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: The underlying implementation is a hash table, so ordered operations are not
+    supported. As usual, since Python uses a lower-level language and does not impose
+    on itself the overhead it imposes on all its users, that implementation will be
+    more efficient and is preferred if ordered operations are not important.
+  prefs: []
+  type: TYPE_NORMAL
+- en: As a simple example, the following `dict` client reads a sequence of strings
+    from standard input, counts the number of times each string appears, and writes
+    the strings and their frequencies. The strings do not come out in sorted order.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs: []
+  type: TYPE_PRE
+- en: Several examples of `dict` clients appear in the exercises at the end of this
+    section.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Set Data Type
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'As a final example, we consider a data type that is simpler than a symbol table,
+    still broadly useful, and easy to implement with hashing or with BSTs. A *set*
+    is a collection of distinct keys, like a symbol table with no values. For example,
+    we could implement a set by deleting references to values in [hashst.py](hashst.py.html)
+    or [bst.py](bst.py.html). Again, Python provides a `set` data type that is implemented
+    in a lower-level language. This is a partial API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Set API](../Images/0cd720d493972d5c7a5fbad74f5b12f8.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'For example, consider the task of reading a sequence of strings from standard
+    input and writing the first occurrence of each string (thereby removing duplicates).
+    We might use a `set`, as in the following client code:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs: []
+  type: TYPE_PRE
+- en: You can find several other examples of set clients in the exercises at the end
+    of this section.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Should you use Python's built-in `dict` and `set` data types? Of course, if
+    they support the operations that you need, because they are written in a lower-level
+    language, not subject to the overhead Python imposes on user code, and therefore
+    are likely to be faster than anything that you could implement yourself. But if
+    your application needs order-based operations like finding the minimum or maximum,
+    you may wish to consider BSTs.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q &amp A
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Q.** Can I use an array (or Python list) as a key in a `dict` or `set`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** No, the built-in `list` data type is mutable, so you should not use
+    arrays as keys in a symbol table or set. In fact, Python lists are not hashable,
+    so you cannot use them as keys in a `dict` or `set`. The built-in `tuple` data
+    type is immutable (and hashable), so you can that instead.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Why doesn''t my user-defined data type work with `dict` or `set`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** By default, user-defined types are hashable, with `hash(x)` returning
+    `id(x)` and `==` testing reference equality. While these default implementations
+    satisfy the hashable requirements, they rarely provide the behavior you want.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Why can''t I return a Python list directly in the special method `__iter__()`?
+    Why must I instead call the built-in `iter()` function with the Python list as
+    an argument?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** A Python list is an iterable object (because it has an `__iter__()`
+    method that returns an iterator) but it is not an iterator.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Which data structure does Python use to implement `dict` and `set`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Python uses an *open-addressing* hash table, which is a cousin of the
+    separate-chaining hash table we considered in this section. Python''s implementation
+    is highly optimized and written in a low-level programming language.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Does Python provide language support for specifying `set` and `dict`
+    objects?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Yes, you can specify a `set` by enclosing in curly braces a comma-separated
+    list of its items. You can specify a `dict` by enclosing in curly braces a comma-separated
+    list of its key''value pairs, with a colon between each key and its associated
+    value.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs: []
+  type: TYPE_PRE
+- en: '**Q.** Does Python provide a built-in data type for an ordered symbol table
+    (or ordered set) that supports ordered iteration, order statistics, and range
+    search?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** No. If you need only ordered iteration (with comparable keys), you could
+    use Python''s `dict` data type and sort the keys (and pay a performance hit for
+    sorting). For example, if you use a `dict` instead of a binary search tree in
+    [index.py](index.py.html), you can arrange to write the keys in sorted order by
+    using code like'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs: []
+  type: TYPE_PRE
+- en: If you need other ordered symbol table operations (such as range search or order
+    statistics), you can use our binary search tree implementation (and pay a performance
+    hit for using a data type that is implemented in Python).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Modify [lookup.py](lookup.py.html) to to make a program `lookupandput.py` that
+    allows *put* operations to be specified on standard input. Use the convention
+    that a plus sign indicates that the next two strings typed are the key-value pair
+    to be inserted.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Modify [lookup.py](lookup.py.html) to make a program `lookupmultiple.py` that
+    handles multiple values having the same key by putting the values in an array,
+    as in [index.py](index.py.html), and then writing them all out on a *get* request,
+    as follows:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Modify [index.py](index.py.html) to make a program `indexbykeyword.py` that
+    takes a file name from the command line and makes an index from standard input
+    using only the keywords in that file. *Note*: Using the same file for indexing
+    and keywords should give the same result as [index.py](index.py.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Modify [index.py](index.py.html) to make a program `indexlines.py` that considers
+    only consecutive sequences of letters as keys (no punctuation or numbers) and
+    uses line numbers instead of word position as the value. This functionality is
+    useful for programs: when given a python program as input, `indexlines.py` should
+    write an index showing each keyword or identifier in the program, along with the
+    line numbers on which it occurs.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Develop an implementation `OrderedSymbolTable` of the symbol-table API that
+    maintains parallel arrays of keys and values, keeping them in key-sorted order.
+    Use binary search for *get*, and move larger elements to the right by one position
+    for *put* (using resizing arrays to keep the array length linear in the number
+    of key'value pairs in the table). Test your implementation with [index.py](index.py.html),
+    and validate the hypothesis that using such an implementation for [index.py](index.py.html)
+    takes time proportional to the product of the number of strings and the number
+    of distinct strings in the input.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Develop an implementation `LinkedSymbolTable` of the symbol-table API that maintains
+    a linked list of nodes containing keys and values, keeping them in arbitrary order.
+    Test your implementation with [index.py](index.py.html), and validate the hypothesis
+    that using such an implementation for [index.py](index.py.html) takes time proportional
+    to the product of the number of strings and the number of distinct strings in
+    the input.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compute `hash(x) % 5` for the single-character keys
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Draw the hash table created when the `i`th key in this sequence is associated
+    with the value `i`, for `i` from 0 to 11.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: What is wrong with the following `__hash__()` implementation?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '*Solution*: While technically it satisfies the conditions needed for a data
+    type to be hashable (if two objects are equal, they have the same hash value),
+    it will lead to poor performance because we expect hash(x) % m to divide keys
+    into m groups of roughly equal size.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Extend `Complex` (as defined in [complex.py](../32class/complex.py.html) from
+    Section 3.2) and `Vector` (as defined in [vector.py](../33design/vector.py.html)
+    from Section 3.3) to make them hashable by implementing the special methods `__hash__()`
+    and `__eq__()`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify [hashst.py](hashst.py.html) to use a resizing array so that the average
+    length of the list associated with each hash value is between 1 and 8.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Draw all the different BSTs that can represent the key sequence
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Draw the BST that results when you insert items with keys
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: in that order into an initially empty tree. What is the height of the resulting
+    BST?
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Suppose we have integer keys between 1 and 1000 in a BST and search for 363\.
+    Which of the following cannot be the sequence of keys examined?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Suppose that the following 31 keys appear (in some order) in a BST of height
+    5:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Draw the top three nodes of the tree (the root and its two children).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Describe the effect on performance if you replaced [hashst.py](hashst.py.html)
+    with [bst.py](bst.py.html) in [lookup.py](lookup.py.html). To protect against
+    the worst case, call `stdrandom.shuffle(database)` before populating the symbol
+    table.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'True or false: Given a BST, let *x* be a leaf node, and let *p* be its parent.
+    Then either (i) the key of *p* is the smallest key in the BST larger than the
+    key of *x* or (ii) the key of *p* is the largest key in the BST smaller than the
+    key of *x*.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify the class `SymbolTable` in [hashst.py](hashst.py.html) to make a class
+    `Set` that implements the constant-time operations in the partial API given in
+    the text for Python's built-in `set` data type.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify the class `OrderedSymbolTable` in [bst.py](bst.py.html) to make a class
+    `OrderedSet` that implements the constant-time operations in the partial API given
+    in the text for Python's built-in `set` data type, assuming that the keys are
+    comparable.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify [hashst.py](hashst.py.html) to support the client code `del st[key]`
+    by adding a method `__delitem__()` that takes a key argument and removes that
+    key (and the corresponding value) from the symbol table, if it exists. Use a resizing
+    array to ensure that the average length of the list associated with each hash
+    value is between 1 and 8.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Implement `__str__()` for [bst.py](bst.py.html), using a recursive helper method.
+    As usual, you can accept quadratic performance because of the cost of string concatenation.
+    *Extra credit*: Compose a linear-time `__str__()` method for [bst.py](bst.py.html)
+    that uses an array and the `join()` method of Python''s built-in `str` data type.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: A *concordance* is an alphabetical list of the words in a text that gives all
+    word positions where each word appears. Thus, `python index.py 0 0` produces a
+    concordance. In a famous incident, one group of researchers tried to establish
+    credibility while keeping details of the Dead Sea Scrolls secret from others by
+    making public a concordance. Compose a program `invertconcordance.py` that takes
+    a command-line argument `n`, reads a concordance from standard input, and writes
+    the first `n` words of the corresponding text on standard output.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Run experiments to validate the claims in the text that the *put* operations
+    and *get* requests for [lookup.py](lookup.py.html) are constant-time operations
+    when using [hashst.py](hashst.py.html) with resizing arrays, as described in a
+    previous exercise. Develop test clients that generate random keys and also run
+    tests for various data sets, either from this booksite or of your own choosing.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Run experiments to validate the claims in the text that the *put* operations
+    and *get* requests for [index.py](index.py.html) are logarithmic in the size of
+    the symbol table when using [bst.py](bst.py.html). Develop test clients that generate
+    random keys and also run tests for various data sets, either from this booksite
+    or of your own choosing.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify [bst.py](bst.py.html) to add methods `min()` and `max()` that return
+    the smallest (or largest) key in the table (or `None` if the table is empty).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify [bst.py](bst.py.html) to add methods `floor()` and `ceiling()` that take
+    as an argument a key and return the largest (smallest) key in the set that is
+    no larger (no smaller) than the given key.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify [bst.py](bst.py.html) to support the special `len()` function by implementing
+    a special method `__len__()` that returns the number of key'value pairs in the
+    symbol table. Use the approach of storing within each `_Node` the number of nodes
+    in the subtree rooted there.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify [bst.py](bst.py.html) to add a method `rangeSearch()` that take two keys
+    `lo` and `hi` as arguments and return an iterator over all keys that are between
+    `lo` and `hi`. The running time should be proportional to the height plus the
+    number of keys in the range.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Modify [bst.py](bst.py.html) to add a method `rangeCount()` that takes keys
+    as arguments and returns the number of keys in a BST between the two given keys.
+    Your method should take time proportional to the height of the tree. *Hint*: First
+    complete the previous exercise.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Modify [bst.py](bst.py.html) to support the client code `del st[key]` by adding
+    a method `__delitem__()` that takes a key argument and removes that key (and the
+    corresponding value) from the symbol table, if it exists. *Hint*: This operation
+    is more difficult than it might seem. Replace the key and its associated value
+    with the next largest key in the BST and its associated value; then remove from
+    the BST the node that contained the next largest key.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify the symbol-table API to handle values with duplicate keys by having `get()`
+    return an iterator for the values having a given key. Reimplement [hashst.py](hashst.py.html)
+    and [bst.py](bst.py.html) as dictated by this API. Discuss the pros and cons of
+    this approach versus the one given in the text.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Suppose that `a[]` is an array of hashable objects. What is the effect of the
+    following statement?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Recompose [lookup.py](lookup.py.html) and [index.py](index.py.html) using a
+    `dict` instead of using [hashst.py](hashst.py.html) and [bst.py](bst.py.html),
+    respectively. Compare performance.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a `dict` client that creates a symbol table mapping letter grades to
+    numerical scores, as in the table below, and then reads from standard input a
+    list of letter grades and computes their average (GPA).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE19]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Implement the `buy()` and `sell()` methods in [stockaccount.py](../32class/stockaccount.py.html)
+    (from Section 3.2). Use a `dict` to store the number of shares of each stock.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Binary Tree Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '*The following exercises are intended to give you experience in working with
+    binary trees that are not necessarily BSTs. They all assume a Node class with
+    three instance variables: a positive double value and two Node references. As
+    with linked lists, you will find it helpful to make drawings using the visual
+    representation shown in the text.*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Implement the following functions, each of which takes as an argument a `Node`
+    that is the root of a binary tree.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '`size(node)`:number of nodes in the tree rooted at `node`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`leaves(node)`: number of nodes in the tree rooted at `node` whose links are
+    both `None`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`total(node)`: sum of the key values in all nodes in the tree rooted at `node`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Your methods should all run in linear time.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Implement a linear-time function `height()` that returns the maximum number
+    of nodes on any path from the root to a leaf node (the height of the empty tree
+    is 0; the height of a one-node tree is 1).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: A binary tree is *heap-ordered* if the key at the root is larger than the keys
+    in all of its descendants. Implement a linear-time function `heapOrdered()` that
+    returns `True` if the tree is heap-ordered, and `False` otherwise.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Given a binary tree, a *single-value* subtree is a maximal subtree that contains
+    the same value. Design a linear-time algorithm that counts the number of single-value
+    subtrees in a binary tree.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: A binary tree is *balanced* if both its subtrees are balanced and the height
+    of its two subtrees differ by at most 1\. Implement a linear-time method `balanced()`
+    that returns `True` if the tree is balanced, and `False` otherwise.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Two binary trees are *isomorphic* if only their key values differ (that is,
+    they have the same shape). Implement a linear-time function `isomorphic()` that
+    takes two tree references as arguments and returns `True` if they refer to isomorphic
+    trees, and `False` otherwise. Then, implement a linear-time function `eq()` that
+    takes two tree references as arguments and returns `True` if they refer to identical
+    trees (isomorphic with the same key values), and `False` otherwise.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Compose a function `levelOrder()` that writes BST keys in level order: first
+    write the root; then the nodes one level below the root, from left to right; then
+    the nodes two levels below the root, from left to right; and so forth. *Hint*:
+    Use a `Queue`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Implement a linear-time function `isBST()` that returns `True` if the binary
+    tree is a BST, and `False` otherwise.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: This task is a bit more difficult than it might seem. Use a recursive
+    helper function `_inRange()` that takes two additional arguments `lo` and `hi`
+    and returns `True` if the binary tree is a BST and all its values are between
+    `lo` and `hi`, and use `None` to represent both the smallest possible key and
+    the largest possible key.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE20]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We note that this implementation uses both the < and <= operators, whereas our
+    binary search tree code uses only the < operator.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Compute the value returned by `mystery()` on some sample binary trees, and then
+    formulate a hypothesis about the value and prove it.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE21]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Spell checking.** Compose a `set` client `spellchecker.py` that takes as
+    a command-line argument the name of a file containing a dictionary of words, and
+    then reads strings from standard input and writes any string that is not in the
+    dictionary. Use the file [words.utf-8.txt](words.utf-8.txt). *Extra credit*: Augment
+    your program to handle common suffixes such as -ing or -ed.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Spell correction.** Compose a `dict` client `spellcorrector.py` that serves
+    as a filter that replaces commonly misspelled words on standard input with a suggested
+    replacement, writing the result to standard output. Take as a command-line argument
+    a file that contains common misspellings and corrections. Use the file [misspellings.txt](misspellings.txt),
+    which contains many common misspellings.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Web filter.** Compose a `set` client `webblocker.py` that takes as a command-line
+    argument the name of a file containing a list of objectionable websites, and then
+    reads strings from standard input and writes only those websites not on the list.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Set operations.** Add the methods `union()` and `intersection()` to `OrderedSet`
+    (see a previous exercise in this section), each of which takes two sets as arguments
+    and that return the union and intersection, respectively, of those two sets.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Frequency symbol table.** Develop a data type `FrequencyTable` that supports
+    the following operations: `click()` and `count()`, both of which take string arguments.
+    The data-type value is an integer that keeps track of the number of times the
+    `click()` operation has been called with the given string as an argument. The
+    `click()` operation increments the count by 1, and the `count()` operation returns
+    the value, possibly 0\. Clients of this data type might include a web traffic
+    analyzer, a music player that counts the number of times each song has been played,
+    phone software for counting calls, and so forth.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**1D range searching.** Develop a data type that supports the following operations:
+    insert a date, search for a date, and count the number of dates in the data structure
+    that lie in a particular interval. Use Python''s `datetime.Date` data type.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Non-overlapping interval search.** Given a list of non-overlapping intervals
+    of integers, compose a function that takes an integer argument and determines
+    in which, if any, interval that value lies. For example, if the intervals are
+    1643-2033, 5532-7643, 8999-10332, and 5666653-5669321, then the query point 9122
+    lies in the third interval and 8122 lies in no interval.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**IP lookup by country.** Compose a `dict` client that uses the data file [ip-by-country.csv](ip-by-country.csv)
+    to determine from which country a given IP address is coming. The data file has
+    five fields: beginning of IP address range, end of IP address range, two-character
+    country code, three-character country code, and country name. The IP addresses
+    are non-overlapping. Such a database tool can be used for credit card fraud detection,
+    spam filtering, auto-selection of language on a website, and web server log analysis.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Inverted index of web pages with single-word queries.** Given a list of web
+    pages, create a symbol table of words contained in the web pages. Associate with
+    each word a list of web pages in which that word appears. Compose a program that
+    reads in a list of web pages, creates the symbol table, and supports single-word
+    queries by returning the list of web pages in which that query word appears.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Inverted index of web pages with multi-word queries.** Extend the previous
+    exercise so that it supports multi-word queries. In this case, output the list
+    of web pages that contain at least one occurrence of each of the query words.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Multiple-word search (unordered).** Compose a program that takes `k` keywords
+    from the command line, reads in a sequence of words from standard input, and identifies
+    the smallest interval of text that contains all of the `k` keywords (not necessarily
+    in the same order). You do not need to consider partial words.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Multiple-word search (ordered).** Repeat the previous exercise, but now assume
+    the keywords must appear in the same order as specified.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Repetition draw in chess.** In the game of chess, if a board position is
+    repeated three times with the same side to move, the side to move can declare
+    a draw. Describe how you could test this condition using a computer program.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Registrar scheduling.** The registrar at a prominent Northeastern university
+    recently scheduled an instructor to teach two different classes at the same exact
+    time. Help the registrar prevent future mistakes by describing a method to check
+    for such conflicts. For simplicity, assume all classes run for 50 minutes and
+    start at 9, 10, 11, 1, 2, or 3.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Entropy.** We define the *relative entropy* of a text corpus with *n* words,
+    *k* of which are distinct as'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*E* = 1 / (*n* lg *n*) (*p*[0] lg(*k*/*p*[0]) + *p*[1] lg(*k*/*p*[1]) + ...
+    + *p*[*k*-1] lg(*k*/*p*[*k*-1]))'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: where *p[i]* is the fraction of times that word *i* appears. Compose a program
+    that reads in a text corpus and writes the relative entropy. Convert all letters
+    to lowercase and treat punctuation marks as whitespace.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Order statistics.** Add to [bst.py](bst.py.html) a method `select()` that
+    takes an integer argument `k` and returns the `k`th smallest key in the BST. Maintain
+    subtree sizes in each node. The running time should be proportional to the height
+    of the tree.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Rank query.** Add to [bst.py](bst.py.html) a method `rank()` that takes a
+    key as an argument and returns the number of keys in the BST that are strictly
+    smaller than key. Maintain subtree sizes in each node. The running time should
+    be proportional to the height of the tree.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Random element.** Add to [bst.py](bst.py.html) a method `random()` that returns
+    a random key. Maintain subtree sizes in each node. The running time should be
+    proportional to the height of the tree.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Queue with no duplicates.** Create a data type that is a queue, except that
+    an element may appear on the queue at most once at any given time. Ignore requests
+    to insert an item if it is already on the queue.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Unique substrings of a given length.** Compose a program that reads in text
+    from standard input and calculates the number of unique substrings of a given
+    length `k` that it contains. For example, if the input is `CGCGGGCGCG`, then there
+    are five unique substrings of length 3: `CGC`, `CGG`, `GCG`, `GGC`, and `GGG`.
+    This calculation is useful in data compression. *Hint*: Use the string slice `s[i:i+k]`
+    to extract the `i`th substring and insert into a symbol table. Test your program
+    on the file [pi-10million.txt](pi-10million.txt), which contains the first 10
+    million digits of π.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Generalized queue.** Implement a class that supports the following API:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![Generalized queue API](../Images/882cc09a421e0039bdf2ffe604b029df.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Use a BST that associates the *k*th element inserted with the key *k* and maintains
+    in each node the total number of nodes in the subtree rooted at that node. To
+    find the *i*th least recently added item, search for the *i*th smallest element
+    in the BST.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Dynamic discrete distribution.** Create a data type that supports the following
+    two operations: `add()` and `random()`. The `add()` method should insert a new
+    item into the data structure if it has not been seen before; otherwise, it should
+    increase its frequency count by 1\. The `random()` method should return an element
+    at random, where the probabilities are weighted by the frequency of each element.
+    Use space proportional to the number of items.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Password checker.** Compose a program that takes a string as a command-line
+    argument and a dictionary of words from standard input, and checks whether the
+    string is a ''good'' password. Here, assume ''good'' means that it (1) is at least
+    eight characters long, (2) is not a word in the dictionary, (3) is not a word
+    in the dictionary followed by a digit 0-9 (e.g., hello5), (4) is not two words
+    in the dictionary concatenated together (e.g., helloworld), and (5) none of (2)
+    through (4) hold for reverses of words in the dictionary. The file [words.utf-8.txt](words.utf-8.txt)
+    contains a dictionary of words.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Random phone numbers.** Compose a program that takes a command-line argument
+    *n* and writes *n* random phone numbers of the form (xxx) xxx-xxxx. Use a `set`
+    to avoid choosing the same number more than once. Use only legal area codes, as
+    found in the file [phone-na.csv](phone-na.csv).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Sparse vectors.** An *n*-dimensional vector is *sparse* if its number of
+    nonzero values is small. Your goal is to represent a vector with space proportional
+    to its number of nonzeros, and to be able to add two sparse vectors in time proportional
+    to the total number of nonzeros. Implement a class that supports the following
+    API:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![Sparse vector API](../Images/f7820c2923cf4912eb51a49121f5389b.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '**Sparse matrices.** An *n*-by-*n* matrix is *sparse* if its number of nonzeros
+    is proportional to *n* (or less). Your goal is to represent a matrix with space
+    proportional to *n*, and to be able to add and multiply two sparse matrices in
+    time proportional to the total number of nonzeros (perhaps with an extra log *n*
+    factor). Implement a class that supports the following API:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![Sparse matrix API](../Images/4d6af760456a946849f287106665f4c5.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '**Mutable string.** Create a data type named `MutableString` that is the same
+    as the Python `str` data type but is mutable. It should support these operations:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '`ms[i]`: return the `i`th character of `MutableString` object `ms`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ms[i] = c`: change the `i`th character of `MutableString` object `ms` to `c`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ms.insert(i, c)`: insert the character `c` into `MutableString` object `ms`
+    before index `i`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`del ms[i]`: delete the `i`th character of `MutableString` object `ms`'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Use a BST to implement those operations in logarithmic time. Then compose other
+    methods — a constructor, a `__str__()` method, comparison methods, a `__contains__()`
+    method, an `__iter__()` method, and so forth — to make the data type reasonably
+    complete.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Assignment statements.** Compose a program to parse and evaluate programs
+    consisting of assignment and write statements with fully parenthesized arithmetic
+    expressions (see [evaluate.py](../43stack/evaluate.py.html) from Section 4.3).
+    For example, given the input'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE22]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: your program should write the value 225\. Assume that all variables and values
+    are floats. Use a symbol table to keep track of variable names.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Codon usage table.** Compose a program that uses a symbol table to write
+    summary statistics for each codon in a genome taken from standard input (frequency
+    per thousand), like the following:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE23]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE

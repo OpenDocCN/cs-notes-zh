@@ -1,0 +1,557 @@
+- en: 6.1   Event-Driven Simulation
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://algs4.cs.princeton.edu/61event](https://algs4.cs.princeton.edu/61event)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: This chapter under construction.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Simulate the motion of N colliding particles according to the laws of elastic
+    collision using event-driven simulation. Such simulations are widely used in molecular
+    dynamics (MD) to understand and predict properties of physical systems at the
+    particle level. This includes the motion of molecules in a gas, the dynamics of
+    chemical reactions, atomic diffusion, sphere packing, the stability of the rings
+    around Saturn, the phase transitions of cerium and cesium, one-dimensional self-gravitating
+    systems, and front propagation. The same techniques apply to other domains that
+    involve physical modeling of particle systems including computer graphics, computer
+    games, and robotics. We will revisit some of these issues again in Chapter 7.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[a good reference](http://arxiv.org/ftp/physics/papers/0405/0405089.pdf)'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Hard sphere model.** The *hard sphere model* (billiard ball model) is an
+    idealized model of the motion of atoms or molecules in a container. We focus on
+    the two-dimensional version called the *hard disc model*. The salient properties
+    of this model are listed below.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: N particles in motion, confined in the unit box.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Particle *i* has known position (*rx[i], ry[i]*), velocity (*vx[i], vy[i]*),
+    mass *m[i]*, and radius *σ[i]*.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Particles interact via elastic collisions with each other and with the reflecting
+    boundary.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No other forces are exerted. Thus, particles travel in straight lines at constant
+    speed between collisions.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This simple model plays a central role in statistical mechanics, a field which
+    relates macroscopic observables (e.g., temperature, pressure, diffusion constant)
+    to microscopic dynamics (motion of individual atoms and molecules). Maxwell and
+    Boltzmann used the model to derive the distribution of speeds of interacting molecules
+    as a function of temperature; Einstein used it to explain the Brownian motion
+    of pollen grains immersed in water.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Simulation.** There are two natural approaches to simulating the system of
+    particles.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Time-driven simulation.* Discretize time into quanta of size *dt*. Update
+    the position of each particle after every *dt* units of time and check for overlaps.
+    If there is an overlap, roll back the clock to the time of the collision, update
+    the velocities of the colliding particles, and continue the simulation. This approach
+    is simple, but it suffers from two significant drawbacks. First, we must perform
+    N² overlap checks per time quantum. Second, we may miss collisions if *dt* is
+    too large and colliding particles fail to overlap when we are looking. To ensure
+    a reasonably accurate simulation, we must choose *dt* to be very small, and this
+    slows down the simulation.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Event-driven simulation.* With event-driven simulation we focus only on those
+    times at which interesting events occur. In the hard disc model, all particles
+    travel in straight line trajectories at constant speeds between collisions. Thus,
+    our main challenge is to determine the ordered sequence of particle collisions.
+    We address this challenge by maintaining a *priority queue* of future events,
+    ordered by time. At any given time, the priority queue contains all future collisions
+    that would occur, assuming each particle moves in a straight line trajectory forever.
+    As particles collide and change direction, some of the events scheduled on the
+    priority queue become "stale" or "invalidated", and no longer correspond to physical
+    collisions. We adopt a lazy strategy, leaving such invalidated collision on the
+    priority queue, waiting to identify and discard them as they are deleted. The
+    main event-driven simulation loop works as follows:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Delete the *impending event*, i.e., the one with the minimum priority *t*.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the event corresponds to an invalidated collision, discard it. The event
+    is invalid if one of the particles has participated in a collision since the time
+    the event was inserted onto the priority queue.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'If the event corresponds to a physical collision between particles *i* and
+    *j*:'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Advance all particles to time *t* along a straight line trajectory.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Update the velocities of the two colliding particles *i* and *j* according to
+    the laws of elastic collision.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Determine all future collisions that would occur involving either *i* or *j*,
+    assuming all particles move in straight line trajectories from time *t* onwards.
+    Insert these events onto the priority queue.
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If the event corresponds to a physical collision between particles *i* and a
+    wall, do the analogous thing for particle *i*.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This event-driven approach results in a more robust, accurate, and efficient
+    simulation than the time-driven one.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Collision prediction.** We review the formulas that specify if and when a
+    particle will collide with the boundary or with another particle, assuming all
+    particles travel in straight-line trajectories.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Collision between particle and a wall.* Given the position (*rx*, *ry*), velocity
+    (*vx*, *vy*), and radius *σ* of a particle at time *t*, we wish to determine if
+    and when it will collide with a vertical or horizontal wall.![Elastic Collision
+    Between Two Particles](../Images/3b56e6da9fd741d1cc05fedffc8ffac5.png)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Since the coordinates are between 0 and 1, a particle comes into contact with
+    a horizontal wall at time *t* + Δt if the quantity *ry* + Δ*t* *vy* equals either
+    σ or (1 - σ). Solving for Δ*t* yields:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![collision with horizontal wall](../Images/074daf18ea563b4e8eb0a4fd224d22c4.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: An analogous equation predicts the time of collision with a vertical wall.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Collision between two particles.* Given the positions and velocities of two
+    particles *i* and *j* at time *t*, we wish to determine if and when they will
+    collide with each other.![Elastic Collision Between Two Particles](../Images/b00dcf90f71bee80c5db827bc45de6cb.png)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Let (*rx[i]''* , *ry[i]''* ) and (*rx[j]''* , *ry[j]''* ) denote the positions
+    of particles *i* and *j* at the moment of contact, say *t* + Δ*t*. When the particles
+    collide, their centers are separated by a distance of σ = σ[i] + σ[j]. In other
+    words:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: σ²   =   (*rx[i]' - rx[j]'* )² + (*ry[i]' - ry[j]'* )²
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: During the time prior to the collision, the particles move in straight-line
+    trajectories. Thus,
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*rx[i]'' = rx[i]* + Δ*t vx[i]*,   *ry [i]'' = ry[i]* + Δ*t vy[i]*'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '*rx[j]'' = rx[j]* + Δ*t vx[j]*,   *ry [j]'' = ry[j]* + Δ*t vy[j]*'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Substituting these four equations into the previous one, solving the resulting
+    quadratic equation for Δ*t*, selecting the physically relevant root, and simplifying,
+    we obtain an expression for Δ*t* in terms of the known positions, velocities,
+    and radii.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![collision between two particles](../Images/527d5dcfeaa787aeaa2dda410cd80603.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '![definition of relevant quantities](../Images/16b00fc09904bb93bbd01e05cc577d24.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: If either Δ*v* ⋅ Δ*r* ≥ 0 or d < 0, then the quadratic equation has no solution
+    for Δ*t* > 0; otherwise we are guaranteed that Δ*t* ≥ 0.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Collision resolution.** In this section we present the physical formulas
+    that specify the behavior of a particle after an elastic collision with a reflecting
+    boundary or with another particle. For simplicity, we ignore multi-particle collisions.
+    There are three equations governing the elastic collision between a pair of hard
+    discs: (i) conservation of linear momentum, (ii) conservation of kinetic energy,
+    and (iii) upon collision, the normal force acts perpendicular to the surface at
+    the collision point. Physics-ly inclined students are encouraged to derive the
+    equations from first principles; the rest of you may keep reading.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Between particle and wall.* If a particle with velocity (*vx*, *vy*) collides
+    with a wall perpendicular to *x*-axis, then the new velocity is (-*vx*, *vy*);
+    if it collides with a wall perpendicular to the *y*-axis, then the new velocity
+    is (*vx*, -*vy*).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Between two particles.* When two hard discs collide, the normal force acts
+    along the line connecting their centers (assuming no friction or spin). The impulse
+    (*Jx*, *Jy*) due to the normal force in the *x* and *y* directions of a perfectly
+    elastic collision at the moment of contact is:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![impulse due to normal force of elastic collision](../Images/24e5c261332edcc23254462c47e014cd.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: and where *m[i]* and *m[j]* are the masses of particles *i* and *j*, and σ,
+    Δ*x*, Δ*y* and Δ *v* ⋅ Δ*r* are defined as above. Once we know the impulse, we
+    can apply Newton's second law (in momentum form) to compute the velocities immediately
+    after the collision.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*vx[i]'' = vx[i] + Jx / m[i],    vx[j]'' = vx[j] - Jx / m[j]*'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '*vy[i]'' = vy[i] + Jy / m[i],    vy[j]'' = vy[j] - Jy / m[j]*'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '**Particle collision simulation in Java.** Our implementation involves the
+    following data types: [MinPQ.java](MinPQ.java.html), [Particle.java](Particle.java.html),
+    and [CollisionSystem.java](CollisionSystem.java.html).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Particle data type.* Represents particles moving in the unit box.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Event data type.* Data type that represents collision events. There are four
+    different types of events: a collision with a vertical wall, a collision with
+    a horizontal wall, a collision between two particles, and a redraw event. This
+    would be a fine opportunity to experiment with OOP and polymorphism. We propose
+    the following simpler (but somewhat less elegant approach).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: In order to implement `isValid`, the event data type should store the collision
+    counts of the relevant particles at the time the event was created. The event
+    corresponds to a physical collision if the current collision counts of the particles
+    are still the same as when the event was created, i.e., no intervening collisions.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Data files.** We use the following data format. The first line contains the
+    number of particles N. Each of the remaining N lines consists of 6 real numbers
+    (position, velocity, mass, and radius) followed by three integers (red, green,
+    and blue values of color). You may assume that all of the position coordinates
+    are between 0 and 1, and the color values are between 0 and 255. Also, you may
+    assume that none of the particles intersect each other or the walls.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Here are some sample data files:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: <blockqoute>| FILE | DESCRIPTION |
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| [p10.txt](p10.txt) | 10 particles |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [p2000.txt](p2000.txt) | 2000 particles |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [diagonal.txt](diagonal.txt) |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [diagonal1.txt](diagonal1.txt) |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [diagonal2.txt](diagonal2.txt) |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [wallbouncing.txt](wallbouncing.txt) | 9 particles in a row colliding with
+    9 particles in a column |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [wallbouncing2.txt](wallbouncing2.txt) | 10 particles in a row not colliding
+    with 9 particles in a column |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [wallbouncing3.txt](wallbouncing3.txt) | 19 particles in a row colliding
+    with 19 particles in a column |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [p100-.125K.txt](p100-.125K.txt) | 100 particles at 0.125 Kelvin |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [p100-.5K.txt](p100-.5K.txt) | 100 particles at 0.5 Kelvin |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [p100-2K.txt](p100-2K.txt) | 100 particles at 2.0 Kelvin |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [p1000-.5K.txt](p1000-.5K.txt) | 1000 particles at 0.5 Kelvin |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [p1000-2K.txt](p1000-2K.txt) | 1000 particles at 2.0 Kelvin |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [billiards2.txt](billiards2.txt) | cue ball striking pyramid of 3 balls |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [billiards4.txt](billiards4.txt) | cue ball striking pyramid of 10 balls
+    |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [billiards5.txt](billiards5.txt) | cue ball striking pyramid of 15 balls
+    |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [diffusion.txt](diffusion.txt) | diffusion of particles from one side of
+    slit |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [diffusion2.txt](diffusion2.txt) | diffusion of particles from one quarter
+    |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [diffusion3.txt](diffusion3.txt) |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [brownian.txt](brownian.txt) |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [brownian2.txt](brownian2.txt) |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [squeeze.txt](squeeze.txt) | one tiny particle sandwiched between two big
+    particles |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [squeeze2.txt](squeeze2.txt) | one tiny particle sandwiched between two big
+    particles |'
+  prefs: []
+  type: TYPE_TB
+- en: '| [pendulum.txt](pendulum.txt) | pendulum effect |</blockqoute>'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Other potential data files
+  prefs: []
+  type: TYPE_NORMAL
+- en: One particle in motion.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Two particles in head on collision.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Two particles, one at rest, colliding at an angle.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: One red particle in motion, N blue particles at rest.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: N particles on a lattice with random initial directions (but same speed) so
+    that the total kinetic energy is consistent with some fixed temperature T, and
+    total linear momentum = 0. Have a different data set for different values of T.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Diffusion I: assign N very tiny particles of the same size near the center
+    of the container with random velocities.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Diffusion II: N blue particles on left, N green particles on right assigned
+    velocities so that they are thermalized (e.g., leave partition between them and
+    save positions and velocities after a while). Watch them mix. Calculate average
+    diffusion rate?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: N big particles so there isn't much room to move without hitting something.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Einstein''s explanation of Brownian motion: 1 big red particle in the center,
+    N smaller blue particles.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Particle collision game.** Implement the game [Particles](http://www.addictinggames.com/particles.html):
+    you control a red ball with a mouse, trying to avoid colliding with blue balls
+    that behave according to the laws of elastic collision. After a certain interval
+    of time, introduce a new blue ball at random.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Brownian motion.** In 1827, the botanist Robert Brown observed the motion
+    of wildflower pollen grains immersed in water using a microscope. He observed
+    that the pollen grains were in a random motion, following what would become known
+    as Brownian motion. This phenomenon was discussed, but no convincing explanation
+    was provided until Einstein provided a mathematical one in 1905. Einstein''s explanation:
+    the motion of the pollen grain particles was caused by millions of tiny molecules
+    colliding with the larger particles. He gave detailed formulas describing the
+    behavior of tiny particles suspended in a liquid at a given temperature. Einstein''s
+    explanation was intended to help justify the existence of atoms and molecules
+    and could be used to estimate the size of the molecules. Einstein''s theory of
+    Brownian motion enables engineers to compute the diffusion constants of alloys
+    by observing the motion of individual particles. Here''s a demo of [Einstein''s
+    explanation of Brownian motion](brownian.swf) from [here](http://nanoatlas.ifs.hr/brownian_motion.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Free path and free time.** Free path = distance a particle travels between
+    collisions. Plot histogram. Mean free path = average free path length over all
+    particles. As temperature increases, mean free path increases (holding pressure
+    constant). Compute *free time length* = time elapsed before a particle collides
+    with another particle or wall.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Collision frequency.** Number of collisions per second.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Root mean-square velocity.** Root mean-square velocity / mean free path =
+    collision frequency. Root mean square velocity = sqrt(3RT/M) where molar gas constant
+    R = 8.314 J / mol K, T = temperature (e.g., 298.15 K), M = molecular mass (e.g.,
+    0.0319998 kg for oxygen).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Maxwell-Boltzmann distribution.** Distribution of velocity of particles in
+    hard sphere model obey Maxwell-Boltzmann distribution (assuming system has thermalized
+    and particles are sufficiently heavy that we can discount quantum-mechanical effects).
+    Distribution shape depends on temperature. Velocity of each component has distribution
+    proportional to exp(-mv_x^2 / 2kT). Magnitude of velocity in d dimensions has
+    distribution proportional to v^(d-1) exp(-mv^2 / 2kT). Used in statistical mechanics
+    because it is unwieldy to simulate on the order of 10^23 particles. Reason: velocity
+    in x, y, and z directions are normal (if all particles have same mass and radius).
+    In 2d, Rayleigh instead of Maxwell-Boltzmann.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Pressure.** Main thermodynamic property of interest = mean pressure. Pressure
+    = force per unit area exerted against container by colliding molecules. In 2d,
+    pressure = average force per unit length on the wall of the container.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Temperature.** Plot temperature over time (should be constant) = 1/N sum(mv^2)
+    / (d k), where d = dimension = 2, k = Boltzmann''s constant.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Diffusion.** Molecules travel very quickly (faster than a speeding jet) but
+    diffuse slowly because they collide with other molecules, thereby changing their
+    direction. Two vessels connected by a pipe containing two different types of particles.
+    Measure fraction of particles of each type in each vessel as a function of time.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Time reversibility.** Change all velocities and run system backwards. Neglecting
+    roundoff error, the system will return to its original state!'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Maxwell''s demon.** [Maxwell''s demon](http://en.wikipedia.org/wiki/Maxwell''s_demon)
+    is a thought experiment conjured up by James Clerk Maxwell in 1871 to contradict
+    the second law of thermodynamics. Vertical wall in middle with molecule size trap
+    door, N particles on left half and N on right half, particle can only go through
+    trap door if demon lets it through. Demon lets through faster than average particles
+    from left to right, and slower than average particles from right to left. Can
+    use redistribution of energy to run a heat engine by allowing heat to flow from
+    left to right. (Doesn''t violate law because demon must interact with the physical
+    world to observe the molecules. Demon must store information about which side
+    of the trap door the molecule is on. Demon eventually runs out of storage space
+    and must begin erasing previous accumulated information to make room for new information.
+    This erasing of information increases the entropy, requiring kT ln 2 units of
+    work.)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Metric space.** Extend to support spheres and hyperplanes in an arbitrary
+    metric space.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Cell method.** Useful optimization: divide region into rectangular cells.
+    Ensure that particles can only collide with particles in one of 9 adjacent cells
+    in any time quantum. Reduces number of binary collision events that must be calculated.
+    Downside: must monitor particles as they move from cell to cell.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Multi-particle collisions.** Handle multi-particle collisions. Such collisions
+    are important when simulating the break in a game of billiards.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Kinetic heaps or kinetic data structures.** (Guibas)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL

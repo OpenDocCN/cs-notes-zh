@@ -1,0 +1,339 @@
+- en: 3.1   Elementary Symbol Tables
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://algs4.cs.princeton.edu/31elementary](https://algs4.cs.princeton.edu/31elementary)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Symbol table.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The primary purpose of a *symbol table* is to associate a *value* with a *key*.
+    The client can *insert* key–value pairs into the symbol table with the expectation
+    of later being able to *search* for the value associated with a given key.![Typical
+    symbol-table applications](../Images/a0e89ac6eea39d628856dbfa1b254052.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: API.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Here is the API.![Symbol-table API](../Images/34e0b508863f9e6a5b1b3a8b0e7a9502.png)We
+    consider several design choices for our implementations to make our code consistent,
+    compact, and useful.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Generics.* We consider the methods without specifying the types of keys and
+    values being processed, using generics.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Duplicate keys.* Only one value is associated with each key (no duplicate
+    keys in a table). When a client puts a key-value pair into a table already containing
+    that key (and an associated value), the new value replaces the old one. These
+    conventions define the *associative array abstraction*, where you can think of
+    a symbol table as being just like an array, where keys are indices and values
+    are array entries.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Null values.* No key can be associated with the value `null`. This convention
+    is directly tied to our specification in the API that `get()` should return `null`
+    for keys not in the table. This convention has two (intended) consequences: First,
+    we can test whether or not the symbol table defines a value associated with a
+    given key by testing whether `get()` returns `null`. Second, we can use the operation
+    of calling `put()` with `null` as its second (value) argument to implement deletion.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Deletion.* Deletion in symbol tables generally involves one of two strategies:
+    *lazy* deletion, where we associate keys in the table with `null`, then perhaps
+    remove all such keys at some later time, and *eager* deletion, where we remove
+    the key from the table immediately. As just discussed, the code `put(key, null)`
+    is an easy (lazy) implementation of `delete(key)`. When we give an (eager) implementation
+    of `delete()`, it is intended to replace this default.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Iterators.* The `keys()` method returns an `Iterable<Key>` object for clients
+    to use to iterate through the keys.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Key equality.* Java requires that all objects implement an `equals()` method
+    and provides implementations both for standard types such as `Integer`, `Double`,
+    and `String` and for more complicated types such as `Date`, `File` and `URL`.
+    For applications involving these types of data, you can just use the built-in
+    implementation. For example, if `x` and `y` are `String` values, then `x.equals(y)`
+    is true if and only if `x` and `y` have the same length and are identical in each
+    character position. In practice, keys might be more complicated, as in [Person.java](Person.java.html).
+    For such client-defined keys, you need to override `equals()`. Java''s convention
+    is that `equals()` must implement an *equivalence relation*:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Reflexive*: `x.equals(x)` is `true`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Symmetric*: `x.equals(y)` is `true` if and only if `y.equals(x)` is `true`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Transitive*: if `x.equals(y)` and `y.equals(z)` are `true`, then so is `x.equals(z)`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'In addition, `equals()` must take an `Object` as argument and satisfy the following
+    properties:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Consistency*: multiple invocations of `x.equals(y)` consistently return the
+    same value, provided neither object is modified'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Not null*: `x.equals(null)` returns `false`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A best practice is to make `Key` types immutable, because consistency cannot
+    otherwise be guaranteed.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Ordered symbol tables.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: In typical applications, keys are `Comparable` objects, so the option exists
+    of using the code `a.compareTo(b)` to compare two keys `a` and `b`. Several symbol-table
+    implementations take advantage of order among the keys that is implied by `Comparable`
+    to provide efficient implementations of the `put()` and `get()` operations. More
+    important, in such implementations, we can think of the symbol table as keeping
+    the keys in order and consider a significantly expanded API that defines numerous
+    natural and useful operations involving relative key order. For applications where
+    keys are `Comparable`, we implement the following API:![Ordered Symbol-table API](../Images/c57f13ccd6851f3798bbec5af0c043f3.png)![Examples
+    of ordered symbol table operations](../Images/34f6fe5ddf15e5b2b54e085caf300660.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Minimum and maximum.* Perhaps the most natural queries for a set of ordered
+    keys are to ask for the smallest and largest keys. We have already encountered
+    the need for these operations (in our discussion of priority queues in Section
+    3.4).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Floor and ceiling.* Given a key, it is often useful to be able to perform
+    the *floor* operation (find the largest key that is less than or equal to the
+    given key) and the *ceiling* operation (find the smallest key that is greater
+    than or equal to the given key). The nomenclature comes from functions defined
+    on real numbers (the floor of a real number x is the largest integer that is smaller
+    than or equal to x and the ceiling of a real number x is the smallest integer
+    that is greater than or equal to x).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Rank and selection.* The basic operations for determining where a new key
+    fits in the order are the *rank* operation (find the number of keys less than
+    a given key) and the *select* operation (find the key with a given rank). We also
+    have already encountered the need for these operations, in our discussion of sort
+    applications in Section 2.5.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Range queries.* How many keys fall within a given range? Which keys fall in
+    a given range? The two-argument `size()` and `keys()` methods that answer these
+    questions are useful in many applications, particularly in large databases.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Delete minimum and delete maximum.* Our ordered symbol table API adds to the
+    basic API methods to delete the maximum and minimum keys (and their associated
+    values).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Exceptional cases.* When a method is to return a key and there is no key fitting
+    the description in the table, our convention is to throw an exception.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Key equality (revisited).* The best practice in Java is to make `compareTo()`
+    consistent with `equals()` in all `Comparable` types. That is, for every pair
+    of objects `a` and `b` in any give `Comparable` type, it should be the case that
+    `(a.compareTo(b) == 0)` and `a.equals(b)` have the same value.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sample clients.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'We consider two clients: a test client that we use to trace algorithm behavior
+    on small inputs and a performance client.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Test client.* The `main()` client in each of our symbol table implementations
+    reads in a sequence of strings from standard input, builds a symbol table by associating
+    the value i with the ith key in the input, and then prints the table.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Frequency counter.* Program [FrequencyCounter.java](FrequencyCounter.java.html)
+    is a symbol-table client that finds the number of occurrences of each string (having
+    at least as many characters as a given threshold length) in a sequence of strings
+    from standard input, then iterates through the keys to find the one that occurs
+    the most frequently.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sequential search in an unordered linked list.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Program [SequentialSearchST.java](SequentialSearchST.java.html) implements a
+    symbol table with a linked list of nodes that contain keys and values. To implement
+    `get()`, we scan through the list, using `equals()` to compare the search key
+    with the key in each node in the list. If we find the match, we return the associated
+    value; if not, we return `null`. To implement `put()`, we also scan through the
+    list, using `equals()` to compare the client key with the key in each node in
+    the list. If we find the match, we update the value associated with that key to
+    be the value given in the second argument; if not, we create a new node with the
+    given key and value and insert it at the beginning of the list. This method is
+    known as *sequential search*.![Sequential search](../Images/8211937f9eb8e44a579b4fe0c723c646.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: Proposition A.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Unsuccessful search and insert in an (unordered) linked-list symbol table both
+    use N compares, and successful search uses N compares in the worst case. In particular,
+    inserting N keys into an initially empty linked-list symbol table uses ~N^2/2
+    compares.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Binary search in an ordered array
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: . Program [BinarySearchST.java](BinarySearchST.java.html) implements the ordered
+    symbol table API. The underlying data structure is two parallel array, with the
+    keys kept in order. The heart of the implementation is the `rank()` method, which
+    returns the number of keys smaller than a given key. For `get()`, the rank tells
+    us precisely where the key is to be found if it is in the table (and, if it is
+    not there, that it is not in the table). For `put()`, the rank tells us precisely
+    where to update the value when the key is in the table, and precisely where to
+    put the key when the key is not in the table. We move all larger keys over one
+    position to make room (working from back to front) and insert the given key and
+    value into the proper positions in their respective arrays.![Binary search symbol
+    table](../Images/32c264b93d2ae14592d880bbf67cfbba.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Binary search.* The reason that we keep keys in an ordered array is so that
+    we can use array indexing to dramatically reduce the number of compares required
+    for each search, using a venerable classic algorithm known as *binary search*.
+    The basic idea is simple: we maintain indices into the sorted key array that delimit
+    the subarray that might contain the search key. To search, we compare the search
+    key against the key in the middle of the subarray. If the search key is less than
+    the key in the middle, we search in the left half of the subarray; if the search
+    key is greater than the key in the middle we search in the right half of the subarray;
+    otherwise the key in the middle is equal to the search key.![Rank](../Images/0a1ba025abfb5277c196a9bf1de9555f.png)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Other operations.* Since the keys are kept in an ordered array, most of the
+    order-based operations are compact and straightforward.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Proposition B.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Binary search in an ordered array with N keys uses no more than lg N + 1 compares
+    for a search (successful or unsuccessful) in the worst case.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Proposition C.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Inserting a new key into an ordered array uses ~ 2N array accesses in the worst
+    case, so inserting N keys into an initially empty table uses ~ N^2 array accesses
+    in the worst case.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Write a client program [GPA.java](GPA.java.html) that creates a symbol table
+    mapping letter grades to numerical scores, as in the table below, then reads from
+    standard input a list of letter grades and computes and prints the GPA (the average
+    of the numerical scores of the corresponding grades).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Develop a symbol-table implementation [ArrayST.java](ArrayST.java.html) that
+    uses an (unordered) array as the underlying data structure to implement our basic
+    symbol table API.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Implement `size()`, `delete()`, and `keys()` for [SequentialSearchST.java](SequentialSearchST.java.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Implement the `delete()` method for [BinarySearchST.java](BinarySearchST.java.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Implement the `floor()` method for [BinarySearchST.java](BinarySearchST.java.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Creative Problems
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Test client.** Write a test client [TestBinarySearchST.java](TestBinarySearchST.java.html)
+    for use in testing the implementations of `min()`, `max()`, `floor()`, `ceiling()`,
+    `select()`, `rank()`, `deleteMin()`, <t>deleteMax(), and `keys()`.</t>'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Certification.** Add `assert` statements to [BinarySearchST.java](BinarySearchST.java.html)
+    to check algorithm invariants and data structure integrity after every insertion
+    and deletion. For example, every index `i` should always be equal to `rank(select(i))`
+    and the array should always be in order.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Web Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Phone number data type.** Write a data type [PhoneNumber.java](PhoneNumber.java.html)
+    that implements US phone numbers. Include an `equals()` method.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Student data type.** Write a data type [Student.java](Student.java.html)
+    that implements a student with a name and section. Include an `equals()` method.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL

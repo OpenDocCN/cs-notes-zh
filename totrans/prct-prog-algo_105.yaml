@@ -1,0 +1,675 @@
+- en: 4.4   Shortest Paths
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://algs4.cs.princeton.edu/44sp](https://algs4.cs.princeton.edu/44sp)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Shortest paths.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: An edge-weighted digraph is a digraph where we associate weights or costs with
+    each edge. A *shortest path* from vertex s to vertex t is a directed path from
+    s to t with the property that no other such path has a lower weight.![Shortest
+    path](../Images/db83588d47a16840571ea82eb7a5826a.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: Properties.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We summarize several important properties and assumptions.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Paths are directed.* A shortest path must respect the direction of its edges.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*The weights are not necessarily distances.* Geometric intuition can be helpful,
+    but the edge weights weights might represent time or cost.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Not all vertices need be reachable.* If t is not reachable from s, there is
+    no path at all, and therefore there is no shortest path from s to t.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Negative weights introduce complications.* For the moment, we assume that
+    edge weights are positive (or zero).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Shortest paths are normally simple.* Our algorithms ignore zero-weight edges
+    that form cycles, so that the shortest paths they find have no cycles.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Shortest paths are not necessarily unique.* There may be multiple paths of
+    the lowest weight from one vertex to another; we are content to find any one of
+    them.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Parallel edges and self-loops may be present.* In the text, we assume that
+    parallel edges are not present and use the notation v->w to refer to the edge
+    from v to w, but our code handles them without difficulty.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Edge-weighted digraph data type.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We represent the weighted edges using the following API:![API for a weighted
+    directed edge](../Images/441e4691ecf4079c88407d73c33143a7.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: The `from()` and `to()` methods are useful for accessing the edge's vertices.
+    [DirectedEdge.java](DirectedEdge.java.html) implements this API.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'We represent edge-weighted digraphs using the following API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![API for an'
+  prefs: []
+  type: TYPE_NORMAL
+- en: edge-weighted graph](../Images/5183e9f715f7f519078e707833344725.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[EdgeWeightedDigraph.java](EdgeWeightedDigraph.java.html) implements the API
+    using the adjacency-lists representation.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![edge-weighted digraph representation](../Images/1f9ed2ec26658559312f493e7eded192.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Shortest paths API.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We use the following API for computing the shortest paths of an edge-weighted
+    digraph:![API for SP implementations](../Images/9548d3f320bf2ad1ece9806c44fdb571.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'We prepare some test data:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[tinyEWD.txt](tinyEWD.txt) contains 8 vertices and 15 edges'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[mediumEWD.txt](mediumEWD.txt) contains 250 vertices and 2,546 edges'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[1000EWG.txt](1000EWD.txt) contains 1,000 vertices and 16,866 edges'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[10000EWG.txt](10000EWD.txt) contains 10,000 vertices and 123,462 edges'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[largeEWG.txt](largeEWD.txt) contains one million vertices and 15,172,126 edges.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Data structures for single-source shortest paths.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Given an edge-weighted digraph and a designated vertex s, a *shortest-paths
+    tree* (SPT) is a subgraph containing s and all the vertices reachable from s that
+    forms a directed tree rooted at s such that every tree path is a shortest path
+    in the digraph.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'We represent the shortest paths with two vertex-indexed arrays:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Edges on the shortest-paths tree*: `edgeTo[v]` is the the last edge on a shortest
+    path from s to v.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Distance to the source*: `distTo[v]` is the length of the shortest path from
+    s to v.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Shortest paths tree](../Images/1bf0dc42e46d1d94fc775e9c7babfff6.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Relaxation.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Our shortest-paths implementations are based on an operation known as *relaxation*.
+    We initialize `distTo[s]` to 0 and `distTo[v]` to infinity for all other vertices
+    v.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Edge relaxation.* To relax an edge v->w means to test whether the best known
+    way from s to w is to go from s to v, then take the edge from v to w, and, if
+    so, update our data structures.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '![edge relaxation](../Images/1304176f7960122f8093d36491508332.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: '*Vertex relaxation.* All of our implementations actually relax all the edges
+    pointing from a given vertex.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Dijkstra's algorithm.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Dijkstra's algorithm initializing `dist[s]` to 0 and all other `distTo[]` entries
+    to positive infinity. Then, it repeatedly relaxes and adds to the tree a non-tree
+    vertex with the lowest `distTo[]` value, continuing until all vertices are on
+    the tree or no non-tree vertex has a finite `distTo[]` value.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[DijkstraSP.java](DijkstraSP.java.html) is an efficient implementation of Dijkstra''s
+    algorithm. It uses [IndexMinPQ.java](IndexMinPQ.java.html) for the priority queue.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Proposition.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Dijkstra's algorithm solves the single-source shortest-paths problem in edge-weighted
+    digraphs with nonnegative weights using extra space proportional to V and time
+    proportional to E log V (in the worst case).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Acyclic edge-weighted digraphs.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We use the term *edge-weighted DAG* to refer to an acyclic edge-weighted digraph.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Single-source shortest paths problem in edge-weighted DAGs.* We now consider
+    an algorithm for finding shortest paths that is simpler and faster than Dijkstra''s
+    algorithm for edge-weighted DAGs.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: It solves the single-source problem in linear time.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: It handles negative edge weights.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: It solves related problems, such as finding longest paths.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The algorithm combines vertex relaxation with topological sorting. We initialize
+    `distTo[s]` to 0 and all other `distTo[]` values to infinity, then relax the vertices,
+    one by one, taking the vertices in *topological order*. [AcyclicSP.java](AcyclicSP.java.html)
+    is an implementation of this approach. It relies on this version of [Topological.java](Topological.java.html),
+    extended to support edge-weighted digraphs.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Single-source longest paths problem in edge-weighted DAGs.* We can solve the
+    single-source longest paths problems in edge-weighted DAGs by initializing the
+    `distTo[]` values to negative infinity and switching the sense of the inequality
+    in `relax()`. [AcyclicLP.java](AcyclicLP.java.html) implements this approach.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Critical path method.* We consider the parallel precedence-constrained job
+    scheduling problem: Given a set of jobs of specified duration to be completed,
+    with precedence constraints that specify that certain jobs have to be completed
+    before certain other jobs are begun, how can we schedule the jobs on identical
+    processors (as many as needed) such that they are all completed in the minimum
+    amount of time while still respecting the constraints?![Job-scheduling problem](../Images/4cabc116e51702f1647e3efa2753e4f8.png)![Job-scheduling
+    solution](../Images/c9100c506da13cec56164c9f91510fac.png)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'This problem can be solved by formulating it as a longest paths problem in
+    an edge-weighted DAG: Create an edge-weighted DAG with a source s, a sink t, and
+    two vertices for each job (a start vertex and an end vertex). For each job, add
+    an edge from its start vertex to its end vertex with weight equal to its duration.
+    For each precedence constraint v->w, add a zero-weight edge from the end vertex
+    corresponding to v to the beginning vertex corresponding to w. Also add zero-weight
+    edges from the source to each job''s start vertex and from each job''s end vertex
+    to the sink.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Job-scheduling problem reduction to longest paths](../Images/c07307c1747961f6c4c068fed76e3000.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Now, schedule each job at the time given by the length of its longest path from
+    the source.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Job-scheduling problem critical path](../Images/9d882d2d8076624c71430c25e4f19b33.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: '[CPM.java](CPM.java.html) is an implementation of the critical path method.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Proposition.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: By relaxing vertices in topological order, we can solve the single-source shortest-paths
+    and longest-paths problems for edge-weighted DAGs in time proportional to E +
+    V.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Shortest paths in general edge-weighted digraphs.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We can solve shortest path problems if (i) all weights are nonnegative or (ii)
+    there are no cycles.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Negative cycles.* A *negative cycle* is a directed cycle whose total weight
+    (sum of the weights of its edges) is negative. The concept of a shortest path
+    is meaningless if there is a negative cycle.![an edge-weighted digraph with a
+    negative cycle](../Images/77cb49d7a1684da2f5ce229fa97a38e8.png)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Accordingly, we consider edge-weighted digraphs with no negative cycles.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Bellman-Ford algorithm.* Initialize `distTo[s]` to 0 and all other `distTo[]`
+    values to infinity. Then, considering the digraph''s edges in any order, and relax
+    all edges. Make V such passes.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We do not consider this version in detail because it *always* relaxes V E edges.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Queue-based Bellman-Ford algorithm.* The only edges that could lead to a change
+    in `distTo[]` are those leaving a vertex whose `distTo[]` value changed in the
+    previous pass. To keep track of such vertices, we use a FIFO queue. [BellmanFordSP.java](BellmanFordSP.java.html)
+    implements this approach by maintaining two additional data structures:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A queue of vertices to be relaxed
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A vertex-index boolean array `onQ[]` that indicates which vertices are on the
+    queue, to avoid duplicates
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Negative cycle detection.* In many applications, our goal is to check for
+    and to check for and extract negative cycles. Accordingly, we add the following
+    methods to the API:![API for negative cycle detection](../Images/c86c2af288a5d75a3fcf9e63f4db2144.png)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There is a negative cycle reachable from the source if and only if the queue
+    is nonempty after the Vth pass through all the edges. Moreover, the subgraph of
+    edges in our `edgeTo[]` array must contain a negative cycle. Accordingly, to implement
+    `negativeCycle()` [BellmanFordSP.java](BellmanFordSP.java.html) builds an edge-weighted
+    digraph from the edges in `edgeTo[]` and looks for a cycle in that digraph. To
+    find the cycle, it uses [EdgeWeightedDirectedCycle.java](EdgeWeightedDirectedCycle.java.html),
+    a version of [DirectedCycle.java](../42directed/DirectedCycle.java.html) from
+    Section 4.3, adapted to work for edge-weighted digraphs. We amortize the cost
+    of this check by performing this check only after every Vth edge relaxation.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Arbitrage detection.* Consider a market for financial transactions that is
+    based on trading commodities. The table in [rates.txt](rates.txt) shows conversion
+    rates among currencies. The first line in the file is the number V of currencies;
+    then the file has one line per currency, giving its name followed by the conversion
+    rates to the other currencies. An *arbitrage opportunity* is a directed cycle
+    such that the product of the exchange rates is greater than one. For example,
+    our table says that 1,000 U.S. dollars will buy 1,000.00 × .741 = 741 euros, then
+    we can buy 741 × 1.366 = 1,012.206 Canadian dollars with our euros, and finally,
+    1,012.206 × .995 = 1,007.14497 U.S. dollars with our Canadian dollars, a 7.14497-dollar
+    profit!'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '| ![Exchange rates](../Images/94c6ddabeeebe712eb0d0a178d29e9c0.png) |      
+          | ![Arbitrage opportunity](../Images/8995a58b650884497d2518894a88a00d.png)
+    |'
+  prefs:
+  - PREF_IND
+  type: TYPE_TB
+- en: To formulate the arbitrage problem as a negative-cycle detection problem, replace
+    each weight by its *logarithm*, negated. With this change, computing path weights
+    by multiplying edge weights in the original problem corresponds to adding them
+    in the transformed problem. [Arbitrage.java](Arbitrage.java.html) identifies arbitrage
+    opportunities in a currency-exchange network by solving the corresponding negative
+    cycle detection problem.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Proposition.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: There exists a shortest path from s to v in an edge-weighted digraph if and
+    only if there exists at least one directed path from s to v and no vertex on any
+    directed path from s to v is on a negative cycle.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Proposition.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The Bellman-Ford algorithm solves the single-source shortest-paths problem from
+    a given source s (or finds a negative cycle reachable from s) for any edge-weighted
+    digraph with V vertices and E edges, in time proportional to E V and extra space
+    proportional to V, in the worst case.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q + A
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Q.** Does Dijkstra''s algorithm work with negative weights?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Yes and no. There are two shortest paths algorithms known as *Dijkstra''s
+    algorithm*, depending on whether a vertex can be enqueued on the priority queue
+    more than once. When the weights are nonnegative, the two versions coincide (as
+    no vertex will be enqueued more than once). The version implemented in [DijkstraSP.java](DijkstraSP.java.html)
+    (which allows a vertex to be enqueued more than once) is correct in the presence
+    of negative edge weights (but no negative cycles) but its running time is exponential
+    in the worst case. (We note that [DijkstraSP.java](DijkstraSP.java.html) throws
+    an exception if the edge-weighted digraph has an edge with a negative weight,
+    so that a programmer is not surprised by this exponential behavior.) If we modify
+    [DijkstraSP.java](DijkstraSP.java.html) so that a vertex cannot be enqueued more
+    than once (e.g., using a `marked[]` array to mark those vertices that have been
+    relaxed), then the algorithm is guaranteed to run in *E* log *V* time but it may
+    yield incorrect results when there are edges with negative weights.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: True or false. Adding a constant to every edge weight does not change the solution
+    to the single-source shortest-paths problem.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution.* False.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Provide an implementation of `toString()` for [EdgeWeightedDigraph.java](EdgeWeightedDigraph.java.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Use the memory-cost model of Section 1.4 to determine the amount of memory used
+    by [EdgeWeightedDigraph.java](EdgeWeightedDigraph.java.html) to represent a graph
+    with *V* vertices and *E* edges.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution.* 56 + 40V + 72E. [MemoryOfEdgeWeightedDigraph.java](MemoryOfEdgeWeightedDigraph.java.html)
+    computes it empirically assuming that no `Integer` values are cached—Java typically
+    caches the integers -128 to 127.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Adapt the `DirectedCycle` and `Topological` classes from Section 4.2 to use
+    the `EdgeweightedDigraph` and `DirectedEdge` APIs of this section, thus implementing
+    [EdgeWeightedDirectedCycle.java](EdgeWeightedDirectedCycle.java.html) and [Topological.java](Topological.java.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Suppose that we convert an `EdgeWeightedGraph` into an `EdgeWeightedDigraph`
+    by creating two `DirectedEdge` objects in the `EdgeWeightedDigraph` (one in each
+    direction) for each `Edge` in the `EdgeWeightedGraph` and then use the Bellman-Ford
+    algorithm. Explain why this approach fails spectacularly.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution:* This can introduce negative cost cycles even if the edge-weighted
+    graph does not contain them.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: What happens if you allow a vertex to be enqueued more than once in the same
+    pass in the Bellman-Ford algorithm?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: The running time of the algorithm can go exponential. For example,
+    consider what happens for the complete edge-weighted digraph whose edge weights
+    are all -1.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Creative Problems
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Longest paths in DAGs.** Develop an implementation [AcyclicLP.java](AcyclicLP.java.html)
+    that can solve the longest-paths problem in edge-weighted DAGs.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**All-pairs shortest paths on a line.** Given a weighted line-graph (undirected
+    connected graph, all vertices of degree 2, except two endpoints which have degree
+    1), devise an algorithm that preprocesses the graph in linear time and can return
+    the distance of the shortest path between any two vertices in constant time.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Partial solution.* Find a vertex s of degree 1 and run breadth-first (or depth-first)
+    search to find the order in which the remaining vertices appear. Then, compute
+    the length of the shortest path from s to v for each vertex v, say `dist[v]`.
+    The shortest path between v and w is |`dist[v] - dist[w]`|.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Monotonic shortest path.** Given an edge-weighted digraph, find a *monotonic*
+    shortest path from s to every other vertex. A path is monotonic if the weight
+    of every edge on the path is either strictly increasing or strictly decreasing.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Partial solution*: relax edges in ascending order and find a best path; then
+    relax edges in descending order and find a best path.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Lazy implementation of Dijkstra''s algorithm.** Develop an implementation
+    [LazyDijkstraSP.java](LazyDijkstraSP.java.html) of the lazy version of Dijkstra''s
+    algorithm that is described in the text.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Bellman-Ford queue never empties.** Show that if there is a negative cycle
+    reachable from the source in the queue-based implementation of the Bellman-Ford
+    algorithm, then the queue never empties.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: Consider a negative cycle and suppose that `distTo[w] <= distTo[v]
+    + length(v, w)` for all edges on cycle W. Summing up this inequality for all edges
+    on the cycle implies that the length of the cycle is nonnegative.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Bellman-Ford negative cycle detection.** Show that if any edge is relaxed
+    during the Vth pass of the generic Bellman-Ford algorithm, then the `edgeTo[]`
+    array has a directed cycle and any such cycle is a negative cycle.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: todo.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Web Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Optimal substructure property.** Prove that every subpath on a shortest path
+    from v to w is also a shortest path between the two endpoints.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Unique shortest path tree.** Suppose that there is a unique shortest path
+    from s to every other vertex. Prove that the SPT is unique.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**No negative cycles.** Prove that if the generic algorithm terminates, then
+    there are no negative cycles reachable from s. Hint: upon termination, all edges
+    reachable from s satisfy distTo[w] <= distTo[v] + e.weight(). Add up this inequality
+    for all edges along a cycle.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Predecessor graph.** True or false. During execution of Bellman-Ford in an
+    edge-weighted digraph with no negative cycles, following the `edgeTo[]` array
+    always yields a path back to s. Repeat the question for Dijkstra''s algorithm.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Yen''s improvement to Bellman-Ford.** [[reference](http://11011110.livejournal.com/215330.html)]
+    Partition the edges into two DAGs A and B: A consists of edges that go from a
+    lower indexed vertex to a higher indexed vertex; B consists of edges that go from
+    a higher indexed vertex to a lower indexed vertex. When iterating through all
+    of the edges in a phase of Bellman-Ford, first iterate through the edges in A
+    in ascending order of vertex number (a topological order of A), then iterate through
+    the edges in B in descending order of vertex number (a topological order of B).
+    When iterating through the edges in A, any path in the SPT that starts at a vertex
+    with the correct `distTo[]` value and uses only edges in A results in the correct
+    `distTo[]` value; similarly for B. The number of passes needed is the maximum
+    number of A-B alternations on a path, which is at most (V+1)/2\. Thus, the number
+    of passes is at most (V+1)/2 instead of V.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Replacement paths.** Given an edge-weighted digraph with nonnegative weights
+    and source s and sink t, design an algorithm to find the shortest path from s
+    to t that does not use edge e for every edge e. The order of growth of your algorithm
+    should be E V log V.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Road network data sets.**'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: From the [DIMACS challenge](http://www.dis.uniroma1.it/~challenge9/download.shtml).
+    Here are [all the roads in each state](http://www.dis.uniroma1.it/~challenge9/data/tiger/).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[rome99.txt](rome99.txt) is a large portion of the directed road network of
+    Rome from the [DIMACS challenge](http://www.dis.uniroma1.it/~challenge9/download.shtml).
+    The graph contains 3353 vertices and 8870 edges. Vertices correspond to intersections
+    between roads and edges correspond to roads or road segments. The edge weights
+    are distances in meters.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[NYC.txt](NYC.txt) is the undirected road network of New York City. The graph
+    contains 264346 vertices and 733846 edges. It is connected, contains parallel
+    edges, but no self-loops. The edge weights are travel times and are strictly positive.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Internet routing.** [OSPF (Open Shortest Path First)](http://en.wikipedia.org/wiki/Open_shortest_path_first)
+    is a widely used protocol for Internet routing that uses Dijkstra''s algorithm.
+    [RIP (Routing Information Protocol)](http://en.wikipedia.org/wiki/Routing_Information_Protocol)
+    is another routing protocol based on the Bellman-Ford algorithm.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Shortest path with the ability to skip one edge.** Given an edge-weighted
+    digraph with nonnegative weights, Design an E log V algorithm for finding the
+    shortest path from s to t where you have the option to change the weight of any
+    one edge to 0.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution.* Compute the shortest path from s to every other vertex; compute
+    the shortest path from every vertex to t. For each edge e = (v, w), compute the
+    sum of the length of the shortest path from s to v and the length of the shortest
+    path from w to t. The smallest such sum provides the shortest such path.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Shortest paths in undirected graphs.** Write a program [DijkstraUndirectedSP.java](DijkstraUndirectedSP.java.html)
+    that solves the single-source shortest paths problems in undirected graphs with
+    nonnegative weights using Dijkstra''s algorithm.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Floyd-Warshall algorithm.** [FloydWarshall.java](FloydWarshall.java.html)
+    implements the Floyd-Warshall algorithm for the all-pairs shortest path problem.
+    It takes time proportional to V^3 and space proportional to V^2. It uses [AdjMatrixEdgeWeightedDigraph.java](AdjMatrixEdgeWeightedDigraph.java.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Randomized Bellman-Ford.** [[reference](http://11011110.livejournal.com/215330.html)]
+    Suppose that we choose the vertex order in Yen''s algorithm uniformly at randomly
+    (where A contains all the edges that go from a lower vertex in the permutation
+    to a higher vertex). Prove that the expected number of passes is at most (V+1)/3.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Suurballe''s algorithm.** Given a digraph with non-negative edge weights
+    and two distinguished vertices s and t, find two edge-disjoint paths from s to
+    t such that the sum of the weights of the two paths is minimized.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution.* This can be done with a clever application of Dijkstra''s algorithm,
+    known as [Suurballe''s algorithm](https://en.wikipedia.org/wiki/Suurballe%27s_algorithm).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL

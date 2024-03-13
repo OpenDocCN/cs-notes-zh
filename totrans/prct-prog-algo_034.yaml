@@ -1,0 +1,495 @@
+- en: 6.2   TOY Machine
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/java/62toy](https://introcs.cs.princeton.edu/java/62toy)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: This section under construction.
+  prefs: []
+  type: TYPE_NORMAL
+- en: TOY is an imaginary machine (created at Princeton) that is very similar to ancient
+    computers. We study it today because it shares the essential characteristics of
+    modern day microprocessors. Also, it demonstrates that simple computational models
+    can perform useful and nontrivial calculations. In this document we describe how
+    to use and program the TOY machine. In [Chapter 7](../70circuits), we describe
+    how to build such a machine in hardware.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Inside the TOY machine.** The TOY machine consists of an arithmetic logic
+    unit, memory, registers, a program counter, switches, lights, and a few buttons
+    *Load*, *Look*, *Step*, *Run*, *Enter*, *Stop*, and *Reset*. We now describe the
+    function of each of these components. Then, we will describe how the use these
+    components to write TOY machine language programs.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![The X-TOY Machine](../Images/92c32216eeefa195fb83124a0bc080de.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: '**Why study TOY.**'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Helps us understand how a computer really works.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Relates Java to the machine.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Helps us understand Java references and C pointers. This makes us better programmers.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Still a few situation today where machine language programming (or assembly)
+    is done in practice, notably video processing, audio processing, and scientific
+    computing. Programmers want to exploit the blazingly fast capabilities of advanced
+    computer hardware designed especially for multimedia applications, including Intel's
+    MMX and SSE, Apple's AltiVec, and graphics cards. Game programmers write hand-tuned
+    assembly programs for pixel-shading and texture-mapping to optimize performance.
+    Computational scientists realized that the same vector operations were equally
+    useful for scientific applications, applying an FFT to scientific data.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Word size.** The TOY machine has two types of storage: main memory and registers.
+    Each entity stores one *word* of information. On the TOY machine, a word is a
+    sequence of 16 bits. Typically, we interpret these 16 bits as a hexadecimal integer
+    in the range `0000` through `FFFF`. Using *two''s complement notation*, we can
+    also interpret it as a decimal integer in the range -32,768 to +32,767. See Section
+    5.1 for a refresher on number representations and two''s complement integers.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Main memory.** The TOY machine has 256 words of *main memory*. Each memory
+    location is labeled with a unique *memory address*. By convention, we use the
+    256 hexadecimal integers in the range `00` through `FF`. Think of a memory location
+    as a mailbox, and a memory address as a postal address. Main memory is used to
+    store instructions and data.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Registers.** The TOY machine has 16 *registers*, indexed from `0` through
+    `F`. Registers are much like main memory: each register stores one 16-bit word.
+    However, registers provide a faster form of storage than main memory. Registers
+    are used as scratch space during computation and play the role of variables in
+    the TOY language. Register 0 is a special register whose output value is always
+    0.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Program counter.** The *program counter* or `pc` is an extra register that
+    keeps track of the next instruction to be executed. It stores 8 bits, corresponding
+    to a hexadecimal integer in the range `00` through `FF`. This integer stores the
+    memory address of the next instruction to execute.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Core dump.** A *core dump* is a complete listing of the state of the machine
+    contents at a particular instant in time. The core dump provides a record of what
+    the machine has done, and it also completely determines what machine will do.
+    Both data and the program are stored in main memory, and it is up to the programmer
+    to ensure that data is treated as data, and that instructions are treated as instructions.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![A Core Dump of TOY](../Images/afda7a2b24e583ee1db8d9b068cfb771.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: '**Input.** The *switches* and *Load* button are used to enter instructions
+    and data into the machine. The switches behave just like ordinary light switches:
+    they are either on or off. There are 8 *memory address switches* to select one
+    of the 2⁸ = 256 possible memory addresses. There are also 16 *data switches* to
+    select a 16 bit integer to load into the corresponding memory location. To enter
+    data into memory, you set the appropriate memory and data switches, and then press
+    the *Load* button. This tedious process is repeated for each memory location.
+    All registers and memory locations are initially `0000`; the program counter is
+    initially `10`.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Output**. The *memory address switches*, *lights* and *Look* button are used
+    to display the address and contents of one word of main memory, as the program
+    is being executed. To select which word of main memory to view, you set the 8
+    memory address switches and press the *Look* button. Now, the 8 address lights
+    display the chosen memory address (which at the moment is the same as the address
+    switches). The 16 data lights display the contents of that memory location. Old
+    programmers could often know what part of the program was being executed by staring
+    at the pattern of memory lights.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Running the machine.** To execute a TOY program, you first enter the program
+    and data into main memory, one word at a time, as described below. Then, you set
+    the initial value of the program counter: to do this, set the memory address switches
+    to the desired value (typically `10`) and press *Look*. Now, you can press the
+    *Run* or *Step* button to initiate the computation. From this point on, the TOY
+    machine executes instructions in a specific, well-defined way. First it checks
+    the value of the program counter and fetches the contents of this memory location.
+    Next, it increments the program counter by 1. (For example, if the program counter
+    is `10`, it gets incremented to `11`.) Finally, it interprets this data as an
+    instruction and executes it according to the rules below. Each instruction can
+    modify the contents of various registers, main memory, or even the program counter
+    itself. It may also output integers to the LED standard output. If the program
+    needs to read a value from standard input, then the *INWAIT* light activates and
+    the machine waits until the user enters a 16-bit integer using the data switches,
+    and presses the *Enter* button. After executing the instruction, the whole fetch-execute
+    cycle is repeated, using the new value of the program counter to obtain the next
+    instruction. This continues forever, or until the machine executes a halt instruction.
+    As with Java, it is possible to write programs that go into infinite loops. It
+    is always possible to stop the TOY machine by pulling the plug or pressing the
+    *Stop* button.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Von Neumann Machine**. One of the essential characteristics of the TOY machine
+    is that it stores computer programs as numbers, and both data and programs are
+    stored in the *same* main memory. In 1945, Princeton scholar John von Neumann
+    first popularized this *stored-program model* or *von Neumann machine*. It enables
+    computers to perform any type of computation, without requiring the user to physically
+    alter or reconfigure the hardware. In contrast, to program the ENIAC computer,
+    the operator had to manually plug in cables and set switches. This was quite tedious
+    and time consuming. This simple but fundamental idea of the stored-program machine
+    has been incorporated into all modern digital computers.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Since the program and data share the same space, the machine can modify its
+    data or the program itself while it is executing. That is, code and data are the
+    same, or at least they can be. The memory is interpreted as an instruction when
+    the program counter references it, and as data when an instruction references
+    it. The ability to treat the program as data is crucial. Consider what happens
+    when you want to download a program from a remote location, e.g., `download.com`.
+    It is no different from receiving email, or any other data. Compilers and debuggers
+    are also programs that read in other programs as input data. Treating programs
+    as data is not without its perils. Computer viruses are (malicious) programs that
+    propagate by writing new programs or modifying existing ones.
+  prefs: []
+  type: TYPE_NORMAL
+- en: In hindsight von Neumann's idea may seem obvious. However, it is not obvious
+    whether a computer built around a stored program model can be as powerful as a
+    computer that can be rewired and reconfigured. In fact, the ability to physically
+    reconfigure a computer does not enable you to solve more problems, so long as
+    basic instruction set is rich enough (as is the case with the TOY machine). This
+    is a consequence of previous work by Alan Turing on *Turing machines*, which we
+    studies in [Chapter 5](../50theory).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Instruction Set Architecture
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The *instruction set architecture* (ISA) is the interface between the TOY programming
+    langauge and the physical hardware that executes the program. The ISA specifies
+    the size of main memory, number of registers, and number of bits per instruction.
+    It also specifies exactly which instructions the machine is capable of performing
+    and how each of the instruction bits is interpreted.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**The TOY ISA.** The TOY machine has 256 words of main memory, 16 registers,
+    and 16-bit instructions. There are 16 different instruction types; each one is
+    designated by one of the *opcodes* `0` through `F`. Each instruction manipulates
+    the contents of memory, registers, or the program counter in a completely specified
+    manner. The 16 TOY instructions are organized into three categories: arithmetic-logic,
+    transfer between memory and registers, and flow control. The table below gives
+    a brief summary. (Here is a text version of the [TOY cheatsheet](cheatsheet.txt).)
+    We describe them in more detail later.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| OPCODE | DESCRIPTION | FORMAT | PSEUDOCODE |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 0 | *halt* | - | `exit` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 1 | *add* | 1 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 2 | *subtract* | 1 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 3 | *and* | 1 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 4 | *xor* | 1 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 5 | *left shift* | 1 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 6 | *right shift* | 1 | `R[d] > R[t]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 7 | *load address* | 2 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 8 | *load* | 2 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 9 | *store* | 2 | `mem[addr]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| A | *load indirect* | 1 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| B | *store indirect* | 1 | `mem[R[t]]` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| C | *branch zero* | 2 | `if (R[d] == 0) pc` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| D | *branch positive* | 2 | `if (R[d] > 0) pc` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| E | *jump register* | - | `pc` |'
+  prefs: []
+  type: TYPE_TB
+- en: '| F | *jump and link* | 2 | `R[d]` |'
+  prefs: []
+  type: TYPE_TB
+- en: Each TOY instruction consists of 4 hex digits (16 bits). The leading (left-most)
+    hex digit encodes one of the 16 opcodes. The second (from the left) hex digit
+    refers to one of the 16 registers, which we call the *destination register* and
+    denote by `d`. The interpretation of the two rightmost hex digits depends on the
+    opcode. With *Format 1* opcodes, the third and fourth hex digits are each interpreted
+    as the index of a register, which we call the two *source registers* and denote
+    by `s` and `t`. For example, the instruction `1462` adds the contents of registers
+    `s` = 6 and `t` = 2 and puts the result into register `d` = 4. With *Format 2*
+    opcodes, the third and fourth hex digits (the rightmost 8 bits) are interpreted
+    as a memory address, which we denote by `addr`. For example, the instruction `9462`
+    stores the contents of register `d` = 4 into memory location `addr = 62`. Note
+    that there is no ambiguity between Format 1 and Format 2 instruction since each
+    opcode has a unique format.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Format 1 and 2 TOY Instructions](../Images/d74fe8215f9bc6e9b4b8a86f4e58c36b.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: '**Modern day microprocessors and ISAs.** Today, there is a wide variety of
+    ISAs used on modern day microprocessors: IA-32 (Intel, AMD), PowerPC (IBM, Motorola),
+    PA-RISC (Hewlett-Packard), and SPARC (SUN Microsystems). These ISAs typically
+    access millions of words of main memory, each of which is 32 or 64 bits wide.
+    For example IA-32 has 8 32-bit general purpose registers; PowerPC has 32 64-bit
+    general purpose registers. The number of instruction types varies greatly from
+    half a dozen to several hundred. The ISA is chosen in order to make it easy to
+    build the underlying hardware and compilers, while striving to maximize performance
+    and minimize cost. Unfortunately, sometimes both goals are sacrificed to maintain
+    backward compatibility with obsolete hardware. There are always tradeoffs.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The TOY machine possesses all of the essential features of modern day microprocessors.
+    However, it is much easier to understand because it has only 16 instructions and
+    two instruction formats. In contrast, the IA-32 (the one used on Intel PC's) has
+    more than 100 instruction types and over a dozen different instruction formats.
+    As a programming language, TOY is also much simpler than the Java programming
+    language. This makes it easier to fully understand, but not necessarily to write
+    code or debug. A *Java compiler* (e.g., `javac`) is a program that automatically
+    converts Java code into the ISA of the computer on which it is to be executed.
+    You will soon appreciate the convenience of working in a higher-level language
+    like Java.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q + A
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Q. Did ancient programmers really flip switches to enter a program?
+  prefs: []
+  type: TYPE_NORMAL
+- en: A. Yes. They later moved on to punch cards for a more permanent form of storage.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q. What's the difference between a register and a memory cell?
+  prefs: []
+  type: TYPE_NORMAL
+- en: A. Both store 16-bit integers. However, in the TOY machine all computations
+    (add, subtract, etc.) can only be performed on the contents of registers, not
+    main memory. To perform arithmetic on a memory cell, it must first be transferred
+    to a register, and then transferred back. It is desirable to make registers as
+    fast as possible so they are typically built from more expensive materials than
+    main memory, even though in principle, both just store 16 bits. This is analogous
+    to the difference between computer RAM (scarce and expensive) and the hard drive
+    (plentiful and cheap).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q. Are special purpose computers or microprocessors still fabricated today?
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'A. Yes, because it is possible to do simple things faster in hardware than
+    software. The Enigma machine was a special purpose encryption machine used by
+    the Germans in World War II. Alan Turing led a team at Bletchley Park to build
+    a Turing bombe machine, whose sole capability was to break Enigma codes. Here''s
+    an [Enigma kit](http://www.xat.nl/enigma-e/desc/index.htm) that you can buy to
+    build your own. Some modern examples include: signal processing, chess chips for
+    Deep Blue to evaluate board positions, N-body simulation chips, cryptography chips
+    that can manipulate 2048 bit integers. Astrophysicists use a very specialized
+    chip for calculating the Newtonian gravitational force between particles. One
+    of the most successful such chips is the [GRAPE-6](http://grape.astron.s.u-tokyo.ac.jp/~makino/grape6.html)
+    which is capable of one teraflop (floating point operations per second) per board,
+    and a 64 processor board is capable of a sustained rate of 64 teraflops. This
+    may be the fastest computer in the world, although it is only good at this one
+    specialized task.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q. What's the difference between load address, load, and load indirect?
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'A. All three instructions load some value into a register. Load address is
+    the simplest: `7C30` loads the value `0030` into register C. Both load and load
+    indirect copy the contents of some memory cell into a register. Suppose that memory
+    location `30` contains `AAAA`, memory location `31` contains `BBBB`, and that
+    register A is storing the value `0031`. Then `8C30` loads the value `AAAA` into
+    register C, while `AC0A` loads the value `BBBB` into register C.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q. What's the difference between `E100` and `E1CC`?
+  prefs: []
+  type: TYPE_NORMAL
+- en: A. Nothing. The last two hex digits are ignored with opcode `E`. Similarly,
+    the third hex digit is ignored with opcodes `A` and `B`. The last three hex digits
+    are ignored with opcode `0`.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q. What does `5ABC` (left shift) do if register C contains a value bigger than
+    15?
+  prefs: []
+  type: TYPE_NORMAL
+- en: A. Since it only makes sense to left shift 15 positions, TOY only considers
+    the last hex digit of register C to determine the number of bits to shift. So
+    it is not true that if register C is `FFFD` (-3) that the left shift would become
+    a right shift by 3.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q. What would happen if the program counter were `FF`?
+  prefs: []
+  type: TYPE_NORMAL
+- en: A. The machine would try to read whatever value is stored in memory location
+    `FF`. Since `FF` is used for standard input, the machine would fetch the next
+    instruction from standard input. The program counter would then be incremented
+    to `00`. It would be extremely rare for a TOY programmer to write a program with
+    this intent.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: How many total *bits* of storage does the TOY machine have? Include registers,
+    main memory, and the program counter.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: TOY uses 8-bit memory addresses which means it's possible to access 256 words
+    of memory. How many words of memory can a 32-bit machine access? A 64-bit machine
+    access?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: How many *words* of main memory does a Pentium IV with 1GB of memory have? A
+    Pentium IV is a 32-bit machine.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: How many *words* of main memory does a Mac G5 with 1GB of memory have? A G5
+    processor is a 64-bit machine.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Give a single instruction that changes the program counter to memory address
+    `15` regardless of the contents of any registers or memory cells.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: `C015` or `F015`. Both instructions rely on the fact that register
+    0 is always `0000`.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: List seven instructions (with different opcodes) that put `0000` into register
+    A.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: `1A00`, `2Axx`, `3A0x`, `4Axx`, `5A0x`, `6A0x`, `7A00`, where `x`
+    is any hex digit.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: List three ways (different opcodes) to set the program counter to `00` without
+    changing the contents of any register or memory cell.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: `C000`, `E0xy`, `F000`.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: List five instructions (with different opcodes) that are no-ops. Exclude cases
+    where the destination register is 0.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: `1xx0`, `1x0x`, `2xx0`, `3xxx`, `5xx0`, `6xx0`, where `x` is any
+    hex digit other than 0.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: List a Format 2 instruction that is a no-op.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: `D0xy` where `xy` is any two hex digit number.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: List six ways to assign the contents of register B into register A.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: `1AB0`, `1A0B`, `2AB0`, `3ABB`, `4A0B`, `4AB0`, `5AB0`, and `6AB0`.
+    where `x` is any hex digit.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: 'There is no *bitwise or* operator in TOY. (In Java it is `|`.) Explain how
+    to compute RC *Answer*: `3DAB 4EAB 1CDE`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'There is no *bitwise nor* operator in TOY (or Java). Explain how to compute
+    RC There is no *bitwise nand* operator in TOY (or Java). Explain how to compute
+    RC There is no *bitwise not* operator in TOY. (In Java it is `~`.) Explain how
+    to compute RB *Answer*: `7101 2B01 4BAB` or `7101 2B01 2BBA`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: There is no *absolute value* function in TOY. Explain how to compute RB There
+    is no *branch if nonnegative* operator in TOY. Explain how to jump to memory address
+    `15` if register A is greater than or equal to 0.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: Use both branch is positive and branch if zero, one after the other:
+    `CA15 DA15`.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Show that the *subtract* operator is redundant. That is, explain how to compute
+    `RC by using a sequence of TOY instructions that don't involve opcode 2.`
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '`Which of the 16 TOY instructions do not use all 16 bits? *Answer*: halt (only
+    uses first 4 bits), load indirect (does not use third set of 4 bits), store indirect
+    (does not use third set of 4 bits), jump register (does not use last 8 bits).`'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '`We interpret some TOY integers to be negative according to two''s complement
+    notation. What are the only instructions for which this matters?'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Answer*: The *branch if positive* treats integers between `0001` and `7FFF`
+    as positive. The *right shift* is a signed shift so that if the leftmost bit is
+    1, then 1''s are prepended to the beginning. All other instructions (even subtract!)
+    do not depend on whether TOY has negative integers or not.`'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL

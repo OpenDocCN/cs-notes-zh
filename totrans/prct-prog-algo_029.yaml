@@ -1,0 +1,755 @@
+- en: 5.4   Computability
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/java/54computability](https://introcs.cs.princeton.edu/java/54computability)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: This section under major construction.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'In David Hilbert''s famous 1900 address to the International Congress of Mathematics,
+    he asserted:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Take any definite unsolved problem, such as the question as to the irrationality
+    of the Euler-Mascheroni constant γ, or the existence of an infinite number of
+    prime numbers of the form 2^n+1. However, unapproachable these problems may seem
+    to us and however helpless we stand before them, we have, nevertheless, the firm
+    conviction that their solution must follow by a finite number of purely logical
+    processes.
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: 'Now that we have a clear notion of an algorithm (the Turing machine), we will
+    see that some computational problems cannot be solved, regardless of the amount
+    of resources available. If an algorithm exists to solve a particular problem,
+    that problem is said to be *solvable*; otherwise the problem is *unsolvable*.
+    We give several natural examples of unsolvable problems. Unsolvable problems arise
+    in many areas including: cellular automata, chaos theory, combinatorics, operations
+    research, statistics, physics, compiler theory, knot theory, logic, set theory,
+    and topology. Note that unsolvability is a very strong statement about a problem
+    - it says not only that scientists have not discovered an algorithm for the problem,
+    but that such a discovery is impossible.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Halting problem.** The halting problem is the most famous of all unsolvable
+    problems, and it was the first one classified as such. The input to the *halting
+    problem* is a Turing machine and its input. The goal is to determine whether or
+    not that Turing machine will ever reach the halt state. This is more difficult
+    than it appears because very simple Turing machines, often referred to as [busy
+    beavers](index.php?c=beaver), may perform remarkably complex actions. An *N-state
+    busy beaver* is a Turing machine defined on N states over the binary alphabet
+    (0 and 1) that when started with an all zero tape, leaves as many 1''s on the
+    tape as possible before halting. Finding busy beavers for even modest size values
+    of N is a surprisingly daunting task. The following 8-state Turing machine leaves
+    4,098 ones on the tape and halts after 47,176,870 steps.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![](../Images/01cfbabb07b820b3261a2ebd5cefd129.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: However, it is not a busy beaver. In fact, [Marxen and Buntrock](http://www.drb.insel.de/~heiner/BB/)
+    have an 8-state Turing machine (when converted to our Minsky style notation) that
+    leaves over 10^(47) ones on the tape after more than 10^(95), and an astonishing
+    9-state Turing machine that leaves over 10^(865) ones on the tape, and halts after
+    over 10^(1730) steps.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Halting problem in Java.** We can recast the Halting problem in terms of
+    the Java programming language. Here, the goal is to write a program, say `Halt.java`,
+    that determines whether or not some static method, say `mystery`, goes into an
+    infinite loop on some specific input `x`. This would be a powerful debugging tool.
+    We''ve all written programs that go into infinite loops. The possibility of an
+    infinite loop in your code usually signifies a bug. An infinite loop in a commercial
+    piece of software could lead to angry customers, or worse. It would sure be nice
+    if the Java compiler could warn us if our function might go into an infinite loop.
+    To see why this is such a daunting task, consider program [Perfect.java](Perfect.java.html).
+    It searches for an odd [perfect number](http://mathworld.wolfram.com/PerfectNumber.html):
+    a number that equals the sum of its proper divisors (e.g., 28 is perfect since
+    28 = 1 + 2 + 4 + 7 + 14). Does the program halt (assuming we never run into overflow
+    problems)? If so, how long do we have to wait until we can conclude that it is
+    in an infinite loop? We can type in the code and see what happens. If the program
+    terminates, we can safely answer yes. The main obstacle is determining when to
+    say no. Suppose we do stop the program at some point (Ctrl-c) and answer no. Maybe
+    if we had left the program running just a bit longer it would have halted on its
+    own. Despite intensive research, no one knows whether `Perfect.java` terminates.
+    Mathematicians have proved that it will not terminate until n is at least 10^(300).
+    This is an extreme example, but it highlights the fact that there is no easy way
+    to tell whether a given program will terminate just by looking at it. In contrast,
+    the program [Cube.java](Cube.java.html) searches for a positive integer-valued
+    solution to 313(a³ + b³) = c³. It turns out that `Cube.java` does halt (assuming
+    we never run into overflow problems), but not until c is greater than 10^(1000).
+    Indeed, we could pose mathematical problems like Fermat''s Last Theorem in the
+    same way (see Exercise XYZ). If the halting problem were solvable, then mathematics
+    would be easy.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**The halting problem is unsolvable.**   We sketch below a mind-blowing proof
+    that no algorithm to solve the halting problem exists or could ever exist. The
+    idea behind the proof is inspired by the following paradox. Is the following statement
+    true or false? *This sentence is false.* The essence of this paradox is caused
+    by self-reference. The TM "formalizes an old argument about why you can never
+    have perfect introspection: because if you could, then you could determine what
+    you were going to do ten seconds from now, and then do something else." (Scott
+    Aaronson) The crucial idea in our Halting proof is to feed a program itself as
+    input.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Barber''s Paradox.** Suppose Barry is a Barber who claims that he shaves
+    all (and only those) people in the town who do not shave themselves, and that
+    Barber lives in the town and is clean-shaven. Does Barry shave himself? We can
+    prove by contradiction that such a barber cannot exist.... We now apply the same
+    logic reasoning to Java programs...'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Informal proof.* Since the Java programming language is equivalent to Turing
+    machines, it suffices to show that we can''t write a Java program to solve the
+    halting problem. We consider programs that take some arbitrary input (say from
+    `stdin`). We denote the result of a program `P` run with input `x` by `P(x)`.
+    We use the mathematical technique of proof by contradiction, or *reductio ad absurdum*.
+    Suppose, for the sake of contradiction, that there exists such a halting program
+    `Halt(P, x)`. (We will show that this leads to an obvious contradiction, and therefore,
+    we must conclude that no such program exists.) It takes two inputs: a program
+    `P` and its input `x`. Program `Halt(P, x)` outputs `yes` if `P(x)` halts, and
+    `no` otherwise. Note that by our hypothesis, `Halt(P, x)` itself always halts
+    for any pair of inputs.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Now, the fun begins. Create a new program `Strange(P)` that takes as input a
+    single program `P`. This new program calls the halting program with `P` as *both*
+    inputs, i.e., `Halt(P, P)`. [Refer back to Turing machine that creates a copy
+    of its input.] It may seem odd to take a program as input, but this is rather
+    common. Compilers do exactly this; they read in a Java program as input, and output
+    a machine language program. As Marvin Minsky observes, you don't need to worry
+    much about why we'd want to perform such an introverted computation. But, you
+    can gain some intuition by considering a computational biologist who wants to
+    create a complete description of their own genome! There is nothing at all absurd
+    about this.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Now, we design the program `Strange(P)` so that it promptly halts if `Halt(P,
+    P)` outputs `no`. Otherwise, we make `Strange(P)` go into an infinite loop. In
+    Java, the code for `Strange(P)` might look like:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: In summary
+  prefs: []
+  type: TYPE_NORMAL
+- en: If `P(P)` does not halt, then `Strange(P)` halts.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: If `P(P)` halts, then `Strange(P)` does not halt.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Now, we perform the crucial step: give program `Strange(P)` *itself* as input,
+    i.e., set `P = Strange`. Let''s see what crazy thing happens. Statements (a) and
+    (b) now reduce to:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: If `Strange(Strange)` does not halt, then `Strange(Strange)` halts.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: If `Strange(Strange)` halts, then `Strange(Strange)` does not halt.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Both cases lead to a contradiction. The only thing we can conclude is that our
+    hypothesis that program `Halt(P, x)` exists is impossible. That is, the halting
+    problem is unsolvable!
+  prefs: []
+  type: TYPE_NORMAL
+- en: A poetic proof.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Here's a [poem](halting-poem.html) that proves the undecidability of the halting
+    problem in verse! In the poetic proof, the program `Strange()` is replaced by
+    `Q()`.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Diagonalization argument.**   This proof is an example of a *diagonalization
+    argument*: we imagine a 2D grid with the rows indexed by programs P, the columns
+    indexed by inputs x, and Halt(P, x) is the result of running the halting program
+    on P(x). The diagonal entries correspond to Halt(P, P). The essence of the proof
+    is determining which row corresponds to the program Strange. The contradiction
+    arises because we constructed Strange to differ with each row in the grid (specifically
+    on each diagonal entry).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Consequences.**   As part of the correctness proof of any deterministic algorithm,
+    we must argue that it terminates after a finite number of steps. There are important
+    classes of programs where it''s easy to tell, but the undecidability of the halting
+    problem precludes a general rule or formula. Each proof of correctness may require
+    an entirely new idea (e.g., the odd perfect number program), and there is no way
+    to (fully) automate the process.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Why debugging is hard? The following are undecidable.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Self-halting problem.* Given a program that takes one input, does it terminate
+    when given itself as input?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Totality problem.* Given a program that takes one input, does it halt on *all*
+    inputs. 3x+1 problem.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Program equivalence problem.* Given two program that takes one input each,
+    do they produce the same result on every input.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Dead code elimination.* Will a particular piece of code ever get executed?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Variable initialization.* Is a variable initialized before it is first referenced?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Memory management.* Will a variable ever be referenced again?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Other unsolvable problems.** Here are some more example of unsolvable problems:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Rice''s theorem.*  Meta-theorem that says any nontrivial property of input/output
+    of a Turing machine is undecidable. Nontrivial means some programs have that property
+    and some don''t. Does a Turing machine halt on all inputs? For infinitely many
+    inputs? For no inputs? On at least two input strings of different lengths? Is
+    set of strings accepted is a regular language? Do two Turing machines halt for
+    exactly the same inputs?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Chaitin''s number.*   What is the probability that a Turing machine M will
+    halt on a random input?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Hilbert''s tenth problem.*   To gain some historical perspective, we relay
+    the famous story of Hilbert''s tenth problem. In 1900, David Hilbert [addressed](http://aleph0.clarku.edu/~djoyce/hilbert/toc.html)
+    the International Congress of Mathematicians in Paris and posed 23 problems as
+    a challenge for the upcoming century. Hilbert''s tenth problem was *to devise
+    a process according to which it can be determined by a finite number of operations
+    whether* a given multivariate polynomial has an integral root. For example, the
+    polynomial f(x,y,z) = 6x³yz² + 3xy² - x³ - 10 has an integral root since f(5,3,0)
+    = 0, whereas the polynomial f(x,y) = x² + y² - 3 does not have one. The problem
+    dates back two thousand years to Diophantine, and it arises in diverse areas including:
+    physics, computational biology, operations research, and statistics. At the time,
+    there was no rigorous definition of an algorithm; consequently the existence of
+    unsolvable problems was not even contemplated. In the 1970''s Hilbert''s 10th
+    problem was resolved in a very surprising way: Yuri Matiyasevich proved that it
+    is unsolvable. That is, it is *impossible* to create a program (say, in Java)
+    that will read in an arbitrary multivariate polynomial as input, and return the
+    appropriate yes-no answer! The problem is decidable if there is only one variable,
+    but is undecidable even if there are 13 variables.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Roots of a function of one variable.*   Hilbert''s 10th problem is decidable
+    if it is a function of a single variable. However, if we allow trigonometric functions,
+    then the problem becomes undecidable again. Given a rational function f(x) of
+    a single variable x comprised of polynomial (addition, multiplication, composition)
+    and sine terms, does there exist an x* such that f(x*) = 0? [Richardson''s theorem](http://mathworld.wolfram.com/RichardsonsTheorem.html)
+    is slightly weaker but more famous and earlier - it assumes f(x) is a function
+    built from rational numbers, π, ln 2, the variable x, addition, multiplication,
+    composition, sine, exponential, and absolute value functions. Reference: [Paul
+    Wang](http://portal.acm.org/citation.cfm?doid=321850.321856).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Definite integration.*   The root-finding problem can be leveraged to show
+    that definite integration is also undecidable. Given a definite integral of a
+    function f(x) involving only polynomial and trigometric functions, is the integral
+    of f(x) from -∞ to +∞ convergent (does the limit exist)? Hence we can''t expect
+    a symbolic algebra package (Maple or Mathematica) to always tell us the answer
+    when we type in a definite integral. Undecidable even f(x) = [(x² + 1)g²(x)]^(-1),
+    where g(x) is a rational function involving polynomials and sine terms.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Post''s correspondence problem.*   The following unsolvable puzzle involving
+    strings was first analyzed by Emil Post in the 1940''s. The input to the problem
+    is `N` different card types. Each card type contains two strings, one on the top,
+    one on the bottom. The puzzle is to arrange the cards so that the top and bottom
+    strings are the same (a `yes` instance) or to report that it''s impossible (a
+    `no` instance). You are allowed to use an arbitrary number of each card type.
+    Here''s a `yes` instance of the problem with 4 card types:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Post''s Correspondence Problem](../Images/ee3dc4eae3bd9c821e3d8d4792aef95e.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: and a corresponding solution that uses cards 1, 3, 0, 2, and a second copy of
+    card 1.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Post''s Correspondence Problem](../Images/d3d24047095769e641568bb022166a1b.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'The top string and bottom string are each `abababababa`. Here''s a `no` instance
+    with 4 cards:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Post''s Correspondence Problem](../Images/e65b3b095473dbd602303e802b306fab.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Why is it a `no` instance? In a `yes` instance, the top and bottom leftmost
+    characters of the leftmost card in the solution must match. In this example, no
+    card's leftmost top and bottom characters match. Hence, there is no possible way
+    to line the cards up appropriately. In general, such a simple explanation may
+    not exist. Here's a [challenging 11 card instance](pcp/pcp.php) created by Andrew
+    Appel.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Incredibly, it is impossible to write a Java program that reads in a sequence
+    of `N` card types, and is always able to correctly report whether or not such
+    an arrangement is possible. Of course, on some inputs (like the two above) the
+    program may be able to return the correct answer. But, on some inputs the program
+    is doomed to fail. Note that if you were restricted to using only one card of
+    each type, then the problem could be solved by trying all possibilities, since
+    the number of possibilities would be finite (although very large). Solvability
+    refers to whether a computation can be done at all, not how much time it would
+    take.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Program equivalence problem.*   The *program equivalence problem* is to identify
+    whether or not two programs produce identical output, given the same input. Clearly
+    a grader in an introductory computer science class would appreciate such a program.
+    More significantly, this would be immensely useful in testing a new program (e.g.,
+    a new, but intricate, sorting algorithm) by comparing it to a well-tested and
+    bug-free version (e.g., brute-force search). Again, this problem is unsolvable.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Uninitialized variables.*   The Java compiler sometimes complains that you
+    may be accessing a local variable before it has been initialized. The programmer
+    can sometimes guarantee that a variable is initialized, but the compiler is not
+    "smart" enough to realize it. In the example below, a will be initialized to 17
+    because the length of an array is always nonnegative.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Why can't the compiler figure this out on its own? In this case, it could. But
+    in general, determining whether a variable has been initialized in undecidable.
+    The compiler acts conservatively, using "sufficient" but not "necessary" tests.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Optimizing compilers (Reference: Appel paper).* An *optimizing compiler* is
+    a compiler that analyzes your program, removing any useless code and variables.
+    Dead-code elimination: does control flow ever reach this point in program? Register
+    allocation: starting from this point, can value in register x affect the result
+    of the computation? Load/store scheduling: are these two references aliased (can
+    they contain pointers to the same memory location)?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Data compression.*   Given a string *s*, find the shortest (measured in number
+    of characters) program that will output *s*. This problem is of fundamental importance
+    in information theory and data compression. It is a formal statement of Occam''s
+    Razor -- *find the simplest explanation that fits the facts.* The Mandelbrot set
+    is a beautiful example of a complex picture that can be generated with a simple
+    program. It would be nice to have a formal method that guarantees to find such
+    a concise description.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Virus recognition.*  Informally, Fred Cohen defines a computer virus as *a
+    program that is able to infect other programs by modifying them to include a possibly
+    evolved copy of itself.* He also provides a rigorous definition involving Turing
+    machines, and shows that that determining whether or not a given program is a
+    virus is unsolvable.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Ambiguity in grammar.*   Given a context free grammar, is it ambiguous?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Matrix mortality problem.*   Given a finite set of N-by-N matrices with integer
+    elements, can they be multiplied in some order (possibly repeating the same matrix
+    more than once) to yield the zero matrix? (Undecidable already for a set of 15
+    or more 3-by-3 matrices, or a set of two 45-by-45 matrices.)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Polygonal tilings.*   Given a polygon, not necessarily regular or convex,
+    is it possible to tile the whole plane with copies of that shape? Yes for rectangle,
+    right triangle, or hexagon.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Wang tilings.*   Given a set of [Wang tiles](http://en.wikipedia.org/wiki/Wang_tile)
+    can you arrange copies of the tiles to cover the infinite plane?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Self-assembly of infinite ribbons.*   Self-assembly = "process by which objects
+    autonomously come together to form complex structures." [Reference.](http://www.usc.edu/dept/molecular-science/focs6.pdf)
+    Applications to circuit fabrication, DNA computing, nano-robotics. Given a set
+    of tiles, can you arrange copies of the tiles to form an infinite ribbon?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Group theory.*  Testing whether a finitely presented group is commutative
+    an undecidable problem. Testing whether it is finite, free, or simple are also
+    undecidable problems.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Topology.*  Testing whether two polyhedra (represented by their triangulations)
+    are homeomorphic is undecidable. Testing whether two two n-Manifolds (using Poincare''s
+    and Veblen''s definition) are homeomorphic is undecidable for n > 3.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Queueing theory.*  (Gamarnik) Is a homogeneous random walk in dimension d
+    stable? Arriving jobs must be processed along some path in a graph. Jobs wait
+    in a buffer if the processor is busy. Inter-arrival times and processing times
+    are known. Scheduling policy is stable if there is a fixed upper bound on the
+    number of parts in the system at all times. Is a generalized priority scheduling
+    policy stable?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Control theory.*  Global asymptotic stability of certain discrete time dynamical
+    systems (hybrid systems, piecewise affine systems) in control theory (Blondel,
+    Henzinger).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Wave equation.*  Reference: Pour-El and Richards. The solution u(x, y, z,
+    t) to the wave equation in three dimensions is unique determined by the initial
+    conditions and du/dt at time t = 0. Even if the initial data are computable values,
+    the solution can attain a non-computable value at a computable point in space-time.
+    Can''t numerically solve some differential equations.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Dynamical systems.*  Reference: Christopher Moore. Given a generalized shift
+    Φ, is Φ chaotic?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Implications.**   The existence of unsolvable problems has profound consequences
+    in both computation and philosophy. First, it says there are some languages that
+    cannot be recognized by any computer. That is, all computers have intrinsic limitations.
+    These problems can be of enormous practical significance, including Hilbert''s
+    10th problem. We must work within the limitations of computers by recognizing
+    and avoiding unsolvable problems. Second, the whole assertion that *logic can
+    solve any problem* is intrinsically false. If the human brain operates equivalently
+    to a machine, then according to the Church-Turing thesis, the human brain would
+    be no more powerful than a Turing machine. Hence, humans would be incapable of
+    solving problems like the Halting problem. Humans may have fundamental limitations,
+    just like computers. Others would view this differently. Rosenbloom concludes
+    *man can never eliminate the necessity of using his own cleverness, no matter
+    how cleverly he tries.*'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Intuitively, computability tells us that to determine what a program actually
+    does, you have to run the program.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Computable numbers.** One of Turing''s main interests was in defining computable
+    number - those numbers whose digits can be described by a mechanical process.
+    For example, it is possible to write a Turing machine that leaves the digits of
+    π (3, 1, 4, 1, 5, etc) on some designated (write-once) part of the tape. Even
+    though π is irrational, after a finite number of steps the first N digits are
+    printed on the special part of the tape. Other examples of computable numbers
+    include all integers, all rational numbers, sqrt(2), all algebraic numbers, sin(10),
+    and erf(.4), the zeros of the Bessel function, etc. This includes pretty much
+    all numbers that arise in scientific computing.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Countable and uncountable numbers.** A decision problem is a subset of strings
+    over the some alphabet. There are countably many Turing machines (like the integers),
+    but uncountably many decision problems (like the real numbers). Hence, virtually
+    all decision problems are undecidable. This argument establishes the existence
+    of undecidable problems, but does not construct any specific one like our proof
+    of the undecidability of the halting problem. Similarly, there are only a countably
+    infinite number of computable numbers, but uncountably many irrational numbers.
+    Thus, most irrational numbers are not computable. Fortunately, the problems and
+    numbers we encounter most often in science and engineering are decidable. Of course,
+    this may be because those are exactly the ones with which we know how to cope!'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Godel''s incompleteness theorem.** Turing undecidability result was anticipated
+    by one of the most shocking blows that shook the very foundations of mathematics.
+    In 1931, Kurt Godel proved that the most widely accepted mathematical formalization
+    of the natural numbers (Principia Mathematica) was either incomplete (not every
+    true statement could be proved true) or was inconsistent (some false statements
+    could be proved true). Godel''s incompleteness theorem applies to any formal mathematical
+    system rich enough to include [Peano''s axioms](http://en.wikipedia.org/wiki/Peano_axioms)
+    of arithmetic.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Negative results.** One of the distinguishing features of computer science
+    that sets it apart from other sciences is the concept of "lower bounds" and "negative
+    results." We see this with undecidability. We will also see it with NP-completeness
+    and its derivatives, and lower bounds for sorting. Some of the great achievements
+    in the social and physical sciences have dealt with impossibility results. There
+    is Heisenberg''s uncertainty principle in quantum mechanics, Arrow''s impossibility
+    theorem in economics, and Carnot''s theorem in thermodynamics. In mathematics,
+    there is Abel''s impossibility theorem for finding the roots of 5th degree polynomials,
+    the impossibility of trisecting an angle with a straight-edge and compass, proving
+    Euclid''s Parallel Postulate and the existence of non-Euclidean geometry, the
+    irrationality of the square root of 2, Lindenman''s proof that π is transcendental.
+    Outside of mathematic logic (e.g, Goedel''s theorem), there are few disciplines
+    with formal methodologies for proving such negative results.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: (Hopcroft, Motwani, and Ullman.) For each of the two instances to the PCP, either
+    find a solution or argue why no such solution is possible.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '*Answer*: A solution to the first instance is bababaababb (2-0-2-1-1-3). The
+    second instance has no solution. Observe that all cards have at least as many
+    b''s on the bottom as on the top. We must start with card 1, which has one more
+    b on the bottom than on the top.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Solvable instance of PCP.** The PCP problem is undecidable even if the only
+    allowable symbols are 0 and 1\. Devise an algorithm that determines whether a
+    PCP problem is a yes instance assuming that the only allowable symbol is 1. *Hint*:
+    requires some number theory.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**3x + 1 function.** It is not always easy to tell whether or not a specific
+    function terminates on all inputs, even if the function is only a few lines long.
+    For example, consider whether or not the following *Collatz function* terminates
+    for input `x`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'On many inputs, including 8 and 7, the program terminates:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: At first glance, this appears like a simple problem. To determine whether or
+    not a program terminates on any specific input, it is tempting to run the program
+    with the given input and see what happens. If the program terminates, we can safely
+    answer `yes`. The main obstacle is deciding when to stop and say `no`. Suppose
+    we do stop the program at some point and answer `no`. Maybe, if we had left the
+    programming running just a bit longer, it would have terminated. There is no way
+    to know for sure.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**196 problem.** Given a positive integer, reverse the digits and add it to
+    the original number. Repeat until you get a palindrome. For example, if we start
+    with 5280, the reverse is 825, so the next number is 5280 + 825 = 6105\. The next
+    number is 6105 + 5016 = 11121. The last number is 11121 + 12111 = 23232 since
+    it is a palindrome. This [reverse and add](http://mathworld.wolfram.com/Reverse-Then-AddSequence.html)
+    algorithm terminates quickly for most integers. Nobody knows whether it terminates
+    for 196, although it is known not to terminate in the first 9 million iterations.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Fermat style problem.** Is there a positive integer-valued solution to 313(a³
+    + b³) = c³? Write a program [Cube.java](Cube.java.html) that enumerates all integers
+    a, b, and c and checks for a solution to the equation. Does the program halt (assuming
+    no overflow)? *Answer*: yes, but don''t wait around since the smallest counterexample
+    has more than 1,000 digits!'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Fermat''s last theorem.** In 1XYZ Fermat conjectured that that there are
+    no positive integers a, b, c, and n such that a^n + b^n = c^n for n > 2. Write
+    a program Fermat.java to search for a counterexample and terminate if it finds
+    one. Enumerate over all tuples a, b, c, and n in increasing order of c^n. In 19XY
+    Andrew Wiles proved Fermat''s last theorem, which implies that Fermat.java will
+    never terminate, assuming no overflow.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Quine.** A quine is a program that when executes prints itself as output.
+    Write a Java program [Quine.java](Quine.java.html) that is a quine. [Reference](http://knet.ro/lsantha/).
+    Here is a list of [quines](http://www.nyx.net/~gthompso/quine.htm) in many languages.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Pangram.** Write a computer program to create true sentence of the form "This
+    computer-generated pangram contains _ a''s, _ b''s, ... " where the blanks are
+    replaced by English words for the numbers.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: This computer-generated pangram contains six a's, one b, three c's, three d's,
+    thirty-seven e's, six f's, three g's, nine h's, twelve i's, one j, one k, two
+    l's, three m's, twenty-two n's, thirteen o's, three p's, one q, fourteen r's,
+    twenty-nine s's, twenty-four t's, five u's, six v's, seven w's, four x's, five
+    y's, and one z.
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: 'Reference: [here](http://rec-puzzles.org/new/sol.pl/language/english/sentences/self.ref/self.ref.letters)'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Self-halting problem.** Self-halting problem: given a program that takes
+    one input, does it terminate when given itself as input? Prove that this problem
+    is undecidable by following a similar argument as for the halting problem.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Totality problem.** The *totality problem* is to decide whether an arbitrary
+    Turing machine halts on *all* inputs. Such a program would enable us automatically
+    detect for the possibility of infinite loops in our Java programs. Prove that
+    the totality problem is undecidable by showing that you could solve the halting
+    problem if you had a program TOTALITY(P) that returns `true` or `false` depending
+    on whether the Turing machine P halts on all inputs.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: suppose we want to solve the halting problem, e.g., to know whether
+    the Turing machine Q halts on input x. Create a new machine P that takes an arbitrary
+    input, ignores it, and runs Q on x. Now, P halts on all inputs if and only if
+    Q halts on input x. Thus, we could use P to solve the halting problem.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Program equivalence problem.** Prove that the program equivalence problems
+    in undecidable. Program equivalence problem: given two programs P and Q, do they
+    produce the same result for all possible input values. Such a program means that
+    an optimizing compiler cannot guarantee to find the optimally efficient program
+    since there may be better versions, but the compiler can''t be sure that they
+    are equivalent.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution*: We will restrict attention to Turing machines with no output -
+    either they halt or don''t halt. We can easily construct a Turing machine Q that
+    always halts and outputs nothing. Then PEQ(P, Q) outputs true if and only if P
+    halts for all possible input values. Thus, if we had a subroutine PEQ(P, Q) we
+    could solve the totality problem, which is undecidable. Hence PEQ(P, Q) is as
+    well.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Busy beavers and computability.** The busy beaver function B(n) is defined
+    to be the maximal number of ones that an n-state Turing machine over the binary
+    alphabet can leave on an initially blank tape, while still halting. The functions
+    B(n) is not computable: it is not possible to write a computer program that will
+    take in an integer n and return B(n). Jeffrey Shallit''s handout provides a [rigorous
+    proof](http://www.undergrad.math.uwaterloo.ca/~cs360/beaver.ps) of this statement.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**A consequence.** Our proof of the undecidability of the Halting problem uses
+    a Turing machines whose input is a representation of itself. In fact, the Halting
+    problem is undecidable even if the input to the Turing machine is blank (all 0''s).
+    Such machines are called *Blank Tape Turing Machines*. Furthermore, the problem
+    is undecidable even if we only allow a two symbol alphabet (0 and 1). We leverage
+    the non-computability of B(n) to establish this fact.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: For the sake of contradiction, let's assume that we can decide whether or not
+    any Turing machine M halts when started with a blank tape. Given such a decider,
+    we'll show how to compute B(n).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This procedure will terminate since there are only finitely many n-state Turing
+    machines (and we can enumerate them in an orderly manner), and we only simulate
+    the actions of those Turing machines that halt. This procedure computes B(n) since
+    all n-state Turing machines that halt are considered. This construction implies
+    that we have a method for computing B(n). Since computing B(n) is undecidable,
+    our original assumption that we could decide whether a Turing machine halts must
+    be invalid. Thus, it is impossible to write a computer program to decide whether
+    a Turing machine will halt, even if the Turing machine begins with an empty tape
+    and it works over the binary alphabet.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Amoeba growth.** Suppose that you start with one amoeba in a jar. Every minute,
+    each amoeba turns into 0 (dies), 1 (does nothing), 2 (splits into two), or 3 (splits
+    into three) amoeba with probability 25%. What is the probability that the amoeba
+    population eventually goes extinct? Write a Java program to simulate this experiment.
+    How do you know when to stop and conclude that the population will not die out?
+    *Answer*: using probability theory, can compute that extinction probability =
+    sqrt(2) - 1\. Using Java, no easy answer.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**60-minute halting problem.** Is it possible to write a program that takes
+    as input another program and its input and determines whether or not it will halt
+    in less than 60 minutes (say on a machine that performs one machine instruction
+    per second)?'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Pell''s equation.** Pell''s equation is to find an integer solution (x, y)
+    to the equation x^2 - Dy^2 = 1, where D is a positive integer. Find the small
+    positive integer solution to x^2 - 991y^2 - 1 = 0. *Answer*: x = 1, y = 0 is a
+    trivial solution, but the smallest positive position is x = 379516400906811930638014896080,
+    y = 12055735790331359447442538767.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Archimedes cattle problem.** Following problem arose in the solution of [Archimedes
+    cattle problem](http://www.andrews.edu/~calkins/profess/cattle.htm), a numerical
+    problem that defied mathematicians for over 200 years until advent of the computer
+    age. Find smallest positive integral solution to x^2 - 4729494y^2 = 1. Answer:
+    x = 109931986732829734979866232821433543901088049, y = 50549485234315033074477819735540408986340.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL

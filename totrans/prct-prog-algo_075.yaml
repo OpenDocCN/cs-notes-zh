@@ -1,0 +1,320 @@
+- en: '3.4 Case Study: N-body Simulation'
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/python/34nbody](https://introcs.cs.princeton.edu/python/34nbody)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: In this section, we consider a new program that exemplifies object-oriented
+    programming. Our task is to compose a program that dynamically simulates the motion
+    of *n* bodies under the influence of mutual gravitational attraction. This *n-body
+    simulation* problem was first formulated by Isaac Newton over 350 years ago, and
+    scientists still study it intensely today.
+  prefs: []
+  type: TYPE_NORMAL
+- en: One reason that this problem is a compelling example of object-oriented programming
+    is that it presents a direct and natural correspondence between physical objects
+    in the real world and the abstract objects that we use in programming.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: N-Body Simulation
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'The bouncing-ball simulation of Section 1.5 is based on *Newton''s first law
+    of motion*: a body in motion remains in motion at the same velocity unless acted
+    on by an outside force. Embellishing that example to include *Newton''s second
+    law of motion* (which explains how outside forces affect velocity) leads us to
+    a basic problem that has fascinated scientists for ages. Given a system of *n*
+    bodies, mutually affected by gravitational forces, the problem is to describe
+    their motion.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Body data type.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'In [bouncingball.py](../15inout/bouncingball.py.html) (from Section 1.5), we
+    keep the displacement from the origin in the floats `rx` and `ry` and the velocity
+    in the floats `vx` and `vy`, and displace the ball the amount it moves in one
+    time unit with the statements:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: '![Adding vectors to move a ball](../Images/f316ebfd7ffe71d070c37f6b104ae87e.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: 'With `Vector`, as defined in [vector.py](../33design/vector.py.html) (from
+    Section 3.3), we can keep the position in the Vector `r` and the velocity in the
+    `Vector` `v`, and then displace the body the amount it moves in `dt` time units
+    with a single statement:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'The program [body.py](body.py.html) implements `Body`, a Python class for a
+    data type for moving bodies. `Body` is a `Vector` client — the values of the data
+    type are `Vector` objects that carry the body''s position and velocity, as well
+    as a float that carries the mass. The data-type operations allow clients to move
+    and to draw the body (and to compute the force vector due to gravitational attraction
+    from another body), as defined by this API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Body API](../Images/4d9ad65fbefe7e8d72736215bc597698.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Technically, the body's position (displacement from the origin) is not a vector
+    (it is a point in space, not a direction and a magnitude), but it is convenient
+    to represent it as a `Vector` because `Vector` operations lead to compact code
+    for the transformation that we need to move the body. When we move a `Body`, we
+    need to change not just its position, but also its velocity.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Force and motion.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Newton''s second law of motion says that the force on a body (a vector) is
+    equal to the scalar product of its mass and its acceleration (also a vector):
+    **F** = *m* **a**. In other words, to compute the acceleration of a body, we compute
+    the force, then divide by its mass. In `Body`, the force is a `Vector` argument
+    `f` to `move()`, so that we can first compute the acceleration vector just by
+    dividing by the mass (a scalar value that is kept as a float in an instance variable)
+    and then compute the change in velocity by adding to it the amount this vector
+    changes over the time interval (in the same way that we used the velocity to change
+    the position). This law immediately translates to the following code for updating
+    the position and velocity of a body due to a given force vector `f` and amount
+    of time `dt`:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'This code appears in the `move()` method in `Body`, to adjust its values to
+    reflect the consequences of that force being applied for that amount of time:
+    the body moves and its velocity changes. This calculation assumes that the acceleration
+    is constant during the time interval.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Motion near a stationary body](../Images/48957913788c18cec8278e08d84f208a.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Forces among bodies.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '![Force from one body to another](../Images/85ec9a8aa8471b86bf7baaec4b9f0f5f.png)
+    The computation of the force imposed by one body on another is encapsulated in
+    the method `forceFrom()` in `Body`, which takes a `Body` object as argument and
+    returns a `Vector`. Newton''s law of universal gravitation is the basis for the
+    calculation: the magnitude of the gravitational force between two bodies is given
+    by the product of their masses divided by the square of the distance between them
+    (scaled by the gravitational constant *G*, which is 6.67 × 10^(-11) N m² / kg²)
+    and the direction of the force is the line between the two particles. This law
+    translates to the following code for computing `a.forceFrom(b)`:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: The *magnitude* of the force vector is the float magnitude, and the *direction*
+    of the force vector is the same as the direction of the difference vector between
+    the two body's positions. The force vector `f` is the product of magnitude and
+    direction.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Universe data type.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '`Universe`, as defined in [universe.py](universe.py.html), is a data type that
+    implements the following API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Universe API](../Images/e7a8364488ba6b3b8c1a8bbdfff408df.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'Its data-type values define a universe (its size, the number of bodies, and
+    an array of bodies) and two data-type operations: `increaseTime()`, which adjusts
+    the positions (and velocities) of all of the bodies, and `draw()`, which draws
+    all of the bodies. The key to the *n*-body simulation is the implementation of
+    `increaseTime()` in `Universe`. The first part of the computation is a doubly
+    nested loop that computes the force vector describing the gravitational force
+    of each body on each other body. It applies the principle of superposition, which
+    says that we can add together the force vectors affecting a body to get a single
+    vector representing the aggregate force. After it has computed all of the forces,
+    it calls the `move()` method for each body to apply the computed force for a fixed
+    time quantum.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: File format.
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The constructor reads the universe parameters and body descriptions from a
+    file that contains the following information:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The number of bodies
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The radius of the universe
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The position, velocity, and mass of each body
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'The files [2bodytiny.txt](2bodytiny.txt), [2body.txt](2body.txt), [3body.txt](3body.txt),
+    and [4body.txt](4body.txt), contain data of that form. As usual, for consistency,
+    all measurements are in standard SI units (recall that the gravitational constant
+    *G* also appears in our code). With this defined file format, the code for our
+    `Universe` constructor is straightforward. Each `Body` is characterized by five
+    floats: the *x*- and *y*-coordinates of its position, the *x*- and *y*-components
+    of its initial velocity, and its mass.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The static images shown below were made by modifying `Universe` and `Body` to
+    draw the bodies in white, and then black on a gray background. By comparison,
+    the dynamic images that you get when you run [universe.py](universe.py.html) as
+    it stands give a realistic feeling of the bodies orbiting one another, which is
+    difficult to discern in the fixed pictures.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Universe output](../Images/26d9a535e856bfcd2b5e47252596ecef.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Q & A
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Q.** The `Universe` API is certainly small. Why not just implement that code
+    in a main() test client for `Body`?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Our design is an expression of what many people believe about the universe:
+    it was created, and then time moves on. It clarifies the code and allows for maximum
+    flexibility in simulating what goes on in the universe.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Why is `forceFrom()` a method? Wouldn''t it be better for it to be a
+    function that takes two `Body` objects as arguments?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** Implementing `forceFrom()` as a method is one of several possible alternatives,
+    and having a function that takes two `Body` objects as arguments is certainly
+    a reasonable choice. Some programmers prefer to completely avoid functions in
+    data-type implementations; another option is to maintain the force acting on each
+    `Body` as an instance variable. Our choice is a compromise between these two options.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Q.** Shouldn''t the `move()` method in [body.py](body.py.html) update the
+    position using the old velocity instead of the updated velocity?'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**A.** It turns out that using the updated velocity (known as the *leapfrog
+    method*) produces more accurate results than using the old velocity (known as
+    the *Euler method*). If you take a course in numerical analysis, you will learn
+    why.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Develop an object-oriented version of [bouncingball.py](../15inout/bouncingball.py.html)
+    (from Section 1.5). Include a constructor that starts each ball moving a random
+    direction at a random velocity (within reasonable limits) and a test client that
+    takes an integer `n` from the command line and simulates the motion of `n` bouncing
+    balls.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Add to [body.py](body.py.html) a `main()` function that unit tests the Body
+    data type.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify [body.py](body.py.html) so that the radius of the circle it draws for
+    a body is proportional to its mass.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What happens in a universe with no gravitational force? This situation would
+    correspond to `forceFrom()` in `Body` always returning the zero vector.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Create a data type `Universe3D` to model three-dimensional universes. Develop
+    a data file to simulate the motion of the planets in our solar system around the
+    sun.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a test client that simulates the motion of two different universes (defined
+    by two different files and appearing in two distinct parts of the standard drawing
+    window). You also need to modify the `draw()` method in `Body`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Compose a class `RandomBody` that initializes its instance variables with (carefully
+    chosen) random values instead of taking them as arguments. Then compose a client
+    that takes a single argument `n` from the command line and simulates motion in
+    a random universe with `n` bodies.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify `Vector` (as defined in [vector.py](../33design/vector.py.html) from
+    Section 3.3) to include a method `__iadd__(self, other)` to support the in-place
+    addition operator `+=`, which enables the client to compose code like `r += v.scale(dt)`.
+    Using this method, revise [body.py](body.py.html) and [universe.py](universe.py.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Modify the `Vector` constructor (as defined in [vector.py](../33design/vector.py.html)
+    from Section 3.3) so that if passed a positive integer `d` as argument, it creates
+    and returns the all-zero vector of dimension `d`. Using this modified constructor,
+    revise universe.py so that it works with three- (or higher-) dimensional universes.
+    For simplicity, don't worry about changing the `draw()` method in [body.py](body.py.html)
+    — it projects the position onto the plane defined by the first *x*- and *y*-coordinates.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '* * *'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Creative Exercise
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**New universe**. Design a new universe with interesting properties and simulate
+    its motion with `Universe`, as defined in [universe.py](universe.py.html). This
+    exercise is truly an opportunity to be creative!'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Percolation**. Compose an object-oriented version of [percolation.py](../24percolation/percolation.py.html)
+    (from Section 2.4). Think carefully about the design before you begin, and be
+    prepared to defend your design decisions.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL

@@ -1,0 +1,1462 @@
+- en: 1.5   Input and Output
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://introcs.cs.princeton.edu/java/15inout](https://introcs.cs.princeton.edu/java/15inout)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: In this section we extend the set of simple abstractions (command-line input
+    and standard output) that we have been using as the interface between our Java
+    programs and the outside world to include *standard input*, *standard drawing*,
+    and *standard audio*. Standard input makes it convenient for us to write programs
+    that process arbitrary amounts of input and to interact with our programs; standard
+    draw makes it possible for us to work with graphics; and standard audio adds sound.
+    ![Bird's eye view](../Images/05eb7a7d9ff3ba7b6b11dcc81313fd97.png)
+  prefs: []
+  type: TYPE_NORMAL
+- en: Bird's-eye view.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: A Java program takes input values from the command line and prints a string
+    of characters as output. By default, both command-line arguments and standard
+    output are associated with an application that takes commands, which we refer
+    to as the *terminal window*.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Command-line arguments.* All of our classes have a `main()` method that takes
+    a `String` array `args[]` as argument. That array is the sequence of command-line
+    arguments that we type. If we intend for an argument to be a number, we must use
+    a method such as `Integer.parseInt()` to convert it from `String` to the appropriate
+    type.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Standard output.* To print output values in our programs, we have been using
+    `System.out.println()`. Java sends the results to an abstract stream of characters
+    known as *standard output*. By default, the operating system connects standard
+    output to the terminal window. All of the output in our programs so far has been
+    appearing in the terminal window.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[RandomSeq.java](RandomSeq.java.html) uses this model: It takes a command-line
+    argument *n* and prints to standard output a sequence of *n* random numbers between
+    0 and 1.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'To complete our programming model, we add the following libraries:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Standard input.* Read numbers and strings from the user.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Standard drawing.* Plot graphics.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Standard audio.* Create sound.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Standard output.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Java''s `System.out.print()` and `System.out.println()` methods implement the
+    basic standard output abstraction that we need. Nevertheless, to treat standard
+    input and standard output in a uniform manner (and to provide a few technical
+    improvements), we use similar methods that are defined in our [StdOut](../stdlib/javadoc/StdOut.html)
+    library:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Standard output API](../Images/7f5d7045146ef3eeefac9df4a5566bd1.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Java's `print()` and `println()` methods are the ones that you have been using.
+    The `printf()` method gives us more control over the appearance of the output.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Formatted printing basics.* In its simplest form, `printf()` takes two arguments.
+    The first argument is called the *format string*. It contains a *conversion specification*
+    that describes how the second argument is to be converted to a string for output.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![anatomy of printf() call](../Images/76b91499d73308c25f484c736cecd41a.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'Format strings begin with `%` and end with a one-letter *conversion code*.
+    The following table summarizes the most frequently used codes:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![formatting examples for printf()](../Images/46ac964b39e87437f2d1b453b98f69b8.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '*Format string.* The format string can contain characters in addition to those
+    for the conversion specification. The conversion specification is replaced by
+    the argument value (converted to a string as specified) and all remaining characters
+    are passed through to the output.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Multiple arguments.* The `printf()` function can take more than two arguments.
+    In this case, the format string will have an additional conversion specification
+    for each additional argument.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Here is more documentation on [printf format string syntax](http://docs.oracle.com/javase/8/docs/api/java/util/Formatter.html#syntax).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Standard input.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Our [StdIn](../stdlib/javadoc/StdIn.html) library takes data from a *standard
+    input stream* that contains a sequence of values separated by whitespace. Each
+    value is a string or a value from one of Java''s primitive types. One of the key
+    features of the standard input stream is that your program *consumes* values when
+    it reads them. Once your program has read a value, it cannot back up and read
+    it again. The library is defined by the following API:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Standard input API](../Images/be853a3d59c07685c33c5803d406e593.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: We now consider several examples in detail.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Typing input.* When you use the `java` command to invoke a Java program from
+    the command line, you actually are doing three things: (1) issuing a command to
+    start executing your program, (2) specifying the values of the command-line arguments,
+    and (3) beginning to define the standard input stream. The string of characters
+    that you type in the terminal window after the command line is the standard input
+    stream. For example, [AddInts.java](AddInts.java.html) takes a command-line argument
+    `n`, then reads `n` numbers from standard input and adds them, and prints the
+    result to standard output:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![anatomy of a command](../Images/7fa0ab73e78f4ec17a0b104df3748ae3.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '*Input format.* If you type `abc` or `12.2` or `true` when `StdIn.readInt()`
+    is expecting an `int`, then it will respond with an `InputMismatchException`.
+    `StdIn` treats strings of consecutive whitespace characters as identical to one
+    space and allows you to delimit your numbers with such strings.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Interactive user input.* [TwentyQuestions.java](TwentyQuestions.java.html)
+    is a simple example of a program that interacts with its user. The program generates
+    a random integer and then gives clues to a user trying to guess the number. The
+    fundamental difference between this program and others that we have written is
+    that the user has the ability to change the control flow *while* the program is
+    executing.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Processing an arbitrary-size input stream.* Typically, input streams are finite:
+    your program marches through the input stream, consuming values until the stream
+    is empty. But there is no restriction of the size of the input stream. [Average.java](Average.java.html)
+    reads in a sequence of real numbers from standard input and prints their average.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Redirection and piping.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: For many applications, typing input data as a standard input stream from the
+    terminal window is untenable because doing so limits our program's processing
+    power by the amount of data that we can type. Similarly, we often want to save
+    the information printed on the standard output stream for later use. We can use
+    operating system mechanisms to address both issues.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Redirecting standard output to a file.* By adding a simple directive to the
+    command that invokes a program, we can *redirect* its standard output to a file,
+    either for permanent storage or for input to some other program at a later time.
+    For example, the command'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Redirecting standard output](../Images/0807897417e071fc5ed5190593cdc9dc.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: specifies that the standard output stream is not to be printed in the terminal
+    window, but instead is to be written to a text file named `data.txt`. Each call
+    to `StdOut.print()` or `StdOut.println()` appends text at the end of that file.
+    In this example, the end result is a file that contains 1,000 random values.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Redirecting standard input from a file.* Similarly, we can redirect standard
+    input so that `StdIn` reads data from a file instead of the terminal window. For
+    example, the command'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Redirecting standard input](../Images/08aa865b2167c729a98bc4c838a846fd.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: reads a sequence of numbers from the file `data.txt` and computes their average
+    value. Specifically, the `<` symbol is a directive to implement the standard input
+    stream by reading from the file `data.txt` instead of by waiting for the user
+    to type something into the terminal window. When the program calls `StdIn.readDouble()`,
+    the operating system reads the value from the file. This facility to redirect
+    standard input from a file enables us to process huge amounts of data from any
+    source with our programs, limited only by the size of the files that we can store.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Connecting two programs.* The most flexible way to implement the standard
+    input and standard output abstractions is to specify that they are implemented
+    by our own programs! This mechanism is called *piping*. For example, the following
+    command'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Piping](../Images/84b82880565d989f40a3d1ee09ef3408.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: specifies that the standard output for `RandomSeq` and the standard input stream
+    for `Average` are the *same* stream.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Filters.* For many common tasks, it is convenient to think of each program
+    as a filter that converts a standard input stream to a standard output stream
+    in some way, [RangeFilter.java](RangeFilter.java.html) takes two command-line
+    arguments and prints on standard output those numbers from standard input that
+    fall within the specified range.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Your operating system also provides a number of filters. For example, the `sort`
+    filter puts the lines on standard input in sorted order:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Another useful filter is `more`, which reads data from standard input and displays
+    it in your terminal window one screenful at a time. For example, if you type
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: you will see as many numbers as fit in your terminal window, but more will wait
+    for you to hit the space bar before displaying each succeeding screenful.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Standard drawing.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Now we introduce a simple abstraction for producing drawings as output. We
+    imagine an abstract drawing device capable of drawing lines and points on a two-dimensional
+    canvas. The device is capable of responding to the commands that our programs
+    issue in the form of calls to static methods in [StdDraw](../stdlib/javadoc/StdDraw.html).
+    The primary interface consists of two kinds of methods: *drawing commands* that
+    cause the device to take an action (such as drawing a line or drawing a point)
+    and *control commands* that set parameters such as the pen size or the coordinate
+    scales.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Basic drawing commands.* We first consider the drawing commands:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Standard drawing API: drawing commands](../Images/6f878098e49c88e9c0ee43eb142e8375.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'These methods are nearly self-documenting: `StdDraw.line(x0, y0, x1, y1)` draws
+    a straight line segment connecting the point (*x*[0], *y*[0]) with the point (*x*[1],
+    *y*[1]). `StdDraw.point(x, y)` draws a spot centered on the point (*x*, *y*).
+    The default coordinate scale is the unit square (all *x*- and *y*-coordinates
+    between 0 and 1). The standard implementation displays the canvas in a window
+    on your computer''s screen, with black lines and points on a white background.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Your first drawing.* The `HelloWorld` for graphics programming with `StdDraw`
+    is to draw a triangle with a point inside. [Triangle.java](Triangle.java.html)
+    accomplishes this with three calls to `StdDraw.line()` and one call to `StdDraw.point()`.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Control commands.* The default canvas size is 512-by-512 pixels and the default
+    coordinate system is the unit square, but we often want to draw plots at different
+    scales. Also, we often want to draw line segments of different thickness or points
+    of different size from the standard. To accommodate these needs, `StdDraw` has
+    the following methods:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Standard drawing API: control commands](../Images/c1ccd2bbf6751427546b11268da572a8.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: For example, the two-call sequence
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: sets the drawing coordinates to be within a *bounding box* whose lower-left
+    corner is at (*x*[0], *y*[0]) and whose upper-right corner is at (*x*[1], *y*[1]).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Filtering data to a standard drawing.* [PlotFilter.java](PlotFilter.java.html)
+    reads a sequence of points defined by (*x*, *y*) coordinates from standard input
+    and draws a spot at each point. It adopts the convention that the first four numbers
+    on standard input specify the bounding box, so that it can scale the plot.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`% **java PlotFilter <**` [`USA.txt`](USA.txt)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: ''
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '![13509 cities in the US](../Images/c41b3fd15e824533ac2453e7fad16aed.png)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '*Plotting a function graph.* [FunctionGraph.java](FunctionGraph.java.html)
+    plots the function *y* = sin(4*x*) + sin(20*x*) in the interval (0, π). There
+    are an infinite number of points in the interval, so we have to make do with evaluating
+    the function at a finite number of points within the interval. We *sample* the
+    function by choosing a set of *x*-values, then computing *y*-values by evaluating
+    the function at each *x*-value. Plotting the function by connecting successive
+    points with lines produces what is known as a *piecewise linear approximation*.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Plotting a function graph](../Images/6413348270fbdc0917bf7ac7889bcc4b.png)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '*Outline and filled shapes.* `StdDraw` also includes methods to draw circles,
+    rectangles, and arbitrary polygons. Each shape defines an outline. When the method
+    name is just the shape name, that outline is traced by the drawing pen. When the
+    method name begins with `filled`, the named shape is instead filled solid, not
+    traced.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Standard drawing API: shapes](../Images/3d2bdb339142f92bf2c97765550f0363.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: The arguments for `circle()` define a circle of radius r; the arguments for
+    `square()` define a square of side length 2r centered on the given point; and
+    the arguments for `polygon()` define a sequence of points that we connect by lines,
+    including one from the last point to the first point.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Standard drawing shapes](../Images/23758b0e67c7347f452b3f75cd63a073.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '*Text and color.* To annotate or highlight various elements in your drawings,
+    `StdDraw` includes methods for drawing text, setting the font, and setting the
+    the ink in the pen.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Standard drawing text and color commands](../Images/d1e3d6ab6314b96eafb6e2bb293de6db.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: In this code, [java.awt.Font](http://docs.oracle.com/javase/8/docs/api/java/awt/Font.html)
+    and [java.awt.Color](http://docs.oracle.com/javase/8/docs/api/java/awt/Color.html)
+    are abstractions that are implemented with non-primitive types that you will learn
+    about in Section 3.1. Until then, we leave the details to `StdDraw`. The default
+    ink color is black; the default font is a 16-point plain Serif font.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Double buffering.* `StdDraw` supports a powerful computer graphics feature
+    known as *double buffering*. When double buffering is enabled by calling `enableDoubleBuffering()`,
+    all drawing takes place on the *offscreen canvas*. The offscreen canvas is not
+    displayed; it exists only in computer memory. Only when you call `show()` does
+    your drawing get copied from the offscreen canvas to the *onscreen canvas*, where
+    it is displayed in the standard drawing window. You can think of double buffering
+    as collecting all of the lines, points, shapes, and text that you tell it to draw,
+    and then drawing them all simultaneously, upon request. One reason to use double
+    buffering is for efficiency when performing a large number of drawing commands.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Computer animations.* Our most important use of double buffering is to produce
+    *computer animations*, where we create the illusion of motion by rapidly displaying
+    static drawings. We can produce animations by repeating the following four steps:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Clear the offscreen canvas.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Draw objects on the offscreen
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Copy the offscreen canvas to the onscreen canvas.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Wait for a short while.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'In support of these steps, the `StdDraw` has several methods:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Standard drawing animation commands](../Images/3afa6ef2d7ab312ad7e5c4f6f36d014a.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'The "Hello, World" program for animation is to produce a black ball that appears
+    to move around on the canvas, bouncing off the boundary according to the laws
+    of elastic collision. Suppose that the ball is at position (*x*, *y*) and we want
+    to create the impression of having it move to a new position, say (*x* + 0.01,
+    *y* + 0.02). We do so in four steps:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Clear the offscreen canvas to white.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Draw a black ball at the new position on the offscreen canvas.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Copy the offscreen canvas to the onscreen canvas.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Wait for a short while.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To create the illusion of movement, [BouncingBall.java](BouncingBall.java.html)
+    iterates these steps for a whole sequence of positions of the ball.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Bouncing ball](../Images/5ea587bceb5f8e0d1bd20a139182c930.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '*Images.* Our standard draw library supports drawing pictures as well as geometric
+    shapes. The command `StdDraw.picture(x, y, filename)` plots the image in the given
+    filename (either JPEG, GIF, or PNG format) on the canvas, centered on (x, y).
+    [BouncingBallDeluxe.java](BouncingBallDeluxe.java.html) illustrates an example
+    where the bouncing ball is replaced by an image of a tennis ball.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*User interaction.* Our standard draw library also includes methods so that
+    the user can interact with the window using the mouse.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '*A first example.* [MouseFollower.java](MouseFollower.java.html) is the `HelloWorld`
+    of mouse interaction. It draws a blue ball, centered on the location of the mouse.
+    When the user holds down the mouse button, the ball changes color from blue to
+    cyan.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*A simple attractor.* [OneSimpleAttractor.java](OneSimpleAttractor.java.html)
+    simulates the motion of a blue ball that is attracted to the mouse. It also accounts
+    for a drag force.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Many simple attractors.* [SimpleAttractors.java](SimpleAttractors.java.html)
+    simulates the motion of 20 blue balls that are attracted to the mouse. It also
+    accounts for a drag force. When the user clicks, the balls disperse randomly.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Springs.* [Springs.java](Springs.java.html) implements a spring system.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Standard audio.
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[StdAudio](../stdlib/javadoc/StdAudio.html) is a library that you can use to
+    play and manipulate sound files. It allows you to play, manipulate and synthesize
+    sound.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Standard audio API](../Images/f781ac5672f2b52ca283aab638c2301e.png)'
+  prefs:
+  - PREF_BQ
+  type: TYPE_IMG
+- en: 'We introduce some some basic concepts behind one of the oldest and most important
+    areas of computer science and scientific computing: *digital signal processing*.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '*Concert A.* Concert A is a sine wave, scaled to oscillate at a frequency of
+    440 times per second. The function sin(*t*) repeats itself once every 2π units
+    on the *x*-axis, so if we measure *t* in seconds and plot the function sin(2π*t*
+    × 440) we get a curve that oscillates 440 times per second. The amplitude (*y*-value)
+    corresponds to the volume. We assume it is scaled to be between −1 and +1.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '*Other notes.* A simple mathematical formula characterizes the other notes
+    on the chromatic scale. They are divided equally on a logarithmic (base 2) scale:
+    there are twelve notes on the chromatic scale, and we get the *i*th note above
+    a given note by multiplying its frequency by the (*i*/12)th power of 2\.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '![Musical notes, numbers, and waves](../Images/fae4eac4dc573213d26d5207db0e1697.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: When you double or halve the frequency, you move up or down an octave on the
+    scale. For example 880 hertz is one octave above concert A and 110 hertz is two
+    octaves below concert A.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '*Sampling.* For digital sound, we represent a curve by sampling it at regular
+    intervals, in precisely the same manner as when we plot function graphs. We sample
+    sufficiently often that we have an accurate representation of the curve—a widely
+    used sampling rate is 44,100 samples per second. It is that simple: we represent
+    sound as an array of numbers (real numbers that are between −1 and +1).'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '| ![Sampling a sine wave at various rates](../Images/4d7e713278bc23214fbddf3105616f73.png)
+    |             | ![Sampling a sine wave at 44,100 Hertz](../Images/5000ed7713290e41fcc428950ea5cbd1.png)
+    |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: For example, the following code fragment plays concert A for 10 seconds.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '*Play that tune.* [PlayThatTune.java](PlayThatTune.java.html) is an example
+    that shows how easily we can create music with `StdAudio`. It takes notes from
+    standard input, indexed on the chromatic scale from concert A, and plays them
+    on standard audio.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Write a program [MaxMin.java](MaxMin.java.html) that reads in integers (as many
+    as the user enters) from standard input and prints out the maximum and minimum
+    values.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program [Stats.java](Stats.java.html) that takes an integer command-line
+    argument *n*, reads *n* floating-point numbers from standard input, and prints
+    their *mean* (average value) and *sample standard deviation* (square root of the
+    sum of the squares of their differences from the average, divided by *n*−1).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Write a program [LongestRun.java](LongestRun.java.html) that reads in a sequence
+    of integers and prints out both the integer that appears in a longest consecutive
+    run and the length of the run. For example, if the input is `1 2 2 1 5 1 1 7 7
+    7 7 1 1`, then your program should print `Longest run: 4 consecutive 7s`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program [WordCount.java](WordCount.java.html) that reads in text from
+    standard input and prints out the number of words in the text. For the purpose
+    of this exercise, a word is a sequence of non-whitespace characters that is surrounded
+    by whitespace.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program [Closest.java](Closest.java.html) that takes three floating-point
+    command-line arguments \(x, y, z\), reads from standard input a sequence of point
+    coordinates \((x_i, y_i, z_i)\), and prints the coordinates of the point closest
+    to \((x, y, z)\). Recall that the square of the distance between \((x, y, z)\)
+    and \((x_i, y_i, z_i)\) is \((x - x_i)^2 + (y - y_i)^2 + (z - z_i)^2\). For efficiency,
+    do not use `Math.sqrt()` or `Math.pow()`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Given the positions and masses of a sequence of objects, write a program to
+    compute their center-of-mass or *centroid.* The centroid is the average position
+    of the *n* objects, weighted by mass. If the positions and masses are given by
+    (*x[i]*, *y[i]*, *m[i]*), then the centroid (*x*, *y*, *m*) is given by:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Write a program `Centroid.java` that reads in a sequence of positions and masses
+    (*x[i]*, *y[i]*, *m[i]*) from standard input and prints out their center of mass
+    (*x*, *y*, *m*). *Hint*: model your program after [Average.java](Average.java.html).'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Write a program [Checkerboard.java](Checkerboard.java.html) that takes a command-line
+    argument n and plots an n-by-n checkerboard with red and black squares. Color
+    the lower-left square red.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![5-by-5 checkerboard](../Images/7a62b13fedd8d00336158d69714a450f.png) |
+    ![8-by-8 checkerboard](../Images/8bd772b6938fb901fcc7328ef46c712c.png) | ![25-by-25
+    checkerboard](../Images/2d13301ba4ab36d63d0cba4d5888c00d.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: Write a program [Rose.java](Rose.java.html) that takes a command-line argument
+    n and plots a rose with n petals (if n is odd) or 2n petals (if n is even) by
+    plotting the polar coordinates (r, θ) of the function *r = sin(n × θ)* for θ ranging
+    from 0 to 2π radians. Below is the desired output for n = 4, 7, and 8.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![rose](../Images/39cb16349d769f860aba5936b445bb9e.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: Write a program [Banner.java](Banner.java.html) that takes a string s from the
+    command line and display it in banner style on the screen, moving from left to
+    right and wrapping back to the beginning of the string as the end is reached.
+    Add a second command-line argument to control the speed.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Write a program `Circles.java` that draws filled circles of random size at
+    random positions in the unit square, producing images like those below. Your program
+    should take four command-line arguments: the number of circles, the probability
+    that each circle is black, the minimum radius, and the maximum radius.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![random circles](../Images/8a14303093127c369c72603b82b38a0d.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Creative Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Spirographs.** Write a program [Spirograph.java](Spirograph.java.html) that
+    takes three command-line arguments R, r, and a and draws the resulting spirograph.
+    A [spirograph](https://en.wikipedia.org/wiki/Spirograph) (technically, an epicycloid)
+    is a curve formed by rolling a circle of radius r around a larger fixed circle
+    or radius R. If the pen offset from the center of the rolling circle is (r+a),
+    then the equation of the resulting curve at time t is given by'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Such curves were popularized by a best-selling toy that contains discs with
+    gear teeth on the edges and small holes that you could put a pen in to trace spirographs.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: For a dramatic 3d effect, draw a circular image, e.g., [earth.gif](earth.gif)
+    instead of a dot, and show it rotating over time. Here's a picture of the resulting
+    [spirograph](images/spirograph.png) when R = 180, r = 40, and a = 15.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Clock.** Write a program [Clock.java](Clock.java.html) that displays an animation
+    of the second, minute, and hour hands of an analog clock. Use the method `StdDraw.show(1000)`
+    to update the display roughly once per second.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Hint*: this may be one of the rare times when you want to use the % operator
+    with a `double` - it works the way you would expect.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Oscilloscope.** Write a program [Oscilloscope.java](Oscilloscope.java.html)
+    to simulate the output of an oscilloscope and produce Lissajous patterns. These
+    patterns are named after the French physicist, Jules A. Lissajous, who studied
+    the patterns that arise when two mutually perpendicular periodic disturbances
+    occur simultaneously. Assume that the inputs are sinusoidal, so tha the following
+    parametric equations describe the curve:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Take the six parameters A[x], w[x], θ[x], θ[y], w[y], and θ[y] from the command
+    line.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: For example, the first image below has Ax = Ay = 1, w[x] = 2, w[y] = 3, θ[x]
+    = 20 degrees, θ[y] = 45 degrees. The other has parameters (1, 1, 5, 3, 30, 45)
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '| ![Oscilloscope 2](../Images/7ac271c2f3549d49c4fb6377f22b5f04.png) | ![Oscilloscope
+    3](../Images/cd39486faf1eda760ff367058ba3db4e.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: Web Exercises
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: '**Word and line count.** Modify [WordCount.java](WordCount.java.html) so that
+    reads in text from standard input and prints out the number of characters, words,
+    and lines in the text.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Rainfall problem.** Write a program `Rainfall.java` that reads in nonnegative
+    integers (representing rainfall) one at a time until 999999 is entered, and then
+    prints out the average of value (not including 999999).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Remove duplicates.** Write a program `Duplicates.java` that reads in a sequence
+    of integers and prints back out the integers, except that it removes repeated
+    values if they appear consecutively. For example, if the input is 1 2 2 1 5 1
+    1 7 7 7 7 1 1, your program should print out 1 2 1 5 1 7 1.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Run length encoding.** Write a program [RunLengthEncoder.java](RunLengthEncoder.java.html)
+    that encodes a binary input using run length encoding. Write a program `RunLengthDecoder.java`
+    that decodes a run length encoded message.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Head and tail.** Write programs `Head.java` and `Tail.java` that take an
+    integer command line input N and print out the first or last N lines of the given
+    file. (Print the whole file if it consists of <= N lines of text.)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Print a random word.** Read a list of N words from standard input, where
+    N is unknown ahead of time, and print out one of the N words uniformly at random.
+    Do not store the word list. Instead, use Knuth''s method: when reading in the
+    ith word, select it with probability 1/i to be the selected word, replacing the
+    previous champion. Print out the word that survives after reading in all of the
+    data.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Caesar cipher.** Julius Caesar sent secret messages to Cicero using a scheme
+    that is now known as a *Caesar cipher*. Each letter is replaced by the letter
+    k positions ahead of it in the alphabet (and you wrap around if needed). The table
+    below gives the Caesar cipher when k = 3.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: For example the message "VENI, VIDI, VICI" is converted to "YHQL, YLGL, YLFL".
+    Write a program `Caesar.java` that takes a command-line argument k and applies
+    a Caesar cipher with shift = k to a sequence of letters read from standard input.
+    If a letter is not an uppercase letter, simply print it back out.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Caesar cipher decoding.** How would you decode a message encrypted using
+    a Caesar cipher? *Hint*: you should not need to write any more code.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Parity check.** A Boolean matrix has the *parity property* when each row
+    and each column has an even sum. This is a simple type of error-correcting code
+    because if one bit is corrupted in transmission (bit is flipped from 0 to 1 or
+    from 1 to 0) it can be detected and repaired. Here''s a 4 x 4 input file which
+    has the parity property:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Write a program ParityCheck.java that takes an integer N as a command line
+    input and reads in an N-by-N Boolean matrix from standard input, and outputs if
+    (i) the matrix has the parity property, or (ii) indicates which single corrupted
+    bit (i, j) can be flipped to restore the parity property, or (iii) indicates that
+    the matrix was corrupted (more than two bits would need to be changed to restore
+    the parity property). Use as little internal storage as possible. Hint: you do
+    not even have to store the matrix!'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Takagi''s function.** Plot Takagi''s function: everywhere continuous, nowhere
+    differentiable.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Hitchhiker problem.** You are interviewing N candidates for the sole position
+    of American Idol. Every minute you get to see a new candidate, and you have one
+    minute to decide whether or not to declare that person the American Idol. You
+    may not change your mind once you finish interviewing the candidate. Suppose that
+    you can immediately rate each candidate with a single real number between 0 and
+    1, but of course, you don''t know the rating of the candidates not yet seen. Devise
+    a strategy and write a program `AmericanIdol` that has at least a 25% chance of
+    picking the best candidate (assuming the candidates arrive in random order), reading
+    the 500 data values from standard input.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '*Solution:* interview for N/2 minutes and record the rating of the best candidate
+    seen so far. In the next N/2 minutes, pick the first candidate that has a higher
+    rating than the recorded one. This yields at least a 25% chance since you will
+    get the best candidate if the second best candidate arrives in the first N/2 minutes,
+    and the best candidate arrives in the final N/2 minutes. This can be improved
+    slightly to 1/e = 0.36788 by using essentially the same strategy, but switching
+    over at time N/e.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Nested diamonds.** Write a program `Diamonds.java` that takes a command line
+    input N and plots N nested squares and diamonds. Below is the desired output for
+    N = 3, 4, and 5.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![diamond 3](../Images/d3a54e796ce18959f9edd56416ff6d46.png) | ![diamond
+    4](../Images/874259a685415cc6dd8583d255af594d.png) | ![diamond 5](../Images/45cc970f7793831a1f370d5ebe351cc1.png)
+    |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '**Regular polygons.** Create a function to plot an N-gon, centered on (x, y)
+    of size length s. Use the function to draws nested polygons like the picture below.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![nested polygons](../Images/929ff9ccf1bebf8b016310a2d164cd2f.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '**Bulging squares.** Write a program `BulgingSquares.java` that draws the following
+    optical illusion from [Akiyoshi Kitaoka](http://www.ritsumei.ac.jp/~akitaoka/index-e.html)
+    The center appears to bulge outwards even though all squares are the same size.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![bulging squares](../Images/279043bd39bb2e796cd5de5c4dd159d4.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '**Spiraling mice.** Suppose that N mice that start on the vertices of a regular
+    polygon with N sides, and they each head toward the nearest other mouse (in counterclockwise
+    direction) until they all meet. Write a program to draw the logarithmic spiral
+    paths that they trace out by drawing nested N-gons, rotated and shrunk as in [this
+    animation](http://mathworld.wolfram.com/Whirl.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Spiral.** Write a program to draw a spiral like the one below.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![spiral](../Images/0fc375f3300289c26e056e386471631b.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '**Globe.** Write a program [Globe.java](Globe.java.html) that takes a real
+    command-line argument α and plots a globe-like pattern with parameter α. Plot
+    the polar coordinates (r, θ) of the function *f(θ) = cos(α × θ)* for θ ranging
+    from 0 to 7200 degrees. Below is the desired output for α = 0.8, 0.9, and 0.95.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![globe pattern with alpha = 0.8](../Images/0eb36c843dcc624205b4d59b40968cf3.png)
+    | ![globe pattern with alpha = 0.9](../Images/2348fa6466c16978b4c77c9f6c9f04a7.png)
+    | ![globe pattern with alpha = 0.95](../Images/865b3da2e17501cb6ba16c782d2ef5d6.png)
+    |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '**Drawing strings.** Write a program [RandomText.java](RandomText.java.html)
+    that takes a string s and an integer N as command line inputs, and writes the
+    string N times at a random location, and in a random color.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![hello](../Images/8c4c33cff2cbc23c7bbf0e4a16a55dfb.png) | ![world](../Images/32e31168f3f62974e743216bd774009b.png)
+    | ![java](../Images/2efe836fed8303108d10d189cdd201a7.png) |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '**2D random walk.** Write a program [RandomWalk.java](RandomWalk.java.html)
+    to simulate a 2D random walk and animate the results. Start at the center of a
+    2N-by-2N grid. The current location is displayed in blue; the trail in white.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '| ![random walk in 2d after 5 steps](../Images/2ad422454dc019807744e96be33e3b03.png)
+    |          | ![random 2d walk after 25 steps](../Images/cf9c989a62f7772f1a88451385c3a352.png)
+    |          | ![random 2d walk after 106 steps](../Images/f74f7617cfdd8d596cab35731988da93.png)
+    |'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_TB
+- en: '**Rotating table.** You are seated at a rotating square table (like a lazy
+    Susan), and there are four coins placed in the four corners of the table. Your
+    goal is to flip the coins so that they are either all heads or all tails, at which
+    point a bell rings to notify you that you are done. You may select any two of
+    them, determine their orientation, and (optionally) flip either or both of them
+    over. To make things challenging, you are blindfolded, and the table is spun after
+    each time you select two coins. Write a program `RotatingTable.java` that initializes
+    the coins to random orientations. Then, it prompts the user to select two positions
+    (1-4), and identifies the orientation of each coin. Next, the user can specify
+    which, if any of the two coins to flip. The process repeats until the user solves
+    the puzzle.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Rotating table solver.** Write another program `RotatingTableSolver.java`
+    to solve the rotating table puzzle. One effective strategy is to choose two coins
+    at random and flip them to heads. However, if you get really unlucky, this could
+    take an arbitrary number of steps. Goal: devise a strategy that always solves
+    the puzzle in at most 5 steps.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Hex.** [Hex](http://mathworld.wolfram.com/GameofHex.html) is a two-player
+    board game popularized by John Nash while a graduate student at Princeton University,
+    and later commercialized by Parker Brothers. It is played on a hexagonal grid
+    in the shape of an [11-by-11 diamond](http://www.wikipedia.org/wiki/Hex_(game)).
+    Write a program `Hex.java` that draws the board.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Projectile motion with drag.** Write a program [BallisticMotion.java](BallisticMotion.java.html)
+    that plots the trajectory of a ball that is shot with velocity v at an angle theta.
+    Account for gravitational and drag forces. Assume that the drag force is proportional
+    to the square of the velocity. Using Newton''s equations of motions and the Euler-Cromer
+    method, update the position, velocity, and acceleration according to the following
+    equations:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Use G = 9.8, C = 0.002, and set the initial velocity to 180 and the angle to
+    60 degrees.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Heart.** Write a program [Heart.java](Heart.java.html) to draw a pink heart:
+    Draw a diamond, then draw two circles to the upper left and upper right sides.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![Heart](../Images/60f7dc1be849e349205a87c96d0bb862.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '**Changing square.** Write a program that draws a square and changes its color
+    each second.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Simple harmonic motion.** Repeat the previous exercise, but animate the Lissajous
+    patterns as in [this applet](http://www.dcs.napier.ac.uk/~andrew/shm/liss3by2.html).
+    Ex: A = B = w[x] = w[y] = 1, but at each time t draw 100 (or so) points with φ[x]
+    ranging from 0 to 720 degrees, and φ[x] ranging from 0 to 1080 degrees.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Bresenham''s line drawing algorithm.** To plot a line segment from (x1, y1)
+    to (x2, y2) on a monitor, say 1024-by-1024, you need to make a discrete approximation
+    to the continuous line and determine exactly which pixels to turn on. [Bresenham''s
+    line drawing algorithm](http://www.cs.helsinki.fi/group/goa/mallinnus/lines/bresenh.html)
+    is a clever solution that works when the slope is between 0 and 1 and x1 < x2.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Modify Bresenham's algorithm to handle arbitrary line segments.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Miller''s madness.** Write a program [Madness.java](Madness.java.html) to
+    plot the parametric equation:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: where the parameter t is in radians. You should get the following [complex picture](images/madness.png).
+    Experiment by changing the parameters and produce original pictures.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Fay''s butterfly.** Write a program [Butterfly.java](Butterfly.java.html)
+    to plot the polar equation:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: where the parameter t is in radians. You should get an image like the following
+    butterfly-like figure. Experiment by changing the parameters and produce original
+    pictures.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '![Butterfly](../Images/d481405422d8281b8186c7bcecf75fa4.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: '**Student database.** The file [students.txt](students.txt) contains a list
+    of students enrolled in an introductory computer science class at Princeton. The
+    first line contains an integer N that specifies the number of students in the
+    database. Each of the next N lines consists of four pieces of information, separated
+    by whitespace: first name, last name, email address, and section number. The program
+    [Students.java](Students.java.html) reads in the integer N and then N lines of
+    data of standard input, stores the data in four parallel arrays (an integer array
+    for the section number and string arrays for the other fields). Then, the program
+    prints out a list of students in section 4 and 5.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Shuffling.** In the October 7, 2003 California state runoff election for
+    governor, there were [135 official candidates](../data/california-gov.txt). To
+    avoid the natural prejudice against candidates whose names appear at the end of
+    the alphabet (Jon W. Zellhoefer), California election officials sought to order
+    the candidates in random order. Write a program program [Shuffle.java](Shuffle.java.html)
+    that takes a command-line argument N, reads in N strings from standard input,
+    and prints them back out in shuffled order. (California decided to [randomize
+    the alphabet](http://www.cnn.com/2003/ALLPOLITICS/08/12/calif.recall/) instead
+    of shuffling the candidates. Using this strategy, not all N! possible outcomes
+    are equally likely or even possible! For example, two candidates with very similar
+    last names will always end up next to each other.)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Reverse.** Write a program [Reverse.java](Reverse.java.html) that reads in
+    an arbitrary number of real values from standard input and prints them in reverse
+    order.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Time series analysis.** This problem investigates two methods for forecasting
+    in time series analysis. Moving average or exponential smoothing.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Polar plots.** Create any of these [polar plots](http://www.mapleapps.com/powertools/calcII/html/L27-polarGraphs.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Java games.** Use `StdDraw.java` to implement one of the games at [javaunlimited.net](http://javaunlimited.net/games/java4k_2006.php).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Consider the following program.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '|'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '|'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: 'Suppose the file `input.txt` contains the following integers:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '|'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '|'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: What is the contents of the array `a` after running the following command
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '|'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '|'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**High-low.** Shuffle a deck of cards, and deal one to the player. Prompt the
+    player to guess whether the next card is higher or lower than the current card.
+    Repeat until player guesses it wrong. Game show: ???? used this.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Elastic collisions.** Write a program `CollidingBalls.java` that takes a
+    command-line argument n and plots the trajectories of n bouncing balls that bounce
+    of the walls and each other according to the laws of elastic collisions. Assume
+    all the balls have the same mass.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Elastic collisions with obstacles.** Each ball should have its own mass.
+    Put a large ball in the center with zero initial velocity. Brownian motion.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Statistical outliers.** Modify [Average.java](Average.java.html) to print
+    out all the values that are larger than 1.5 standard deviations from the mean.
+    You will need an array to store the values.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Optical illusions.** Create a [Kofka ring](http://web.mit.edu/persci/gaz/gaz-teaching/flash/koffka-movie.swf)
+    or one of the other [optical illusions](http://web.mit.edu/persci/gaz/gaz-teaching/index.html)
+    collected by Edward Adelson.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Computer animation.** In 1995 James Gosling presented a demonstration of
+    Java to Sun executives, illustrating its potential to deliver dynamic and interactive
+    Web content. At the time, web pages were fixed and non-interactive. To demonstrate
+    what the Web could be, Gosling presented applets to rotate 3D molecules, visualize
+    sorting routines, and Duke cart-wheeling across the screen. Java was officially
+    introduced in May 1995 and widely adopted in the technology sector. The Internet
+    would never be the same.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![Duke doing cartwheels](../Images/5d476fb207f3a74a6d6b20d9b1b64258.png)'
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+- en: Program [Duke.java](Duke.java.html) reads in the 17 images [T1.gif](T1.gif)
+    through [T17.gif](T17.gif) and produces the animation. To execute on your computer,
+    download the 17 GIF files and put in the same directory as `Duke.java`. (Alternatively,
+    download and unzip the file [duke.zip](duke.zip) or [duke.jar](duke.jar) to extract
+    all 17 GIFs.)
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '**Cart-wheeling Duke.** Modify [Duke.java](Duke.java.html) so that it cartwheels
+    5 times across the screen, from right to left, wrapping around when it hits the
+    window boundary. Repeat this cart-wheeling cycle 100 times. *Hint*: after displaying
+    a sequence of 17 frames, move 57 pixels to the left and repeat. Name your program
+    [MoreDuke.java](MoreDuke.java.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Tac (cat backwards).** Write a program `Tac.java` that reads lines of text
+    from standard input and prints the lines out in reverse order.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Game.** Implement the game [dodge](http://www.lewpen.com/game/) using `StdDraw`:
+    move a blue disc within the unit square to touch a randomly placed green disc,
+    while avoiding the moving red discs. After each touch, add a new moving red disc.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Simple harmonic motion.** Create an animation like the one below from [Wikipedia](http://en.wikipedia.org/wiki/Image:Simple_harmonic_motion_animation.gif)
+    of simple harmonic motion.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '![Simple harmonic motion](../Images/9677902e2ca42df74e54438ad06bf67d.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: '**Yin yang.** Draw a [yin yang](http://www.krazydad.com/bestiary/bestiary_yinyang.html)
+    using `StdDraw.arc()`.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Twenty questions.** Write a program [QuestionsTwenty.java](QuestionsTwenty.java.html)
+    that plays 20 questions from the opposite point of view: the user thinks of a
+    number between 1 and a million and the computer makes the guesses. Use *binary
+    search* to ensure that the computer needs at most 20 guesses.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Write a program `DeleteX.java` that reads in text from standard input and deletes
+    all occurrences of the letter X. To filter a file and remove all X''s, run your
+    program with the following command:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Write a program `ThreeLargest.java` that reads integers from standard input
+    and prints out the three largest inputs.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program `Pnorm.java` that takes a command-line argument p, reads in
+    real numbers from standard input, and prints out their *p-norm*. The p-norm norm
+    of a vector (x[1], ..., x[N]) is defined to be the pth root of (|x[1]|^p + |x[2]|^p
+    + ... + |x[N]|^p).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Consider the following Java program.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Suppose that the file `input.txt` contains
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE19]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: What does the following command do?
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE20]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Repeat the previous exercise but use the following command instead
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE21]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Consider the following Java program.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE22]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Suppose that the file `input.txt` contains the integers 1 and 1\. What does
+    the following command do?
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE23]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Consider the Java program [Ruler.java](Ruler.java.html).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE24]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Suppose that the file `input.txt` contains the integers 1 and 1\. What does
+    the following command do?
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE25]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Modify [Add.java](Add.java.html) so that it re-asks the user to enter two positive
+    integers if the user types in a non-positive integer.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Modify [TwentyQuestions.java](TwentyQuestions.java.html) so that it re-asks
+    the user to enter a response if the user types in something other than `true`
+    or `false`. Hint: add a `do-while` loop within the main loop.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Nonagram.** Write a program to plot a [nonagram](http://mathworld.wolfram.com/Nonagram.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Star polygons.** Write a program `StarPolygon.java` that takes two command
+    line inputs p and q, and plots the [{p/q}-star polygon](http://mathworld.wolfram.com/StarPolygon.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Complete graph.** Write a program to plot that takes an integer N, plots
+    an N-gon, where each vertex lies on a circle of radius 256\. Then draw a gray
+    line connecting each pair of vertices.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Necker cube.** Write a program `NeckerCube.java` to plot a [Necker cube](http://mathworld.wolfram.com/NeckerCube.html).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'What happens if you move the `StdDraw.clear(Color.BLACK)` command to before
+    the beginning of the `while` loop in [BouncingBall.java](BouncingBall.java.html)?
+    *Answer*: try it and observe a nice woven 3d pattern with the given starting velocity
+    and position.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What happens if you change the parameter of `StdDraw.show()` to 0 or 1000 in
+    [BouncingBall.java](BouncingBall.java.html)?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program to plot a circular ring of width 10 like the one below using
+    two calls to `StdDraw.filledCircle()`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program to plot a circular ring of width 10 like the one below using
+    a nested `for` loop and many calls to `StdDraw.point()`.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program to plot the Olympic rings.![Olympic rings http://www.janecky.com/olympics/rings.html](../Images/5a40bae61ad7a1793534903a4c140956.png)
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a program [BouncingBallDeluxe.java](BouncingBallDeluxe.java.html) that
+    embellishes [BouncingBall.java](BouncingBall.java.html) by playing a sound effect
+    upon collision with the wall using `StdAudio` and the sound file [pipebang.wav](pipepang.wav).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
