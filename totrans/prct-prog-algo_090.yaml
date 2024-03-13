@@ -1,100 +1,139 @@
 - en: 2.1   Elementary Sorts
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 2.1   基本排序
 - en: 原文：[https://algs4.cs.princeton.edu/21elementary](https://algs4.cs.princeton.edu/21elementary)
+  id: totrans-1
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 原文：[https://algs4.cs.princeton.edu/21elementary](https://algs4.cs.princeton.edu/21elementary)
 - en: In this section, we shall study two elementary sorting methods (selection sort
     and insertion sort) and a variation of one of them (shellsort).
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 在本节中，我们将学习两种基本的排序方法（选择排序和插入排序）以及其中一种的变体（希尔排序）。
 - en: Rules of the game.
+  id: totrans-3
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 游戏规则。
 - en: 'Our primary concern is algorithms for rearranging arrays of items where each
     item contains a *key*. The objective is to rearrange the items such that their
     keys are in ascending order. In Java, the abstract notion of a key is captured
     in a built-in mechanism—the `Comparable` interface. With but a few exceptions,
     our sort code refers to the data only through two operations: the method `less()`
     that compares objects and the method `exch()` that exchanges them.'
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们的主要关注点是重新排列包含*关键字*的项目数组的算法，目标是重新排列项目，使它们的关键字按升序排列。在Java中，关键字的抽象概念在内置机制中���现为`Comparable`接口。除了少数例外，我们的排序代码只通过两个操作引用数据：比较对象的方法`less()`和交换它们的方法`exch()`。
 - en: '[PRE0]'
+  id: totrans-5
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: '*Sorting cost model.* When studying sorting algorithms, we count *compares*
     and *exchanges*. For algorithms that do not use exchanges, we count *array accesses*.'
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*排序成本模型。*在研究排序算法时，我们计算*比较*和*交换*。对于不使用交换的算法，我们计算*数组访问*。'
 - en: '*Extra memory.* The sorting algorithms we consider divide into two basic types:
     those that sort *in place* (no extra memory except perhaps for a small function-call
     stack or a constant number of instance variables), and those that need enough
     extra memory to hold another copy of the array to be sorted.'
+  id: totrans-7
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*额外内存。*我们考虑的排序算法分为两种基本类型：一种是*原地*排序（除了可能需要一小段函数调用堆栈或常数数量的实例变量外，不需要额外内存），另一种是需要足够额外内存来保存另一个要排序的数组的副本。'
 - en: '*Types of data.* Our sort code is effective for any type of data that implements
     Java''s [Comparable interface](http://download.oracle.com/javase/6/docs/api/java/lang/Comparable.html).
     This means that there is a method `compareTo()` for which `v.compareTo(w)` returns
     an integer that is negative, zero, or positive when v < w, v = w, or v > w, respectively.
     The method must implement a *total order*:'
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*数据类型。*我们的排序代码适用于实现Java的[Comparable接口](http://download.oracle.com/javase/6/docs/api/java/lang/Comparable.html)的任何数据类型。这意味着存在一个`compareTo()`方法，其中`v.compareTo(w)`在v
+    < w时返回负整数，在v = w时返回零，在v > w时返回正整数。该方法必须实现*全序*：'
 - en: '*Reflexive:* for all v, v = v.'
+  id: totrans-9
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*自反性：*对于所有的v，v = v。'
 - en: '*Antisymmetric:* for all v and w, if (v < w) then (w > v); and if (v = w) then
     (w = v).'
+  id: totrans-10
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*反对称性：*对于所有的v和w，如果(v < w)，那么(w > v)；如果(v = w)，那么(w = v)。'
 - en: '*Transitive:* for all v, w, and x, if (v ≤ w) and (w ≤ x), then v ≤ x.'
+  id: totrans-11
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '*传递性：*对于所有的v、w和x，如果(v ≤ w)且(w ≤ x)，那么v ≤ x。'
 - en: In addition, `v.compareTo(w)` must throw an exception if `v` and `w` are of
     incompatible types or if either is `null`.
+  id: totrans-12
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 此外，如果`v`和`w`是不兼容类型或其中任何一个为`null`，`v.compareTo(w)`必须抛出异常。
 - en: '[Date.java](Date.java.html) illustrates how to implement the `Comparable` interface
     for a user-defined type.'
+  id: totrans-13
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '[Date.java](Date.java.html)演示了如何为用户定义的类型实现`Comparable`接口。'
 - en: Selection sort.
+  id: totrans-14
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 选择排序。
 - en: 'One of the simplest sorting algorithms works as follows: First, find the smallest
     item in the array, and exchange it with the first entry. Then, find the next smallest
     item and exchange it with the second entry. Continue in this way until the entire
     array is sorted. This method is called *selection sort* because it works by repeatedly
     selecting the smallest remaining item. [Selection.java](Selection.java.html) is
     an implementation of this method.![Selection sort](../Images/fd03f1830b21d56e7b13a560bca5ccac.png)'
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 最简单的排序算法之一的工作方式如下：首先，在数组中找到最小的项，并将其与第一个条目交换。然后，找到下一个最小的项并将其与第二个条目交换。继续这样做，直到整个数组排序完成。这种方法被称为*选择排序*，因为它通过重复选择剩余的最小项来工作。[Selection.java](Selection.java.html)是这种方法的实现。![选择排序](../Images/fd03f1830b21d56e7b13a560bca5ccac.png)
 - en: Proposition.
+  id: totrans-16
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 命题。
 - en: Selection sort uses ~n²/2 compares and n exchanges to sort an array of length
     n.
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 选择排序使用~n²/2次比较和n次交换来对长度为n的数组进行排序。
 - en: Insertion sort.
+  id: totrans-18
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 插入排序。
 - en: The algorithm that people often use to sort bridge hands is to consider the
     cards one at a time, inserting each into its proper place among those already
     considered (keeping them sorted). In a computer implementation, we need to make
@@ -102,63 +141,87 @@
     inserting the current item into the vacated position. [Insertion.java](Insertion.java.html)
     is an implementation of this method, which is called *insertion sort*.![Selection
     sort](../Images/8c81be6793c070e4423b9dd21b9ae032.png)
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 人们经常用来排序桥牌的算法是逐个考虑卡片，将每张卡片插入到已考虑的卡片中的适当位置（保持它们排序）。在计算机实现中，我们需要为当前项目腾出空间，通过将较大的项目向右移动一个位置，然后将当前项目插入到空出的位置。[Insertion.java](Insertion.java.html)是这种方法的实现，称为*插入排序*。![选择排序](../Images/8c81be6793c070e4423b9dd21b9ae032.png)
 - en: Proposition.
+  id: totrans-20
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 命题。
 - en: For randomly ordered arrays of length N with with distinct keys, insertion sort
     uses ~N²/4 compares and ~N²/4 exchanges on the average. The worst case is ~ N²/2
     compares and ~ N²/2 exchanges and the best case is N-1 compares and 0 exchanges.
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于具有不同键的长度为N的随机排序数组，插入排序平均使用~N²/4次比较和~N²/4次交换。最坏情况下，使用~N²/2次比较和~N²/2次交换，最佳情况下是N-1次比较和0次交换。
 - en: 'Insertion sort works well for certain types of nonrandom arrays that often
     arise in practice, even if they are huge. An *inversion* is a pair of keys that
     are out of order in the array. For instance, E X A M P L E has 11 inversions:
     E-A, X-A, X-M, X-P, X-L, X-E, M-L, M-E, P-L, P-E, and L-E. If the number of inversions
     in an array is less than a constant multiple of the array size, we say that the
     array is *partially sorted*.'
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 插入排序对于某些在实践中经常出现的非随机数组非常有效，即使它们很大。*逆序对*是数组中顺序不正确的一对关键字。例如，E X A M P L E有11个逆序对：E-A、X-A、X-M、X-P、X-L、X-E、M-L、M-E、P-L、P-E和L-E。如果数组中的逆序对数量小于数组大小的常数倍，则称该数组是*部分排序*的。
 - en: Proposition.
+  id: totrans-23
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 命题。
 - en: The number of exchanges used by insertion sort is equal to the number of inversions
     in the array, and the number of compares is at least equal to the number of inversions
     and at most equal to the number of inversions plus the array size.
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 插入排序使用的交换次数等于数组中的逆序数，比较次数至少等于逆序数，最多等于逆序数加上数组大小。
 - en: Property.
+  id: totrans-25
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 属性。
 - en: For randomly ordered arrays of distinct values, the running times of insertion
     sort and selection sort are quadratic and within a small constant factor of one
     another.
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于具有不同值的随机排序数组，插入排序和选择排序的运行时间是二次的，并且彼此之间相差一个小的常数因子。
 - en: '[SortCompare.java](SortCompare.java.html) uses the `sort()` methods in the
     classes named as command-line arguments to perform the given number of experiments
     (sorting arrays of the given size) and prints the ratio of the observed running
     times of the algorithms.'
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: '[SortCompare.java](SortCompare.java.html)使用命令行参数中命名的类中的`sort()`方法执行给定数量的实验（对给定大小的数组进行排序），并打印算法观察运行时间的比率。'
 - en: Visualizing sorting algorithms.
+  id: totrans-28
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 可视化排序算法。
 - en: We use a simple visual representation to help describe the properties of sorting
     algorithms. We use vertical bars, to be sorted by their heights. [SelectionBars.java](SelectionBars.java.html)
     and [InsertionBars.java](InsertionBars.java.html) produce these visualizations.![Visualization
     of selection sort and insertion sort](../Images/a487876e041ee06ce4ee3dcdc3057482.png)
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们使用简单的可视化表示来描述排序算法的属性。我们使用垂直条形图，按其高度排序。[SelectionBars.java](SelectionBars.java.html)和[InsertionBars.java](InsertionBars.java.html)生成这些可视化效果。![选择排序和插入排序的可视化效果](../Images/a487876e041ee06ce4ee3dcdc3057482.png)
 - en: Shellsort.
+  id: totrans-30
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 希尔排序。
 - en: 'Shellsort is a simple extension of insertion sort that gains speed by allowing
     exchanges of entries that are far apart, to produce partially sorted arrays that
     can be efficiently sorted, eventually by insertion sort. The idea is to rearrange
@@ -170,267 +233,377 @@
     for any increment sequence of values of h that ends in 1 will produce a sorted
     array: that is shellsort. [Shell.java](Shell.java.html) is an implementation of
     this method.![Shellsort](../Images/90c4382307c869b7e4469d79eb4b47b3.png)'
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 希尔排序是插入排序的简单扩展，通过允许远离的条目进行交换，以产生部分排序的数组，最终可以通过插入排序高效地排序。其思想是重新排列数组，使其具有这样的属性：取每个第h个条目（从任何位置开始）会产生一个排序序列。这样的数组称为*h-排序*。通过对一些大的h值进行h-排序，我们可以将数组中的条目移动到较远的距离，从而使得对较小的h值进行h-排序更容易。对于以1结尾的任何增量序列的值使用这种过程将产生一个排序的数组：这就是希尔排序。[Shell.java](Shell.java.html)是这种方法的实现。![希尔排序](../Images/90c4382307c869b7e4469d79eb4b47b3.png)
 - en: '[ShellBars.java](ShellBars.java.html) produces a visualization of shellsort.'
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: '[ShellBars.java](ShellBars.java.html)生成希尔排序的可视化效果。'
 - en: '![Shellsort visualization](../Images/c07f7ba07dd237c438da57b76eb2d7b5.png)'
+  id: totrans-33
   prefs: []
   type: TYPE_IMG
+  zh: '![希尔排序的可视化效果](../Images/c07f7ba07dd237c438da57b76eb2d7b5.png)'
 - en: Property.
+  id: totrans-34
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 属性。
 - en: The number of compares used by shellsort with the increments 1, 4, 13, 40, 121,
     364, ... is bounded by a small multiple of N times the number of increments used.
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 使用增量为1、4、13、40、121、364的希尔排序所使用的比较次数受到N的倍数限制，与使用的增量数量成正比。
 - en: Proposition.
+  id: totrans-36
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 命题。
 - en: The number of compares used by shellsort with the increments 1, 4, 13, 40, 121,
     364, ... is O(N^(3/2)).
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 使用增量为1、4、13、40、121、364的希尔排序所使用的比较次数为O(N^(3/2))。
 - en: Q + A
+  id: totrans-38
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 问与答
 - en: '**Q.** The compiler gives a warning when I compile [Insertion.java](Insertion.java.html).
     Is ther any way to avoid this?'
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: '**Q.** 当我编译[Insertion.java](Insertion.java.html)时，编译器会发出警告。有没有办法避免这种情况？'
 - en: '[PRE1]'
+  id: totrans-40
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: '**A.** Yes, if you use static generics, as in [InsertionPedantic.java](InsertionPedantic.java.html).
     It leads to awkward (but warning-free) code.'
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: '**A.** 是的，如果使用静态泛型，就像[InsertionPedantic.java](InsertionPedantic.java.html)一样。这会导致笨拙（但无警告）的代码。'
 - en: Exercises
+  id: totrans-42
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 练习
 - en: Show in the style of the example trace with selection sort, how selection sort
     sorts the array
+  id: totrans-43
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 以选择排序示例跟踪的方式展示选择排序如何对数组进行排序。
 - en: '[PRE2]'
+  id: totrans-44
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: '*Solution.*'
+  id: totrans-45
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。*'
 - en: '![Selection sort](../Images/90ee2c2bfcb9f094a1ef28718406d375.png)'
+  id: totrans-46
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![选择排序](../Images/90ee2c2bfcb9f094a1ef28718406d375.png)'
 - en: What is the maximum number of exchanges involving any particular item during
     selection sort? What is the average number of exchanges involving one specific
     item x?
+  id: totrans-47
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在选择排序中涉及任何特定项目的最大交换次数是多少？涉及特定项目x的平均交换次数是多少？
 - en: '*Solution.* The average number of exchanges is exactly 2 because there are
     exactly n exchanges and n items (and each exchange involves two items). The maximum
     number of exchanges is n, as in the following example.'
+  id: totrans-48
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。* 平均交换次数恰好为2，因为总共有n次交换和n个项目（每次交换涉及两个项目）。最大交换次数为n，如下例所示。'
 - en: '![Selection sort](../Images/c2c99a075481c6ecfcfb4691ebb4267c.png)'
+  id: totrans-49
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![选择排序](../Images/c2c99a075481c6ecfcfb4691ebb4267c.png)'
 - en: Show in the style of the example trace with insertion sort, how insertion sort
     sorts the array
+  id: totrans-50
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 以插入排序示例跟踪的方式展示插入排序如何对数组进行排序。
 - en: '[PRE3]'
+  id: totrans-51
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: '*Solution.*'
+  id: totrans-52
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。*'
 - en: '![Selection sort](../Images/a6fa9568323c9ff3ae0c8795bef1ea3b.png)'
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![选择排序](../Images/a6fa9568323c9ff3ae0c8795bef1ea3b.png)'
 - en: Which method runs fastest for an array with all keys identical, selection sort
     or insertion sort?
+  id: totrans-54
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 对于所有键相同的数组，选择排序和插入排序哪个运行速度更快？
 - en: '*Solution.* Insertion sort runs in linear time when all keys are equal.'
+  id: totrans-55
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。* 当所有键相等时，插入排序运行时间为线性时间。'
 - en: Suppose that we use insertion sort on a randomly ordered array where items have
     only one of three key values. Is the running time linear, quadratic, or something
     in between?
+  id: totrans-56
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 假设我们在一个随机排序的数组上使用插入排序，其中项目只有三个键值之一。运行时间是线性的、二次的还是介于两者之间的？
 - en: '*Solution.* Quadratic.'
+  id: totrans-57
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。* 二次的。'
 - en: Show in the style of the example trace with shellsort, how shellsort sort sorts
     the array
+  id: totrans-58
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 以希尔排序示例跟踪的方式展示希尔排序如何对数组进行排序。
 - en: '[PRE4]'
+  id: totrans-59
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: '*Solution.*'
+  id: totrans-60
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。*'
 - en: '![Shellsort trace](../Images/68cad3c6ad19eeeb0f31f0c8fdf1fae8.png)'
+  id: totrans-61
   prefs:
   - PREF_IND
   - PREF_BQ
   type: TYPE_IMG
+  zh: '![希尔排序跟踪](../Images/68cad3c6ad19eeeb0f31f0c8fdf1fae8.png)'
 - en: Why not use selection sort for *h*-sorting in shellsort?
+  id: totrans-62
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 为什么在希尔排序的*h*排序中不使用选择排序？
 - en: '*Solution.* Insertion sort is faster on inputs that are partially-sorted.'
+  id: totrans-63
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。* 插入排序在部分排序的输入上更快。'
 - en: Creative Problems
+  id: totrans-64
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 创意问题
 - en: '**Expensive exchange.** A clerk at a shipping company is charged with the task
     of rearranging a number of large crates in order of the time they are to be shipped
     out. Thus, the cost of compares is very low (just look at the labels) relative
     to the cost of exchanges (move the crates). The warehouse is nearly full: there
     is extra space sufficient to hold any one of the crates, but not two. Which sorting
     method should the clerk use?'
+  id: totrans-65
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**昂贵的交换。** 一家运输公司的职员负责按照要运出的时间顺序重新排列一些大箱子。因此，相对于交换的成本（移动箱子），比较的成本非常低（只需查看标签）。仓库几乎满了：有足够的额外空间来容纳任何一个箱子，但不能容纳两个。职员应该使用哪种排序方法？'
 - en: '*Solution.* Use selection sort because it minimizes the number of exchanges.'
+  id: totrans-66
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。* 使用选择排序，因为它最小化了交换的次数。'
 - en: '**Visual trace.** Modify your solution to the previous exercise to make [Insertion.java](Insertion.java.html)
     and [Selection.java](Selection.java.html) produce visual traces such as those
     depicted in this section.'
+  id: totrans-67
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**可视化跟踪。** 修改你对上一个练习的解决方案，使[Insertion.java](Insertion.java.html)和[Selection.java](Selection.java.html)产生类似本节中所示的可视化跟踪。'
 - en: '*Solution.* [TraceInsertion.java](TraceInsertion.java.html), [TraceSelection.java](TraceSelection.java.html),
     and [TraceShell.java](TraceShell.java.html).'
+  id: totrans-68
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*解决方案。* [TraceInsertion.java](TraceInsertion.java.html)、[TraceSelection.java](TraceSelection.java.html)和[TraceShell.java](TraceShell.java.html)。'
 - en: '**Comparable transactions.** Expand your implementation of [Transaction.java](Transaction.java.html)
     so that it implements `Comparable`, such that transactions are kept in order by
     amount.'
+  id: totrans-69
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**可比较的交易。** 扩展你的[Transaction.java](Transaction.java.html)实现，使其实现`Comparable`，使得交易按金额顺序排列。'
 - en: '**Transaction sort test client.** Write a class [SortTransactions.java](SortTransactions.java.html)
     that consists of a static method `main()` that reads a sequence of transactions
     from standard input, sorts them, and prints the result on standard output.'
+  id: totrans-70
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**交易排序测试客户端。** 编写一个类[SortTransactions.java](SortTransactions.java.html)，其中包含一个静态方法`main()`，从标准输入读取一系列交易，对其进行排序，并在标准输出上打印结果。'
 - en: Experiments
+  id: totrans-71
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 实验
 - en: '**Insertion sort with sentinel.** Develop an implementation [InsertionX.java](InsertionX.java.html)
     of insertion sort that eliminates the j > 0 test in the inner loop by first putting
     the smallest item into position. Use [SortCompare.java](SortCompare.java.html)
     to evaluate the effectiveness of doing so. *Note*: it is often possible to avoid
     an index-out-of-bounds test in this way—the item that enables the test to be eliminated
     is known as a *sentinel*.'
+  id: totrans-72
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**带哨兵的插入排序。** 开发一个插入排序的实现[InsertionX.java](InsertionX.java.html)，通过首先将最小的项目放入位置来消除内部循环中的j
+    > 0测试。使用[SortCompare.java](SortCompare.java.html)来评估这样做的有效性。*注意*：通常可以通过这种方式避免索引越界测试——使测试能够被消除的项目称为*哨兵*。'
 - en: '**Insertion sort without exchanges.** Develop an implementation [InsertionX.java](InsertionX.java.html)
     of insertion sort that moves larger items to the right one position rather than
     doing full exchanges. Use [SortCompare.java](SortCompare.java.html) to evaluate
     the effectiveness of doing so.'
+  id: totrans-73
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**无交换的插入排序。** 开发一个插入排序的实现[InsertionX.java](InsertionX.java.html)，将较大的项目向右移动一个位置，而不是进行完整的交换。使用[SortCompare.java](SortCompare.java.html)来评估这样做的有效性。'
 - en: Web Exercises
+  id: totrans-74
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 网络练习
 - en: '**Sorting networks.** Write a program [Sort3.java](Sort3.java.html) with three
     `if` statements (and no loops) that reads in three integers *a*, *b*, and *c*
     from the command line and prints them out in ascending order.'
+  id: totrans-75
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**排序网络。** 编写一个程序[Sort3.java](Sort3.java.html)，其中有三个`if`语句（没有循环），从命令行读取三个整数*a*、*b*和*c*，并按升序打印它们。'
 - en: '[PRE5]'
+  id: totrans-76
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: '**Oblivious sorting network.** Convince yourself that the following code fragment
     rearranges the integers stored in the variables A, B, C, and D so that A <= B
     <= C <= D.'
+  id: totrans-77
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**无视排序网络。** 说服自己，以下代码片段重新排列存储在变量A、B、C和D中的整数，使得A <= B <= C <= D。'
 - en: '[PRE6]'
+  id: totrans-78
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: Devise a sequence of statements that would sort 5 integers. How many `if` statements
     does your program use?
+  id: totrans-79
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 设计一系列语句，可以对5个整数���行排序。你的程序使用了多少个`if`语句？
 - en: '**Optimal oblivious sorting networks.** Create a program that sorts four integers
     using only 5 `if` statements, and one that sorts five integers using only 9 `if`
     statements of the type above? Oblivious sorting networks are useful for implementing
     sorting algorithms in hardware. How can you check that your program works for
     all inputs?'
+  id: totrans-80
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**最佳的无视排序网络。** 创建一个程序，使用仅5个`if`语句对四个整数进行排序，以及使用仅9个上述类型的`if`语句对五个整数进行排序？无视排序网络对于在硬件中实现排序算法很有用。如何检查你的程序对所有输入都有效？'
 - en: '*Answer:* [Sort4.java](Sort4.java.html) sorts 4 items using 5 compare-exchanges.
     [Sort5.java](Sort5.java.html) sorts 5 items using 9 compare-exchanges.'
+  id: totrans-81
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '*答案：* [Sort4.java](Sort4.java.html) 使用5个比较交换对4个项目进行排序。[Sort5.java](Sort5.java.html)
+    使用9个比较交换对5个项目进行排序。'
 - en: The [0-1 principle](http://en.wikipedia.org/wiki/Sorting_network) says that
     you can verify the correctness of a (deterministic) sorting network by checking
     whether it correctly sorts an input that is a sequence of 0s and 1s. Thus, to
     check that `Sort5.java` works, you only need to test it on the 2^5 = 32 possible
     inputs of 0s and 1s.
+  id: totrans-82
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: '[0-1原则](http://en.wikipedia.org/wiki/Sorting_network)说，你可以通过检查一个（确定性的）排序网络是否正确地对由0和1组成的输入进行排序来验证其正确性。因此，要检查`Sort5.java`是否有效，你只需要在32个可能的由0和1组成的输入上测试它。'
 - en: '**Optimal oblivious sorting (challenging).** Find an optimal sorting network
     for 6, 7, and 8 inputs, using 12, 16, and 19 `if` statements of the form in the
     previous problem, respectively.'
+  id: totrans-83
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**最佳的无视排序（具有挑战性）。** 找到一个针对6、7和8个输入的最佳排序网络，分别使用12、16和19个上一个问题中形式的`if`语句。'
 - en: 'Answer: [Sort6.java](Sort6.java.html) is the solution for sorting 6 items.'
+  id: totrans-84
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 答案：[Sort6.java](Sort6.java.html)是对6个项目进行排序的解决方案。
 - en: '**Optimal non-oblivious sorting.** Write a program that sorts 5 inputs using
     only 7 comparisons. *Hint*: First compare the first two numbers, the second two
     numbers, and the larger of the two groups, and label them so that a < b < d and
@@ -440,83 +613,112 @@
     the same manner that you inserted e (with the knowledge that c < d). This uses
     3 (first step) + 2 (second step) + 2 (third step) = 7 comparisons. This method
     was first discovered by H. B. Demuth in 1956.'
+  id: totrans-85
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**最佳非盲目排序。** 编写一个程序，仅使用7次比较对5个输入进行排序。*提示*：首先比较前两个数字，然后比较后两个数字，以及两组中较大的数字，并标记它们，使得a
+    < b < d和c < d。其次，将剩余的项目e插入到链a < b < d中的适当位置，首先与b进行比较，然后根据结果与a或d进行比较。第三，以与插入e相同的方式将c插入到涉及a、b、d和e的链中的适当位置（知道c
+    < d）。这使用了3（第一步）+ 2（第二步）+ 2（第三步）= 7次比较。这种方法最初是由H.B. Demuth在1956年发现的。'
 - en: '**Stupidsort.** Analyze the running time (worst case and best case), correctness,
     and stability of the following sorting algorithm. Scan the array from left to
     right until you find two consecutive items that are out-of-place. Swap them, and
     start over from the beginning. Repeat until the scan reaches the end of the array.'
+  id: totrans-86
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**Stupidsort。** 分析以下排序算法的运行时间（最坏情况和最佳情况）、正确性和稳定性。从左到右扫描数组，直到找到两个连续的位置不正确的项。交换它们，并从头开始。重复直到扫描到数组的末尾。'
 - en: '[PRE7]'
+  id: totrans-87
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: Consider also the following recursive variant and analyze the worst case memory
     usage.
+  id: totrans-88
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 考虑以下递归变体并分析最坏情况下的内存使用情况。
 - en: '[PRE8]'
+  id: totrans-89
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: '**Stoogesort.** Analyze the running time and correctness of the following recursive
     sorting algorithm: if the leftmost item is larger than the rightmost item, swap
     them. If there are 2 or more items in the current subarray, (i) sort the initial
     two-thirds of the array recursively, (ii) sort the final two-thirds of the array,
     (iii) sort the initial two-thirds of the array again.'
+  id: totrans-90
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**Stoogesort。** 分析以下递归排序算法的运行时间和正确性：如果最左边的项大于最右边的项，则交换它们。如果当前子数组中有2个或更多项，(i)
+    递归地对数组的前两个三分之一进行排序，(ii) 对数组的最后两个三分之一进行排序，(iii) 再次对数组的前两个三分之一进行排序。'
 - en: '**Guess-sort.** Pick two indices i and j at random; if a[i] > a[j], then swap
     them. Repeat until the input is sorted. Analyze the expected running time of this
     algorithm. *Hint*: after each swap, the number of inversions strictly decreases.
     If there are m bad pairs, then the expected time to find a bad pair is Theta(n^2/m).
     Summing up from m =1 to n^2 yields O(N^2 log N) overall, ala coupon collector.
     This bound is tight: consider input 1 0 3 2 5 4 7 6 ...'
+  id: totrans-91
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**猜测排序。** 随机选择两个索引i和j；如果a[i] > a[j]，则交换它们。重复直到输入排序。分析此算法的预期运行时间。*提示*：每次交换后，逆序的数量会严格减少。如果有m个坏对，那么找到一个坏对的预期时间为Theta(n^2/m)。从m
+    = 1到n^2求和得到O(N^2 log N)的总体时间，类似于收集优惠券。这个界限是紧的：考虑输入1 0 3 2 5 4 7 6 ...'
 - en: '**Bogosort.** Bogosort is a randomized algorithm that works by throwing the
     N cards up in the air, collecting them, and checking whether they wound up in
     increasing order. If they didn''t, repeat until they do. Implement bogosort using
     the shuffling algorithm from Section 1.4\. Estimate the running time as a function
     of N.'
+  id: totrans-92
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**Bogosort。** Bogosort是一种随机算法，通过将N张卡片抛起来，收集它们，并检查它们是否以递增顺序排列。如果没有，重复直到它们排好序。使用第1.4节中的洗牌算法实现bogosort。估计运行时间作为N的函数。'
 - en: '**Slow sort.** Consider the following sorting algorithm: choose two integer
     i and j at random. If i < j, but a[i] > a[j], swap them. Repeat until the array
     is in ascending order. Argue that the algorithm will eventually finish (with probability
     1). How long will it takes as a function of N? *Hint*: How many swaps will it
     make in the worst case?'
+  id: totrans-93
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**慢速排序。** 考虑以下排序算法：随机选择两个整数i和j。如果i < j，但a[i] > a[j]，则交换它们。重复直到数组按升序排列。论证该算法最终会完成（概率为1）。作为N的函数，它需要多长时间？*提示*：在最坏情况下，它会进行多少次交换？'
 - en: '**Minimum number of moves to sort an array.** Given a list of N keys, a *move
     operation* consists of removing any one key from the list and appending it to
     the end of the list. No other operations are permitted. Design an algorithm that
     sorts a given list using the minimum number of moves.'
+  id: totrans-94
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**对数组进行排序的最小移动次数。** 给定一个包含N个键的列表，*移动操作*包括从列表中移除任意一个键并将其附加到列表的末尾。不允许其他操作。设计一个算法，使用最少的移动次数对给定列表进行排序。'
 - en: '**Guess-Sort.** Consider the following exchanged-based sorting algorithm: pick
     two random indices; if a[i] and a[j] are an inversion, swap them; repeat. Show
     that the expected time to sort an array of size N is at most N^2 log N. See [this
     paper](http://www.sciencedirect.com/science/article/pii/S0166218X04001131?np=y)
     for an analysis and related sorting algorithm known as Fun-Sort.'
+  id: totrans-95
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**猜测排序。** 考虑以下基于交换的排序算法：随机选择两个索引；如果a[i]和a[j]是一个逆序，交换它们；重复。证明对大小为N的数组进行排序的预期时间最多为N^2
+    log N。参见[此论文](http://www.sciencedirect.com/science/article/pii/S0166218X04001131?np=y)进行分析，以及称为Fun-Sort的相关排序算法。'
 - en: '**Swapping an inversion.** Given an array of N keys, let a[i] and a[j] be an
     inversion (i < j but a[i] > a[j]). Prove or disprove: swapping a[i] and a[j] strictly
     decreases the number of inversions.'
+  id: totrans-96
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**交换一个逆序。** 给定一个包含N个键的数组，设a[i]和a[j]是一个逆序（i < j但a[i] > a[j]）。证明或证伪：交换a[i]和a[j]会严格减少逆序的数量。'
 - en: '**Binary insertion sort.** Develop an implementation [BinaryInsertion.java](BinaryInsertion.java.html)
     of insertion sort that uses binary search to find the insertion point j for entry
     a[i] and then shifts all of the entries a[j] to a[i-1] over one position to the
@@ -524,6 +726,9 @@
     in the worst case. Note that the number of array accesses will still be quadratic
     in the worst case. Use [SortCompare.java](SortCompare.java.html) to evaluate the
     effectiveness of doing so.'
+  id: totrans-97
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**二进制插入排序。** 开发一个实现[BinaryInsertion.java](BinaryInsertion.java.html)的插入排序，该排序使用二分查找来找到插入点j以便将条目a[i]插入，然后将所有条目a[j]到a[i-1]向右移动一个位置。在最坏情况下，对长度为n的数组进行排序的比较次数应该约为~
+    n lg n。请注意，在最坏情况下，数组访问次数仍然是二次的。使用[SortCompare.java](SortCompare.java.html)来评估这样做的有效性。'
