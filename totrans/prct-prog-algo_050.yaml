@@ -1,0 +1,1956 @@
+- en: 9.1   Floating Point
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 9.1 浮点数
+- en: 原文：[https://introcs.cs.princeton.edu/java/91float](https://introcs.cs.princeton.edu/java/91float)
+  id: totrans-1
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 原文：[https://introcs.cs.princeton.edu/java/91float](https://introcs.cs.princeton.edu/java/91float)
+- en: This section under major construction.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本节正在进行重大施工。
+- en: One distinguishing feature that separates traditional computer science from
+    scientific computing is its use of discrete mathematics (0s and 1s) instead of
+    continuous mathematics and calculus. Transitioning from integers to real numbers
+    is more than a cosmetic change. Digital computers cannot represent all real numbers
+    exactly, so we face new challenges when designing computer algorithms for real
+    numbers. Now, in addition to analyzing the running time and memory footprint,
+    we must be concerned with the "correctness" of the resulting solutions. This challenging
+    problem is further exacerbated since many important scientific algorithms make
+    additional approximations to accommodate a discrete computer. Just as we discovered
+    that some discrete algorithms are inherently too slow (polynomial vs. exponential),
+    we will see that some floating point algorithms are too inaccurate (stable vs.
+    unstable). Sometimes this problem can be corrected by designing a more clever
+    algorithm. With discrete problems, the difficulty is sometimes intrinsic (NP-completeness).
+    With floating point problems, the difficulty may also be inherent (ill conditioning),
+    e.g., accurate long-term weather prediction. To be an effective computational
+    scientist, we must be able to classify our algorithms and problems accordingly.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 传统计算机科学与科学计算的一个显著特征是其使用离散数学（0和1）而不是连续数学和微积分。从整数过渡到实数不仅仅是一种表面变化。数字计算机无法精确表示所有实数，因此在为实数设计计算机算法时，我们面临新的挑战。现在，除了分析运行时间和内存占用量之外，我们还必须关注结果解决方案的“正确性”。这个具有挑战性的问题进一步恶化，因为许多重要的科学算法为适应离散计算机而进行额外的近似。正如我们发现一些离散算法本质上太慢（多项式
+    vs. 指数），我们将看到一些浮点算法太不准确（稳定 vs. 不稳定）。有时，通过设计更聪明的算法可以解决这个问题。对于离散问题，困难有时是固有的（NP完全性）。对于浮点问题，困难也可能是固有的（病态条件），例如准确的长期天气预测。要成为一名有效的计算科学家，我们必须能够相应地对我们的算法和问题进行分类。
+- en: Floating point.
+  id: totrans-4
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 浮点数。
+- en: Some of the greatest achievements of the 20th century would not have been possible
+    without the floating point capabilities of digital computers. Nevertheless, this
+    subject is not well understood by most programmers and is a regular source of
+    confusion. In a February, 1998 keynote address entitled *Extensions to Java for
+    Numerical Computing* James Gosling asserted "95% of folks out there are completely
+    clueless about floating-point." However, the main ideas behind floating point
+    are not difficult, and we will demystify the confusion that plagues most novices.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 20世纪最伟大的成就之一如果没有数字计算机的浮点能力是不可能的。然而，大多数程序员对这个主题并不了解，经常引起混淆。在1998年2月的一次主题演讲中，名为*Java扩展用于数值计算*的James
+    Gosling断言“95%的人完全不了解浮点数”。然而，浮点数背后的主要思想并不难理解，我们将揭开大多数新手困惑的神秘面纱。
+- en: IEEE 754 binary floating point representation.
+  id: totrans-6
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: IEEE 754二进制浮点表示。
+- en: First we will describe how floating point numbers are represented. Java uses
+    a subset of the [IEEE 754 binary floating point standard](http://754r.ucbtest.org/standards/754xml.html)
+    to represent floating point numbers and define the results of arithmetic operations.
+    Virtually all modern computers conform to this standard. A `float` is represented
+    using 32 bits, and each possible combination of bits represents one real number.
+    This means that at most 2^(32) possible real numbers can be exactly represented,
+    even though there are infinitely many real numbers (even between 0 and 1). The
+    IEEE standard uses an internal representation similar to scientific notation,
+    but in binary instead of base 10. This covers a range from ±1.40129846432481707e-45
+    to ±3.40282346638528860e+38. with 6 or 7 significant decimal digits, including
+    including plus infinity, minus infinity, and NaN (not a number). The number contains
+    a sign bit *s* (interpreted as plus or minus), 8 bits for the exponent *e*, and
+    23 bits for the mantissa *M*. The decimal number is represented according to the
+    following formula.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们将描述浮点数是如何表示的。Java使用[IEEE 754二进制浮点标准](http://754r.ucbtest.org/standards/754xml.html)的一个子集来表示浮点数并定义算术运算的结果。几乎所有现代计算机都符合这一标准。一个`float`使用32位表示，每种可能的位组合表示一个实数。这意味着最多可以精确表示2^(32)个实数，尽管实数有无限多个（甚至在0和1之间）。IEEE标准使用类似于科学记数法的内部表示，但是使用二进制而不是十进制。这涵盖了从±1.40129846432481707e-45到±3.40282346638528860e+38的范围。具有6或7个有效十进制数字，包括正无穷大、负无穷大和NaN（不是一个数字）。该数字包含一个符号位*s*（解释为正或负），8位指数*e*，和23位尾数*M*。十进制数根据以下公式表示。
+- en: '[PRE0]'
+  id: totrans-8
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: '*Sign bit s (bit 31)*. The most significant bit represents the sign of the
+    number (1 for negative, 0 for positive).'
+  id: totrans-9
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*符号位s（第31位）*。最高有效位表示数字的符号（1为负，0为正）。'
+- en: '*Exponent field e (bits 30 - 23).* The next 8 bits represent the exponent.
+    By convention the exponent is *biased* by 127. This means that to represent the
+    binary exponent 5, we encode 127 + 5 = 132 in binary (10000100). To represent
+    the binary exponent -5 we encode 127 - 5 = 122 in binary (01111010). This convention
+    is alternative to two''s complement notation for representing negative integers.'
+  id: totrans-10
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*指数字段e（第30 - 23位）*。接下来的8位表示指数。按照惯例，指数通过127进行*偏置*。这意味着要表示二进制指数5，我们在二进制中编码为127
+    + 5 = 132（10000100）。要表示二进制指数-5，我们在二进制中编码为127 - 5 = 122（01111010）。这种约定是用于表示负整数的补码表示法的替代方法。'
+- en: '*Mantissa m (bits 22 - 0).* The remaining 23 bits represent the mantissa, *normalized*
+    to be between 0.5 and 1. This normalization is always possible by adjusting the
+    binary exponent accordingly. Binary fractions work like decimal fractions: 0.1101
+    represents 1/2 + 1/4 + 1/16 = 13/16 = 0.8125. Not every decimal number can be
+    represented as a binary fraction. For example 1/10 = 1/16 + 1/32 + 1/256 + 1/512
+    + 1/4096 + 1/8192 + ... In this case, the number 0.1 is approximated by the closest
+    23 bit binary fraction 0.000110011001100110011... One further optimization is
+    employed. Since the mantissa always begins with a 1, there is no need to explicitly
+    store this *hidden bit*.'
+  id: totrans-11
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*尾数m（位22-0）*。剩余的23位表示尾数，*标准化*为0.5到1之间。通过相应地调整二进制指数，始终可以进行这种标准化。二进制小数与十进制小数类似：0.1101表示1/2
+    + 1/4 + 1/16 = 13/16 = 0.8125。并非每个十进制数都可以表示为二进制小数。例如，1/10 = 1/16 + 1/32 + 1/256
+    + 1/512 + 1/4096 + 1/8192 + ... 在这种情况下，数字0.1由最接近的23位二进制小数0.000110011001100110011...来近似���还有一个进一步的优化。由于尾数始终以1开头，因此不需要显式存储这个*隐藏位*。'
+- en: As an example the decimal number 0.085 is stored as 00111101101011100001010001111011.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，十进制数0.085存储为00111101101011100001010001111011。
+- en: '[PRE1]'
+  id: totrans-13
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: This exactly represents the number 2^(e-127) (1 + m / 2^(23)) = 2^(-4)(1 + 3019899/8388608)
+    = 11408507/134217728 = 0.085000000894069671630859375.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这恰好表示数字2^(e-127) (1 + m / 2^(23)) = 2^(-4)(1 + 3019899/8388608) = 11408507/134217728
+    = 0.085000000894069671630859375。
+- en: A `double` is similar to a `float` except that its internal representation uses
+    64 bits, an 11 bit exponent with a bias of 1023, and a 52 bit mantissa. This covers
+    a range from ±4.94065645841246544e-324 to ±1.79769313486231570e+308 with 14 or
+    15 significant digits of accuracy.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`double`类似于`float`，只是其内部表示使用64位，11位指数，偏置为1023，以及52位尾数。这覆盖了从±4.94065645841246544e-324到±1.79769313486231570e+308的范围，精度为14或15个有效数字。'
+- en: Precision vs. accuracy.
+  id: totrans-16
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 精度与准确性。
+- en: 'Precision = tightness of specification. Accuracy = correctness. Do not confuse
+    precision with accuracy. 3.133333333 is an estimate of the mathematical constant
+    π which is specified with 10 decimal digits of precision, but it only has two
+    decimal digits of accuracy. As John von Neumann once said "There''s no sense in
+    being precise when you don''t even know what you''re talking about." Java typically
+    prints out floating point numbers with 16 or 17 decimal digits of precision, but
+    do not blindly believe that this means there that many digits of accuracy! Calculators
+    typically display 10 digits, but compute with 13 digits of precision. Kahan: the
+    mirror for the Hubble space telescope was ground with great precision, but to
+    the wrong specification. Hence, it was initially a great failure since it couldn''t
+    produce high resolution images as expected. However, it''s precision enabled an
+    astronaut to install a corrective lens to counter-balance the error. Currency
+    calculations are often defined in terms of a give precision, e.g., Euro exchange
+    rates must be quoted to 6 digits.'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 精度=规范的严密程度。准确性=正确性。不要混淆精度和准确性。3.133333333是数学常数π的估计值，其规范为10位小数，但只有两位小数的准确性。正如约翰·冯·诺伊曼曾经说过的：“当你连自己在说什么都不知道时，精确是没有意义的。”Java通常以16或17位小数的精度打印浮点数，但不要盲目相信这意味着有那么多位的准确性！计算器通常显示10位数字，但以13位精度进行计算。卡汉：哈勃太空望远镜的镜子被磨得非常精确，但却是按照错误的规范。因此，最初它是一个巨大的失败，因为它无法产生预期的高分辨率图像。然而，它的精度使一名宇航员能够安装一个校正镜片来抵消误差。货币计算通常以给定的精度来定义，例如，欧元汇率必须报价到6位数。
+- en: Roundoff error.
+  id: totrans-18
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 舍入误差。
+- en: Programming with floating point numbers can be a bewildering and perilous process
+    for the uninitiated. Arithmetic with integers is exact, unless the answer is outside
+    the range of integers that can be represented (overflow). In contrast, floating
+    point arithmetic is not exact since some real numbers require an infinite number
+    of digits to be represented, e.g., the mathematical constants e and π and 1/3\.
+    However, most novice Java programmers are surprised to learn that 1/10 is not
+    exactly representable either in the standard binary floating point. These roundoff
+    errors can propagate through the calculation in non-intuitive ways.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用浮点数进行编程对于未经培训的人来说可能是一个令人困惑和危险的过程。整数运算是精确的，除非答案超出了可以表示的整数范围（溢出）。相比之下，浮点运算并不是精确的，因为一些实数需要无限位数的数字来表示，例如，数学常数e和π以及1/3。然而，大多数初学者Java程序员会惊讶地发现，1/10在标准二进制浮点数中也无法精确表示。这些舍入误差可能以非直观的方式传播到计算中。
+- en: '*Rounding of decimal fractions.* For example, the first code fragment below
+    from [FloatingPoint.java](FloatingPoint.java.html) prints `false`, while the second
+    one prints `true`.'
+  id: totrans-20
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*小数的四舍五入*。例如，下面来自[FloatingPoint.java](FloatingPoint.java.html)的第一个代码片段打印出`false`，而第二个则打印出`true`。'
+- en: '[PRE2]'
+  id: totrans-21
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: '*Newton''s method.* A more realistic example is the following code fragment
+    whose intent is to compute the square root of c by iterating Newton''s method.
+    Mathematically, the sequence of iterates converges to √c from above, so that t²
+    - c > 0. However, a floating point number only has finitely many bits of accuracy,
+    so eventually, we may expect t² to equal c exactly, up to machine precision.'
+  id: totrans-22
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*牛顿法*。一个更现实的例子是以下代码片段，其目的是通过迭代牛顿法计算c的平方根。数学上，迭代���列收敛到√c，使得t² - c > 0。然而，浮点数只有有限位数的准确性，所以最终，我们可能期望t²精确地等于c，直到机器精度。'
+- en: '[PRE3]'
+  id: totrans-23
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: Indeed, for some values of c, the method works.
+  id: totrans-24
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 实际上，对于某些c的值，这种方法是有效的。
+- en: '[PRE4]'
+  id: totrans-25
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: This might give us some confidence that our code fragment is correct. But a
+    surprising thing happens when we try to compute the square root of 20\. Our program
+    gets stuck in an infinite loop! This type of error is called *roundoff error*.
+    *Machine accuracy* is smallest number ε such that (1.0 + ε != 1.0). In Java, it
+    is XYZ with `double` and XYZ with `float`. Changing the error tolerance ε to a
+    small positive value helps, but does not fix the problem (see exercise XYZ).
+  id: totrans-26
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 当我们尝试计算20的平方根时，可能会让我们对我们的代码片段正确性产生一些信心。但是当我们尝试计算20的平方根时，一个令人惊讶的事情发生了！我们的程序陷入了无限循环！这种错误称为*舍入误差*。*机器精度*是最小的数字ε，使得（1.0
+    + ε != 1.0）。在Java中，使用`double`是XYZ，使用`float`是XYZ。将误差容限ε更改为一个小的正值有所帮助，但并不能解决问题（参见练习XYZ）。
+- en: We must be satisfied with approximating the square root. A reliable way to do
+    the computation is to choose some error tolerance ε, say `1E-15`, and try to find
+    a value `t` such that |t - c/t| < ε t. We use *relative error* instead of *absolute
+    error*; otherwise the program may go into an infinite loop (see exercise XYZ).
+  id: totrans-27
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们必须满足于近似平方根。进行计算的可靠方法是选择一些误差容限ε，比如`1E-15`，并尝试找到一个值`t`，使得|t - c/t| < ε t。我们使用*相对误差*而不是*绝对误差*；否则程序可能会陷入无限循环（参见练习XYZ）。
+- en: '[PRE5]'
+  id: totrans-28
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: '*Harmonic sum.* Possibly motivate by trying to estimate Euler''s constant γ
+    = limit as n approaches infinity of γ[n] = H[n] - ln n. The limit exists and is
+    approximately 0.5772156649\. Surprisingly, it is not even known whether γ is irrational.'
+  id: totrans-29
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*调和级数。*可能是受到尝试估计欧拉常数γ = 当n趋向无穷大时γ[n] = H[n] - ln n的启发。极限存在且约为0.5772156649。令人惊讶的是，甚至不知道γ是否是无理数。'
+- en: Program [HarmonicSum.java](HarmonicSum.java.html) computes 1/1 + 1/2 + ... +
+    1/N using single precision and double precision. With single precision, when N
+    = 10,000, the sum is accurate to 5 decimal digits, when N = 1,000,000 it is accurate
+    to only 3 decimal digits, when N = 10,000,000 it is accurate to only 2 decimal
+    digits. In fact, once N reaches 10 million, the sum never increases. Although
+    the Harmonic sum diverges to infinity, in floating point it converges to a finite
+    number! This dispels the popular misconception that if you are solving a problem
+    that requires only 4 or 5 decimal digits of ?precision, then you are safe using
+    a type that stores 7. Many numerical computations (e.g., integration or solutions
+    to differential equations) involve summing up alot of small terms. The errors
+    can accumulate. This accumulation of roundoff error can lead to serious problems.
+  id: totrans-30
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 程序[HarmonicSum.java](HarmonicSum.java.html)使用单精度和双精度计算1/1 + 1/2 + ... + 1/N。使用单精度时，当N
+    = 10,000时，总和精确到5位小数，当N = 1,000,000时，只精确到3位小数，当N = 10,000,000时，只精确到2位小数。实际上，一旦N达到1000万，总和就再也不增加了。尽管调和级数发散到无穷大，在浮点数中它收敛到一个有限的数！这打破了一个常见的误解，即如果你解决的问题只需要4或5位小数的精度，那么使用存储7位的类型是安全的。许多数值计算（例如，积分或微分方程的解）涉及对许多小项求和。误差可能会累积。这种舍入误差的累积可能导致严重问题。
+- en: 'Better formula: γ ≈ γ[n] - 1/(2n) + 1/(12n²). Accurate to 12 decimal places
+    for n = 1 million.'
+  id: totrans-31
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 更好的公式：γ ≈ γ[n] - 1/(2n) + 1/(12n²)。对于n = 100万，精确到小数点后12位。
+- en: 'Every time you perform an arithmetic operation, you introduce an additional
+    error of at least ε. Kernighan and Plauger: "Floating point numbers are like piles
+    of sand; every time you move one you lose a little sand and pick up a little dirt."
+    If the errors occur at random, we might expect a cumulative error of sqrt(N) ε[m].
+    However, if we are not vigilant in designing our numerical algorithms, these errors
+    can propagate in very unfavorable and non-intuitive ways, leading to cumulative
+    errors of N ε[m] or worse.'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次进行算术运算时，至少会引入一个额外的误差ε。Kernighan和Plauger说：“浮点数就像沙堆；每次移动一个，你就会丢失一点沙子并拾起一点灰尘。”如果错误是随机发生的，我们可能会预期一个累积误差为sqrt(N)
+    ε[m]。然而，如果我们在设计数值算法时不够警惕，这些错误可能会以非常不利和非直观的方式传播，导致累积误差达到N ε[m]或更糟。
+- en: Financial computing.
+  id: totrans-33
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 金融计算。
+- en: We illustrate some examples of roundoff error that can ruin a financial calculation.
+    Financial calculations involving dollars and cents involve base 10 arithmetic.
+    The following examples demonstrate some of the perils of using a binary floating
+    point system like IEEE 754.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们举例说明一些可能破坏财务计算的舍入误差。涉及美元和美分的财务计算涉及基数10算术。以下示例演示了使用类似IEEE 754的二进制浮点系统可能遇到的一些危险。
+- en: '*Sales tax.* Program [Financial.java](Financial.java.html) illustrates the
+    danger. Calculate the 9% sales tax of a 50 cent phone call. (or 5% sales tax on
+    a $0.70 phone call). Using IEEE 754, 1.09 * 50 = xxx. This results gets rounded
+    down to 0.xx even though the exact answer is 0.xx, which the telephone company
+    (by law) is required to round down to 0.xx (using Banker''s rounding). In contrast,
+    a 14% tax on a 75 cent phone call yields xxx. might get rounded up to x.xx even
+    though (by law) the phone company must round down the number (using Banker''s
+    rounding) to x.xx. This difference in pennies might not seem significant, and
+    you might hope that the effects cancel each other out in the long run. However,
+    taken over hundreds of millions of transactions, this [salami slicing](http://en.wikipedia.org/wiki/Salami_slicing)
+    might result in millions of dollars. Reference: Superman III (1983), Hackers (1995),
+    and Office Space (1999). In Office Space, three friends infect the accounting
+    system with a computer virus that rounds down fractions of a cent and transfer
+    it into their account.'
+  id: totrans-35
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*销售税。*程序[Financial.java](Financial.java.html)说明了危险。计算一个50美分电话的9%销售税。（或者0.70美元电话的5%销售税）。使用IEEE
+    754，1.09 * 50 = xxx。即使精确答案是0.xx，结果也会被四舍五入为0.xx，而电话公司（根据法律）必须将其四舍五入为0.xx（使用银行家舍入）。相比之下，一个75美分电话的14%税可能会被四舍五入为x.xx，即使��根据法律）电话公司必须将数字四舍五入为x.xx（使用银行家舍入）。这几分钱的差异可能看起来不重要，你可能希望这些影响在长期内互相抵消。然而，经过数亿次交易，这种[薄利多销](http://en.wikipedia.org/wiki/Salami_slicing)可能导致数百万美元的损失。参考：《超人III》（1983年），《骇客》（1995年）和《办公室空间》（1999年）。在《办公室空间》中，三个朋友通过计算机病毒感染会计系统，将分数部分四舍五入并转移到他们的账户中。'
+- en: For this reason, some programmers believe that you should always use integer
+    types to store financial values instead of floating point types. The next example
+    will show the perils of storing financial values using type `int`.
+  id: totrans-36
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 出于这个原因，一些程序员认为在存储财务值时应始终使用整数类型，而不是浮点类型。下一个示例将展示使用 `int` 类型存储财务值的危险。
+- en: '*Compound interest.* This example introduces you to the dangers of roundoff
+    error. Suppose you invest $1000.00 at 5% interest, compounded daily. How much
+    money will you end up with after 1 year? If the bank computes the value correctly,
+    you should end up with $1051.27 since the exact formula is'
+  id: totrans-37
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*复利.* 这个例子向您介绍了舍入误差的危险。假设您以每日复利的方式投资 $1000.00，利率为 5%。1年后您将有多少钱？如果银行正确计算价值，您应该最终得到
+    $1051.27，因为精确公式是'
+- en: '[PRE6]'
+  id: totrans-38
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: which leads to 1051.2674964674473.... Suppose, instead, that the bank stores
+    your balance as an integer (measured in pennies). At the end of each day, the
+    bank calculates your balance and multiplies it by 1.05 and rounds the result to
+    the nearest penny. Then, you will end up with only $1051.10, and have been cheated
+    out of 17 cents. Suppose instead the bank rounds *down* to the nearest penny at
+    the end of each day. Now, you will end up with only $1049.40 and you will have
+    been cheated out of $1.87\. The error of not storing the fractions of a penny
+    accumulate and can eventually become significant, and even fraudulent. Program
+    [CompoundInterest.java](CompoundInterest.java.html).
+  id: totrans-39
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这导致 1051.2674964674473.... 假设银行将您的余额存储为整数（以便士计算）。每天结束时，银行计算您的余额并乘以 1.05，然后将结果四舍五入到最接近的一分钱。那么，您最终只会得到
+    $1051.10，被骗了 17 分钱。假设银行每天结束时向下舍入到最接近的一分钱。现在，您最终只会得到 $1049.40，您将被骗走 $1.87。不存储分数部分的误差会累积，并最终可能变得显著，甚至是欺诈性的。程序
+    [CompoundInterest.java](CompoundInterest.java.html)。
+- en: Instead of using integer or floating point types, you should use Java's `BigDecimal`
+    library. This library has two main advantages. First, it can represent decimal
+    numbers exactly. This prevents the sales tax issues of using binary floating point.
+    Second, it can store numbers with an arbitrary amount of precision. This enables
+    the programmer to control the degree to which roundoff error affects the computation.
+  id: totrans-40
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 您应该使用 Java 的 `BigDecimal` 库，而不是使用整数或浮点类型。这个库有两个主要优点。首先，它可以精确表示十进制数。这可以避免使用二进制浮点数时的销售税问题。其次，它可以存储具有任意精度的数字。这使程序员能够控制舍入误差对计算的影响程度。
+- en: Other source of error.
+  id: totrans-41
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 其他误差来源。
+- en: In addition to roundoff error inherent when using floating point arithmetic,
+    there are some other types of approximation errors that commonly arise in scientific
+    applications.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了使用浮点运算时固有的舍入误差外，科学应用中常见的还有一些其他类型的近似误差。
+- en: '*Measurement error.* The data values used in the computation are not accurate.
+    This arises from both practical (inaccurate or imprecise measuring instruments)
+    and theoretical (Heisenberg uncertainty principle) considerations. We are primarily
+    interested in models and solution methods whose answer is not highly sensitive
+    to the initial data.'
+  id: totrans-43
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*测量误差。* 计算中使用的数据值不准确。这源于实际（不准确或���精确的测量仪器）和理论（海森堡不确定性原理）考虑。我们主要关注的是对初始数据不太敏感的模型和解决方法。'
+- en: '*Discretization error.* Another source of inaccuracy results from discretizing
+    continuous system, e.g., approximating a transcendental function by truncating
+    its Taylor expansion, approximating an integral using a finite sum of rectangles,
+    finite difference method for finding approximate solutions to differential equations,
+    or estimating a continuous function over a lattice. Discretization error would
+    still be present even if using exact arithmetic. It is often unavoidable, but
+    we can reduce truncation error by using more refined discretization. Of course,
+    this comes at the price of using more resources, whether it be memory or time.
+    Discretization error often more important than roundoff error in practical applications.'
+  id: totrans-44
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*离散化误差。* 另一个不准确性来源是对连续系统进行离散化，例如，通过截断其泰勒展开来近似超越函数，使用矩形的有限和来近似积分，使用有限差分方法找到微分方程的近似解，或者在格点上估计连续函数。即使使用精确算术，离散化误差仍然存在。这通常是不可避免的，但我们可以通过使用更精细的离散化来减少截断误差。当然，这要以使用更多资源为代价，无论是内存还是时间。在实际应用中，离散化误差通常比舍入误差更重要。'
+- en: '*Statistical error.* Not enough random samples.'
+  id: totrans-45
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*统计误差。* 没有足够的随机样本。'
+- en: Catastrophic cancellation.
+  id: totrans-46
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 灾难性的取消。
+- en: Devastating loss of precision when small numbers are computed from large numbers
+    by addition or subtraction. For example if x and y agree in all but the last few
+    digits, then if we compute z = x - y, then z may only have a few digits of accuracy.
+    If we subsequently use z in a calculation, then the result may only have a few
+    digits of accuracy.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当从大数通过加法或减法计算小数时，会导致精度严重丢失。例如，如果 x 和 y 除了最后几位外完全相同，那么如果我们计算 z = x - y，那么 z 可能只有几位精度。如果随后在计算中使用
+    z，那么结果可能只有几位精度。
+- en: '*Plotting a function.* Try plotting f(x) = (1 - cos x) / (x^2) from x = -4
+    * 10^-8 to 4 * 10^-8. In this region the mathematical function f(x) is approximately
+    constant, with the value 0.5. However, in IEEE floating point, it is most definitely
+    not! Program [Catastrophic.java](Catastrophic.java.html) does this, with some
+    very surprising results.'
+  id: totrans-48
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*绘制函数。* 尝试绘制 f(x) = (1 - cos x) / (x^2)，其中 x = -4 * 10^-8 到 4 * 10^-8。在这个区域内，数学函数
+    f(x) 大致恒定，值为 0.5。然而，在 IEEE 浮点数中，情况绝对不是这样！程序 [Catastrophic.java](Catastrophic.java.html)
+    进行了这个操作，结果非常令人惊讶。'
+- en: '![Catastrophic cancellation](../Images/e5714f30b618b93dfc94f562d216d4d4.png)'
+  id: totrans-49
+  prefs:
+  - PREF_IND
+  - PREF_BQ
+  type: TYPE_IMG
+  zh: '![灾难性取消](../Images/e5714f30b618b93dfc94f562d216d4d4.png)'
+- en: '*Exponential function.* Now we consider a more subtle and pernicious consequence
+    of catastrophic cancellation. Program [Exponential.java](Exponential.java.html)
+    computes e^x using the Taylor series'
+  id: totrans-50
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*指数函数。* 现在我们考虑灾难性取消的一个更微妙和有害的后果。程序 [Exponential.java](Exponential.java.html)
+    使用泰勒级数计算 e^x'
+- en: '[PRE7]'
+  id: totrans-51
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: This series converges uniformly and absolutely for all values of x. Nevertheless,
+    for many negative values of x (e.g., -25), the program obtains no correct digits,
+    no matter how many terms in the series are summed. For example when x = -25, the
+    series converges in floating point to -7.129780403672078E-7 (a negative number!),
+    but the true answer is 1.3887943864964021E-11. To see why, observe that term 24
+    in the sum is 25^(24)/24! and term 25 is -25^(25)/25!. In principle, they should
+    exactly cancel each other out. In practice, they cancel each other out catastrophically.
+    The size of these terms (5.7 * 10⁹) is 20 orders of magnitude greater than the
+    true answer, and any error in the cancellation is magnified in the calculated
+    answer. Fortunately, in this case, the problem is easily rectified (see Exercise
+    XYZ).
+  id: totrans-52
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 该级数在所有x值上均一致绝对收敛。然而，对于许多负的x值（例如，-25），程序无法获得任何正确的数字，无论级数中有多少项相加。例如，当x = -25时，级数在浮点数中收敛为-7.129780403672078E-7（一个负数！），但真实答案是1.3887943864964021E-11。要了解原因，请注意级数中的第24项是25^(24)/24!，第25项是-25^(25)/25!。原则上，它们应该完全互相抵消。实际上，它们相互抵消得灾难性。这些项的大小（5.7
+    * 10⁹）比真实答案大20个数量级，任何抵消中的错误都会在计算答案中放大。幸运的是，在这种情况下，问题很容易纠正（见练习XYZ）。
+- en: Numerical analysis.
+  id: totrans-53
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 数值分析。
+- en: Lloyd Trefethen (1992) "Numerical analysis is the study of algorithms for the
+    problems of continuous mathematics."
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Lloyd Trefethen（1992年）"数值分析是研究连续数学问题算法的学科。"
+- en: '*Stability.* A mathematical problem is *well-conditioned* if its solution changes
+    by only a small amount when the input parameters changes by a small amount. An
+    algorithm is *numerically stable* if the output of the algorithm changes by only
+    a small amount when the input data changes by a small amount. Numerical stability
+    captures how errors are propagated by the algorithm. Numerical analysis is the
+    art and science of finding numerically stable algorithms to solve well-conditioned
+    problems. Accuracy depends on the conditioning of problem and the stability of
+    the algorithm. Inaccuracy can result from applying a stable algorithm to an ill-conditioned
+    problem or an unstable algorithm to a well-conditioned problem.'
+  id: totrans-55
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*稳定性.* 如果一个数学问题的解在输入参数发生微小变化时只有微小变化，则该问题是*良好条件*的。如果算法的输出在输入数据发生微小变化时只有微小变化，则该算法是*数值稳定*的。数值稳定性捕捉了算法如何传播错误。数值分析是寻找解决良好条件问题的数值稳定算法的艺术��科学。准确性取决于问题的条件和算法的稳定性。应用稳定算法解决病态问题或应用不稳定算法解决良好条件问题可能导致不准确性。'
+- en: '*Exponential function.* For a simple example, computing f(x) = exp(x) is a
+    well conditioned problem since f(x + ε) = .... One algorithm for computing exp(x)
+    is via its Taylor series. Suppose we estimate f(x) = exp(x) using the first four
+    terms of its Taylor approximation: g(x) = 1 + x + x²/2 + x³/3!. Then f(1) = 2.718282,
+    g(1) = 2.666667. However, it is unstable since if x < 0 ..... A stable algorithm
+    is to use the Taylor series if x is nonnegative, but if x is negative, compute
+    e^(-x) using a Taylor series and take the reciprocal.'
+  id: totrans-56
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*指数函数.* 举个简单的例子，计算f(x) = exp(x)是一个良好条件的问题，因为f(x + ε) = .... 通过其泰勒级数计算exp(x)的一种算法。假设我们使用其泰勒近似的前四项来估计f(x)
+    = exp(x)：g(x) = 1 + x + x²/2 + x³/3!。那么f(1) = 2.718282，g(1) = 2.666667。然而，它是不稳定的，因为如果x
+    < 0 ..... 一个稳定的算法是，如果x是非负的，则使用泰勒级数，但如果x是负的，则使用泰勒级数计算e^(-x)并取倒数。'
+- en: '*(1 - cos x) / (x^2) function.* Give a stable way to evaluate this function.'
+  id: totrans-57
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*(1 - cos x) / (x^2)函数.* 给出一个稳定的方法来评估这个函数。'
+- en: '*Conditioning.* We saw an example of a non-stable algorithm for computing exp(x).
+    We also saw a stable algorithm for computing it. Sometimes, we are not always
+    so lucky. We say that a problem is *ill-conditioned* if there is no stable algorithm
+    for solving it.'
+  id: totrans-58
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*条件.* 我们看到了一个计算exp(x)的不稳定算法的例子。我们也看到了一个稳定的计算算法。有时，我们并不总是那么幸运。如果没有稳定的算法来解决问题，我们称问题为*病态问题*。'
+- en: Addition, multiplication, exponentiation, and division of positive numbers are
+    all well-conditioned problems. So is computing the roots of a quadratic equation.
+    (See Exercise XYZ.) Subtraction is ill-conditioned. So is finding the roots of
+    a general polynomial. The conditioning of the problem of solving Ax = b depends
+    on the matrix A.
+  id: totrans-59
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 正数的加法、乘法、指数运算和除法都是良好条件的问题。计算二次方程的根也是如此。（见练习XYZ。）减法是病态问题。找到一般多项式的根也是如此。解Ax =
+    b问题的条件取决于矩阵A。
+- en: '*Population dynamics.* The Verhulst equation is a simplified model of population
+    dynamics.'
+  id: totrans-60
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*人口动态.* Verhulst方程是人口动态的简化模型。'
+- en: '[PRE8]'
+  id: totrans-61
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: Program [Verhulst.java](Verhulst.java.html) reads in a command line parameter
+    R and iterates the Verhulst equation for 100 iterations, starting with x[0] =
+    0.5. It orders the computation in four different, but mathematically equivalent,
+    ways. All lead to significantly different results when R = 3, none of which is
+    remotely correct (as can be verified using exact arithmetic in Maple). ([Reference](http://www.lactamme.polytechnique.fr/Mosaic/descripteurs/Kepler.02..html))
+  id: totrans-62
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 程序[Verhulst.java](Verhulst.java.html)读取命令行参数R，并迭代Verhulst方程100次，从x[0] = 0.5开始。它以四种不同但在数学上等效的方式进行计算。当R
+    = 3时，所有计算结果都明显不同，但都不正确（可以使用Maple中的精确算术进行验证）。([参考链接](http://www.lactamme.polytechnique.fr/Mosaic/descripteurs/Kepler.02..html))
+- en: '[PRE9]'
+  id: totrans-63
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'When R > 2.57, this system exhibits chaotic behavior. The system itself is
+    ill-conditioned, so there is no way to restructure the computation to iterate
+    the system using floating point arithmetic. Although we cannot expect our floating
+    point algorithms to correctly handle ill-conditioned problem, we can ask that
+    they report back an error rangle associated with the solution so that at least
+    we are alerted to potential problems. For example, when solving linear systems
+    of equations (see section 9.5), we can compute something called a *condition number*:
+    this quantity can be used to bound the error of the resulting solution.'
+  id: totrans-64
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 当R > 2.57时，该系统表现出混沌行为。系统本身是病态的，因此无法重构计算以使用浮点算术迭代系统。尽管我们不能指望我们的浮点算法正确处理病态问题，但我们可以要求它们报告与解决方案相关的错误范围，以至少警示我们可能存在的问题。例如，在解线性方程组时（见第9.5节），我们可以计算一种称为*条件数*的东西：这个量可以用来限制结果解的误差。
+- en: Ill-conditioning is not just a theoretical possibility. Astrophysicists have
+    determined that our Solar System is chaotic. The trajectory of Pluto's orbit is
+    chaotic, as in the motion of the Jovian planets, Halley's comet, and asteroidal
+    zone trajectories. Upon a close encounter with Venus, Mercury could be ejected
+    from the Solar System in less than 3.5 billion year!
+  id: totrans-65
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 病态条件不仅仅是一个理论可能性。天体物理学家已经确定我们的太阳系是混沌的。冥王星轨道的轨迹是混沌的，就像木星行星、哈雷彗星和小行星带轨迹的运动一样。在与金星的近距离接触中，水星可能在不到35亿年内被从太阳系中抛出！
+- en: '*Calculating special functions.* When learning calculus, we derive convergent
+    Taylor series formulas for calculating exponential and trigometric functions.
+    (e.g., exp(x), log(x), sin(x), cos(x), arctan(x), etc.). However, we must take
+    great care when applying such formulas on digital computers. Not all special functions
+    are built in to Java''s Math library, so there are times when you must create
+    your own. Give example, e.g., error function.'
+  id: totrans-66
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*计算特殊函数。* 在学习微积分时，我们推导出用于计算指数和三角函数的收敛泰勒级数公式（例如，exp(x)，log(x)，sin(x)，cos(x)，arctan(x)等）。然而，在数字计算机上应用这些公式时必须非常小心。并非所有特殊函数都内置在Java的Math库中，因此有时必须自己创建。举例，误差函数。'
+- en: Numerical analysts have derived accurate, precise, and efficient algorithms
+    for computing classic functions (e.g., hyperbolic trigometric functions, gamma
+    function, beta function, error function, Bessel functions, Jacobian elliptic functions,
+    spherical harmonics) that arise in scientific applications. We strongly recommend
+    using these proven recipes instead of devising your own ad hoc routines.
+  id: totrans-67
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 数值分析家们为计算科学应用中出现的经典函数（例如，双曲三角函数、伽玛函数、贝塔函数、误差函数、贝塞尔函数、雅可比椭圆函数、球谐函数）推导出了准确、精确和高效的算法。我们强烈建议使用这些经过验证的方法，而不是设计自己的临时程序。
+- en: Real-world numerical catastrophes.
+  id: totrans-68
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 真实世界的数值灾难。
+- en: The examples we've discussed above are rather simplistic. However, these issues
+    arise in real applications. When done incorrectly, disaster can quickly strike.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们上面讨论的例子相当简单。然而，这些问题在实际应用中会出现。如果处理不当，灾难可能很快发生。
+- en: '*Ariane 5 rocket.* Ariane 5 rocket exploded 40 seconds after being launched
+    by European Space Agency. Maiden voyage after a decade and 7 billion dollars of
+    research and development. Sensor reported acceleration that so was large that
+    it caused an overflow in the part of the program responsible for recalibrating
+    inertial guidance. 64-bit floating point number was converted to a 16-bit signed
+    integer, but the number was larger than 32,767 and the conversion failed. Unanticipated
+    overflow was caught by a general systems diagnostic and dumped debugging data
+    into an area of memory used for guiding the rocket''s motors. Control was switched
+    to a backup computer, but this had the same data. This resulted in a drastic attempt
+    to correct the nonexistent problem, which separated the motors from their mountings,
+    leading to the [end of Ariane 5](http://www.around.com/ariane.html).'
+  id: totrans-70
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*阿丽亚娜5号火箭。* 阿丽亚娜5号火箭在欧洲航天局发射后40秒爆炸。这是经过十年和70亿美元的研发后的首次飞行。传感器报告的加速度如此之大，以至于导致重新校准惯性导航的程序部分溢出。64位浮点数被转换为16位有符号整数，但数字大于32767，转换失败。意外的溢出被一个通用系统诊断捕获，并将调试数据转储到用于引导火箭发动机的内存区域。控制被切换到备用计算机，但这台计算机也有相同的数据。这导致了一次试图纠正不存在问题的激烈尝试，导致了火箭发动机与支架分离，导致了[阿丽亚娜5号的终结](http://www.around.com/ariane.html)。'
+- en: '*Patriot missile accident.* On February 25, 1991 an American Patriot missile
+    failed to track and destroy an Iraqi Scud missile. Instead it hit an Army barracks,
+    killing 26 people. The cause was later determined to be an inaccurate calculate
+    caused by measuring time in tenth of a second. Couldn''t represent 1/10 exactly
+    since used 24 bit floating point. Software to fix problem arrived in Dhahran on
+    February 26. Here is more [information](http://www.ima.umn.edu/~arnold/disasters/patriot.html).'
+  id: totrans-71
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*爱国者导弹事故。* 1991年2月25日，一枚美国爱国者导弹未能追踪和摧毁一枚伊拉克飞毛腿导弹。相反，它击中了一个陆军兵营，造成26人死亡。后来确定原因是由于以十分之一秒为单位测量时间导致的不准确计算。由于使用了24位浮点数���无法准确表示1/10。用于解决问题的软件于2月26日抵达达赫兰。这里有更多[信息](http://www.ima.umn.edu/~arnold/disasters/patriot.html)。'
+- en: '*Intel FDIV Bug* Error in Pentium hardwire floating point divide circuit. Discovered
+    by Intel in July 1994, rediscovered and publicized by math professor in September
+    1994\. Intel recall in December 1994 cost $300 million. Another floating point
+    bug discovered in 1997.'
+  id: totrans-72
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*英特尔FDIV错误* 五代芯片硬件浮点除法电路中的错误。英特尔于1994年7月发现，数学教授于1994年9月重新发现并公开。1994年12月英特尔召回成本为3亿美元。1997年发现另一个浮点错误。'
+- en: '*Sinking of Sleipner oil rig.* Sleipner A $700 million platform for producing
+    oil and gas sprang a leak and sank in North Sea in August, 1991. Error in inaccurate
+    finite element approximation underestimate shear stress by 47% [Reference](http://www.ima.umn.edu/~arnold/disasters/sleipner.html).'
+  id: totrans-73
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*斯莱普纳石油钻井平台沉没。* 价值7亿美元的斯莱普纳A平台用于生产石油和天然气，在1991年8月在北海泄漏并沉没。有误差的有限元近似低估了剪切应力47%
+    [参考](http://www.ima.umn.edu/~arnold/disasters/sleipner.html)。'
+- en: '*Vancouver stock exchange.* Vancouver stock exchange index was undervalued
+    by over 50% after 22 months of accumulated roundoff error. The obvious algorithm
+    is to add up all the stock prices after Instead a "clever" analyst decided it
+    would be more efficient to recompute the index by adding the net change of a stock
+    after each trade. This computation was done using four decimal places and truncating
+    (not rounding) the result to three. [Reference](http://www.ualberta.ca/~carolina/CHE374/notes/U01_errors/flerrors/fl_and_errors.html)'
+  id: totrans-74
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*温哥华证券交易所。* 温哥华证券交易所指数在累积了22个月的四舍五入误差后被低估了超过50%。明显的算法是在每次交易后将所有股票价格相加。然而，“聪明”的分析师决定更高效地重新计算指数，方法是在每次交易后添加股票的净变化。这个计算使用四位小数并将结果截断（而非四舍五入）到三位。[参考链接](http://www.ualberta.ca/~carolina/CHE374/notes/U01_errors/flerrors/fl_and_errors.html)'
+- en: '**Lessons.**'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**教训。**'
+- en: Use `double` instead of `float` for accuracy.
+  id: totrans-76
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 为了精确性，请使用 `double` 而不是 `float`。
+- en: Use `float` only if you really need to conserve memory, and are aware of the
+    associated risks with accuracy. Usually it doesn't make things faster, and occasionally
+    makes things slower.
+  id: totrans-77
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 只有在真正需要节省内存并且意识到与精度相关的风险时才使用 `float`。通常情况下，这不会加快速度，有时甚至会减慢速度。
+- en: Be careful of calculating the difference of two very similar values and using
+    the result in a subsequent calculation.
+  id: totrans-78
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 谨慎计算两个非常相似值的差异，并在随后的计算中使用结果。
+- en: Be careful about adding two quantities of very different magnitudes.
+  id: totrans-79
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 谨慎添加两个数量的数量级差异很大。
+- en: Be careful about repeating a slightly inaccurate computation many many times.
+    For example, calculating the change in position of planets over time.
+  id: totrans-80
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 谨慎多次重复进行略有不准确的计算。例如，随时间计算行星位置的变化。
+- en: Designing stable floating point algorithms is highly nontrivial. Use libraries
+    when available.
+  id: totrans-81
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 设计稳定的浮点算法非常不容易。在有库可用时请使用库。
+- en: Q + A
+  id: totrans-82
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+  zh: Q + A
+- en: '**Q.** Any good references on floating point?'
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**Q.** 有关浮点数的任何好参考资料吗？'
+- en: '**A.** Here are two articles on floating point precision: [What Every Computer
+    Scientist Should Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html)
+    by David Goldberg and [How Java''s Floating-Point Hurts Everyone Everywhere](http://www.cs.berkeley.edu/~wkahan/JAVAhurt.pdf)
+    co-authored by Turing award winner [William Kahn](http://http.cs.berkeley.edu/~wkahan/).
+    Here''s Wikipedia''s entry on [Numerical analysis](http://en.wikipedia.org/wiki/List_of_numerical_analysis_topics).'
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**A.** 这里有两篇关于浮点精度的文章：[计算机科学家应该了解的浮点运算知识](https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html)
+    由大卫·戈德堡（David Goldberg）撰写，以及由图灵奖获得者[威廉·卡恩](http://http.cs.berkeley.edu/~wkahan/)合著的[Java的浮点数如何伤害每个人](http://www.cs.berkeley.edu/~wkahan/JAVAhurt.pdf)。这是维基百科关于[数值分析](http://en.wikipedia.org/wiki/List_of_numerical_analysis_topics)的条目。'
+- en: '**Q.** How can I convert from IEEE bit representation to double?'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**Q.** 如何将 IEEE 位表示转换为双精度浮点数？'
+- en: '**A.** Here is a [decimal to IEEE converter](http://babbage.cs.qc.edu/courses/cs341/IEEE-754.html).
+    To get the IEEE 754 bit representation of a `double` variable x in Java, use `Double.doubleToLongBits(x)`.
+    According to [The Code Project](http://www.codeproject.com/useritems/precisefloating.asp),
+    to get the smallest double precision number greater than x (assuming x is positive
+    and finite) is `Double.longBitsToDouble(Double.doubleToLongBits(x) + 1)`.'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**A.** 这里有一个[十进制到 IEEE 转换器](http://babbage.cs.qc.edu/courses/cs341/IEEE-754.html)。在
+    Java 中，要获取变量 x 的 IEEE 754 位表示，使用 `Double.doubleToLongBits(x)`。根据[Code Project](http://www.codeproject.com/useritems/precisefloating.asp)的说法，要获取大于
+    x 的最小双精度数（假设 x 是正的且有限的），使用 `Double.longBitsToDouble(Double.doubleToLongBits(x)
+    + 1)`。'
+- en: Q. Is there any direct way to check for overflow on integer types?
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 有没有直接的方法来检查整数类型的溢出？
+- en: A. No. The integer types do not indicate overflow in any way. Integer divide
+    and integer remainder throw exceptions when the denominator is zero.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 不。整数类型在任何情况下都不指示溢出。当分母为零时，整数除法和整数余数会抛出异常。
+- en: Q. What happens if I enter a number that is too large, e.g., `1E400`?
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 如果我输入一个太大的数字，比如 `1E400`，会发生什么？
+- en: A. Java returns the error message "floating point number too large."
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. Java 返回错误消息“浮点数太大”。
+- en: Q. What about floating point types?
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 浮点类型有什么不同？
+- en: A. Operations that overflow evaluate to plus or minus infinity. Operations that
+    underflows result in plus or minus zero. Operations that have no mathematically
+    definite evaluate to NaN (not a number), e.g., `0.0/0.0`, `Math.sqrt(-3.0)`, `Math.acos(3.0)`,
+    `Math.log(-3.0)`, and `Math.pow(8, 1.0/3.0)`.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 溢出的操作会评估为正无穷大或负无穷大。下溢的操���会导致正零或负零。数学上没有明确定义的操作会评估为 NaN（不是一个数字），例如 `0.0/0.0`，`Math.sqrt(-3.0)`，`Math.acos(3.0)`，`Math.log(-3.0)`
+    和 `Math.pow(8, 1.0/3.0)`。
+- en: Q. How do I test whether my variable has the value NaN?
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 如何测试我的变量是否具有 NaN 值？
+- en: A. Use the method `Double.isNaN()`. Note that NaN is unordered so the comparison
+    operations , and = involving one or two NaNs always evaluates to false. Any !=
+    comparison involving NaN evaluates to true, even (x != x), when x is NaN.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 使用方法 `Double.isNaN()`。请注意，NaN 是无序的，因此涉及一个或两个 NaN 的比较操作，如 >、< 和 = 总是评估为 false。任何涉及
+    NaN 的 != 比较都评估为 true，即使 (x != x)，当 x 是 NaN 时也是如此。
+- en: Q. What's the difference between -0.0 and 0.0?
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. -0.0 和 0.0 有什么区别？
+- en: A. Both are representations of the number zero. It is true that if x = 0.0 and
+    y = -0.0 that `(x == y)`. However, 1/x yields Infinity, whereas 1/y yields -Infinity.
+    Program [NegativeZero.java](NegativeZero.java.html) illustrates this. It gives
+    a surprising counterexample to the misconception that if `(x == y)` then `(f(x)
+    == f(y))`. log 0 = -infinity, log (-1) = NaN. log(ε) vs. log(-ε).
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 两者都是表示零的方式。如果 x = 0.0 并且 y = -0.0，那么 `(x == y)`。然而，1/x 产生 Infinity，而 1/y
+    产生 -Infinity。程序[NegativeZero.java](NegativeZero.java.html)说明了这一点。它给出了一个令人惊讶的反例，即如果
+    `(x == y)`，那么 `(f(x) == f(y))`。log 0 = -infinity，log (-1) = NaN。log(ε) vs. log(-ε)。
+- en: Q. I've heard that programmers should never compare two real numbers for exact
+    equality, but you should always use a test like if |a-b| < ε or |a-b| < ε min(|a|,
+    |b|). Is this right?
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 我听说程序员永远不应该比较两个实数是否完全相等，而应该始终使用类似于 if |a-b| < ε 或 |a-b| < ε min(|a|, |b|)
+    的测试。这是正确的吗？
+- en: 'A. It depends on the situation. If you know that the floating-point numbers
+    are exactly representable (e.g., multiple of 1/4), it''s fine to compare for exact
+    equality. If the floating-point numbers are not exactly representable, then the
+    relative error method is usually preferred (but can fail if the numbers are very
+    close to zero). The absolute value method may have unintended consequences. It
+    is not clear what value of ε to use. If a = +ε/4 and b = -ε/4, should we really
+    consider them equal. Transitivity is not true: if a and b are "equal" and b and
+    c are "equal", it may not be the case that a and c are "equal."'
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 这取决于情况。如果您知道浮点数是精确可表示的（例如，1/4 的倍数），那么可以进行精确相等的比较。如果浮点数不能精确表示，则通常首选相对误差方法（但如果数字非常接近零，则可能失败）。绝对值方法可能会产生意想不到的后果。不清楚要使用什么值的
+    ε。如果 a = +ε/4，b = -ε/4，我们真的应该认为它们相等吗。传递性不成立：如果 a 和 b 是“相等的”，b 和 c 是“相等的”，那么 a
+    和 c 可能不是“相等的”。
+- en: Q. What rule does Java use to print out a double?
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. Java 使用什么规则来打印双精度数？
+- en: A. By setting all the exponent bits to 1. Here's the [java.lang.Double API](http://docs.oracle.com/javase/6/docs/api/java/lang/Double.html#toString(double)).
+    It always prints at least one digit after the decimal. After that, it uses as
+    many digits as necessary (but no more) to distinguish the number from the nearest
+    representable double.
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 通过将所有指数位设置为 1。这里是 [java.lang.Double API](http://docs.oracle.com/javase/6/docs/api/java/lang/Double.html#toString(double))。它总是至少打印小数点后一位数字。之后，它使用尽可能多的数字（但不超过）来区分数字与最近可表示的双精度数。
+- en: Q. How are zero, infinity and NaN represented using IEEE 754?
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 零、无穷大和 NaN 如何使用 IEEE 754 表示？
+- en: A. By setting all the exponent bits to 1. Positive infinity = 0x7ff0000000000000
+    (all exponent bits 1, sign bit 0 and all mantissa bits 0), negative infinity =
+    0xfff0000000000000 (all exponent bits 1, sign bit 1 and all mantissa bits 0),
+    NaN = 0x7ff8000000000000 (all exponent bits 1, at least one mantissa bit set).
+    Positive zero = all bits 0. Negative zero = all bits 0, except sign bit which
+    is 1.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 通过将所有指数位设置为 1。正无穷 = 0x7ff0000000000000（所有指数位为 1，符号位为 0，所有尾数位为 0），负无穷 = 0xfff0000000000000（所有指数位为
+    1，符号位为 1，所有尾数位为 0），NaN = 0x7ff8000000000000（所有指数位为 1，至少一个尾数位设置为 1）。正零 = 所有位为 0。负零
+    = 所有位为 0，除了符号位为 1。
+- en: Q. What is the exact value represented when I store 0.1 using double precision
+    IEEE point.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 使用双精度 IEEE 浮点数存储 0.1 时表示的确切值是多少。
+- en: A. It's 0.1000000000000000055511151231257827021181583404541015625. You can use
+    `System.out.println(new BigDecimal(0.1));` to see for yourself.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 它是 0.1000000000000000055511151231257827021181583404541015625。您可以使用 `System.out.println(new
+    BigDecimal(0.1));` 来自己查看。
+- en: Q. What is `StrictMath`?
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 什么是 `StrictMath`？
+- en: A. Java's `Math` library guarantees its results to be with 1 or to 2 [ulps](http://mindprod.com/jgloss/ulp.html)
+    of the true answer. Java's `StrictMath` guarantees that all results are accurate
+    to within 1/2 ulp of the true answer. A classic tradeoff of speed vs. accuracy.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. Java 的 `Math` 库保证其结果与真实答案的 1 或 2 [ulps](http://mindprod.com/jgloss/ulp.html)
+    之内。Java 的 `StrictMath` 保证所有结果准确到真实答案的 1/2 ulp。速度与准确性的经典权衡。
+- en: Q. What is `strictfp` modifier?
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 什么是 `strictfp` 修饰符？
+- en: A. It is also possible to use the `strictfp` modifier when declaring a class
+    or method. This ensures that the floating point results will be bit-by-bit accurate
+    across different JVMs. The IEEE standard allows processors to perform intermediate
+    computations using more precision if the result would overflow. The `strictfp`
+    requires that every intermediate result be truncated to 64-bit double format.
+    This can be a major performance hit since Intel Pentium processor registers operate
+    using IEEE 754's 80-bit double-extended format. Not many people have a use for
+    this mode.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 在声明类或方法时也可以使用 `strictfp` 修饰符。这确保浮点结果在不同的 JVM 中是逐位准确的。IEEE 标准允许处理器在结果溢出时使用更高精度进行中间计算。`strictfp`
+    要求每个中间结果被截断为 64 位双精度格式。这可能会对性能造成重大影响，因为英特尔奔腾处理器寄存器使用 IEEE 754 的 80 位双扩展格式。没有多少人会使用这种模式。
+- en: Q. What does the compiler flag `javac -ffast-math` do?
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 编译器标志 `javac -ffast-math` 是做什么的？
+- en: A. It relaxes some of the rounding requirements of IEEE. It makes some floating
+    point computations faster.
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 它放宽了 IEEE 的一些舍入要求。它使一些浮点计算更快。
+- en: Q. Are integers always represented exactly using IEEE floating point?
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 整数是否总是使用 IEEE 浮点数精确表示？
+- en: A. Yes, barring overflow of the 52 bit mantissa. The smallest positive integer
+    that is not represented exactly using type `double` is 2^(53) + 1 = 9,007,199,254,740,993.
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 是的，除了 52 位尾数的溢出。使用类型 `double` 时，不精确表示的最小正整数是 2^(53) + 1 = 9,007,199,254,740,993。
+- en: Q. Does (a + b) always equal (b + a) when a and b and floating point numbers?
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 当 a 和 b 是浮点数时，(a + b) 是否总是等于 (b + a)？
+- en: A. Yes.
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 是的。
+- en: Q. Does x / y always equal the same value, independent of my platform?
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. x / y 是否总是等于相同的值，不受我的平台影响？
+- en: 'A. Yes. IEEE requires that operations (+ * - /) are performed exactly and then
+    rounded to the nearest floating point number (using Banker''s round if there is
+    a tie: round to nearest even number). This improves portability at the expense
+    of efficiency.'
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 是的。IEEE 要求操作（+ * - /）必须精确执行，然后四舍五入到最接近的浮点数（如果出现平局，则使用银行家舍入：四舍五入到最接近的偶数）。这提高了可移植性，但以效率为代价。
+- en: Q. Does `(x - y)` always equal `(x + (-y))`?
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. `(x - y)` 是否总是等于 `(x + (-y))`？
+- en: A. Yes. Guaranteed by IEEE 754.
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 是的。由 IEEE 754 保证。
+- en: Q. Is -x always the same as 0 - x?
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. -x 是否总是等于 0 - x？
+- en: A. Almost, except if x = 0\. Then -x = -0, but 0 - x = 0.
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 几乎是，除非 x = 0。那么 -x = -0，但 0 - x = 0。
+- en: Q. Does (x + x == 2 * x)? (1 * x == x)? (0.5 * x == x / 2)?
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. (x + x == 2 * x) 是否成立？(1 * x == x)？(0.5 * x == x / 2)？
+- en: A. Yes, guaranteed by IEEE 754.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 是的，由 IEEE 754 保证。
+- en: Q. Does x / 1000.0 always equal 0.001 * x?
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. x / 1000.0 是否总是等于 0.001 * x？
+- en: A. No. For example, if x = 1138, they are different.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 不是。例如，如果 x = 1138，则它们是不同的。
+- en: Q. If `(x != y)`, is `z = 1 / (x - y)` always guaranteed not to produce division
+    by zero.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. 如果 `(x != y)`，那么 `z = 1 / (x - y)` 是否总是保证不会产生除以零的情况。
+- en: A. Yes, guaranteed by IEEE 754 (using denormalized numbers).
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 是的，由 IEEE 754 保证（使用非规格化数）。
+- en: Q. Is `(x >= y)` always the same as `!(x < y)`?
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Q. `(x >= y)` 是否总是等同于 `!(x < y)`？
+- en: A. No if either `x` or `y` is `NaN`, or both are `NaN`.
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 如果 `x` 或 `y` 中有一个是 `NaN`，或者两者都是 `NaN`，则不会。
+- en: Q. Why not use a decimal floating point instead of binary floating point?
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 问：为什么不使用十进制浮点而不是二进制浮点？
+- en: A. [Decimal floating point](http://www2.hursley.ibm.com/decimal/decifaq1.html)
+    offers several advantages over binary floating point, especially for financial
+    computations. However, it usually requires about 20% more storage (assuming it
+    is stored using binary hardware) and the resulting code is somewhat slower.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. [十进制浮点](http://www2.hursley.ibm.com/decimal/decifaq1.html)相对于二进制浮点有几个优势，特别是对于金融计算。但是，通常需要大约
+    20% 的额外存储空间（假设使用二进制硬件存储），而且生成的代码速度略慢。
+- en: Q. Why not use a fixed point representation instead of a floating point? floating
+    point?
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 问：为什么不使用固定点表示而不是浮点？浮点？
+- en: A. Fixed point numbers have a fixed number of digits after the decimal place.
+    Can be represented using integer arithmetic. Floating point has a sliding window
+    of precision, which provides a large dynamic range and high precision. Fixed point
+    numbers are used on some embedded hardware devices that do not have an FPU (to
+    save money), e.g., audio decoding or 3D graphics. Appropriate when data is constrained
+    in a certain range.
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 固定点数在小数点后具有固定数量的数字。可以使用整数算术表示。浮点数具有动态精度的滑动窗口，提供了很大的动态范围和高精度。固定点数用于一些没有 FPU
+    的嵌入式硬件设备（为了节省成本），例如音频解码或 3D 图形。当数据受到一定范围的限制时，适用。
+- en: Q. Any good resources for numerics in Java?
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有关 Java 中数值计算的好资源吗？
+- en: 'A. [Java numerics](http://math.nist.gov/javanumerics/) provides a focal point
+    for information on numerical computing in Java. [JSci](http://jsci.sourceforge.net/api/index.html):
+    a free science API for numerical computing in Java.'
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. [Java numerics](http://math.nist.gov/javanumerics/) 提供了关于 Java 数值计算的信息的焦点。[JSci](http://jsci.sourceforge.net/api/index.html)：Java
+    中用于数值计算的免费科学 API。
+- en: Q. Why are Java's `Math.sin` and `Math.cos` functions slower than their C counterparts?
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 问：为什么 Java 的 `Math.sin` 和 `Math.cos` 函数比它们的 C 对应函数慢？
+- en: A. In the range -pi/4 to pi/4, Java uses the hardware sin and cos functions,
+    so they take about the same time as in C. Arguments outside this range must be
+    converted to this range by taking them modulo pi. As James Gosling [blogs](http://blogs.sun.com/roller/page/jag?entry=transcendental_meditation)
+    on x87 platform, the hardware sin and cos use an approximation which makes the
+    computation fast, but it is not of the accuracy required by IEEE. C implementation
+    typically use the hardware sin and cos for all arguments, trading off IEEE conformance
+    for speed.
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A. 在 -pi/4 到 pi/4 范围内，Java 使用硬件 sin 和 cos 函数，因此它们的执行时间与 C 中的大致相同。超出此范围的参数必须通过取模
+    pi 转换为此范围。正如 James Gosling 在 x87 平台上的[博客](http://blogs.sun.com/roller/page/jag?entry=transcendental_meditation)中所述，硬件
+    sin 和 cos 使用一种近似值，使计算速度快，但不符合 IEEE 所需的精度。C 实现通常对所有参数使用硬件 sin 和 cos，以速度换取 IEEE
+    符合性。
+- en: Exercises
+  id: totrans-137
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+  zh: 练习
+- en: What is the result of the following code fragment?
+  id: totrans-138
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 以下代码片段的结果是什么？
+- en: '[PRE10]'
+  id: totrans-139
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: List all representable numbers for 6-bit floating point numbers with 1 sign
+    bit, 3 exponent bits, and 2 mantissa bits. What is the result of the following
+    code fragment?
+  id: totrans-140
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 列出具有 1 个符号位、3 个指数位和 2 个尾数位的 6 位浮点数的所有可表示数字。以下代码片段的结果是什么？
+- en: How many values does the following code fragment print?
+  id: totrans-141
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 以下代码片段打印出多少个值？
+- en: '[PRE11]'
+  id: totrans-142
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: '*Answer*: nine (five in the first loop and four in the second loop). The output
+    is:'
+  id: totrans-143
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*答案：*九（第一个循环中五个，第二个循环中四个）。输出为：'
+- en: '[PRE12]'
+  id: totrans-144
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: What numbers are printed out when executing the following code fragment with
+    N = 25?
+  id: totrans-145
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 执行以下代码片段时打印出什么数字，其中 N = 25？
+- en: '[PRE13]'
+  id: totrans-146
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: '*Answer*: 1 5 6 7 8 9 10 11 12 13 14 15 16 17 18. Unlikely you would predict
+    this without typing it in. Avoid using floating point numbers to check loop continuation
+    conditions.'
+  id: totrans-147
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*答案：*1 5 6 7 8 9 10 11 12 13 14 15 16 17 18。你不太可能在不输入的情况下预测这个。避免使用浮点数来检查循环继续条件。'
+- en: What is the result of the following code fragment?
+  id: totrans-148
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 以下代码片段的结果是什么？
+- en: '[PRE14]'
+  id: totrans-149
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: '*Answer:* pretty much what you expect, but there is a lot of noise in the least
+    significant two or three digits.'
+  id: totrans-150
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*答案：*几乎符合你的预期，但最不显著的两三位有很多噪音。'
+- en: What does the following code fragment print?
+  id: totrans-151
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 以下代码片段打印什么？
+- en: '[PRE15]'
+  id: totrans-152
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: Prints out 0.9200000000000002 twice!
+  id: totrans-153
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 两次打印出 0.9200000000000002！
+- en: Find a value of x for which (0.1 * x) is different from (x / 10).
+  id: totrans-154
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 找到一个值 x，使得 (0.1 * x) 与 (x / 10) 不同。
+- en: Find a real number a such that (a * (3.0 / a)) doesn't equal 3.0. *Answer:*
+    If a = 0, the first expression evaluates to NaN.
+  id: totrans-155
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 找到一个实数 a，使得 (a * (3.0 / a)) 不等于 3.0。*答案：*如果 a = 0，则第一个表达式计算结果为 NaN。
+- en: Find a real number a such that (Math.sqrt(a) * Math.sqrt(a)) doesn't equal a.
+    *Answer:* a = 2.0.
+  id: totrans-156
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 找到一个实数 a，使得 (Math.sqrt(a) * Math.sqrt(a)) 不等于 a。*答案：*a = 2.0。
+- en: Find floating point values such that (x/x != 1), (x - x != 0), (0 != 0 * x).
+    *Answer:* consider values of x that are 0, +- infinity, or NaN.
+  id: totrans-157
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 找到浮点值，使得 (x/x != 1)，(x - x != 0)，(0 != 0 * x)。*答案：*考虑 x 的值为 0、+- 无穷大或 NaN。
+- en: Find floating point values `x` and `y` such that `x >= y` is `true`, but `!(x
+    < y)` is `false`.
+  id: totrans-158
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 找到浮点值 `x` 和 `y`，使得 `x >= y` 为 `true`，但 `!(x < y)` 为 `false`。
+- en: '*Hint*: consider cases where either `x` or `y` (or both) have the value `NaN`.'
+  id: totrans-159
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*提示：*考虑 `x` 或 `y`（或两者）的值为 `NaN` 的情况。'
+- en: What is the result of the following code fragment from [FloatingPoint.java](FloatingPoint.java.html)?
+  id: totrans-160
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[FloatingPoint.java](FloatingPoint.java.html)中以下代码片段的结果是什么？'
+- en: '[PRE16]'
+  id: totrans-161
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: Examples from *How Reliable are Results of Computers* by S. M. Rump. See program
+    [Rump.java](Rump.java.html).
+  id: totrans-162
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 来自 S. M. Rump 的《计算机结果有多可靠》的示例。查看程序[Rump.java](Rump.java.html)。
+- en: 'Compute a*a - 2*b*b where a = 665857 and b = 470832 are of type `float`. Then
+    compute a*a - 2.0*b*b. Repeat with type `double`. Java answers with float: 0.0
+    and 11776.0. Java answers with double: 1.0. Exact answer: 1.0.'
+  id: totrans-163
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 计算 a*a - 2*b*b，其中 a = 665857，b = 470832，类型为 `float`。然后计算 a*a - 2.0*b*b。使用 `double`
+    类型重复。Java 的答案为 float：0.0 和 11776.0。Java 的答案为 double：1.0。精确答案为：1.0。
+- en: 'Compute 9x⁴ - y⁴ + 2y² where x = 10864 and y = 18817 are of type `double`.
+    Java answer: 2.0. Exact answer: 1.0.'
+  id: totrans-164
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 计算 9x⁴ - y⁴ + 2y²，其中 x = 10864，y = 18817，类型为 `double`。Java 答案为 2.0。精确答案为 1.0。
+- en: 'Compute p(x) = 8118x⁴ - 11482x³ + x² + 5741x - 2030 where x = 0.707107 is of
+    type `float` and `double`. Java answer for float: 1.2207031E-4. Java answer for
+    double: -1.9554136088117957E-11. Exact answer: -1.91527325270... * 10^-7.'
+  id: totrans-165
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 计算 p(x) = 8118x⁴ - 11482x³ + x² + 5741x - 2030，其中 x = 0.707107 是 `float` 和 `double`
+    类型。float 的 Java 答案：1.2207031E-4。double 的 Java 答案：-1.9554136088117957E-11。精确答案：-1.91527325270...
+    * 10^-7。
+- en: 'Do you think using the type `double` would be a good idea for storing stock
+    prices that are always specified in increments of 1/64\. Explain why or why not.
+    *Answer*: yes, it would be perfectly fine since such values are represented exactly
+    using binary floating point. If the stock prices were represented in decimal,
+    e.g., 45.10, that could result in roundoff error.'
+  id: totrans-166
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 您认为使用 `double` 类型来存储总是以 1/64 递增的股价是个好主意吗？解释为什么或为什么不��*答案*：是的，这是完全可以的，因为这些值在二进制浮点数中可以精确表示。如果股价以十进制表示，例如
+    45.10，那可能会导致舍入误差。
+- en: Fix [Exponential.java](Exponential.java.html) so that it works properly for
+    negative inputs using the method described in the text.
+  id: totrans-167
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 修复 [Exponential.java](Exponential.java.html)，使其能正确处理负输入，使用文本中描述的方法。
+- en: Sum the following real numbers from left to right. Use floating point arithmetic,
+    and assume your computer only stores three decimal digits of precision.
+  id: totrans-168
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 从左到右求和以下实数。使用浮点运算，并假设您的计算机只存储三位小数的精度。
+- en: '[PRE17]'
+  id: totrans-169
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: Repeat using the priority queue algorithm. Repeat using Kahan's algorithm.
+  id: totrans-170
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 使用优先队列算法重复。使用 Kahan 的算法重复。
+- en: 'Write a program to read in a list of bank account values and print the average
+    value, rounded exactly to the nearest penny using banker''s rounding. The input
+    values will be separeated by whitespace and using two decimal digits. Hint: avoid
+    `Double.parseDouble`.'
+  id: totrans-171
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 编写一个程序，读取一系列银行账户值，并打印平均值，精确到最接近的一分钱，使用银行家舍入法。输入值将以空格分隔，并使用两位小数。提示：避免使用 `Double.parseDouble`。
+- en: '[PRE18]'
+  id: totrans-172
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: What does the following [code fragment](Equality.java.html) print?
+  id: totrans-173
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 以下 [代码片段](Equality.java.html) 打印什么？
+- en: '[PRE19]'
+  id: totrans-174
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: '*Answer*: 16777217 and 16777216.00000000000. 2^24 + 1 is the smallest positive
+    integer that is not exactly representable using type `float`.'
+  id: totrans-175
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*答案*：16777217 和 16777216.00000000000。2^24 + 1 是最小的正整数，使用 `float` 类型无法精确表示。'
+- en: Can you find values a, b, and c such that Math.sqrt(b*b - a*c) is invalid (NaN)
+    but (b*b < a*c) is false? Kahan.
+  id: totrans-176
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 能找到值 a、b 和 c，使得 Math.sqrt(b*b - a*c) 无效（NaN），但 (b*b < a*c) 为假吗？Kahan。
+- en: What is wrong with each of the following [two loops](FloatingLoop.java.html)?
+  id: totrans-177
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 以下 [两个循环](FloatingLoop.java.html) 各有什么问题？
+- en: '[PRE20]'
+  id: totrans-178
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: '*Answer*: The first code fragment goes into an infinite loop when x = 16777216.0f
+    since 16777217.0f cannot be represented exactly using type `float` and 16777216.0f
+    + 1.0f = 16777216.0f. The second loop is guaranteed to work correctly, but using
+    a variable of type `int` for the loop variable might be more efficient.'
+  id: totrans-179
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*答案*：当 x = 16777216.0f 时，第一个代码片段会陷入无限循环，因为使用 `float` 类型无法精确表示 16777217.0f，而
+    16777216.0f + 1.0f = 16777216.0f。第二个循环保证能正确运行，但使用 `int` 类型的变量作为循环变量可能更有效率。'
+- en: 'One way to define e is the limit as n approaches infinity of (1 + 1/n)^n. Write
+    a computer program to estimate e using this formula. For which value of n do you
+    get the best approximation of e? *Hint*: if n gets too large, then 1 + 1/n is
+    equal to 1 using floating point arithmetic.'
+  id: totrans-180
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 定义 e 的一种方式是当 n 趋近无穷大时的极限 (1 + 1/n)^n。编写一个计算程序，使用这个公式估计 e。对于哪个值的 n 你得到了最好的 e
+    近似值？*提示*：如果 n 太大，那么在浮点运算中 1 + 1/n 等于 1。
+- en: What's wrong with the following implementation of `Math.max()`.
+  id: totrans-181
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 以下 `Math.max()` 实现有什么问题。
+- en: '[PRE21]'
+  id: totrans-182
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: '*Answer*: double not handle NaN properly. According to this definition max(0,
+    NaN) is NaN but max(NaN, 0) is 0\. It should be NaN.'
+  id: totrans-183
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '*答案*：double 不能正确处理 NaN。根据这个定义，max(0, NaN) 是 NaN，但 max(NaN, 0) 是 0。应该是 NaN。'
+- en: Not all subtraction is catastrophic. Demonstrate that the expression x² - y²
+    exhibits catastrophic cancellation when x is close to y. However, the improved
+    expression (x + y)(x - y) still subtracts nearly equal quantities, but it is a
+    benign cancellation.
+  id: totrans-184
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 并非所有减法都会导致灾难性的消除。演示当 x 接近 y 时，表达式 x² - y² 会出现灾难性的消除。然而，改进后的表达式 (x + y)(x - y)
+    仍然减去几乎相等的量，但这是一种良性的消除。
+- en: (Goldberg) (1 + i/n)^n arises in financial calculations involving interest.
+    Rewrite as e^(n ln (1 + i/n)). Now trick is to compute ln(1+x). Math.log(1+x)
+    not accurate when x << 1.
+  id: totrans-185
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: (Goldberg) (1 + i/n)^n 在涉及利息的金融计算中出现。重写为 e^(n ln (1 + i/n))。现在的技巧是计算 ln(1+x)。当
+    x << 1 时，Math.log(1+x) 不准确。
+- en: '[PRE22]'
+  id: totrans-186
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE22]'
+- en: 'Alternative in Java 1.5: `Math.log1p(x)`'
+  id: totrans-187
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在 Java 1.5 中的替代方法：`Math.log1p(x)`
+- en: To compute e^x - 1, use `Math.expm1(x)`. For values of x near 0, Math.expm1(x)
+    + 1 is more accurate than Math.exp(x).
+  id: totrans-188
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 要计算 e^x - 1，使用 `Math.expm1(x)`。对于 x 附近的值，Math.expm1(x) + 1 比 Math.exp(x) 更准确。
+- en: 'Catastrophic cancellation: f(x) = e^x - sin x - cos x near x = 0\. Use x² +
+    x³/3 as an approximation near x = 0.'
+  id: totrans-189
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 灾难性的消除：f(x) = e^x - sin x - cos x 在 x = 0 附近。使用 x² + x³/3 作为 x = 0 附近的近似值。
+- en: 'Catastrophic cancellation: f(x) = ln(x) - 1. For x near e use ln(x/e).'
+  id: totrans-190
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 灾难性的消除：f(x) = ln(x) - 1。对于 x 附近的 e 使用 ln(x/e)。
+- en: 'Catastrophic cancellation: f(x) = ln(x) - log(1/x). For x near 1 use 2 ln(x).'
+  id: totrans-191
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 灾难性的消除：f(x) = ln(x) - log(1/x)。对于 x 附近的 1 使用 2 ln(x)。
+- en: 'Catastrophic cancellation: x^(-2)(sinx - e^x + 1).'
+  id: totrans-192
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 灾难性的消除：x^(-2)(sinx - e^x + 1)。
+- en: Find a value of x for which `Math.abs(x)` doesn't equal `Math.sqrt(x*x)`.
+  id: totrans-193
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 找到一个 x 的值，使得 `Math.abs(x)` 不等于 `Math.sqrt(x*x)`。
+- en: '**Numerical stability.** The *golden mean* φ = sqrt(5)/2 - 1/2 = 0.61803398874989484820...
+    It satisfies the equation φ^N = φ^(N-2) - φ^(N-1). We could use this recurrence
+    to compute power of φ by starting with phi0 = 1, phi1 = φ, and iterating the recurrence
+    to calculate successive powers of φ. However, floating-point roundoff error swamps
+    the computation by about N = 40. Write a program [Unstable.java](Unstable.java.html)
+    that reads in a command line parameter N and prints out φ^N computed using the
+    recurrence above and also using `Math.pow()`. Run your program with N = 40 and
+    N = 100 to see the consequences of roundoff error.'
+  id: totrans-194
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**数值稳定性。** *黄金分割数* φ = sqrt(5)/2 - 1/2 = 0.61803398874989484820... 它满足方程φ^N
+    = φ^(N-2) - φ^(N-1)。我们可以使用这个递归来计算φ的幂，从phi0 = 1，phi1 = φ开始，并通过迭代递归来计算φ的连续幂。然而，浮点舍入误差会在N
+    = 40左右时影响计算。编写一个程序[Unstable.java](Unstable.java.html)，读取一个命令行参数N，并打印出使用上述递归和`Math.pow()`计算的φ^N。运行你的程序，N分别为40和100，看看舍入误差的后果。'
+- en: Creative Exercises
+  id: totrans-195
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+  zh: 创意练习
+- en: '**Roundoff errors.** Sums. Relative error = |x - x''| / |x| = independent of
+    units. One idea is to create priority queue of numbers and repeatedly add the
+    two smallest values and insert back into the priority queue. (See exercise XYZ.)
+    Simpler and faster alternative: Kahan''s summation formula (Goldberg, Theorem
+    8). Example of useful algorithm that exploits fact that (x + y) + z doesn''t equal
+    x + (y + z). Optimizing compiler better not rearrange terms.'
+  id: totrans-196
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**舍入误差。** 求和。相对误差 = |x - x''| / |x| = 与单位无关。一个想法是创建一个数字的优先级队列，并重复添加两个最小值并插入回优先级队列。
+    (参见练习XYZ。) 更简单更快的替代方案：Kahan求和公式 (Goldberg，定理8)。利用(x + y) + z不等于x + (y + z)这一事实的有用算法的例子。优化编译器最好不要重新排列项。'
+- en: '[PRE23]'
+  id: totrans-197
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE23]'
+- en: 'Recommended method: sorting and adding.'
+  id: totrans-198
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 推荐方法：排序和添加。
+- en: '**Cauchy-Schwartz inequality.** The Cauchy-Schwartz inequality guarantees that
+    for any real numbers x[i] and y[i] that'
+  id: totrans-199
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**柯西-施瓦茨不等式。** 柯西-施瓦茨不等式保证对于任意实数x[i]和y[i]，有'
+- en: '[PRE24]'
+  id: totrans-200
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE24]'
+- en: In particular, when n = 2, y[1] = y[2] = 1, we have
+  id: totrans-201
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 特别地，当n = 2，y[1] = y[2] = 1时，我们有
+- en: '[PRE25]'
+  id: totrans-202
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE25]'
+- en: Write a program [CauchySchwartz.java](CauchySchwartz.java.html) that reads in
+    two integers x[1] and x[2], and verifies that the identity is not necessarily
+    true in floating point. Try x[1] = 0.5000000000000002 and x[2] = 0.5000000000000001
+  id: totrans-203
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 编写一个程序[CauchySchwartz.java](CauchySchwartz.java.html)，读取两个整数x[1]和x[2]，并验证浮点数中的恒等式不一定成立。尝试x[1]
+    = 0.5000000000000002和x[2] = 0.5000000000000001
+- en: '**Chebyshev approximation for distance computations.** Use the following approximation
+    for computing the distance between p and q without doing an expensive square root
+    operation. sqrt(dx² + dy²) = max(|dx|, |dy|) + 0.35 * min(|dx|, |dy|). How accurate.'
+  id: totrans-204
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**切比雪夫距离计算逼近。** 使用以下逼近计算p和q之间的距离，而不进行昂贵的平方根运算。sqrt(dx² + dy²) = max(|dx|, |dy|)
+    + 0.35 * min(|dx|, |dy|)。有多精确。'
+- en: '**Pythagoras.** Write a program Program [Pythagoras.java](Pythagoras.java.html)
+    that reads in two real-valued command line parameters a and b and prints out sqrt(a*a
+    + b*b). Try to stave off overflow. For example, if |a| >= |b| then compute |a|
+    sqrt(1 + (b/a)*(b/a)). If |a| < |b| do analogous. Ex: x = y = DBL_MAX / 10.0;'
+  id: totrans-205
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**毕达哥拉斯。** 编写一个程序[Pythagoras.java](Pythagoras.java.html)，读取两个实数命令行参数a和b，并打印出sqrt(a*a
+    + b*b)。尝试避免溢出。例如，如果|a| >= |b|，则计算|a| sqrt(1 + (b/a)*(b/a))。如果|a| < |b|，则进行类似操作。例如：x
+    = y = DBL_MAX / 10.0;'
+- en: 'Reliable implementation since Java 1.5: `Math.hypot(a, b)`.'
+  id: totrans-206
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: Java 1.5以来的可靠实现：`Math.hypot(a, b)`。
+- en: '**Overflow.** What is the result of the following code fragment?'
+  id: totrans-207
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**溢出。** 以下代码片段的结果是什么？'
+- en: '[PRE26]'
+  id: totrans-208
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE26]'
+- en: '**Optimizing compiler.** An optimizing compiler.... Must be wary about blindly
+    applying algebraic laws to computer programs since this could lead to disastrous
+    results. Show that with floating point numbers, addition is not associative. That
+    is find values a, b, and c such that ((a + b) + c) != (a + (b + c)). Show also
+    that the distributive property does not necessarily apply finding a, b, and c
+    such that (a * (b + c)) != (a * b + a * c). Problem more pronounced with multiplication
+    ((a * b) * c) != (a * (b * c)). Give simple example.'
+  id: totrans-209
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**优化编译器。** 一个优化编译器... 必须谨慎地应用代数定律到计算机程序中，因为这可能导致灾难性的结果。证明浮点数中，加法不是可结合的。即找到值a、b和c，使得((a
+    + b) + c) != (a + (b + c))。还证明分配律不一定适用，找到值a、b和c，使得(a * (b + c)) != (a * b + a
+    * c)。问题在于乘法更加明显 ((a * b) * c) != (a * (b * c))。给出一个简单的例子。'
+- en: '**Integer arithmetic.** Integer addition and multiplication are provably associative
+    in Java, e.g., (a+b)+c always equals a+(b+c).'
+  id: totrans-210
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**整数运算。** 在Java中，整数加法和乘法在数学上是可结合的，例如，(a+b)+c总是等于a+(b+c)。'
+- en: '**Harmonic sum.** Redo the harmonic sum computation, but sum from right-to-left
+    instead of left-to-right. It illustrates that addition is not associative (a +
+    b) + c vs. a + (b + c) since we get different answers depending on whether we
+    sum from left-to-right or right-to-left.'
+  id: totrans-211
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**调和和。** 重新进行调和和计算，但从右到左而不是从左到右求和。这说明加法不是可结合的 (a + b) + c vs. a + (b + c)，因为我们根据从左到右或从右到左求和得到不同的答案。'
+- en: '**Pi.** Compare the following two methods for approximating the mathematical
+    constant pi. Repeat while p_k > p_k-1\. The sequence p_k converges to pi.'
+  id: totrans-212
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**圆周率。** 比较以下两种逼近数学常数pi的方法。当p_k > p_k-1时重复。序列p_k收敛到pi。'
+- en: '[PRE27]'
+  id: totrans-213
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE27]'
+- en: The second formula has much better behavior since it avoids the catastrophic
+    cancellation 2 - sqrt((2-s_k)(2+s_k)).
+  id: totrans-214
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 第二个公式的行为要好得多，因为它避免了灾难性的消除 2 - sqrt((2-s_k)(2+s_k))。
+- en: '**Jean-Michael Muller example.** Consider the sequence x[0] = 4, x[1] = 4.25,
+    x[n] = 108 - (815 - 1500/x[n-2]) / x[n-1]. Program [Muller.java](Muller.java.html)
+    attempts to estimate what x[n] converges to as n gets large. It computes the value
+    100.0, but the correct value is 5.'
+  id: totrans-215
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**Jean-Michael Muller的例子。** 考虑序列x[0] = 4，x[1] = 4.25，x[n] = 108 - (815 - 1500/x[n-2])
+    / x[n-1]。程序[Muller.java](Muller.java.html)试图估计n变大时x[n]收敛到的值。它计算值为100.0，但正确值为5。'
+- en: '**Another Kahan example.** Myth: if you keep adding more precision and answer
+    converges then it''s correct. Counterexample: E(0) = 1, E(z) = (exp(z) - 1) /
+    z. Q(x) = |x - sqrt(x² + 1)| - 1/(x + sqrt(x² + 1)) H(x) = E(Q(x)²). Compute H(x)
+    for x = 15.0, 16.0, 17.0, 9999.0. Repeat with more precision, say using `BigDecimal`.'
+  id: totrans-216
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**另一个 Kahan 的例子。** 迷思：如果你不断增加精度并且答案收敛，那么它就是正确的。反例：E(0) = 1，E(z) = (exp(z) -
+    1) / z。Q(x) = |x - sqrt(x² + 1)| - 1/(x + sqrt(x² + 1))，H(x) = E(Q(x)²)。计算 x =
+    15.0, 16.0, 17.0, 9999.0 时的 H(x)。使用更多精度，比如使用 `BigDecimal`。 '
+- en: Dividing rational numbers (a + ib) /(c + id). See Smith's formula (11).
+  id: totrans-217
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 分割有理数 (a + ib) /(c + id)。参见 Smith 的公式（11）。
+- en: With integer types we must be cognizant of overflow. The same principles of
+    overflow apply to floating point numbers. For example, to compute sqrt(x*x + y*y),
+    use fabs(y) * sqrt(1+(x/y)*(x/y)) if x < y and analog if x > y. x = y = DBL_MAX
+    / 10.0;
+  id: totrans-218
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 对于整数类型，我们必须注意溢出问题。溢出的相同原则也适用于浮点数。例如，要计算 sqrt(x*x + y*y)，如果 x < y，则使用 fabs(y)
+    * sqrt(1+(x/y)*(x/y))，如果 x > y，则使用类似的方法。x = y = DBL_MAX / 10.0;
+- en: '**Gamma function.** Write a program [Gamma.java](Gamma.java.html) that takes
+    a command line parameter x and prints Gamma(x) and log Gamma(x) to 9 significant
+    digits, where Gamma(x) is the gamma function:'
+  id: totrans-219
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**Gamma 函数。** 编写一个程序 [Gamma.java](Gamma.java.html)，接受一个命令行参数 x，并打印出 Gamma(x)
+    和 log Gamma(x) 至 9 个有效数字，其中 Gamma(x) 是 gamma 函数：'
+- en: '|'
+  id: totrans-220
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '|'
+- en: '[PRE28]'
+  id: totrans-221
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE28]'
+- en: '|'
+  id: totrans-222
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '|'
+- en: 'The Gamma function is a continuous version of the factorial function: if n
+    is a positive integer, then n! = Gamma(n+1). Use [Lanczos'' formula](http://www.rskey.org/gamma.htm):'
+  id: totrans-223
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: Gamma 函数是阶乘函数的连续版本：如果 n 是正整数，则 n! = Gamma(n+1)。使用 [Lanczos' formula](http://www.rskey.org/gamma.htm)：
+- en: '|'
+  id: totrans-224
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '|'
+- en: '[PRE29]'
+  id: totrans-225
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE29]'
+- en: '|'
+  id: totrans-226
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '|'
+- en: This is accurate to 9 significant digits for x > 1.
+  id: totrans-227
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 对于 x > 1，这个结果精确到 9 个有效数字。
+- en: '**Siegfried M. Rump example.** Write a program [Remarkable.java](Remarkable.java.html)
+    to compute'
+  id: totrans-228
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**Siegfried M. Rump 的例子。** 编写一个程序 [Remarkable.java](Remarkable.java.html) 来计算'
+- en: '[PRE30]'
+  id: totrans-229
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE30]'
+- en: for a = 77617 and b = 33096\. Try with different floating point precision. Can
+    rewrite
+  id: totrans-230
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 对于 a = 77617 和 b = 33096。尝试使用不同的浮点精度。可以重写
+- en: '[PRE31]'
+  id: totrans-231
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE31]'
+- en: It turns out that x and z have 35 digits in common.
+  id: totrans-232
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 结果表明 x 和 z 有 35 位数字是相同的。
+- en: '[PRE32]'
+  id: totrans-233
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE32]'
+- en: The answer we get in Java (on Sun Sparc) using single precision is 6.338253
+    ×10^(29) and using double precision is a/(2b) = 1.1726039400531787. The true answer
+    is -2 + a/(2b) = -54767/66192 = -0.82739606...., but the z + x = -2 term is catostrophically
+    cancelled unless you are using at least 122 digits of precision! We match this
+    answer using the `BigDecimal` ADT in Java's Math library.
+  id: totrans-234
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在 Java（在 Sun Sparc 上）使用单精度得到的答案是 6.338253 ×10^(29)，使用双精度是 a/(2b) = 1.1726039400531787。真正的答案是
+    -2 + a/(2b) = -54767/66192 = -0.82739606....，但 z + x = -2 项会在没有至少使用 122 位精度的情况下被灾难性地取消！我们使用
+    Java 的 Math 库中的 `BigDecimal` ADT 来匹配这个答案。
+- en: The paper [A Remarkable Example of Catastrophic Cancellation Unraveled](http://link.springer.de/link/service/journals/00607/bibs/1066003/10660309.htm)
+    describes this well-known formula, which demonstrates why obtaining identical
+    results in different precisions does not mathematically imply accuracy. Moreover,
+    even on IEEE 754 conforming platforms (Intel, Sun Sparc), you can get different
+    answers depending on whether the intermediate rounding mode is 24, 53, or 64 bits.
+    This remarkable example was constructed by Siegfried M. Rump at IBM for S/370
+    architectures.
+  id: totrans-235
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 论文 [A Remarkable Example of Catastrophic Cancellation Unraveled](http://link.springer.de/link/service/journals/00607/bibs/1066003/10660309.htm)
+    描述了这个著名的公式，展示了为什么在不同精度下获得相同结果并不意味着数学上的准确性。此外，即使在符合 IEEE 754 标准的平台上（Intel、Sun Sparc），根据中间舍入模式是
+    24、53 还是 64 位，你可能会得到不同的答案。这个引人注目的例子是由 IBM 的 Siegfried M. Rump 为 S/370 架构构建的。
+- en: '**Area of a triangle.** Write a program `TriangleArea.java` that takes three
+    command line inputs a, b, and c, representing the side lengths of a triangle,
+    and prints out the area of the triangle using Heron''s formula: area = sqrt(s(s-a)(s-b)(s-c)),
+    where s = (a + b + c) / 2. Inaccurate when a is close to b. Improve with 1960s
+    era formula: sort a >= b >= c. if (c + b < a) then not a legal triangle. 1/4 *
+    sqrt((a+(b+c)) * (c-(a-b)) * (c+(a-b)) *(a+(b-c))). Ex: a = b = 12345679.0, c
+    = 1.01233995.'
+  id: totrans-236
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**三角形的面积。** 编写一个程序 `TriangleArea.java`，接受三个命令行输入 a、b 和 c，表示三角形的边长，并使用海伦公式打印出三角形的面积：area
+    = sqrt(s(s-a)(s-b)(s-c))，其中 s = (a + b + c) / 2。当 a 接近 b 时不准确。使用 1960 年代的公式进行改进：排序
+    a >= b >= c。如果 (c + b < a) 则不是合法三角形。1/4 * sqrt((a+(b+c)) * (c-(a-b)) * (c+(a-b))
+    *(a+(b-c)))。例如：a = b = 12345679.0，c = 1.01233995。'
+- en: '**Quadratic formula.** The *quadratic equation* is a grade school formula for
+    finding the real roots of ax² + bx + c.'
+  id: totrans-237
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**二次方程公式。** *二次方程* 是一个用于找到 ax² + bx + c 的实根的小学公式。'
+- en: '[PRE33]'
+  id: totrans-238
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE33]'
+- en: A novice programmer who needed to calculate the roots of a quadratic equation
+    might naively apply this formula. Of course, we should be careful to handle the
+    a = 0 case specially to avoid division by zero. Also we should check the discriminant
+    b² - 4ac. If it's negative, then there are no real roots. However, the major problem
+    with this formula is that it doesn't work if a or c are very small because one
+    of the two roots will be computed by subtracting b from a very nearly equal quantity.
+    The correct way to compute the roots is
+  id: totrans-239
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 一个初学者程序员需要计算二次方程的根，可能会天真地应用这个公式。当然，我们应该小心处理 a = 0 的情况，以避免除以零。此外，我们应该检查判别式 b²
+    - 4ac。如果是负数，则没有实根。然而，这个公式的主要问题是，如果 a 或 c 非常小，那么其中一个根将通过从几乎相等的数量中减去 b 来计算。计算根的正确方法是
+- en: '[PRE34]'
+  id: totrans-240
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE34]'
+- en: For example the roots of x² - 3000000x + 2 are r1 and r2. The grade school formula
+    yields only 3 digits of accuracy for the smaller root (6.665941327810287E-7) when
+    using double precision arithmetic, whereas the good formula yields 12 digits of
+    accuracy (6.666666666668148E-7). When b = -30000000, the situation deteriorates.
+    The grade school method now only has two digits of accuracy (6.705522537231445E-8)
+    vs. 12 digits of accuracy (6.666666666666681E-8). When b = -300000000, the grade
+    school method has zero digits of accuracy (0.0) as opposed to 16 (6.666666666666667E-9).
+  id: totrans-241
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 例如，x² - 3000000x + 2的根是r1和r2。当使用双精度算术时，小根（6.665941327810287E-7）的小学公式仅提供3位精度，而好的公式提供12位精度（6.666666666668148E-7）。当b
+    = -30000000时，情况恶化。小学方法现在只有两位精度（6.705522537231445E-8）与12位精度（6.666666666666681E-8）。当b
+    = -300000000时，小学方法的精度为零（0.0），而不是16（6.666666666666667E-9）。
+- en: Consider summarizing this in a table.
+  id: totrans-242
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 考虑用表格总结这一点。
+- en: '**Beneficial cancellation.** Massive cancellations in subtraction do not always
+    lead to catastrophic cancellation. Cancellation error does not always lead to
+    inaccuracy. Straightforward implementation of f(x) = (x-1) / (e^(x-1) - 1) not
+    accurate if x is close to 1. Surprisingly, the solution below achieves full working
+    accuracy regardless of the size of x. Final computed answer more accurate than
+    intermediate results through extreme cleverness in helpful cancellation! Error
+    analysis can be very subtle and non-obvious.'
+  id: totrans-243
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**有益的消除。** 减法中的大量消除并不总是导致灾难性的消除。消除误差并不总是导致不准确。如果x接近1，则f(x) = (x-1) / (e^(x-1)
+    - 1)的直接实现不准确。令人惊讶的是，下面的解决方案无论x的大小如何都能实现完全的工作精度。通过有益的消除在极端巧妙中获得的最终计算答案比中间结果更准确！误差分析可能非常微妙和不明显。'
+- en: '[PRE35]'
+  id: totrans-244
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE35]'
+- en: Program [BeneficialCancellation.java](BeneficialCancellation.java.html) implements
+    the straightforward and numerically accurate approaches.
+  id: totrans-245
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 程序[BeneficialCancellation.java](BeneficialCancellation.java.html)实现了直接和数值精确的方法。
+- en: See [How Java's Floating-Point Hurts Everyone Everywhere](http://www.eecs.berkeley.edu/~wkahan/JAVAhurt.pdf).
+  id: totrans-246
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 参见[Java的浮点数如何伤害每个人](http://www.eecs.berkeley.edu/~wkahan/JAVAhurt.pdf)。
+- en: '**1 - cos(x).** Compare computing 1 - cos(x) naively and using the formula
+    cos(x) = 2 sin(x/2)^2. [The Right Way to Calculate Stuff](http://www.plunk.org/~hatch/rightway.php).'
+  id: totrans-247
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**1 - cos(x)**。比较天真地计算1 - cos(x)和使用公式cos(x) = 2 sin(x/2)^2。[正确计算的方法](http://www.plunk.org/~hatch/rightway.php)。'
+- en: '**Square root cancellation.** Devise an accurate expression for the difference
+    between the square root of (b² + 100) and b. *Solution*: If b is negative or relatively
+    small, just do the obvious thing. If b is much larger than 100, you can get catastrophic
+    cancellation. The difference equals b (sqrt(1 + 100/b²) - 1). If x is very small
+    then, it''s safe to approximate sqrt(1 + x) by 1 + x/2. Now, the difference is
+    approximately b (100 / b²) / 2 = 50 / b.'
+  id: totrans-248
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**平方根消除。** 设计一个准确的表达式，表示(b² + 100)的平方根与b之间的差异。*解决方案*：如果b为负数或相对较小，只需做明显的事情。如果b远大于100，可能会发生灾难性的消除。差异等于b(sqrt(1
+    + 100/b²) - 1)。如果x非常小，那么可以安全地用1 + x/2来近似sqrt(1 + x)。现在，差异大约为b (100 / b²) / 2 =
+    50 / b。'
