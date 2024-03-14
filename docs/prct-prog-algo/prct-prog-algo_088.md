@@ -1,6 +1,11 @@
 # 1.5   案例研究：并查集
 
 > 原文：[`algs4.cs.princeton.edu/15uf`](https://algs4.cs.princeton.edu/15uf)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ![动态连通性示例](img/ec0629a49043f96fd9d9f774ef0ac8b7.png)
 

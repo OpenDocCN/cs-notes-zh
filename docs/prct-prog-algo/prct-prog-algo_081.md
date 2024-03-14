@@ -1,6 +1,11 @@
 # 4.5 一个案例研究：小世界现象
 
 > 原文：[`introcs.cs.princeton.edu/python/45graph`](https://introcs.cs.princeton.edu/python/45graph)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 <title>一个案例研究：小世界现象</title>
 

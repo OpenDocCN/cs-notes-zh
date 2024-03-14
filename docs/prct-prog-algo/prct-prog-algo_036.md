@@ -1,6 +1,10 @@
 # 6.4   TOY 虚拟机
 
-> 译文：[`introcs.cs.princeton.edu/java/64simulator`](https://introcs.cs.princeton.edu/java/64simulator)
+> 原文：[`introcs.cs.princeton.edu/java/64simulator`](https://introcs.cs.princeton.edu/java/64simulator)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 本节正在大力施工中。
 

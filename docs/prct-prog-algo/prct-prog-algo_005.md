@@ -1,6 +1,11 @@
 # 1.3   条件和循环
 
 > 原文：[`introcs.cs.princeton.edu/java/13flow`](https://introcs.cs.princeton.edu/java/13flow)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在我们到目前为止检查的程序中，每个语句都按给定的顺序执行一次。大多数程序更复杂，因为语句的顺序和每个语句执行的次数可能会有所不同。我们使用术语*控制流*来指代程序中的语句顺序。
 

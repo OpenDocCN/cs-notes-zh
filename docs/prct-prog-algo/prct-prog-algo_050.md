@@ -1,6 +1,11 @@
 # 9.1 浮点数
 
 > 原文：[`introcs.cs.princeton.edu/java/91float`](https://introcs.cs.princeton.edu/java/91float)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在进行重大施工。
 

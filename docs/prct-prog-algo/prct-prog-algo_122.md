@@ -1,6 +1,11 @@
 # 3\. 生成函数
 
 > 原文：[`aofa.cs.princeton.edu/30gf`](https://aofa.cs.princeton.edu/30gf)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章介绍了算法分析和组合学中的一个核心概念：*生成函数* —— 这是算法研究对象和发现其性质所必需的分析方法之间的必要而自然的联系。
 

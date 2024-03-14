@@ -1,6 +1,11 @@
 # 9.2   符号方法
 
 > 原文：[`introcs.cs.princeton.edu/java/92symbolic`](https://introcs.cs.princeton.edu/java/92symbolic)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在进行重大改造。
 

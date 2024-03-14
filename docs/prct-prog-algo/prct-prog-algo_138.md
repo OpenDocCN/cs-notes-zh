@@ -1,6 +1,11 @@
 # 9\.   多元渐近和极限定律
 
 > 原文：[`ac.cs.princeton.edu/90multivariate`](https://ac.cs.princeton.edu/90multivariate)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## IX.1 极限定律和组合结构
 

@@ -1,6 +1,11 @@
 # 9\.   单词和映射
 
 > 原文：[`aofa.cs.princeton.edu/90maps`](https://aofa.cs.princeton.edu/90maps)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章涵盖了*单词*（从`M`-字母表中的`N`-字母字符串）的全局属性，这在经典组合学中得到了很好的研究（因为它们模拟了独立伯努利试验的序列）和经典应用算法学中得到了很好的研究（因为它们模拟了哈希算法的输入序列）。本章还涵盖了随机*映射*（从`N`-字母表中的`N`-字母单词）并讨论了与树和排列的关系。
 

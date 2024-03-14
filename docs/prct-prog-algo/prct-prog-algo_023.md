@@ -1,6 +1,11 @@
 # 4.4   符号表
 
 > 原文：[`introcs.cs.princeton.edu/java/44st`](https://introcs.cs.princeton.edu/java/44st)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 *符号表*是一种数据类型，我们用它来将*值*与*键*关联起来。客户端可以通过指定键-值对将条目存储（*put*）到符号表中，然后可以检索（*get*）与特定键对应的值。
 

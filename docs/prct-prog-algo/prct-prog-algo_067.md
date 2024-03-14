@@ -1,6 +1,11 @@
 # 2.1 定义函数
 
 > 原文：[`introcs.cs.princeton.edu/python/21function`](https://introcs.cs.princeton.edu/python/21function)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 从本书站点的开始，您一直在编写调用 Python 函数的代码。在本节中，您将学习如何定义和调用自己的函数。函数支持一个关键概念，从现在开始将贯穿您的编程方法：*每当您可以清晰地将计算中的任务分开时，您都应该这样做*。
 

@@ -1,6 +1,11 @@
 # 3\.   组合参数和多变量生成函数
 
 > 原文：[`ac.cs.princeton.edu/30mgf`](https://ac.cs.princeton.edu/30mgf)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## III.1 双变量生���函数（BGFs）简介
 

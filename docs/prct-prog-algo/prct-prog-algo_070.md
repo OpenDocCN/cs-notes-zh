@@ -1,6 +1,10 @@
 # 2.4 案例研究：渗流
 
-> 译文：[`introcs.cs.princeton.edu/python/24percolation`](https://introcs.cs.princeton.edu/python/24percolation)
+> 原文：[`introcs.cs.princeton.edu/python/24percolation`](https://introcs.cs.princeton.edu/python/24percolation)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 我们通过考虑一个有趣的科学问题的案例研究来结束我们对函数和模块的研究：一个用于研究一种名为*渗流*的自然模型的*蒙特卡罗*模拟。
 

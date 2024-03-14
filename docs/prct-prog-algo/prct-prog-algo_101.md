@@ -1,6 +1,11 @@
 # 4\.   图
 
 > 原文：[`algs4.cs.princeton.edu/40graphs`](https://algs4.cs.princeton.edu/40graphs)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## 概述。
 

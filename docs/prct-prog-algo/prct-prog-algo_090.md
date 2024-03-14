@@ -1,6 +1,11 @@
 # 2.1   基本排序
 
 > 原文：[`algs4.cs.princeton.edu/21elementary`](https://algs4.cs.princeton.edu/21elementary)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们将学习两种基本的排序方法（选择排序和插入排序）以及其中一种的变体（希尔排序）。
 

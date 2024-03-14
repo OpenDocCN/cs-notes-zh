@@ -1,6 +1,11 @@
 # 2.1   静态方法
 
 > 原文：[`introcs.cs.princeton.edu/java/21function`](https://introcs.cs.princeton.edu/java/21function)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 实现函数的 Java 构造称为*静态方法*。
 

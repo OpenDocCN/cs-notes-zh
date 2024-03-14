@@ -1,6 +1,11 @@
 # 3.1   使用数据类型
 
 > 原文：[`introcs.cs.princeton.edu/java/31datatype`](https://introcs.cs.princeton.edu/java/31datatype)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 *数据类型*是一组值和一组在这些值上定义的操作。���Java 中，您一直在使用原始数据类型，这些数据类型由广泛的适用于各种应用程序的*引用类型*库补充。在本节中，我们考虑用于字符串处理和图像处理的引用类型。
 

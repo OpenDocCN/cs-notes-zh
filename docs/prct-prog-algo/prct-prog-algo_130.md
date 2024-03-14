@@ -1,6 +1,11 @@
 # 1\.   组合结构和普通生成函数
 
 > 原文：[`ac.cs.princeton.edu/10ogf`](https://ac.cs.princeton.edu/10ogf)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## I.1 符号枚举方法
 

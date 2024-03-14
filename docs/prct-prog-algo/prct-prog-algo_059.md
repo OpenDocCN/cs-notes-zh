@@ -1,6 +1,11 @@
 # 1\. 编程元素
 
 > 原文：[`introcs.cs.princeton.edu/python/10elements`](https://introcs.cs.princeton.edu/python/10elements)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章的目标是说服您，编写计算机程序比写段文字（如段落或文章）更容易。写散文很困难：我们在学校花了很多年学习如何做到这一点。相比之下，只需几个基本构件就足以让我们进入一个世界，在这个世界中，我们可以利用计算机帮助我们解决各种各样的迷人问题，否则这些问题将无法解决。在本章中，我们将带领您了解这些基本构件，让您开始使用 Python 进行编程，并研究各种有趣的程序。
 

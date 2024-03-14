@@ -1,6 +1,11 @@
 # 8.2 编译器、解释器和仿真器
 
 > 原文：[`introcs.cs.princeton.edu/java/82compiler`](https://introcs.cs.princeton.edu/java/82compiler)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在大规模施工中。
 

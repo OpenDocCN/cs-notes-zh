@@ -1,6 +1,11 @@
 # 1.1 您的第一个程序
 
 > 原文：[`introcs.cs.princeton.edu/python/11hello`](https://introcs.cs.princeton.edu/python/11hello)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们的计划是通过带领您完成运行简单程序所需的基本步骤，将您引入 Python 编程的世界。*Python 系统*（以下简称*Python*）是一组应用程序，与您习惯使用的其他应用程序（如文字处理器、电子邮件程序和网络浏览器）类似。与任何应用程序一样，您需要确保 Python 已正确安装在您的计算机上。您还需要一个文本编辑器和一个终端应用程序。您的第一个任务是按照安装这样一个 Python 编程环境的说明。
 

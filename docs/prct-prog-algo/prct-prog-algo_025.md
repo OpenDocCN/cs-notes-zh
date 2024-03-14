@@ -1,6 +1,11 @@
 # 5\.   计算理论
 
 > 原文：[`introcs.cs.princeton.edu/java/50theory`](https://introcs.cs.princeton.edu/java/50theory)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章正在大力构建中。
 

@@ -1,6 +1,11 @@
 # 1.4   数组
 
 > 原文：[`introcs.cs.princeton.edu/java/14array`](https://introcs.cs.princeton.edu/java/14array)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ![一个数组](img/ef5f89a1aa8cf70f523802dda05f9042.png) 在本节中，我们考虑一种称为*数组*的基本构造。数组存储一系列相同类型的值。我们不仅想��储值，还想能够快速访问每个单独的值。我们用来引用数组中单个值的方法是对它们进行编号，然后*索引*它们——如果我们有*n*个值，我们将它们视为从 0 到*n*−1 编号。
 

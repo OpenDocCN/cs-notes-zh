@@ -1,6 +1,11 @@
 # 5.5   数据压缩
 
 > 原文：[`algs4.cs.princeton.edu/55compression`](https://algs4.cs.princeton.edu/55compression)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在大规模施工中。
 

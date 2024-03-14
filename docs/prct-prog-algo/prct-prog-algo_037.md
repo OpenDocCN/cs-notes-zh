@@ -1,6 +1,11 @@
 # 7.  构建计算设备
 
 > 原文：[`introcs.cs.princeton.edu/java/70circuits`](https://introcs.cs.princeton.edu/java/70circuits)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章正在进行重大改造。
 

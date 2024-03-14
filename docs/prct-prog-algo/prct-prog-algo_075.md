@@ -1,6 +1,11 @@
 # 3.4 案例研究：N 体模拟
 
 > 原文：[`introcs.cs.princeton.edu/python/34nbody`](https://introcs.cs.princeton.edu/python/34nbody)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们考虑一个展示面向对象编程的新程序。我们的任务是编写一个动态模拟*n*个物体在相互引力影响下的运动的程序。这个*n*体模拟问题是由艾萨克·牛顿在 350 多年前首次提出的，科学家们今天仍在密切研究。
 

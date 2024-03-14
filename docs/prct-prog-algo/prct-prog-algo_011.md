@@ -1,6 +1,11 @@
 # 2.2   库和客户端
 
 > 原文：[`introcs.cs.princeton.edu/java/22library`](https://introcs.cs.princeton.edu/java/22library)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 您编写的每个程序都包含在一个`.java`文件中的 Java 代码。对于大型程序，将所有代码放在一个文件中是受限制和不必要的。幸运的是，在 Java 中很容易引用另一个文件中定义的方法。这种能力对我们的编程风格有两个重要的影响：
 

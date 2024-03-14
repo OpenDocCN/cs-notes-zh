@@ -1,6 +1,11 @@
 # 4.2   排序和搜索
 
 > 原文：[`introcs.cs.princeton.edu/java/42sort`](https://introcs.cs.princeton.edu/java/42sort)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 排序问题是将一个数组中的项按升序重新排列。在本节中，我们将详细讨论两种经典的排序和搜索算法——二分搜索和归并排序——以及它们的效率在多个关键应用中发挥的作用。
 

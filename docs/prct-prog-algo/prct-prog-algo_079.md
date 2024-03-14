@@ -1,6 +1,11 @@
 # 4.3 栈和队列
 
 > 原文：[`introcs.cs.princeton.edu/python/43stack`](https://introcs.cs.princeton.edu/python/43stack)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 <title>4.3 栈和队列</title>
 

@@ -1,6 +1,11 @@
 # 2.3   快速排序
 
 > 原文：[`algs4.cs.princeton.edu/23quicksort`](https://algs4.cs.princeton.edu/23quicksort)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 快速排序很受欢迎，因为它不难实现，适用于各种不同类型的输入数据，并且在典型应用中比任何其他排序方法都要快得多。它是原地排序（仅使用一个小型辅助栈），平均需要时间与 N log N 成正比来对 N 个项进行排序，并且具有极短的内部循环。
 

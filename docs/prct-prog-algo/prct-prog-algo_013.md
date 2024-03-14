@@ -1,6 +1,11 @@
 # 2.4   案例研究：渗流
 
 > 原文：[`introcs.cs.princeton.edu/java/24percolation`](https://introcs.cs.princeton.edu/java/24percolation)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 我们通过考虑开发一个解决有趣科学问题的程序的案例研究来结束我们对函数和模块的研究。作为研究一种称为*渗流*的自然模型的*蒙特卡罗*模拟。
 

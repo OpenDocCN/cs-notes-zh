@@ -1,6 +1,11 @@
 # 3.1   基本符号表
 
 > 原文：[`algs4.cs.princeton.edu/31elementary`](https://algs4.cs.princeton.edu/31elementary)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## 符号表。
 

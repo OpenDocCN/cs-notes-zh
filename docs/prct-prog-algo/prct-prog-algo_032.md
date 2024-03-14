@@ -1,6 +1,11 @@
 # 6\.   一台计算机
 
 > 原文：[`introcs.cs.princeton.edu/java/60machine`](https://introcs.cs.princeton.edu/java/60machine)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章节正在大力施工中。
 

@@ -1,6 +1,11 @@
 # 5\. 应用有理和亚纯渐近
 
 > 原文：[`ac.cs.princeton.edu/50applications`](https://ac.cs.princeton.edu/50applications)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## V.1 有理和亚纯渐近的路线图
 

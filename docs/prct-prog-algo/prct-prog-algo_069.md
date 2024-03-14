@@ -1,6 +1,11 @@
 # 2.3 递归
 
 > 原文：[`introcs.cs.princeton.edu/python/23recursion`](https://introcs.cs.princeton.edu/python/23recursion)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 从一个函数调用另一个函数的想法立即引出了函数调用*自身*的可能性。Python 中的函数调用机制支持这种可能性，这被称为*递归*。递归是一种强大的通用编程技术，是许多至关重要的计算应用的关键，从组合搜索和排序方法（提供信息处理的基本支持（第四章））到用于信号处理的快速傅里叶变换。
 

@@ -1,6 +1,11 @@
 # 7.2   基本电路模型
 
 > 原文：[`introcs.cs.princeton.edu/java/72circuit`](https://introcs.cs.princeton.edu/java/72circuit)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章节正在大规模施工中。
 

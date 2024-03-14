@@ -1,6 +1,11 @@
 # 1.2   数据抽象
 
 > 原文：[`algs4.cs.princeton.edu/12oop`](https://algs4.cs.princeton.edu/12oop)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## 面向对象编程。
 

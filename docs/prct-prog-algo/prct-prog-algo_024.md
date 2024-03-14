@@ -1,6 +1,11 @@
 # 4.5   案例研究：小世界现象
 
 > 原文：[`introcs.cs.princeton.edu/java/45graph`](https://introcs.cs.princeton.edu/java/45graph)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 我们用于研究实体之间成对连接性质的数学模型称为*图*。一些图表现出一种特定属性，称为[小世界现象](https://en.wikipedia.org/wiki/Small-world_network)。这是一个基本概念，即使我们每个人的熟人相对较少，但我们之间存在着相对较短的熟人链���![图术语](img/22cf48cff8e9caf51f6bbc2de31bd58f.png)
 

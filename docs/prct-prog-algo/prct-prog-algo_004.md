@@ -1,6 +1,11 @@
 # 1.2   数据的内置类型
 
 > 原文：[`introcs.cs.princeton.edu/java/12types`](https://introcs.cs.princeton.edu/java/12types)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 *数据类型*是一组值和在其上定义的一组操作。例如，我们熟悉数字及其上定义的操作，如加法和乘法。在 Java 中有八种不同的内置数据类型，主要是不同类型的数字。我们经常使用系统类型来表示字符字符串，因此我们在这里也考虑它。
 

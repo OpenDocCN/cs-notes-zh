@@ -1,6 +1,11 @@
 # 3.3   设计数据类型
 
 > 原文：[`introcs.cs.princeton.edu/java/33design`](https://introcs.cs.princeton.edu/java/33design)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们讨论*封装*、*不可变性*和*继承*，特别关注这些机制在*数据类型设计*中的应用，以实现模块化编程，促进调试，并编写清晰和正确的代码。
 

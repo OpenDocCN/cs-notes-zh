@@ -1,6 +1,11 @@
 # 3\.   面向对象编程
 
 > 原文：[`introcs.cs.princeton.edu/java/30oop`](https://introcs.cs.princeton.edu/java/30oop)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## 概述。
 

@@ -1,6 +1,11 @@
 # 6.1 表示信息
 
 > 原文：[`introcs.cs.princeton.edu/java/61data`](https://introcs.cs.princeton.edu/java/61data)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 一切适合数字计算机处理的内容都表示为一系列 0 和 1，无论是数字数据、文本、可执行文件、图像、音频还是视频。计算机中给定一系列比特的含义取决于上下文。在本节中，我们描述了如何以二进制、十进制和十六进制表示整数，以及如何在不同表示之间进行转换。我们还描述了如何表示负整数和浮点数。
 

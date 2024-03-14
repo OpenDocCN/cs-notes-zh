@@ -1,6 +1,11 @@
 # 7.3 组合电路
 
 > 原文：[`introcs.cs.princeton.edu/java/73combinational`](https://introcs.cs.princeton.edu/java/73combinational)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章节正在大规模施工中。
 

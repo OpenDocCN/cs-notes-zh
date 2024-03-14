@@ -1,6 +1,11 @@
 # 1.4   算法分析
 
 > 原文：[`algs4.cs.princeton.edu/14analysis`](https://algs4.cs.princeton.edu/14analysis)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 随着人们在使用计算机方面的经验增加，他们用计算机来解决困难问题或处理大量数据，不可避免地会引发这样的问题：
 

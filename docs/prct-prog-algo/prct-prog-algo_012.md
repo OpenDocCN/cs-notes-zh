@@ -1,6 +1,11 @@
 # 2.3   递归
 
 > 原文：[`introcs.cs.princeton.edu/java/23recursion`](https://introcs.cs.princeton.edu/java/23recursion)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 从另一个函数调用一个函数的想法立即暗示了函数调用*自身*的可能性。Java 中的函数调用机制支持这种可能性，这被称为*递归*。
 

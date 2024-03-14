@@ -1,6 +1,11 @@
 # 6\.   上下文
 
 > 原文：[`algs4.cs.princeton.edu/60context`](https://algs4.cs.princeton.edu/60context)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章节正在大规模施工中。
 

@@ -1,6 +1,11 @@
 # 1.5 输入和输出
 
 > 原文：[`introcs.cs.princeton.edu/python/15inout`](https://introcs.cs.princeton.edu/python/15inout)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们扩展了我们一直在使用的简单抽象集合（命令行输入和标准输出），作为我们的 Python 程序与外部世界之间接口的一部分，包括*标准输入*、*标准绘图*和*标准音频*。标准输入使我们能够方便地组合处理任意数量的输入的程序，并与我们的程序进行交互；标准绘图使我们能够处理图形；标准音频添加了声音。
 

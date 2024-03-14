@@ -1,6 +1,11 @@
 # 5.2   查找树
 
 > 原文：[`algs4.cs.princeton.edu/52trie`](https://algs4.cs.princeton.edu/52trie)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在大规模建设中。
 

@@ -1,6 +1,11 @@
 # 6.6   难解性
 
 > 原文：[`algs4.cs.princeton.edu/66intractability`](https://algs4.cs.princeton.edu/66intractability)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在建设中。复杂性理论的目标是理解高效计算的本质。我们已经学习了算法分析，这使我们能够根据它们消耗的资源量对*算法*进行分类。在本节中，我们将学习一个丰富的*问题*类别，至今还没有人能够设计出高效的算法。
 

@@ -1,6 +1,11 @@
 # 3.2   创建数据类型
 
 > 原文：[`introcs.cs.princeton.edu/java/32class`](https://introcs.cs.princeton.edu/java/32class)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们介绍了使我们能够创建用户定义数据类型的 Java 机制。我们考虑了一系列示例，从带电粒子和复数到乌龟图形和股票账户。
 

@@ -1,6 +1,11 @@
 # 3.4   哈希表
 
 > 原文：[`algs4.cs.princeton.edu/34hash`](https://algs4.cs.princeton.edu/34hash)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 如果键是小整数，我们可以使用数组来实现符号表，通过将键解释为数组索引，以便我们可以将与键 i 关联的值存储在数组位置 i 中。在本节中，我们考虑*哈希*，这是一种处理更复杂类型键的简单方法的扩展。我们通过进行算术运算将键转换为数组索引来引用键值对。
 

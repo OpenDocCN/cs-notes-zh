@@ -1,6 +1,11 @@
 # 6.3 后缀数组
 
 > 原文：[`algs4.cs.princeton.edu/63suffix`](https://algs4.cs.princeton.edu/63suffix)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章正在大规模施工中。
 

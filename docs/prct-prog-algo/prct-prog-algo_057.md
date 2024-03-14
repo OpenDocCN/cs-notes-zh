@@ -1,6 +1,11 @@
 # 9.8 蒙特卡罗模拟
 
 > 原文：[`introcs.cs.princeton.edu/java/98simulation`](https://introcs.cs.princeton.edu/java/98simulation)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在大规模施工中。
 

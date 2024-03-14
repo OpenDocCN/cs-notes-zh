@@ -1,6 +1,11 @@
 # 1.3 条件语句和循环
 
 > 原文：[`introcs.cs.princeton.edu/python/13flow`](https://introcs.cs.princeton.edu/python/13flow)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 我们使用术语*控制流*来指代程序中执行的语句序列。到目前为止，我们检查过的所有程序都具有简单的控制流：语句按给定顺序依次执行。大多数程序具有更复杂的结构，其中语句可能会根据某些条件（条件语句）而执行或不执行，或者一组语句会多次执行（循环）。
 

@@ -1,6 +1,11 @@
 # 1.5 输入和输出
 
 > 原文：[`introcs.cs.princeton.edu/java/15inout`](https://introcs.cs.princeton.edu/java/15inout)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们将扩展我们一直在使用的简单抽象集合（命令行输入和标准输出）以包括*标准输入*、*标准绘图*和*标准音频*，以便我们编写处理任意数量输入的程序并与我们的程序交互；标准绘图使我们能够处理图形；标准音频添加了声音。 ![俯视图](img/88eb9904d7cca953a53c006d854ae895.png)
 

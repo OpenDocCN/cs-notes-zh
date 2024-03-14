@@ -1,6 +1,11 @@
 # 9.3\. 数值积分
 
 > 原文：[`introcs.cs.princeton.edu/java/93integration`](https://introcs.cs.princeton.edu/java/93integration)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在大力施工中。
 

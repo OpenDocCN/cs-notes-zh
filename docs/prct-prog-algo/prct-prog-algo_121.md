@@ -1,6 +1,11 @@
 # 2\.   递归关系
 
 > 原文：[`aofa.cs.princeton.edu/20recurrence`](https://aofa.cs.princeton.edu/20recurrence)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章重点讨论各种类型的*递归关系*的基本数学性质，这些关系在通过将程序的递归表示直接映射到描述其属性的函数的递归表示时经常出现。
 

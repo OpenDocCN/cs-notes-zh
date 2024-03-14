@@ -1,6 +1,11 @@
 # 2.2   归并排序
 
 > 原文：[`algs4.cs.princeton.edu/22mergesort`](https://algs4.cs.princeton.edu/22mergesort)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 我们在本节中考虑的算法基于一种简单的操作，称为*合并*：将两个有序数组组合成一个更大的有序数组。这个操作立即适用于一种简单的递归排序方法，称为*归并排序*：将数组分成两半，对这两半进行排序（递归），然后合并结果。
 

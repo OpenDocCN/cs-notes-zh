@@ -1,6 +1,11 @@
 # 1.1   您的第一个 Java 程序：   Hello World
 
 > 原文：[`introcs.cs.princeton.edu/java/11hello`](https://introcs.cs.princeton.edu/java/11hello)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们的计划是通过带领您完成三个基本步骤来进入 Java 编程的世界，以便让一个简单的程序运行起来。与任何应用程序一样，您需要确保 Java 已正确安装在您的计算机上。您还需要一个编辑器和一个终端应用程序。以下是三种流行家用操作系统的系统特定说明。[Mac OS X · Windows · Linux]
 

@@ -1,6 +1,11 @@
 # 7\.   排列
 
 > 原文：[`aofa.cs.princeton.edu/70permutations`](https://aofa.cs.princeton.edu/70permutations)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章概述了排列（数字`1`到`N`的排序）的组合性质，并展示了它们与基本且广泛使用的排序算法之间的自然关系。
 

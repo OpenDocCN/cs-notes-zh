@@ -1,6 +1,11 @@
 # 5.5   难解性
 
 > 原文：[`introcs.cs.princeton.edu/java/55intractability`](https://introcs.cs.princeton.edu/java/55intractability)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在进行重大改建。
 

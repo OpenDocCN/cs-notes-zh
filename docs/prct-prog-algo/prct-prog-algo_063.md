@@ -1,6 +1,11 @@
 # 1.4 数组
 
 > 原文：[`introcs.cs.princeton.edu/python/14array`](https://introcs.cs.princeton.edu/python/14array)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 *数据结构*是一种组织我们希望用计算机程序处理的数据的方式。*一维数组*（或*数组*）是一种存储对象序列（引用）的数据结构。我们将数组中的对象称为其*元素*。我们用来引用数组中的元素的方法是*编号*，然后*索引*它们。如果我们有* n *个元素在序列中，我们认为它们从 0 到* n *-1 编号。然后，我们可以通过引用该范围内的任何整数*i*的第*i*个元素来明确指定其中的一个。
 

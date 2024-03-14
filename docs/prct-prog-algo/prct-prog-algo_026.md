@@ -1,6 +1,11 @@
 # 5.1   形式语言
 
 > 原文：[`introcs.cs.princeton.edu/java/51language`](https://introcs.cs.princeton.edu/java/51language)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们介绍形式语言、正规表达式、确定性有限状态自动机和非确定性有限状态自动机。 
 

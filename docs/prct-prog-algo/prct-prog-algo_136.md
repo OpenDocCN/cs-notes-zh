@@ -1,6 +1,11 @@
 # 7\.   奇点分析的应用
 
 > 原文：[`ac.cs.princeton.edu/70applications`](https://ac.cs.princeton.edu/70applications)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## VII.1 奇点分析渐近的路线图
 

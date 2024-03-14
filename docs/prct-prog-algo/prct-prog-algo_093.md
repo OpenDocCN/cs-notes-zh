@@ -1,6 +1,11 @@
 # 2.4 优先队列
 
 > 原文：[`algs4.cs.princeton.edu/24pq`](https://algs4.cs.princeton.edu/24pq)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 许多应用程序要求我们按顺序处理具有键的项目，但不一定是完全排序的顺序，也不一定一次处理所有项目。通常，我们收集一组项目，然后处理具有最大键的项目，然后可能收集更多项目，然后处理具有当前最大键的项目，依此类推。在这种环境中，一个适当的数据类型支持两个操作：*删除最大*和*插入*。这样的数据类型称为*优先队列*。
 

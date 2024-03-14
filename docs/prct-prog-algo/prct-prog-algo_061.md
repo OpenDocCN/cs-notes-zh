@@ -1,6 +1,11 @@
 # 1.2 数据的内置类型
 
 > 原文：[`introcs.cs.princeton.edu/python/12types`](https://introcs.cs.princeton.edu/python/12types)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 *数据类型*是一组值和在这些值上定义的一组操作。许多数据类型内置于 Python 语言中。在本节中，我们考虑 Python 内置的数据类型`int`（用于整数）、`float`（用于浮点数）、`str`（用于字符序列）和`bool`（用于真假值）。
 

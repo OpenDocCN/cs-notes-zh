@@ -1,6 +1,10 @@
 # 1.6   案例研究：   随机网络冲浪者
 
-> 译文：[`introcs.cs.princeton.edu/java/16pagerank`](https://introcs.cs.princeton.edu/java/16pagerank)
+> 原文：[`introcs.cs.princeton.edu/java/16pagerank`](https://introcs.cs.princeton.edu/java/16pagerank)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 通过网络进行交流已经成为日常生活的一个重要组成部分。这种交流部分得益于对网络结构的科学研究。我们考虑一个简单的模型，称为*随机冲浪者模型*。我们认为网络是一组固定的页面��每个页面包含一组固定的*超链接*，每个链接引用到其他页面。我们研究一个人（随机冲浪者）从页面到页面随机移动时会发生什么，无论是通过在地址栏中输入页面名称还是通过点击当前页面上的链接。
 

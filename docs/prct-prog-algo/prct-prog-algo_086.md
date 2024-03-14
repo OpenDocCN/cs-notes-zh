@@ -1,6 +1,11 @@
 # 1.3   袋子、队列和栈
 
 > 原文：[`algs4.cs.princeton.edu/13stacks`](https://algs4.cs.princeton.edu/13stacks)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 几种基本数据类型涉及对象的集合。具体来说，值的集合是对象的集合，操作围绕向集合中添加、删除或检查对象展开。在本节中，我们考虑了三种这样的数据类型，称为袋子、队列和栈。它们在规定下一个要移除或检查的对象方面有所不同。
 

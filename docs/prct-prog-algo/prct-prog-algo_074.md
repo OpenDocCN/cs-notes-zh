@@ -1,6 +1,10 @@
 # 3.3 设计数据类型
 
-> 译文：[`introcs.cs.princeton.edu/python/33design`](https://introcs.cs.princeton.edu/python/33design)
+> 原文：[`introcs.cs.princeton.edu/python/33design`](https://introcs.cs.princeton.edu/python/33design)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 在本节中，我们将重点放在开发 API 作为任何程序开发的关键步骤上。我们需要考虑各种替代方案，了解它们对客户端程序和实现的影响，并完善设计以在客户端需求和可能的实现策略之间取得适当平衡。
 

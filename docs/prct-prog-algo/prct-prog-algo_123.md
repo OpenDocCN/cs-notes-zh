@@ -1,6 +1,11 @@
 # 4\.   渐近逼近
 
 > 原文：[`aofa.cs.princeton.edu/40asymptotic`](https://aofa.cs.princeton.edu/40asymptotic)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章探讨了导出问题的近似解或近似精确解的方法，这些方法使我们能够在分析算法时对感兴趣的数量进行*简洁*和*精确*的估计。
 

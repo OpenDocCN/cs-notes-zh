@@ -1,6 +1,11 @@
 # 3.5   搜索应用
 
 > 原文：[`algs4.cs.princeton.edu/35applications`](https://algs4.cs.princeton.edu/35applications)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在大规模施工中。
 

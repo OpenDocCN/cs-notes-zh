@@ -1,6 +1,11 @@
 # 8.4 网络
 
 > 原文：[`introcs.cs.princeton.edu/java/84network`](https://introcs.cs.princeton.edu/java/84network)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在进行重大改建。
 

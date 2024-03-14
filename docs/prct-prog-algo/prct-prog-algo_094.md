@@ -1,6 +1,11 @@
 # 2.5   排序应用
 
 > 原文：[`algs4.cs.princeton.edu/25applications`](https://algs4.cs.princeton.edu/25applications)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 排序算法和优先队列在各种应用中被广泛使用。本节的目的是简要概述其中一些应用。
 

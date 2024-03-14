@@ -1,6 +1,11 @@
 # 3.4   案例研究:   N 体模拟
 
 > 原文：[`introcs.cs.princeton.edu/java/34nbody`](https://introcs.cs.princeton.edu/java/34nbody)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们编写一个面向对象的程序，动态模拟 *n* 个身体在相互引力影响下的运动。
 

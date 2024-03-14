@@ -1,6 +1,11 @@
 # 4\. 算法和数据结构
 
 > 原文：[`introcs.cs.princeton.edu/python/40algorithms`](https://introcs.cs.princeton.edu/python/40algorithms)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章介绍了作为各种应用的基本构建块的基本数据类型。我们提供完整的实现，尽管其中一些内置在 Python 中，这样你就可以清楚地了解它们的工作原理以及它们为什么重要。
 

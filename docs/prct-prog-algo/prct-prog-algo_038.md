@@ -1,6 +1,11 @@
 # 7.1   布尔逻辑
 
 > 原文：[`introcs.cs.princeton.edu/java/71boolean`](https://introcs.cs.princeton.edu/java/71boolean)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 *布尔函数*是将参数映射到值的数学函数，其中范围（函数参数）���定义域（函数值）的允许值只有两个值— `*true*`和`*false*`（或`*0*`和`*1*`）。布尔函数的研究被称为*布尔逻辑*。
 

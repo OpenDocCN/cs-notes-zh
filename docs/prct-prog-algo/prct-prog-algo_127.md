@@ -1,6 +1,11 @@
 # 8\.   字符串
 
 > 原文：[`aofa.cs.princeton.edu/80strings`](https://aofa.cs.princeton.edu/80strings)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章研究*字符串*的基本组合特性，即从固定字母表中提取的字符或字母序列，并介绍处理字符串的算法，从计算理论核心的基本方法到具有许多重要应用的实用文本处理方法。
 

@@ -1,6 +1,11 @@
 # 3\. 面向对象编程
 
 > 原文：[`introcs.cs.princeton.edu/python/30oop`](https://introcs.cs.princeton.edu/python/30oop)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在*面向对象编程*中，我们将一个大型且可能复杂的程序分解为一组相互作用的元素或*对象*。这个想法源自于对（软件中）建模现实世界实体的概念，如电子、人、建筑物或太阳系，并很容易扩展到对抽象实体的建模，如位、数字、颜色、图像或程序。
 

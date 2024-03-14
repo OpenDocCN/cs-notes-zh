@@ -1,6 +1,11 @@
 # 4.2 排序和搜索
 
 > 原文：[`introcs.cs.princeton.edu/python/42sort`](https://introcs.cs.princeton.edu/python/42sort)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 <title>排序和搜索</title>
 

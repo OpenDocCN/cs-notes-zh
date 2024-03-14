@@ -1,6 +1,11 @@
 # 2\. 标记结构和指数生成函数
 
 > 原文：[`ac.cs.princeton.edu/20egf`](https://ac.cs.princeton.edu/20egf)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## II.1 有标签类
 

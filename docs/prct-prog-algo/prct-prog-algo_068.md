@@ -1,6 +1,11 @@
 # 2.2 模块和客户端
 
 > 原文：[`introcs.cs.princeton.edu/python/22module`](https://introcs.cs.princeton.edu/python/22module)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 到目前为止，你编写的每个程序都包含在一个单独的 .py 文件中的 Python 代码。对于大型程序来说，将所有代码放在一个文件中是受限制且不必要的。幸运的是，在 Python 中很容易调用另一个文件中定义的函数。这种能力有两个重要的后果：
 

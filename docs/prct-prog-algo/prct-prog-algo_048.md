@@ -1,6 +1,11 @@
 # 8.5 应用系统
 
 > 原文：[`introcs.cs.princeton.edu/java/85application`](https://introcs.cs.princeton.edu/java/85application)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 这一部分正在进行重大改造。
 

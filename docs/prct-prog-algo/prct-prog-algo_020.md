@@ -1,6 +1,11 @@
 # 4.1   算法分析
 
 > 原文：[`introcs.cs.princeton.edu/java/41analysis`](https://introcs.cs.princeton.edu/java/41analysis)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，您将学会在编程时尊重一个原则：*注意成本。* 为了研究运行它们的成本，我们通过*科学方法*研究我们的程序本身。我们还应用数学分析来推导成本的简洁模型。
 

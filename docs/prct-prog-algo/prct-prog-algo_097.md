@@ -1,6 +1,11 @@
 # 3.2   二叉搜索树
 
 > 原文：[`algs4.cs.princeton.edu/32bst`](https://algs4.cs.princeton.edu/32bst)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 我们研究了一种符号表实现，它将链表中的插入灵活性与有序数组中的搜索效率结合起来。具体来说，每个节点使用两个链接会导致基于二叉搜索树数据结构的高效符号表实现，这被认为是计算机科学中最基本的算法之一。
 

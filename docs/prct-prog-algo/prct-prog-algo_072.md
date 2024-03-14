@@ -1,6 +1,11 @@
 # 3.1 使用数据类型
 
 > 原文：[`introcs.cs.princeton.edu/python/31datatype`](https://introcs.cs.princeton.edu/python/31datatype)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本书站点的前两章中，我们的程序仅��于对数字、布尔值和字符串的操作。当然，原因是到目前为止我们遇到的 Python 数据类型 —— `int`、`float`、`bool`和`str` —— 使用熟悉的操作操作数字、布尔值和字符串。在本章中，我们开始考虑其他数据类型。
 

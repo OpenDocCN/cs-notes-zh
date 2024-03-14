@@ -1,6 +1,11 @@
 # 4.4   最短路径
 
 > 原文：[`algs4.cs.princeton.edu/44sp`](https://algs4.cs.princeton.edu/44sp)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## 最短路径。
 

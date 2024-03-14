@@ -1,6 +1,11 @@
 # 4\. 复分析，有理和亚纯渐近
 
 > 原文：[`ac.cs.princeton.edu/40complex`](https://ac.cs.princeton.edu/40complex)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 ## IV.1 生成函数作为解析对象
 

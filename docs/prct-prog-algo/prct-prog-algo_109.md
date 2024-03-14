@@ -1,6 +1,11 @@
 # 5.3 �� 子字符串搜索
 
 > 原文：[`algs4.cs.princeton.edu/53substring`](https://algs4.cs.princeton.edu/53substring)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本节正在大规模施工中。在长字符串中搜索 - 在线。
 

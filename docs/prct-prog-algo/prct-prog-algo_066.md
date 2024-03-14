@@ -1,6 +1,11 @@
 # 2\. 函数和模块
 
 > 原文：[`introcs.cs.princeton.edu/python/20functions`](https://introcs.cs.princeton.edu/python/20functions)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本章中，我们考虑了一个对控制流程具有深远影响的概念，就像条件语句和循环一样重要：*函数*，它允许我们在不同代码段之间传递控制。函数很重要，因为它们允许我们在程序中清晰地分离任务，并且因为它们提供了一个通用机制，使我们能够重用代码。
 

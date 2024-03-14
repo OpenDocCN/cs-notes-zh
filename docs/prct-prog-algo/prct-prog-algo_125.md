@@ -1,6 +1,11 @@
 # 6\.   树
 
 > 原文：[`aofa.cs.princeton.edu/60trees`](https://aofa.cs.princeton.edu/60trees)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章研究了许多不同类型的*树*的性质，这些树是许多实际算法中隐式和显式出现的基本结构。我们的目标是提供对树的组合分析广泛文献中的结果的访问，同时为大量算法应用奠定基础。
 

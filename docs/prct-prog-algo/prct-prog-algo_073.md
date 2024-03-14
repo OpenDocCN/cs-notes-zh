@@ -1,6 +1,11 @@
 # 3.2 创建数据类型
 
 > 原文：[`introcs.cs.princeton.edu/python/32class`](https://introcs.cs.princeton.edu/python/32class)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在上一节中，我们解释了如何在 Python 中*使用*我们自己的数据类型。在本节中，我们将解释如何*实现*它们。
 

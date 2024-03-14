@@ -1,6 +1,10 @@
 # 5\.   解析组合学
 
-> 译文：[`aofa.cs.princeton.edu/50ac`](https://aofa.cs.princeton.edu/50ac)
+> 原文：[`aofa.cs.princeton.edu/50ac`](https://aofa.cs.princeton.edu/50ac)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 本章介绍了*解析组合学*，这是一种现代方法，用于研究我们在算法分析中经常遇到的组合结构。这种方法的基础是组合结构通常由简单的形式规则定义，这些规则是学习其属性的关键。这一观察的最终结果之一是，相对较小的一组*转移定理*最终产生了我们寻求的数量的准确近似值。图 5.1 概述了这个过程。生成函数是解析组合学中研究的中心对象。首先，我们直接将组合对象的形式定义转换为枚举对象或描述其属性的生成函数的定义。其次，我们使用经典数学分析来提取生成函数系数的估计。
 

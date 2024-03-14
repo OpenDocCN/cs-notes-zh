@@ -1,6 +1,11 @@
 # 4.3   栈和队列
 
 > 原文：[`introcs.cs.princeton.edu/java/43stack`](https://introcs.cs.princeton.edu/java/43stack)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 在本节中，我们介绍了两种密切相关的数据类型，用于操作任意大的对象集合：*栈*和*队列*。栈和队列是*集合*概念的特殊情况。每个都由四个操作特征化：*创建*集合，*插入*项目，*移除*项目，以及测试集合是否*为空*。
 

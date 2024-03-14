@@ -1,6 +1,11 @@
 # 4.4 符号表
 
 > 原文：[`introcs.cs.princeton.edu/python/44st`](https://introcs.cs.princeton.edu/python/44st)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 <title>4.4\. 符号表</title>
 

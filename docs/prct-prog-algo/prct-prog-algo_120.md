@@ -1,6 +1,11 @@
 # 1\.   算法分析
 
 > 原文：[`aofa.cs.princeton.edu/10analysis`](https://aofa.cs.princeton.edu/10analysis)
+> 
+> 译者：[飞龙](https://github.com/wizardforcel)
+> 
+> 协议：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 
 本章考虑了算法分析的一般动机以及研究算法性能特征的各种方法之间的关系。
 
