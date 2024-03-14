@@ -10,13 +10,13 @@
 
 ## 推入栈
 
-![推入栈的操作](img/15e8d56c1c189ab01164b1f7b69a6d09.png)
+![推入栈的操作](img/93c29ebd4fbed4e56b0ed1a5a9a272b8.png)
 
 一个*推入栈*（或简称*栈*）是基于后进先出（LIFO）策略的集合。当你点击一个超链接时，你的浏览器会显示新页面（并将其插入到栈中）。你可以继续点击超链接访问新页面。你可以通过点击返回按钮（从栈中移除）来重新访问上一页。推入栈提供了你期望的行���。
 
 按照传统，我们将栈的*插入*操作称为*push*，将栈的*移除*操作称为*pop*。我们还包括一个方法来测试栈是否为空。以下 API 总结了这些操作：
 
-> ![栈 API](img/1c97b64f5357430036732c1aafef38a7.png)
+> ![栈 API](img/e463f137b02b2a0a0ee68f4e3d421e1f.png)
 
 * * *
 
@@ -24,7 +24,7 @@
 
 用 Python 列表表示栈是一个自然的想法，但在继续阅读之前，值得你花一点时间考虑如何实现。
 
-![使用 Python 列表表示栈](img/21e435f1dd6935aeda859ce31dab0a37.png)
+![使用 Python 列表表示栈](img/d096425189ccc793dd7295987f80432e.png)
 
 自然地，你需要一个实例变量`a[]`来在 Python 列表中保存栈项。为了效率，我们按照插入顺序存储项，因为在 Python 列表的末尾插入和删除每次操作都需要恒定的摊销时间（而在开头插入和删除每次操作都需要线性时间）。
 
@@ -40,7 +40,7 @@
 
 arraystack.py 中的测试客户端允许使用任意序列的操作进行测试：对于标准输入中的每个字符串，它执行一个`push()`操作，除了由减号组成的字符串，对于该字符串，它执行一个`pop()`操作。右侧的图表是测试文件 tobe.txt 的跟踪。
 
-> ![arraystack.py 测试客户端的跟踪](img/12d13b11c25f82b894a6ea7d748c9c0a.png)
+> ![arraystack.py 测试客户端的跟踪](img/330558aa3be5e9b038fa196a41267828.png)
 
 这种实现的主要特点是它使用的空间与栈中的项数成线性关系，并且*推入和弹出操作需要恒定的摊销时间*。
 
@@ -66,7 +66,7 @@ class Node:
 
 现在，根据递归定义，我们可以用一个指向`Node`对象的引用来表示一个链表，该对象包含一个指向项目的引用和另一个`Node`对象的引用，该对象包含一个指向项目的引用和另一个`Node`对象的引用，依此类推。链表中的最后一个`Node`对象必须指示它确实是最后一个 Node 对象。在 Python 中，我们通过将最后一个`Node`对象的`next`实例变量赋值为`None`来实现这一点。请记住，`None`是 Python 的一个关键字 — 赋值为`None`的变量不引用任何对象。
 
-![将链表连接在一起](img/6709a7930e01779723b5ea70b5cda1db.png)
+![将链表连接在一起](img/0a946931c44b64cc3bc3e05dc9b7bea3.png)
 
 例如，要构建一个包含项目`'to'`、`'be'`和`'or'`的链表，我们执行以下代码：
 
@@ -79,11 +79,11 @@ first  = Node('to', second)
 
 为了简洁起见，我们使用术语*link*来指代`Node`引用。为了简单起见，当项目是一个字符串时（如我们的示例中），我们将其放在节点矩形内（而不是使用更准确的表达方式，即节点持有对外部字符串对象的引用）。这种视觉表示让我们可以专注于链接。
 
-![在链表中删除第一个节点](img/b61a321b80ecf2bb927fbabc352cac43.png)
+![在链表中删除第一个节点](img/5f1befc7d20637acf9c37dc4000db8a4.png)
 
 假设你想要从���表中*删除*第一个节点。这个操作很简单：只需将`first`赋值为`first.next`。通常，在执行此赋值之前，你会先检索项目（通过将其赋值给某个变量），因为一旦更改变量`first`，你可能会失去对先前引用的节点的任何访问权限。通常，`Node`对象变成孤立的，Python 的内存管理系统最终会回收它。
 
-![在链表开头插入新节点](img/74222d8688e1f51bff1917d1b3db9942.png)
+![在链表开头插入新节点](img/94dada6c5af0fe79f9146673477af883.png)
 
 现在，假设你想要在链表中*插入*一个新节点。最容易的地方是在链表的开头插入。例如，要在第一个节点为`first`的给定链表中的开头插入字符串`'not'`，我们将`first`保存在变量`oldFirst`中；创建一个新的`Node`，其`item`实例变量为`'not'`，`next`实例变量为`oldFirst`；然后将`first`指向该新的`Node`。
 
@@ -91,7 +91,7 @@ first  = Node('to', second)
 
 ### 使用链表实现栈。
 
-![linkedstack.py 测试客户端的跟踪](img/1b2e38d9b6b2de23a46eaf939428b5af.png) 程序 linkedstack.py 使用链表来实现栈。该实现基于一个私有的`_Node`类，该类与我们一直在使用的`Node`类相同。我们将该类设为私有，因为`Stack`数据类型的客户端不需要知道链表的任何细节。通常，我们给类名加上前导下划线以强调`Stack`客户端不应直接访问`_Node`类。
+![linkedstack.py 测试客户端的跟踪](img/4e12108fdc68c93f53e9323cee43b393.png) 程序 linkedstack.py 使用链表来实现栈。该实现基于一个私有的`_Node`类，该类与我们一直在使用的`Node`类相同。我们将该类设为私有，因为`Stack`数据类型的客户端不需要知道链表的任何细节。通常，我们给类名加上前导下划线以强调`Stack`客户端不应直接访问`_Node`类。
 
 ### 链表遍历。
 
@@ -166,7 +166,7 @@ Python 如何进行这种计算？我们可以通过编写一个 Python 程序�
 
 和往常一样，我们首先明确 API。再次按照传统，我们将队列插入操作命名为*enqueue*，将移除操作命名为*dequeue*，如下所示的 API。
 
-> ![队列 API](img/27d1aaba1faf78fafb740cb5e51d9e51.png)
+> ![队列 API](img/ff710be5d1be1d2635ffd9b1cac7d7c4.png)
 
 应用我们从栈中学到的知识，我们可以使用 Python 列表（调整大小的数组）或链表来开发实现，其中操作需要常数时间，与队列中的元素数量一起增长和缩小的内存。
 
@@ -208,7 +208,7 @@ Python 如何进行这种计算？我们可以通过编写一个 Python 程序�
 
 > | `% python mm1queue.py .167 .25` | `% python mm1queue.py .167 .20` |
 > | --- | --- |
-> | ![mm1queue.py 输出 1](img/3ecd40de309487836dacff66b32ee1a6.png) | ![mm1queue.py 输出 2](img/826c73c325929be435e8a3e403896cd5.png) |
+> | ![mm1queue.py 输出 1](img/0da8b87926adbe2b63b813108f49fa9e.png) | ![mm1queue.py 输出 2](img/57253b2205f9baba94e456a9c5bee3a9.png) |
 
 ### 资源分配。
 
@@ -220,7 +220,7 @@ Python 如何进行这种计算？我们可以通过编写一个 Python 程序�
 
 > | `% python loadbalance.py 50 500 1` | `% python loadbalance.py 50 500 2` |
 > | --- | --- |
-> | ![loadbalance.py 输出 1](img/3e6739b9bc9d3d87e3cd14627bcaf347.png) | ![loadbalance.py 输出 2](img/b17fa916e4a8c71376ddab1109bad00c.png) |
+> | ![loadbalance.py 输出 1](img/bfa04e6943ff576027978f75ad22ba3a.png) | ![loadbalance.py 输出 2](img/93b4753739bcc48833f713148508f0ee.png) |
 
 * * *
 
@@ -486,7 +486,7 @@ stack2 = LinkedStack()
 
 1.  **Deque.** 双端队列或*deque*（发音为“deck”）是栈和队列的结合体。编写一个使用链表实现此 API 的类`Deque`：
 
-    > ![Deque API](img/143c8cce33b94ba1ea51c10973ea32a0.png)
+    > ![Deque API](img/877585da9e2ad7d73200dd1866e84b4b.png)
 
 1.  **Josephus 问题。** 在古代的 Josephus 问题中，*n*个人处于困境，并同意采取以下策略来减少人口。他们排成一个圆圈（位置编号从 0 到*n*-1），并沿着圆圈进行，每隔*m*个人就淘汰一个人，直到只剩下一个人为止。传说中 Josephus 找到了一个位置，可以避免被淘汰。编写一个`Queue`客户端`josephus.py`，从命令行获取*n*和*m*，并写出人们被淘汰的顺序（从而向 Josephus 展示在圆圈中应该坐在哪里）。
 
@@ -502,7 +502,7 @@ stack2 = LinkedStack()
 
 1.  **删除第 i 个元素。** 实现一个支持以下 API 的类：
 
-    > ![GeneralizedQueue API](img/882cc09a421e0039bdf2ffe604b029df.png)
+    > ![GeneralizedQueue API](img/00a347e8e484959b6355bf343f1c7b56.png)
 
     首先，开发一个使用 Python 列表（调整大小的数组）实现的方法，然后开发一个使用链表实现的方法。（查看第 4.4 节末尾的“广义队列”创意练习，以获得使用二叉搜索树的更有效实现。）
 
@@ -514,7 +514,7 @@ stack2 = LinkedStack()
 
 1.  **随机队列。** 随机队列按照以下 API 存储一组项目：
 
-    > ![RandomQueue API](img/ffbe8da226a6ee91a53b29923e9e7dd7.png)
+    > ![RandomQueue API](img/1d218561c6496624b2f9f0939983a8a5.png)
 
     编写一个实现此 API 的类`RandomQueue`。*提示*：使用 Python 列表（调整大小的数组）表示，就像 arraystack.py 中一样。要删除一个项目，将一个随机位置（从 0 到*n*-1 索引）的项目与最后一个位置（索引*n*-1）的项目交换。然后删除并返回最后一个对象。编写一个客户端，使用`RandomQueue`以随机顺序写入一副卡牌。
 
@@ -524,7 +524,7 @@ stack2 = LinkedStack()
 
 1.  **文本编辑器缓冲区。** 为文本编辑器中的缓冲区开发一个数据类型，实现以下 API：
 
-    > ![缓冲区 API](img/fb4541823e15dcb8a3d77b41c99d3f22.png)
+    > ![缓冲区 API](img/cae25575b02fb5365e88ebb79dc4256f.png)
 
     *提示*：使用两个栈。
 

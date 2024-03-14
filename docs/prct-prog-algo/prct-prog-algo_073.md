@@ -16,7 +16,7 @@
 
 我们在下面重复了 Charge API。我们已经看过 API 作为如何在客户端代码中使用数据类型的规范；现在看它们作为如何实现数据类型的规范。
 
-> ![Charge API](img/e557eacb2fb9b790687584395eab1e07.png)
+> ![Charge API](img/63933395beedd55b9f058d52a16d2d7b.png)
 
 ### 类。
 
@@ -35,13 +35,13 @@ c = Charge(x0, y0, q0)
 
 当客户端调用构造函数时，Python 的默认构造过程会创建指定类型的新对象，调用`__init__()`方法来定义和初始化实例变量，并返回对新对象的引用。在这本书站点中，我们将`__init__()`称为数据类型的*构造函数*，即使从技术上讲，它只是对象创建过程的相关部分。
 
-![构造函数的解剖](img/e3f97d9d4321be0e8420a3b0a8266834.png)
+![构造函数的解剖](img/75fba69978a2c7f6640696f251667109.png)
 
 右侧的代码是`Charge`的`__init__()`实现。它是一个方法，因此它的第一行是一个签名，由关键字`def`、它的名称(`__init__`)、一个参数变量列表和一个冒号组成。按照惯例，第一个参数变量被命名为`self`。*作为 Python 默认对象创建过程的一部分，当调用`__init()__`时，self 参数变量的值是对新创建对象的引用。*来自客户端的普通参数变量跟随特殊参数变量`self`。其余行组成构造函数的主体。本书中的惯例是，`__init()__`由初始化新创建对象的代码组成，通过定义和初始化实例变量。
 
 ### 实例变量。
 
-数据类型是一组值和在这些值上定义的一组操作。在 Python 中，*实例变量*实现这些值。实例变量属于类的特定实例——即特定对象。在本书站点中，我们的约定是在构造函数中定义和初始化新创建对象的每个实例变量，并且仅在构造函数中。Python 程序的标准约定是实例变量名称以下划线开头。在我们的实现中，您可以检查构造函数以查看整套实例变量。例如，前一页上的`__init__()`实现告诉我们`Charge`有三个实例变量`_rx`、`_ry`和`_q`。当创建对象时，`__init__()`方法的`self`参数变量的值是对该对象的引用。就像我们可以使用`syntax c.potentialAt()`为电荷`c`调用方法一样，我们也可以使用`syntax self._rx`为电荷`self`引用实例变量。因此，`Charge`的`__init__()`构造函数中的三行定义和初始化了新对象的`_rx`、`_ry`和`_q`。![创建和初始化对象](img/b828042db656f789820c825a399fbc46.png)
+数据类型是一组值和在这些值上定义的一组操作。在 Python 中，*实例变量*实现这些值。实例变量属于类的特定实例——即特定对象。在本书站点中，我们的约定是在构造函数中定义和初始化新创建对象的每个实例变量，并且仅在构造函数中。Python 程序的标准约定是实例变量名称以下划线开头。在我们的实现中，您可以检查构造函数以查看整套实例变量。例如，前一页上的`__init__()`实现告诉我们`Charge`有三个实例变量`_rx`、`_ry`和`_q`。当创建对象时，`__init__()`方法的`self`参数变量的值是对该对象的引用。就像我们可以使用`syntax c.potentialAt()`为电荷`c`调用方法一样，我们也可以使用`syntax self._rx`为电荷`self`引用实例变量。因此，`Charge`的`__init__()`构造函数中的三行定义和初始化了新对象的`_rx`、`_ry`和`_q`。![创建和初始化对象](img/8c30b4fb53ae44a2d3e9156f943a425a.png)
 
 ### 对象创建的细节。
 
@@ -66,7 +66,7 @@ c1 = Charge(0.51, 0.63, 21.3)
 
 要定义方法，我们编写的代码与我们在第二章学习的用于定义函数的代码非常相似，但（重要的是）方法还可以访问实例变量。例如，我们的`Charge`数据类型的`potentialAt()`方法的代码如下所示：
 
-> ![方法的解剖](img/e7619165b0e2364fbc373bc7f16009c4.png)
+> ![方法的解剖](img/c841304bfa75cf1e0da0aa5fb75a2c94.png)
 
 第一行是方法的签名：关键字`def`、方法名称、括号中的参数变量名称和冒号。每个方法的第一个参数变量都命名为`self`。当客户端调用方法时，Python 会自动将`self`参数变量设置为引用要操作的对象——调用方法的对象。例如，当客户端使用`c.potentialAt(x, y)`调用我们的方法时，`potentialAt()`方法的`self`参数变量的值被设置为`c`。客户端的普通参数变量（在本例中为`x`和`y`）跟随特殊参数变量`self`。其余行构成`potentialAt()`方法的主体。
 
@@ -82,7 +82,7 @@ c1 = Charge(0.51, 0.63, 21.3)
 
 三种变量之间的差异是面向对象编程的关键，并在这个表格中总结如下：
 
-> ![方法中的变量](img/b4ccaf3413d7c4e494945afe0884be9e.png)
+> ![方法中的变量](img/aebf62759606e4086556602aad589d7c.png)
 
 在我们的示例中，`potentialAt()`使用由`self`引用的对象的`_rx`、`_ry`和`_q`实例变量，参数变量`x`和`y`，以及局部变量`COULOMB`、`dx`、`dy`和`r`来计算并返回一个值。
 
@@ -100,7 +100,7 @@ c1 = Charge(0.51, 0.63, 21.3)
 
 charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性，并定义了一个测试客户端。这个图表将 charge.py 中的代码与其特性相关联：
 
-> ![类定义的解剖](img/f071143df75368deb0978fc03be7b904.png)
+> ![类定义的解剖](img/1a93510e3ef5660988923e584871fdbd.png)
 
 在本节的其余部分，我们将这些基本步骤应用于创建许多有趣的数据类型和客户端。
 
@@ -110,7 +110,7 @@ charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性
 
 程序 stopwatch.py 定义了一个 `Stopwatch` 类，实现了这个 API：
 
-> ![秒表 API](img/21dda2c9b1e4cfee75a801c2d5b95905.png)
+> ![秒表 API](img/0cdb110e9ba400f45f0e7cb7638d7113.png)
 
 `Stopwatch` 对象是一个简化版本的老式秒表。创建时开始计时，可以通过调用 `elapsedTime()` 方法询问它已经运行了多长时间。
 
@@ -120,11 +120,11 @@ charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性
 
 程序 histogram.py 定义了一个 `Histogram` 类，用于以不同高度的条形图形式图形地表示数据的分布，这种图表称为*直方图*。这是它的 API：
 
-> ![直方图 API](img/8a61006038b5ccf205e120459d6335d6.png)
+> ![直方图 API](img/ddd7c2c8c10a90cf1e1ce6c538910e69.png)
 
 `Histogram` 对象维护一个给定区间内整数值出现频率的数组。它的 `draw()` 方法将绘图缩放，使最高的条形图紧密地适应画布，然后调用 `stdstats.plotBars()` 来显示值的直方图。
 
-> | `% python histogram.py 50 .5 100000` | ![](img/373ca78cc3593e13575017a43d2ffbb8.png) |
+> | `% python histogram.py 50 .5 100000` | ![](img/1f3ab3cfa7a83d406b915534c95bc246.png) |
 > | --- | --- |
 
 * * *
@@ -133,7 +133,7 @@ charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性
 
 想象一个生活在单位正方形中并在移动时绘制线条的海龟。它可以沿直线移动指定的距离，或者可以向左旋转（逆时针）指定的角度。根据这个 API：
 
-> ![海龟 API](img/23a00824dc65b3ea15aa649b6951ec8f.png)
+> ![海龟 API](img/9f3b719e4a0f2254ed8a33499534f902.png)
 
 当我们创建一个海龟时，我们将它放在指定的点，面向指定的方向。然后，通过给海龟一系列的 `goForward()` 和 `turnLeft()` 命令来创建绘图。
 
@@ -143,7 +143,7 @@ charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性
 
 > | `% python turtle.py 3` | `% python turtle.py 7` | `% python turtle.py 1000` |
 > | --- | --- | --- |
-> | ![](img/0b774af070960a9f598e633609dbe66f.png) | ![](img/ccac2f2a9ce741662cb3f356b79edab3.png) | ![](img/9754fb5ea28805d95bc0013f358d543a.png) |
+> | ![](img/9481956d6fd5813d5ca67fd62a2c267a.png) | ![](img/5a587833b8f6addb5714fe25a24fd2c1.png) | ![](img/798ac2edabf52617a24db8fe4895cdd9.png) |
 
 ### 科赫曲线。
 
@@ -151,11 +151,11 @@ charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性
 
 > | `% python koch.py 0` | `% python koch.py 1` |
 > | --- | --- |
-> | ![](img/c8c1bff51a274f2a3aeddcb94d077388.png) | ![](img/91f165800a98698f03f07aaf36aed909.png) |
+> | ![](img/95b4bd0e366a8795e14b1ad0e26c0d19.png) | ![](img/7181ddefe6a781c1712350b5d2d5e1a2.png) |
 > | `% python koch.py 2` | `% python koch.py 3` |
-> | ![](img/80d59065ab83dc87e494603d8b8b6758.png) | ![](img/114bfae41c253f0e8771515c01f945a5.png) |
+> | ![](img/119ccc25ea0479a5e92f7324c52ada37.png) | ![](img/95cfb529da35ab6cbc41843af9ed90cb.png) |
 > | `% python koch.py 4` |
-> | ![](img/87f09a341d85bb4c4e3ab2c442af6257.png) |
+> | ![](img/33b5d7ae56636a64d37c9b8614a0c814.png) |
 
 ### 奇迹螺线。
 
@@ -163,15 +163,15 @@ charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性
 
 > | `% python spiral.py 3 1 1.0` | `% python spiral.py 3 10 1.2` |
 > | --- | --- |
-> | ![](img/7d5fac33a5ec355835062b8f28ac4f2b.png) | ![](img/a2fdbc309982ea63117591ec1d1a4ff0.png) |
+> | ![](img/0575d5f29c6b5e246d49cef1f2b0affe.png) | ![](img/92958299d7b40d0adf65d4144e0426e1.png) |
 > | `% python spiral.py 1440 10 1.00004` | `% python spiral.py 1440 10 1.0004` |
-> | ![](img/5b2799bd860db25d19915edee1b182c4.png) | ![](img/1a9f235285c18977f6950b751b5065cc.png) |
+> | ![](img/1290bd28c0eb356ed685a224607e8446.png) | ![](img/0382700a73ed3cb5cd83a2abcc809a98.png) |
 
 对数螺线最早由勒内·笛卡尔于 1638 年描述。雅各布·伯努利对其数学特性感到惊讶，因此将其命名为*奇迹螺线*（miraculous spiral）。许多人也认为这个精确的曲线在各种自然现象中清晰可见是"奇迹"：
 
 > | **鹦鹉螺壳** | **螺旋星系** | **暴风云** |
 > | --- | --- | --- |
-> | ![](img/a896f6d0fdc985d0372c50cf43382263.png) | ![](img/e1b84f03ed8ac6632c42a2cdf164173b.png) | ![](img/f66de97204ed7279ec522ea9ab51e14d.png) |
+> | ![](img/09bca0f5404a05c617851ba4192dd833.png) | ![](img/4c877f8864d4478a0caf3b17bfbcc10d.png) | ![](img/6e69945705eebb67e3e7858e30215b00.png) |
 
 ### 布朗运动。
 
@@ -179,15 +179,15 @@ charge.py 中 `Charge` 数据类型的实现展示了我们描述的所有特性
 
 > | `% python drunk.py 10000 .01` |
 > | --- |
-> | ![](img/9beda515d3dfbdccea727e2a527c4200.png) |
+> | ![](img/d7216f5ba03ccd0af7818fb57b3e415a.png) |
 
 程序 drunks.py 绘制了许多这样的乌龟，它们都在四处漫步。
 
 > | `% python drunks.py 20 500 .005` | `% python drunks.py 20 1000 .005` |
 > | --- | --- |
-> | ![](img/7dbf6154e02e7393d446697c711ad313.png) | ![](img/effe9be40a3e3dca9cb242b0b916c907.png) |
+> | ![](img/60b9317be4ce4a29ff76d866d2a41ea7.png) | ![](img/bd7c7f76f97bb010d90b5c5e4d24e984.png) |
 > | `% python drunks.py 20 5000 .005` |
-> | ![](img/5e8e1a1e2e6188d47e0d5aca941b5cc4.png) |
+> | ![](img/e6dcea039f2827bcbf50f8e4603b9745.png) |
 
 乌龟图形最初是由麻省理工学院的西摩·帕帕特在 20 世纪 60 年代作为教育性编程语言 [Logo](https://en.wikipedia.org/wiki/Logo_%28programming_language%29) 的一部分开发的。但是乌龟图形并不是玩具，正如我们刚刚在许多科学示例中看到的那样。乌龟图形还有许多商业应用。例如，它是 [PostScript](https://en.wikipedia.org/wiki/PostScript) 的基础，这是一种用于创建大多数报纸、杂志和书籍的印刷页面的编程语言。
 
@@ -213,7 +213,7 @@ Python 语言提供了一个 `complex`（小写 `c`）数据类型。在实际�
 
 通常，我们从规定数据类型操作的 API 开始。
 
-> ![复数 API](img/fbd48f1e83abb91af2efa5eb0b9d00f9.png)
+> ![复数 API](img/c4637fc806d69a39b1cb731bbb3f5cf5.png)
 
 在 complex.py 中定义的 `Complex` 类实现了该 API。
 
@@ -235,11 +235,11 @@ Python 语言提供了一个 `complex`（小写 `c`）数据类型。在实际�
 
 <考虑复数序列>z[0]，*z*[1]，*z*[2]，...，*z*[t]，...，其中*z*[*t*]+1 = (*z*[*t*])² + *z*[0]。例如，这个表格显示了对应于*z*[0] = 1 + *i*的序列的前几个条目：</consider>
 
-> ![Mandelbrot 序列计算](img/8f67abf6fa62c9fa8882be5d467596a9.png)
+> ![Mandelbrot 序列计算](img/cbdc0e1c281629c41284255edeea9b24.png)
 
 现在，如果序列|*z[t]*|发散到无穷大，那么*z*[0]不在 Mandelbrot 集合中；如果序列有界，那么*z*[0]在 Mandelbrot 集合中。
 
-![Mandelbrot 集合](img/fc85adefb3e6c6589ee8e8c735845db5.png)
+![Mandelbrot 集合](img/7cc699809aa22dedd98552468cb6bc7c.png)
 
 要可视化 Mandelbrot 集合，我们对*复数*点进行采样，就像我们对实数点进行采样以绘制实值函数一样。每个复数*x* + *yi*对应于平面上的一个点（*x*，*y*），因此我们可以按照以下方式绘制结果：对于指定分辨率*n*，我们在指定的正方形内定义一个*n*乘*n*像素网格，并在相应点在 Mandelbrot 集合中时绘制黑色像素，在不在时绘制白色像素。
 
@@ -247,7 +247,7 @@ Python 语言提供了一个 `complex`（小写 `c`）数据类型。在实际�
 
 > | `% python mandelbrot.py 512 -.5 0 2` | `% python mandelbrot.py 512 .1015 -.633 .01` |
 > | --- | --- |
-> | ![](img/d5c71fb87273a29de8070e03cec42a46.png) | ![](img/a52e537ca166ef3695246590d7521667.png) |
+> | ![](img/d844ccbcc8120257fac06e9051f2d213.png) | ![](img/b341dac1da9d9f47a40c228a4c2db787.png) |
 
 使用 mandelbrot.py 生成图像需要对复数值进行数亿次操作。因此，我们使用 Python 的`complex`数据类型，这肯定比我们刚考虑的`Complex`数据类型更有效率。
 
@@ -257,7 +257,7 @@ Python 语言提供了一个 `complex`（小写 `c`）数据类型。在实际�
 
 假设股票经纪人需要维护包含各种股票股份的客户账户。也就是说，经纪人需要处理的值集合包括客户姓名、持有的不同股票数量、每支股票的股票数量和股票代码，以及手头现金。为了处理一个账户，经纪人至少需要在此 API 中定义的操作：
 
-> ![StockAccount API](img/88d0d130fbd2b97790d6344c16fbc428.png)
+> ![StockAccount API](img/c6c8e7eb83226eff6169ec31c86c1bef.png)
 
 客户信息具有很长的生命周期，并且需要保存在文件或数据库中。为了处理一个账户，客户端程序需要从相应的文件中读取信息；适当处理信息；如果信息发生变化，则将其写回文件，保存以备后用。为了实现这种处理，我们需要一个文件格式和一个内部表示，或者账户信息的数据结构。
 
@@ -363,7 +363,7 @@ Turing, Alan
 
 #### 练习
 
-![矩形示例](img/472dda7f69359b46e3d33c13962a535e.png)
+![矩形示例](img/496e37c932d372aa3349041496076f23.png)
 
 1.  考虑下面显示的（轴对齐）矩形的数据类型实现，它用矩形的中心点坐标、宽度和高度表示每个矩形。组合一个这种数据类型的 API，并填写`perimeter()`、`intersects()`、`contains()`和`draw()`的代码。*注意*：将重合的线视为相交，因此，例如`a.intersects(a)`为 True，`a.contains(a)`为 True。
 
@@ -436,19 +436,19 @@ class Charge:
 
 1.  Python 提供了一个数据类型`Fraction`，定义在标准模块`fractions.py`中，实现有理数。实现自己版本的该数据类型。具体地，为有理数数据类型开发以下 API 的实现：
 
-    > ![Rational 的 API](img/428dd58c59f55beaa5b03030a5bc6578.png)
+    > ![Rational 的 API](img/bf00a8b6971e3e90a6ff75026430fa9e.png)
 
     使用 euclid.py 中定义的`euclid.gcd()`（来自第 2.3 节）确保分子和分母永远没有任何公共因子。包括一个测试客户端，测试所有您的方法。
 
 1.  *区间*被定义为一条线上大于等于`left`且小于等于`right`的所有点的集合。特别地，`right`小于`left`的区间为空。组合一个实现以下 API 的数据类型`Interval`。包括一个测试客户端，是一个过滤器，从命令行获取一个浮点数`x`，并将包含`x`的所有输入的区间（每个由一对浮点数定义）写入标准输出，并将相互交叉的所有区间对写入标准输出。
 
-    > ![Interval 的 API](img/0e9e2ae2bb145818ffb5034624fe794c.png)
+    > ![Interval 的 API](img/859f1ba888d98f9c526e053f946626df.png)
 
 1.  开发一个实现您的`Rectangle` API（在本节的先前练习中）的实现，利用`Interval`（在本节的先前练习中）来简化和澄清代码。
 
 1.  组合一个数据类型`Point`，实现以下 API。包括一个自己设计的客户端。
 
-    > ![Point 的 API](img/bf038ca0164d514c98a06c2862e3ca87.png)
+    > ![Point 的 API](img/956d95278f4f73a169611b6f588ed952.png)
 
 1.  添加到`Stopwatch`的方法，如 stopwatch.py 中定义的，允许客户端停止和重新启动秒表。
 
@@ -466,7 +466,7 @@ class Charge:
 
 1.  实现对`Complex` API 的以下添加：
 
-    > ![Complex 的 API（续）](img/c3c3583e9106e0601f8b70424a941c09.png)
+    > ![Complex 的 API（续）](img/659f20aefc66e3a0d2d26726c4c841c7.png)
 
     包括一个测试客户端，测试所有您的方法。
 
@@ -518,18 +518,18 @@ class Charge:
 
 1.  **龙曲线**。编写一个递归客户端`dragon.py`，使用`Turtle`（在 turtle.py 中定义）绘制龙曲线（参见第 1.2 和 1.5 节的练习）。这些曲线最初由三位 NASA 物理学家发现，后来在 20 世纪 60 年代由马丁·加德纳广泛传播，并在迈克尔·克莱顿的书籍和电影《侏罗纪公园》中使用。这个练习可以用非常紧凑的代码解决，基于一对直接从第 1.2 节练习中的定义派生的相互作用递归函数。其中一个函数`dragon()`应该按预期绘制曲线；另一个函数`nogard()`应该以*相反*顺序绘制曲线。
 
-    > | ![](img/e744aedaea9a3c01c083e52e16b85a0d.png) | ![](img/384e4e6c3b986f4a526863dfe818973d.png) | ![](img/a0f3db472a3c240ba4bd87494983b013.png) | ![](img/48e7c6d3c2c127a67c69f26c56b8b835.png) | ![](img/401b59ef24127efe0630660765449a07.png) |
+    > | ![](img/7c4d484cc7e510909e77b213809e6fa4.png) | ![](img/5fdf3c278a33a0bfcd4aae6677e4c37b.png) | ![](img/7902bc6f27da2bc21d3863503839883a.png) | ![](img/a568364f7e5c08e6d6ef8448cad7907c.png) | ![](img/f790b29cf1887a454b4f762e62735405.png) |
     > | --- | --- | --- | --- | --- |
-    > | ![](img/28ac00cc0e991bb5db94a1239315f089.png) | ![](img/5c0aad30ed7dfdaa19b2da60bfea3f73.png) | ![](img/2c3d0beb888259f4b30aed129b210f2a.png) | ![](img/c1649c0adc1a9cd0d476f6a2bd8821f6.png) | ![](img/228f67dd632ac6fd85a703e7a282aaaa.png) |
+    > | ![](img/a1c1671b381146c58a8fd59bc1b4c74f.png) | ![](img/3e5486ed3bd923f5bf783f2499cce836.png) | ![](img/32ea2a864772e7962310eb9a58f05309.png) | ![](img/e938dc06e4812ae0d9dff59131f9f122.png) | ![](img/8bfee6e9d487a1ddb74dbdd771017bf3.png) |
 
 1.  **希尔伯特曲线**。*填充空间*曲线是一个连续曲线，在单位正方形中通过每个点。组成`Turtle`的递归客户端（如 turtle.py 中定义的）来生成这些递归模式，这些模式接近 19 世纪末数学家大卫·希尔伯特定义的填充空间曲线。参见前一个练习。您需要一对方法：`hilbert()`，遍历希尔伯特曲线，和`treblih()`，以相反顺序遍历希尔伯特曲线。
 
-    | ![一阶希尔伯特曲线](img/0d4af346b940ab809ec706cbc418cec4.png) | ![二阶希尔伯特曲线](img/1b5403ff4f2f538592628737ae077747.png) | ![三阶希尔伯特曲线](img/06cf83a801cb0001688515fb6ad0b65f.png) | ![四阶希尔伯特曲线](img/808f1aa01acde7742c31cefee958b542.png) | ![五阶希尔伯特曲线](img/a6f77e57e081fbf446ec81b232a2274e.png) |
+    | ![一阶希尔伯特曲线](img/2c29bbc1adf069e7ab8c4210270a3150.png) | ![二阶希尔伯特曲线](img/44bd5cbbc12cbc260bb87621765fabca.png) | ![三阶希尔伯特曲线](img/6358c078ea40ea83a7c5f7314714e2ba.png) | ![四阶希尔伯特曲线](img/e9e1bd7f6ca98bfe06ebeabbe8a452d7.png) | ![五阶希尔伯特曲线](img/59b2115d08294dcadf62799141f3e212.png) |
     | --- | --- | --- | --- | --- |
 
 1.  **Gosper 岛**。组成一个`Turtle`的递归客户端（如 turtle.py 中定义的），生成这些递归模式。
 
-    | ![](img/98a779a6750a6225f245c358706ab27c.png) | ![](img/a2323810fdd6f7341ef170ef737b4afa.png) | ![](img/bbbe116b0948b67a26f7dcbe5daec276.png) | ![](img/d30780da0c4cd0a8f328b6e5839e807e.png) | ![](img/6618deb313f4c454ce23abf46d2a52b3.png) |
+    | ![](img/291d26fe04e7fa9743e40d1819ab3d5b.png) | ![](img/b94d7ad8ed757758da09e73a4ee5fe6a.png) | ![](img/ee37a043c394f9682a73feda720bda3a.png) | ![](img/9ba208305460ce201fe1d35b640964f9.png) | ![](img/1b718def07bdc9b9b82a7bf9b0b98e00.png) |
     | --- | --- | --- | --- | --- |
 
 1.  **数据分析**。为运行实验而组成一种数据类型，其中控制变量是范围为 0, *n*)的整数，而因变量是浮点数。例如，研究接受整数参数的程序的运行时间将涉及这样的实验。Tukey 图是一种可视化此类数据统计的方法（请参阅第 2.2 节中的*Tukey 图*练习）。实现以下 API：
@@ -546,23 +546,23 @@ class Charge:
 
 1.  **牛顿法的混沌**。多项式*f*(*z*) = *z*⁴ - 1 有四个根：1，-1，*i*和-*i*。我们可以在复平面上使用牛顿法找到这些根：*z*[*k*+1] = *z*[*k*] - *f*(*z*[*k*])/*f*'(*z*[*k*])。这里，*f*(*z*) = *z*⁴ - 1，*f*'(*z*) = 4*z*³。该方法收敛到四个根中的一个，取决于起始点*z*[0]。编写一个名为`Newton`的`Complex`客户端（如 complex.py 中定义的），它接受一个命令行参数*n*，通过将像素映射到以原点为中心、大小为 2 的正方形中的复平面上的复点，并根据相应点收敛到哪个四个根（如果 100 次迭代后没有收敛则为黑色）将*n*乘以*n*的`Picture`像素涂成白色、红色、绿色或蓝色。
 
-    > ![牛顿法](img/ec3feffd5e482693d5930ed0c48a7533.png)
+    > ![牛顿法](img/c82b411a4dd7d6ea9cb85d72ed8e734f.png)
 
 1.  **等势面**。*等势面*是所有具有相同电势 V 的点的集合。给定一组点电荷，通过绘制等势面（也称为*等势线图*）来可视化电势是很有用的。编写一个名为`equipotential.py`的程序，通过计算每个像素点的电势并检查相应点的电势是否在 5V 的倍数的 1 像素范围内来绘制每 5V 一条线。*注意*：通过将分配给每个像素的颜色值混合，而不是让它们与灰度值成比例，可以很容易地近似解决这个练习，具体方法请参考这里（来自第 3.1 节）。例如，通过在创建`Color`之前插入上面的代码，可以创建附带的图像。解释为什么它有效，并尝试使用自己的版本进行实验。
 
-    > | ![电势等势面](img/0b2f602b44ff1e750769b3fa8e8b6df2.png) | ![电势等势面](img/2e32f544cc3e952520ef3f5626531f12.png) |
+    > | ![电势等势面](img/b1cae4b83480c9f52f85bdcc4ba00112.png) | ![电势等势面](img/2362b206a02e3c8e5999ee5f8d7bb9c1.png) |
     > | --- | --- |
 
 1.  **彩色曼德博图**。创建一个包含 256 个整数三元组的文件，表示有趣的`Color`值，然后使用这些颜色而不是灰度值来绘制 mandelbrot.py 中的每个像素。读取值以创建一个包含 256 个`Color`值的数组，然后使用`mandel()`的返回值索引到该数组。通过在集合的各个位置尝试不同的颜色选择，可以产生令人惊叹的图像。mandel.txt 是一个示例。
 
     > | `% python mandelbrot.py -1.5 -1.0 2.0 2.0` | `% python mandelbrot.py 0.10259 -0.641 0.0086 0.0086` |
     > | --- | --- |
-    > | ![曼德博集](img/e7918925eac7307d377a50e13ebecd29.png) | ![曼德博集](img/48678556c5d0971990a132ea73af293b.png) |
+    > | ![曼德博集](img/fd24067394d1f4290c5afb03da23e981.png) | ![曼德博集](img/ff69556ea0f0adcf333dd3f04d3fe211.png) |
 
 1.  **茱莉亚集**。对于给定的复数*c*，*茱莉亚集*是与曼德博函数相关的一组点。我们不��固定*z*而变化*c*，而是固定*c*而变化*z*。那些使修改后的曼德博函数保持有界的点属于茱莉亚集；那些使序列发散到无穷大的点不属于该集合。所有感兴趣的点*z*都位于以原点为中心的 4 乘 4 的方框内。对于*c*的茱莉亚集是连通的，当且仅当*c*在曼德博集中时！编写一个名为`colorjulia.py`的程序，它接受两个命令行参数*a*和*b*，并使用前面练习中描述的颜色表方法为*c* = *a* + *bi*绘制一个彩色版本的茱莉亚集。
 
     > | `python colorjulia.py -1.25 0.00` | `python colorjulia.py-0.75 0.10` |
     > | --- | --- |
-    > | ![茱莉亚集](img/ce7a90970e8b6a5cc872a0efa1d10bf2.png) | ![茱莉亚集](img/0b9e0d3e17b67c2e33d17fdfaa24a0be.png) |
+    > | ![茱莉亚集](img/acbe489e88e1eac04dfca47ca7ec44c9.png) | ![茱莉亚集](img/815e2a630f0a4c060368483905bfd59c.png) |
 
 1.  **最大赢家和最大输家**。编写一个`StockAccount`的客户端（如在 stockaccount.py 中定义），该客户端构建一个`StockAccount`对象数组，计算每个账户的总价值，并为价值最大和最小的账户编写报告。假设账户信息保存在一个文件中，该文件依次包含每个账户的信息，格式如本页前面描述的那样。

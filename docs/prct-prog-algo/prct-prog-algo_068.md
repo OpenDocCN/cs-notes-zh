@@ -39,7 +39,7 @@ if __name__ == '__main__': main()
 
 这张图总结了 gaussiantable.py 客户端、gaussian.py 模块和标准`math`模块之间的控制流。
 
-> ![](img/bfb9c7ad81dd68ca2f4e06d4e93c827d.png) <alt of="" control="" in="" a="" modular="" program=""></alt>
+> ![](img/ff989087ed135906d43fce5fdafd33ec.png) <alt of="" control="" in="" a="" modular="" program=""></alt>
 
 ### 模块化编程。
 
@@ -51,7 +51,7 @@ if __name__ == '__main__': main()
 
 接下来，我们描述作为模块化编程基础的抽象。
 
-![模块化编程抽象](img/1fa629df7e528ce82a666fa32670f053.png)
+![模块化编程抽象](img/045fe70356470b5c716b9600191c4460.png)
 
 ### 实现。
 
@@ -65,7 +65,7 @@ if __name__ == '__main__': main()
 
 程序员通常以客户端和实现之间的合同来思考，这是对实现要做什么的明确规范。你已经能够组成作为`math`和`random`等标准 Python 模块的客户端的程序，因为有一个非正式的合同（对它们应该做什么的���语描述）以及可供使用的函数的签名的精确规范。总体而言，这些信息被称为*应用程序编程接口（API）*。对于用户定义的模块，相同的机制是有效的。API 允许任何客户端使用模块，而无需检查定义模块的代码。当我们组成一个新模块时，我们总是提供一个 API。例如，这是我们的 gaussian.py 模块的 API：
 
-> ![高斯 API](img/cc4ab3763e405e2d547a9a4445c7e4c2.png)
+> ![高斯 API](img/b393c37cd59a30783602cc5bfe38eb47.png)
 
 API 应包含多少信息？在这个书站中，我们坚持一个与我们的设计原则相一致的原则：向客户程序员提供他们需要的信息，而不是更多。
 
@@ -92,7 +92,7 @@ def pdf(x, mu=0.0, sigma=1.0):
 
 所有标准、扩展和书站模块的 API 都可以通过交互式 Python 中内置的 `help()` 函数获得。如下所示，你只需要输入 `python`（进入交互式 Python），然后输入语句 `import module`（加载模块），然后输入 `help(module)` 来查看模块的 API。标准和扩展 Python 模块的 API 也可以通过[在线 Python 文档](https://docs.python.org/3/)以另一种形式获得。
 
-> ![访问 Python 文档](img/2297c8656ca799ae917cab9e0221d28c.png)
+> ![访问 Python 文档](img/53cd00fdcb43480c0b96989b35e98678.png)
 
 接下来，我们介绍我们的 `stdrandom` 模块（用于生成随机数）、`stdarray` 模块（用于一维和二维数组）和 `stdstats` 模块（用于统计计算）的 API。我们还描述了这些模块的一些有趣的客户端。
 
@@ -102,7 +102,7 @@ def pdf(x, mu=0.0, sigma=1.0):
 
 `stdrandom.py` 模块用于从各种分布生成随机数。
 
-> ![Stdrandom API](img/4c3208a64b0fcf1fc1e0213fa9e8b3b4.png)
+> ![Stdrandom API](img/b7bd879366ee131a7dde4e1c9fee838d.png)
 
 ### API 设计。
 
@@ -132,11 +132,11 @@ def pdf(x, mu=0.0, sigma=1.0):
 
 此外，我们已经看到并将继续看到许多例子，我们希望从标准输入中读取值到数组中，并将值从数组写入标准输出。因此，我们在 `stdarray` 模块中包含了从标准输入读取整数、浮点数和布尔数组并将它们写入标准输出的函数，从而补充了 `stdio` 模块。这是 `stdarray` 的完整 API：
 
-> ![Stdarray API](img/2cc2d66e674cfef0900458c157bd23f2.png)
+> ![Stdarray API](img/1265e4ddc41b16bbe9fbfe4cbec88084.png)
 
 我们采用的约定是标准输入中出现的数组包括维度，并按照指示的顺序出现，如下图所示。`read*()`函数期望这种格式，而`write*()`函数以这种格式生成输出。
 
-> ![数组的文件格式](img/ec8517423641aba7d140a97c37549d25.png)
+> ![数组的文件格式](img/9a96f7d822510dac860d6c8f6503a052.png)
 
 对于布尔数组，我们的文件格式使用`0`和`1`值，而不是`False`和`True`。这种约定对于大数组来说更加经济。更重要的是，使用这种文件格式更容易发现数据中的模式。
 
@@ -146,15 +146,15 @@ def pdf(x, mu=0.0, sigma=1.0):
 
 [迭代函数系统](http://www.cut-the-knot.org/ctk/ifs.shtml)（IFS）是产生分形图像如谢尔宾斯基三角形和巴恩斯利蕨的一般方法。作为第一个例子，考虑以下简单过程：从等边三角形的一个顶点开始绘制一个点。然后随机选择三个顶点中的一个，并在刚刚绘制的点和该顶点之间的中点绘制一个新点。继续执行相同的操作。
 
-> ![一个随机过程](img/c388dafdf422670b2fea8e7d0efa15b1.png)
+> ![一个随机过程](img/46464efed07a895ab23f47db55ec0608.png)
 
 程序 sierpinski.py 模拟了这个过程。以下是 1000、10000 和 100000 步后的快照。您可能会认出这个图形是[谢尔宾斯基三角形](http://mathworld.wolfram.com/SierpinskiSieve.html)。
 
-> ![一个随机过程？](img/90c71f02780233666de958cbdd7c93f6.png)
+> ![一个随机过程？](img/baa186407d70b5d908a62ec49a9b955e.png)
 
 程序 ifs.py 是一个数据驱动版本的程序，模拟了这个过程的一般化。详情请参阅教科书。您可以在以下任何输入文件上运行它：barnsley.txt, binary.txt, coral.txt, culcita.txt, cyclososus.txt, dragon.txt, fishbone.txt, floor.txt, koch.txt, sierpinski.txt, spiral.txt, swirl.txt, tree.txt, 或 zigzag.txt。
 
-> ![迭代函数系统示例](img/8e79629e66ef4d4aa1c7ed709f6ee2e8.png)
+> ![迭代函数系统示例](img/be848da088c69e90c3f52696763c27f8.png)
 
 能够如此轻松地产生如此逼真的图表，引发了有趣的科学问题：计算告诉我们关于自然的什么？自然告诉我们关于计算的什么？
 
@@ -164,13 +164,13 @@ def pdf(x, mu=0.0, sigma=1.0):
 
 `stdstats.py`模块用于统计计算和基本可视化，如下所示的 API。详情请参阅教科书。
 
-> ![stdstats API](img/041a279d5fa1d406ff055b042e775d22.png)
+> ![stdstats API](img/75dd887387e1f29d8a8d6de4df8df6f7.png)
 
 ### 伯努利试验。
 
 程序 bernoulli.py 是一个`stdstats.py`客户端示例。它计算在抛掷公平硬币*n*次时找到的正面数，并将结果与预测的高斯分布函数进行比较。根据[中心极限定理](http://mathworld.wolfram.com/CentralLimitTheorem.html)，结果直方图极好���近似于均值为*n*/2 和方差为*n*/4 的高斯分布。这是命令`python bernoulli.py 20 100000`的输出：
 
-> ![stdstats API](img/7f47da26a86081c76846792863a71fc1.png)
+> ![stdstats API](img/6657da120ed72612236fdeb7c2dd4e62.png)
 
 * * *
 
@@ -178,7 +178,7 @@ def pdf(x, mu=0.0, sigma=1.0):
 
 我们开发的模块实现展示了模块化编程。我们不是将一个新程序组合成一个自包含的文件来解决新问题，而是将每个任务分解为更小、更易管理的子任务，然后实现和独立调试解决每个子任务的代码。ifs.py 和 bernoulli.py 程序展示了模块化编程，因为它们是相对复杂的计算，使用了几个相对较小的模块。 
 
-> ![本节中客户端和模块的依赖图](img/24f881ba56010092d746348c476cd121.png)
+> ![本节中客户端和模块的依赖图](img/b6eb544d444bb5628ff862d5c3512dc6.png)
 
 我们在整个书站强调模块化编程，因为它有许多重要的好处，包括以下内容：
 
@@ -308,7 +308,7 @@ Python 的理念是：由于 gaussian.py 在这个程序中被用作模块，很
 
 1.  编写一个模块`matrix.py`，为向量和矩阵实现以下 API（参见第 1.4 节）：
 
-    > ![矩阵 API](img/db6060f1a8a89b0359bdd07f42523bdf.png)
+    > ![矩阵 API](img/18a3c80d5db1329cd6a9c910ecbd3b08.png)
 
     *解决方案*：参见 matrix.py。
 

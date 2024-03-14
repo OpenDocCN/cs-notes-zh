@@ -34,7 +34,7 @@
 
     查看[这篇文章](http://java-performance.info/changes-to-string-java-1-7-0_06/)获取更多细节。
 
-    ![字符串操作](img/e5ccb96ba41b7fdc8ca13f7f422cdc99.png)
+    ![字符串操作](img/d605fa7dceaaa7306143427f64915aef.png)
 
 +   *连接.* `+` 运算符执行字符串连接。我们避免逐个字符附加形成字符串，因为在 Java 中这是一个 *二次时间* 的过程。（Java 有一个 [StringBuilder](http://download.oracle.com/javase/6/docs/api/java/lang/StringBuilder.html) 类用于这种用途。）
 
@@ -42,11 +42,11 @@
 
 ## 字母表。
 
-一些应用程序涉及从受限字母表中获取的字符串。在这种应用程序中，使用具有以下 API 的 Alphabet.java 类通常是有意义的：![Alphabet API](img/f98f6543a37b5dbceed04162ad50f388.png)
+一些应用程序涉及从受限字母表中获取的字符串。在这种应用程序中，使用具有以下 API 的 Alphabet.java 类通常是有意义的：![Alphabet API](img/091d0d207d95eff3a4bcd30c993799d2.png)
 
 构造函数以 R 个字符的字符串作为参数，该字符串指定了字母表；`toChar()`和`toIndex()`方法在常数时间内在字符串字符和介于 0 和 R-1 之间的`int`值之间进行转换。`R()`方法返回字母表或*基数*中的字符数。包括一些预定义的字母表：
 
-![字母表](img/2b81c444b7268baf93da09e17c286e43.png)
+![字母表](img/a2f77cac2331b31ff366a7e1bc5d3d37.png)
 
 Count.java 是一个客户端程序，它在命令行上指定一个字母表，读取该字母表上的一系列字符（忽略不在字母表中的字符），计算每个字符出现的频率，
 

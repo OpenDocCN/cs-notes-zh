@@ -8,11 +8,11 @@
 
 您已经在使用一个不是原始的数据类型——`String`数据类型，其值是字符序列。我们在*应用程序编程接口*（API）中指定数据类型的行为。这是 Java 的[String](https://docs.oracle.com/javase/8/docs/api/java/lang/String.html)数据类型的部分 API：
 
-> ![字符串 API](img/09b67650293dc171af32e34b2ad85239.png)
+> ![字符串 API](img/dcf886aa6a81ad2089381485f57604bb.png)
 
 第一个条目，与类名相同且没有返回类型，定义了一种特殊的方法，称为*构造函数*。其他条目定义了可以接受参数并返回值的*实例方法*。
 
-> ![使用引用数据类型](img/bc429022eaeee8d06e298c061ec793c6.png)
+> ![使用引用数据类型](img/90b3496d6837d536b2ae91ffd9391f56.png)
 
 +   *声明变量。* 您声明引用类型的变量的方式与声明原始类型的变量的方式完全相同。声明语句不会创建任何内容；它只是说我们将使用变量名`s`来引用一个`String`对象。
 
@@ -24,11 +24,11 @@
 
 +   *数据类型操作。* 以下示例说明了`String`数据类型的各种操作。
 
-    > ![字符串操作](img/8f52a18880c32fe21d3553ecde86aeec.png)
+    > ![字符串操作](img/01a605e672a17c583725ac39ca7a2846.png)
 
 +   *代码片段。* 以下代码片段演示了各种字符串处理方法的使用。
 
-    > ![字符串代码片段](img/d3ca62286f24d24eda553372739c3df0.png)
+    > ![字符串代码片段](img/2be5c3fbcc7d4b43c831878b5859f6e7.png)
 
 +   *基因组学。* 生物学家使用一个简单的模型来表示生命的基本组成部分，其中字母 A、C、G 和 T 代表生物体 DNA 中的四个碱基。*基因*是一个表示在理解生命过程中至关重要的功能单元的子字符串。PotentialGene.java 以 DNA 字符串作为参数，并根据以下标准确定它是否对应于潜在基因：
 
@@ -40,7 +40,7 @@
 
     +   它没有干扰的终止密码子。
 
-## 颜色。 ![颜色值](img/3d5356fb426e14fd698262b8e4064c91.png) Java 的[Color](https://docs.oracle.com/javase/8/docs/api/java/awt/Color.html)数据类型使用[RGB 颜色模型](https://en.wikipedia.org/wiki/RGB_color_model)表示颜色值，其中颜色由三个整数（每个介于 0 和 255 之间）定义，表示颜色的红色、绿色和蓝色分量的强度。通过混合红色、蓝色和绿色分量获得其他颜色值。
+## 颜色。 ![颜色值](img/1306dc4a198441336d2f659e8cec55e3.png) Java 的[Color](https://docs.oracle.com/javase/8/docs/api/java/awt/Color.html)数据类型使用[RGB 颜色模型](https://en.wikipedia.org/wiki/RGB_color_model)表示颜色值，其中颜色由三个整数（每个介于 0 和 255 之间）定义，表示颜色的红色、绿色和蓝色分量的强度。通过混合红色、蓝色和绿色分量获得其他颜色值。
 
 `Color`数据类型有一个接受三个整数参数的构造函数。例如，您可以编写
 
@@ -52,40 +52,40 @@ Color bookBlue = new Color(  9,  90, 166);
 
 用于创建代表纯红色和用于打印本书的蓝色的对象。以下表总结了我们在本书中使用的[Color](https://docs.oracle.com/javase/8/docs/api/java/awt/Color.html) API 中的方法：
 
-> ![颜色 API](img/129fd5fccf4dbda108d78d35d70f8ad9.png)
+> ![颜色 API](img/8a19886a0854a6a2b12a0cd6176c21b6.png)
 
 这里有一些使用 `Color` 数据类型的示例客户端。
 
 +   *Albers 方块.* AlbersSquares.java 在命令行上以 1960 年代约瑟夫·阿尔伯斯开发的格式显示以 RGB 表示的两种颜色，这种格式彻底改变了人们对颜色的看法。
 
-    > ![Albers 方块](img/788fdd57a9242dbc96d9d88261e3c0f6.png)
+    > ![Albers 方块](img/e47b840d9bbfccf2d9c3dd551c00b13d.png)
 
 +   *亮度.* 现代显示器（如液晶显示器、等离子电视和手机屏幕）上的图像质量取决于一种称为 *单色亮度* 或有效亮度的颜色属性的理解。 它是三种强度的线性组合：如果颜色的红色、绿色和蓝色值分别为 *r*、*g* 和 *b*，则其亮度由以下方程定义
 
     > $$Y = 0.299r + 0.587g + 0.114b$$
 
-+   *灰度.* ![将颜色转换为灰度](img/6d48c5de279e726e26c7962fc76ee185.png) RGB 颜色模型具有这样的特性，即当三种颜色强度相同时，结果颜色位于从黑色（全 0）到白色（全 255）的灰度范围内。 将颜色转换为灰度的简单方法是用其亮度等于其红色、绿色和蓝色值的新颜色替换该颜色。
++   *灰度.* ![将颜色转换为灰度](img/dd695419de3bad55eef745919841e618.png) RGB 颜色模型具有这样的特性，即当三种颜色强度相同时，结果颜色位于从黑色（全 0）到白色（全 255）的灰度范围内。 将颜色转换为灰度的简单方法是用其亮度等于其红色、绿色和蓝色值的新颜色替换该颜色。
 
 +   *颜色兼容性.* 亮度值在确定两种颜色是否兼容方面也至关重要，即在另一种颜色的背景上打印文本是否可读。 一个广泛使用的经验法则是前景色和背景色之间的亮度差应至少为 128。
 
-    > ![颜色兼容性](img/05d73c4b35e1f96b66018203cbeab030.png)
+    > ![颜色兼容性](img/61224f200ead70fcbfa733371889340a.png)
 
-Luminance.java 是一个静态方法库，我们可以用它来将颜色转换为灰度并测试两种颜色是否兼容。## 图像处理。![数字图像的解剖](img/8be79614dad0b3fdd34c5048cb4e2284.png) *数字图像* 是一个由 *像素*（图像元素）组成的矩形网格，其中每个像素的颜色是单独定义的。 数字图像有时被称为 *光栅* 或 *位图* 图像。 相比之下，我们使用 `StdDraw` 生成的图像（涉及几何对象）被称为 *矢量* 图像。
+Luminance.java 是一个静态方法库，我们可以用它来将颜色转换为灰度并测试两种颜色是否兼容。## 图像处理。![数字图像的解剖](img/9c77bcb3084a2cee76c56f277b13345b.png) *数字图像* 是一个由 *像素*（图像元素）组成的矩形网格，其中每个像素的颜色是单独定义的。 数字图像有时被称为 *光栅* 或 *位图* 图像。 相比之下，我们使用 `StdDraw` 生成的图像（涉及几何对象）被称为 *矢量* 图像。
 
 [Picture](http://introcs.cs.princeton.edu/java/stdlib/javadoc/Picture.html) 数据类型允许您操作数字图像。 值集是一个二维矩阵，其中包含 `Color` 值，并且操作是您可能期望的：创建图像（空白或从文件），将像素的值设置为给定颜色，并提取给定像素的颜色。 以下 API 总结了可用的操作：
 
-> ![图片 API](img/9afc4d0e8ecc80dece20adad0ef7cba8.png)
+> ![图片 API](img/be5dbf77e2d032e1074a51006b88d65e.png)
 
 大多数图像处理程序都是过滤器，通过扫描源图像中的所有像素，然后执行一些计算来确定目标图像中每个像素的颜色。
 
 +   *灰度.* Grayscale.java 将图像从彩色转换为灰度。
 
-    | ![狒狒](img/cf5710079eb12fddce40cbfb49066ef2.png) |      | ![灰度狒狒](img/d929bca627edbc9b4dd973a2f779a942.png) |
+    | ![狒狒](img/248018528ff7c0db033fa4337aa0e0e5.png) |      | ![灰度狒狒](img/9dd4294b05dfed1e9553690d16cf0046.png) |
     | --- | --- | --- |
 
 +   *缩放.* Scale.java 接受一个图像文件的名称和两个整数（宽度 *w* 和高度 *h*）作为命令行参数，将图片缩放到 *w*-by-*h*，并显示两个图像。
 
-    | ![灰度狒狒](img/f32d9f3edfbec865ea5ce64bd48a3fd7.png) *600-by-300* |      | ![200-by-400](img/db971affee53184e3223577e7c2bb36c.png) *200-by-400* |
+    | ![灰度狒狒](img/92d87a70c311cfbe2710c91f34942d55.png) *600-by-300* |      | ![200-by-400](img/ef29de427169c86e01655e07cacec669.png) *200-by-400* |
     | --- | --- | --- |
 
 +   *淡入效果.* Fade.java 接受一个整数 *n* 和源图像和目标图像的名称作为命令行参数，并在 *n* 步内从源图像淡入到目标图像。 它使用线性插值策略，其中图像 *i* 中的每个像素是源图像和目标图像中相应像素的加权平均值。
@@ -96,11 +96,11 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 +   *输入流数据类型。*[In](http://introcs.cs.princeton.edu/java/stdlib/javadoc/In.html)是支持从文件和网站以及标准输入流中读取数字和文本数据的[StdIn](http://introcs.cs.princeton.edu/java/stdlib/javadoc/StdIn.html)的面向对象版本。
 
-    > ![In API](img/596f8eb243ceb57c97fd392c85d04ebb.png)
+    > ![In API](img/439a91eb1eeb4e87e2a32bf10b649a43.png)
 
 +   *输出流数据类型。*[Out](http://introcs.cs.princeton.edu/java/stdlib/javadoc/Out.html)是支持将文本打印到各种输出流的[StdOut](http://introcs.cs.princeton.edu/java/stdlib/javadoc/StdOut.html)的面向对象版本。
 
-    > ![Out API](img/0610b815cb531c4a511258403147bd02.png)
+    > ![Out API](img/869b4485e95cd22520f49cfc0c074417.png)
 
 +   *文件连接。*Cat.java 读取指定为命令行参数的多个文件，将它们连接起来，并将结果打印到一个文件中。
 
@@ -169,12 +169,12 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  编写一个程序 FlipX.java，它接受图像文件的名称作为命令行参数，并水平翻转图像。
 
-    | ![peppers](img/424362da382564bd6db4dc56e6318268.png) |      | ![flip peppers](img/b7f3822bba203135088b95cf602d1d9f.png) |
+    | ![peppers](img/5e4e94bae46879766d9c7dda9b7f4cda.png) |      | ![flip peppers](img/b5f4aa1449878e9fe1c019b3d1bcc342.png) |
     | --- | --- | --- |
 
 1.  编写一个程序 ColorSeparation.java，它接受图像文件的名称作为命令行参数，并创建并显示三个`Picture`对象，一个包含红色分量，一个包含绿色分量，一个包含蓝色分量。
 
-    | ![baboon red](img/7a1fb72b0feac7b53c3178cc2d99a52e.png) |      | ![baboon green](img/3b80f0af885b3df0c133aa7c2ce1d38b.png) |      | ![baboon blue](img/c8a3bf6d99a3f8b6af6288bdaf29baaa.png) |
+    | ![baboon red](img/89d04847ec49be7c90cee7b0396082c8.png) |      | ![baboon green](img/4755e726ece1730db29cf9ee867b988e.png) |      | ![baboon blue](img/7a487e46751e901f6f9a8f584baacd36.png) |
     | --- | --- | --- | --- | --- |
 
 1.  编写一个静态方法`isValidDNA()`，它接受一个字符串作为参数，并仅在其完全由字符`A`、`T`、`C`和`G`组成时返回`true`。
@@ -295,11 +295,11 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **色彩研究.** 编写一个程序 ColorStudy.java，显示右侧显示的色彩研究，其中给出了对应于本书中使用的 256 个蓝色级别（按行主序的蓝色到白色）和灰色级别（按列主序的黑色到白色）的 Albers 方块。
 
-    > ![色彩研究](img/db237fae8d0f0003d09e993f8e041b17.png)
+    > ![色彩研究](img/7abf2d630be5bca20956cff58bef708c.png)
 
 1.  **标题.** 编写一个程序 Tile.java，该程序接受一个图像文件的名称和两个整数*m*和*n*作为命令行参数，并创建一个*m*乘以*n*的图像平铺。
 
-    | ![2 乘 3 的狒狒](img/320c62720d82e790f962e422ad71ffbc.png) |
+    | ![2 乘 3 的狒狒](img/3263246f70b42a3bbb161194764409a1.png) |
     | --- |
 
 1.  **旋转滤镜.** 编写一个程序 Rotation.java，该程序接受两个命令行参数（图像文件的名称和一个实数\(\theta\)），并将图像逆时针旋转\(\theta\)度。要进行旋转，将源图像中每个像素\((s_i, s_j)\)的颜色复制到由以下公式给出的目标像素\((t_i, t_j)\)中：
@@ -308,12 +308,12 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     其中\((c_i, c_j)\)是图像的中心。
 
-    | ![狒狒](img/cf5710079eb12fddce40cbfb49066ef2.png) |      | ![旋转狒狒](img/e72ff459f8ff0fee17b525bf6dc2e3b0.png) |
+    | ![狒狒](img/248018528ff7c0db033fa4337aa0e0e5.png) |      | ![旋转狒狒](img/81ac4d2477d01c9b61711987862707d5.png) |
     | --- | --- | --- |
 
 1.  **涡旋滤镜.** 创建涡旋效果类似于旋转，只是角度随着到图像中心的距离的变化而变化。使用与前一个练习中相同的公式，但将\(\theta\)计算为\((s_i, s_j)\)的函数，具体来说是\(\pi/256\)乘以到中心的距离。
 
-    | ![狒狒](img/cf5710079eb12fddce40cbfb49066ef2.png) |      | ![涡旋狒狒](img/f0561ded245230dfbe7bb16f080610cb.png) |
+    | ![狒狒](img/248018528ff7c0db033fa4337aa0e0e5.png) |      | ![涡旋狒狒](img/7f0afd42716811499a046af06c26b57a.png) |
     | --- | --- | --- |
 
 1.  **波浪滤镜.** 编写一个过滤器 Wave.java，类似于前两个练习中的过滤器，创建波浪效果，通过将源图像中每个像素\((s_i, s_j)\)的颜色复制到目标像素\((t_i, t_j)\)中，其中
@@ -322,15 +322,15 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     添加代码以将振幅（附图中的 20）和频率（附图中的 64）作为命令行参数。
 
-    | ![波浪狒狒](img/1041215f25967cf479478fa52abffa6e.png) |      | ![波浪狒狒](img/4504b12ddd232cd648b276711014dcd8.png) |
+    | ![波浪狒狒](img/e91223ee91b38c98d6858fdc9b9e1b13.png) |      | ![波浪狒狒](img/657758520fa7dd65cddf58af7e903667.png) |
     | --- | --- | --- |
 
 1.  **玻璃滤镜.** 编写一个程序 Glass.java，该程序将图像文件的名称作为命令行参数，并应用*玻璃滤镜*：将每个像素*p*设置为随机相邻像素的颜色（其像素坐标与*p*的坐标最多相差 5）。
 
-    | ![狒狒](img/cf5710079eb12fddce40cbfb49066ef2.png) |      | ![透过玻璃的狒狒](img/af4db0bf2e50e622a2265bc885125069.png) |
+    | ![狒狒](img/248018528ff7c0db033fa4337aa0e0e5.png) |      | ![透过玻璃的狒狒](img/74b9762d0b4db39f7ea2009e6ea6c670.png) |
     | --- | --- | --- |
 
-    ![数字缩放](img/ef00393817699bafdeef039168db920b.png)
+    ![数字缩放](img/ebe56c38f8485e6a1e7e978109fd3561.png)
 
 1.  **数字缩放。**编写一个程序 Zoom.java，接受图像文件的名称和三个数字*s*、*x*和*y*作为命令行参数，并显示一个放大输入图像部分的输出图像。这些数字都在 0 和 1 之间，*s*被解释为比例因子，(*x*, *y*)为输出图像中心点的相对坐标。使用此程序在计算机上的某个数字照片上放大一个相对或宠物。
 
@@ -677,7 +677,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **Thue-Morse 编织。** 回顾第 2.3 节练习中的[Thue-Morse 序列](http://mathworld.wolfram.com/Thue-MorseSequence.html)。编写一个程序 ThueMorse.java，读取一个命令行输入 N，并在乌龟图形中绘制 N×N 的 Thue-Morse 编织。如果 Thue-Morse 字符串中第 i 位和第 j 位的位不同，则将单元格(i, j)绘制为黑色。下面是 N = 4、8 和 16 的 Thue-Morse 模式。
 
-    | ![4x4 Thue-Morse 模式](img/65b966e28151674410aec4ae3cb1a66f.png) | ![8x8 Thue-Morse 模式](img/cb26f95f01d4240b91bba774ab21ccb3.png) | ![16x16 Thue-Morse 模式](img/1ac2f6302876899b8d325a574aa30e6e.png) |
+    | ![4x4 Thue-Morse 模式](img/456edba12424eb5a3535345e71935def.png) | ![8x8 Thue-Morse 模式](img/b5b32510cd399943c221f25d08427ae6.png) | ![16x16 Thue-Morse 模式](img/bd7b0c36ecef42371792decfb4072eb4.png) |
     | --- | --- | --- |
 
     由于迷人的不规则性，对于较大的 N，你的眼睛可能很难保持集中。
@@ -730,7 +730,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **画家和打印机的色彩三角形。** 创建以下两幅图像。画家三角形的主色调是红色、绿色和蓝色；打印机三角形的主色调是品红、青色和黄色。
 
-    |                | ![Painter's triangle](img/e41b95346b1b62a83b863d10b65d8344.png) |                | ![Printer's triangle](img/740106f49889659dfb324ab2bbcbd7fb.png) |
+    |                | ![Painter's triangle](img/c8622a040c4573c1e8bf4618f92c4f44.png) |                | ![Printer's triangle](img/235b95035646279ef3c0bf12a3730f31.png) |
     | --- | --- | --- | --- |
 
 1.  **两步视觉运动。** 创建[两步视觉运动](http://www.georgemather.com/MotionDemos/TwostrokeMP4.html)或[四步](http://www.georgemather.com/MotionMP4.html)的视觉错觉。
@@ -763,7 +763,7 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
 1.  **变亮。** 编写一个程序 Brighter.java，该程序接受一个命令行参数，即 JPG 或 PNG 文件的名称，将其显示在窗口中，并显示一个更亮的副本。使用`Color`方法`brighter()`，它返回调用颜色的更亮版本。
 
-    | ![狒狒](img/cf5710079eb12fddce40cbfb49066ef2.png) |      | ![更亮的狒狒](img/af23bd6539193ef3aeeee376df211e9f.png) |
+    | ![狒狒](img/248018528ff7c0db033fa4337aa0e0e5.png) |      | ![更亮的狒狒](img/a57f84dcf3d285635fe0af8e86578974.png) |
     | --- | --- | --- |
 
 1.  **边缘检测。** 目标：形成图像某些特征的数学模型。为了实现这一目标，我们希望检测边缘或线条。*边缘*是图片中一个像素到下一个像素之间强烈对比的区域。边缘检测是图像处理和计算机视觉中��一个基本问题。*Sobel 方法*是一种流行的边缘检测技术。我们假设图像是灰度的。（如果不是，我们可以通过取红色、绿色和蓝色强度的平均值来转换。）对于每个像素(i, j)，我们通过计算两个 3x3*卷积掩模*来计算*边缘强度*。这涉及计算以(i, j)为中心的 3x3 邻域中九个像素的灰度值，将它们乘以 3x3 掩模中的相应权重，并将乘积相加。  
@@ -777,5 +777,5 @@ Luminance.java 是一个静态方法库，我们可以用它来将颜色转换�
 
     这产生两个值 Gx 和 Gy。在输出图片中，我们根据灰度值 255 - Sqrt(Gx*Gx + Gy*Gy)对像素(i, j)进行着色。处理边界的方法有很多种。为简单起见，我们忽略这种特殊情况，并将边界像素着色为黑色。程序 EdgeDetector.java 接受图像名称作为命令行输入，并对该图像应用 Sobel 边缘检测算法。
 
-    | ![狒狒](img/cf5710079eb12fddce40cbfb49066ef2.png) |      | ![Sobel 狒狒](img/7f16cb0420e016e4bc91b5c4e5648f51.png) |
+    | ![狒狒](img/248018528ff7c0db033fa4337aa0e0e5.png) |      | ![Sobel 狒狒](img/bb4c722dbadec47423a558c92eead29d.png) |
     | --- | --- | --- |

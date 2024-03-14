@@ -8,7 +8,7 @@
 
 数据类型 Ball.java 表示具有给定位置 \((r_x, r_y)\) 的球，它以固定速度 \((v_x, v_y)\) 在坐标为 −1 到 +1 的盒子中移动。当它与边界碰撞时，根据弹性碰撞定律反弹。
 
-> ![添加矢量以移动球](img/0a74711369e2da400dd552c6b1a0997f.png)
+> ![添加矢量以移动球](img/c6f40226e82ffd2f4448025128288d08.png)
 
 客户端 BouncingBalls.java 接受一个命令行参数 *n* 并创建 *n* 个随机弹跳球。
 
@@ -26,15 +26,15 @@
 
     它使用 Vector.java 数据类型来表示位移、速度和力作为矢量量。
 
-    > ![Body 数据类型 API](img/4a3db88c0c4f95460fd93a35352e2586.png)
+    > ![Body 数据类型 API](img/cf55b612bf1d69b1d2c7a428880957c3.png)
 
 +   *Universe 数据类型.* Universe.java 接受一个命令行参数 `dt`，从标准输入读取一个宇宙，并使用时间量子 `dt` 模拟宇宙。以下是数据文件格式的示例：
 
-    > ![n 体模拟的数据文件格式](img/ae222ac7b21fbaf4ef22ec2e15af3439.png)
+    > ![n 体模拟的数据文件格式](img/dab6d568ab94fba424299f8ccadd01ef.png)
 
     以下静态图像 2body.txt, 3body.txt, 和 4body.txt 是通过修改 Universe.java 和 Body.java 来绘制白色身体，然后在灰色背景上绘制黑色身体而制作的。
 
-    > ![2-, 3-, 和 4-体系的模拟](img/239e0e02a08d33b7c892b0e9e1e07e2a.png)
+    > ![2-, 3-, 和 4-体系的模拟](img/3dadf6ffee23eb6c0e96b625277206e4.png)
 
 #### 练习
 

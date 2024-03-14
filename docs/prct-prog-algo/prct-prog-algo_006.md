@@ -2,7 +2,7 @@
 
 > 原文：[`introcs.cs.princeton.edu/java/14array`](https://introcs.cs.princeton.edu/java/14array)
 
-![一个数组](img/8dc0add35e4461218ac3d9e05edc1769.png) 在本节中，我们考虑一种称为*数组*的基本构造。数组存储一系列相同类型的值。我们不仅想��储值，还想能够快速访问每个单独的值。我们用来引用数组中单个值的方法是对它们进行编号，然后*索引*它们——如果我们有*n*个值，我们将它们视为从 0 到*n*−1 编号。
+![一个数组](img/ef5f89a1aa8cf70f523802dda05f9042.png) 在本节中，我们考虑一种称为*数组*的基本构造。数组存储一系列相同类型的值。我们不仅想��储值，还想能够快速访问每个单独的值。我们用来引用数组中单个值的方法是对它们进行编号，然后*索引*它们——如果我们有*n*个值，我们将它们视为从 0 到*n*−1 编号。
 
 ## Java 中的数组。
 
@@ -28,7 +28,7 @@ for (int i = 0; i < n; i++)    // elements are indexed from 0 to n-1
 
 ArrayExamples.java 包含了 Java 中使用数组的典型示例。
 
-> ![数组处理示例](img/15e7a579b26a16f91989722fdbe4b7c3.png)
+> ![数组处理示例](img/a2c8e33724235c4f2fadea78e79f7414.png)
 
 ## 使用数组进行编程。
 
@@ -160,7 +160,7 @@ System.out.println(MONTHS[m]);
 
 ```
 
-如果你需要在程序的多个不同位置通过其数字访问月份名称，这种技术将特别有用。请注意，我们故意浪费数组中的一个槽（元素 0）以使 `MONTHS[1]` 对应于一月，如所需。![优惠券收集](img/3cc0a4109328288f5cc8c7b7a8134320.png)
+如果你需要在程序的多个不同位置通过其数字访问月份名称，这种技术将特别有用。请注意，我们故意浪费数组中的一个槽（元素 0）以使 `MONTHS[1]` 对应于一月，如所需。![优惠券收集](img/789d119900fb839791b538e40133ca82.png)
 
 ### 优惠券收集器。
 
@@ -168,7 +168,7 @@ System.out.println(MONTHS[m]);
 
 ### 埃拉托斯特尼筛法。
 
-[素数计数函数](http://mathworld.wolfram.com/PrimeCountingFunction.html) π(*n*) 是小于或等于 *n* 的素数数量。例如，π(17) = 7，因为前七个素数是 2, 3, 5, 7, 11, 13 和 17。PrimeSieve.java 接受一个整数命令行参数 *n* 并使用[埃拉托斯特尼筛法](http://mathworld.wolfram.com/SieveofEratosthenes.html)计算 π(*n*)。详情请参阅教科书。![一个二维数组](img/b671e674b19b2d5bd564253c19240e18.png)
+[素数计数函数](http://mathworld.wolfram.com/PrimeCountingFunction.html) π(*n*) 是小于或等于 *n* 的素数数量。例如，π(17) = 7，因为前七个素数是 2, 3, 5, 7, 11, 13 和 17。PrimeSieve.java 接受一个整数命令行参数 *n* 并使用[埃拉托斯特尼筛法](http://mathworld.wolfram.com/SieveofEratosthenes.html)计算 π(*n*)。详情请参阅教科书。![一个二维数组](img/d94ae635a22910f0a989c2c012c77f17.png)
 
 ## 二维数组。
 
@@ -236,7 +236,7 @@ System.out.println(MONTHS[m]);
 
     然后通过类似`a[i][j][k]`的代码引用一个条目。
 
-![矩阵乘法](img/ed1d2ea391443d5e5a93cdf14f4b6ffb.png)
+![矩阵乘法](img/46d7aa1e743e391bfba49af876b5f22f.png)
 
 ## 矩阵操作。
 

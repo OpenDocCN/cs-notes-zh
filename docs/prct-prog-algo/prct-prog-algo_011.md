@@ -12,7 +12,7 @@
 
 要引用另一个类中定义的静态方法，您必须使 Java 可以访问这两个类（例如，通过将它们都放在计算机上的同一目录中）。然后，要调用方法，请在其类名和句点分隔符之前添加。例如，SAT.java 调用 Gaussian.java 中的`cdf()`方法，后者调用`pdf()`方法，后者调用[Math](https://docs.oracle.com/javase/8/docs/api/java/lang/Math.html)中的`exp()`和`sqrt()`方法。
 
-> ![模块化编程图示](img/08a4c662eefda06deca9e68e4a8aaba9.png)
+> ![模块化编程图示](img/73562afbf14a62fc009f6277a64cfee9.png)
 
 我们描述了有关该过程的几个细节。
 
@@ -26,7 +26,7 @@
 
 +   *多个`main()`方法。* SAT.java 和 Gaussian.java 都有自己的`main()`方法。当您键入`java`后跟类名时，Java 将控制转移到该类中定义的`main()`方法对应的机器代码。
 
-![客户端、API 和实现](img/fe54cc3bca2868d5b52704ec28427319.png)
+![客户端、API 和实现](img/aba3773481fc86ff20a3c5241e3f0510.png)
 
 ## 库。
 
@@ -40,46 +40,46 @@
 
 例如，Gaussian.java 是以下 API 的实现：
 
-> ![高斯 API](img/f8164ed7b1ae44ff509bd9c9acdc8f0c.png)
+> ![高斯 API](img/8b4fda1ed5c5c63769b8262483713f7d.png)
 
 ## 随机数。
 
 StdRandom.java 是一个用于从各种分布生成随机数的库。
 
-> ![标准随机 API](img/7d3be812da4ce1d354533066395c0a25.png)
+> ![标准随机 API](img/f7845298570b53d6223d010e37babfb0.png)
 
 ## 数组的输入和输出。
 
 StdArrayIO.java 是一个用于从标准输入读取原始类型数组并将其打印到标准输出的库。
 
-> ![标准数组 IO](img/bcfcd188420bb95a4f5c8ba663769e6f.png)
+> ![标准数组 IO](img/498d8de467a837e40fa60b40518d030e.png)
 
 ## 迭代函数系统。
 
 [迭代函数系统](http://www.cut-the-knot.org/ctk/ifs.shtml)（IFS）是生成分形图像如[谢尔宾斯基三角形](https://en.wikipedia.org/wiki/Sierpinski_triangle)或[巴恩斯利蕨](https://en.wikipedia.org/wiki/Barnsley_fern)的一般方法。作为第一个例子，考虑以下简单过程：从等边三角形的一个顶点开始绘制一个点。然后随机选择三个顶点中的一个，并在刚刚绘制的点与该顶点之间的中点处绘制一个新点。继续执行相同的操作。
 
-> ![迭代函数系统](img/9f85fbf9d76716c8cb26f2bb3fe76188.png)
+> ![迭代函数系统](img/eed1371aa531ac8567aa670da158b524.png)
 
 Sierpinski.java 模拟这一过程。以下是 1,000、10,000 和 100,000 步后的快照。
 
-> | ![1,000 个点的混沌游戏](img/192178ce188a8f31eeeb6ca4cd13bdb9.png) |      | ![10,000 个点的混沌游戏](img/dfb5a428a0035a4c53441412d473f664.png) |      | ![100,000 个点的混沌游戏](img/f56b527fbdc550ebf867b68aeba9a6f6.png) |
+> | ![1,000 个点的混沌游戏](img/ff6b89390a88e431a586b61a8c4a899c.png) |      | ![10,000 个点的混沌游戏](img/8ddb898beb22f9a3f4cd5a22adeb8416.png) |      | ![100,000 个点的混沌游戏](img/b4777dd4d509e25a83a531a449dd195b.png) |
 > | --- | --- | --- | --- | --- |
 
 IFS.java 是一个模拟这一过程的数据驱动版本程序的通用化。您可以在输入 sierpinski.txt、barnsley.txt、tree.txt 和 coral.txt 上运行它。
 
-> ![迭代函数系统示例](img/0e214d0b393091d915b3dd999e58f074.png)
+> ![迭代函数系统示例](img/1eb4d06a2160e589d7a90f252282f6e9.png)
 
 ## 标准统计。
 
 StdStats.java 是一个用于统计计算和基本可视化的库。
 
-> ![标准统计 API](img/7fc599c4e9f62cbe069bbf29e1a1d16f.png)
+> ![标准统计 API](img/f28d021368ba6b2b3b60055b71e2a1db.png)
 
 ## 伯努利试验。
 
 Bernoulli.java 计算在抛掷公平硬币*n*次时找到正面的次数，并将结果与预测的高斯分布函数进行比较。根据[中心极限定理](http://mathworld.wolfram.com/CentralLimitTheorem.html)，得到的直方图极好地近似于均值为*n*/2，方差为*n*/4 的高斯分布。
 
-> ![抛掷 20 枚硬币，100000 次的直方图](img/02362d7379f9cdf90b1906e24a2ddd07.png)
+> ![抛掷 20 枚硬币，100000 次的直方图](img/2320c1c5754d7b474c251a43e0c96300.png)
 
 #### 练习
 
@@ -93,7 +93,7 @@ Bernoulli.java 计算在抛掷公平硬币*n*次时找到正面的次数，并�
 
 1.  编写一个实现以下 API 的库 Matrix.java：
 
-    > ![矩阵 API](img/a578f74b1d8403c5cb49910c6f373815.png)
+    > ![矩阵 API](img/3027fa8e1b934c73ab92d92ebf028201.png)
 
 1.  编写一个 Matrix.java 客户端 MarkovSquaring.java，实现第 1.6 节中描述的 Markov.java 版本，但是基于矩阵的平方，而不是迭代向量-矩阵乘法。
 
@@ -118,7 +118,7 @@ Bernoulli.java 计算在抛掷公平硬币*n*次时找到正面的次数，并�
 
     下面的图片显示了 500、1000 和 10,000 次迭代后的结果。
 
-    > | ![Barnsley fern](img/5614290cd45a155eecf3b92a5607d86b.png) | ![Barnsley fern](img/3e2c995f375686f0a39e711f34cb5fbf.png) | ![Barnsley fern](img/40e1da33f68a1844be4f69aa2f4a5518.png) |
+    > | ![Barnsley fern](img/f663933d26f4749cd345160fbfdd8486.png) | ![Barnsley fern](img/082c0487cb5e6203bd6121c9a97f0dfc.png) | ![Barnsley fern](img/cc81ed2ff5fd59e0e5e73c2c9a5f488d.png) |
     > | --- | --- | --- |
 
 1.  **Black-Scholes。** [Black-Scholes](http://en.wikipedia.org/wiki/Black-Scholes)模型预测时间 t 时的资产价格将为 S' = S exp { (rt - 0.5*sigma²*t + sigma ε sqrt(t) }，其中 epsilon 是标准高斯随机变量。可以使用蒙特卡洛模拟来估计。要估算时间 T 时期权的价值，计算 max(S' - X, 0)并在 epsilon 的许多试验中取平均值。今天期权的价值为 e^-rT * 平均值。欧式看跌期权= max(X - S', 0)。重用函数。将程序命名为 BlackScholes.java。参见练习 2.1.30 中针对此情况的精确公式。
