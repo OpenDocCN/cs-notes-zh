@@ -38,7 +38,7 @@
 > 
 > 真相一旦入眼，你就再也无法视而不见。——《黑客帝国》
 
-* [在线阅读](https://csntzh.flygon.net)
+* [在线阅读](https://csnt.flygon.net)
 
 ## 下载
 
