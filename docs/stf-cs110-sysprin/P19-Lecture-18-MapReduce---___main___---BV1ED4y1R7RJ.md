@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P19：Lecture 18 MapReduce - ___main___ - BV1ED4y1R7RJ
+# P19：Lecture 18 MapReduce - ___main___ - BV1ED4y1R7RJ
 
  Okay。 Welcome。 Welcome back。 So this has zero to do with the class。 Although by the way。
 

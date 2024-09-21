@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P4：Lecture 4 Filesystem Data Structures, System Calls and Intro to Multiprocessing - ___main___ - BV1ED4y1R7RJ
+# P4：Lecture 4 Filesystem Data Structures, System Calls and Intro to Multiprocessing - ___main___ - BV1ED4y1R7RJ
 
  Welcome。 Welcome to week two CS110。 I hope I've already had a nice weekend。 I。
 

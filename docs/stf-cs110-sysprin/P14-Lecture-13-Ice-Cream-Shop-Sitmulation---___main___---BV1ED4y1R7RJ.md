@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P14：Lecture 13 Ice Cream Shop Sitmulation - ___main___ - BV1ED4y1R7RJ
+# P14：Lecture 13 Ice Cream Shop Sitmulation - ___main___ - BV1ED4y1R7RJ
 
  Okay， so we are starting out today。 Today is one problem。 Hopefully you've got the handout。
 

@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P11：Lecture 10 From C threads to C++ threads - ___main___ - BV1ED4y1R7RJ
+# P11：Lecture 10 From C threads to C++ threads - ___main___ - BV1ED4y1R7RJ
 
  Welcome。 All right。 Welcome to the 19 of you that are here。 No。
 

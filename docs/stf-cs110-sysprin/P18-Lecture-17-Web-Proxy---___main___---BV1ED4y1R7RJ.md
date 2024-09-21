@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P18：Lecture 17 Web Proxy - ___main___ - BV1ED4y1R7RJ
+# P18：Lecture 17 Web Proxy - ___main___ - BV1ED4y1R7RJ
 
  Okay， let's get going even though not a ton of people here but we'll get going。 So。
 

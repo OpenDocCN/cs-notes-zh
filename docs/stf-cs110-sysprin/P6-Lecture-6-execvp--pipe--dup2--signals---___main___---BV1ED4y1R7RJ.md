@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P6：Lecture 6 execvp, pipe, dup2, signals - ___main___ - BV1ED4y1R7RJ
+# P6：Lecture 6 execvp, pipe, dup2, signals - ___main___ - BV1ED4y1R7RJ
 
  Welcome， welcome back to Monday CS 110。 We are continuing with multi-processing， which is。
 

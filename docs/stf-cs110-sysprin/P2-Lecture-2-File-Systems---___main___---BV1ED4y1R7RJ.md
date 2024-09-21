@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P2：Lecture 2 File Systems - ___main___ - BV1ED4y1R7RJ
+# P2：Lecture 2 File Systems - ___main___ - BV1ED4y1R7RJ
 
  Hello， hello。 Welcome。 Welcome back to day two， CS110。 So we have a lot to cover。 We。
 

@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P20：Lecture 19 Principles of System Design - ___main___ - BV1ED4y1R7RJ
+# P20：Lecture 19 Principles of System Design - ___main___ - BV1ED4y1R7RJ
 
  So， CS140 is about operating systems。 In this class。
 

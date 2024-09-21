@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P5：Lecture 5 Execvp Introduction - ___main___ - BV1ED4y1R7RJ
+# P5：Lecture 5 Execvp Introduction - ___main___ - BV1ED4y1R7RJ
 
  Okay， welcome back。 There are fewer of you here than before。
 

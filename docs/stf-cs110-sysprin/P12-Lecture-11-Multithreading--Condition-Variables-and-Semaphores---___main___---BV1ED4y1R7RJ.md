@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P12：Lecture 11 Multithreading, Condition Variables and Semaphores - ___main___ - BV1ED4y1R7RJ
+# P12：Lecture 11 Multithreading, Condition Variables and Semaphores - ___main___ - BV1ED4y1R7RJ
 
  Alright， we might as well get going， but it seems a little odd。 I'll try not to blaster yours out。
 

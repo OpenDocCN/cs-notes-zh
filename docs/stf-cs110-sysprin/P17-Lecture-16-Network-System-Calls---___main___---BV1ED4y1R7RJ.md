@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P17：Lecture 16 Network System Calls - ___main___ - BV1ED4y1R7RJ
+# P17：Lecture 16 Network System Calls - ___main___ - BV1ED4y1R7RJ
 
  Screen and cast people you missed about 30 seconds。 Okay， so the question was， "Hey。
 

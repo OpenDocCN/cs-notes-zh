@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P21：Lecture 20 Non-blocking I_O - ___main___ - BV1ED4y1R7RJ
+# P21：Lecture 20 Non-blocking I_O - ___main___ - BV1ED4y1R7RJ
 
  Okay， all right， so we've made it to the last day。 Woohoo！
 

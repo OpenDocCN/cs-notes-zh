@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P3：Lecture 3 Unix v6 Filesystem - ___main___ - BV1ED4y1R7RJ
+# P3：Lecture 3 Unix v6 Filesystem - ___main___ - BV1ED4y1R7RJ
 
  Welcome。 Welcome back to CS110。 How is the summit one going？ You guys started it。
 

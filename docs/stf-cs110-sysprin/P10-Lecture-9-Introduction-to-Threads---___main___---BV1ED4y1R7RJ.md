@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P10：Lecture 9 Introduction to Threads - ___main___ - BV1ED4y1R7RJ
+# P10：Lecture 9 Introduction to Threads - ___main___ - BV1ED4y1R7RJ
 
  Well， it must be sunny in 92 degrees outside because it looks like half of the people are here。
 

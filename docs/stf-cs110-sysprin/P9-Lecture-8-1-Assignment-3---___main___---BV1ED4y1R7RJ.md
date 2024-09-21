@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P9：Lecture 8-1 Assignment 3 - ___main___ - BV1ED4y1R7RJ
+# P9：Lecture 8-1 Assignment 3 - ___main___ - BV1ED4y1R7RJ
 
  Hi there， this is Chris and this is a video on assignment three and I apologize for being。
 

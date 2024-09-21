@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P15：Lecture 14 Introduction to Networking - ___main___ - BV1ED4y1R7RJ
+# P15：Lecture 14 Introduction to Networking - ___main___ - BV1ED4y1R7RJ
 
  Welcome， welcome to week seven we're getting there。 How's assignment five going？
 

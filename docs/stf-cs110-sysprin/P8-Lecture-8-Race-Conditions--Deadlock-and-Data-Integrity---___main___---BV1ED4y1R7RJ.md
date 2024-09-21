@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P8：Lecture 8 Race Conditions, Deadlock and Data Integrity - ___main___ - BV1ED4y1R7RJ
+# P8：Lecture 8 Race Conditions, Deadlock and Data Integrity - ___main___ - BV1ED4y1R7RJ
 
  All right， so welcome。 We have a presentation which you've probably heard when you were in 1Six B or 1Six X and。
 

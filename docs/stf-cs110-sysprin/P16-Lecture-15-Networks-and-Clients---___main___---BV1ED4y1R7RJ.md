@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P16：Lecture 15 Networks and Clients - ___main___ - BV1ED4y1R7RJ
+# P16：Lecture 15 Networks and Clients - ___main___ - BV1ED4y1R7RJ
 
  Okay， so we are going to continue our discussion about networks。
 

@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P7：Lecture 7 Signals - ___main___ - BV1ED4y1R7RJ
+# P7：Lecture 7 Signals - ___main___ - BV1ED4y1R7RJ
 
  Welcome to Wednesday。 Hope the assignment's going well。 I will go back to my office。
 

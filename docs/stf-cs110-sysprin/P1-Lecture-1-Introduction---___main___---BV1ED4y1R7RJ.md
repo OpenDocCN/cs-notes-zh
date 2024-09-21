@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P1：Lecture 1 Introduction - ___main___ - BV1ED4y1R7RJ
+# P1：Lecture 1 Introduction - ___main___ - BV1ED4y1R7RJ
 
  All right。 Welcome to CS110。 I'm Chris Gregg teaching CS110 this quarter。 Welcome。 The。
 

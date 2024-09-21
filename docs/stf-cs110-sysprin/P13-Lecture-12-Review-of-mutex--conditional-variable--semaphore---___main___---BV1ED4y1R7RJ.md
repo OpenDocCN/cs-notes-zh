@@ -1,4 +1,4 @@
-# 斯坦福大学 CS 110 计算机系统原理 Principles of Computer Systems（Spring 2019） - P13：Lecture 12 Review of mutex, conditional variable, semaphore - ___main___ - BV1ED4y1R7RJ
+# P13：Lecture 12 Review of mutex, conditional variable, semaphore - ___main___ - BV1ED4y1R7RJ
 
  Okay， we might as well get started。 Welcome。 So the midterm is over。 I hope everybody did alright。
 
