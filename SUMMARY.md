@@ -5,4 +5,5 @@
 +   [斯坦福 CS110 计算机系统原理笔记](docs/stf-cs110-sysprin/README.md)
 +   [斯坦福 CS143 编译原理中文笔记](docs/stf-cs143/README.md)
 +   [UCB CS162 操作系统笔记](docs/ucb-cs162-os/README.md)
++   [UCB CS61c 组成原理中文笔记](docs/ucb-cs61c-arch/README.md)
 +   [UIUC CS241：众包系统编程书](docs/uiuc-cs241-notes/README.md)
