@@ -1,3 +1,4 @@
++   [GAMES 图形学系列笔记](docs/games/README.md)
 +   [MIT 6.858 计算机系统安全讲义 2014 秋季](docs/mit-6858-comp-sec/README.md)
 +   [普林斯顿编程和算法讲义](docs/prct-prog-algo/README.md)
 +   [NUS CS1101S：SICP JavaScript 描述](docs/sicp-js/README.md)
