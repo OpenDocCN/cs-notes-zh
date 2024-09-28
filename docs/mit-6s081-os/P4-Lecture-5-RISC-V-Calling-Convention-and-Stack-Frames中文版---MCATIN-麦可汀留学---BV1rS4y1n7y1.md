@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P4：Lecture 5 RISC-V Calling Convention and Stack Frames中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P4：Lecture 5 RISC-V Calling Convention and Stack Frames中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/8869c25b6b4d641c47e873667332405a_0.png)
 

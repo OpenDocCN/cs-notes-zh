@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P7：Lecture 8 Page Faults 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P7：Lecture 8 Page Faults 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/1b44dfaa9ed2f5cd06fa161e0ad1f661_0.png)
 

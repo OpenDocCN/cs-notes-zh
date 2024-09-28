@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P5：Lecture 6 -  Isolation & System Call Entry_Exit 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P5：Lecture 6 -  Isolation & System Call Entry_Exit 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/2560cc93e558d8e9bdb7ab02e0210a2a_0.png)
 

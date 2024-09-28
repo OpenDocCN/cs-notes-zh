@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P1：Lecture 1 - Introduction and Examples 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P1：Lecture 1 - Introduction and Examples 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/d26c9a1f1068d704f04befc83f9512ce_0.png)
 

@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P23：Lecture 24 -  Final Q&A lecture 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P23：Lecture 24 -  Final Q&A lecture 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/2951c2de4fadf60c0ba62b4f514fda37_0.png)
 

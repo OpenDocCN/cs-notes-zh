@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P13：Lecture 14 - File Systems 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P13：Lecture 14 - File Systems 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
  started and everybody can see my screen that I shared and I hope everybody can hear me。
 

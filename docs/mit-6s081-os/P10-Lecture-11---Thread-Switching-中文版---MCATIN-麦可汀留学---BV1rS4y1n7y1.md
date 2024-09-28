@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P10：Lecture 11 - Thread Switching 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P10：Lecture 11 - Thread Switching 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/4c0f21ff94f6c74e5c0d1185ab9b48b1_0.png)
 

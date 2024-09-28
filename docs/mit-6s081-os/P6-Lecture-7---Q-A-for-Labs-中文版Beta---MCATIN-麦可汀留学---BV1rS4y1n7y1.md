@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P6：Lecture 7 - Q&A for Labs 中文版Beta - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P6：Lecture 7 - Q&A for Labs 中文版Beta - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/0e0a9164246e62f84280252dde192371_0.png)
 

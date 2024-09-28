@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P9：Lecture 10 - Multiprocessors and Locks 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P9：Lecture 10 - Multiprocessors and Locks 中文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/b9a5b7552f4dd1cee6570fbae1468305_0.png)
 

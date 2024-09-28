@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P19：Lecture 20 - Kernels and High-Level-Languages (HLL) 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P19：Lecture 20 - Kernels and High-Level-Languages (HLL) 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/2b8f0fb25ca0e5272414f7e320a85034_0.png)
 

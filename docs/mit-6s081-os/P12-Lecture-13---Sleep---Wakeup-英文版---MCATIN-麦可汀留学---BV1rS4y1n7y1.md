@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P12：Lecture 13 - Sleep & Wakeup 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P12：Lecture 13 - Sleep & Wakeup 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/2163d189246c37b025079af87447a4d0_0.png)
 

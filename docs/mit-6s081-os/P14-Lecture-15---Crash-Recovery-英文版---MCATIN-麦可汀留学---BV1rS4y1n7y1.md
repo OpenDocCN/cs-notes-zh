@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P14：Lecture 15 - Crash Recovery 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P14：Lecture 15 - Crash Recovery 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/7444807965d999fb8d4e42cb1c584ec1_0.png)
 

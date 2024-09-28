@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P17：Lecture 18 - OS Organization 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P17：Lecture 18 - OS Organization 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
  All right。 You guys hear me。 Yes。 Excellent。 Thank you。 All right。 Today， I want to talk。
 

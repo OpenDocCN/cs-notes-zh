@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P15：Lecture 16 - File System Performance and Fast Crash Recovery 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P15：Lecture 16 - File System Performance and Fast Crash Recovery 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/db835f856eb0951ed70e15b32b315722_0.png)
 

@@ -1,4 +1,4 @@
-# 【操作系统工程】精译【MIT 公开课 MIT6.S081】 - P16：Lecture 17 - Virtual Memory for Applications 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
+# P16：Lecture 17 - Virtual Memory for Applications 英文版 - MCATIN-麦可汀留学 - BV1rS4y1n7y1
 
 ![](img/34aa4f9fc39dabb7509d4bcc7255c15b_0.png)
 
