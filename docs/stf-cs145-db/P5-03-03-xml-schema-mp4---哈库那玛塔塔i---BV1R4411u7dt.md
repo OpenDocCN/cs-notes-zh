@@ -1,4 +1,4 @@
-# [P5：03-03-xml-schema.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P5：03-03-xml-schema.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， we'll be learning about XML schema。
 

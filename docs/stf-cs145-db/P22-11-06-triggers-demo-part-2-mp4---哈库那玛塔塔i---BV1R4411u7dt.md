@@ -1,4 +1,4 @@
-# [P22：11-06-triggers-demo-part-2.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P22：11-06-triggers-demo-part-2.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  If you made it through that long first part of the demo of triggers， here we are in part。
 

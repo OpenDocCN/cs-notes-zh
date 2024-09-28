@@ -1,4 +1,4 @@
-# [P14：07-02-functional-dependencies.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P14：07-02-functional-dependencies.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This video covers functional dependencies。
 

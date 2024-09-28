@@ -1,4 +1,4 @@
-# [P27：16-02-olap-demo.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P27：16-02-olap-demo.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， we'll be doing a live demonstration of OLAP。
 

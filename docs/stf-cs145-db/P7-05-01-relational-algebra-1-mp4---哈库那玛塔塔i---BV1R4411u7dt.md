@@ -1,4 +1,4 @@
-# [P7：05-01-relational-algebra-1.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P7：05-01-relational-algebra-1.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This is the first of two videos where we learn about relational algebra。
 

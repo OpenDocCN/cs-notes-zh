@@ -1,4 +1,4 @@
-# [P4：03-01-well-formed-xml.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P4：03-01-well-formed-xml.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This video introduces the basics of XML。 XML can be thought of as a data model。
 

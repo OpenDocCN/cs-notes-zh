@@ -1,4 +1,4 @@
-# [P6：04-01-json-intro.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P6：04-01-json-intro.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This video introduces JSON。 Let's start by talking about its pronunciation。
 

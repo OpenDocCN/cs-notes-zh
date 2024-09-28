@@ -1,4 +1,4 @@
-# [P15：08-01-xpath-intro.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P15：08-01-xpath-intro.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  Now let's turn to the subject of querying XML。
 

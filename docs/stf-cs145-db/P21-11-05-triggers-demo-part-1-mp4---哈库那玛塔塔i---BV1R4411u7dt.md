@@ -1,4 +1,4 @@
-# [P21：11-05-triggers-demo-part-1.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P21：11-05-triggers-demo-part-1.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  Now let's see triggers in action。
 

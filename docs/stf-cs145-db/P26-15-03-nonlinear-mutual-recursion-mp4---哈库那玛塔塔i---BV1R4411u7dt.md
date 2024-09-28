@@ -1,4 +1,4 @@
-# [P26：15-03-nonlinear-mutual-recursion.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P26：15-03-nonlinear-mutual-recursion.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， we'll be exploring some further issues involved in recursion in the SQL language。
 

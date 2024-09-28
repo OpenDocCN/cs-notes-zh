@@ -1,4 +1,4 @@
-# [P19：09-01-uml-data-modeling.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P19：09-01-uml-data-modeling.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This video talks about data modeling in UML。
 

@@ -1,4 +1,4 @@
-# [P28：DBClass Office Hours 02_21_2013 - 哈库那玛塔塔i - BV1R4411u7dt
+# P28：DBClass Office Hours 02_21_2013 - 哈库那玛塔塔i - BV1R4411u7dt
 
  Hello students， welcome to Office Hours for the Week。 So I will be doing this。
 

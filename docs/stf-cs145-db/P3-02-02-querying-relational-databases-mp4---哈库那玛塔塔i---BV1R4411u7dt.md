@@ -1,4 +1,4 @@
-# [P3：02-02-querying-relational-databases.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# P3：02-02-querying-relational-databases.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video we're going to learn about querying relational databases。
 
