@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P21：Lec21 NP-Completeness - 东风渐起UCAS - BV1o64y177K8
+# P21：Lec21 NP-Completeness - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/bccd9dcad1c20a97407b93aa74a169e8_0.png)
 

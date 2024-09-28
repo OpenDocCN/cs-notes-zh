@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P3：Lec3 Divide-and-Conquer (Part II) - 东风渐起UCAS - BV1o64y177K8
+# P3：Lec3 Divide-and-Conquer (Part II) - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/d0bc6e2a8dca7b2f11b8a0c91e62f633_0.png)
 

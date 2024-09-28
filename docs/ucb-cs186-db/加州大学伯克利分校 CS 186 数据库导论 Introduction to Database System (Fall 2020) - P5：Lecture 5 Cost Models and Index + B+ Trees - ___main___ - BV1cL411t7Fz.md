@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P5：Lecture 5 Cost Models and Index + B+ Trees - ___main___ - BV1cL411t7Fz
+# P5：Lecture 5 Cost Models and Index + B+ Trees - ___main___ - BV1cL411t7Fz
 
  say lecture of 186。
 

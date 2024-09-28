@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P25：Lec25 Randomized Algorithm - 东风渐起UCAS - BV1o64y177K8
+# P25：Lec25 Randomized Algorithm - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/1ec77d5e61438c5687f66612fade1808_0.png)
 

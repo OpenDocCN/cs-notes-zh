@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P20：Lec20 Search Problems - 东风渐起UCAS - BV1o64y177K8
+# P20：Lec20 Search Problems - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/5d6383d122f154bcbd8e38486e9d3f2d_0.png)
 

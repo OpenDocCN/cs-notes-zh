@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P9：Lecture 9 Sorting & Hashing - ___main___ - BV1cL411t7Fz
+# P9：Lecture 9 Sorting & Hashing - ___main___ - BV1cL411t7Fz
 
 到局部的右边。
 

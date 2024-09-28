@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P15：Lec15 Linear Programming - 东风渐起UCAS - BV1o64y177K8
+# P15：Lec15 Linear Programming - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/dd147090c731e29ff9b800c0d97ee8f6_0.png)
 

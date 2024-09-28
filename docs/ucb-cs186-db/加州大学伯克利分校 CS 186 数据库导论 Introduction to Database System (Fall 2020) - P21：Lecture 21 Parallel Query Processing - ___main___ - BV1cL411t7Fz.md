@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P21：Lecture 21 Parallel Query Processing - ___main___ - BV1cL411t7Fz
+# P21：Lecture 21 Parallel Query Processing - ___main___ - BV1cL411t7Fz
 
 ![](img/738b9754739b257a6f4d1c36a13228ff_0.png)
 

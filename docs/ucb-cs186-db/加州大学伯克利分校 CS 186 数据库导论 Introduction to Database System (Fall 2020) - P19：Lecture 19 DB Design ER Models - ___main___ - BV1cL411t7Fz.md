@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P19：Lecture 19 DB Design ER Models - ___main___ - BV1cL411t7Fz
+# P19：Lecture 19 DB Design ER Models - ___main___ - BV1cL411t7Fz
 
 ![](img/4ab6a2617435eaa1d6158d0d63238fff_0.png)
 

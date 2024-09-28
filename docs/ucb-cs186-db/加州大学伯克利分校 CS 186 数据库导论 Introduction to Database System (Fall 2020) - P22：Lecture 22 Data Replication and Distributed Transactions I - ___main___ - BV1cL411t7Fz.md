@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P22：Lecture 22 Data Replication and Distributed Transactions I - ___main___ - BV1cL411t7Fz
+# P22：Lecture 22 Data Replication and Distributed Transactions I - ___main___ - BV1cL411t7Fz
 
  Because we would like to actually move on next to the next topic of like what happens when we try to run transactions on parallel databases。
 

@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P19：Lec19 Reductions, Bipartite Matching - 东风渐起UCAS - BV1o64y177K8
+# P19：Lec19 Reductions, Bipartite Matching - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/51c46a55c13f83ed9e095dd93d59cc15_0.png)
 

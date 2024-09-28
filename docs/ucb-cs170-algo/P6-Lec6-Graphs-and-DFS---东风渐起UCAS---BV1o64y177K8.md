@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P6：Lec6 Graphs and DFS - 东风渐起UCAS - BV1o64y177K8
+# P6：Lec6 Graphs and DFS - 东风渐起UCAS - BV1o64y177K8
 
 我现在有点害怕换HDMI，但是我的iPad没有显示，嗯，我的iPad显示不出来，我应该连接到另一个吗。
 

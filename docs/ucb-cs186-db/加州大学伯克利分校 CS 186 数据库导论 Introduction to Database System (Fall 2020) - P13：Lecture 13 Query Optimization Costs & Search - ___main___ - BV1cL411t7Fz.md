@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P13：Lecture 13 Query Optimization Costs & Search - ___main___ - BV1cL411t7Fz
+# P13：Lecture 13 Query Optimization Costs & Search - ___main___ - BV1cL411t7Fz
 
 看起来不错。
 

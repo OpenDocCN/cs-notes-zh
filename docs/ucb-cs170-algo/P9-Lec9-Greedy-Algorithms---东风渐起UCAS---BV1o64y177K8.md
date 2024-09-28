@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P9：Lec9 Greedy Algorithms - 东风渐起UCAS - BV1o64y177K8
+# P9：Lec9 Greedy Algorithms - 东风渐起UCAS - BV1o64y177K8
 
 一个快速的问题，有人有iPad的USB充电器吗？我可以借一下，你是最接近的，谢谢你。
 

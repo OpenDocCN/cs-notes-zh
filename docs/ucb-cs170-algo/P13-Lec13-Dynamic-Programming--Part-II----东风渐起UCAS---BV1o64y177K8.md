@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P13：Lec13 Dynamic Programming (Part II) - 东风渐起UCAS - BV1o64y177K8
+# P13：Lec13 Dynamic Programming (Part II) - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/cbd891bc4c32e909b9d5c6862096a5a1_0.png)
 

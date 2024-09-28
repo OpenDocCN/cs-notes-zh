@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P14：Lec14 Dynamic Programming (Part III) - 东风渐起UCAS - BV1o64y177K8
+# P14：Lec14 Dynamic Programming (Part III) - 东风渐起UCAS - BV1o64y177K8
 
 你们过得怎么样，那么你在其他课上的期中考试成绩如何呢？你是摩萨丹吗，好啦，所以现在还是期中考试，呵呵，然后呢，我想在下一个期中考试开始前你可能有两周的休息时间，作为一个本科生是很难的，好啦。
 

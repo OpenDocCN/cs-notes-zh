@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P1：Lec1 Introduction, Big-O Notation, Arithmetic - 东风渐起UCAS - BV1o64y177K8
+# P1：Lec1 Introduction, Big-O Notation, Arithmetic - 东风渐起UCAS - BV1o64y177K8
 
 好啦，现在是十二点三十九分，所以我们将在一两分钟内开始，所以请坐，我敢肯定会有很多人迟到，我看到有很多空位，但洒了进去，我想知道你是否可以喜欢，坐近一点，并腾出一些角落的座位给那些要晚到的人，谢谢你们。
 

@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P7：Lecture 7 Buffer Management - ___main___ - BV1cL411t7Fz
+# P7：Lecture 7 Buffer Management - ___main___ - BV1cL411t7Fz
 
  Okay， I think it is being recorded。
 

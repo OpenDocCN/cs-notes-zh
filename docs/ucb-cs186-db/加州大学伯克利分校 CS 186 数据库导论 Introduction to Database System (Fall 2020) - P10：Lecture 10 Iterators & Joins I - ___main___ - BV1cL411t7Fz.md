@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P10：Lecture 10 Iterators & Joins I - ___main___ - BV1cL411t7Fz
+# P10：Lecture 10 Iterators & Joins I - ___main___ - BV1cL411t7Fz
 
  Okay， look， it's awesome to see all of you。
 

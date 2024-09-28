@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P10：Lec10 Minimum Spanning Trees - 东风渐起UCAS - BV1o64y177K8
+# P10：Lec10 Minimum Spanning Trees - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/430e07d7373410f8a0bd43b509a7a84e_0.png)
 

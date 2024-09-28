@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P17：Lec17 Network Flow (Part II) - 东风渐起UCAS - BV1o64y177K8
+# P17：Lec17 Network Flow (Part II) - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/c4b08f078539a11a008d3efad209c5dc_0.png)
 

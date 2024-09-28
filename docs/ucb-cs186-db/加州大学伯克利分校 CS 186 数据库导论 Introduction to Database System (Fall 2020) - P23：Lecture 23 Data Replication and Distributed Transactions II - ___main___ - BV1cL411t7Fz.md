@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P23：Lecture 23 Data Replication and Distributed Transactions II - ___main___ - BV1cL411t7Fz
+# P23：Lecture 23 Data Replication and Distributed Transactions II - ___main___ - BV1cL411t7Fz
 
 ![](img/b880a387f40b6f9b82a51d4e2b5fdd54_0.png)
 

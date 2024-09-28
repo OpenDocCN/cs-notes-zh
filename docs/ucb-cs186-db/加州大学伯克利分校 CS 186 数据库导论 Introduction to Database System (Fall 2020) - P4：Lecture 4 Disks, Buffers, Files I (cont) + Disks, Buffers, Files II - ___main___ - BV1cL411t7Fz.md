@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P4：Lecture 4 Disks, Buffers, Files I (cont) + Disks, Buffers, Files II - ___main___ - BV1cL411t7Fz
+# P4：Lecture 4 Disks, Buffers, Files I (cont) + Disks, Buffers, Files II - ___main___ - BV1cL411t7Fz
 
  of 186。 So just a few announcements to begin with。 So first of all。
 

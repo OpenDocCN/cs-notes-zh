@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P4：Lec4 Fast Fourier Transform (Part I) - 东风渐起UCAS - BV1o64y177K8
+# P4：Lec4 Fast Fourier Transform (Part I) - 东风渐起UCAS - BV1o64y177K8
 
 好啦，呃，我想现在是12点40分，所以让我们开始吧，呃，后面的人都能听到我说话吗，我就当你答应了，酷，今天的第四讲，今天讲座的主题是多项式乘法，我看看能不能把音量调小一点，我不知道该怎么做，我会说的。
 

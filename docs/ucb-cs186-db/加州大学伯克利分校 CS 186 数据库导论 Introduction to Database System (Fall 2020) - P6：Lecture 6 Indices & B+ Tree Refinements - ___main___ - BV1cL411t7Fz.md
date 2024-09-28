@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P6：Lecture 6 Indices & B+ Tree Refinements - ___main___ - BV1cL411t7Fz
+# P6：Lecture 6 Indices & B+ Tree Refinements - ___main___ - BV1cL411t7Fz
 
 ![](img/49fd386ee5683984b6cef039251b7f3e_0.png)
 

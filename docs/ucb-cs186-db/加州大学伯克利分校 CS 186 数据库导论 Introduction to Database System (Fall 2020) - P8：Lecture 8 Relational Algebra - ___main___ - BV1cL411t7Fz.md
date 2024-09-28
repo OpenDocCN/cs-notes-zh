@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P8：Lecture 8 Relational Algebra - ___main___ - BV1cL411t7Fz
+# P8：Lecture 8 Relational Algebra - ___main___ - BV1cL411t7Fz
 
  I should。 OK， so will there be sort of a dry run for this thing？ Yes。
 

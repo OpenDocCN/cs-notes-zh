@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P5：Lec5 Fast Fourier Transform (Part II) - 东风渐起UCAS - BV1o64y177K8
+# P5：Lec5 Fast Fourier Transform (Part II) - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/84e48ca68c32b2f24d02befb6faff7dd_0.png)
 

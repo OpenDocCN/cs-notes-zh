@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P22：Lec22 Approximation Algorithm - 东风渐起UCAS - BV1o64y177K8
+# P22：Lec22 Approximation Algorithm - 东风渐起UCAS - BV1o64y177K8
 
 好啦，嗯，所以让我们得到，我们开始吧，向下一点，酷，今天我们要从np完备性，和np硬度和还原度，所有这些，嗯，我们要谈谈我们的下一个话题，也就是近似算法，和往常一样，在我们这样做之前，让我来谈谈。
 

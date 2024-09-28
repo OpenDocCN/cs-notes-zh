@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P27：Lecture 27 OLAP, Column Stores - ___main___ - BV1cL411t7Fz
+# P27：Lecture 27 OLAP, Column Stores - ___main___ - BV1cL411t7Fz
 
  I just started it。 Okay， cool。 Okay， cool。 There you go。
 

@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P25：Lecture 25 NoSQL II - ___main___ - BV1cL411t7Fz
+# P25：Lecture 25 NoSQL II - ___main___ - BV1cL411t7Fz
 
 ![](img/5219991661bf799fd6abc2f5dd000729_0.png)
 

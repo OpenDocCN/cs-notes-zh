@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P17：Lecture 17 Recovery II - ___main___ - BV1cL411t7Fz
+# P17：Lecture 17 Recovery II - ___main___ - BV1cL411t7Fz
 
  Okay。 I could try if you can。
 

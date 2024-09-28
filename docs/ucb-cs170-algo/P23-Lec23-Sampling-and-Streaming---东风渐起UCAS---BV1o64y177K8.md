@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P23：Lec23 Sampling and Streaming - 东风渐起UCAS - BV1o64y177K8
+# P23：Lec23 Sampling and Streaming - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/2881d37b70f2e58ce685b96f5fc97e77_0.png)
 

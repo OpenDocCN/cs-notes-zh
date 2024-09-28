@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P11：Lec11 More on MSTs and Set Cover - 东风渐起UCAS - BV1o64y177K8
+# P11：Lec11 More on MSTs and Set Cover - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/9e1ab6cffaa43cc7eea71d8c3aebf8fe_0.png)
 

@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P24：Lec24 Sketching and Streaming (Part II) - 东风渐起UCAS - BV1o64y177K8
+# P24：Lec24 Sketching and Streaming (Part II) - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/9cde4bcb39dd10bdfba7c0f63e271414_0.png)
 

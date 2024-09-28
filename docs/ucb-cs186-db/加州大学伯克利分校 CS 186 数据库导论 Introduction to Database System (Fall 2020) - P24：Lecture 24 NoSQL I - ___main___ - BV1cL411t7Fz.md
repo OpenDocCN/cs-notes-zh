@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P24：Lecture 24 NoSQL I - ___main___ - BV1cL411t7Fz
+# P24：Lecture 24 NoSQL I - ___main___ - BV1cL411t7Fz
 
  Does it actually consume a lot of power？
 

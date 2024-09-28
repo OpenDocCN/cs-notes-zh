@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P26：Lec26 Special Topic (Quantum Algorithm) - 东风渐起UCAS - BV1o64y177K8
+# P26：Lec26 Special Topic (Quantum Algorithm) - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/01f6b4fceaaa8251f84c6af6e80441fd_0.png)
 

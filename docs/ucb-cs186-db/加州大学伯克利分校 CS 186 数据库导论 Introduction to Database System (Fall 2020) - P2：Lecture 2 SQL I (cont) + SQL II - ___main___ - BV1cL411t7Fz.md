@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P2：Lecture 2 SQL I (cont) + SQL II - ___main___ - BV1cL411t7Fz
+# P2：Lecture 2 SQL I (cont) + SQL II - ___main___ - BV1cL411t7Fz
 
 ![](img/380d25af24e3d95ef6c48696115a9d08_0.png)
 

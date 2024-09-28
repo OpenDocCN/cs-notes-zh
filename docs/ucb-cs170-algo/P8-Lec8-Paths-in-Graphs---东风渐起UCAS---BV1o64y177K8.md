@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P8：Lec8 Paths in Graphs - 东风渐起UCAS - BV1o64y177K8
+# P8：Lec8 Paths in Graphs - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/4ee47ca52a8f7f667338c0104745b9bb_0.png)
 

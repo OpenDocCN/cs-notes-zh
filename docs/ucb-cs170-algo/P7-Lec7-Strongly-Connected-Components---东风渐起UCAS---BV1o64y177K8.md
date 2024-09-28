@@ -1,4 +1,4 @@
-# 加州大学伯克利分校算法课程CS170 - P7：Lec7 Strongly Connected Components - 东风渐起UCAS - BV1o64y177K8
+# P7：Lec7 Strongly Connected Components - 东风渐起UCAS - BV1o64y177K8
 
 ![](img/2dfec4277d0eac031156908cc047a7a7_0.png)
 

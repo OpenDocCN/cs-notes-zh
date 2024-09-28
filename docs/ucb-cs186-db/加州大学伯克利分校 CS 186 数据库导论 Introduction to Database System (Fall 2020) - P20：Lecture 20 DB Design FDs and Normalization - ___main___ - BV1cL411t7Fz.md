@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P20：Lecture 20 DB Design FDs and Normalization - ___main___ - BV1cL411t7Fz
+# P20：Lecture 20 DB Design FDs and Normalization - ___main___ - BV1cL411t7Fz
 
 ![](img/fae25ea80ddc4aecdb2d8d0159a2e936_0.png)
 

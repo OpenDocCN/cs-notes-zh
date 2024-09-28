@@ -1,4 +1,4 @@
-# 加州大学伯克利分校 CS 186 数据库导论 Introduction to Database System (Fall 2020) - P3：Lecture 3 SQL II (cont) + Disks, Buffers, Files I - ___main___ - BV1cL411t7Fz
+# P3：Lecture 3 SQL II (cont) + Disks, Buffers, Files I - ___main___ - BV1cL411t7Fz
 
 我做到了，嗯如果你点击，你没有，即使那样，也有更多，然后允许记录，好的，我该走了吗，好的，所有的权利，所以嗯，给我一秒钟，嗨，伙计们，这是三班，我猜是一八十六，嗯，今天可能会打嗝，因为我有一个新的桌面。
 
