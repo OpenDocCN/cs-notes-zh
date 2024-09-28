@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P19：Lecture 18 - Fork Consistency, SUNDR - mayf09 - BV16f4y1z7kn
+# P19：Lecture 18 - Fork Consistency, SUNDR - mayf09 - BV16f4y1z7kn
 
 好的，下午好，大家能听到我说话吗？是的。好的，谢谢，是的，我会在课程结束后贴上讲稿，作为对聊天的回应。好的，今天我想在 6。824 开始一个新的话题，这是最后一个要讨论的话题，主题是去中心化的系统。
 

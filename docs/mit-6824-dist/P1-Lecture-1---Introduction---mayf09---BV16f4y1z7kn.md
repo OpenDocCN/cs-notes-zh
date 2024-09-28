@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P1：Lecture 1 - Introduction - mayf09 - BV16f4y1z7kn
+# P1：Lecture 1 - Introduction - mayf09 - BV16f4y1z7kn
 
 你们可能注意到了，我在共享屏幕上放的网页部分，大部分课程是跟据课程表的，我稍后再说这件事，但是，希望你能找到链接，然后找到课程表。稍后，我会更详细地谈到这个。
 

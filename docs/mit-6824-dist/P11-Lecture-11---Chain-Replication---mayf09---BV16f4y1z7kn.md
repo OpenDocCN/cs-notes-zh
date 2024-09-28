@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P11：Lecture 11 - Chain Replication - mayf09 - BV16f4y1z7kn
+# P11：Lecture 11 - Chain Replication - mayf09 - BV16f4y1z7kn
 
 傍晚好，晚上好，无论你在哪里，我们开始吧。今天，我想谈谈链式复制，今天的论文来自 2004 ，在深入研究这篇论文之前，我想提醒你几件后勤上的事，一是我们周四有个测验，测验的所有主题说明。
 

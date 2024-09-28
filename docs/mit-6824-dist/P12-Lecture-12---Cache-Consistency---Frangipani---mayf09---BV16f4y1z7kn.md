@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P12：Lecture 12 - Cache Consistency - Frangipani - mayf09 - BV16f4y1z7kn
+# P12：Lecture 12 - Cache Consistency - Frangipani - mayf09 - BV16f4y1z7kn
 
 好的，早上好，下午好，晚上好，不管你在哪里，今天的计划是讨论 Frangipani ，这是一篇 1997 年的论文，所以这是一篇有点老的论文，本文的研究背景是网络文件系统。
 

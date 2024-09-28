@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P14：Lecture 14 - Spanner - mayf09 - BV16f4y1z7kn
+# P14：Lecture 14 - Spanner - mayf09 - BV16f4y1z7kn
 
 下午好，傍晚好，晚上好，早上好，无论你在哪里或者无论你什么时候看。所以今天我想谈谈 Spanner ，是一篇 2012 年的论文，但 Spanner 系统仍在使用中，而且还在不断地开发中。
 

@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P16：Lecture 15 continued - Optimistic Concurrency Control (FaRM) pt. 2 - mayf09 - BV16f4y1z7kn
+# P16：Lecture 15 continued - Optimistic Concurrency Control (FaRM) pt. 2 - mayf09 - BV16f4y1z7kn
 
 好的，下午好，傍晚好，晚上好，早上好，无论你在哪个时区收看这个课程。再次检查声音，大家能听到我说话吗？是的。是的。好的，今天我要谈两件事，我想结束我们对 FaRM 的讨论，然后我会讨论 Spark 。
 

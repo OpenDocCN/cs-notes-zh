@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P2：Lecture 2 - RPC and Threads - mayf09 - BV16f4y1z7kn
+# P2：Lecture 2 - RPC and Threads - mayf09 - BV16f4y1z7kn
 
 好的，今天的主题是线程和 RPC ，6。824 第二讲，我们将主要关注 Go 的线程和 RPC ，我们在实验中使用的编程语言，这节课的大部分内容都是量身定做的，帮助你了解实验用的 Go 编程。
 

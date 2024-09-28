@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P7：Lecture 7 - Fault Tolerance - Raft (2) - mayf09 - BV16f4y1z7kn
+# P7：Lecture 7 - Fault Tolerance - Raft (2) - mayf09 - BV16f4y1z7kn
 
 好的，下午好，声音检查，大家能听到我说话吗？是的。谢谢，好的，下午好，晚上好，早上好，晚上好，无论你在哪里，今天我要更多地谈谈 raft ，我们想要涵盖以下不同的主题，将与实验相关。所以，首先。
 

@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P13：Lecture 13 - Distributed Transactions - mayf09 - BV16f4y1z7kn
+# P13：Lecture 13 - Distributed Transactions - mayf09 - BV16f4y1z7kn
 
 好的，谢谢。好的，下午好，傍晚好，早上好，晚上好，无论你在哪里，今天我们要谈的是事务。你们可能注意到了，今天的阅读材料本质上更多是教程，我们不是在研究一个特定的系统。
 

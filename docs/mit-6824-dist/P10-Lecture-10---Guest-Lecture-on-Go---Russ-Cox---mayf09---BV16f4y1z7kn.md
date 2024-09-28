@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P10：Lecture 10 - Guest Lecture on Go - Russ Cox - mayf09 - BV16f4y1z7kn
+# P10：Lecture 10 - Guest Lecture on Go - Russ Cox - mayf09 - BV16f4y1z7kn
 
 好的，下午好，早上好，傍晚好，晚上好，无论你在哪里。让我们重新开始吧。所以，今天我们有一个嘉宾课程，可能演讲者需要一些介绍，Russ Cox 是 Go 项目的联合负责人之一，我们会更多地讨论这个问题。
 

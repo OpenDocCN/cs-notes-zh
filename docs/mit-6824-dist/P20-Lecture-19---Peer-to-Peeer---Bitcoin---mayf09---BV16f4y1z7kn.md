@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P20：Lecture 19 - Peer-to-Peeer - Bitcoin - mayf09 - BV16f4y1z7kn
+# P20：Lecture 19 - Peer-to-Peeer - Bitcoin - mayf09 - BV16f4y1z7kn
 
 好的，下午好，早上好或晚上好，我们开始吧，今天我想谈谈比特币。我想谈这件事的原因是，它解决了一个困难的问题，也就是与拜占庭参与者达成共识。我想它解决了，所以拜占庭参与者是，它可能是恶意的或敌意的。
 

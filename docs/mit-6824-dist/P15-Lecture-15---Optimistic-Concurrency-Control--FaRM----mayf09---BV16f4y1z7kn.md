@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P15：Lecture 15 - Optimistic Concurrency Control (FaRM) - mayf09 - BV16f4y1z7kn
+# P15：Lecture 15 - Optimistic Concurrency Control (FaRM) - mayf09 - BV16f4y1z7kn
 
 下午好，傍晚好，晚上好，无论你在哪里。所以今天我想谈谈 FaRM ，这是一篇 2015 年的论文，是比较近的一篇论文，这是一篇研究论文，这个研究论文的主题是，试图探索一些想法和技术，来获得高性能的事务。
 

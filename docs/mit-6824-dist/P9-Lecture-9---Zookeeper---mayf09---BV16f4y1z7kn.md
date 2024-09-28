@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P9：Lecture 9 - Zookeeper - mayf09 - BV16f4y1z7kn
+# P9：Lecture 9 - Zookeeper - mayf09 - BV16f4y1z7kn
 
 谢谢。好的，下午好，早上好，傍晚好，晚上好，无论你在哪里，所以今天我想谈谈 zookeeper ，以及它的背景，我们今天布置的论文，是 2010 年的。所以我们会回顾上几节课的内容。
 

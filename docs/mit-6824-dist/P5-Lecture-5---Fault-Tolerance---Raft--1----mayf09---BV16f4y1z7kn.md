@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P5：Lecture 5 - Fault Tolerance - Raft (1) - mayf09 - BV16f4y1z7kn
+# P5：Lecture 5 - Fault Tolerance - Raft (1) - mayf09 - BV16f4y1z7kn
 
 所以今天的主题是 raft 复制协议，我们将详细讨论这个问题，实际上，我们将使用多节课来讲解它，一个是，因为它是分布式复制协议示例的核心组件之一。所以，今天我们主要关注。
 

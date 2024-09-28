@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P21：Lecture 20 - Blockstack - mayf09 - BV16f4y1z7kn
+# P21：Lecture 20 - Blockstack - mayf09 - BV16f4y1z7kn
 
 好的，谢谢。好的，就是，下午好，早上好，傍晚好，晚上安，无论你在哪里，我想欢迎来到本学期的最后一周，所以还有两节课，今天我们将要讨论的是 Blockstack ，周四，我们收到一份来自不同项目的报告。
 

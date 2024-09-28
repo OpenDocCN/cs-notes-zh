@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P22：Lecture 21 - Project Presentations - mayf09 - BV16f4y1z7kn
+# P22：Lecture 21 - Project Presentations - mayf09 - BV16f4y1z7kn
 
 只要你想做好准备，就可以开始了。好的，那我们开始吧。请。好了，大家好，我是 Felipe ，我和 Caralina 一起工作，今天，我们将介绍，我们的分布式私有电子投票项目。
 

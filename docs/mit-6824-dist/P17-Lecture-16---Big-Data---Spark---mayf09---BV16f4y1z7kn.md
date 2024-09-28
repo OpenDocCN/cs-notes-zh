@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P17：Lecture 16 - Big Data - Spark - mayf09 - BV16f4y1z7kn
+# P17：Lecture 16 - Big Data - Spark - mayf09 - BV16f4y1z7kn
 
 我们将谈论的是 Spark ，所以这几乎可以追溯到学期开始，我们在那里谈了很多关于 mapreduce 的事情，事实上，在实验 1 你实现了 mapreduce 。事实上，非正式的。
 

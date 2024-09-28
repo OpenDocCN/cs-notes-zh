@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P4：Lecture 4 - Primary-Backup Replication - mayf09 - BV16f4y1z7kn
+# P4：Lecture 4 - Primary-Backup Replication - mayf09 - BV16f4y1z7kn
 
 好的，下午好，早上好，晚上好，无论你在哪里。今天我想谈谈主/备复制，是对主/备应用程序的介绍。我们将在本学期的多节课中讨论这一点，但这是[]或 VMware 容错论文，是一个非常好的介绍。
 

@@ -1,4 +1,4 @@
-# MIT 6.824 2021 分布式系统 [中英文字幕] - P18：Lecture 17 - Cache Consistency - Memcached at Facebook - mayf09 - BV16f4y1z7kn
+# P18：Lecture 17 - Cache Consistency - Memcached at Facebook - mayf09 - BV16f4y1z7kn
 
 所以今天我想讨论一下 memcache ，这是一篇来自 Facebook 的 2013 年的论文，memcache 在很多网站中使用，或者大型网站使用的，与它的想法或架构很相似。这篇论文是一篇经验论文。
 
