@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P10：06-06-aggregation.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P10：06-06-aggregation.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  The next set of queries will show introduce the concept of aggregation in SQL。
 

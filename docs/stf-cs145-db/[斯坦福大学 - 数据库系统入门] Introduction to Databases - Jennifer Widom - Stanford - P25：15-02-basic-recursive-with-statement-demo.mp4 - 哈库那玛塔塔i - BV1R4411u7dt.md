@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P25：15-02-basic-recursive-with-statement-demo.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P25：15-02-basic-recursive-with-statement-demo.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This video gives a live demonstration of the recursive constructs in SQL that we introduced in the previous video。
 

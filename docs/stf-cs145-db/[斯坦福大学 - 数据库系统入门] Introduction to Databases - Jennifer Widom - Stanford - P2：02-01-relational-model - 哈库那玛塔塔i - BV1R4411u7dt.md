@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P2：02-01-relational-model - 哈库那玛塔塔i - BV1R4411u7dt
+# [P2：02-01-relational-model - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， we'll learn about the relational model。
 

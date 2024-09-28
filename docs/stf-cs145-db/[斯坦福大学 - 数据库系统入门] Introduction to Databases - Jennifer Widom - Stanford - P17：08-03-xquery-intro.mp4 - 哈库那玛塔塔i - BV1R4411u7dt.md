@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P17：08-03-xquery-intro.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P17：08-03-xquery-intro.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This video gives an introduction to the XQuery query language for XML。
 

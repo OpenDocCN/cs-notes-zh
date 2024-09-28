@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P12：06-08-data-modification-statements.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P12：06-08-data-modification-statements.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this final video， we'll learn the modification statements of SQL。
 

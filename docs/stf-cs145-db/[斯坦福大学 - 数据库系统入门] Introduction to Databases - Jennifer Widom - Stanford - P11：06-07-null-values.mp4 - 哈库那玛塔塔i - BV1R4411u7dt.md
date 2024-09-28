@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P11：06-07-null-values.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P11：06-07-null-values.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， we'll be learning about null values in SQL。
 

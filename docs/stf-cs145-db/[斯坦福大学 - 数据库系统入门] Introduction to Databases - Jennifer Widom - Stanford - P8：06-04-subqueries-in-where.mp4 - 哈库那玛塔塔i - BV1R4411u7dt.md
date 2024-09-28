@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P8：06-04-subqueries-in-where.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P8：06-04-subqueries-in-where.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  This SQL video， which as usual， will consist mostly of running live queries。
 

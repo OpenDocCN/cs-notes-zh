@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P16：08-02-xpath-demo.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P16：08-02-xpath-demo.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， we'll demonstrate X-Path by running a number of queries over our bookstore data。
 

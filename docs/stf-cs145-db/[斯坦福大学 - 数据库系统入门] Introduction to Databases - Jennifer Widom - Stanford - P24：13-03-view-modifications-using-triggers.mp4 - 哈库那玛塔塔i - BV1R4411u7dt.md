@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P24：13-03-view-modifications-using-triggers.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P24：13-03-view-modifications-using-triggers.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， which will mostly be live demo， we'll talk about modifying views through triggers。
 

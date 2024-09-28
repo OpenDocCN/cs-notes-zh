@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P30：Midterm Exam Solutions - 哈库那玛塔塔i - BV1R4411u7dt
+# [P30：Midterm Exam Solutions - 哈库那玛塔塔i - BV1R4411u7dt
 
  Hello students。 This is the video where I'm going to run through all the problems in the midterm exam and go through just the quick solutions for each of them。
 

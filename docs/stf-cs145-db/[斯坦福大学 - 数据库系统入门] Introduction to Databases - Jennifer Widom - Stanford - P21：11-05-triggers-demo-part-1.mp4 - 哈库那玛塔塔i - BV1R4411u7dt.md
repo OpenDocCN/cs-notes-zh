@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P21：11-05-triggers-demo-part-1.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P21：11-05-triggers-demo-part-1.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  Now let's see triggers in action。
 

@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P13：07-01-relational-design-overview.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P13：07-01-relational-design-overview.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this sequence of videos， we'll learn about designing good schemas for relational databases。
 

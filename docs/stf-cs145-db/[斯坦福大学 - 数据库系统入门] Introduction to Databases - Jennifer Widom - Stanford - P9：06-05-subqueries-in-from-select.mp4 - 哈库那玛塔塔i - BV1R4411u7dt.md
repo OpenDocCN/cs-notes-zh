@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P9：06-05-subqueries-in-from-select.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P9：06-05-subqueries-in-from-select.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In the next set of SQL queries， we'll see examples of using subqueries in the from and the select clauses。
 

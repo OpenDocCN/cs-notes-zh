@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P23：12-02-transactions-properties.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
+# [P23：12-02-transactions-properties.mp4 - 哈库那玛塔塔i - BV1R4411u7dt
 
  In this video， we'll delve into more detail about the properties of transactions。
 

@@ -1,4 +1,4 @@
-# [斯坦福大学 - 数据库系统入门] Introduction to Databases - Jennifer Widom - Stanford - P1：01-01-introduction - 哈库那玛塔塔i - BV1R4411u7dt
+# [P1：01-01-introduction - 哈库那玛塔塔i - BV1R4411u7dt
 
  Welcome to the course Introduction to Databases。 I'm Jennifer Whittom from Stanford University。
 
