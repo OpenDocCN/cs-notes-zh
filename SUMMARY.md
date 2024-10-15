@@ -1,4 +1,5 @@
 +   [GAMES 图形学系列笔记](docs/games/README.md)
++   [哈佛 CS50 计算机科学导论笔记](docs/hav-cs50-intro/README.md)
 +   [MIT 6.824 分布式系统笔记](docs/mit-6824-dist/README.md)
 +   [MIT 6.858 计算机系统安全讲义 2014 秋季](docs/mit-6858-comp-sec/README.md)
 +   [MIT  6.S081 操作系统工程笔记](docs/mit-6s081-os/README.md)
