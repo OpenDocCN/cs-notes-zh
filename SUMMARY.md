@@ -6,6 +6,7 @@
 +   [普林斯顿编程和算法讲义](docs/prct-prog-algo/README.md)
 +   [NUS CS1101S：SICP JavaScript 描述](docs/sicp-js/README.md)
 +   [UCB CS61a SICP Python 描述](docs/sicp-py/README.md)
++   [斯坦福 CS106A/B/L/X 编程入门笔记](docs/stf-cs106-prog/README.md)
 +   [斯坦福 CS110 计算机系统原理笔记](docs/stf-cs110-sysprin/README.md)
 +   [斯坦福 CS143 编译原理中文笔记](docs/stf-cs143/README.md)
 +   [斯坦福 CS144 计算机网络笔记](docs/stf-cs144-net/README.md)
