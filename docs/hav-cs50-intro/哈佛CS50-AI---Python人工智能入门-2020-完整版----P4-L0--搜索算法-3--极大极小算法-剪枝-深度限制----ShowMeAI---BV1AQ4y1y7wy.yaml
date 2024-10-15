@@ -1,823 +1,1124 @@
 - en: 哈佛CS50-AI ｜ Python人工智能入门(2020·完整版) - P4：L0- 搜索算法 3 (极大极小算法，剪枝，深度限制) - ShowMeAI
     - BV1AQ4y1y7wy
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 哈佛CS50-AI ｜ Python人工智能入门(2020·完整版) - P4：L0- 搜索算法 3 (极大极小算法，剪枝，深度限制) - ShowMeAI
+    - BV1AQ4y1y7wy
 - en: to find driving directions from point A，to point B sometimes in search。situations
     though we'll enter an。![](img/bed85332cae7d95278a07a427cbda9eb_1.png)
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 从点A到点B寻找驾驶方向有时会进入搜索状态。情况是这样的！[](img/bed85332cae7d95278a07a427cbda9eb_1.png)
 - en: adversarial situation where I am an，agent trying to make intelligent。decisions
     and there's someone else who，is fighting against me so to speak that。has opposite
     objectives someone where I，am trying to succeed someone else that。wants me to
     fail and this is most，popular in something like a game a game。
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这种对抗情境中，我是一个试图做出智能决策的代理，而有另一个人正在对抗我，有着相反的目标。换句话说，我试图成功，而另一个人希望我失败，这种情况在游戏中非常常见。
 - en: like tic-tac-toe where we've got this，3x3 grid and X and O take turns either。writing
     an X or an O and any one of，these squares and and the goal is to get。three X's
     in a row if you're the X，player or three O's in a row if you're。the Oh play ER
     and computers have gotten，quite good at playing games。
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 就像井字棋一样，我们有一个3x3的网格，X和O轮流在这些方格中写下X或O，目标是如果你是X玩家，得到三个连续的X，或者如果你是O玩家，得到三个连续的O，计算机在玩游戏时变得相当出色。
 - en: tic-tac-toe very easily but even more，complex games and so you might imagine。what
     does an intelligent decision in a。![](img/bed85332cae7d95278a07a427cbda9eb_3.png)
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 井字棋非常简单，但更复杂的游戏又是怎样的呢？那么，智能决策在游戏中会是什么样子呢？！[](img/bed85332cae7d95278a07a427cbda9eb_3.png)
 - en: game look like so maybe X makes an，initial move in the middle and a plays。![](img/bed85332cae7d95278a07a427cbda9eb_5.png)
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 游戏的初步移动可能是X在中间，而O会下棋。！[](img/bed85332cae7d95278a07a427cbda9eb_5.png)
 - en: up here like what does an intelligent，move for X now become like where should。you
     move if you were X and it turns out，there are a couple of possibilities but。if
     an AI is playing this game optimally，then the AI might play somewhere like。the
     upper right we're in this situation，o has the opposite objective of X X is。
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，在这种情况下，智能的X应该如何移动呢？最终结果是有几种可能性，但如果AI以最佳方式玩这个游戏，那么AI可能会选择上右方的位置，因为此时O的目标与X相反。
 - en: trying to win the game to get three in a，row diagonally here and O is trying
     to。stop that objective opposite of the，objective and so o is going to place。here
     to try to block but now X has a，pretty clever move X can make a move。like this
     where now X has two possible，ways that X can win the game X could win。
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 试图赢得游戏，目标是在这里获得三个连续的棋子，而O则试图阻止这个目标。因此，O会在这里下棋来阻挡，但现在X可以做出一个相当聪明的移动，X可以进行这样的移动，现在X有两个可能的方式赢得游戏。
 - en: the game by getting three in a row，across here or X could win the game by。getting
     three in a row vertically this，way so it doesn't matter where Oh makes。their next
     move o could play here for，example blocking the three in a row。horizontally but
     then X is going to win。
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 游戏的目标是在这里横向得到三个连续的棋子，或者X可以通过纵向得到三个连续的棋子来赢得游戏，因此O的下一步移动无关紧要。例如，O可以在这里下棋来阻挡横向的三个连续棋子，但随后X将赢得游戏。
 - en: '![](img/bed85332cae7d95278a07a427cbda9eb_7.png)'
+  id: totrans-9
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/bed85332cae7d95278a07a427cbda9eb_7.png)'
 - en: the game by getting a three in a row，vertically and so there's a fair amount，order
     for the。computer to be able to solve a problem，and it's similar in spirit to the。problems
     we've looked at so far right，their actions there's some sort of state。of the board
     and some transition from，one action to the next but it's。
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 游戏的目标是纵向得到三个连续的棋子，因此需要有相当的能力，以便计算机能够解决问题。这在精神上与我们目前所看到的问题相似，棋盘的状态和从一个动作到下一个动作的某种转变。
 - en: different in the sense that this is now，not just a classical search problem
     but。an adversarial search problem that I am，at the ex-player trying to find the
     best。moves to make but I know that there's，some adversary that is trying to stop
     me。![](img/bed85332cae7d95278a07a427cbda9eb_9.png)
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 这与传统搜索问题不同，因为这现在是一个对抗性搜索问题。我是一个玩家，试图找到最佳移动，但我知道有对手在阻止我。![](img/bed85332cae7d95278a07a427cbda9eb_9.png)
 - en: so we need some sort of algorithm to，deal with these adversarial type of。![](img/bed85332cae7d95278a07a427cbda9eb_11.png)
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，我们需要某种算法来处理这种对抗性类型的情况！[](img/bed85332cae7d95278a07a427cbda9eb_11.png)
 - en: search situations and the algorithm，we're going to take a look at is an。algorithm
     called minimax which works，very well for these deterministic games。where there
     are two players it can work，for other types of games as well but。we'll look right
     now at games where I，make a move then my opponent makes a。
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们要查看的搜索情况和算法是一个叫做 minimax 的算法，它在这些确定性游戏中效果很好，其中有两个玩家，它也可以适用于其他类型的游戏，但我们现在将关注我先走一步，然后我的对手再走一步的游戏。
 - en: move and I am trying to win and my，opponent is trying to win also or in。other
     words my opponent is trying to get，me to lose and so what do we need in。order
     to make this algorithm work well，anytime we try and translate this human。concept
     it's like playing a game winning，and losing to a computer we want to。
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 我在试图赢，而我的对手也在试图赢，换句话说，我的对手在努力让我输。那么我们需要什么才能让这个算法运行良好呢？每当我们尝试将这种人类概念转化为计算机时，就像是玩游戏、赢和输，我们想要的是。
 - en: translate it in terms that the computer，can understand and ultimately the。computer
     really just understands at，numbers and so we want some way of。translating a game
     of X's and O's on a，grid to something numerical something。the computer can understand
     the computer，doesn't normally understand notions of。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 将其翻译为计算机可以理解的术语，最终计算机只是理解数字。所以我们想要某种方式将井字棋游戏转化为数值形式，以便计算机可以理解，计算机通常不理解。
 - en: like win or lose but it does understand，the concept of like bigger and smaller。and
     so we want mean white money I do is。![](img/bed85332cae7d95278a07a427cbda9eb_13.png)
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种算法虽然不能直接判断输赢，但能理解大小的概念。所以我们想要的是白色的财富，我所做的是。![](img/bed85332cae7d95278a07a427cbda9eb_13.png)
 - en: we might take each of the possible ways，that a tic-tac-toe game can unfold and。assign
     a value or a utility to each one，of those possible ways and in a。tic-tac-toe game
     and in many types of，games there are three possible outcomes。the outcomes are
     o wins and X wins or，nobody wins so player 1 wins player 2。
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可能会考虑井字棋游戏的所有可能展开方式，并给每一种方式分配一个值或效用。在井字棋游戏以及许多类型的游戏中，可能的结果有三种：O 赢、X 赢或无人获胜。因此，玩家
+    1 胜、玩家 2 胜或无人获胜。
 - en: wins or nobody wins and for now let's go，in and head an assign each of these。possible
     outcomes a different value will，say o winning that'll have a value of。negative
     1 nobody winning that'll have a，value of 0 and X winning that will have，a value
     of 1。so we've just assigned numbers to each，of these three possible outcomes and
     now。
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，让我们给这些可能结果赋予不同的值：O 胜利的值为负 1，无人获胜的值为 0，X 胜利的值为 1。这样我们就为这三种可能的结果分配了数字。
 - en: we have two players we have the X player，and the O player and we're going to
     go。ahead and call the X player the map，player and we'll call the Oh player the。min
     player and the reason why is because，in the minimax algorithm the max player。which
     in this case is X is aiming to，maximize the score right these are the。
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们有两个玩家，X 玩家和 O 玩家，我们将把 X 玩家称为最大化玩家，把 O 玩家称为最小化玩家，原因在于，在 minimax 算法中，最大化玩家（在这种情况下是
+    X）旨在最大化分数。
 - en: possible options for the score negative，1 0 & 1 X wants to maximize the score。meaning
     if at all possible X would like，this situation where X wins the game and。we give
     it a score of 1 but if this，isn't possible if X needs to choose。between these
     two options negative 1，meaning a winning or 0 meaning nobody。
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 可能的分数选项为负，1 0 和 1 X 想要最大化分数。这意味着如果可能，X 希望在这种情况下赢得比赛，我们给它一个分数为 1，但如果这不可能，X 需要在这两个选项之间选择：负
+    1，表示获胜，或 0，表示无人获胜。
 - en: winning X would rather that nobody wins，score of 0 then a score of negative
     1 o。winning so this notion of winning and，losing in tying has been reduced。mathematically
     to just this idea of try，and maximize the score the X player。always wants the
     score to be bigger and，on the flip side the min player in this。
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 胜利时，X 宁愿无人获胜，分数为 0，而不是负 1 O 胜利。因此，赢、输和平局的概念在数学上被简化为尝试最大化分数的想法，X 玩家总是希望分数更大，而反过来，最小化玩家则希望。
 - en: case o is aiming to minimize the score，the o player wants the score to be as。small
     as possible so now we've taken，this game of X's and O's and winning and。losing
     and turned it into something，mathematical something where X is trying。to maximize
     the score o is trying to，minimize the score let's now look at all。
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: O 的目标是最小化分数，O 玩家希望分数尽可能小。所以现在我们已经将这个 X 和 O 的游戏，以及赢和输，转变为某种数学模型，X 正在尝试最大化分数，O
+    正在尝试最小化分数。现在让我们看一下所有的可能性。
 - en: of the parts of the game that we need in，order to encode it in an AI so that
     an。![](img/bed85332cae7d95278a07a427cbda9eb_15.png)
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 游戏的各个部分，我们需要将其编码到AI中，以便。![](img/bed85332cae7d95278a07a427cbda9eb_15.png)
 - en: AI can play a game like tic-tac-toe so，the game is going to need a couple of。things
     will need some sort of initial，state that will in this case call s0。that which
     is how the game begins like，an empty tic-tac-toe board for example。![](img/bed85332cae7d95278a07a427cbda9eb_17.png)
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: AI可以玩像井字棋这样的游戏，因此游戏需要一些东西，我们需要某种初始状态，在这种情况下我们称之为s0。这就是游戏开始的方式，比如一个空的井字棋棋盘。例如。![](img/bed85332cae7d95278a07a427cbda9eb_17.png)
 - en: will also need a function called player，where the player function is going to。take
     as input a state here represented，by s and the output of the player。function is
     going to be which players，turn is it right we need to be able to。give a tic-tac-toe
     board to the computer，run it through a function and that。
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们还需要一个名为玩家的函数，玩家函数将以状态作为输入，这里用s表示，玩家函数的输出将是轮到哪个玩家。我们需要能够将一个井字棋棋盘传递给计算机，通过一个函数运行它，然后。
 - en: function tells us whose turn it is we'll，need some notion of actions that we
     can。take we'll see examples of that in just，a moment we need some notion of a。transition
     model same as before if I，have a state and I take an action I need。to know what
     results as a consequence of，it I need some way of knowing when the。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 函数告诉我们轮到谁了，我们需要一些可以采取的行动的概念。稍后我们会看到这些例子，我们需要一个与之前相同的转换模型。如果我有一个状态并采取一个行动，我需要知道作为结果会发生什么，我需要某种方式来了解何时。
 - en: game is over so this is equivalent to，kind of like a goal test but I need some。terminal
     test some way to check to see，if a state is，a terminal state where a terminal
     state。means the game is over in the classic，game of tic-tac-toe a terminal state。means
     either someone has gotten three in，a row or all of the squares of the。
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 游戏结束，因此这等同于一种目标测试，但我需要一些终端测试，以检查一个状态是否是终端状态，终端状态意味着游戏结束。在经典的井字棋游戏中，终端状态意味着某人已经三连胜，或者所有方块都被填满。
 - en: tic-tac-toe board are filled either of，those conditions of make it a terminal。state
     in a game of chess it might be，something like when there is checkmate。or if check
     Mina's no longer possible，that that becomes a terminal State and。then finally
     we'll need a utility，function a function that takes a state。
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 井字棋棋盘被填满，这两种条件使其成为终端状态。在棋类游戏中，终端状态可能是当出现将死或如果将军不再可能时，这就成为终端状态。最后，我们还需要一个效用函数，接受一个状态。
 - en: and gives us a numerical value for that，terminal state some way of saying if
     X。wins the game that has a value of 1 if，oh is won the game that has a value of。negative
     1 if nobody is won the game，that has a value of 0 so let's take a。look at each
     of these in turn at the，initial state we can just represent in。
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 并为那个终端状态提供一个数值，如果X赢得游戏，则该值为1，如果O赢得游戏，则该值为负1。如果没有人赢得游戏，则该值为0。让我们逐一查看这些，在初始状态下，我们可以简单地表示为。
 - en: tic-tac-toe as the empty game board this，is where we begin it's the place from。which
     we begin this search and again，I'll be representing these things。visually but
     you can imagine this really，just being like an array or a。![](img/bed85332cae7d95278a07a427cbda9eb_19.png)
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 井字棋作为空的游戏棋盘，这是我们开始的地方，是我们开始搜索的起点。我将以视觉方式表示这些，但你可以想象这实际上就像一个数组或一个。![](img/bed85332cae7d95278a07a427cbda9eb_19.png)
 - en: two-dimensional array of all of these，possible squares then we need the player。function
     that again takes a state and，tells us whose turn it is assuming X。makes the first
     move if I have an empty，game board then my player function is。![](img/bed85332cae7d95278a07a427cbda9eb_21.png)
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 二维数组中包含所有可能的方块，我们还需要一个玩家函数，它同样接受一个状态并告诉我们轮到谁，假设X先走。如果我有一个空的棋盘，那么我的玩家函数是。![](img/bed85332cae7d95278a07a427cbda9eb_21.png)
 - en: going to return X and if I have a game，board where X has made a move then my。player
     function is going to return o the，player function takes a tic-tac-toe game。board
     and tells us whose turn it is next，up we'll consider the actions function。the
     actions function much like it did in，classical search takes a state and gives。
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 将返回X，如果我有一个棋盘，其中X已经移动，那么我的玩家函数将返回O。玩家函数接受一个井字棋棋盘并告诉我们下一个轮到谁。接下来，我们将考虑动作函数。动作函数就像在经典搜索中那样，接受一个状态并给出。
 - en: us the set of all of the possible，actions we can take in that state so。let's
     imagine it's always turned to move，in a game board that looks like this。what happens
     when we pass it into the，action function so the action function。takes this state
     of the game as input，and the output is a set of possible。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有可能的行动集合，我们可以在该状态下采取的行动，所以让我们想象在一个看起来像这样的棋盘上总是轮到我们行动。当我们将其传入行动函数时会发生什么，因此行动函数以游戏状态作为输入，输出是一组可能的。
 - en: actions it's a set of I could move in，the upper left or I could move in the。bottom
     middle those are the two possible，action choices that I have when I begin。in this
     particular state now just as，before when we had states and actions we。need some
     sort of transition model to，tell us when we take this action in the。
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 行动是一组我可以在左上角移动，或者我可以在底部中间移动，这就是我在这个特定状态开始时的两个可能行动选择。和之前一样，当我们有状态和行动时，我们需要某种转移模型来告诉我们，当我们在此状态下采取此行动时会发生什么。
 - en: state what is the new state that we get，and here we define that using the result。function
     that takes a state as input as，well as an action，and when we applied the result
     function。to this state saying that let's let o，move in this upper left corner
     the new。state we get is this resulting state，where o is in the upper left corner
     and。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 表明我们得到的新状态是什么，这里我们使用结果函数来定义，结果函数接受状态作为输入以及一个行动，当我们将结果函数应用于这个状态时，假设让 O 在左上角下棋，我们得到的新状态是这个结果状态，其中
+    O 在左上角。
 - en: now this seems obvious to someone who，knows how to play tic-tac-toe like of。course
     you play in the upper left corner，that's the board you get but all of this。information
     needs to be encoded into the，tic-tac-toe，until you tell the AI how the rules of。tic-tac-toe
     work and this function，defining this function here allows us to。
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 这对懂得如何玩井字棋的人来说似乎显而易见，当然你会在左上角下棋，那是你得到的棋盘，但所有这些信息都需要编码到井字棋中，直到你告诉 AI 井字棋的规则是如何工作的，这个函数定义允许我们。
 - en: tell the AI how this game actually works，and how actions actually affect the。![](img/bed85332cae7d95278a07a427cbda9eb_23.png)
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 告诉 AI 这个游戏是如何实际运作的，以及行动如何真正影响游戏。 ![](img/bed85332cae7d95278a07a427cbda9eb_23.png)
 - en: outcome of the game so the AI needs to，know how the game works the AI also。needs
     to know when the game is over as，by defining a function called terminal。that takes
     as input a state s such that，if we take a game that is not yet over。pass it into
     the terminal function the，output is false the game is not over but。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 游戏的结果，因此 AI 需要知道游戏是如何运作的，AI 还需要知道游戏何时结束，这通过定义一个称为终止的函数来实现，该函数以状态 `s` 为输入，如果我们考虑一个尚未结束的游戏，传入终止函数的输出为假，游戏尚未结束，但。
 - en: if we take a game that is over because X，has gotten three in a row along that。diagonal
     pass that into the terminal，function then the output is going to be。true because
     the game now is in fact，over and finally we've told the AI how。the game works
     in terms of what moves，can be made and what happens when you。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们考虑一个已经结束的游戏，因为 X 在对角线上已经连成三连，那么传入终止函数的输出将为真，因为游戏实际上已经结束，最后我们告诉 AI 游戏的运作方式，包括可以采取的行动以及当你采取行动时会发生什么。
 - en: make those moves we've told the AI when，the game is over now we need to tell
     the。AI what the value of each of those，states is and we do that by defining。this
     utility function that takes a state，s and tells us the score or the utility。of
     that state so again we said that if X，wins the game that utility is a value of。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 按照我们告诉 AI 的步骤进行操作，游戏现在结束了，我们需要告诉 AI 每个状态的价值，我们通过定义这个效用函数来实现，它接受一个状态 `s` 并告诉我们该状态的得分或效用。
 - en: 1 whereas if oh wind again then the，utility of that is negative 1 and the AI。needs
     to know for each of these terminal，States where the game is over what is。the utility
     of that state so I can give，you a game board like this where the。game is in fact
     over and I ask the AI to，tell me what the value of that state is。
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 1 而如果 X 再次获胜，那么效用为负 1，AI 需要知道每个终止状态的效用，即游戏已结束时该状态的效用，因此我可以给你一个像这样的棋盘，其中游戏实际上已经结束，我询问
+    AI 这个状态的价值。
 - en: it could do so the value of the state is，1 where things get interesting though
     is。if the game is not yet over，let's imagine a game board like this。we're in the
     middle of the game it's，always turn to make a move so how do we。know it's always
     turn to make a move we，can calculate that using the player。
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 这可以实现，所以状态的价值是 1，但事情变得有趣的是，如果游戏还没有结束，假设一个像这样的游戏棋盘。我们处于游戏中间，轮到我们采取行动，那么我们怎么知道总是轮到我们行动呢？我们可以通过计算玩家来判断。
 - en: function we can say player of s pass in，the state o is the answer so we know。it's
     always turn to move and now what is，the value of this board。what action should
     I take well that's，going to depend we have to do some。calculation here and this
     is where the，minimax algorithm really comes in recall。
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可以说，玩家的状态传递给O的答案，所以我们知道现在是他们的回合。这个棋盘的价值是什么？我应该采取什么行动？这将取决于我们必须进行一些计算，而这就是minimax算法真正发挥作用的地方。
 - en: that X is trying to maximize the score，which means that o is trying to minimize。the
     score Oh we'd like for the to，minimize the total value that we get at。the end
     of the game and because this，game isn't over yet we don't really know。just yet
     what the value of this game，board is we have to do some calculation。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: X正试图最大化得分，这意味着O正试图最小化得分。我们希望最小化最终游戏的总值，因为这个游戏尚未结束，我们还不清楚这个棋盘的价值。我们需要进行一些计算。
 - en: in order to figure that out and so how，do we do that kind of calculation well。in
     order to do so we're going to，consider just as we might in a classical。search
     situation what actions could，happen next and what states will that。take us to
     and it turns out that in this，position there are only two open squares。
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了弄清楚这一点，我们该如何进行计算呢？为此，我们将考虑就像在经典搜索中一样，下一步可能会采取哪些动作，以及这些动作会把我们带到什么状态。结果发现，在这个位置只有两个开放的方格。
 - en: which means there are only two open，places where ou can make a move Oh could。either
     make a move in the upper left or，o can make a move in the bottom middle。and minimax
     doesn't know right，out-of-the-box of which of those moves。is going to be better
     so it's going to，consider both but now we sort of run。
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 这意味着只有两个开放位置，O可以出手，O可以选择在左上角出手，或者在下中间出手。Minimax不知道哪一个移动更好，所以它会考虑两个选项，但现在我们需要考虑。
 - en: into the same situation now I have two，more game boards neither of which is。over
     what happens next and now it's in，this sense that minimax is what we'll。call a
     recursive algorithm it's going to，now repeat the exact same process。although now
     considering it from the，opposite perspective it's as if I am now。
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在进入同样的情况，我有两个游戏棋盘，它们都还没有结束。接下来会发生什么？在这个意义上，minimax可以称为递归算法，它将重复相同的过程，虽然现在是从相反的角度来看，就好像我现在是。
 - en: going to put myself if I am the O player，I am going to put myself in my。opponent's
     shoes my opponent as the X，player and consider what would my。opponent do if they
     were in this，position what would my opponent do the X。player if they were in that
     position and，what would then happen well the other。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我是O玩家，我会站在对手的角度，考虑如果我是X玩家在这个位置，我的对手会怎么做？那么会发生什么呢？
 - en: player my opponent the X player is，trying to maximize the score whereas I。am
     trying to minimize the score as the，OU player so X is trying to find the。![](img/bed85332cae7d95278a07a427cbda9eb_25.png)
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的对手，X玩家，正试图最大化得分，而我作为O玩家则在尽力最小化得分。因此，X正试图找到最大可能的值！[](img/bed85332cae7d95278a07a427cbda9eb_25.png)
 - en: maximum possible value that they can get，and so what's going to happen well
     from。this board position X only has one，choice X is going to play here and。they're
     going to get three in a row and，we know that that board X winning that。has a value
     of 1 if X wins the game the，value of that game board is 1 and so。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 从这个棋盘位置来看，X只有一个选择，X将会在这里出手，他们会得到三连。在这种情况下，X赢得比赛的棋盘价值是1，如果X赢得比赛，那么这个棋盘的价值就是1。
 - en: from this position if this state can，only ever lead to the state it's the。only
     possible option and this state has，a value of 1，then the maximum possible value
     that the。ex player can get from this game board，is also one from here the only
     place we。can get is to a game with the value of，one so this game board also has
     a value。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 从这个位置来看，如果这个状态只能导致这个状态，这是唯一的选择，而这个状态的价值是1，那么对手玩家可以从这个棋盘获得的最大可能值也是1。从这里，唯一能得到的就是一个价值为1的游戏棋盘，所以这个棋盘也有这个价值。
 - en: of one now we consider this one over，here what's going to happen now well X。needs
     to make a move the only move X can，make is in the upper left so X will go。there
     and in this game no one wins the，game nobody has three in a row so the。value of
     that game board，is zero nobody's won and so again by the。
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们考虑这个局面，X需要进行一个移动，X唯一可以选择的移动是在左上角，所以X会走到那里。在这个游戏中没有人获胜，没有人连续三次，所以这个棋盘的价值是零，没有人赢。
 - en: same logic if from this board position，the only place we can get to is a board。where
     the value is zero then this state，must also have a value of zero and now。here
     comes the choice part the idea of，trying to minimize I as the Oh player。now know
     that if I make this choice，moving in the upper left that is going。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 相同的逻辑，如果从这个棋盘位置，我们唯一能到达的地方是一个价值为零的棋盘，那么这个状态也必须有一个价值为零。现在来了选择的部分，作为O玩家的我现在知道，如果我做出这个选择，移动到左上方。
 - en: to result in a game with a value of 1，assuming everyone plays optimally and
     if。I instead play in the lower middle，choose this fork in the road that is。going
     to result in a game board with a，value of 0 I have two options I have a 1。and
     a 0 to choose from and I need to，pick and as the min player I would。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 导致一个价值为1的游戏，假设每个人都以最优方式进行游戏。如果我选择中下方，选择这条分叉，将导致一个价值为0的游戏板，我有两个选项可以选择，1和0，我需要做出选择，作为最小玩家我会。
 - en: rather choose the option with the，minimum value so whenever a player has。multiple
     choices the min player will，choose the option with the smallest。value the max
     player will choose the，option with the largest value between。the 1 and the 0 the
     0 is smaller meaning，I'd rather tied the game then lose the。
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 我更倾向于选择价值最小的选项，因此每当一个玩家有多个选择时，最小玩家将选择价值最小的选项，而最大玩家将选择在1和0之间的最大值，0更小，意味着我宁愿平局也不愿输掉游戏。
 - en: game and so this game board will say，also has a value of 0 because if I am。playing
     optimally I will pick this fork，in the road I'll place my o here to。block X is
     three in a row X will move in，the upper left and the game will be over。and no
     one will have won the game so，this is now the logic of minimax to。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 游戏板上将显示这个游戏的价值为0，因为如果我在最优情况下，我会选择这条分叉，我会在这里放置我的O来阻止X三个一排，X会在左上角移动，游戏将结束，而没有人会赢得游戏。所以，这就是现在的最小最大逻辑。
 - en: consider all of the possible options，that I can take all of the actions that。I
     can take and then to put myself in my，opponent's choose I decide what move I'm。going
     to make now by considering what，move my opponent will make on the next。turn and
     to do that I consider what move，I would make on the turn after that so。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 考虑所有我可以采取的可能选项，以及我可以采取的所有行动，然后将自己置于对手的选择中。我决定现在要进行的移动，通过考虑我对手下一轮会做什么移动来决定，并且为了做到这一点，我还考虑了我在之后的回合会做什么移动。
 - en: on and so forth until I get all the way，down to the end of the game to one of。these
     so-called terminal States in fact，this very decision point where I am。trying to
     decide as the OU player what，to make a decision about might have just。been a part
     of the logic that the X，player my opponent was using the move，before me this my。
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 继续进行，直到我一直走到游戏结束，达到这些所谓的终端状态。实际上，在这个决策点，我作为O玩家正在决定的事情，可能只是我对手X玩家在我之前所用的逻辑的一部分。
 - en: be part of some larger tree where X is，trying to make a move in this situation。and
     needs to pick between three，different options in order to make a。decision about
     what to happen and the，further and further away we are from the。end of the game
     the deeper this tree has，to go because every level in this tree。
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 它将是某个更大树的一部分，在这种情况下，X需要选择三个不同的选项来做出决策。离游戏结束越远，这棵树就必须越深，因为这棵树的每个层级。
 - en: is going to correspond to one move one，move or action that I take one move or。action
     that my opponent takes in order，to decide what happens and in fact it。turns out
     that if I am the X player in，this position and I recursively do the。logic and
     see I have a choice three，choices in fact one of which leads to a。
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 这将对应我进行的一次移动，或者说是我对手采取的行动，以决定发生什么。实际上，如果我在这个位置是X玩家，并且我递归地进行逻辑运算，我会发现我有三个选择，其中一个会导致一个结果。
 - en: value of zero if I play here and if，everyone plays optimally the game will。be
     a tie if I play here then always，going to win and I'll lose playing。optimally
     or here where I the X player，can win well between a score of zero and。negative
     one and one I'd rather pick the，board with a value of one because that's。
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我在这里进行游戏，并且如果每个人都以最优方式进行游戏，结果将是平局。如果我在这里玩，我总会赢，或者在这里，我作为X玩家可以赢得胜利，在0和负1以及1之间，我宁愿选择一个价值为1的棋盘，因为那样。
 - en: the maximum value I can get and so this，board would also have a maximum value
     of。one and so this tree can get very very，deep especially as the game starts to。have
     more and more moves in this logic，works not just for tic-tac-toe but any。of these
     sorts of games where I make a，move my opponent makes a move and。
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 我能获得的最大值，因此这个棋盘也将具有一个最大值。这个树可以变得非常非常深，尤其是随着游戏开始有越来越多的走法。这一逻辑不仅适用于井字棋，也适用于任何这些类型的游戏，在这些游戏中，我先走一步，然后对手再走一步。
 - en: ultimately we have these adversarial，objectives and we can simplify the。diagram
     into a diagram that looks like，this this is a more abstract version of。![](img/bed85332cae7d95278a07a427cbda9eb_27.png)
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 最终我们有这些对抗性的目标，我们可以将图示简化为看起来像这样的图，这更抽象地表现了。![](img/bed85332cae7d95278a07a427cbda9eb_27.png)
 - en: the minimax tree where these are each，States but I'm no longer representing。them
     it's exactly like tic-tac-toe，boards and this is just representing。some generic
     game that might be，tic-tac-toe might be some other game。altogether any of these
     green arrows，that are pointing up that represents a。
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是**极小极大树**，其中每个状态都在这里，但我不再表示它们。这就像井字棋的棋盘，这仅仅表示一些通用的游戏，可能是井字棋，也可能是其他完全不同的游戏。所有这些指向上的绿色箭头代表一个。
 - en: maximizing state I would like the score，to be as big as possible and any of。these
     red arrows pointing down those are，minimizing states where the player is。the min
     player and they are trying to，make the score as small as possible so。if you imagine
     in this situation I am，the maximizing player this player here。
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 在**最大化状态**中，我希望得分尽可能大，而所有这些指向下方的红色箭头则是**最小化状态**，在这里玩家是**最小化玩家**，他们试图让得分尽可能小。因此，如果你想象在这种情况下，我是**最大化玩家**，这个玩家在这里。
 - en: and I have three choices one choice，gives me a score of five one choice。gives
     me a score of three and one choice，gives me a score of nine。well then between
     those three choices my，best option is to choose this nine over。here the score
     that maximizes my options，out of all the three options and so I。
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 我有三个选择，一个选择给我得分五，一个选择给我得分三，还有一个选择给我得分九。那么在这三种选择中，我最好的选择是选择这个九，它是最大化我所有三种选择的得分。
 - en: can give this state a value of nine，because among my three options。that is the
     best choice that I have，available to me so that's my decision。now you imagine
     it's like one move away，from the end of the game but then you。could also ask a
     reasonable question。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 这给这个状态一个值为九，因为在我的三个选择中，这是我能获得的最佳选择，所以这是我的决策。现在你可以想象这就像离游戏结束还有一步，但你也可以问一个合理的问题。
 - en: '![](img/bed85332cae7d95278a07a427cbda9eb_29.png)'
+  id: totrans-68
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/bed85332cae7d95278a07a427cbda9eb_29.png)'
 - en: what might my opponent do two moves away，from the end of the game my opponent
     is。the minimizing player they are trying to，make the score as small as possible。imagine
     what would have happened if they，had to pick which choice to make one。choice leads
     us to this state where I，the maximizing player I'm going to opt。
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的对手在游戏结束前两步可能会做什么呢？我的对手是**最小化玩家**，他们试图让得分尽可能小。想象一下，如果他们必须选择一个选择会发生什么。一种选择引导我们进入这个状态，而我，作为**最大化玩家**，将会选择。
 - en: for nine the biggest score that I can，get and one leads to this state where
     I。the maximizing player would choose eight，which is then the largest score that
     I。can get now the minimizing player forced，to choose between a 9 or an 8 is going。to
     choose the smallest possible score，which in this case is an 8 and that is。
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于九，我能获得的最大得分，而一则引导我们进入这个状态，作为**最大化玩家**我会选择八，而这就是我能获得的最大得分。现在**最小化玩家**被迫在9和8之间选择，将会选择尽可能小的得分，在这种情况下是8。
 - en: then how this process would unfold but，the minimizing player in this case。considers
     both of their options and then，all of the options that would happen as。a result
     of that so this now is a，general picture of what the minimax。![](img/bed85332cae7d95278a07a427cbda9eb_31.png)
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后这个过程将如何展开，但在这种情况下**最小化玩家**会考虑他们的两个选择，以及因此产生的所有选项。所以这现在是一个**极小极大**的整体图景。![](img/bed85332cae7d95278a07a427cbda9eb_31.png)
 - en: algorithm looks like let's now try to，formalize it using a little bit of。pseudocode
     so what exactly is happening，in the minimax algorithm。well given a state s we
     need to decide。![](img/bed85332cae7d95278a07a427cbda9eb_33.png)
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 算法看起来是这样的，现在我们尝试用一点伪代码将其形式化。那么在**极小极大算法**中究竟发生了什么呢？在给定状态s的情况下，我们需要决定。![](img/bed85332cae7d95278a07a427cbda9eb_33.png)
 - en: what to happen the max player if it's，Max's players turn then max is going to。pick
     an action a in actions of us recall，that actions is a function that takes a。state
     and gives me back all of the，possible actions that I can take it。tells me all
     of the moves that are，possible the max player is going to。
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果轮到最大化的玩家，最大化的玩家将选择在我们之前提到的行动集合中一个行动a，回忆一下，行动是一个函数，它接受一个状态并给我返回所有可能的行动，它告诉我所有可能的移动，最大化的玩家将会。
 - en: specifically pick an action a in the set，of actions that gives me the highest。value
     of min value of result of SN a so，what does that mean well it means that I。want
     to make the option that gives me，the highest score of all of the actions。a but
     what score is that going to have，to calculate that I need to know what my。
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 特别是选择在行动集合中能够给我最高的最小值结果的行动a，这意味着我想选择能够让我在所有行动中获得最高分的选项a，但这个分数究竟是什么，我需要知道我的。
 - en: opponent the min player is going to do，if they try to minimize the value of
     the。state that results so we say what state，results after I take this action and。what
     happens when the min player tries，to minimize the value of that state I。consider
     that for all of my possible，options and after I've considered that。
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 最小化的玩家会怎么做，如果他们试图最小化所得到状态的值，我们需要考虑在我采取这个行动后，哪个状态会产生，以及当最小化的玩家试图最小化那个状态的值时会发生什么。我考虑了所有我的可能选项，并在考虑之后。
 - en: for all of my possible options I picked，the action a，that has the highest value
     likewise the。min player is going to do the same thing，but backwards they're also
     going to。consider what are all of the possible，actions they can take if it's their
     turn。and they're going to pick the action a，that has the smallest possible value
     of。
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于我所有可能的选项，我选择了价值最高的行动a，类似地，最小化的玩家也会这样做，但他们是反向思考，他们会考虑如果轮到他们，他们可以采取的所有可能的行动，并选择具有最小可能值的行动a。
 - en: all the options and the way they know，what the smallest possible value of all。the
     options is is by considering what，the max player is going to do by saying。what's
     the result of applying this，action to the current state and then。what would the
     max player try to do what，value would the max player calculate for。
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有的选项，以及他们如何知道所有选项中最小的可能值是通过考虑最大化的玩家会做什么，问一下将这个行动应用于当前状态的结果，然后最大化的玩家会尝试做什么，最大化的玩家会为此计算出什么值。
 - en: that particular state so everyone makes，their decision based on trying to。estimate
     what the other person would do，and now we need to turn our attention to。these
     two functions max value and min，value how do you actually calculate the。value
     of a state if you're trying to，maximize its value and how do you。
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 那个特定状态使每个人的决策都基于试图估计对方会做什么，现在我们需要将注意力转向这两个函数：最大值和最小值，如何实际计算一个状态的值，如果你试图最大化它的价值，又该如何操作。
 - en: calculate the value of a state if you're，trying to minimize the value if you
     can。do that then we have an entire，implementation of this minimax algorithm。so
     let's try it let's try and implement，this max value function that takes a。state
     and returns as output the value of，that state if I'm trying to maximize the。
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你试图最小化价值，计算一个状态的值，如果你能做到这一点，那么我们就拥有这个最小最大算法的完整实现。让我们尝试一下，试着实现这个最大值函数，它接受一个状态并返回作为输出的值，如果我试图最大化。
 - en: value of the state well the first thing，I can check for is to see if the game
     is。over because if the game is over in，other words if the state is a terminal。state
     then this is easy I already have，this utility function that tells me what。the
     value of the board is if the game is，over I just checked like did x-wind a no。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 关于状态的值，我可以首先检查游戏是否结束，因为如果游戏结束，换句话说，如果状态是终局状态，那么这很简单，我已经有这个效用函数，它告诉我棋盘的值，如果游戏结束，我只需检查，比如说x是否获胜。
 - en: win is it a tie and this utility，function just knows what the value of。the state
     is what's trickier is if the，game isn't over because then I need to。do this recursive
     reasoning about，thinking what is my opponent going to do。on the next move and
     I want to calculate，the value of this state and I want the。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 赢了是平局吗？这个效用函数只知道状态的值，更棘手的是，如果游戏没有结束，因为那样我需要进行递归推理，思考我的对手在下一步会做什么，我想计算这个状态的值。
 - en: value of the state to be as high as，possible and I'll keep track of that。value
     in a variable called V and if I，want the value to be as high as possible。I need
     to give V an initial value and，initially I'll just go ahead and set it。to being
     as low as possible because I，don't know what options are available to。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 状态的值尽可能高，我会在一个名为V的变量中跟踪这个值。如果我想让值尽可能高，我需要给V一个初始值，最初我会将其设定为尽可能低，因为我不知道可用的选项是什么。
 - en: me yet so initially I'll set V equal to，negative infinity which seems a little。bit
     strange but the idea here is I want，the value initially to be a low as low。as
     possible because as I consider my，actions I'm always going to try and do，better。than
     V and if I set V to negative，infinity I know I can always do better。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 一开始，我会将V设为负无穷，这似乎有点奇怪，但这里的想法是我希望初始值尽可能低，因为在考虑我的行动时，我总是会尝试做得比V更好。如果我将V设为负无穷，我知道我总能做得更好。
 - en: than that so now I consider my actions，and this is going to be some kind of。loop
     where for every action in actions，of state recall actions as a function。that takes
     my state and gives me all the，possible actions that I can use in that。![](img/bed85332cae7d95278a07a427cbda9eb_35.png)
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在我考虑我的行动，这将是某种循环，对于状态中的每个行动，回忆一下，actions是一个函数，它接受我的状态并给我所有可能的行动。![](img/bed85332cae7d95278a07a427cbda9eb_35.png)
 - en: state so for each one of those actions I，want to compare it to V and say alright。V
     is going to be equal to the maximum of，V and this expression so what is this。expression
     well first it is get the，result of taking the action in the state。and then get
     the min value of that in，other words let's say I want to find out。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，对于每一个行动，我想将其与V进行比较，并说好的，V将等于V和这个表达式中的最大值。那么这个表达式是什么呢？首先，它是获取在该状态中采取行动的结果，然后获取该结果的最小值，换句话说，假设我想找出。
 - en: from that state what is the best that，the min player can do if they're gonna。try
     and minimize the score so whatever，the resulting score is of the min value。of
     that state compare it to my current，best value and just pick the maximum of。those
     two because I am trying to。
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 从这个状态来看，最小玩家能做的最好选择是什么，如果他们想要尽量减少分数，那么无论结果的分数是多少，都要将这个最小值与我当前的最佳值进行比较，然后选择这两者中的最大值，因为我正在尝试。
 - en: '![](img/bed85332cae7d95278a07a427cbda9eb_37.png)'
+  id: totrans-87
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/bed85332cae7d95278a07a427cbda9eb_37.png)'
 - en: maximize the value in short with these，three lines of code are doing are going。through
     all of my possible actions and，asking the question how do I maximize。the score
     given what my opponent is，going to try to do after this entire。loop I can just
     return via and that is，now the value of that particular state。
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 简而言之，这三行代码所做的就是遍历我所有可能的行动，问这个问题：在我的对手尝试在这整个循环之后做什么的情况下，我如何最大化分数。最终我可以通过返回来得到那个特定状态的值。
 - en: and for the min player it's the exact，opposite of this the same logic just。backwards
     to calculate the minimum value，of a state first we check if it's a。terminal state
     if it is we return into，utility otherwise we're going to now try。to minimize the
     value of the state given，all of my possible actions so I need an。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于最小玩家来说，正好与此相反，逻辑相同，只不过是反过来计算一个状态的最小值，首先我们检查它是否是一个终止状态，如果是，就返回效用，否则我们将尝试尽量减少该状态的值，考虑到我所有可能的行动，因此我需要一个。
 - en: initial value for V the value of the，state and initially I'll set it to。infinity
     because I know it can always，get something less than infinity so by。starting with
     V equals infinity I make，sure that the very first action I find。![](img/bed85332cae7d95278a07a427cbda9eb_39.png)
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: V的初始值是状态的值，最初我将其设定为正无穷，因为我知道它总能得到小于正无穷的东西。因此，通过从V等于正无穷开始，我确保我找到的第一个行动。![](img/bed85332cae7d95278a07a427cbda9eb_39.png)
 - en: that will be less than this value of V，and then I do the same thing loop over。all
     of my possible actions and for each，of the results that we could get when。the
     max player makes their decision，let's take the minimum of that and the。current
     value of e so after all is said，and done I get the smallest possible。
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个值将小于V的值，然后我做同样的事情，遍历我所有可能的行动，对于每个结果，当最大玩家做出决策时，让我们取最小值和当前值e。因此，经过一切，我得到可能的最小值。
 - en: value of V that I then return back to。![](img/bed85332cae7d95278a07a427cbda9eb_41.png)
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 最后返回的V的值。![](img/bed85332cae7d95278a07a427cbda9eb_41.png)
 - en: the user so that in effect is the pseudo，code for minimax that is how we take
     a。game and figure out what the best move，to make is by recursively using these。max
     value and min value functions where，max value calls min value min value。calls
     Max value back and forth all the，way until we reach a terminal state at。
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 用户实际上是伪代码，用于最小最大算法，这就是我们如何处理一个游戏并通过递归使用这些最大值和最小值函数来确定最佳移动，最大值调用最小值，最小值再调用最大值，来回进行，直到我们达到终端状态。
 - en: which point our algorithm can simply，return the utility of that particular。state
     what you might imagine is that，this is going to start to be a long。process especially
     as games start to get，more complex as we start to add more。moves and more possible
     options and，games that might last quite a bit longer。
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这个点上，我们的算法可以简单地返回那个特定状态的效用，你可能会想象，这将开始变成一个漫长的过程，尤其是随着游戏开始变得更复杂，我们开始添加更多的动作和更多的可能选项，以及可能持续更长时间的游戏。
 - en: so the next question to ask is what sort，of optimizations can we make here how。can
     we do better in order to use less，space or take less time to be able to。solve
     this kind of problem and we'll，take a look at a couple of possible。optimizations
     but for one we'll take a，look at this example again returning to。
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以接下来的问题是，我们可以在这里进行什么样的优化，我们如何能够更好地使用更少的空间或更少的时间来解决这种问题，我们将查看几种可能的优化，但对于一种，我们将再次回顾这个例子。
 - en: these up arrows and down arrows let's，imagine that I now and the max player。this
     green arrow I am trying to make，this score as high as possible and this。is an
     easy game where there are just two，moves I make a move one of these three。options
     and then my opponent makes a，move one of these three options based on。
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些向上和向下的箭头，让我们想象我现在是最大玩家，这个绿色箭头我试图让得分尽可能高，这是一场简单的游戏，我只需进行两个动作，我选择这三种选项之一，然后我的对手也选择这三种选项之一。
 - en: what move I make and as a result we get，some value let's look at the order in。which
     I do these calculations and figure，out if there are any optimizations I。might
     be able to make to this，calculation process I'm gonna have to。look at these states
     one at a time so，let's say I start here on the left and。
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 我做出什么移动，因此我们得到了某个值，让我们看看我进行这些计算的顺序，并弄清楚是否有任何优化可以对这个计算过程进行改进，我必须逐个查看这些状态，所以假设我从左边开始。
 - en: say all right now I'm gonna consider，what will the min player my opponent try，to
     do here。well the min player is going to look at，all three of their possible actions
     and。look at their value because these are，terminal states they're the end of the。game
     and so they'll see alright this，node is a value of four value of eight。
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 说好，现在我将考虑我的对手最小玩家会尝试做什么。好吧，最小玩家会查看他们的三个可能的行动，并查看它们的值，因为这些都是终端状态，它们是游戏的结束，所以他们会看到这个节点的值是四，值是八。
 - en: value of five and the min player is，going to say well alright between these。three
     options for eight and five I'll，take the smallest one I'll take the four。so this
     state now has a value of four，then I is the max player say all right。if I take
     this action it will have a，value of four that's the best that I can。
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 值为五，而最小玩家会说好吧，在这三个选项中，八和五，我会选择最小的那个，我会选择四。因此这个状态现在的值是四，然后作为最大玩家的我说好吧，如果我选择这个行动，它将有一个值为四，这是我所能得到的最好结果。
 - en: do because min player is going to try，and minimize my score so now what if I。take
     this option we'll explore this next，and now explore what the min player。would
     do if I choose this action and the，min player is going to say alright what。are
     the three options the min player has，options between nine three and seven and。
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 由于最小玩家会试图最小化我的得分，那么如果我选择这个选项，我们将接下来探索这个，接下来探索如果我选择这个行动，最小玩家将会说好吧，最小玩家有的三个选项是九、三和七。
 - en: so three is the smallest among nine，seven so we'll go ahead and say this。state
     has a value of three so now I as，the max player I have now explored two。of my
     three options I know that one of，my options will guarantee me a score of。four
     at least and one of my options will，guarantee me a score of three and now I。
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以三是在九和七中是最小的，因此我们可以说这个状态的值是三，所以现在作为最大玩家的我已经探索了我的三个选项中的两个，我知道我的一个选项将至少保证我得分四，而我的一个选项将保证我得分三，而现在我。
 - en: consider my third option and say all，right what happens here same exact logic。the
     min player is gonna look at these，three states two four and six say the。minimum
     possible option is two so the，min player wants the two now I as the。max player
     have calculated all of the，information by looking two layers deep。
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 让我考虑我的第三个选项，想想这里会发生什么，采用完全相同的逻辑。最小化玩家会查看这三个状态：2、4和6，最小可能的选项是2，因此最小化玩家想要2，而我作为最大化玩家已经通过向下看两层深来计算了所有信息。
 - en: by looking at all of these nodes and I，can now say between the four the 3 and。the
     2 you know what I'd rather take，before because if I choose this option。if my opponent
     plays optimally they will，try and get me to the 4 but that's the。best I can do
     I can't guarantee a higher，score because if I pick either of these。
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 通过查看所有这些节点，我现在可以说，在4、3和2之间，你知道我宁愿选择前者，因为如果我选择这个选项，如果我的对手最佳游戏，他们会试图让我达到4，但这就是我能做到的最好了。我不能保证更高的得分，因为如果我选择其中一个。
 - en: 2 options I might get a 3 or and I get a，2 and it's true that you know down
     here。is a 9 and that's the highest score out，of any of the scores so I might be。tempted
     to say you know what maybe I，should take this option because I might。get the 9
     but if the min player is，playing intelligently if they're making。
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 2个选项，我可能会得到3，或者得到2，确实在这里是9，这是所有分数中最高的，所以我可能会想说，你知道吗？也许我应该选择这个选项，因为我可能会得到9，但如果最小化玩家聪明地在玩，他们会考虑我的对手对此的反应。
 - en: the best moves and each possible option，they have when they get to make a choice。I'll
     be left with the 3 whereas I could，better playing optimally have guaranteed。that
     I would get the 4 so that is an，effect the logic that I would use as a。mini max
     player trying to maximize my，score from that node there but it turns。
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 最佳的动作和他们在做选择时所拥有的每一个可能选项。我会留下3，而如果我能以最佳方式进行游戏，我本可以确保获得4，这就是我作为一个迷你最大化玩家所使用的逻辑，试图从那个节点最大化我的得分，但这反过来了。
 - en: out they took quite a bit of computation，for me to figure that out I had to。reason
     through all of these nodes in，order to draw this conclusion and this。is for a
     pretty simple game where I have，three choices my opponent has three。choices and
     then the game's over so what，I'd like to do is come up with some way。
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们花了我相当多的计算时间才能弄清楚这一点，我必须理清所有这些节点才能得出这个结论，这对于一个相当简单的游戏来说，我有三个选择，而我的对手有三个选择，然后游戏结束。所以我想做的是想出一些方法。
 - en: to optimize this maybe I don't need to，do all of this calculation to still。reach
     the conclusion that you know what，this action to the left that's the best。that
     I could do let's go ahead and try，again and try and be a little more。intelligent
     about how I go about doing，this so first I start the exact same way。
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了优化这个，也许我不需要进行所有这些计算就能得出结论，你知道吗？这个向左的动作是我能做的最好选择。让我们再试一次，试着在做这件事情时更加聪明，所以我首先以完全相同的方式开始。
 - en: I don't know what to do initially so I，just have to consider one of the options。and
     consider what the min player might，do min has three options for 8 and 5 and。between
     those three options min says 4，is the best they can do because they。want to try
     to minimize the score now I，the max play，we'll consider my second option making。
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 我最初不知道该怎么做，因此我只需考虑其中一个选项，想想最小化玩家可能会怎么做。最小化玩家有8和5的三个选项，而在这三个选项中，最小化玩家认为4是他们能做的最好选择，因为他们想要尽量减少得分。现在我，作为最大化玩家，会考虑我的第二个选项。
 - en: this move here and considering what my，opponent would do in response。what will
     the min player do well the min，player is going to from that state look。at their
     options and I would say all，right 9 is an option 3 is an option and。if I am doing
     the math from this initial，state doing all this calculation when I。
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么最小化玩家会怎么做呢？最小化玩家会从那个状态查看他们的选项，我会说，好的，9是一个选项，3也是一个选项。如果我从这个初始状态进行数学计算，进行所有这些计算，当我。
 - en: see a 3 that should immediately be a red，flag for me because when I see a 3
     down。here at this state I know that the value，of this state is going to be at
     most 3。it's going to be 3 or something less，than 3 even though I haven't yet looked。at
     this last action or even a few，further actions if there were more。
+  id: totrans-110
   prefs: []
   type: TYPE_NORMAL
+  zh: 看到3时，这对我来说应该立即是一个红色警告，因为当我在这个状态下看到3时，我知道这个状态的值最多为3。它将是3或者低于3，即使我还没有查看这个最后的动作，甚至是几个后续动作，如果还有更多的话。
 - en: actions that could be taken here how do，I know that well I know that the min。player
     is going to try to minimize my，score and if they see a 3 the only way。this could
     be something other than a 3，is if this remaining thing that I。haven't yet looked
     at is less than 3，which means there is no way for this。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 我可以有效地剪除这个叶子节点，并且在这里可以采取的行动，我怎么知道这一点呢？我知道最小玩家将试图将我的得分降低，如果他们看到一个3，唯一能使这个值不等于3的，就是我尚未查看的剩余状态小于3，这意味着没有办法。
 - en: value to be anything more than 3 because，the min player can already guarantee
     a 3。and they are trying to minimize my score，so what does that tell me。well it
     tells me that if I choose this，action my score is going to be 3 or。maybe even
     less than 3 if I'm unlucky，but I already know that this action will。
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 值不能超过3，因为最小玩家已经能保证得分为3，并且他们正在努力将我的得分降低。那么这告诉我什么呢？这告诉我如果我选择这个行动，我的得分将是3，或者如果运气不好，甚至可能低于3，但我已经知道这个行动将。
 - en: guarantee me a 4 and so given that I，know that this action guarantees me a。score
     of 4 and this action means I can't，do better than 3 if I'm trying to。maximize
     my options there is no need for，me to consider this triangle here there。is no
     value no number that could go here，that would change my mind between these。
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 保证我得到4。因此，考虑到我知道这个行动保证我得分为4，而这个行动意味着我不能得到超过3的得分，如果我试图最大化我的选择，那就没有必要考虑这个三角形。这里没有任何值，任何数字能改变我在这之间的想法。
 - en: two options I am always going to up for，this path that gets me a 4 as opposed
     to。this path where the best I can do is a 3，if my opponent plays optimally and
     this。is going to be true for all the future，states that I look at too but if I
     look。over here at what min player might do，over here if I see that this state
     is a。
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 我总是会有两个选择，一个是让我得到4的路径，另一个是让我得到3的路径，前提是我的对手以最佳策略进行游戏。这对于我未来考虑的所有状态都是成立的，但如果我看一下最小玩家可能会做的事情，如果我看到这个状态是一个。
 - en: 2 I know that this state is at most a 2，because the only way this value could
     be。something let other than two is if one，of these remaining states is less than。the
     2 and so the min player would opt，for that instead so even without looking。at
     these remaining states I is the，maximizing player can know that choosing，better。
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 2，我知道这个状态至多是2，因为这个值如果不等于2，就必须有其中一个剩余状态小于2，因此最小玩家会选择那个状态，而不是这个。因此，即使不考虑这些剩余状态，作为最大化玩家的我也能知道，选择。
 - en: then choosing either of those two paths，to the right because this one can't
     be。better than three this one can't be，better than two and so for in this case。is
     the best that I can do so in order to，do this guy and I can say now that this。state
     has a value of four so in order to，do this type of calculation I was doing。
+  id: totrans-116
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后选择这两个路径中的任一个都不如右边的那个，因为这个路径不能优于3，那个路径不能优于2，因此在这种情况下，这是我能做到的最好选择。为了做这个，我现在可以说这个状态的值是4。因此，为了进行这种类型的计算，我会认为。
 - en: a little bit more bookkeeping keeping，track of things keeping track all the。time
     of what is the best that I can do，what is the worst that I can do and for。each
     of these states saying all right，well if I already know that I can get a。four
     then if the best I can do at this，consider it，I can effectively prune this leaf
     and。
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 需要更多的记账，随时跟踪事情，跟踪我能做的最好和最坏的事情，对于每一个状态，我会说，好吧，如果我已经知道我能得到4，那么如果我考虑的最佳结果是。
 - en: anything below it from the tree and it's，for that reason this approach this。optimization
     to minim acts it's called，alpha beta pruning alpha and beta stand。for these two
     values you'll have to keep，track of the best you can do so far and。![](img/bed85332cae7d95278a07a427cbda9eb_43.png)
+  id: totrans-118
   prefs: []
   type: TYPE_NORMAL
+  zh: 从树中剪除任何低于它的值，因此这个方法，这种最小化的优化称为阿尔法-贝塔剪枝，阿尔法和贝塔代表这两个值，你必须跟踪你目前为止能做到的最好结果。![](img/bed85332cae7d95278a07a427cbda9eb_43.png)
 - en: the worst you can do so far and pruning，is the idea of if I have a big long
     deep。search tree I might be able to search it，more efficiently if I don't need
     to。search through everything if I can，remove some of the nodes to try and。optimize
     the way that I look through，this entire search space so alpha beta。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 到目前为止你能做的最糟糕的事情，因此剪枝的理念是，如果我有一个很长很深的搜索树，如果我不需要搜索所有内容，我可能会更高效地搜索它。如果我能删除一些节点，以优化我查看整个搜索空间的方式，那么阿尔法-贝塔。
 - en: pruning can definitely save us a lot of，time as we go about the search process。by
     making our searches more efficient，but even then it's still not great as，games
     get more complex。tic-tac-toe fortunately it's a，relatively simple game and we
     might。reasonably ask a question like how many。
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 剪枝确实可以为我们节省很多时间，在搜索过程中通过提高搜索效率，但即便如此，当游戏变得更复杂时，这仍然不是很好。幸运的是，井字棋是一个相对简单的游戏，我们或许可以合理地问，究竟有多少种。
 - en: '![](img/bed85332cae7d95278a07a427cbda9eb_45.png)'
+  id: totrans-121
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/bed85332cae7d95278a07a427cbda9eb_45.png)'
 - en: total possible tic-tac-toe games are，there you can think about it you can try。and
     estimate you know how many moves are，there at any given point。how many moves long
     in the game last it。![](img/bed85332cae7d95278a07a427cbda9eb_47.png)
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 总共有多少可能的井字棋游戏呢？你可以考虑一下，尝试估算在任何特定时刻，有多少步骤。有多少步长，游戏持续多长时间。![](img/bed85332cae7d95278a07a427cbda9eb_47.png)
 - en: turns out there are about two hundred，and fifty-five thousand possible。tic-tac-toe
     games that can be played but，compare that to a more complex game。something like
     a game of chess for，example far more pieces far more moves。games that last much
     longer how many。
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 结果是，约有二十五万可能的井字棋游戏可以进行，但与更复杂的游戏相比，比如国际象棋，棋子更多，移动更多，游戏持续时间更长，有多少呢？
 - en: '![](img/bed85332cae7d95278a07a427cbda9eb_49.png)'
+  id: totrans-124
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/bed85332cae7d95278a07a427cbda9eb_49.png)'
 - en: total possible chess games could there，be it turns out that after just four。moves
     each four moves by the white，player four moves by the black player。![](img/bed85332cae7d95278a07a427cbda9eb_51.png)
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 总共有多少可能的国际象棋游戏呢？结果是，仅仅经过四步，每位白方选手四步，黑方选手四步。![](img/bed85332cae7d95278a07a427cbda9eb_51.png)
 - en: that there are 288 billion possible，chess games that can result from that，situation。after
     just four moves each and going，even further if you look at entire chess。games
     and how many possible chess games。![](img/bed85332cae7d95278a07a427cbda9eb_53.png)
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 从这种情况下，可能会有2880亿种可能的国际象棋游戏。仅仅在四步之后，进一步分析整个国际象棋游戏，会有多少种可能的国际象棋游戏呢？![](img/bed85332cae7d95278a07a427cbda9eb_53.png)
 - en: there could be as a result，they're there more than ten to the，twenty-nine thousand
     possible chess。games far more chess games than could，ever be considered and this
     is a pretty。big problem for the minimax algorithm，because the minimax algorithm
     starts。with an initial state considers all the，possible actions and all the possible。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，可能会有超过十的二十九次方的国际象棋游戏，远比任何可能被考虑的国际象棋游戏要多。这对极小化算法来说是一个相当大的问题，因为极小化算法从初始状态开始，考虑所有可能的动作和所有可能的。
 - en: actions after that all the way until we，get to the end of the game and that's。going
     to be a problem if the computer is，going to need to look through this many。states
     which is far more than any，computer could ever do in any reasonable。amount of
     time so what do we do in order，to solve this problem instead of looking。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 之后的所有行动，直到我们到达游戏结束。如果计算机需要查看如此多的状态，这将是一个问题，这远远超过了任何计算机在合理时间内能够做到的。那么我们该如何解决这个问题，而不是层层深入，每一步都往前走，直到游戏结束呢？
 - en: through all these states which is，totally intractable for a computer we。need
     some better approach and it turns，out that better approach generally takes。the
     form of something called depth。![](img/bed85332cae7d95278a07a427cbda9eb_55.png)
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于计算机来说，遍历所有这些状态是完全无法处理的，我们需要一些更好的方法，结果显示这种更好的方法通常采取一种称为深度的方法。![](img/bed85332cae7d95278a07a427cbda9eb_55.png)
 - en: limited minimax where normally minimax，is depth unlimited we just keep going。![](img/bed85332cae7d95278a07a427cbda9eb_57.png)
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 限制的极小化算法，通常极小化算法是深度无限的，我们只需不断进行下去。![](img/bed85332cae7d95278a07a427cbda9eb_57.png)
 - en: layer after layer move after move until，we get to the end of the game depth。limited
     minimax is instead going to say，you know what after a certain number of。moves
     maybe I'll look ten moves ahead。![](img/bed85332cae7d95278a07a427cbda9eb_59.png)
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 深度有限的极小化算法会说，你知道吗，在某个步数之后，也许我会看十步前。![](img/bed85332cae7d95278a07a427cbda9eb_59.png)
 - en: maybe I'll look twelve moves ahead but，after that point I'm going to stop and。not
     consider additional moves that might。![](img/bed85332cae7d95278a07a427cbda9eb_61.png)
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 也许我会看十二步之后，但到那时我会停止，不再考虑可能的额外步骤。![](img/bed85332cae7d95278a07a427cbda9eb_61.png)
 - en: come after that just because it would be，computationally intractable to consider。all
     of those possible options but what，do we do after we get ten or twelve。moves deep
     and we arrive at a situation，where the game's not over minimax still。needs a way
     to assign a score to that，game board or game state to figure out。
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 在计算上，考虑所有可能的选项是不可行的，所以我们在深入十或十二个棋步后，会遇到游戏尚未结束的情况，minimax仍然需要一种方法为棋盘或游戏状态分配分数，以确定其当前价值，这在游戏结束时很简单，但如果游戏还未结束，就不那么容易。
 - en: what its current value is which is easy，to do if the game is over but not so。easy
     to do if the game is not yet over，so in order to do that we need to add。one additional
     feature to depth limited，minimax called an evaluation function。which is just some
     function that is，going to estimate the expected utility。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 为此，我们需要为深度限制的minimax添加一个额外的特征，称为评估函数，它只是一个估计预期效用的函数。
 - en: '![](img/bed85332cae7d95278a07a427cbda9eb_63.png)'
+  id: totrans-135
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/bed85332cae7d95278a07a427cbda9eb_63.png)'
 - en: of a game from a given state so in a，game like chess if you imagine that a。game
     value of 1 means white wins，a draw，then you might imagine that a score of，like
     0。8 means white is very likely to，win now certainly not guaranteed and you。would
     have an evaluation function that，estimates how good the game state。
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 在一个游戏中，比如国际象棋，如果想象游戏值为1意味着白方胜利，而0表示平局，那么你可以想象0.8的分数意味着白方非常可能获胜，这当然不是绝对保证。你会有一个评估函数来估计游戏状态的好坏。
 - en: happens to be and depending on how good，that evaluation function is that is。ultimately
     what's going to constrain how，good the a is the better the AI is at。estimating
     how good or how bad any，gamestate is the better the AI is going。to be able to
     play that game if the，evaluation function is worse and not as。
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 这取决于评估函数的质量，这最终将约束AI的能力。AI越擅长评估任何游戏状态的好坏，它在玩游戏时就会越出色。如果评估函数较差，则表现不佳。
 - en: good as it estimating what the expected，utility is then it's going to be a whole。lot
     harder and you can imagine trying to，come up with these evaluation functions。in
     chess for example you might write an，evaluation function based on how many。pieces
     you have as compared to how many，pieces your opponent has because each。
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 作为对预期效用的估计，它会变得更复杂，因此想出这些评估函数会更加困难。在国际象棋中，你可能会根据你拥有的棋子数量与对手的棋子数量来编写评估函数，因为每个。
 - en: one has a value and your evaluation，function function probably needs to be a。little
     bit more complicated than that，to consider other possible situations。that might
     arise as well and there are，many other variants on minimax and add。additional
     features in order to help，perform better under these larger more。
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 每个都有一个值，你的评估函数可能需要比这更复杂，以考虑其他可能出现的情况，还有许多其他的minimax变体以及添加其他特征，以帮助在这些更复杂的环境中表现更好。
 - en: computationally intractable situations，where we couldn't possibly explore all。of
     the possible moves so we need to，figure out how to use evaluation。functions and
     other techniques to be，able to play these games ultimately。better but this now
     was a look at this，kind of adversarial search these search。
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 在计算上不可行的情况下，我们无法探索所有可能的走法，因此需要弄清楚如何使用评估函数和其他技术，以便能够最终更好地玩这些游戏。但这现在是对这种对抗搜索的一种观察。
 - en: problems where we have situations where，I am trying to play against some sort
     of。opponent and these search problems show，up all over the place throughout。artificial
     intelligence we've been，talking a lot today about more classical。search problems
     like trying to find，directions from one location to another。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们面临的问题是，在与某种对手对战时，这些搜索问题在整个人工智能领域中随处可见。今天我们讨论了更多经典的搜索问题，比如尝试找到从一个位置到另一个位置的方向。
 - en: but anytime an eye is faced with trying，to make a decision like what do I do
     now。in order to do something that is，rational or do something that is。intelligent
     or trying to play a game，like figuring out what move to make。these sort of algorithms
     can really come，in handy it turns out that for。
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 但每当眼睛面临决策时，比如我现在该怎么做，以便做出理性或智能的行为，或者尝试玩游戏，像是想出该做什么棋步时，这些算法实际上会非常有用。
 - en: tic-tac-toe the solution is pretty，simple because it's a small game xkcd is。famously
     put together a webcomic where，he will tell you exactly what move to。make is the
     optimal move to make no。![](img/bed85332cae7d95278a07a427cbda9eb_65.png)
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 井字棋的解决方案相对简单，因为这是一个小型游戏，xkcd著名地制作了一部网络漫画，在其中他会告诉你确切的最佳动作。
 - en: matter what your opponent happens to do，this type of thing is not quite as。possible
     for a much larger game like，checkers or chess for example where。chess is totally
     computationally，intractable for most computers to be。able to explore all the possible
     States，so we really need our AI to be far more。
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 无论你的对手做什么，这种情况在像跳棋或国际象棋这样的大型游戏中并不太可能，因为国际象棋对大多数计算机来说在计算上是不可解的，因此我们确实需要我们的AI变得更加智能。
 - en: intelligent about how they go about，trying to deal with these problems and。how
     they go about taking this，environment that they find themselves in。and ultimately
     searching for one of，these solutions so this then was a look。at search in artificial
     intelligence，next time we'll take a look at knowledge。
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 它们如何聪明地处理这些问题，以及它们如何在这个环境中寻找解决方案，所以这就是我们对人工智能中搜索的探讨，下次我们将研究知识。
 - en: thinking about how it is that our AIS，are able to know information reason。about
     that information and draw，conclusions all。
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 思考我们的AI是如何获取信息、推理这些信息并得出结论的。
