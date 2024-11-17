@@ -1,1335 +1,1773 @@
 - en: P8：Lecture 8： Synchronization 3 Locks, Semaphores, and Monitors - RubatoTheEmber
     - BV1L541117gr
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: P8：第8讲：同步 3 锁、信号量和监视器 - RubatoTheEmber - BV1L541117gr
 - en: All right。
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_1.png)'
+  id: totrans-2
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_1.png)'
 - en: Welcome back everybody。 So we're going to pick up where we left off last time
     talking about synchronization and。 see whether we can get through lock semaphores
     and monitors。 So this should be an information filled lecture。 So if you remember
     from last time， for some reason。 there we go， we talked about the too， much milk
     solution。 And if you remember。
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 大家欢迎回来。我们将从上次讨论同步的地方接着讲，看看我们是否能够完成锁、信号量和监视器的内容。所以这应该是一堂充实的信息量的课程。如果你还记得上次的内容，因为某些原因，我们讨论了过多牛奶的解决方案。如果你记得的话。
 - en: we were trying to figure out how to make a lock with only the， with， only loads
     and stores。 And this got pretty complicated pretty quickly。 This was a solution
     that actually worked。 But if you notice， the thread A and B code is actually different。
     And we said that if you were to generalize to end threads， there would actually
     be end。
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们当时试图仅使用加载和存储来实现一个锁。这很快就变得相当复杂了。这个是一个实际有效的解决方案。但如果你注意到，线程A和B的代码实际上是不同的。我们说，如果你将其推广到n个线程，实际上会有n个不同的锁。
 - en: different threads and different pieces of code。 I mean， so this is not really
     very desirable。 And you can figure this out basically at this point X， we know
     that if there isn't a note， from B。 then we'll be able to keep going through because
     B won't accidentally do the。 critical section and at point Y， we can say that
     if there's no note A， it's safe for B， to buy。
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 不同的线程和不同的代码段，我的意思是，这其实并不是很理想。你可以在这个X点基本上理解这一点，如果没有来自B的通知，我们就能够继续下去，因为B不会意外地执行临界区，在Y点，我们可以说，如果没有A的通知，对于B来说，去买东西是安全的。
 - en: So this works， but it isn't really very satisfying。 And I'll also point out
     that it's got a really bad property here for thread A at least。 It could potentially
     sit here and spin for the whole time that B goes off to get milk。 and comes back。
     So this is what we're going to call busy waiting later。
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，这样是可行的，但其实并不太令人满意。我还要指出，这对线程 A 来说，至少它有一个非常糟糕的特性。它可能会在 B 去拿牛奶并返回的整个过程中一直在这里等待旋转。所以我们稍后将把这称为忙等待。
 - en: And this is really a sign of a bad synchronization protocol。 So what we really
     want is we want。 when you have to wait for a lock， we want it to go， to sleep。
     Okay？ Are there any questions on this？
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 这真的是一个糟糕同步协议的标志。所以我们真正想要的是，在你需要等待一个锁时，我们希望它能够进入睡眠状态。明白吗？有任何问题吗？
 - en: Are we good？ So this was not so much a solution as an aspiration。 We said， well。
     what we really want is we want something that's gotten acquired in release。 that
     we can pass it in an address of a lock， let's say， and a choir will wait until
     the。 lock is free and grab it and release will release the lock to let somebody
     else grab， it。
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们明白了吗？所以这不算一个真正的解决方案，更像是一种理想。我们说，实际上我们希望的是某种可以被获取和释放的锁，我们可以传递一个锁的地址，假设，并且一个合唱队会等待直到锁被释放，然后抓取它，释放操作会释放锁，让其他人抓取它。
 - en: And so the nice thing about this is if we have a uniform lock like this， we
     can put a choir。 and release around any critical section， like for instance， this
     one for our milk。 And it will make sure that there's never more than one thread
     inside that critical section。 at a time， and therefore we won't end up with too
     much milk。 Okay？
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，这样做的好处是，如果我们有一个像这样的统一锁，我们可以在任何临界区周围放一个合唱队，并释放它，例如，这个是为了我们的牛奶。它会确保在该临界区内一次只有一个线程，因此我们不会得到过多的牛奶。明白了吗？
 - en: And not only will not end up with too much milk， but it's pretty easy to just
     look at。 this code and know that it's correct。 So this is much simpler than that
     previous thing。 which was kind of hard to evaluate， right？ Okay。 And so in the
     critical section， by the way。 is the piece that we're protecting so that only，
     one thread can get in there at a time。
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 而且不仅不会导致牛奶过多，而且很容易看出这段代码是正确的。所以这比之前那个要简单得多，后者比较难以评估，对吧？好了，临界区，顺便说一下，就是我们要保护的那部分，这样就只有一个线程能进去。
 - en: And the other thing， obviously， about this acquire is we sleep。 So if there
     are 12 threads that come in simultaneously， one of them gets through。 the other
     one goes， to sleep， the other 12 or 11 of them go to sleep without doing anything。
     They're not spinning， they're just on the wait queue。 Okay。
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个显然的关于这种获取锁的事情是我们会进入睡眠状态。所以如果有 12 个线程同时进入，其中一个线程可以通过，其他的线程会进入睡眠状态，剩下的 11 个线程什么也不做。它们不是在忙碌，只是处于等待队列中。明白了吗？
 - en: So that's going to be our desired goal for building a lock。 Now before I go
     past the API。 I want to make sure there aren't any questions on this。 Does this
     make sense to everybody？ Okay。 Questions？ All right。 So we then said， okay， we're
     going to build a lock。 What do we do？ Well。 one thing is we could start using，
     so clearly having only loads in stores doesn't。
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这将是我们构建锁的目标。在我继续讲解 API 之前，我想确保大家对这个没有疑问。大家理解了吗？好，有问题吗？好。那么我们接下来说，好的，我们要构建一个锁。我们该怎么做呢？嗯，一种方法是我们可以开始使用，所以显然仅仅依赖加载和存储并不足够。
 - en: help us too complicated。 So instead， we want to do something with some other
     hardware of some sort。 And the one thing we know about is we know about interrupt，
     disable and enable。 And if you think about the way we built our scheduler and
     thread multiplexer so far is that。 what a thread's running， the only reason it'll
     ever switch to another thread is either there's。
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 这对我们来说太复杂了。所以相反，我们想使用某种其他硬件。我们知道的一件事是我们知道如何禁用和启用中断。如果你考虑一下我们迄今为止如何构建调度器和线程多路复用器，你会发现，当线程在运行时，它切换到另一个线程的唯一原因是要么有。
 - en: an internal or an external event。 Internal events are all those cases where
     the thread chooses to go into the kernel。 Maybe it's doing a read system call。
     Maybe it's doing a yield， whatever。 And we can avoid that by just not doing it。
     So the only things we really need to protect against is external events。 What's
     a particularly important external event is a timer interrupt going off， which
     will。
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 内部事件或外部事件。内部事件是所有那些线程选择进入内核的情况。也许它正在执行一个读系统调用，可能它正在做一个让步，不管是什么。我们可以通过不让它发生来避免这种情况。所以我们真正需要保护的就是外部事件。一个特别重要的外部事件是定时器中断触发，它会。
 - en: take the thread that's running， swap it out for another thread。 Okay。 So that
     would be a point at which we could potentially violate the critical section。 And
     so that's why if we disable interrupts and in particular disable the timer interrupt。
     then we won't have to worry about critical sections。 Okay。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 把正在运行的线程换成另一个线程。好，所以这将是一个我们可能会破坏临界区的时刻。也正因为如此，如果我们禁用中断，特别是禁用定时器中断，那么我们就不用担心临界区了。明白吗？
 - en: So that's why interrupt disable is an interesting thing for us because it potentially
     allows。 us to prevent scheduling。 Now this only is going to work for a uniprocessor
     because when you disable interrupts and re-enable。 them， it's easy to do on a
     single processor。 But if you have more than one core。 it's much harder to disable
     interrupts across all the， cores so that one thread can run。 Okay。
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这就是为什么禁用中断对我们来说是一个有趣的事情，因为它有可能让我们阻止调度。现在，这仅适用于单处理器，因为禁用和重新启用中断在单处理器上很容易做到。但如果你有多个核心，禁用所有核心的中断让一个线程运行就要难得多。明白吗？
 - en: So whatever we come up with now is not going to really work well on a multi-core
     system。 but it does work well on a single core。 And we could do this， right？
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以无论我们现在想出来的方案，在多核系统上都不会很好用，但在单核系统上它可以很好地工作。我们可以这么做，对吧？
 - en: This is the naive approach we said。 Well， you acquire by disabling interrupts
     and you release by re-enabling them。 And again， the reason that works is because
     we know the timer is not going to go off and。 so we can run that critical section
     and no thread will get in there。 There's the only way a thread could get in there
     is that the timer goes off。 Okay。
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是我们说的天真方法。嗯，你通过禁用中断来获取锁，通过重新启用中断来释放锁。再一次，这种方法有效的原因是我们知道定时器不会触发，所以我们可以运行那个临界区，确保没有其他线程进入。唯一可能让线程进入临界区的方式就是定时器触发。明白了吗？
 - en: Everybody with me？ But this is not good。 Okay。 Why is this not good？ Yeah。 Yeah。
     So your program。 which you could think of a user program， for instance， might
     be running， a lower priority。 There might be something high priority that needs
     to get in there。 And in particular。 we can't even let the user do this。 So we
     kind of said。
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 大家都明白了吗？但这样不好。好，为什么这样不好？对，对。比如你的程序，你可以把它理解为用户程序，可能正以较低优先级运行，可能有某个高优先级的东西需要介入。而且特别是，我们甚至不能让用户做这件事。所以我们大概就说了。
 - en: the problem is we never want to give the user control of interrupts。 because
     they could say lock a choir and then accidentally go into an infinite loop or
     intentionally。 thereby crashing the whole machine。 So whatever this is， this is
     already bad。 but it's even worse because when we're disabling， interrupts for
     a long period of time。
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 问题是，我们从不想让用户控制中断。因为他们可能会说锁被占用了，然后不小心进入无限循环，或者故意这样做，从而导致整个机器崩溃。所以不管这是什么，这已经是不好的了。而且更糟糕的是，当我们长时间禁用中断时，
 - en: then it's possible that there's something really crucial， that comes in like，
     gee。 your reactor is about to melt down。 And you're going to ignore it because
     the interrupts are disabled。 Okay。 And so interrupt disable like this is just
     not a good plan。 Okay。 Just too drastic。 But so far， we don't know anything better。
     I haven't told you anything else that we could use other than load store and interrupt。
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，很可能有些非常关键的事情发生了，比如，天哪，你的反应堆快要熔毁了。你可能会忽视它，因为中断被禁用了。好吧。所以像这样禁用中断显然不是一个好计划。太激进了。但是到目前为止，我们没有发现更好的方法。除了加载存储和中断，我没有告诉你们其他可以使用的东西。
 - en: disable。 So let's see if we can go a little better than this。 Okay。 And that's
     where we were as we ended last time。 And so we came up with this better implementation
     of lock by disabling interrupts。 And the idea here was that interrupt disable
     and enable isn't the actual lock。 The actual lock is going to be a variable in
     memory somewhere， which is either zero or， one。
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 禁用。所以让我们看看是否可以做得比这个更好。好的。这是我们上次结束时的情况。所以我们想出了一个通过禁用中断来实现锁的更好方案。这里的想法是，禁用和启用中断并不是实际的锁。实际的锁将是内存中的一个变量，它的值是零或一。
 - en: And we're going to use the interrupt disable and enable to implement the lock。
     So rather than interrupt disable and enable being the lock， we're going to set
     up a situation。 where we use them to implement the lock。 Everybody with me， that's
     a little different。 It's like a meta task here。 Okay。 And so this is， for instance，
     what our acquire looks like。
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将使用禁用和启用中断来实现锁。所以，与其说禁用和启用中断是锁本身，我们将创建一个情境，利用它们来实现锁。大家明白了吗？这有点不同。就像是一个元任务。好的。所以这就是，比如说，我们的
+    acquire 是这样工作的。
 - en: And notice what I've done here is I've got a single variable in memory。 And
     I'll leave this to you guys to figure out how to generalize this to many possible，
     locks。 But for now we have a single integer。 We set it to free， which is zero。
     And then we acquire does this。 It disables interrupts momentarily。
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后注意，我这里做了什么，我在内存中有一个单一的变量。我将留给你们去想怎么将这个方法推广到多个可能的锁。但现在我们只有一个整数。我们将它设置为“空闲”，即零。然后我们调用
+    acquire 做这个操作。它暂时禁用中断。
 - en: It does something really quickly and then re-enables them。 So the only reason
     this could be okay is if that thing between the disable and the enable， is fast。
     Okay。 That's going to be our goal。 And notice what we do is we say， well。 if somebody
     else has the lock because value is， already busy。
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 它快速执行一些操作，然后重新启用中断。所以，唯一能够保证这个操作是安全的原因，就是在禁用和启用之间的那个操作要足够快。好的。这将是我们的目标。注意我们做的事情是，我们说，如果别人已经获得了锁，因为值已经是忙碌状态。
 - en: we'll put ourselves on the thread queue and go to sleep。 Okay。 The thread queue
     is going to be associated potentially with this lock。 Otherwise if the value isn't
     busy， I'll go ahead and make it busy and exit。 So the only way that acquire works
     immediately is if the lock is free， the person that did。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们会将自己放到线程队列上，然后进入休眠状态。好的。线程队列可能会与这个锁相关联。否则，如果值不是忙碌状态，我会继续将其设为忙碌并退出。所以 acquire
+    能立即工作的唯一情况是，如果锁是空闲的，执行此操作的人就能获得锁。
 - en: acquire or the thread that did acquire， disables interrupts， grabs the lock，
     re-enables them。 That's very fast。 Alternatively， if the lock is taken。 they quickly
     put themselves on a thread queue and， go to sleep and somebody else can run。 Now
     don't think about that too hard until we get to a couple slides later because
     that's。
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: acquire 或执行 acquire 的线程，禁用中断，获取锁，然后重新启用中断。这非常快。或者，如果锁已经被占用，它们会迅速将自己放到线程队列上，然后进入休眠，其他线程可以运行。现在，别想得太复杂，直到我们看到几张幻灯片之后，因为那时。
 - en: a little tricky， right？ Like how do you disable interrupts and go to sleep？
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 有点棘手，对吧？比如，怎么禁用中断然后去休眠呢？
 - en: Now interrupts are disabled。 Okay。 So that sounds bad， but we'll make it less
     bad very quickly。 So release is easy here， right？ Release says， well， I know I
     have the lock。 So what I'm going to do is I'm going to see if anybody's waiting
     for it。 And if they are。 I'll take them off of the wait queue and start them running。
     Okay。
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在中断已经禁用了。好的，听起来不太好，但我们会很快让它变得不那么糟糕。所以释放（release）在这里是简单的，对吧？释放操作说，我知道我已经得到了锁。那么我将检查是否有其他人在等待锁。如果有，我会将它们从等待队列中取出并让它们开始执行。好的。
 - en: And then I'll exit because with release you're typically saying， well， I'm done
     with the， lock。 but somebody else have it。 And notice that we don't even bother
     to set value we could equal to free and then have。 it set it to busy again because
     what happened here is this thing is already sleeping and。 value is already equal
     to busy。 So when we just let it fall through and after having woken it up that
     new thread is now awake。
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我会退出，因为在释放（release）时，你通常会说，好吧，我已经用完了这个锁，但其他人可以继续使用。注意，我们甚至不需要将值设置为“自由”，然后再将其设置为“忙碌”，因为这里发生的情况是这个线程已经在休眠，值已经是“忙碌”了。所以当我们让它继续执行并且唤醒它后，新线程现在已经醒了。
 - en: and value is still busy。 So it's got the lock。 Okay。 And only if there's nobody
     waiting do we go ahead and set the lock to free and exit。 Okay。 So what we've
     done here is we've really used disable and enable to implement a lock。 And I'm
     going to go through this a little more， but are there any questions to start with，
     here？
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在值仍然很忙。所以它拿到了锁。好的。只有在没有人等待时，我们才会继续将锁设置为自由并退出。好的。所以我们在这里做的其实是通过禁用和启用来实现一个锁。我会稍后再详细讲解这个过程，不过现在有任何问题吗？
 - en: All right。 You're all 100% on board with this implementation。 Okay。 Good。 So
     first of all。 why can we only use this in the kernel？ Yes。 That's right。 So this
     code as it is can only be used in the kernel。 Now what I could do。 and we'll talk
     about that a little bit later， is I could make an， acquire and a release system
     call。
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 好了。你们都100%理解这个实现了吗？好的。首先，为什么我们只能在内核中使用这个呢？是的，没错。这个代码目前只能在内核中使用。现在，我可以做的是，稍后我们会讨论一下，我可以创建一个获取和释放的系统调用。
 - en: So the user code calls acquire as a system call。 Okay。 But for now these aren't
     system calls。 This is just something that the kernel could use， but users can't。
     Okay。 And that's purely because we're disabling and re-enabling interrupts。 But
     let's look into this a little bit further because it's a little more subtle perhaps
     than。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以用户代码将获取（acquire）作为系统调用来调用。好的。但目前这些还不是系统调用。这只是内核可以使用的内容，用户不能使用。好的。完全是因为我们禁用了和重新启用了中断。让我们再深入看一下，因为这可能比看上去更微妙一些。
 - en: you might have thought。 So why do we need to disable interrupts at all again？
     Okay。 Because the code that's executing either acquire or release has some logic
     in it。 See。 that's between the two red pieces here。 And if that logic gets interleaved
     by somebody else trying to do acquire or release。 it's， going to get all screwed
     up。 So in fact， this code here is actually a critical section that we're protecting。
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 你们可能会想。那么我们为什么还需要禁用中断呢？好的。因为执行获取（acquire）或释放（release）操作的代码中有一些逻辑。看，在这两块红色部分之间。如果这个逻辑被其他尝试执行获取或释放操作的代码插入，事情就会乱套。所以事实上，这里这段代码实际上是我们需要保护的临界区。
 - en: Okay。 And we're making sure that only one thread is ever either in this side
     or this side。 Okay。 Now， a good question in the chat is if we disable interrupts
     and go to sleep， are we only talking。 about disabling interrupts for the current
     thread？ No。 Interrupt disable is a global thing。 So this looks broken so far，
     right？ I hope everybody's kind of wondering if I have interrupts disabled and
     then I go to sleep。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。我们确保只有一个线程会在这一边或那一边。好的。现在，聊天室中的一个好问题是，如果我们禁用了中断然后进入休眠，是否只是禁用当前线程的中断？不，中断禁用是全局性的。所以到目前为止这看起来是有问题的，对吧？我希望大家都在想，如果我禁用了中断然后进入休眠。
 - en: what happens here？ How do they get re-enabled and why is the machine not fresh？
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里发生了什么？它们是如何重新启用的，为什么机器不会被刷新呢？
 - en: So I admit that looks tricky。 I haven't showed you how to make that work yet。
     Okay。 So。 but we do need to disable interrupts to make sure that nobody gets in
     there in the。 middle of a choir and release or that's going to be broken。 Now。
     let's look at this acquire just by itself and notice that there's kind of a critical。
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我承认这看起来很复杂。我还没有展示如何使它工作。好的。所以，然而我们确实需要禁用中断，以确保没有人会在获取和释放操作之间插入，否则它就会坏掉。现在，让我们只看看获取（acquire）操作，注意这里有个临界区。
 - en: section between disable and enable， but I'm going to call it a meta critical
     section because。 it's a critical section in the lock up of a plantation， which
     is different from when。 the user says acquire and release。 The thing in between
     those two are his， you know。 the user's critical section。 Okay。 And I figure if
     Facebook can do it。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 禁用和启用之间的部分，但我称其为元关键区段，因为它是在一个种植园的锁定中，这与用户说的获取和释放不同。用户在这两个操作之间的部分就是他的，嗯，你知道的，用户的临界区。好的。我想如果
+    Facebook 能做到的话。
 - en: I can call this a meta critical section。 Okay。 Why not？ So， unlike the previous
     solution。 this meta critical section is very short。 So the previous solution was
     acquire being disable interrupts。 you do a bunch of stuff， and then release。 That's
     potentially very long。 This should be really fast。 assuming that this thing here
     about putting yourself to， sleep is fast。 Okay。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 我可以称这个为元关键区段。好的，为什么不呢？所以，不像之前的解决方案，这个元关键区段非常短。之前的解决方案是禁用中断时获取锁，你做一堆事情，然后释放。那可能会很长。这个应该非常快，假设在这里将自己放入睡眠状态的操作是快速的。好的。
 - en: So we're going to need to figure out how to do that。 Okay。 So the user of the
     lock can basically hold on to the lock as long as they want because。 the only
     consequence of the operating system of a user holding the lock is there's a value。
     in memory that's equal to one for a long period of time。 All right。 So what？ Okay。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们需要弄清楚如何操作。好的。锁的用户基本上可以一直持有锁，因为操作系统对用户持有锁的唯一后果就是内存中有一个值长时间等于 1。好吧。那么怎么样呢？好的。
 - en: Question in the back。 No， stretch in the back。 So now we still haven't figured
     out what to do here。 Okay。 What's going on there？ And let's look at this。 So here
     we are and suppose the value is busy。 So we are some thread that's trying to acquire
     the lock and we've discovered that the lock， is busy。 And so what we need to do
     is we need to go away for a while until the lock is free again。
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 背部有问题。不是，背部有拉伸。那么现在我们仍然没有弄清楚该怎么做。好的。那边发生了什么？我们来看一下。所以我们在这里，假设值是忙的。我们是一个尝试获取锁的线程，并且发现锁是忙的。所以我们需要做的是，等一会儿直到锁再次可用。
 - en: So that means we need to put ourselves to sleep。 And the question is what happens
     if we re-enable interrupts here？
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这意味着我们需要把自己放到睡眠状态。那么问题是如果我们在这里重新启用中断，会发生什么呢？
 - en: So rather than no enable interrupt in here， we put it right there。 Okay。 What
     can happen there？
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们没有在这里启用中断，而是把它放在了那里。好的。那么那里会发生什么呢？
 - en: Yeah。 So good。 Let me give， let me take what you just said there and simplify
     it a little bit。 but you're， on the right track， right？ So if we re-enable here
     and the timer interrupt comes in and the thread that has the lock releases。 then
     look what happens。 We come back here and we put ourselves on the。 the weight queue
     and go to sleep。 And we never wake up because the thread that had the lock released
     us or thought it said。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，好的。让我简化一下你刚才说的，但你在正确的轨道上，对吧？如果我们在这里重新启用中断，计时器中断来了，而持有锁的线程释放了锁，那么看看会发生什么。我们回到这里，把自己放入等待队列并去睡觉。然后我们永远不会醒来，因为持有锁的线程释放了我们，或者它认为已经释放了。
 - en: well， there's nobody to release。 It went to sleep。 Okay。 So this is a bad place
     to re-enable interrupts。 So that's not good。 Now we could， what about here？
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，没有人来释放。它去睡觉了。好的。那么在这里重新启用中断是一个糟糕的地方。所以那不好。那么我们可以怎么办呢？
 - en: Same problem， right？ Version of that。 Okay。 Release puts the thread on the ready
     queue or because that's a little bit worse actually。 than the previous one。 So
     if we've already put ourselves on the weight queue。 the waking thread says， oh，
     there's， somebody in the weight queue and they put us on the ready queue and then
     we go ahead。 and do whatever to go to sleep。 So it's all screwed up， right？
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 相同的问题，对吧？那个版本的情况。好的。释放将线程放入就绪队列，或者因为那实际上比之前的情况稍差一些。如果我们已经把自己放入等待队列，那么唤醒线程就会说，哦，等待队列里有其他人，他们把我们放入就绪队列，然后我们继续做任何事情去睡觉。所以这一切都搞砸了，对吧？
 - en: So we can't really re-enable interrupts there either。 So what we really want
     to do it is we want to go to sleep and then re-enable interrupts。 That's the only
     way to make this really work。 Okay。 But that seems challenging。 Right？
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们实际上也不能在这里重新启用中断。那么我们真正想做的是，我们想先去睡觉，然后再重新启用中断。这是唯一真正能让它工作的方式。好的。但这似乎有点挑战性，对吧？
 - en: How do you go to sleep and then re-enable interrupts because you know， you're
     sleeping。 Now there was some really good discussion I thought or questions on
     Piazza that get to。 this point very carefully and I want to talk this through。
     The thread that's acquiring or trying to acquire the lock that puts itself to
     sleep puts itself。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 你是怎么去睡觉然后再启用中断的，因为你知道，你正在睡觉。现在，我觉得在 Piazza 上有一些非常好的讨论，或者说问题，正是涉及这个问题，我想和大家一起理清楚。试图获取或正在获取锁的线程会把自己挂起并进入睡眠状态。
 - en: to sleep。 What's happening is it tries to acquire， it's running this disable
     interrupts。 it's checking， this off。 It's actually putting the TCB on the weight
     queue and there's still instructions running。 there。 So you could kind of think
     that the thread is running along and it put itself to sleep。 but there's still
     code running。 So we could now at that point after putting ourselves to sleep。
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 进入睡眠时，发生了什么呢？它尝试获取锁，执行禁用中断的操作，检查并关闭它。实际上，它把 TCB 放入等待队列，同时仍然有指令在执行。所以你可以理解为线程在运行并把自己挂起，但仍然有代码在继续执行。那么在将自己挂起后，我们现在可以继续操作。
 - en: go wake somebody else up， because we have the CPU。 So I know this is a little
     weird to think about but you could think this thread is putting。 itself to sleep
     and then that same CPU is now picking somebody else up to run。 And that's going
     to solve our problem for us because here's what happens。 Thread A and B。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后去唤醒其他人，因为我们有 CPU。所以我知道这个思考起来有点奇怪，但你可以想象这个线程把自己挂起，然后同一个 CPU 会去选择其他线程执行。这样就能解决我们的难题了，因为事情是这样的。线程
+    A 和 B。
 - en: we got to look at these in combination with each other。 Thread A is running
     along。 disables interrupts and decides it has to go to sleep。 So what sleep means
     is put all your registers in the TCB， put yourself on some weight queue。 somewhere，
     that's sleeping。 But after that， well that thread is asleep but the CPU is still
     running and so what can。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们必须把这两者结合来看。线程 A 正在运行，禁用中断并决定自己需要睡觉。睡眠的意思是将所有寄存器保存到 TCB，将自己放到某个等待队列上，这就叫睡觉。但是之后，虽然那个线程处于睡眠状态，但
+    CPU 仍然在运行，那么它能做什么？
 - en: it do？ Well it can do a context switch to some other thread and that thread
     went to sleep with。 interrupts off。 Right？ That's how we just did it over here。
     And so when we context switch to thread B， we're running also in a context where
     interrupts。 are off。 So when we go back to running again， we just re-enable them。
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 它可以做一次上下文切换，切换到其他线程，而那个线程是在中断关闭的情况下进入睡眠的，对吧？这就是我们刚才做的。所以当我们进行上下文切换到线程 B 时，我们也是在中断关闭的上下文中运行的。因此，当我们重新开始运行时，我们只是重新启用中断。
 - en: But now that CPU was running A， goes over it's running B and the fact that interrupts。
     were disabled here， sorry I didn't color this red， I should have， we load the
     TCB and then。 re-enable interrupts and then keep running。 Until the next time
     when we context switch and re-enable interrupts。 So in fact， if you look at just
     thread A， the difference between disable and enable is over。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是现在 CPU 正在运行 A，然后它切换到 B，并且中断在这里被禁用，抱歉我没有将其标红，我应该标红的，我们加载了 TCB，然后重新启用中断，继续运行。直到下一次上下文切换时重新启用中断。所以实际上，如果你只看线程
+    A，禁用和启用的差异已经结束。
 - en: two context switches。 Okay， I'm going to pause to let that sink in for a second
     because it's a little weird。 And in fact， if I go back here， notice thread A，
     disables interrupts， goes to sleep and then。 later somebody wakes it up and it
     re-enables interrupts over here and release because it's。 been woken up at that
     point。 So the pair of enable and disable is actually going across the choir and
     release in the case。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 两次上下文切换。好吧，我会暂停一下，让你们消化一下，因为这有点奇怪。实际上，如果我回到这里，注意到线程 A 禁用中断，进入睡眠，然后稍后有人唤醒它，重新启用中断并释放，因为它已经被唤醒了。所以启用和禁用中断的操作实际上是跨越了整个周期和释放的过程。
 - en: there。 Okay？ Because the guy who is releasing wakes you up。 Okay。 Now， the question
     of do we。 in the chat says do we enable interrupts whenever we context。 switch
     or how do we know the previous thread called disable interrupts？
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吗？因为唤醒你的那个家伙会把你叫醒。明白吗？现在，关于我们是否在每次上下文切换时启用中断的问题，聊天里有提到，我们如何知道之前的线程禁用了中断？
 - en: The answer is you have to be careful that you properly code everything that
     gets around。 the scheduler so that when you go into the scheduler actually interrupts
     are off。 So that when you come out， you know you have to re-enable them。 Okay，
     that's a pattern。 It's like an OS rule number one is whenever you go into the
     scheduler， interrupts are disabled。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 答案是，你必须小心地正确编码所有会绕过调度程序的代码，这样当你进入调度程序时实际上中断是关闭的。所以当你出来时，你知道你必须重新启用它们。好的，这就是一个模式。这就像是操作系统的第一个规则，每当你进入调度程序时，中断是禁用的。
 - en: So you know exactly what happens when you take a thread out of there and start
     running， it。 Okay。 And notice that this is fast。 This idea of disabling。 putting
     yourself to sleep and waking somebody else up。 That's just a short number of instructions。
     So that's not a long running difference between interrupt， disable and interrupt
     enable。 Okay。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你知道当你把一个线程从那里拿出来开始运行时，究竟发生了什么。好的。注意，这个过程很快。禁用、让自己休眠、唤醒其他线程的这个想法，只是一小段指令。所以在禁用中断和启用中断之间不会有长时间的运行差异。好的。
 - en: that's the fast piece。 All right。 Questions。 So this is an agreement between
     everybody that knows it's touching the scheduler that。 you have a certain pattern
     of， you know， always disabling when you go into the scheduler and。 mess with who's
     sleeping and who's not。 That's why this works。 Okay。 Should I go on？
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是快速的部分。好了，有问题吗？这是大家都达成的共识，大家都知道它涉及到调度程序。你有一个特定的模式，你知道，在进入调度程序时总是禁用它，并且处理谁在休眠，谁没有休眠。这就是它有效的原因。好的，我继续吗？
 - en: Now a question here is what if thread B doesn't go back to sleep。 So in this
     particular example。 by the way， let me just turn on my little pointer here。 In
     this particular example。 if thread B is actually woken up right here。 Okay。 so
     we thread B isn't going back to sleep at this point， but the question was kind，
     of， well。
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在这里的问题是如果线程 B 不回到休眠状态会怎么样。在这个特定的例子中，顺便说一下，让我打开我的小指示器。在这个特定的例子中，如果线程 B 真的在这里被唤醒。好的，线程
+    B 这时没有回到休眠状态，但问题是，这种情况有点儿，嗯。
 - en: what if thread B never goes back to sleep？ It has to go back to sleep because
     we're not going to let thread B run forever。 That would be an OS bug， right？ Because
     we have the timer interrupt going off to switch it。 Okay。 So we will eventually
     go back this way。 All right。 Now I have something for you that's going to help。
     Let's simulate this。 Okay。
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果线程 B 永远不再进入休眠状态，会怎么样？它必须回到休眠状态，因为我们不会让线程 B 永远运行下去。这将是一个操作系统的 bug，对吧？因为我们有定时器中断来进行切换。好吧。所以我们最终会回到这种情况。好了，现在我有一些东西可以帮你们。我们来模拟一下。好的。
 - en: You can only handle so many simulations in a class， but this one's not too bad。
     So here's the value here that's going to be either zero or one。 Zero is free。
     One is busy。 We're going to keep track of who the owner of the lock is and who's
     waiting on the lock。 So this waiters thing here is going to be a queue of waiters。
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 你只能在课堂上处理这么多模拟，但这个不算太复杂。这里有一个值，要么是 0，要么是 1。0 表示空闲，1 表示忙碌。我们将跟踪谁是锁的拥有者，谁在等待锁。所以这里的等待者队列将是一个等待者的队列。
 - en: The owner is actually not going to be any real thing right now。 It's going to
     just be a bookkeeping to help us understand what's going on。 And it's going to
     be who's wait， who's owning the lock right now。 So right now nobody owns the lock。
     but we're going to go through this situation with thread。
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有者实际上现在并没有真正的意义。它只是一个帮助我们理解发生了什么的记账工具。它将表示现在谁在拥有锁。所以现在没有人拥有锁，但我们将通过这个情境来讨论线程。
 - en: A and B such that somebody owns the lock and then somebody else owns the lock。
     Okay。 And notice what we've got here。 Here's thread A。 Here's thread B。 Here's
     our require and release。 Okay。 And notice that thread A is running along and it
     says lock acquire does something lock release。 Thread B also is going to do lock
     acquire do something lock release。 Okay。
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: A 和 B，假设某人拥有锁，然后另一个人拥有锁。好的。注意看这里的情况。这里是线程 A，这里是线程 B，这是我们的请求和释放。好的。注意线程 A 正在运行，并且它执行锁获取做一些事情，再执行锁释放。线程
+    B 也会做锁获取，做一些事情，然后锁释放。好的。
 - en: And so let's see what happens if the two of them are trying to do this simultaneously。
     Because what we want is only one of them ever gets into their critical section
     at a， time。 That's our primary goal here， right？ Because if more than one of them
     gets into the critical section。 we've got a problem。 So here we go。 A happens
     to be grabbing the CPU for a moment。
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么我们来看一下，如果这两个线程同时尝试这样做，会发生什么情况。因为我们希望只有一个线程能够进入它们的临界区，对吧？这是我们的主要目标。如果多个线程进入了临界区，我们就有问题了。那么，我们开始吧。此时
+    A 恰好占用了 CPU 一会儿。
 - en: It's running along and hits lock acquire。 So acquire does what it disables interrupts。
     That's what that little red dot there means。 And now it's going to run this code。
     But notice that value started out at zero。 So at this moment in time， nobody has
     the lock。 So A is going to get the lock， right？ So we're going to take this arm
     where we set value to one and we become the owner。
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 它正在运行并遇到 lock acquire。所以 acquire 做了什么？它禁用了中断。这就是那颗小红点的意思。现在它将运行这段代码。但请注意，值最初是零。所以在这一刻，没有人拥有锁。于是
+    A 将获得锁，对吧？我们会设置值为 1，成为所有者。
 - en: Okay。 And here's where the CPU is running right now。 And notice that that owner
     is pointing at A。 But again， we don't have to keep track of， who the actual owner
     is。 It's like just for us to know。 Because the reason the owner is known kind
     of the system is really that thread A will。 make it pass lock acquire into its
     critical section。 And so it will be the owner。
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，当前 CPU 正在运行。请注意，当前的所有者指向 A。但我们不必一直追踪实际的所有者。这只是为了我们了解。因为知道所有者的原因实际上是，线程 A
+    会通过 lock acquire 进入其临界区。因此，它将成为所有者。
 - en: It knows that because it made it there。 Okay。 But now we re-enable interrupts。
     We return from acquire and now A gets to start running in its critical section
     and it。 owns the lock。 Okay。 Now notice， I also put on this slide the ready queue。
     So the ready queue is just that queue where we switch back and forth between running
     and， ready。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 它知道这一点，因为它已经到达了那里。好的。但是现在我们重新启用中断。从 acquire 返回后，A 将开始在其临界区内运行，并且它拥有锁。好的。现在请注意，我在这个幻灯片上还列出了就绪队列。就绪队列就是我们在运行和就绪之间切换的队列。
 - en: you know， as we multiplex the CPU。 Okay。 So what this current state says is
     A is running。 B is ready to run。 And at any point the timer interrupt could go
     off and let the ready one run and the running。 one go ready。 And the only reason
     that wouldn't happen is if we have interrupts disabled。 And I just want to pause
     here for a second to make sure everybody understands all the。
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 你知道，随着我们对 CPU 进行多路复用。好的。那么当前的状态表示 A 正在运行，B 准备运行。在任何时刻，定时器中断可能会触发，让准备好的线程运行，而正在运行的线程则变为准备状态。唯一不会发生这种情况的原因是如果我们禁用了中断。现在我想暂停一下，确保每个人都理解了这一切。
 - en: information on this slide because there's a lot of stuff here。 Okay。 Questions？
     Are we good？
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 这张幻灯片上的信息，因为这里有很多内容。好的，有问题吗？大家都明白了吗？
 - en: Now let's go a little further。 So now A is computing critical section。 Not a
     dum dum dum dum dum dum。 Okay。 It's funny to watch what that just did with the
     text that's coming up on the screen。 So anyway， so now we come along and at some
     point the timer goes off。 Why did the timer go off？
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们再往后看一点。A 正在计算它的临界区。不是 dum dum dum dum dum dum。好的，看到文本在屏幕上显示出来的样子真有趣。无论如何，接下来在某个时刻定时器触发了。为什么定时器会触发？
 - en: Well， because the timer went off。 It's there to multiplex us。 So all that's
     going to happen is we're going to switch from thread A to B purely because。 the
     scheduler is there。 Okay。 So there's no magic so far。 And if you notice at that
     point going into the scheduler is going to disable interrupts， as well。
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，因为定时器触发了。它的目的是为我们进行多路复用。所以所发生的就是我们会因为调度程序的作用而从线程 A 切换到 B。好的，到目前为止没有什么神奇的东西。如果你注意到，从那时起进入调度程序时也会禁用中断。
 - en: That's why I've got a little red dot there。 So not only did we disable interrupts
     explicitly in our acquire and release code。 but when you， enter the kernel because
     of an interrupt happening。 That always starts out with interrupts disabled。 When
     I talked about interrupts before that's what happens and that's why this is red。
     And it's going to go through the trouble in the scheduler of switching A and B。
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是我为什么在这里加了一个小红点的原因。所以不仅我们在 acquire 和 release 的代码中显式禁用了中断，而且当你因为中断而进入内核时，内核的开始总是会禁用中断。我之前讲到的中断就是这么回事，这也是为什么这个点是红色的。接着它会在调度程序中切换
+    A 和 B。
 - en: So that now we're in this situation。 First we put A on the ready queue。 Then
     we start and get B running。 So now A isn't running。 It's just on the ready queue
     and B's running。 Okay。 So all that happened there was we just swap。 That was last
     lecture。 Okay。 And if you notice that now we're going to come up with lock acquire。
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们处于这种情况。首先，我们将 A 放入就绪队列。然后我们开始让 B 运行。现在 A 没有运行，它只是处于就绪队列中，而 B 在运行。好的，所发生的一切就是我们交换了。这是上节课的内容。好的。如果你注意到现在我们要进行锁获取。
 - en: So what do we want to have happen there when B goes to lock acquire？ What should
     happen？
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，当 B 去获取锁时，我们希望发生什么呢？
 - en: Go to sleep， right？ Why should B go to sleep？ Because A has the lock， right？
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 去睡觉吧，对吧？为什么 B 要去睡觉？因为 A 拿到了锁，对吧？
 - en: And if we let B run we got a problem。 So let's see why that happens。 So B is
     in the lock calls lock acquire。 We first disable interrupts。 And now notice what
     is value values one and the reason value is one is because A has already。 got
     the lock。 So we're going to do this arm of the code here and we're going to put
     ourselves on the。
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们让 B 运行，就会遇到一个问题。那么我们来看看为什么会发生这种情况。B 在锁的调用中调用了锁获取。我们首先禁用中断。现在注意，值是 1，而值为
+    1 的原因是因为 A 已经获得了锁。所以我们会执行这段代码，并将自己放到。
 - en: weight queue and go to sleep。 Which means we're going to go to the ready queue
     to find somebody else to run because。 we can't run we're going to sleep。 And therefore
     who's ready to run？ A， right？
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 等待队列并进入睡眠状态。这意味着我们将进入就绪队列寻找其他可以运行的进程，因为我们无法运行，必须睡觉。因此，谁准备好运行了？A，对吧？
 - en: So what happens is this CPU disables interrupts goes to sleep which is going
     to call the scheduler。 which is going to say B is waiting。 Okay， because it went
     to sleep so it's waiting and voila we're going to go back into A re-enable。 interrupts
     and now it's running again。 So the fact that we tried to grab the lock but we
     can't really kind of force the scheduling。 operation bringing A back to life。
     And now A is running and B is waiting。
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以发生的事情是，CPU 禁用中断后进入睡眠状态，这将调用调度程序。调度程序会说 B 正在等待。好的，因为它已经进入睡眠状态，所以它在等待。接着我们会回到
+    A，重新启用中断，A 又开始运行。所以我们试图获取锁但无法获取，从而迫使调度操作，使 A 重新“复活”。现在 A 在运行，B 在等待。
 - en: And if you were to look inside you know what's going on in the kernel you'd
     see that B is。 on a queue associated with the lock waiting。 So it's not going
     to get picked up we could have the timer go off all day right now and。 B will
     never get woken up again because it's not on the ready queue it's on a weight
     queue。 So B is suspended here all right。 Now we're going to run for a little bit
     longer and we come to lock release。
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你查看内核中的内容，你会看到 B 正在与锁相关的队列上等待。所以它不会被挑选出来，即使定时器一直响，B 也永远不会被唤醒，因为它不在就绪队列中，它在等待队列中。所以
+    B 被挂起在这里。好了，现在我们将运行一段时间，接着来到锁释放。
 - en: So what do we want to happen with lock release？ Speak up or raise your hand
     go ahead。 We want to do what with the lock？ So we want to give B the lock right。
     So at minimum we want to take B off of the weight queue and give it the lock。
     So notice what that really means is the following。 We go to release we disable
     interrupts。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么我们希望锁释放时发生什么呢？请说一下或举手。我们希望如何处理锁？我们希望把锁交给 B，对吧？至少我们希望把 B 从等待队列中取出并把锁交给它。所以注意，这实际上意味着什么呢？我们进入释放状态，禁用中断。
 - en: We say is there anybody on the weight queue yep we're going to put them on the
     ready queue。 Poof。 Now B is the owner okay but that's subtle because this owner
     thing isn't real it's just。 telling us as we're simulating who the owner is because
     we re-enable interrupts and come。 back and run after lock release for A so A release
     the lock and it keeps running afterwards。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们检查等待队列中是否有进程，是的，我们将它们放到就绪队列中。砰！现在 B 就是所有者了。好的，但这有点微妙，因为这个所有者的概念并不是真实的，它只是告诉我们在模拟中谁是所有者，因为我们重新启用中断，然后继续运行
+    A，A 释放锁后继续运行。
 - en: The only thing that happened in the kernel inside is that B got taken off the
     weight。 queue and put on the ready queue okay and if later when the timer goes
     off we'll swap。 again and what's that going to do。 It's going to disable interrupts
     and it's going to pick somebody off the ready queue to run。 and if it happens
     to pick B where was B suspended B was suspended right here and so B will just。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 在内核中发生的唯一事情是，B 被从等待队列中移除并放到就绪队列中，好的。如果稍后定时器响了，我们会再次交换。那会发生什么呢？它将禁用中断并从就绪队列中挑选一个进程来运行。如果恰好选中了
+    B，那 B 被挂起的位置是这里，所以 B 会继续。
 - en: pick up from there they'll be we'll put B running we'll start running from that
     point。 we'll re-enable interrupts we'll go back to lock acquire and now we're
     running in our。 critical section。 So the only thing that happened was later after
     after A release B will now get to run。 and it'll return from lock acquire which
     means that B's got the lock。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 从这里继续，我们会让B运行，并从那一点开始运行。我们会重新启用中断，回到锁获取函数，现在我们在临界区中运行。所以唯一发生的事情是稍后A释放锁后，B就会运行，它会从锁获取函数返回，意味着B得到了锁。
 - en: Why does B have the lock because it returns from lock acquire you have the lock
     when you。 do that okay and so this little owner thing doesn't actually have to
     have B there in order。 for this all to work okay and then later we'll release
     the lock and either wake somebody。 else up or just release the lock。 Alright I'm
     going to pause on that simulation how we do it please ask a question。
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么B需要锁？因为它从锁获取函数返回时，你已经得到了锁，明白吗？所以这个小的“拥有者”并不需要B存在就能让这一切正常工作，好的，然后稍后我们会释放锁，或者唤醒其他人，或者直接释放锁。好了，我暂停一下关于这个模拟的讲解，如果有问题请提问。
 - en: Yes。 Yes。 So first question there is does every interrupt disable disable the
     same interrupts is everybody。 else。 So there's two if you remember back when we
     talked about interrupts every device has an。 interrupt that's unique and it's
     and when one of them's ready there's an ID this interrupt。 disable as I've discussing
     it here is sort of the meta interrupt disable that disables。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，没错。第一个问题是每个中断禁用是否禁用相同的中断？是否每个其他设备都是一样的？如果你记得我们之前讨论中断的时候，每个设备都有一个独特的中断，并且当其中一个准备好时，会有一个ID，这个禁用中断就像我在这里讨论的那样，实际上是一个元中断禁用，它会禁用。
 - en: them all and re-adables them all。 Now we could get the same activity here as
     long as we're very careful if we I'm not even。 going to say that the reason we
     want to disable all of them is because pretty much anything。 that came in could
     in principle be an interrupt that re-enables the runs the scheduler again。 so
     we want to make sure nobody's running the scheduler there okay so this is really
     inter。
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 关闭所有中断然后重新启用它们。只要我们非常小心，我们可以在这里得到相同的活动，我甚至不会说我们要禁用所有中断的原因是因为几乎任何进入的东西都可能成为一个中断，重新启用它会重新运行调度程序。所以我们要确保此时没有人在运行调度程序，好的，这实际上是与中断相关的。
 - en: disable them all okay and there's a question here there's no such thing as interrupts
     while。 you're in the kernel mode that's false okay that's a question the answer
     is no that's。 why we're in kernel mode and we have to disable and re-enable interrupts
     because they could， happen。 And if you remember that slide that I had last time
     I think it was where I showed you。
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: 关闭所有中断好吧，这里有一个问题，“在内核模式下没有中断”是错误的，好吗？这是一个问题，答案是否定的。这就是为什么我们要进入内核模式，并且需要禁用和重新启用中断，因为中断是有可能发生的。如果你记得我上次展示的那张幻灯片，应该是我展示的内容。
 - en: that there's a bunch of user threads that have both a user stack and a kernel
     stack。 and a bunch of kernel threads that only have a kernel stack those get multiplex
     all between。 them so you could have things you could have the kernel is running
     a kernel thread and。 there could be an interrupt that goes off and you could switch
     to a different kernel thread。
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 其实有一堆用户线程，它们既有用户栈也有内核栈，还有一些只有内核栈的内核线程，这些线程会在它们之间进行复用。所以你可能会遇到这种情况：内核正在运行一个内核线程，而此时发生了一个中断，你可以切换到另一个内核线程。
 - en: so we only disable interrupts temporarily okay now there's a question over here
     I'll get。 up to you in just a second go ahead so the tricky part about doing it
     here inside the。 else clause is if you do it before the value equals one you're
     going to get a mess if somebody。 else comes in at the wrong spot and if you do
     it after you're kind of redoing the same。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们只会暂时禁用中断。好了，这里有一个问题，我马上就给你，继续吧。所以在`else`语句中执行的难点是，如果你在`value == 1`之前执行它，你会遇到麻烦，如果有人在错误的位置进入，或者如果你在之后执行，就相当于重新做了一遍相同的操作。
 - en: thing the enable interrupt does so there isn't really an advantage of putting
     it inside the， else。 Well this fall through might not you might not save an instruction
     depends on how this。 compiles because this is just falling through that else clause
     go ahead you had a question。 so right now either you have to do assist Paul to
     do this or this is in the kernel either。
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 使能中断的事情就是这样，所以把它放在`else`语句中并没有真正的优势。好吧，这个“fall through”可能并不会节省一个指令，这取决于编译的方式，因为这只是跳过了那个`else`语句。继续吧，你有问题吗？所以现在要么你得使用辅助的方式来做这件事，要么这就发生在内核中。
 - en: those could work so this could be used between threat between kernel threads
     in the kernel。 to lock each other and be careful now there's a question here so
     here the idea the lock being。 acquired is just value equal one when we release
     thread a we pass ownership to it yes so the。 moment that we take thread B when
     you do release in thread a and you take B off of the weight。
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些可以工作，所以它可以在内核中的内核线程之间使用。用来锁住彼此，并且要小心，现在这里有一个问题，锁被获取的想法。是当值等于一时我们释放线程A并将所有权传递给它，是的，接下来我们获取线程B，当你释放线程A并将B从等待队列中移除时。
 - en: Q and put it on the ready Q you have a implicitly given be the lock because
     the next time it starts。 running it's going to be in the critical section good
     good question and why do we need。 to disable all interrupts rather than leaving
     very high priority interrupts so that's a good。 question we kind of answered it
     really high priority interrupts like you know nuclear meltdown。
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 队列并把它放到就绪队列中，你隐式地给了B锁，因为下次它开始运行时，它将会在临界区。好的，问题很好，为什么我们需要禁用所有中断，而不是允许非常高优先级的中断呢？这是一个好问题，我们之前其实已经回答了，非常高优先级的中断，就像你知道的核灾难。
 - en: you could leave those still in a people you just got to make sure that whatever
     interrupts。 you leave a naval won't trigger a contact switch because the whole
     point of disabling。 interrupts is no contact switch here okay all right and be
     becomes the owner and release。 because the ready Q is empty be becomes owner and
     release here after a release is purely。
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以把那些仍然保留在那个人身上，只要确保你留下的任何中断不会触发上下文切换，因为禁用中断的整个目的是为了避免上下文切换。好的，没问题，线程B成为所有者并释放。因为就绪队列为空，B成为所有者并在这里释放，释放后的操作完全是。
 - en: because lock acquire will return the next time we let the thing run because
     we put it on the。 ready Q rather than the weight you go ahead。 Okay good so you're
     talking about kind of this point where a did a lot or be did a lock。 acquire goes
     into acquire and it goes to sleep so what happens there is we put ourselves。 on
     the weight Q and then what it means to go to sleep is we have to let somebody
     else。
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为锁获取将返回，下一次我们让它运行时，我们会将它放到就绪队列而不是等待队列，你可以继续。好的，很好，你现在说的是这种情况，即A做了很多，或者B做了锁获取，进入获取并进入睡眠状态。那么发生的事情是我们把自己放到了等待队列中，接着去睡觉意味着我们必须让别人。
 - en: run so we go into the scheduler at that point and the scheduler is the thing
     that will pick。 a new thread and we'll go through a path that does enable again
     that's right the scheduler。 always starts with interrupts disabled and you're
     re-enable coming out and if you look。 here this is a little confusing but we go
     from this point and we hit the green for re-enabling。
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 运行时，我们进入调度程序，调度程序将选择一个新的线程，我们将经过一个路径，这个路径会再次启用，没错，调度程序总是从禁用中断开始，出来时重新启用。如果你看这里，这有点混乱，但我们从这个点开始，然后我们到达启用的绿色部分。
 - en: before we start running。 So the question here is interesting does something
     about sleeping change instruction。 pointers somewhere so it knows to re-attempt
     the acquire function every time it wakes up。 no this is more subtle than that
     again when we went to sleep our instruction pointer was。 right here in the middle
     of a choir when we went to sleep and so now when we get re-enabled。
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 在我们开始运行之前。所以这里的问题很有趣，睡眠是否会改变指令指针的某个地方，这样它知道每次醒来时重新尝试获取函数？不，这比那要微妙一些，当我们去睡觉时，我们的指令指针就在获取的中间，当我们去睡觉时，所以现在当我们重新启用时。
 - en: our instruction pointer when we start running again it's going to be right there
     and when。 we get to that point where we left off and so when we schedule again
     we'll start running。 from that point in a choir there's nothing else that's going
     to hold us out so we're going。 to exit from a choir and now we've got the lock
     because we exited from a choir。
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们重新开始运行时，我们的指令指针将会在那儿，当我们到达我们离开的那个点时，所以下次调度时，我们将从那个获取的点开始运行，没有其他东西会阻止我们。所以我们会退出获取，而现在我们得到了锁，因为我们退出了获取。
 - en: Okay so it's a little more subtle than having to have a loop here yeah question
     in the back。 You mean like saying value equals zero and then doing it nothing
     so good question so。 what prevents thread B from being malicious and setting value
     equal to zero。 So the answer is you could do that but then you've broken kind
     of like a contract that。
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，所以这比在这里有一个循环要微妙一些，是的，后排有个问题。你是说将值设为零然后什么也不做吗？这是一个好问题。那么，是什么防止线程B恶意地将值设为零呢？答案是，你可以这么做，但是你就打破了类似合同的东西。
 - en: everybody in the kernel has in that case right and the contract is you go through
     lock acquire。 and release before you touch some shared data okay so this is an
     important point let me say。 this in another way so once we get to where we're
     at user mode when we have user threads。 that are cooperating together and they're
     acquiring and releasing locks they are implicitly part。
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 每个内核中的每个人在这种情况下都有对吧？合同是你要通过锁的获取和释放，然后才能触碰到一些共享数据。好的，这是一个重要的点，让我换种方式说。我们一旦到达用户模式，当我们有多个协作的用户线程，它们获取和释放锁时，它们隐式地是一个整体。
 - en: of the same application and they're going to do their best to not screw it up
     and so basically。 you could think of this as if thread B did that it's a bug not
     a security problem。 And that's going to be I realize that sounds silly but it's
     an important point that's going。 to be important as we get further on yeah go
     ahead。
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们是同一个应用程序的一部分，并且会尽力避免出错。所以，基本上你可以认为如果线程B这么做了，那是一个bug，而不是安全问题。我意识到这听起来有点傻，但这是一个重要的点，随着我们深入，理解这个点会变得更加重要。好的，继续。
 - en: So when B goes to sleep right here so B is going to sleep you're asking who
     enables it。 So what happens is we go into the scheduler and we're going to pick
     A to run again and。 so in the scheduler releasing A to run is going to is going
     to re-enable interrupt at。 that point so you could say that thread A releases
     the interrupt I guess。
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以当B线程在这里休眠时，B将进入休眠，你问的是谁重新启用它。发生的事情是我们进入调度器，然后我们选择A线程再次运行。因此，在调度器中释放A线程以便运行时，将会重新启用中断。那时你可以说线程A释放了中断，我想。
 - en: Okay but hold on you could say that but I want you guys to get very good at
     going back。 and forth between the thread view and the CPU view because there's
     only one CPU here。 that's why I've got all these little arrows going back and
     forth right the CPU is running。 here and it goes over to B and it comes back to
     A and it goes back。
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，但等一下，你可以这么说，但我希望你们能够非常熟练地在线程视图和CPU视图之间来回切换，因为这里只有一个CPU。这就是为什么我有这么多小箭头来回穿梭的原因，CPU在这里运行，然后切换到B线程，接着又回到A，继续往返。
 - en: So the two views that you've got to pick up sorry about that out there Nittland。
     So the two views that you want to get really good at understanding is that when
     one view。 is what's the CPU doing and the other is what are the threads doing
     and if you can get that。 in your mind as to how to have those simultaneously there
     in your mind you're going to be in good。
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你们需要掌握的两个视图，对不起那边的Nittland。所以你们要理解的两个视图是，一个是CPU在做什么，另一个是线程在做什么。如果你能够理解这两者如何同时存在于你脑海中，那你将能够很好地理解。
 - en: shape and that's kind of what this simulation is about okay yeah go ahead。 Yes
     there is a weight queue per lock typically。 What about what？
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 形状，这大概就是这个模拟的内容，好的，继续。是的，通常每个锁都有一个等待队列。那么，关于什么呢？
 - en: So the ready queue is for all threads because when you put something on the
     ready queue it。 just means it can run it just means I'm ready to be swapped and
     get some CPU and the reason。 we put this over on the weight queue is because B
     can't run because it's trying to get a lock。 that's already taken and so we have
     to put it to sleep then a weight queue。 Good yes。 [inaudible]。
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以就绪队列是所有线程共享的，因为当你将某个线程放入就绪队列时，它仅仅意味着它可以运行，意味着它准备好被交换并获得一些CPU时间。我们将其放入等待队列的原因是，B线程无法运行，因为它试图获取一个已经被占用的锁，所以我们必须让它休眠，然后放入等待队列。很好，是的。[听不清]。
 - en: No because when we acquired we disabled and re-enabled if you go through you'll
     see that。 there's actually just one re-enable for every disabled。 Well except
     that this acquire release didn't use the scheduler because we're still running。
     thread A when we're done。 So here this loop there's no scheduler involved。
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 不，因为当我们获取锁时，我们禁用了并重新启用了锁。如果你仔细看，会发现每个禁用都有一个对应的重新启用。唯一的例外是这个获取释放没有使用调度器，因为我们仍然在运行线程A，当我们完成时。所以在这个循环中，没有涉及调度器。
 - en: Here it's not going back to thread A's inquire what's doing here is it's going
     back to thread。 A running over here in the critical section。 So here thread A
     never goes to sleep thread A goes around to this else clause。 So thread A never
     hits the scheduler in this original acquisition。 The only time the scheduler is
     involved is when the timer goes off here and then we as。
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里并不是回到线程A的查询，实际上发生的是它回到了线程A在临界区的执行。所以线程A从来没有进入睡眠状态，它绕过了这个`else`分支。因此，线程A在最初的获取中从未触及调度器。唯一涉及调度器的时刻是定时器在这里触发，然后我们作为。
 - en: a scheduler we let B run。 So I'm going to move on if that's okay with you guys
     because this is one of these things。 where I think staring at a little while to
     think about it then you could ask me a question。 later if you like。 But everything's
     paired up but I think that I think this simulation is useful right because。 it
     kind of shows you some of the subtle piece I hope。 Okay， we good？ So good。 So
     let's go past this。
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们让 B 运行的调度器。所以如果大家没问题的话，我将继续讲下去，因为这是那种需要稍微停下来想一想的事情，之后如果你们有问题可以问我。但一切都已经配对好了，我觉得这个模拟是有用的，对吧？因为它能展示出一些微妙的部分，我希望如此。好了，大家没问题吧？很好。那么我们继续。
 - en: So that's fine and dandy except that unfortunately right now we're not able
     to run this at user。 mode the way we've written that there。 We'd have to actually
     have a system call。 Okay。 and so that seems unfortunate。 And so this also doesn't
     work on multiprocessors because we'd have to disable interrupts across。 all the
     cores and that's also expensive。 So let's see if we can come up with something
     else and the alternative here is atomic instruction。
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这倒没什么大问题，除了不幸的是，我们现在不能以用户模式运行它，就像我们那样写的。我们必须实际进行一个系统调用。好吧，这看起来有点不幸。所以这也不适用于多处理器，因为我们必须禁用所有核心的中断，而这也是非常消耗资源的。那么让我们看看是否能想出别的办法，这里的替代方案就是原子指令。
 - en: sequences。 Okay， and these are special instructions that are different from
     load or store and interrupt。 disabled and enable that do something atomically
     to a value。 So the hardware has to be different。 it has to include these instructions
     in order for， what we're talking about to exist。 And fortunately all modern processors
     have that hardware of some form。 Okay。
+  id: totrans-110
   prefs: []
   type: TYPE_NORMAL
+  zh: 序列。好的，这些是特殊指令，和加载、存储、禁用中断和启用中断不一样，它们以原子方式操作一个值。所以硬件必须不同，它必须包含这些指令，才能使我们所说的这些事情得以实现。幸运的是，所有现代处理器都有这种形式的硬件。好的。
 - en: and unlike disabling interrupts we can use this on multi core。 So there's a
     lot of examples。 The most common one here is what's called test and set。 And test
     and set you give it an address and what it does is it reads the value from the。
     address and memory and stores a one and tells you what was there before。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 与禁用中断不同，我们可以在多核处理器上使用这个。所以这里有很多例子。最常见的是所谓的测试并设置。你给它一个地址，它会从内存中的地址读取值，并存储一个 1，然后告诉你之前存储的值是什么。
 - en: So atomically with no chance of anybody getting in there it both reads the old
     value stores， a one。 Okay， and tells you what it got。 All right。 Now what we're
     going to do with that of course is we're going to say that zero is free and。 one
     is busy。 And if you do a test and set and you happen to be the lucky one that
     grabbed a zero and。 started one there you'll be the one that gets the lock and
     everybody else that tries to。
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以原子地进行操作，确保没有任何人能够插手，它会读取旧值并存储一个 1。好的，然后告诉你它得到了什么。现在我们要做的当然是把零定义为空闲，把一定义为忙碌。如果你执行测试并设置，而恰好是你抓到了零并将它设为一，那么你就会获得锁，其他所有尝试进行的操作都会被排队。
 - en: do it there'll be a one there you grab the one store the one you'll say I got
     a one I。 got a I got to go in a loop。 Okay， so this is the kind of instructions
     we're going to be interested in。 Swap is a different type of atomic instruction
     and what it says is you give it a register。 and an address and it says grab what's
     at the address and take what's in the register stored。
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你在那里执行，它会存储一个 1，你抓到这个 1 并存储这个 1，你就可以说我得到了一个 1，我必须进入一个循环。好的，这就是我们将感兴趣的那种指令。交换是另一种类型的原子指令，它的意思是你给它一个寄存器和一个地址，它会从地址中获取数据，并将寄存器中的数据存储到这个地址。
 - en: back to the address。 Swap the address and the register and I do that atomically
     in a way nobody can get in。 And compare and swap is a more complicated one you
     get an address and two registers and。 what that says is if what's in the address
     matches the first register's value store the。 second register value there and
     return success。 Otherwise if the address and if the thing in the address and the
     register one don't match。
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 回到地址。交换地址和寄存器，并且我以原子方式进行交换，确保没有人能够插手。比较并交换是一个更复杂的操作，你需要一个地址和两个寄存器，它的意思是如果地址中的值与第一个寄存器的值匹配，就把第二个寄存器的值存储到这个地址，并返回成功。否则，如果地址中的值与第一个寄存器的值不匹配。
 - en: return failure。 Okay， and then last there's a fun one called load link store
     conditional which was in the。 original R 4000 and alpha from MIPS well the R 4000
     from MIPS in the alpha from digital。 equipment corporation and the idea here is
     that you can construct any arbitrary other。 instructions with Lord Link stored
     load linked stored conditional this way you give it an。
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果失败则返回失败。好的，最后有一个有趣的操作叫做`load link store conditional`，最初出现在R4000和MIPS的Alpha架构中。R4000来自MIPS，Alpha来自数字设备公司。这里的想法是，你可以通过`load
+    link`和`store conditional`这两个指令，构建任何任意的其他指令。
 - en: address you load the thing that's in the address you do whatever you want so
     this move I one。 to R two and store R two that's a arbitrary code in there and
     then you basically say that。 if this store failed then you loop back and what
     this will do is it'll let you grab a。 value store a value back but if anybody
     else is modified the value then you have to loop。
+  id: totrans-116
   prefs: []
   type: TYPE_NORMAL
+  zh: 在地址中加载内容，您可以做任何您想做的事情，所以这个操作我将`R1`的值移动到`R2`并存储到`R2`，这是一段任意代码，然后基本上可以这样说。如果存储失败，那么你会回到循环，执行这段操作。它会让你抓取一个值并存储一个值，如果有人修改了这个值，那你就必须再来一次。
 - en: back and do it again。 So it's a way it's like a risk version of these other
     ones that allow you to make a more complicated。 instruction sequence。 So I'm going
     to hold off on explaining that anymore but let's let's look at other things。 here
     let's talk about compare and swap。 So this one is an x86 instruction it was also
     on the 68000 and again notice what happens。 here we basically say that if Reg
     one matches what was in the address of memory so we basically。
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后再重新做一次。所以它是一种类似于其他版本的RISC指令集，允许你构建更复杂的指令序列。好了，我将暂停进一步解释这个，但我们来看看其他内容。这里我们讨论的是`compare
+    and swap`。这个操作是x86指令集中的一部分，也曾在68000上出现，注意发生了什么。这里我们基本上说，如果寄存器`R1`与内存地址中的值匹配……
 - en: load the value of the address check it with Reg one if that matches then we
     store Reg two。 in the address and we return success otherwise we return failure。
     And let me show you how to build a lock free linked list out of this。 Okay so
     here's my add to Q and what I do is I give it a pointer to an object okay and
     that。
+  id: totrans-118
   prefs: []
   type: TYPE_NORMAL
+  zh: 加载地址的值并用寄存器`R1`进行比较，如果匹配，则我们将寄存器`R2`的值存储到地址中并返回成功，否则返回失败。接下来，我将展示如何基于这个操作构建一个无锁的链表。好，这就是我的`add
+    to Q`方法，我做的是给它一个指向对象的指针，好吧，然后……
 - en: object has to have a link in it and we're going to just say add this add this
     add this。 and we can do this simultaneously from a thousand different threads
     and cores and it'll work。 Okay and notice some subtleties here I load a value
     at the root okay that's a single link。 list I load the value at the root I store
     the value of of my new of the root into the object。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 对象必须包含一个链接，我们将一直添加、添加、添加，所有这一切可以在成千上万的线程和核心中并行进行，依然能够正常工作。好吧，请注意一些细节：我加载了根节点的值，它是一个单链表，我把根节点的值加载到寄存器中，再把根节点的新值存储到对象里。
 - en: so I'm linking it in and then if compare and swap fails I keep retrying it so
     this has。 got a retry if somebody else is competing with you to get on the list。
     Let me show you this here's a here's a single link list this is 61 B everybody
     remember that。 okay and notice we have a root and the root points at the next
     which points at the next。
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我在将其链接进链表。如果`compare and swap`失败，我会继续重试，因此如果有人与你竞争加入列表，这个操作会自动重试。让我展示给你看，这是一个单链表，这是61B，大家都记得吧？好，注意我们有一个根节点，它指向下一个节点，后者指向下一个节点，依此类推。
 - en: and so on and what we want to do is add an item to this list and we want to
     have a lot。 of threads be able to do this simultaneously without a lock。 Okay
     so look what we do here we load the root pointer that's what this thing is into
     register。 one we store register one into the new object。 Okay here's the new object
     we store the root in here and then we say compare what's currently。
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们希望做的是往这个链表里添加一个项目，并希望多个线程能够同时进行而不需要锁。好，看看我们这里做的事情，我们将根节点指针加载到寄存器`R1`中，然后将`R1`的值存储到新的对象里。好的，这是新的对象，我们把根节点值存储到其中，然后我们比较当前值……
 - en: in the root with what we thought it was in R1 and if nobody's messed it up so
     nobody。 else has stored something in the root and root is still equal to R1 then
     we win because。 we put the root into here we pointed the root at this object and
     we're good。 If it fails we go and keep doing it over and over again until we get
     to link and then we， exit。
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果没有人修改它，没其他人往根节点存储了数据，且根节点仍然等于`R1`，那么我们就算成功了，因为我们已经将根节点指向了这个对象，一切都好了。如果失败了，我们会一直重试，直到最终完成连接，然后退出。
 - en: Okay so there's an example of what is often called a lock free style of synchronizing
     where。 we don't have to actually put a lock around the root。 Okay and this will
     be a lot faster than if we did the obvious thing which by now at this。 part in
     the lecture your obvious thing would be acquire lock change the list release lock。
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，这里有一个通常称为无锁同步的例子。在这种方式下，我们不需要在根节点上加锁。好的，这比我们做的显而易见的事情要快得多，到了这个讲座部分，你显然认为应该加锁，改变列表，然后释放锁。
 - en: right that would hopefully that's something that you're now almost ready to
     do but if。 you do that now you're you've got a lot of people going to sleep on
     the lock whereas。 with this in that rare instance where in you know in a couple
     of instructions you happen。 to get there with somebody else you'll loop but that's
     going to happen very rarely。
+  id: totrans-124
   prefs: []
   type: TYPE_NORMAL
+  zh: 对，这希望你现在几乎准备好了，但是如果你现在就做的话，你会发现很多人会在加锁时陷入困境。相比之下，在那种罕见的情况下，你可能会和别人一起执行几条指令，才会进入循环，但这种情况发生的几率非常小。
 - en: Okay and this is a this is kind of like a busy wait is the question in the in
     the chat。 but in fact this resolves extremely quickly。 So you could kind of make
     an argument that this isn't much of a busy wait the only way。 it would spin for
     a long period of time is if you have thousands of threads that are。 all trying
     to do this simultaneously。 And it isn't going to happen if you only have one CPU
     right only one thread is going to get。
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，这有点像忙等，这是聊天中的问题，但事实上这个过程会非常迅速。所以你可以说这并不算是忙等，唯一可能长时间自旋的情况是你有成千上万的线程同时执行这个。如果你只有一个CPU的话，就不会发生这种情况，只有一个线程会运行。
 - en: to run at once so all right。 So next Thursday that's a week from today mid term
     one。 Okay now we will be putting out on Piazza information about which rooms you
     go to so。 there's like four rooms so watch for that that's coming out this soon。
     You get one sheet of handwritten notes both sides。
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 一次性执行，所以，好的，下周四，也就是从今天起一周后，期中考试一。好的，我们将在Piazza上发布关于去哪个教室的信息。将有四个教室，请留意这个，信息很快就会发布。你可以带一张手写的纸，正反两面都可以。
 - en: Okay do not take microfiche of your textbook and glue it in and bring a mic
     bring a magnifying。 glass so that's not that violates the spirit of this note
     rule here okay so you can have。 one sheet and you can write both sides of it anything
     you want。 Okay there won't be any calculators there won't be any devices just
     your sheet and a。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，不要把教材做成微缩胶片粘上并带个放大镜，这样违反了这个规则的精神。好的，你可以带一张纸，正反两面都可以写，写你想写的任何东西。好的，不允许带计算器或其他设备，只能带那张纸和一支笔。
 - en: pencil or pen or something okay。 Can bring liquid paper if you feel like using
     a pen I guess。 The project one design documents do okay I say next Friday that's
     really tomorrow so。 keep in mind that there's going to be design reviews coming
     up and so that's going to be。 very soon and so watch for that too it'll probably
     be either over the weekend or early。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 铅笔、钢笔或其他东西都可以。如果你觉得用钢笔方便，可以带上一些液体修正液。项目的设计文档可以做，我说的是下周五，实际上就是明天。所以，记得要注意设计评审即将进行，那个很快就会来了，所以也要注意那个，可能会在周末或下周初进行。
 - en: next week okay because we don't want to compete with the mid term。 There's also
     going to be a design review or excuse me there's also going to be a review。 for
     the mid term but it hasn't been scheduled yet we're trying to figure that out
     so watch。 for that so I'm sorry there's a lot of unknown things here yet。
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 下周好吧，因为我们不想与期中考试冲突。也会有一个设计评审，或者抱歉，也会有一个期中考试的复习，但这个还没有安排，我们正在解决这个问题，所以请留意。抱歉，现在还有很多不确定的事情。
 - en: I talked about the design review this is like a high level discussion of your
     design if。 you have to put code in there try to use you know pseudocode don't
     put a whole pile of。 C in there because you're trying to explain your approach
     to your TA think of this like。 I don't know they're your manager in a company
     and you're designing this okay and you have。
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 我提到过设计评审，这是对你设计的高层次讨论。如果你必须在其中写代码，尽量使用伪代码，不要写一堆C代码，因为你是想向你的助教解释你的方法。可以把它当作是你向公司经理汇报设计的情景。
 - en: to make sure they understand what you're trying to do。 Okay so the design review
     is coming up let's see and that's going to be up to your TA。 Let's see and then
     of course do your own work on the projects so I guess are there any other。 questions
     on this？ The question that's in the chat is yes the design review is coming up
     very soon because。
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 确保他们理解你想做什么。好了，设计评审快要来了，我们来看一下，这将由你的助教决定。接下来，当然，你也要在项目上做自己的工作。那么，有其他问题吗？聊天中提到的问题是，设计评审很快就会举行。
 - en: typically what happens is you submit a design doc and the design review is shortly
     thereafter。 I guess we could make that a little clearer on the schedule but it's
     certainly true。 All right okay so there's a question here in the chat so I'll
     move on unless people have。 a question。 So in fact I'm going to say let's see
     there's one thing in the chat and then I'm going to。
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 通常情况下，提交设计文档后，设计评审会紧随其后。我想我们可以在日程安排上把这一点说得更清楚一些，但这显然是对的。好的，有个问题在聊天里，我会继续往下讲，除非有人有问题。事实上，我要说的是，聊天里有一个问题，然后我将……
 - en: give you guys a little bit of a break and then we'll come back but what's the
     difference。 between atomic read modify write instructions and a read write lock
     on a file so the read。 write lock on a file is software and it's more complicated
     the atomic instructions are。 a single instruction okay and you can build all sorts
     of interesting locks on top of that。
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 给大家休息一下，然后我们再回来，不过原子读-修改-写指令和文件上的读写锁有什么区别呢？文件上的读写锁是软件实现的，它更为复杂，而原子指令是一条单独的指令，你可以在此基础上构建各种有趣的锁。
 - en: and that's what we're going to that's our next topic here okay。 All right let's
     take a little bit of a break and then come back so let's let's keep it semi。 short
     let's say three minutes or so and feel free to stand up and stretch okay。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是我们接下来的话题了。好了，我们先休息一下，然后再回来。让我们保持短暂的休息，大约三分钟，随时站起来伸展一下。
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_3.png)'
+  id: totrans-135
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_3.png)'
 - en: Okay。
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_5.png)'
+  id: totrans-137
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_5.png)'
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_6.png)'
+  id: totrans-138
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_6.png)'
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_7.png)'
+  id: totrans-139
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_7.png)'
 - en: So let's keep going here。 Now what we can do with test and set is something
     pretty simple that looks like this。 I already said this but you can have your
     lock as an integer and that lock you started。 out at zero and then the way a choir
     works is you go in a loop that says while test and。 set and you give it the lock
     address it'll spin okay and why does that work well it works。
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们继续。现在我们可以做一些简单的事情，像这样。我之前已经说过了，你可以将锁定义为一个整数，并且把它的初始值设置为零，然后获取锁的方式就是进入一个循环，执行`while
+    test and set`，并传入锁的地址，它会一直旋转。那么，为什么这有效呢？它之所以有效是因为……
 - en: because if multiple threads are trying to acquire they'll all try to do test
     and set。 one of them will be the one that gets the zero back and stores a one
     and all the other。 ones will store a one and this while loop if what comes back
     is a one then you know that。 you didn't get the lock and so you just keep running
     test and set over and over again and。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为如果多个线程都在尝试获取锁，它们都会尝试进行测试和设置。最终其中一个线程会得到零并存储一，而其他线程都会存储一。这个`while`循环中，如果返回的是一，意味着你没有获得锁，所以你会不断地重复执行测试和设置。
 - en: what happens is when you release you set that variable to zero and all of a
     sudden one of。 the threads it's busy spinning is lucky enough to run the one test
     and set instruction that。 pulls the zero out and stores a one okay and then it'll
     exit from a choir and get to go。 forward all right。 So you know if the lock is
     free test and set read zero sets a lock to one so now it's busy。
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 发生的情况是，当你释放锁时，你将那个变量设置为零，突然其中一个忙于旋转的线程幸运地执行了测试和设置指令，将零取出并存储为一，然后它会退出并继续执行。好的。所以，如果锁是空闲的，`test
+    and set`读取零并将锁设置为一，这样就变成了忙等待。
 - en: when you set it to zero somebody else gets to go okay。 The problem of course
     is this is a serious busy wait scenario because when you're waiting。 for the lock
     you're spinning okay but before we fix that I just want to pause here and。 ask
     because this makes sense to everybody。 Okay we're good now the way we can you
     know what's the problem so the positives of this。
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 当你将它设置为零时，其他人就可以进去了。问题当然是，这是一种严重的忙等待（busy wait）场景，因为当你等待锁时，你会一直旋转。不过，在我们解决这个问题之前，我想暂停一下，问一下大家，这样理解大家都能明白吗？好，现在没问题，我们可以继续。那么问题是什么？这种方式的好处是……
 - en: is that this is in memory and we're not disabling interrupts or enabling them
     so the machine can。 just keep going and we don't have to be running this in the
     kernel okay so that's good works。 on a multi processor or multi core why because
     that memory is shared across all the cores。 and so they all can do test and set
     on the same address and it just works okay so that。
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是因为它在内存中，我们没有禁用或启用中断，所以机器可以继续运行，我们不需要在内核中执行这个操作。好的，这样就有效。它在多处理器或多核系统上也能正常工作，为什么？因为内存在所有核心之间是共享的，所以它们都可以在相同地址上执行测试和设置操作，效果就是这样。好的。
 - en: seems like a positive。 The negative here is this extremely inefficient and when
     you're waiting you're spinning and。 wasting time and in fact if you think about
     it when you're spinning you're doing nothing。 useful and you will actually suppose
     that you only have one CPU and two threads the thread。 that's waiting will actually
     spin until the timer goes off and then thread A gets to go。
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 似乎是一个正面的问题。负面的是，这非常低效，当你在等待时，你是在旋转并浪费时间。事实上，如果你想想看，当你在旋转时，你什么也没做，实际上如果你只有一个CPU和两个线程，等待的线程会一直旋转，直到计时器响起，然后线程A可以继续执行。
 - en: further and eventually release so you're it's worse than wasting time you're
     wasting a lot。 of time you're kind of waiting for a hundred milliseconds until
     the timer goes off and you。 let thread go A go again to release the lock okay
     so this is really pretty bad okay because。 the one that's spinning and wasting
     cycles isn't the one that has to release the lock we're。
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 更远，最终释放。所以，你浪费的不是时间，而是大量的时间，你有点像在等待100毫秒，直到计时器响起，然后让线程A继续执行来释放锁。好的，这真的很糟糕，因为浪费循环的线程不是必须释放锁的线程。
 - en: actually preventing it from doing the work required to release the lock okay
     so that's。 why busy waiting this is this poor guy here who's busy waiting is rough
     and he's blue right。 this is just not good okay and this is a type of priority
     inversion potentially because。 if the busy waiting thread is higher priority than
     the thread holding the lock you might。
+  id: totrans-147
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上阻止了它执行释放锁所需的工作。好的，这就是为什么忙等待不好。这里的可怜家伙正在忙等待，他看起来很糟糕，真的很糟糕。这种情况非常糟糕，这可能是一种优先级倒置的问题，因为如果忙等待的线程优先级比持有锁的线程高，可能会……
 - en: not get any progress okay because you have to go because you have the busy waiting
     one。 is executing cycles and when we get into priority scheduling we're not there
     yet the one that。 has to release the lock can't even run because the higher priority
     one is the one that's spinning。 okay so this is this is just not good and this
     was there the original Martian rover had。
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: 没有任何进展，好的，因为你必须继续，因为你有忙等待。它在执行循环，当我们进入优先级调度时，我们还没有到达那个阶段。必须释放锁的线程甚至无法运行，因为优先级更高的线程正在旋转。好的，这样就不好了，这也是原始的火星探测车所面临的问题。
 - en: a very interesting priority inversion problem we'll talk a little bit more about
     that later。 when we start getting into scheduling but that actually was a problem
     that caused this rover。 which is quite a way to wait from the earth keep rebooting
     over and over again because。 of a priority inversion problem sort of like this
     so and when we get into higher level。
+  id: totrans-149
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是一个非常有趣的优先级倒置问题，我们稍后会多讲一些，当我们开始讨论调度时，但实际上这是一个导致这辆火星探测车反复重启的问题。由于优先级倒置问题，它离地球有相当远的距离，所以不断重启。就像这样，所以当我们深入了解更高层次的……
 - en: primitives and just a little bit like semaphores or monitors the waiting thread
     may wait an。 arbitrarily long time and so we're gonna be wasting a lot of cycles
     so let's see if we。 can fix this and it turns out that to fix it we can do something
     which is kind of colloquially。 called test and test inset and it looks like this
     it's almost identical but what it says。
+  id: totrans-150
   prefs: []
   type: TYPE_NORMAL
+  zh: 原语和信号量或监视器有些类似，等待的线程可能会等待任意长的时间，所以我们会浪费很多循环时间。让我们看看是否能够修复这个问题，结果证明，我们可以通过一种口语上叫做“测试并测试设置”的方式来修复它。看起来几乎一样，但它的意思是……
 - en: is to acquire I first say while the lock is one spin okay and then try to grab
     it now。 this is actually still busy waiting so that's not quite good yet but it
     does have a very。 nice property to it because if you have a bunch of cores and
     the number of threads you have。 is less than the core so you're not really preventing
     a thread from running but a bunch。
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: 获取锁，我首先说，当锁是1时，旋转并尝试获取它。现在，这实际上还是忙等待，所以还不是特别好，但它确实有一个非常好的特性，因为如果你有多个核心，而线程数少于核心数，那么你并没有真正阻止线程运行，而是阻止了一些……
 - en: of them are spinning with the previous solution every loop writes the variable
     over and over。 again right one right one right over and over again and it also
     reads it and so if you've。 got a cache go here multiprocessor the values are bouncing
     back and forth and so not only。 are you wasting cycles but you're burning memory
     bandwidth so this is just bad okay and so this。
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 它们中的许多都在旋转，使用之前的解决方案时，每次循环都会一次又一次地写入变量，对吧？一次一次地写，写，重复，而且它也会读取，如果你有一个缓存，当你在多处理器上时，值会来回跳动。所以你不仅浪费了周期，还消耗了内存带宽。因此这就是不好的做法。所以这个。
 - en: is still a busy way to solution but this test and test inset doesn't do what
     I just said。 because what happens is as long as the lock is busy the cores that
     aren't that are spinning。 waiting read the one into their cash and now they're
     only running they're only spinning。 in their own cash they're not bothering the
     rest of the processors so when you know when。
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: 这仍然是一个忙等待的解决方案，但这个测试和测试内嵌并没有做我刚才说的那样。因为发生的情况是，只要锁定处于忙碌状态，那些没有忙等待的核心就会旋转，等待将数据读取到它们的缓存中，结果它们仅在自己的缓存中旋转，而不会打扰其他处理器。所以当你知道时。
 - en: we start talking more about multiprocessors you're probably never going to want
     to just。 do a raw test inset you're going to want to do a test in test inset because
     it's better。 for the memory use okay now but this is still busy waiting so the
     question is can we build。 test inset locks without busy waiting and the idea here
     is we're going to basically do。
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们开始更多地讨论多处理器时，你可能永远不会只做一个原始的测试插入，你会想要做一个测试内嵌测试插入，因为它对内存使用更好。好的，虽然现在这是忙等待，问题是我们能否构建没有忙等待的测试内嵌锁，想法是我们基本上会做。
 - en: the same pattern we did with interrupt disable okay so we have our lock which
     is going to。 be freer busy but now we're going to have what we call a guard so
     this is like a meta。 lock okay remember we got meta I don't know what were they
     thinking when they called Facebook。 meta it just seems kind of silly for me but
     anyway that's by the way that's an opinion。
+  id: totrans-155
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们采用与禁用中断时相同的模式，好的，所以我们有我们的锁，这将是自由的忙等待，但现在我们会有一个我们称之为守卫的东西，所以这就像一个元锁。记住，我们有元锁，我不知道他们在叫
+    Facebook 为“元”时是怎么想的，对我来说这似乎有点傻，但无论如何，顺便说一句，这只是个人看法。
 - en: doesn't reflect reality I don't know so what we're going to do here is this
     guard is just。 like interrupt disable it enable we're going to make sure we only
     do it short period of。 time and so notice what we do is we grab the lock which
     is the guard and now we look at。 the actual lock that we care about so the meta
     thing is red we look at the actual lock。
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 这并不能反映现实，我不知道。所以我们要做的是，这个守卫就像禁用和启用中断一样，我们要确保我们只在短时间内进行操作。所以注意我们所做的就是抓住锁，这就是守卫，然后我们看我们真正关心的锁。元锁是红色的，我们看实际的锁。
 - en: if the lock we want is busy we put ourselves to sleep we put the thread in the
     way you put。 ourselves to sleep and atomically set the guard equal to zero okay
     that's similar to。 atomically re-enabling interrupts when we put ourselves to
     sleep otherwise we set the lock。 to busy and we exit with guard equals zero and
     notice that this just like with interrupt。
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们想要的锁是忙碌的，我们就把自己放到休眠状态，把线程放到休眠状态，然后原子地将守卫设置为零。好的，这类似于当我们把自己放到休眠状态时，原子地重新启用中断。否则，我们将锁设置为忙碌并退出，守卫等于零，注意这就像禁用和启用中断一样。
 - en: disable and enable which we're only you only had the interrupts disabled for
     a brief period。 of time for the same argument here we only have that guard variable
     equal to one for a。 brief period of time so the likelihood of a bunch of threads
     running into that guard。 and wasting a lot of cycles is very low okay so this
     is kind of a similar idea to the interrupt。
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: 禁用和启用中断，我们只会在短时间内禁用中断。在这里我们只会让守卫变量为 1 在短时间内，因此一群线程撞到那个守卫并浪费大量周期的可能性非常低。所以这和中断禁用的想法类似。
 - en: disable and enable alright now somehow whatever we do for sleep has to reset
     the guard variable。 okay and what's tricky about this of course is if we're running
     this thing at user level。 which was our goal go to sleep what do we have to do
     to go to sleep we're running at。 user level what do we have to do to go to sleep
     yeah yeah we had to go into the kernel。
+  id: totrans-159
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，现在不管我们做什么，休眠操作必须重置守卫变量。好的，这个难点当然是，如果我们在用户级别运行这个操作（这是我们的目标），那我们必须做什么才能休眠？我们在用户级别运行，怎么做才能休眠呢？是的，我们必须进入内核。
 - en: to go to sleep and maybe that's not a big deal here because we only go into
     the kernel。 if we're actually have to go to sleep anyway here this kind of says
     we have to go into the。 kernel to even see if there's somebody to wake up so this
     particular solution kind of forces。 you to take a system call into the kernel
     just to see if there's somebody to wake up。
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 必须进入内核休眠，可能在这里并不算大问题，因为我们只有在必须休眠时才会进入内核。这里的意思是，我们甚至必须进入内核才能看看是否有线程需要唤醒。所以这个特定的解决方案强制要求你进入内核系统调用，仅仅是为了查看是否有人需要唤醒。
 - en: and that might not be desirable because we would really like to have a situation
     where。 if there were no contention on the lock which means there weren't more
     than one thread trying。 to get the lock that we could acquire and release extremely
     quickly without ever entering。 the kernel that would be great okay but this this
     particular solution doesn't have that。
+  id: totrans-161
   prefs: []
   type: TYPE_NORMAL
+  zh: 而这可能不太理想，因为我们真的希望有一种情况，如果没有锁的争用（意味着没有多个线程试图获取锁），我们可以非常快速地获取和释放锁，而不需要进入内核，这样会更好。嗯，但是这个特定的解决方案并不具备这样的特性。
 - en: property so anybody have any idea what we could do yeah okay question。 the reason
     busy waiting on the guard is better than busy waiting on the full acquire release。
     is that the guard is only equal to one for a very short period of time so the
     probability。 of running into somebody and busy waiting is extremely low whereas
     if you acquire and。
+  id: totrans-162
   prefs: []
   type: TYPE_NORMAL
+  zh: 有谁有主意我们该怎么做吗？嗯，好的问题。为什么在守卫上忙等待比在完整的获取释放上忙等待更好？因为守卫仅在非常短的时间内为1，所以碰到别人并忙等待的概率极低，而如果你获取和……
 - en: release and you do a long computation between acquire and release the person
     with the lock。 might have the lock for a long time and the probability of different
     threads colliding。 with that is extremely high so you're going to get a much higher
     chance of spinning for。 a very long time yeah， you mean here so remember that
     we separated the lock from the guard。
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 释放时，如果你在获取和释放之间做了长时间计算，那么持有锁的线程可能会占用锁很长时间，且不同线程发生碰撞的概率非常高，这样就会大大增加长时间自旋的机会。嗯，你是指这里，所以记住我们把锁和保护分开了。
 - en: so which part are you worried about being not safe oh I see well that's a really
     good。 okay that's a that's a really good question so you're worried about if the
     CPU reorders。 the loads and stores then what right yeah so that's an extremely
     sophisticated question。 and I'm going to give you the answer is the following
     you have to make sure that if there's。
+  id: totrans-164
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么你担心哪一部分不安全呢？哦，我明白了，这个问题很好。好的，这真是个好问题。那么，你担心的是，如果CPU重排了加载和存储，那该怎么办呢？是的，这是一个极其复杂的问题，我的回答是：你必须确保，如果有……
 - en: a load store reordering that could happen that you have to put the right guards
     the right。 fence instructions in there to prevent that from happening so processors
     without a border。 execution but a weaker memory model then release consistency
     you have the expenses that you。 could do to prevent those two from bypassing each
     other well this isn't this is like code。
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 可能发生的加载存储重排，你必须放入正确的保护、正确的屏障指令来防止这种情况发生。所以没有边界的处理器执行，但内存模型更弱，这时候释放一致性就能发挥作用，你可以做一些操作来防止这两者相互绕过。嗯，这不像是代码。
 - en: this is an instruction so what this compiles down to we haven't really shown
     you exactly。 here but feel free to ask me about that that's that could take a
     much longer time to question。 but that's a great question all right so if you
     look remember acquiring this is what。 we just did with disabling of interrupts
     and re-enabling this was bad so we did this meta。
+  id: totrans-166
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是一个指令，所以它编译成什么我们并没有完全展示给你，但如果有问题，可以随时问我。这个问题可能需要更长时间来解答，但这是个好问题。好了，如果你记得，获取就像我们刚才做的那样，通过禁用中断并重新启用，这是不好的，所以我们做了这个元临界区。
 - en: idea where we just disable interrupts and re-enable them quickly and that kind
     of made things。 faster notice that this pattern we just did here is very similar
     right rather than spinning。 for a long time to do a choir release instead we're
     using the spinning part for a meta critical。 section and then we just use the
     variable as our lock so those are very parallel to each。
+  id: totrans-167
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们的想法是禁用中断并快速重新启用它，这样做让事情变得更快。注意，我们刚才做的这个模式非常相似，对吧？与其长时间自旋做获取和释放，我们更倾向于使用自旋部分作为一个元临界区，然后我们用变量作为我们的锁，所以这些非常类似。
 - en: other and the way to think about them okay and the advantage of both of the
     versions on。 the right side is really that the lock can have just an address to
     the lock so you could。 have a whole array of locks you could have many locks okay
     now let me briefly I want to。 tell you briefly about few texts and then I want
     to tell you about semaphores here but。
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一种方法是这样思考它们的区别，好吗？右侧两个版本的优点实际上是锁可以仅包含一个锁的地址，因此你可以拥有一整个锁数组，你可以有多个锁。好了，现在让我简要介绍一些文本，然后我想给你讲一下信号量。
 - en: few texts is a special kind of hidden system call in Linux that takes an address
     of a variable。 like value that we just talked about an operation like wait or
     wake and a current value which。 we're going to look for and the idea is in a time
     out where if something takes too long。 we can time out and it's an interface to
     the kernel sleep function so remember what I said。
+  id: totrans-169
   prefs: []
   type: TYPE_NORMAL
+  zh: 信号量是Linux中的一种特殊的隐藏系统调用，它接受一个变量地址（像我们刚才提到的值）、一个操作（如wait或wake）和一个当前值，我们要查找的值。其思想是在超时的情况下，如果某些操作太长时间没有完成，可以超时，这也是内核休眠函数的接口。记住我之前说过的。
 - en: earlier well what does it mean to go to sleep you actually have to go in the
     kernel to go。 to sleep so the way Linux gives that to you is with few texts okay
     but typically this。 is buried inside the p thread code okay so you don't actually
     program this but explicitly。 usually but you can and just as an example we could
     do a test and set in a few text so。
+  id: totrans-170
   prefs: []
   type: TYPE_NORMAL
+  zh: 如前所述，进入休眠意味着你必须进入内核才能休眠。所以Linux给你提供的方式是通过一些文本。通常这会被隐藏在p线程代码中，所以你实际上不会显式地编程，但你可以做，举个例子，我们可以在某些文本中进行测试和设置。
 - en: this would be while we have we try to grab the lock we get back a one therefore
     we have。 to go to sleep we could call few text to go to sleep and notice what
     we're saying is the。 lock equal to one atomically with few text wait we'll go
     into the kernel and go to sleep。 okay and release is simply to release it you
     set the lock to zero and then you ask the。
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 这会是这样：当我们尝试获取锁时，如果返回1，那么我们就必须进入休眠。我们可以调用信号量来进入休眠。注意我们所说的是，锁等于1并通过信号量原子操作等待，我们就会进入内核并休眠。释放操作只是将锁设置为0，然后请求释放。
 - en: kernel to wake up one person that might be there okay and so few text becomes
     the way。 to get into the kernel to go to sleep now the downside of this the way
     I did this is we always。 go into the kernel to see if there's somebody to wake
     up okay so the lock has no overhead。 because if something if there is nobody locking
     you grab it right away and exit but every release。
+  id: totrans-172
   prefs: []
   type: TYPE_NORMAL
+  zh: 内核会唤醒可能存在的某个线程。所以，信号量成为了进入内核休眠的方式。现在这样做的缺点是，我们总是进入内核查看是否有人需要唤醒。所以锁没有开销，因为如果没有人锁定，你可以立即抓取它并退出，但每次释放时。
 - en: has to go into the kernel to see if there's somebody sleeping so this is not
     quite what。 we want to do a really good lock all right so instead we could do
     something like this。 where we might say well while test and set fails set this
     maybe to true go to sleep and。 then set maybe to true again and then keep retrying
     until you get out of this while loop。
+  id: totrans-173
   prefs: []
   type: TYPE_NORMAL
+  zh: 必须进入内核查看是否有线程正在休眠，因此这并不是我们想要实现的真正好的锁。好了，所以我们可以像这样做，其中我们可能会说，当测试并设置失败时，将maybe设置为true，然后进入休眠，再次设置maybe为true，然后继续重试，直到你从这个while循环中退出。
 - en: having the lock and the way we know for sure we got the lock is because we swapped
     in a。 one and we got back a zero we got the lock okay so all the stuff we're doing
     with few。 text is trying to deal with the go to sleep part of the lock okay and
     look what happens。 over here to release we say set the lock to zero so that just
     released it and then if。
+  id: totrans-174
   prefs: []
   type: TYPE_NORMAL
+  zh: 拥有锁的方式是我们确认确实获得了锁，因为我们交换了一个1并且得到了一个0，我们得到了锁。因此，我们在做的所有与信号量相关的操作都是在处理锁的休眠部分。看看释放时发生了什么，我们将锁设置为0，这样它就被释放了。
 - en: there's the chance that somebody's sleeping in the kernel then try to wake them
     up and。 the reason this is different from the previous is if there's only one
     thread then there will。 never be anybody setting maybe to true and when the thread
     releases they'll never have。 to go into the kernel so this is messy but it's better
     than the previous one if you only。
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: 有可能某个线程在内核中休眠，然后试图唤醒它。与之前的情况不同，因为如果只有一个线程，那么就不会有人将maybe设置为true，并且当线程释放时，它们永远不会进入内核。所以这是比较混乱的，但比之前的情况要好，如果你只有一个线程的话。
 - en: have one thread that keeps requiring and releasing and the goal of the lock
     is to just make sure。 in the rare instance with two of them actually run into
     the same lock then you can handle it。 well okay now I'm not going to show you
     this you can look at this on the slides whoops but。
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 有一个线程不断地请求和释放锁，锁的目标是确保在极少数情况下，如果两个线程同时进入同一个锁，那么你能够妥善处理。好的，现在我不会展示给你看，你可以在幻灯片上查看，哎呀。
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_9.png)'
+  id: totrans-177
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_9.png)'
 - en: there's a much better implementation where there's actually three states of
     the lock。 unlocked locked and contested and in that instance if there's no contention
     things will。 go unlocked and locked and the only time you go into the kernel is
     when there might be。 a contest with multiple people with the lock okay and this
     is a pretty cool version of this。
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有一种更好的实现方法，其中锁有三个状态：解锁、加锁和争用。在这种情况下，如果没有竞争，系统将处于解锁和加锁状态，只有在可能存在多个线程争用锁时，才会进入内核。好的，这是一种非常酷的锁实现方式。
 - en: you should stare at this on your own time or after the class okay there's a
     smile here。 okay now this mask thing is kind of weird still alright so let's finish
     up today given。
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: 你应该在自己的时间里或课后再仔细看一下这个。好的，这个掩码的东西还是有点奇怪。好吧，现在让我们今天结束这一部分，接着说。
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_11.png)'
+  id: totrans-180
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_11.png)'
 - en: the last couple of lectures what's the right abstraction for synchronizing threads
     so we've。 kind of pushed locks as far as we could go be nice to have something
     higher level so good。 primitives and practices or design patterns are going to
     be really important to make things。 work properly Linux Unix all the Ixas were
     pretty stable now but boy in the early days。
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: 在过去的几节课中，我们讨论了同步线程的正确抽象是什么，所以我们尽可能地推动锁的使用，现在最好有一些更高级的东西来帮助同步，因此，好的原语、实践或设计模式将非常重要，才能确保系统正常工作。Linux、Unix以及所有的IX操作系统现在已经非常稳定，但在早期的日子里。
 - en: you know until the mid 80s or so they would crash on a regular basis or they'd
     lock up。 on a regular basis and that was because of bad synchronization okay and
     good synchronization。 practices took a while for people to figure out and so really
     if you don't synchronize。 properly and you got shared data it's highly likely
     that something bad is going to happen。
+  id: totrans-182
   prefs: []
   type: TYPE_NORMAL
+  zh: 直到80年代中期左右，计算机经常崩溃或定期死机，那是因为同步做得不好。好的同步实践花了很长时间才被人们弄明白。所以如果你没有正确同步，并且有共享数据，那么很有可能会发生不好的事情。
 - en: okay and in the case of locks that's something bad means multiple things in
     the same critical。 section at the same time okay now so synchronization in general
     the word means coordinating multiple。 concurrent activities in a way that makes
     sure the code is running correctly and so we're。 going to talk for the rest of
     today and next time we're going to talk a lot about ways of。
+  id: totrans-183
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，在锁的情况下，这意味着在同一临界区同时发生多件事情，这是不好的。好的，接下来我们来谈一下同步，通常这个词的意思是以一种确保代码正确运行的方式来协调多个并发活动。所以我们今天接下来的时间，以及下次课，我们将会讨论很多不同的同步方法。
 - en: producing good sharing of data and let's start here with a bounded buffer okay
     so the。 idea of a bounded buffer is this producer consumer idea where the producer
     produces a。 bunch of stuff and puts it in the buffer and if the buffer is full
     the producers will go。 to sleep and the consumers will try to pull stuff out of
     the buffer and if there's nothing。
+  id: totrans-184
   prefs: []
   type: TYPE_NORMAL
+  zh: 产生良好的数据共享，从这里开始，讲一个有界缓冲区的概念。好的，有界缓冲区的想法是生产者消费者问题，生产者生产一些东西并将它放入缓冲区，如果缓冲区满了，生产者会休眠，而消费者会尝试从缓冲区中取东西，如果没有东西可取。
 - en: in the buffer the consumers will go to sleep okay and so this synchronization
     pattern is。 going to be trying to make this work cleanly and you don't want the
     producer and the consumer。 to have to work and lock step so you put a buffer in
     between them and now the trick is。 the buffer is going to absorb some of the timing
     and we're going to figure out what to。
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: 在缓冲区中，消费者会休眠。好的，因此，这个同步模式的目标是让这个过程顺利工作，并且你不希望生产者和消费者需要步调一致地工作，所以你在它们之间放置了一个缓冲区。现在的难点是，缓冲区将会吸收一些时间差，我们需要弄清楚怎么做。
 - en: do to make the synchronization work cleanly and so the GCC compiler I mentioned
     this before。 you got kind of C-preprocessor goes into two different phases the
     compiler goes into the。 December assembler and the loader that's a good example
     of kind of producer consumer。 because the buffer is exactly this pipe thing here
     and by the way homework two which I think。
+  id: totrans-186
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了让同步顺利工作，之前提到的GCC编译器，你知道的，它的C预处理器分成两个阶段，编译器进入汇编器和加载器阶段，这就是生产者消费者的一个很好的例子，因为缓冲区正是这个管道的样子，顺便说一句，第二次作业我想是明天发的，做的是shell，你会学会如何实现这些东西。
 - en: is handed out tomorrow does the shell and so you're going to get to figure out
     how to implement。 these guys okay so another example I like is the Coke machine
     where the Coke machine。 has some slots for Coke the guy comes by to fill it up
     if there's no space well in this。 example he falls asleep until somebody takes
     a Coke then he wakes up puts Coke in there。
+  id: totrans-187
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个我喜欢的例子是可乐机，它有一些放可乐的槽，工作人员来填充，如果没有空位，在这个例子中，他就会睡着，直到有人拿走一瓶可乐，然后他醒来再放进去。
 - en: okay and the case of the students that go and try to buy Coke if it's empty
     he falls。 sleep until somebody puts it in there then they wake you up and you
     get a Coke okay so。 that's going to be our Coke machine okay going after the caffeine
     habits that we know you。 all have and so do I right but there's lots of things
     this is good for you know servers。
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，关于那些学生去尝试买可乐的情况，如果可乐机空了，他就会睡着，直到有人放进去，之后他们把你叫醒，你就能得到一瓶可乐。好的，这就是我们的可乐机了，去解决我们都知道你们有的咖啡因习惯，对吧，我也有，没错，但这对很多东西都很有用，比如服务器。
 - en: and routers okay so a circular buffer this is a 61 B thing typically has a you
     know a。
+  id: totrans-189
   prefs: []
   type: TYPE_NORMAL
+  zh: 和路由器。好的，所以循环缓冲区，这是一个61 B的例子，通常有一个……
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_13.png)'
+  id: totrans-190
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_13.png)'
 - en: read pointer and a write pointer and a bunch of entries and the trick with this
     is there's。 manipulation involved in making sure to see whether the buffer is
     full or empty based。 on the queue pointers and then adding something and moving
     the pointers and you got to do that。 in a way that doesn't get messed up if multiple
     threads are going to get mess with it okay。
+  id: totrans-191
   prefs: []
   type: TYPE_NORMAL
+  zh: 读取指针和写入指针，以及一堆条目，关键是，这里面有操作，确保根据队列指针检查缓冲区是否满或空，然后添加东西并移动指针，你得以一种不会出错的方式来做这个，尤其是当多个线程可能会干扰时，明白了吗？
 - en: so in order to build a circular queue used by many threads we're going to have
     to put。 synchronization around this okay and here's an example of what we really
     want here for。 instance what if we say for a producer you acquire a lock on the
     queue and while the buffer is。 full you spin and as soon as the buffer has a slot
     then you add the item and you release。
+  id: totrans-192
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，为了构建一个多线程使用的循环队列，我们需要在这周围添加同步机制。好的，这是我们真正需要的例子。例如，如果我们说对于一个生产者，你获取队列上的锁，当缓冲区满时，你会一直旋转，直到缓冲区有了空位，然后你添加项目并释放锁。
 - en: the lock and exit and this the consumer acquires the lock waits until the buffer
     is fully empty。 or waits as long as the buffer is still empty and as soon as there's
     something there they。 deque the item release the lock and return the item what's
     wrong with this so we put a lock。 in there to make sure that the queue manipulation
     in red doesn't get screwed up by multiple threads。
+  id: totrans-193
   prefs: []
   type: TYPE_NORMAL
+  zh: 锁和退出，消费者获取锁，等待直到缓冲区完全空，或者只要缓冲区仍然为空，他就会等待，一旦有东西，他就取出该项目，释放锁并返回该项目。这个有什么问题呢？我们在里面加了一个锁，确保红色的队列操作不会被多个线程搞乱。
 - en: what's wrong with this what was that yeah this is a deadlock why is that because
     producer grabs。 the lock spins waiting for the buffer to be full but the the one
     that will do anything about that。 has to acquire the lock first and they'll go
     to sleep so they can't deque any items so the producer。 can wake up and go forward
     so this is a permanent lock up situation okay this is not very good now。
+  id: totrans-194
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个有什么问题呢？是的，这是死锁。为什么呢？因为生产者获取了锁，旋转等待缓冲区满了，但那个会处理的线程必须先获取锁，然后它就会睡觉，这样它不能取出任何项目，所以生产者不能醒来继续进行，这就是一个永久的锁定情况。好的，这样不好。
 - en: never comes out of the loop so here believe it or not we could do this messy
     but we acquire the。 lock we say is the buffer full okay release the lock require
     the lock is the buffer full okay release。 the lock require lock the buffer full
     okay when we eventually encounter a not buffer full then we。 can in queue a new
     item release the lock and go forward this is uh not great but this will。
+  id: totrans-195
   prefs: []
   type: TYPE_NORMAL
+  zh: 永远不会退出循环，所以这里，信不信由你，我们可以这样做，虽然有些杂乱，但我们获取锁，然后检查缓冲区是否已满，接着释放锁，获取锁，检查缓冲区是否已满，然后释放锁，获取锁，再检查缓冲区是否已满，直到最终遇到一个不是满的缓冲区，之后我们可以将新项入队，释放锁并继续前进。虽然这种做法并不好，但这会奏效。
 - en: actually work okay but this is busy waiting okay right because that acquired
     release goes over and。 over again so really the question is what is the right
     abstraction and good primitives are going to。 be very important and so next time
     let's do something other than locks and really synchronization is a。 way of coordinating
     multiple concurrent activities as I said and we're going to talk about semaphores。
+  id: totrans-196
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上是有效的，不过这是忙等待，因为获取和释放锁不断循环。所以问题真正的关键在于，什么才是正确的抽象，好的原语会非常重要，所以下次我们不讨论锁，而是要讨论同步，正如我之前所说，实际上同步是一种协调多个并发活动的方式，我们将会讨论信号量。
 - en: I have a couple of minutes I want to give you the semaphore pattern here okay
     semaphores are like a。 kind of generalized lock and Dykstra first defined them
     in the 60s and the main synchronization primitive。 that was used in original Unix
     was a semaphore and a semaphore is like a special type of integer。 and it supports
     the following operations you set a value only when you initialize。
+  id: totrans-197
   prefs: []
   type: TYPE_NORMAL
+  zh: 我有几分钟时间，我想给你们讲解一下信号量模式，好吗？信号量就像是一种通用的锁，Dykstra 在 60 年代首次定义了它们，而原始 Unix 中使用的主要同步原语就是信号量。信号量就像一种特殊类型的整数，它支持以下操作，你只能在初始化时设置其值。
 - en: and then there's only two operations either down or p which uh waits for the
     semaphore to become。 bigger than one and then decrements bigger than zero I mean
     then decrements it by one and then upper。 v which increments the semaphore by
     one and wakes up somebody who might be sleeping so you sleep if。 you try to decrement
     below zero and you get woken up as soon as somebody increments it above zero。
+  id: totrans-198
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后只有两个操作，一个是 down 或者 p，它等待信号量变得大于 1，然后将其减去 1，另一个是 upper，v 操作，它将信号量增加 1，并唤醒可能正在等待的人。所以如果你尝试将信号量减到零以下，你就会进入休眠状态，并且当某人将信号量增加到零以上时，你就会被唤醒。
 - en: so this is a little more powerful than a lock okay and they're like integers
     except there's no。 negative values the only thing you can do with them is p and
     v operations or up and down。 the down and up I mean the operations are atomic
     so two p's together can never get you below zero。 the thread going to sleep and
     p won't miss a wake up from v and uh so here it's a real。
+  id: totrans-199
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以信号量比锁要强大一些，它们就像整数一样，但没有负值。你能对它们进行的唯一操作是 p 和 v 操作，或者说是 down 和 up。这些操作是原子的，所以两个
+    p 操作同时执行时，永远不会让信号量降到零以下。正在休眠的线程执行 p 操作时不会错过来自 v 的唤醒信号。所以这里，实际的情况是。
 - en: railway analogy I'm gonna say and then we'll finish up you start the value equal
     to two here's。 a semaphore that's what this little picture is the train comes
     by and tries to execute a p operation。 which decrements the value by one and the
     train gets to go through the semaphore the second one comes。 along decrements
     and the train gets through the third one that comes along tries to decrement but。
+  id: totrans-200
   prefs: []
   type: TYPE_NORMAL
+  zh: 我将用铁路类比来说明，然后我们就结束。我会说开始时值为 2，这是一个信号量，这就是图中的小图示。火车经过并尝试执行 p 操作，将值减 1，火车通过信号量，第二列火车来时，信号量再减
+    1，火车继续通过，第三列火车经过时尝试减 1，但。
 - en: that would take it below zero so that p operation puts it to sleep okay and
     later if one of these。 exits and increments the value to one the train wakes up
     and goes through okay so I want to leave。 you with this idea and we'll follow
     this more later okay so in conclusion we talked a lot about。 atomic operations
     hardware atomicity primitives like test and set compare and swap etc we showed。
+  id: totrans-201
   prefs: []
   type: TYPE_NORMAL
+  zh: 这会把信号量降低到零以下，所以 p 操作会让它进入休眠状态。如果其中一个线程退出并将信号量值增加到 1，火车就会被唤醒并通过。所以我想给你留下这个概念，我们稍后会继续讲解。最后总结一下，我们讨论了很多关于原子操作的内容，比如硬件的原子性原语，例如测试并设置、比较并交换等，我们展示了
 - en: you lots of ways to build locks but we don't want to spin wait very long okay
     and what we did this。 time is we started talking about semaphores and uh monitors
     will be our other topic so what I'm。 gonna do by the way is I'm gonna put up a
     video with more information about semaphores and。 monitors for you guys you could
     take a look at it and then we'll pick this up next time but I want。
+  id: totrans-202
   prefs: []
   type: TYPE_NORMAL
+  zh: 有很多种方法可以构建锁，但是我们不想让它们等待太长时间，好吗？我们这次做的事情是开始讨论信号量，嗯，监视器将是我们的另一个话题。所以我接下来会做的是，我会上传一个视频，里面有更多关于信号量和监视器的信息，大家可以去看一下，接着我们下次再继续讨论这个话题，但我希望。
 - en: to make sure that you have a chance of reading more about this all right have
     a great weekend。 watch for information about design reviews and about mid-term
     review， Thank you。
+  id: totrans-203
   prefs: []
   type: TYPE_NORMAL
+  zh: 确保你有机会进一步阅读相关内容，好吗？祝你周末愉快。请关注有关设计评审和期中评审的信息，谢谢。
 - en: '![](img/22a440ab5259f377d19dc5be83e46a76_15.png)'
+  id: totrans-204
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22a440ab5259f377d19dc5be83e46a76_15.png)'
 - en: ( thanks for tuning in )。
+  id: totrans-205
   prefs: []
   type: TYPE_NORMAL
+  zh: (感谢收看)。
