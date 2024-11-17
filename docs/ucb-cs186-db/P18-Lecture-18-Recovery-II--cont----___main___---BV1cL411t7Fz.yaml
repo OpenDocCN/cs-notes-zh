@@ -1,1517 +1,2020 @@
 - en: P18：Lecture 18 Recovery II (cont) - ___main___ - BV1cL411t7Fz
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: P18：讲座 18 恢复 II（续） - ___main___ - BV1cL411t7Fz
 - en: the cloud。
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 云端。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_1.png)'
+  id: totrans-2
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_1.png)'
 - en: Okay， so I'm going to start。 Okay。 Hi everyone。 I'm going to go to the Tuesday's
     lecture。 And I hope you have a great weekend。 So for today we just wanted to wrap
     up the discussion on。 recovery。 So， as Dettio already mentioned， different concepts
     of doing undo and redo and。 also different types of blocks。 So we'll also talk
     about the areas， algorithm for recovery in this。
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，我开始了。大家好。我将继续讲周二的讲座，希望你们度过了一个愉快的周末。今天，我们想总结一下恢复的讨论。正如Dettio已经提到的，撤销和重做的不同概念，还有不同类型的块。所以我们还会讨论恢复中的区域算法。
 - en: lecture。 So the first few slides are just going to review from last time。 So
     the first thing that。 you might remember is how we are having different types
     of operations being required in the lock。 So for instance， on this slide here，
     I'm just basically showing you different different types。 of records that can
     actually show up in the lock。 For example， reading， writing， and also。
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 讲座。所以前几张幻灯片只是回顾上次的内容。你可能记得的是，我们在锁中需要不同类型的操作。例如，在这一张幻灯片中，我基本上展示了锁中可能出现的不同类型的记录。例如，读取、写入，以及。
 - en: fetching and flushing of individual pages。 And then we also talk about this
     concept of right ahead。 lock， right？ So meaning that we are going to write to
     the lock record first before we actually carry。 out the corresponding operation。
     I mean， obviously， it only matters for writing， right？ Because for。 reading， I
     mean， it doesn't matter whether we are actually recording in a lock or even not
     even。
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 单独页面的获取和刷新。接着我们还会谈到预写锁的概念，对吧？也就是说，在实际执行相应操作之前，我们会先写入锁记录。我是说，显然，这只对写操作有意义，对吧？因为对于读取操作，我的意思是，是否在锁中记录并不重要，甚至可能根本不记录。
 - en: recording to a lock is fine too。 Right。 So we're only talking about writing
     operations or things。 that can actually change the state of the database。 So right
     ahead， locking basically means that we。 are going to first write to the lock with
     the record that we are going to make the change。 before we actually make the change。
     So that means we for instance， we're going to write a。
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 写入锁也是可以的，对吧。所以我们只谈论写操作或者那些能实际改变数据库状态的操作。所以预写锁基本上意味着我们会首先向锁写入记录，表明我们将进行更改，随后才真正进行更改。所以这意味着我们，比如说，我们会写一个。
 - en: record that says we're flushing a particular disk page that is dirty before
     we actually write。 the page out to the disk from memory。 Does that make sense？
     Cool。 So for。 and then we also talk about last week about different types of，
     logging that we can do。 For instance， in the case of undo re-locking， we're basically
     storing。
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 记录表明我们在将页面从内存写出到磁盘之前，正在刷新一个脏的磁盘页面。这样有意义吗？酷。那么接下来我们还会讨论上周提到的不同类型的日志记录。例如，在撤销重做锁的情况下，我们基本上是在存储。
 - en: the old value of a particular data element， right？ Like for instance， the tuple
     in the lock itself。 And then we're basically going to go back in time， right，
     when a crash happens， and then we're。 going to go back in time from the very end
     of the lock and then un-throw or undo， right？ Each of。 the operations that were
     involved for transactions that have not been completed。 So as a reminder。
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个特定数据元素的旧值，对吧？比如说，锁中的元组本身。然后我们基本上会回到时间的过去，对吧，当发生崩溃时，然后我们将会从锁的最末端回溯，然后撤销或恢复，对吧？每个涉及未完成事务的操作。所以提醒一下。
 - en: right？ We're only concerned about transactions that are not completed at the
     time of the crash。 So for instance， transactions that were still running， and
     then at the time of the crash。 maybe it did not， commit or it also did not abort。
     So those are the kind of incomplete transactions that we need to， be able to un-roll。
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？我们只关心在崩溃时未完成的事务。例如，仍在运行的事务，崩溃时可能没有提交，也没有中止。这些就是我们需要能够回滚的未完成事务。
 - en: Un-roll meaning in this case that we're going to undo the changes that it was，
     going to。 it basically was in the middle of doing， right？ Because that transaction
     did not complete。 so therefore we need to undo all the changes that it has made
     so far。 Does that make sense？ Yeah。 so that is an important concept， right？ Because
     in all this hours people were asking about， like。
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: '"撤销"在这里的意思是，我们将撤销那些它本来打算做的更改，对吧？因为那个事务没有完成，因此我们需要撤销它到目前为止所做的所有更改。这样说有意义吗？是的。所以这是一个重要的概念，对吧？因为在这些小时里，人们一直在问，像是。'
 - en: by incomplete， do you mean transactions that were aborted？ And the answer is
     no。 because if a transaction has been aborted and it has finished， it's abort
     operation， right？ As in。 it already unrolled all the things that it was， it actually
     made changes too。 Then our job is done。 There's nothing to recover。 The only transactions
     that we need to recover。
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: '"不完整"的意思是指已被中止的事务吗？答案是否定的。因为如果一个事务已经被中止并且它已经完成了中止操作，对吧？也就是说，它已经撤销了所有它做过的更改。那么我们的工作就完成了。没有什么需要恢复的。我们只需要恢复那些。'
 - en: if we want need to do that， are those that actually did not complete this operation。
     because it neither commit nor abort， at the time of the crash。 So for those transactions
     we need to un-roll all the changes that it has done。 So effectively we're just
     aborting it， except that we're not calling it out as an abort explicitly。
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们需要做的是那些实际上没有完成该操作的事务。因为它们在崩溃时既没有提交也没有中止。因此，对于这些事务，我们需要撤销它所做的所有更改。所以实际上我们只是在中止它，只不过我们没有明确地将其称为中止。
 - en: And then we also talk about redo locking， right？ So the only change here is
     that instead of storing。 the old value that we're going to restore to when we
     need to recover something， we're instead going。 to write down the value that the
     transaction was going to make。 And the reason why we're doing that。 is because
     unlike undo recovery， in redo-based recovery， we're going to play back the lock
     entirely。
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们还讨论了重做锁，对吧？所以这里唯一的变化是，我们不再存储我们在需要恢复时要恢复到的旧值，而是记录下事务将要进行的修改。我们这样做的原因是，因为与撤销恢复不同，在基于重做的恢复中，我们将完全回放锁。
 - en: from the very beginning。 And then if a transaction has a rate of incomplete
     completed。 then that's fine。 And then for those transactions that are。 that did
     not complete at the time of the crash， we're actually just going to ignore those
     entries in the lock when we want to do redo-based logging。 Does that make sense？
     So it's basically saying that if we want to redo everything， it's fine。
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 从一开始。如果一个事务的完成率是未完成的，那没关系。那么对于那些在崩溃时没有完成的事务，我们实际上只是会忽略这些锁中的条目，当我们想做基于重做的日志记录时。这样说有意义吗？所以基本上是说，如果我们想重做所有操作，没问题。
 - en: but we only want to redo those that needs to be redone， right？ So for instance。
     the transactions that actually committed， right？ If a transaction ended up being。
     if a transaction ended up aborting， that's fine because the lock record would
     have recorded that。 the transaction is going to roll back itself。 So when we hit
     that part of the lock， we're basically。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 但我们只想重做那些需要重做的，没错？比如说，实际上已提交的事务，对吧？如果一个事务最终被中止，那也没关系，因为锁记录会记录下该事务将会回滚自己。所以当我们遇到锁的那部分时，我们基本上是。
 - en: just going to undo all the changes that particular aborted transaction that's
     going to do。 So the only things that we do not want to redo are the actions from
     the transactions that actually。 did not complete。 Just like in the case of the
     undo lock in case we wanted to undo the actions。 of a transaction that were incomplete。
     Cool？ Any questions about this so far？
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 只是撤销那个特定中止事务所做的所有更改。因此，我们不希望重做的唯一事情是那些实际上没有完成的事务的操作。就像在撤销锁的情况下，我们想撤销一个事务的不完整操作一样。明白吗？到目前为止有任何问题吗？
 - en: So hopefully the effect is the same， right？ So like， you know， whatever recovery
     mechanism that。 we use， it should recover the database to the exact same state，
     right？ So that is not a question。 So for both of these cases， we are trying to
     recover the database to the exact state。 So if。 redo logging somehow， redo-based
     recovery somehow recovers a state-based， a different state that。
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以希望效果是一样的，对吧？就像你知道的，无论我们使用什么恢复机制，它应该将数据库恢复到完全相同的状态，对吧？所以这不是一个问题。对于这两种情况，我们都在尝试将数据库恢复到相同的状态。所以如果。重做日志以某种方式，基于重做的恢复以某种方式恢复到一个基于状态的、不同的状态，那。
 - en: undo logging-based recovery mechanism， then we have a problem。 That should not
     happen， right？ We。 have a buck if that's the case。 Okay， so what is the problem
     with both of these schemes？
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果是基于撤销日志的恢复机制，那么我们会遇到一个问题。这是不能发生的，对吧？如果真是这样，我们就会遇到麻烦。那么，这两种方案有什么问题呢？
 - en: So as you might remember from the didties， part of the lecture， in both of these
     cases， we need to。 fully recover from the entire log， right？ In the case of undo-based
     recovery， we need to always。 start from the very end and then go all the way to
     the very beginning。 And then for redo-based。 recovery， we're basically doing the
     reverse。 Start from the beginning， we need to scan all。
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 正如你可能还记得的，从讲义的内容来看，在这两种情况下，我们都需要从整个日志中完全恢复，对吧？在基于撤销的恢复机制中，我们总是需要从日志的最末尾开始，然后一直扫描到最前面。而对于基于重做的恢复机制，我们实际上是在做相反的操作。从头开始，我们需要扫描所有的日志。
 - en: the way to the end of the log， right？ The question， of course， is like， you
     know。 can we actually avoid， doing that because if your log is kind of long， then，
     you know。 it might take a while， right， before the database actually gets recovered。
     And then of course。 the answer is yes， right？ I mean， that's why I'm still here
     and talking to you about this。
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 问题是如何才能避免扫描整个日志，对吧？当然，问题是，你知道，如果日志很长，那么，可能需要一些时间，对吧，才能让数据库完全恢复。然后，当然，答案是肯定的，对吧？这就是我今天还在这里和你们讨论这些问题的原因。
 - en: So the algorithm that we will use， to avoid needing to scan the entire log is
     something called ARIES。 It's actually an algorithm that， was developed at IBM
     Almadin， right？ Which。 as I said last Thursday， is actually somewhere down， in
     San Jose。 You can even go visit these days。 It's actually still an IBM site。 It's
     an IBM， research lab over there。 And this guy Mohan， right？
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们将使用的算法是ARIES，它是一种避免需要扫描整个日志的算法。实际上，这个算法是由IBM Almaden开发的，对吧？正如我上周四所说，它实际上位于圣荷西的某个地方。你现在甚至可以去参观它。它实际上仍然是一个IBM的地点，是IBM在那里的一个研究实验室。而这位Mohan，就是其中的关键人物。
 - en: He actually just recently retired。 So， if you're checking out on Facebook or
     Twitter， I mean。 he has a lot of stuff that he posts on a， daily basis。 So you
     might want to check him out。 I don't know if he is on Jaiji yet。 I wouldn't be。
     surprised if he is very active social on the social networking team。 Anyway。
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 他实际上最近刚刚退休。所以，如果你在Facebook或Twitter上查看他的动态，他每天都有很多内容发布。所以你可能想去看看。我不知道他是否已经在Jaiji上了。如果他在社交网络团队里非常活跃，我一点也不惊讶。总之。
 - en: so the whole reason why， we're talking about that is because we wanted to use
     this as an example of trying to optimize。 the schemes that we talked about earlier
     for recovery。 But before we talk about the actual。 protocol that ARIES used to
     do recovery， it first needs to talk about the concept of a checkpoint。 So what
     is a checkpoint？ So a checkpoint in database speak is basically an action of taking
     an action。
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们之所以谈论这个问题，是因为我们希望将其作为一个例子，来优化我们之前讨论的恢复方案。但在我们讨论ARIES实际用于恢复的协议之前，我们首先需要谈谈检查点的概念。那么，什么是检查点呢？在数据库的术语中，检查点基本上是一个定期保存数据库整个状态的动作。
 - en: in terms of just saving the entire state of the database periodically。 So what
     do we do。 during a checkpoint happening in the database？ We stop accepting all
     transactions that are new。 So we kind of stop the world。 We wait until all the
     currently executing transactions complete。 And again， complete means either they
     decide to abort or commit and fully done with that aspect。
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，在数据库中发生检查点时我们会做什么？我们会停止接受所有新的事务。也就是说，我们暂停所有操作。我们等待当前正在执行的所有事务完成。再次强调，完成的意思是它们决定了是中止还是提交，并且已经完全处理完这部分操作。
 - en: right？ So if we are committing， then we make sure that all the dirty pages are
     flushed。 And then if we are boarding， then we make sure that everything that this
     transaction made in。 terms of changes are all unrolled。 So that's what I mean
     by like your wait for everyone to complete。 And then we flush the lock to the
     disk。 We flush all the dirty pages to the disk for the committed。
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？所以如果我们在提交操作，那么我们就确保所有的脏页都已经刷新。如果我们在挂起操作，那么我们就确保该事务所做的所有修改都被撤销。这就是我所说的等待每个操作完成。然后我们将锁刷新到磁盘。我们会把所有的脏页都刷新到磁盘中，以确保提交。
 - en: transactions。 And then we write a record to the lock saying that we have taken
     a checkpoint at that。 point。 And then I claim that at that moment， then all the
     changes that are made to by committed。 transactions have basically made it。 And
     all the changes that were made by aborted transactions。 have been rolled back。
     So we are in a clean slate now， right？ So no more incomplete transactions。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务。然后我们在锁中写一个记录，表示我们在那个时刻进行了检查点。然后我声明，在那一刻，所有由已提交事务所做的更改基本上已经完成，所有由已中止事务所做的更改已被回滚。所以现在我们处于一个干净的状态，对吧？因此，不再有不完整的事务。
 - en: We don't need to deal with any of those anymore。 Everything has been decided，
     so to speak。 So at that point， then we can just resume executing new incoming
     transactions。 Okay。 So here's a pictorial illustration of what a taking a checkpoint
     would mean in terms of the lock。 So you see different lock entries。 And then at
     some point， there'll be a checkpoint record。
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们不再需要处理任何这些事务。一切都已经决定了，可以这么说。所以到那时，我们可以继续执行新的传入事务。好了，下面是一个图示，展示了在锁的上下文中，进行检查点意味着什么。你可以看到不同的锁条目，然后在某个时刻，会有一个检查点记录。
 - en: What that means is if we ever crash， let's say， like， you know， let's say this
     is the end of the。 entire lock and then we crash at the very end of the lock。
     what that means is we actually don't need， to deal with any of the transactions
     that happened before the checkpoint。 Because as I， said， we have already flushed
     all the dirty pages to the disk from those committed transactions。
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 这意味着，如果我们发生崩溃，假设，就像，假设这是整个锁的结束，然后我们在锁的最后崩溃。那意味着实际上我们不需要处理检查点之前发生的任何事务。因为正如我所说，我们已经将那些已提交事务的所有脏页刷新到磁盘上。
 - en: And all the aborted transactions have already been rolled back。 So we don't
     need to deal with。 anything that actually happened before the checkpoint。 The
     only ones that we need to deal with are those。 transactions that were started
     right after the checkpoint until the point of crash， right？
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有已回滚的事务已经被撤销。所以我们不需要处理任何检查点之前发生的事情。我们唯一需要处理的是那些在检查点之后到崩溃发生之间启动的事务，对吧？
 - en: So same story。 So if a given transaction was not， you know， still running at
     the time of the crash。 then we need to undo his actions。 And then if a transaction
     actually has committed after the。 checkpoint， then we need to make sure that all
     the dirty pages has been flushed。 So for that。 you can use your favorite， you
     know， redo on do mechanism to do recovery that way。
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 同样的故事。如果某个事务在崩溃时还没有完成，那么我们需要撤销它的操作。如果一个事务在检查点之后已提交，那么我们需要确保所有脏页都已经被刷新。为此，你可以使用你喜欢的，任何的重做撤销机制来进行恢复。
 - en: Does that make sense？ The point here is that this is one simple mechanism that
     you can use to get rid of part of the lock。 so that you don't have to always scan
     from the very beginning or replay all the way back to the。 beginning if you do
     undo based recovery， right？ Everything up to the checkpoint has been taken。 care
     of on the disk。 And you know that they're in a persistent state。 So therefore，
     we don't need。
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 这有意义吗？关键是，这是一个简单的机制，你可以用它来摆脱一部分锁，这样你就不需要总是从头开始扫描，或者在进行基于撤销的恢复时重放到开始的地方，对吧？检查点之前的所有内容已经被处理并写入磁盘。而且你知道它们处于持久化状态。因此，我们不需要。
 - en: to handle any of those transactions anymore。 The only ones that we need to care
     about are the ones。 that get started after the last checkpoint。 In fact。 you might
     as well just truncate the lock at that， point， right？
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 不再需要处理任何这些事务。我们唯一需要关心的是那些在最后一个检查点之后开始的事务。事实上，你也可以在那时直接截断锁，对吧？
 - en: We don't need any of the records that are before the checkpoint。 So you can
     also。 delete everything up here if you like， right？ We don't need that anymore。
     Oh。 any questions about this， so far？ So Nicholas asked if the DBMS handle corruption
     of data at all。 So this is outside， the scope of this class。 You can imagine that
     the file system has a way to make sure that things。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们不需要任何检查点之前的记录。如果你愿意，你也可以删除这些内容，对吧？我们不再需要它了。哦，到目前为止有什么问题吗？所以尼古拉问数据库管理系统（DBMS）是否处理数据损坏的问题。这个问题超出了本课程的范围。你可以想象，文件系统有办法确保事情。
 - en: are in a consistent state， right？ So for instance， error correction codes， check
     sums， all those。 things can help。 But we're basically assuming that the file system
     will take care of that。 for 186 purposes。 Oh， okay。 So this is so far so good，
     right？ But however， the problem is we have。 to stop the world， right？ When we
     take the checkpoint， in a sense that we have to wait for everyone。
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们需要确保所有数据都处于一致的状态，对吧？举个例子，错误修正码、校验和，所有这些东西都可以帮助我们。但我们基本上假设文件系统会为此负责，以便完成186目的。哦，好的。那么到目前为止一切都很好，对吧？但是，问题是我们必须停止整个世界，对吧？当我们进行检查点操作时，从某种意义上说，我们必须等所有事务完成。
 - en: to finish and we are not accepting any new transactions。 So that's not so good。
     Obviously。 it would be great if we have a way to still take the checkpoint while
     the database is still。 accepting new transactions。 So that's why there's this
     idea of fuzzy checkpoint， checkpointing。 which comes from the area's paper。 The
     idea is to basically say that we save all the。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 还没有完成，我们也不接受任何新的事务。所以这就不太好了。显然，如果我们有办法在数据库仍然接受新事务时进行检查点操作，那就太好了。所以这就是模糊检查点的概念，来自该领域的论文。这个概念的基本思想是，我们保存所有页面的生命周期。
 - en: state of the transactions and the state of all the pages in the buffer pool
     when we take the checkpoint。 Why？ Because unlike the full checkpoint mechanism，
     during fuzzy checkpointing， we would still have。 transactions that are running，
     potentially， right？ Because we're still accepting new transactions。 And since
     we have not flushed all the pages to the disk， there are potentially dirty pages
     that。
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务的状态和缓冲池中所有页面的状态都需要在我们进行检查点时保存。为什么？因为与完全检查点机制不同，在模糊检查点中，我们仍然会有正在运行的事务，可能是对吧？因为我们还在接受新的事务。而且由于我们并没有将所有页面刷新到磁盘，因此有可能会有脏页面。
 - en: are still residing in the buffer pool。 So therefore， we need to save the state
     of all those running。 transactions and all the statuses of the pages that are
     currently in the buffer pool in case some of。 them are dirty。 And in order to
     do that， we need new data structures to store that information。 Right？ Makes sense
     so far？ So let's see what all these data structures are like。 But before we。
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些事务仍然驻留在缓冲池中。所以，我们需要保存所有这些正在运行的事务的状态，以及所有当前在缓冲池中的页面状态，以防其中一些页面是脏的。为了做到这一点，我们需要新的数据结构来存储这些信息。对吧？到目前为止有道理吗？那么让我们来看看这些数据结构是什么样的。但在此之前。
 - en: talk about the exact data structure， let's first figure out what are we actually
     keeping track up。 right？ When I say we need to store the state of the transaction。
     What do I mean？ Well， first。 we need to store for each transaction whether they
     are running， they are committing， they are。 boarding， or they have finished。 Right？
     So that's easy。 I mean， you can have one single table in。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 说到具体的数据结构，我们首先需要弄清楚我们到底在追踪什么，对吧？当我说我们需要存储事务的状态时，我到底是什么意思呢？嗯，首先，我们需要存储每个事务的状态：它们是正在运行、正在提交、正在挂起，还是已经完成了。对吧？这个很简单。我的意思是，你可以有一个内存中的单一表格来实现。
 - en: memory that does that。 And then we also need a mechanism to store which pages
     are dirty in the。 buffer pool。 I mean， you might think the buffer pool is already
     keeping track of that。 Yes。 But。 we're still basically making use of that mechanism。
     Is that already exist？ And then we also need to。 keep track of which transaction
     actually costs that page to be dirty。 So if you remember the life。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们还需要一个机制来存储哪些页面在缓冲池中是脏的。我的意思是，你可能会认为缓冲池已经在追踪这个了。是的。但是，我们仍然基本上是在利用那个机制。它已经存在吗？然后我们还需要追踪哪些事务实际上导致了这些页面变脏。所以，如果你记得，生命周期。
 - en: cycle of a page in the buffer pool， right？ So what some transaction will want
     to bring a new page。 a clean page from the disk into memory。 And then at some
     point， some transaction is going to make。 changes to that page， making it dirty。
     So we just want to record what is the first action that costs。 that page to be
     dirty after being brought into the buffer pool。 And you see why in just a second。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 在缓冲池中，对吧？所以某个事务会将一个新的页面，从磁盘加载到内存中。然后在某个时刻，某个事务会对该页面进行修改，使其变脏。所以我们只想记录导致该页面在进入缓冲池后第一次变脏的操作。你很快就会明白为什么要这样做。
 - en: So if we can keep track of these two things， then what we'll do at a checkpoint
     is that we'll just。 save them to the disk。 I mean， just like saving a lock entry，
     right？ You can also save the state。 of the transaction to file。 I mean， just write
     everything out。 And you can also just write like。 you know， information from point
     number two to the file as well。 But that's not hard。 And then。
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以如果我们能够跟踪这两样东西，那么在检查点时，我们将做的就是将它们保存到磁盘。就像保存一个锁条目一样，对吧？你也可以保存事务的状态到文件。就是说，把所有内容都写出来。而且你也可以将第二点的信息写入文件。但这不难。然后。
 - en: what we're going to do at recovery time is we're going to recreate transaction。
     transaction states and the state of the buffer pool from like， you know， the information
     that we。 have saved during the checkpoint。 And then we're going to recreate all
     the running transactions。 and all the dirty pages and memory。 And then， you know，
     replay the rest of the lock that way。
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 在恢复时，我们要做的是重建事务。事务状态以及缓冲池的状态，基于我们在检查点时保存的信息。然后我们将重建所有正在运行的事务和所有脏页及内存。接着，您知道的，按这种方式重放其余的锁。
 - en: And we'll see what that means。 Okay。 So now let's dive into the details about
     like， you know。 how do we actually keep track of these things？ So first order
     of business is we need to。 store something known as a lock sequence number to
     each of the lock records。 Because on the last。 line， I was saying that we need
     to keep track of what is which transactions action first caused a。
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将看到这意味着什么。好的，现在让我们深入了解这些细节。像，如何实际跟踪这些东西呢？首先，我们需要为每个锁记录存储一个称为锁序列号的东西。因为在上一行，我说过我们需要跟踪哪些事务的操作最先导致了某个页面发生变化。
 - en: particular page to become 30。 So we need a page， we need a mechanism to be able
     to point into a。 particular transaction's action。 In order to do that。 let's just
     give every transaction action a number。 Essentially。 like your formulist needs
     to be a unique number that is increasing。 But like， you know。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 特定页面成为30的操作。所以我们需要一个机制，能够指向特定事务的操作。为了做到这一点，让我们给每个事务操作一个编号。基本上，就像你的公式列表需要是一个唯一的、递增的数字。你知道的，。
 - en: for a very cheap implementation， I mean， you can just use like line number in
     the file。 for instance， right， is a unique number that is strictly increasing。
     So that satisfies the bill。 So we're going to give a number to each of the actions
     in the lock。 And then with that， right。 so we can now have a page lock sequence
     number， which is exactly the thing I was telling you on the last。
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于一个非常简单的实现，我的意思是，你可以仅仅使用文件中的行号。例如，行号是一个独特且严格递增的数字。所以这就满足了要求。因此，我们将为锁中的每个操作分配一个号码。然后通过这个，我们就能得到一个页面锁序列号，这正是我在上一部分所提到的内容。
 - en: on the on the last slide， right， which is the lock record that caused the page
     to become 30 from。 the beginning。 And also the lock record that updated the page
     most recently turns out that we need both。 But then for both of these， we're just
     going to reference the lock sequence number as a way to。 point back into the lock。
     So pictorically， that's like， this is something that you will see。
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 在上一张幻灯片中，右边是导致页面从最开始变成30的锁记录。而且，最近更新该页面的锁记录也很重要，事实证明我们需要这两个记录。但对于这两个，我们只是通过锁序列号来引用，以此作为指向锁的方式。所以从图示上看，这就是你会看到的内容。
 - en: So here， we have what is known as the 30 page table。 which just lists out all
     the 30 pages in the buffer pool， and a recovery lock sequence number。 which， as
     I said， correspond to the first lock sequence number。 the first action that caused
     that particular page to become 30 after being brought into memory。
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以在这里，我们有一个所谓的30页表，它列出了缓冲池中的所有30页，以及一个恢复锁序列号。正如我所说，这个序列号对应于导致该特定页面在加载到内存后成为30的第一个锁序列号。
 - en: So as you can imagine， right， so each of these numbers here， like， you know，
     line number one， zero。 two， one， zero， one， zero， one， better be something that
     actually writes to the page， right。 because otherwise we have a problem。 Like，
     you know， those are supposed to be actions that。 caused the page to be 30。 So
     an action that causes the page to be 30 is obviously right。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 正如你能想象的那样，这里每个数字，比如，行号一，零。二，一，零，一，零，一，零，必须是实际写入页面的操作。因为如果不是，那就有问题了。你知道的，那些操作应该是导致页面成为30的操作。所以导致页面成为30的操作显然是写操作。
 - en: So basically， those things better point to a right record in the lock。 And then
     here's the transactions table， which basically keeps track of which transaction，
     um。 was running， and also， like， you know， the status of each of them。 And then
     the last。 LSN here is talking about， like， you know， which lock record number，
     uh， last update。
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以基本上，这些东西最好指向锁中的正确记录。然后这里是事务表，基本上跟踪着哪个事务在运行，还有你知道的，每个事务的状态。然后最后，这里的 LSN 讲的是，像你知道的，哪个锁记录号，最后更新。
 - en: LSN stands for lock sequence number。 So last sequence， the lock， the last lock
     sequence number。 that corresponds to the most recent update from that transaction。
     So you can think of this as basically a way to keep track of where we are within
     that transaction。 Right。 So if we can point to the paid point to the lock record
     for responding to， let's say， like。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: LSN 代表锁序列号。因此，最后的序列号，即锁，最后的锁序列号。它对应于该事务的最新更新。所以你可以把它看作是基本上跟踪我们在那个事务中的位置的方式。对吧？所以，如果我们可以指向付费点，指向锁记录进行响应，假设，比如说，像。
 - en: you know， transaction number 100， then we can also trace back to figure out，
     um， at what point。 in the transaction that， uh， that particular transaction actually
     made progress up to。 So again。 we'll see how all these things actually play out，
     uh， when we need to do recovery。 But for， now。 let's just make sure that we understand
     these are the data structures that we need to keep。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 你知道，事务号 100，我们也可以追溯回去找出，在那个事务中，那个特定的事务实际上进展到了什么阶段。所以，再次强调。我们会看到所有这些事情在需要恢复时是如何发挥作用的。但现在，让我们先确保理解这些是我们需要保留的数据结构。
 - en: in memory in order to run areas。 Uh， Nick， you have a question？ Yeah。 I was
     just curious why you would， um， have these transactions that are in status， commit
     or abort。 because it seems like those transactions would have finished。 And so
     then。 you don't care about it at the checkpoint。 Yeah。 So I'm mentioning like
     this at this point。
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 在内存中为了运行区域。呃，Nick，你有问题吗？是的。我只是好奇，为什么会有这些处于提交或中止状态的事务。因为看起来这些事务应该已经完成了。所以到检查点时，你不关心它了，对吧？是的。所以我在这个点提到这一点。
 - en: but I'm mentioning， so yeah， so that's actually a great question。 So just so
     everybody understands。 this。 So the question is why are we actually keeping track
     of transactions that have committed。 right？ So if you look into the project， uh，
     you see that there are actually different， phases of。 uh， committing and aborting。
     So when it first says commit， it actually hasn't committed。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 但我在提到这个，所以是的，这是一个很好的问题。所以为了让大家都理解。这个问题是，为什么我们要跟踪已经提交的事务？对吧？所以如果你看一下项目，你会看到实际上有不同的，提交和中止的阶段。所以当它第一次说提交时，它实际上并没有提交。
 - en: everything yet。 So commit at this point just means it's going to commit。 It
     hasn't actually。 flushed everything to the disk yet。 So in the project， you see
     that， like， you know， after the。 flushing has actually been， uh， carried out，
     we'll actually say the status is end or complete at that。 point。 So that's one
     difference。 And then the other thing you might ask is， okay， fine， right？ So。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 一切还没有。所以在这一点上，提交只是意味着它将要提交。它实际上还没有把所有东西刷新到磁盘。所以在项目中，你会看到，你知道的，在刷新操作实际上完成后，我们会说状态是结束或完成，到了那个点。所以这是一个区别。然后你可能会问的另一个问题是，好的，没问题，对吧？
 - en: but why do we keep track of transactions that are that have already been completed？
     And the true。 answer is you don't。 We don't actually need to keep track of things
     that have already been completed。 because as， as I was saying， those transactions
     already made made it， right？ And then they have。 completely written everything
     out to the desk or they have completely unrolled all the actions。 So。
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 但为什么我们要跟踪已经完成的事务？真正的答案是，你不需要。我们实际上不需要跟踪那些已经完成的事务。因为正如我所说，那些事务已经完成，对吧？然后它们已经完全写入了磁盘，或者它们已经完全回滚了所有的操作。所以。
 - en: we don't need to do that anymore if we don't want to。 It's just for completeness
     and also for。 compliance with the code that you see in your project。 That's why
     we do it that way。 Oh， okay。 Yeah。 that makes fun。 Okay。 And then the log is just
     the same as before， right？ Nothing， nothing new。 So this is the right head block。
     It's just that now I have decided to be a little bit， more， um。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们不想再做这个了，就不需要做了。这只是为了完整性，同时也是为了符合你在项目中看到的代码要求。这就是我们以这种方式做的原因。哦，好吧。是的。那很好。好的。那么日志就和以前一样，对吧？没有，没什么新东西。所以这是正确的头块。只是现在我决定稍微多一些，嗯。
 - en: I don't know， like systematic or like， you know， presented slightly more nicely
     in a table， format。 So you can see the different fields involved。 The only thing
     that I want to bring out is this， uh。 previous LSN that is highlighted in green，
     uh， which basically talks about the previous。 log record corresponding to the
     same transaction。 So you see here， for instance， line number 104。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 我不知道，比如说，是否可以系统化或以更漂亮的表格格式呈现。这样你就能看到涉及的不同字段。我想强调的是这个，被绿色高亮显示的前一个LSN，它基本上是指与同一事务对应的前一个日志记录。所以你看到这里，例如104行。
 - en: points back to line number 101， because that is the first record corresponding
     to transaction number。 100。 And then I'm just like， you know， separating out the
     payload here as a separate field。 I mean。 you don't have to， uh， just for ease
     of exposition。 And then sometimes you see that the payload is。 different depending
     on what type of record we have。 So the first two lines here， they correspond to。
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 指向101行，因为那是与事务编号100对应的第一个记录。然后我就像，知道吧，把有效负载分离出来作为一个独立的字段。我的意思是，你不必这么做，仅仅是为了说明方便。有时候你会看到有效负载会有所不同，取决于我们拥有的记录类型。所以这里的前两行，它们对应的是。
 - en: starting a transaction。 So obviously we don't have a new value or old value
     to write。 So therefore。 it's only says starts versus the next two rack lock records
     here， basically， uh， is a write。 And then， for that， we actually store both the
     old and the new records that we are writing。 And you see why， we need to keep
     track of both， right？
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 启动一个事务。显然我们没有新值或旧值需要写入。所以它只会显示启动，而接下来的两行锁记录，基本上是写操作。对于这一点，我们会存储我们写入的旧记录和新记录。你能看到，为什么我们需要追踪两者，对吧？
 - en: Because in undo and redo locking based mechanism， we only， store either one
     of them。 So now your question might be why are you storing both？ You see why in，
     just a second。 Okay。 So just to bring everything together。 So now， uh， here we
     have it。 So we have， the 30 page table。 which is new。 We have the transactions
     table， which is also new。 The lock， itself is not new。
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为在撤销和重做锁定机制中，我们只存储其中一个。所以现在你的问题可能是，为什么要同时存储两者？你稍等一下就会明白。好吧，总结一下所有内容。现在，我们有了这个。我们有了30页表，这是新的。我们有了事务表，它也是新的。锁本身并不新。
 - en: It's just the right ahead lock that we have。 The only new thing here is just。
     an extra field called the previous lock sequence number。 And then the buffer pool
     is also not new。 The only new thing here is just keeping track of the first lock
     record that made the page become。 30。 So for instance， in this case， you see that
     page number five here was first written by。
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 它就是我们所说的提前写入锁。唯一新鲜的地方是一个额外的字段，叫做前一个锁序列号。然后缓冲池也不算新东西。唯一的新东西就是追踪使得页面变为30的第一个锁记录。所以在这个例子中，你可以看到这里页面5第一次被写入。
 - en: transaction 100 at the line sequence number of 104。 So therefore， that's why
     that page has 104。 as the page LSN。 And it likewise for the other page， but I'm
     not showing you the entire lock。 record。 So that's why you're not seeing them
     here。 Cool。 Actually。 Okay。 So， um。 what happens during a， during check pointing？
     As I said。
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务100，在行序号104的位置。所以，这就是为什么那一页的LSN是104。同样的情况也适用于其他页面，不过我没有展示完整的锁记录。所以你在这里没有看到它们。酷，实际上。好吧。那么，检查点过程中会发生什么？如我所说。
 - en: we want to be able to store these things to the disk， right？ So。 let's first
     begin by writing a block begin checkpoint record to the lock。 And then we're going
     to flush， the lock to the disk up to that point。 We're going to continue normal
     operation。 We're going to keep， by processing transactions。
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们希望能够将这些内容存储到磁盘，对吧？所以。首先，让我们开始写一个块开始的检查点记录到锁中。然后我们将锁刷新到磁盘，直到这一点。接下来我们继续正常操作。我们会继续处理事务。
 - en: accepting new transactions， so to speak。 And then as， and then at some point。
     we're just going to dump whatever like， you know， 30 page table and transactions
     table that we have。 onto the disk。 And then write an end checkpoint record to
     the lock and then flush the lock to the disk。 So you can already see what might
     happen， right？ So we might be， you know， in the middle of writing。
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 接受新事务，可以这么说。然后，随着时间的推移，到某个时刻，我们就会将所有的事务表和类似于30页的表格数据，丢到磁盘上。然后写一个结束的检查点记录到锁中，并将锁刷新到磁盘。所以你可以看到，可能会发生什么，对吧？所以我们可能会处于写入的中间状态。
 - en: to the disk when a new transaction gets started， we might be writing to the
     disk when a page now。 gets 30， right？ So we need to handle all of those cases。
     But I would claim that actually doesn't really， affect us in terms of doing recovery。
     because we are going to redo all those actions anyway。 As you see later on。 But
     that's。
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 当一个新事务启动时，我们可能会在写入磁盘时，页面现在变为30，对吧？所以我们需要处理所有这些情况。但是我认为实际上这并不会影响我们进行恢复的过程，因为我们无论如何都会重新做这些操作。正如你稍后会看到的那样。但是。
 - en: this is exactly how you would take a checkpoint using under fuzzy， checkpointing。
     So now let's talk about how do we actually process a transaction。 For example。
     what happens when we start a new transaction， when a transaction update a page。
     when it tries to commit， a board， and also what happens when the buffer pool manager
     wants to fetch or flush a page。
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 这正是你使用模糊检查点（fuzzy checkpointing）进行检查点操作的方式。那么现在我们来谈谈我们实际是如何处理事务的。例如，当我们开始一个新事务时会发生什么？当事务更新页面时会发生什么？当它尝试提交、撤销时，发生了什么？当缓冲池管理器想要获取或刷新页面时又会发生什么？
 - en: And by what happens， I mean， what happens to these data structures that we were
     talking about。 on the previous slide。 Any questions so far？ Oh， okay。 So first
     one， first one is easy。 So what。 happens when a transaction starts？ I mean， as
     you can guess， we first write a lock record to。 the first write a record to the
     lock， right， saying that we want to start a new transaction。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 我所说的“发生什么”是指我们之前提到的那些数据结构发生了什么变化。到目前为止有问题吗？哦，好。首先，第一个问题很简单。那么，当一个事务开始时会发生什么？你可以猜到，我们首先会写一条锁记录到锁中，表示我们要开始一个新的事务。
 - en: That's no surprise。 And then we want to update the transaction table， right，
     because we now。 have a new transaction starting。 So for example， if transaction
     number 105 starts。 then we're just going to write a new record。 And then we are
     going to insert a new entry to the。 transactions table。 So you see here that like，
     you know， transaction 105 is running。 And then since。
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 这并不令人惊讶。接着我们想要更新事务表，对吧，因为现在我们有一个新的事务开始。例如，如果事务号为105的事务开始，那么我们就会写入一条新的记录。接着我们会向事务表插入一个新的条目。你可以看到，像这样，事务105正在运行。然后，由于。
 - en: it actually hasn't made any updates yet， therefore， therefore， the last LSN
     field here is not or。 I'm just representing that as a dash。 And then the buffer
     pool in the 30 page table didn't， like。 there's no change to them。 So that's why
     you see them just the same thing as before。 So what about if it actually writes
     to the disk， right， or make an update， right， it doesn't have。
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 它实际上还没有进行任何更新，因此，这里的最后一个LSN字段没有被填写，或者说我只是用破折号表示。然后在30页表中的缓冲池也没有任何变化。所以你看到它们和之前一样。所以如果它实际上写入了磁盘，对吧，或者进行了一次更新，它就没有。
 - en: to write to this yet？ So we're going to first write an update record to the
     lock。 So this is。 in compliance with right ahead logging， right， which is what
     we're using here。 So at first write。 the update record to the lock。 And then we'll
     update a bunch of stuff。 So don't worry about it。 If you don't understand what
     I mean， let's just go through an example to。
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 还没有写入吗？所以我们首先会写一条更新记录到锁中。这是符合**预写日志**（right ahead logging）规范的，对吧，这正是我们在这里使用的方式。所以首先写更新记录到锁。然后我们将更新一些内容。不要担心，如果你不理解我说的意思，我们就通过一个例子来。
 - en: make sure we understand why we're doing what I'm trying to do here in color。
     So let's say。 running transaction decides to write a number， I'll update a page
     basically page number seven。 So we're first going to write a record to the lock
     saying that that's the action that transaction。 100 is going to do。 And then it
     gets a new lock sequence number， right， is the next one， basically。
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 确保我们理解我在这里做的事情为什么要用颜色标示。所以假设正在运行的事务决定写入一个数字，我将更新一个页面，基本上是第七页。所以我们首先会写一条记录到锁中，表示事务100将要执行的操作。然后它会得到一个新的锁序列号，对吧，基本上就是下一个。
 - en: in this case， one， zero， two。 And then we're going to update all these other
     tables using the following。 mechanism。 So the first thing is in the lock entry
     corresponding to this new update， we're going to。 set the previous LSN to be one，
     zero， one， because that was the second to last action that the。 trans that this
     particular transaction took， right？ Okay。 And then we're going to set。
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这种情况下，1，0，2。接着我们将使用以下机制更新所有这些其他表。首先，在与这个新更新对应的锁条目中，我们会把前一个LSN设置为1，0，1，因为那是该事务（trans）进行的倒数第二个操作，对吧？好的。然后我们将设置。
 - en: the page LSN to be this new LSN that we are currently writing， because this
     is now the latest。 lock entry that make this particular page dirty。 Okay。 And
     then we're also going to set the last LSN of the transactions table for this particular。
     transaction to be one， zero， two， because that is the last action that this transaction
     took to make。
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 页面的LSN将是我们当前正在写入的这个新的LSN，因为这现在是最新的。锁条目，使得这个特定页面变为脏页。好的。然后我们还将设置该特定事务的事务表中的最后一个LSN为102，因为这是该事务使得。
 - en: sorry， this is the last action that this particular transaction took to update
     a page。 And then in the dirty page table， we are going to set the recovery LSN
     to be to be also like。 you know， this， sorry， it should be one， zero， two， to
     be one， zero， two， because this is the first。 update record that made this particular
     page to be dirty。 So remember， right？ So in this case。
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 对不起，这是该特定事务更新页面时采取的最后一个操作。然后在脏页表中，我们将设置恢复LSN为，也就是说，你知道的，这，抱歉，它应该是一个，零，二，应该是一个，零，二，因为这是第一次。更新记录使得这个特定页面变为脏页。所以记住，明白了吗？所以在这种情况下。
 - en: we're storing the last， the last LSN that made the page 30 in the buffer pool。
     And we are making。 the first LSN that made a page 30 in the 30 page table。 So
     make sure you run。 that particular one might be one， zero， one， because you have
     a previous。 update through that same page。 So it's actually correct。 Yeah。 Okay，
     fine。 Sorry。
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们存储了最后一个使得第30页变脏的LSN，并且我们正在设置。第30页表中使得第30页变脏的第一个LSN。所以确保你运行。那个特定的LSN，可能是101，因为你之前。通过那个页面进行了更新。所以这实际上是正确的。好的，明白了。抱歉。
 - en: I forget to look it out。 Yeah。 So 101 also wrote to page seven。 So therefore，
     in this case。 we actually don't need to update the dirty page table， because the
     first lock。 record that made this page 30 was 101。 So even though 1002 also wrote
     to it， but that's fine。 But then notice that we do have to update this number
     here， because that number correspond to。
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 我忘记把它查出来了。对的。所以101也写入了第七页。因此，在这种情况下。我们实际上不需要更新脏页表，因为第一个锁。记录使得第30页变脏的是101。所以即使1002也写入了它，但没问题。但注意，我们确实需要更新这里的数字，因为那个数字对应于。
 - en: the last one。 So far so good。 Great。 So now what happens with play page flushes，
     right？
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 最后一个。到目前为止一切顺利。很好。那么现在页面刷新时会发生什么呢？
 - en: So first we want to flush the lock， including up to and including the page LSN
     number。 So in this case， so we'll actually go through an example later on in terms
     of actually carrying。 this out。 But that's what we'll do。 And then we're going
     to remove the page from the 30 page table。 and the buffer pool。 So this is just
     the action of writing the 30 pages out to the disk。
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们首先要刷新锁，包括直到并包括页面LSN号。所以在这种情况下，我们稍后会通过一个实际的例子来执行这个操作。但这就是我们将要做的。然后我们将从第30页表中删除该页面。并且从缓冲池中删除。所以这只是将第30页写入磁盘的操作。
 - en: And then we can tell which pages are dirty， because like， you know。 those pages
     would have a non-zero， page LSN number。 So for instance。 if the buffer pool manager
     wants to flush page number seven， right？
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们可以知道哪些页面是脏的，因为你知道。那些页面会有一个非零的页面LSN号。所以举个例子。如果缓冲池管理器想要刷新第七页，对吧？
 - en: So what happens is we first need to flush the lock up to including line number
     101， because。 that was the last lock record that touches page number seven。 How
     can we actually know that number。 to be 101？ Well， we just look at the page， right？
     And then each page already stores the last number。 the last lock record that made
     itself 30。 So therefore， when we try to flush a page。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以发生的情况是我们首先需要刷新锁，直到包括行号101，因为。那是最后一个触及第七页的锁记录。我们如何知道这个数字。是101呢？嗯，我们只需查看页面，对吧？然后每个页面已经存储了最后一个数字。最后的锁记录使得它自己变脏。因此，当我们尝试刷新页面时。
 - en: we just look up that number and then make sure that all the lines up to that
     number has been。 written to the disk。 If lock sequence number really mean line
     number， right？ So now you understand。 why we actually have this page number stored
     within each page。 Exactly， because when we try to。 flush things， we need to make
     sure that like， you know， the lock record corresponding to those。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们只需要查找那个数字，然后确保所有直到该数字的行都已经。写入磁盘。如果锁序列号确实表示行号，对吧？所以现在你明白了。为什么我们实际上在每个页面中存储了这个页面号。没错，因为当我们试图。刷新数据时，我们需要确保，比如说，你知道，锁记录对应于那些。
 - en: changes have already been flushed to the disk。 And again， this is right ahead
     logging， right？ So。 before we make any changes， we need to make sure that the
     lock record has already been written。 and it has been also flushed to the disk。
     And then the subsequent step is just like， you know。 making the actual right，
     right， to the disk。 So in this case， like， you know， we know that。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 更改已经刷新到磁盘了。而且， 这就是前日志记录对吧？所以，在我们进行任何更改之前，我们需要确保锁记录已经被写入，并且也已经刷新到磁盘。然后，后续的步骤就像你知道的那样，执行实际的写入操作，对吧？所以在这种情况下，就像你知道的那样，我们知道。
 - en: page number seven is 30。 So we're just right that page out to the disk， and
     then subsequently。 we remove it from the buffer pool。 So we're moving from the
     buffer pool， and then we also。 right out the， we also removed that page from the
     dirty page table。 You might ask， I mean。 do we need， to actually evict that page
     from the buffer pool？ I mean， you don't have to。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 页面七是30。所以我们将该页面写入磁盘，然后随后从缓冲池中移除它。所以我们从缓冲池中移除，然后我们也把它从脏页表中移除。你可能会问，意思是我们需要将该页面从缓冲池中驱逐出去吗？我的意思是，不一定。
 - en: but if you decide to， actually keep that page in the buffer pool。 then we better
     make sure that the page， LSN， is now set， to be null or something， right？
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是如果你决定实际保留该页面在缓冲池中，那么我们最好确保该页面的LSN现在被设置为null或者其他值，对吧？
 - en: Because that page is now clean， because we have already written it to， the disk。
     And then for easiest explanation here， I just like， you know， also evict that
     from the， buffer pool。 for simplicity。 Okay。 So what about for page batches？ So
     now let's say we want to act。 buffer pool manager wants to fetch in a new page
     from the， from the disk。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为该页面现在已经是干净的，因为我们已经将其写入磁盘。然后为了更简单的说明，我也像你知道的那样，将其从缓冲池中驱逐出去，简化处理。好的。那么页面批次的情况怎么样？现在假设我们想要操作缓冲池管理器从磁盘中获取一个新页面。
 - en: So what we do is we create， a new entry in the 30 page table and also bring
     that corresponding page to the buffer pool。 So for， example， let's say I want
     to actually fetch page number two into the buffer pool。 So we create a new， entry
     in a 30 page table with the recovery LSN to be null， right？
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们所做的就是，在30页面表中创建一个新条目，并且把相应的页面带入缓冲池。例如，假设我想将页面二带入缓冲池。我们就在30页面表中创建一个新条目，恢复LSN为null，对吧？
 - en: Because no one has written to that， page yet。 So the last。 the recovery LSN
     in this case is just null。 And then we just bring that page。 into the buffer pool
     with page LSN set to be null as well。 And I'm just not showing you there for。
     saving space purposes。 And then everything else is untouched， right？
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为没有人写入过那个页面。所以，最后的恢复LSN在这种情况下就是null。然后我们将该页面带入缓冲池，页面的LSN也被设置为null。我这里没有显示出来，是为了节省空间。然后其他的部分保持不变，对吧？
 - en: Because we're not talking about， new transactions。 So now comes the kind of
     tedious part， right？
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为我们并不是在谈论新的事务。所以现在进入了比较繁琐的部分，对吧？
 - en: What happens when a， transaction commits and also a transaction aborts？ Okay。
     What happens when a transaction commits？ So， we first want to write the commit
     record to the lock。 I mean， just like in right ahead logging。 So that part has
     not changed anything。 We want to also flush that lock， the lock， the lock up to。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 当一个事务提交或者事务中止时会发生什么？好吧，当事务提交时会发生什么？所以，我们首先需要将提交记录写入锁中。我的意思是，就像在前日志记录中一样。所以那部分并没有改变什么。我们还需要将锁刷新到磁盘。
 - en: that particular entry for the same reason we're doing right ahead logging here。
     And for the purpose。 of committing and deciding the fate of a transaction at the
     point for which the lock entry corresponding。 to the commit record made it to
     the disk， then we consider that transaction to be committed already。 Even though
     at this point， like， you know， all the 30 pages are still in memory and like，
     you know。
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于该条目的处理，原因跟我们在这里做前日志记录是一样的。为了提交并决定事务的命运，在与提交记录相对应的锁条目写入磁盘时，我们就认为该事务已经提交了。即使此时，像你知道的那样，所有30页面仍然在内存中，像你知道的那样。
 - en: nothing has actually written out and all that stuff， like， that's fine。 So from。
     right ahead logging point of view and also from every point of view， we consider
     the。 transaction to have already committed the time that the lock record corresponding
     to the commit。 actually made it to the disk。 And then subsequently， what we'll
     do is like， we'll just update the。
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 其实没有写出所有东西，这没关系。所以从**前置日志**的角度来看，也从每个角度来看，我们认为事务已经在与提交对应的锁记录写入磁盘的时刻提交了。然后接下来，我们会做的就是像这样，我们会更新。
 - en: transaction status to be in commit mode or like it's trying to commit。 And then
     we don't have to do。 that synchronously， right？ Because this is right ahead logging。
     But at some point， at some point in。 time， we imagine we need to flush the 30
     pages， 30 pages from this particular transaction to the。 disk。 And then we'll，
     and then when all the 30 pages have landed in the disk， then we just write。
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务状态变成提交模式，或者说它正在尝试提交。然后我们不必同步执行这一步，对吧？因为这是前置日志。但是在某个时刻，在某个时间点，我们假设需要将这笔事务的30页数据刷新到磁盘上。然后我们会，等所有30页数据都写入磁盘时，我们再写。
 - en: an end record to the lock。 Signific find that， like， you know， we have also
     completed the 30。 pages right to the disk。 And then we're going to actually go
     and change the transaction status to。 be complete， which basically means that
     the lock entry has made it to the disk。 And also all the 30。 pages from this transaction
     has have also made it to the disk as well。 And then that's it。
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个结束记录到锁中。我们会发现，像你们知道的，我们已经将30页数据写入磁盘了。然后我们会实际去更改事务状态为**完成**，这基本上意味着锁条目已经写入了磁盘，并且这笔事务的所有30页数据也已经写入了磁盘。然后就这样。
 - en: So the only reason why I'm going through this is because like， you know， for
     the commit。 record writing and also for a disk cluster， you guys are ready to
     familiar with that from the。 previous lecture， if you remember our discussion
     of like， you know， forcing， right？ The only reason。 why I'm bringing this back
     on this slide is because we now have， you know。
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 我之所以要讲这些，是因为你们应该已经熟悉之前讲座中的**强制写入**部分，关于提交记录的写入以及磁盘簇的内容，如果你们还记得我们关于强制写入的讨论。我现在把它提到这个幻灯片上，是因为现在我们有了。
 - en: this new transactions thing， here and then this new 30 page table here。 I just
     want to make sure that you guys understand what。 happens to those cases when a
     transaction commits。 Cool。 Yeah。 And finally， what happens when。 so let's go through
     an example， right？ So let's say a。
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个新的事务机制，在这里和这里的这张30页表格。我只是想确保你们明白当事务提交时会发生什么。很酷，对吧？是的。最后，发生什么呢？所以我们来通过一个例子，行吗？假设有一个。
 - en: transaction transaction 100 decides to commit。 So we write the commit record
     with flush it to the disk。 We update that transaction status to commit and then
     we start flushing the 30 pages corresponding。 to that transaction。 When that's
     done， we write the end entry to the log。 So that's what you see here， right？ So
     you see one commit entry and then the flushing happens and then we write end when
     the。
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务100决定提交。所以我们写入提交记录并将其刷新到磁盘。我们更新事务状态为提交，然后开始刷新与该事务对应的30页。当这完成后，我们写入结束条目到日志中。所以你在这里看到的就是这样，对吧？所以你看到一个提交条目，然后是刷新操作，最后我们写入结束。
 - en: when the writing is completed。 So at that point， you basically see that all
     the 30 pages have been。 evicted。 And again， you don't have to， but I'm just showing
     you this for simplicity or simplicity。 And then the 30 page table in this case
     would just have nothing in it because none of the pages are。 dirty。 And then finally，
     we will update the transaction status to be complete。 So that's you see。
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 当写入完成时。所以在那时，你基本上会看到所有的30页数据已经被**驱逐**了。再次强调，你不一定非得这么做，但我这样做是为了简单起见。然后在这种情况下，30页表格就什么都没有了，因为没有任何页面是脏页。最后，我们会更新事务状态为**完成**。就是这样，你看。
 - en: So finally， what happens when a transaction decides to abort？ Well， similar
     to similar just， commit。 right？ We first write an abort record to the lock， flush
     everything to the entry， and like。 you know， just like in transaction committing，
     right？ So at this point。 we consider the transactions， to have already aborted。
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 最后，事务决定中止时会发生什么呢？嗯，类似于提交对吧？我们首先写一个中止记录到锁中，刷新所有内容到条目中，就像在事务提交时一样，对吧？所以在这一刻，我们认为该事务已经中止。
 - en: even though we actually haven't wrote back the actions from that transaction，
     yet。 So now we need to do the cleanup stuff， right？ After we wrote the abort records
     to the disk。 So now we need to do all the unroll all the actions that this transaction
     did， right？ How do we do？
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使实际上我们还没有将该事务的操作写回。现在我们需要做清理工作，对吧？在我们将回滚记录写入磁盘之后，接下来我们需要撤销该事务所做的所有操作，对吧？我们该怎么做呢？
 - en: How do we know that？ Well， look at the last LSN from the transactions table。
     That's our life safer。 right？ Because the because that number basically points
     to the last update。 that particular transaction made。 So basically， that means
     that is the first thing that we need。 to unroll， right？ I mean， because we're
     unrolling from the end up to the beginning。
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们怎么知道呢？嗯，看看事务表中的最后一个LSN。这就是我们的救命稻草，对吧？因为这个数字基本上指向了该事务所做的最后一次更新。所以，基本上，这意味着我们需要撤销的第一件事就是它，对吧？我是说，因为我们是从最后开始撤销，一直到最前面。
 - en: So if a transaction made a bunch of changes， that's fine。 because we're going
     to start from the very， end。 And then we're going to trace back in time to unroll
     all the changes。 right？ And then with that number， you can now go to the lock
     and figure out what it was actually writing。 and then use the payload， right？
     To figure out what are the numbers that it needs to write back in order。
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，如果一个事务做了一堆更改，那没关系。因为我们会从最后开始。然后我们会追溯时间，撤销所有的更改，对吧？然后，借助那个数字，你现在可以去锁中查看它实际写入了什么内容，然后使用有效负载，对吧？来确定需要按顺序写回的数字。
 - en: to undo the action。 Okay。 So after we have actually undone， we have actually
     undone the action。 We。 have wanted to write something known as a compensation
     record to the lock。 A compensation record or a， CLR is basically another type
     of lock record that just says we have undo。 we have undone in， particular action。
     You'll get to see why we need to write that out to the disk when we talk about。
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了撤销操作。好吧。所以，在我们实际上已经撤销了操作之后，我们会想要写入一种叫做补偿记录的内容到锁中。补偿记录，或者CLR，基本上是另一种类型的锁记录，它仅仅表示我们已经撤销了特定的操作。你将看到为什么我们需要将其写入磁盘，当我们讲解时。
 - en: the actual recovery algorithm。 But for now， you can think of this。 But as a
     hint， I can tell you。 that is basically an optimization。 We don't necessarily
     need to do that。 Because in undo-based recovery， we never need to write these
     kind of lock records， right？
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际的恢复算法。但现在，你可以将其理解为一个提示，我可以告诉你，这基本上是一种优化。我们不一定需要这样做。因为在基于撤销的恢复中，我们从来不需要写这些类型的锁记录，对吧？
 - en: So it's basically for optimization purposes。 And then a CLR record also points
     to the next record that needs to be undone。 if anything。 And then we're basically
     going to just follow the previous LSN in the lock to figure out if there。 are
     other actions that needs to be undone as well。 And then after everything is done。
     we'll change the transaction status to be abort， meaning that we have fully aborted
     everything。
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，这基本上是为了优化的目的。然后CLR记录还指向需要撤销的下一个记录，如果有的话。然后我们基本上会按照锁中的前一个LSN来追踪，看看是否还有其他操作需要撤销。然后，在一切完成后，我们会将事务状态更改为回滚，意味着我们已经完全撤销了所有内容。
 - en: And then we're going to write the end record to the lock and then mark it as
     complete。 Because we。 have completely undone all the actions from that transaction。
     Example。 So we have transaction 100。 trying to abort。 We first write the abort
     record to the lock， right？ So that's line number 104 that。 you see here on the
     right hand side of the screen。 And then from the lock record， right？ We first。
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们将写入结束记录到锁中，并将其标记为完成。因为我们已经完全撤销了该事务的所有操作。举个例子。假设我们有事务100，尝试回滚。我们首先将回滚记录写入锁中，对吧？这就是你在屏幕右侧看到的第104行。然后，从锁记录开始，对吧？我们首先。
 - en: we'll see that LSN number 103 is the first thing to undo。 Because that has the
     same entry， right？
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们会看到LSN编号103是需要撤销的第一件事。因为它有相同的条目，对吧？
 - en: So it's basically coming from the transactions table that I'm not showing you
     on this slide。 But from the transactions table， we'll see that 103 is the first
     thing to undo。 So we'll go and undo like， you know， 103， which basically means
     restoring the old value。 In this case， the number two to the page。 And of course，
     I'm also aligning the details here， right？
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，这基本上来自于事务表，我在这张幻灯片上没有展示。但从事务表中，我们会看到103是需要撤销的第一件事。所以我们会去撤销103，这基本上意味着恢复旧值。在这个例子中，将数字二恢复到页面上。当然，我也在这里对齐了细节，对吧？
 - en: You need to， figure out like， you know， where do we actually write the number
     two on the page。 right？ What is， the offset？ And like， you know， what are we actually
     writing there？ So。 but I'm just like， you're not showing you those details。 They
     would be in the lock as well。 Okay。 Fine。 So we have， we have undone transaction
     number 103。
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 你需要弄清楚像是，知道我们到底应该在页面上的哪个位置写入数字 2，对吧？偏移量是多少？而且，像是，我们到底在那里写了什么？所以，但是我只是没给你展示这些细节，它们也会在锁记录中。好的。没问题。所以我们已经撤销了事务编号
+    103。
 - en: And then we basically write the compensation， record to the disk。 Sorry， so
     the lock， right？
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们基本上写入补偿，记录到磁盘。抱歉，所以是锁，对吧？
 - en: So that's what you see here as well， off record number 105。 So a couple of things
     to notice。 The first one is the fact that we are， writing a new type of record，
     okay， compensation record。 And then the second one is about like， you know， what
     is this LSN pointing to？
+  id: totrans-110
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这就是你在这里看到的内容，记录编号 105。需要注意的几件事。第一件是我们在写入一种新类型的记录，好的，补偿记录。第二件是，像你知道的，这个 LSN
+    指向的是什么？
 - en: Is pointing to the next action that we need to undo， which in this case is number
     102。 Again。 you see why we actually need to do that later on when we talk about
     recovery。 But for now。 just make sure you understand what that number actually
     corresponds to。 Okay。 Great。 So we have。 written this CRR record out。 And then
     we basically go back to the lock online 103。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个记录指向我们需要撤销的下一个操作，在这种情况下是编号 102。再次提醒你，你会理解我们为什么后来要这样做，当我们讨论恢复时。但现在，只要确保你理解这个数字实际上代表了什么。好的。太好了。所以我们已经写出了这个
+    CLR 记录。然后我们基本上回到锁的第 103 行。
 - en: And then figure out， if there's anything else that needs to be undone。 And in
     this case， we do。 right？ Because from previous， LSN， we see that lock record number
     102 was also an update by the same transaction that we are trying。 to abort。 So
     therefore， we repeat this exact same procedure by undoing the operation and then。
     writing another CRR record to the end of the lock that you see here at line number
     106。
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后弄清楚是否还有其他操作需要撤销。在这种情况下，我们确实有。对吧？因为从之前的 LSN，我们看到锁记录编号 102 也是由我们正在尝试中止的同一事务进行的更新。因此，我们通过撤销操作重复相同的过程，然后在你在第
+    106 行看到的锁的末尾写入另一个 CLR 记录。
 - en: And then at that point， we figure out that there's actually no more transactions。
     no more actions to be undo because lock record number 101 is actually just a start
     record。 So we。 don't need to undo that。 We're done。 So we change the transaction
     status to abort。 And then we flush all the dirty pages just like in the committed
     case。 And then we write the end。
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后在这一点上，我们弄清楚实际上没有更多的事务，没有更多的操作需要撤销，因为锁记录编号 101 只是一个开始记录。所以我们不需要撤销它。我们完成了。所以我们将事务状态改为中止。然后我们像提交的情况一样刷新所有脏页。然后写入结束记录。
 - en: record that you see online 107 and then change the status back to complete。
     And we have done unrolling， transaction number 100。 So you might have a question
     about like。 you know， why are we skipping in the lock， right？ Because like， you
     know， notice that in this case。 we are， basically doing point-edge hazing。 We
     first figure out the first。
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 你在第 107 行看到的记录，然后将状态改回为完成。我们已经回滚了，事务编号 100。所以你可能会有一个问题，像是，你知道的，为什么我们跳过了锁，对吧？因为你知道的，注意到在这种情况下，我们基本上是在做点对点的模糊处理。我们首先搞清楚第一个。
 - en: we first figure out that the first， action to actually undo is line number 103。
     And then we do this previous LSN game， right？ To trace。 back what is the next
     action to undo and then what is the next action to undo， so to speak。 So this
     might actually incur a lot of random disk writes， right？ Because we are basically
     jumping。
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们首先弄清楚，第一个需要撤销的操作是第 103 行。然后我们做这个之前 LSN 的回溯，对吧？追踪回去找出下一个需要撤销的操作，然后继续撤销，怎么说呢。所以这可能会导致大量的随机磁盘写入，对吧？因为我们基本上在跳跃。
 - en: back in time。 So we actually see a better algorithm to do this unrolling in
     just a few slides。 Any questions about this so far？ Yes。 So currently when we
     were rolling back。 when we were undoing 102， it says CLR-H71。 Isn't the previous
     LSN 101， even though that's the start。 so why wouldn't we write？ 101 instead of
     putting。 Okay。
+  id: totrans-116
   prefs: []
   type: TYPE_NORMAL
+  zh: 回溯到之前的时间。所以我们实际上在接下来的几张幻灯片中会看到一个更好的算法来进行这个回滚。到目前为止有什么问题吗？是的。所以目前当我们回滚时。当我们在撤销
+    102 时，显示 CLR-H71。难道不是之前的 LSN 101，尽管那是开始记录吗？那为什么我们不写 101，而是写？
 - en: why is there no CRR record corresponding to 101？ Like， because I understand
     like， it's an old value。 but why is that no rather than putting 101， because 101
     comes before 102。 But you mean like here？
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么没有对应于101的CRR记录？就因为我理解它是一个旧值。但是为什么没有而是直接把101丢掉，因为101在102之前。你的意思是这里吗？
 - en: No， no， like on the fifth bullet point， it says undo 102 and write CLR-H7。 Like
     this， right？ Yeah。 Yeah， why is that a no？ It's the same thing as here。 Okay。
     Yeah。 the reason is because that is not actually an action to be undo， right？
     To be undone。 Okay， I see。 Yeah， there's nothing to undo on line 101， right？ So，
     yeah。 Okay， thank you。 Yeah。 Warren。 Yeah。
+  id: totrans-118
   prefs: []
   type: TYPE_NORMAL
+  zh: 不，不，像第五个要点上写的，撤销102并写CLR-H7。是这样吗？对。对，为什么那是个不呢？就和这里一样。好吧，原因是因为那并不是一个需要撤销的操作，对吧？需要撤销的。好，我明白了。对，101行没有什么可撤销的，对吧？所以，是的。好，谢谢。对，Warren。对。
 - en: so why are we keeping track of the completion status for transaction？ Like。
     why can't we just throw it out of the table？ You can't。 So that's exactly the
     same thing as what Nate was asking earlier。 The only reason reason why we're keeping
     that is because that's what your project code actually does。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，为什么我们要追踪事务的完成状态呢？为什么不能直接把它从表中丢掉？你不能。其实这和Nate之前问的完全一样。我们保留它的唯一原因就是因为那是你的项目代码实际上在做的事。
 - en: In theory， you don't need to do that。 You can just toss out that record at that
     point。 Yeah。 when it's complete。 Cool。 So do you understand this part so far？
     So I know this is kind of boring。 I know we're kind of like tracing back each
     of the steps and， you might think， okay。 why we're just not skip to the good stuff，
     right？ So here's the good stuff。 Well， I guess also。 So。
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 理论上，你不需要这么做。你可以在那时直接丢掉那个记录。对，完成时。很酷。那么，到目前为止你明白这一部分了吗？我知道这有点无聊，我知道我们像是在一步步回溯，但你可能会想，好吧，为什么我们不跳到更有趣的部分呢？那么，这就是有趣的部分。嗯，我想也是。
 - en: Alvin， one thing that might be useful。 If you go back to a previous， just the
     previous slide。 one tip that I find useful just to sort of slow down the place
     for a second， go back to a previous。 slide before this。 That's okay。 Where you
     have all the data structures。 Okay。 so I think one thing that helped me understand
     ARIES is sort of like one thing that is really。
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: Alvin，有一件事可能会有用。如果你回到上一张幻灯片。一个我觉得有用的小窍门就是，稍微放慢节奏，回到之前的那张幻灯片。没关系。就是你看到所有数据结构的那张。好吧，我觉得帮助我理解ARIES的一件事就像是，有一个非常。
 - en: confusing is why there are so many variables。 Why is there rec， LSN， page LSN，
     pre-VLS。 and last LSN and dirty page table， transaction table。 So I think one
     thing is as you see these。 structures， you try to sort of understand to the best
     of your ability why they exist， right？
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 让人困惑的是，为什么有这么多变量。为什么会有rec、LSN、page LSN、pre-VLSN、last LSN以及脏页表、事务表。我的想法是，当你看到这些结构时，你会尽力理解它们存在的原因，对吧？
 - en: For example， Alvin just showed an example of why pre-VLSN is helpful because
     it allows you to go back。 in the log， right？ You don't need to read through all
     of the log， you need。 you can use the pre-VLSN， to go back in the log， skipping
     over log entries that you don't。 that are not relevant。 Likewise， I don't know，
     last LSN for a transaction gives you a starting point of the log to go back from。
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如，Alvin刚才举了一个例子，说明为什么pre-VLSN很有用，因为它让你可以回到日志中，对吧？你不需要阅读整个日志，你可以使用pre-VLSN回到日志中的某个位置，跳过不相关的日志条目。同样，我不知道，事务的last
+    LSN给了你从哪里开始回溯日志的起点。
 - en: if you want to undo the effects of a transaction。 The rec LSN， as Alvin is going
     to describe。 is going， to be going to tell you where you should start your recovery
     process and he is going to describe。 that。 So likewise， each of these variables
     helps in some way optimize the process of recovery。 And so I think that is a helpful
     device to try to understand this。 It is hard， it is not easy。
+  id: totrans-124
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你想撤销一个事务的影响。正如Alvin将要描述的，rec LSN将告诉你应该从哪里开始恢复过程，他会描述这个。所以，同样地，这些变量中的每一个都在某种程度上帮助优化恢复过程。因此，我认为这是一个帮助理解这个过程的工具。它很难，并不容易。
 - en: it is tedious。 So take your time with it， I would say。 Yeah， I totally agree
     about this。 So in fact。 I was better with this， when I was learning this stuff，
     now。 and if I were not giving this next round， I would have completely forgotten
     what all these。 things are about， it's just too many things buying them。
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 这确实很繁琐。所以，我会说，花点时间慢慢做。是的，我完全同意这一点。事实上，在我学习这些东西的时候，我做得更好，现在。如果我不再讲下一轮内容，我可能完全会忘记这些事情，这些东西太多了，记不住。
 - en: So that's why I try to actually move to this， example step by step。 But again。
     these are actually all optimization。 So for instance， last LSN， let's pick that
     one。 So that one was basically used to figure out at which point in the。 log do
     we first look at when we try to let's say abort a transaction。 So in this case。
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这就是为什么我尽量一步一步地引入这个例子。但同样，这些其实都是优化。比如说，最后的LSN，我们就选这个。它基本上是用来确定在日志中什么时候开始查看，以便我们尝试，比如说中止一个事务。所以在这种情况下。
 - en: transaction 100 decides abort， so we need to wait to look up where to actually
     start， unrolling it。 You don't have to use the last LSN if you don't want to。
     You can just scan all the。 way back from the end of the log to figure out what
     was the last thing that your transaction 100 did。 Right？ Totally valid， totally
     fine。 The only thing is just cost， right？ So like， you know。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务100决定中止，所以我们需要等待查看从哪里开始回滚操作。如果你不想使用最后的LSN，你也可以。你可以从日志的末尾一直扫描，找出事务100做的最后一件事。对吧？完全有效，完全没问题。唯一的区别就是成本，对吧？你知道的。
 - en: if you don't want to incur the cost of scanning everything from the back up
     until you get to an。 action that is done by transaction 100， then the other option
     is to keep track of it explicitly。 That's what this is doing。 So this is just
     keeping track of where the last action。 and transaction did so that when we cut，
     sorry， so that when undo or abort actually needs to happen。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你不想承担从备份扫描所有内容直到你到达由事务100执行的操作的成本，那么另一种选择就是显式地跟踪它。这就是这个所做的事情。所以，这只是记录下最后一个操作的位置以及事务所做的操作，这样当我们需要撤销或中止时，能够有效地处理。
 - en: we have a starting point。 Right？ So same thing for this previous LSN thing in
     the right head lock。 right？ I mean， undo or redo logging， right？ That ADITIA talked
     about in the last lecture。 There's no previous LSN， right？ So why are we all suddenly
     introducing this new thing？ Well。 first of all， it's just confused off us， right？
     So you can blame Mohan for that， right？ And no。
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们有一个起点。对吧？所以这对于右锁的前一个LSN也是一样的，对吧？我的意思是，撤销或重做日志，对吧？这就是ADITIA在上一讲中提到的。没有前一个LSN，对吧？那么为什么我们突然要引入这个新东西？嗯。首先，它把我们弄得很困惑，对吧？所以你可以把这个怪罪到Mohan身上，对吧？不。
 - en: but for more practical use， right？ It's basically because we want to construct
     a， linked list。 right， of the actions that needs to be， needs to be undone。 Right？
     So if you have this。 previous LSN， it basically just serves as a pointer。 It's
     a pointer that says for each of these actions， they form， like， you know。
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是对于更实际的应用，对吧？基本上是因为我们想要构建一个需要撤销的操作的**链表**。对吧？所以如果你有这个前一个LSN，它基本上充当一个指针。它是一个指针，指示每个操作的顺序，像你知道的那样。
 - en: what is the last one that I need to undo for this transaction， and so on and
     so forth。 If they don't exist， fine。 You can always scan the lock to figure out，
     like。 what is the second to the last thing to do？ To undo， right？ And likewise，
     for redo， okay？ So it's。 again， an optimization， right？ And then， like， you know，
     also， right， for the， for the page LSN。
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，最后我需要为这个事务撤销的是什么？依此类推。如果它们不存在，没问题。你总是可以扫描日志来找出，比如说，倒数第二个操作是什么？要撤销的，对吧？同样，对于重做也是如此，好吗？所以它是一个优化，对吧？然后，像你知道的，对于页面LSN。
 - en: right？ So to speak。 So for a page LSN， that basically says， what is the last。
     LSN that touches that particular page？ Why do we need that？ Because when you flush
     a 30 page。 out to the disk， we need to figure out， like， which part of the lock
     do we actually flush up to？
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？就是说，对于页面LSN，它基本上说明了，最后一个接触该页面的LSN是什么？我们为什么需要这个？因为当你将30个页面刷新到磁盘时，我们需要弄清楚，实际上应该刷新到磁盘的锁是哪一部分？
 - en: Right？ Because for， because of right-hand logging， we need to make sure that
     the lock already made。 it to the disk before we can actually make the 30 pages
     to the disk。 So page LSN basically tells。 us the way to go back to the lock and
     then make sure that that part of the lock has already been。 written out， right？
     You know， again， you don't have to do that， right？ I mean， you can always just。
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？因为右日志记录，我们需要确保锁已经写入磁盘，然后我们才能将30个页面写入磁盘。所以页面LSN基本上告诉我们回到日志的哪个部分，并确保该部分已经写入磁盘，对吧？你知道的，同样的，你不一定非要这样做，对吧？我的意思是，你总是可以。
 - en: flush the entire lock for all we care。 I mean， fine。 I mean， if your lock is
     like one terabyte。 model， I mean， like， good luck， right？ So that's not， that's
     not a requirement for correctness。 It's just an optimization。 Does that make sense？
     Cool。 So yeah， so just make sure that， like。 you understand the reasoning behind
     it。 I mean， not just， and of course， also the evenness of this。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了我们关心的事，刷新整个锁。我的意思是，没问题。如果你的锁是一个TB的模型，我的意思是，祝你好运，对吧？所以那不是正确性的要求，它只是一个优化。这样理解吗？酷。是的，所以确保你理解其中的逻辑。我的意思是，不只是，当然，当然还有这个的一致性。
 - en: the Mohan， right？ So， but besides that， there's actually a practical purpose
     why we actually keep track of all these things。 Okay， so if no more questions，
     then let's actually talk about how to actually do recovery with this。 Oh， quick
     question。 Could you go back to slide？ This one or the next one， or the previous
     one？
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: Mohan，对吧？那么，除此之外，实际上我们追踪这些事情是有实际目的的。好了，如果没有其他问题，那我们来谈谈如何用这个来做恢复。哦，快问一下。你能回到上一页吗？这一页还是下一页，或者是前一页？
 - en: I guess， like both。 So like for this slide， you mentioned at the， like near
     the end that you。 have to flush the dirty pages。 But in the previous slide， I
     don't think that was included。 Yeah。 I'll not mention that。 Yeah， I don't think
     so。 I was wondering if that was intentional。 I see。 Yeah。 I know it's missing
     here。 So I should basically， it's too many things to put on this slide。 So。
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 我想，两者都有。比如说对于这一页，你提到在接近结尾时，你得刷新脏页。但是在前一页，我不认为有提到。是的，我没有提到。是的，我觉得没有。我在想这是不是故意的。我明白了。是的，我知道这页缺少了。所以其实是因为这页内容太多了。
 - en: here。 Great。 Okay， so now let's go to the good stuff， right？
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这里。很好。好了，现在我们来谈谈重点，对吧？
 - en: So what do we actually do with recovery？ Alvin， do you think we should take
     a break now since we're at six？
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 那我们实际如何做恢复呢？Alvin，你觉得我们现在应该休息一下吗？因为已经到六点了。
 - en: This is a good point。 Okay。 Do you want to share videos？
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是个好点子。好吧。你想分享视频吗？
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_3.png)'
+  id: totrans-140
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_3.png)'
 - en: Yeah。 So let me see if there's a way to get the sound。 So I picked two of them
     from the entries or actually， yeah。 we picked two of them from the entries that
     were。 All right。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的。让我看看有没有办法获取声音。所以我从条目中选了两个，实际上，是的。我们从那些条目中选了两个。好了。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_5.png)'
+  id: totrans-142
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_5.png)'
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_6.png)'
+  id: totrans-143
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_6.png)'
 - en: Are you guys here？ Yes。 Okay， so。 Oops。
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 你们在吗？是的。好，哦。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_8.png)'
+  id: totrans-145
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_8.png)'
 - en: (woman speaking in foreign language)， (woman speaking in foreign language)，
     Okay。 so let's see if this works。 If there's no sound， maybe I'll ask a tittier
     to play it。 (woman speaking in foreign language)， (woman speaking in foreign language)。
     (woman speaking in foreign language)。
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: （女性用外语讲话），（女性用外语讲话），好吧。那么让我们看看这个是否有效。如果没有声音，我也许会请技术人员来播放它。（女性用外语讲话），（女性用外语讲话）。
+    （女性用外语讲话）。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_10.png)'
+  id: totrans-147
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_10.png)'
 - en: '- Alvin， it''s reverberating。 Are we getting all that？ - All right， stop。 -
     Give me semi the link。 - Yeah， I''ll do that。 - We''re still hearing that。 - Yeah，
     sorry。 Okay， so let me， oops。'
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: '- Alvin，它在回响。我们都听到吗？ - 好的，停。 - 给我一个链接。 - 好的，我来做。 - 我们还听得到吗？ - 是的，抱歉。好了，让我，哦。'
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_12.png)'
+  id: totrans-149
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_12.png)'
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_13.png)'
+  id: totrans-150
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_13.png)'
 - en: (woman speaking in foreign language)， - You might imagine how hard would it
     be。 to actually just play a stupid video。 - I think you can just disconnect all
     you。 from one of your devices。 - Yeah， that's what I did。 but somehow it's still
     doing a lot of hack-coin。 So let me， let me just send it to a tittier。
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: （女性用外语讲话）， - 你可以想象这有多难。实际上只播放一个愚蠢的视频。 - 我觉得你可以只断开所有设备上的连接。 - 是的，我就是这么做的，但不知为何它还是做了很多的黑客操作。让我把它发给技术人员。
 - en: Do you see it？ I did it。 - Yeah， I see it。 Give me a sec。 (woman speaking in
     foreign language)。 - Up。
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 你看到了吗？我做到了。 - 是的，我看到了。稍等。（女性用外语讲话）。 - 上。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_15.png)'
+  id: totrans-153
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_15.png)'
 - en: Hey， Angel， did you give the dinosaurs more muscle？ Like I， hey， God， what's
     up？ Hey， Angel。 did you give the dinosaurs more muscle？ Like I asked。 What？ I
     told you to make them meteor。 Make them a meteor。 Meteor。 Meteor。 Meteor。 - It
     actually came from TikTok。
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 嘿，Angel，你是不是让恐龙更强壮了？就像我说的，嘿，神啊，怎么了？嘿，Angel，你是不是让恐龙更强壮了？就像我说的。什么？我告诉你要让它们变成陨石。让它们变成陨石。陨石。陨石。陨石。-
+    其实这来自TikTok。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_17.png)'
+  id: totrans-155
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_17.png)'
 - en: I don't know why you guys just not sent us， like this， the TikTok。 Thank you，
     Angel。 It's a TikTok video uploaded to YouTube。 Okay， so that's it。 Interesting。
     (woman speaking in foreign language)， Okay， I'm sharing number two。 Give me a
     sec。 (woman speaking in foreign language)， - Very nice to meet you。
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 我不知道你们为什么不直接发给我们，像这样，TikTok。谢谢你，Angel。那是上传到YouTube的TikTok视频。好吧，就是这样。有意思。 （女人说外语）好吧，我分享第二个。给我一秒钟。
+    （女人说外语）- 很高兴认识你。
 - en: Can we go straight to the whiteboard question？ Sorry， man。 The whoozer I fit
     in now a long question。 into the last 15 minutes。 Damn it， look， I don't even
     wanna be here。 I just need this to go on my senior position in Pomo Doc。 I'm about
     a month away from campaign 10 Deloitte。 I'm just putting up a front now。
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们能直接跳到白板题吗？抱歉，兄弟，我得把这个长问题塞进剩下的15分钟里。该死，看，我根本不想在这里。我只是想让这事变成我在Pomo Doc的高级职位申请的一部分。我离德勤的10号活动还差一个月。我现在只是在装样子。
 - en: so you won't hope I'll meet too much for conversation。 Well， that's if you actually
     do well。 and we actually give you an offer， right？ You're not wrong。 I know that
     you don't care。 but let me tell you about our team， current projects。 and that
     I play a significant role in all of them， straight to the whiteboard question，
     please。
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你应该不会指望我和你聊太多。嗯，那如果你表现得好，我们真的给你offer的话，那就是这样的，对吧？你没错。我知道你不在乎，但让我告诉你关于我们团队、当前项目的一些事情，顺便说一下，我在其中每一个项目里都扮演着重要角色，直接进入白板题吧。
 - en: Now that we've wasted enough time to chatting， here are some other CS video
     questions as well。 I'm pretty sure I'm totally bombing this interview， but I'm
     just hoping that other candidates。 would do even worse。 Time for your coding challenge，
     finally。 I've done this question before but I'm not gonna tell you that。 Good。
+  id: totrans-159
   prefs: []
   type: TYPE_NORMAL
+  zh: 既然我们浪费了足够的时间在聊天上，下面是一些其他的计算机科学面试问题。我敢肯定我完全搞砸了这次面试，但我只是希望其他候选人做得更差。终于到你的编码挑战了。我以前做过这个题目，但我不会告诉你。好。
 - en: this is the only question I prepared。 I hate to point this out， but all your
     questions this far。 will provide zero projections， in my future performance in
     this company。 Yeah。 and I'm completely aware of that。 But hey， we don't get to
     reinvent the rules。 we just need to play the game。 Honestly， I have no idea what
     I'm doing。
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是我唯一准备的题目。我不想指出这一点，但到目前为止你问的所有问题，完全无法预测我在公司未来的表现。是的，我完全意识到这一点。但嘿，我们不能重新发明规则，我们只需要遵守游戏规则。老实说，我不知道自己在做什么。
 - en: So I'm gonna start throwing some technical terms in。 Hopefully I can catch you
     squinting your eyes。 All right， try me。 Hash table， binary search， dynamic programming。
     Ha， well， you got me。 Here's my solution。 Good job。 You've completely， bomb the
     coding section as well。 What can I say？
+  id: totrans-161
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我开始丢些技术术语出来。希望能让你眯起眼睛。好吧，试试我。哈希表，二分查找，动态规划。哈，好吧，你抓住我了。这里是我的解决方案。干得好。你完全搞砸了编码部分。还能说什么呢？
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_19.png)'
+  id: totrans-162
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_19.png)'
 - en: We still have some behavioral questions， just to see if you wake well in a team
     environment。 Just as I thought that nothing is more intimidating， than being given
     a coding question。 that I don't know the answer to。 Who am I really kidding？ You're
     a programmer。 Can I say no？ Yep。 you are not a good culture fit either。
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们还有一些行为问题，看看你是否能很好地融入团队环境。正如我所想，没有什么比被给一个我不知道答案的编码问题更让人紧张了。我到底在骗谁呢？你是程序员。我可以说不吗？是的，你也不是一个很合适的团队文化人选。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_21.png)'
+  id: totrans-164
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_21.png)'
 - en: Whatever that means。 Thank you so much。 It seems like I'm going to have quite
     a few new roommates。
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 无论那意味着什么。非常感谢。看起来我将有几个新的室友。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_23.png)'
+  id: totrans-166
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_23.png)'
 - en: at the end of this month。 Good luck buddy。 I'm waiting for an official。 rejection
     letter for my via email。 Sounds just terrible。 (upbeat music)， (upbeat music)，
     - Singress。 - Sorry。 - Santa's more stuff。 I mean， we need more。 I mean， otherwise，
     like， you know。 we end up talking about areas for the rest of this semester。 That
     would be sad。 That would be sad。
+  id: totrans-167
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个月末就会结束。祝好运，朋友。我正在等着收到我的正式拒信，通过邮件发来。听起来真糟糕。（背景音乐），（背景音乐）， - Singress。 - 对不起。
+    - 圣诞老人还有东西要准备。我的意思是，我们需要更多东西。否则，你知道的，我们就会一直讨论本学期余下的内容。那样会很遗憾。那样会很遗憾。
 - en: '- Yeah， Jerry。 This is our favorite part of preparing for lecture indeed。 -
     Alvin。 do you want to do announcements？ - Sure。 So thanks for everyone for your
     feedback。 So I just want to like， you know， we just wanted to address those things。'
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: '- 是的，杰瑞。确实，这是我们准备讲座时最喜欢的部分。 - 阿尔文，你想做一下公告吗？ - 当然。所以谢谢大家的反馈。我只想，嗯，我们只是想回应一下这些事情。'
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_25.png)'
+  id: totrans-169
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_25.png)'
 - en: in the mid semester review that you guys put in。 First of all。 you guys asked
     for breaks in the lecture， and there you have it， right？ Yeah。 we also understand
     that an hour， and 30 minutes long of talking is a lot。 And then especially hearing
     like monotonic people like me， is basically a big pain in the butt。
+  id: totrans-170
   prefs: []
   type: TYPE_NORMAL
+  zh: 在你们提交的期中评审中。首先，你们提到希望在讲座中有休息时间，看看，已经有了，对吧？是的。我们也明白，连续一个小时半的讲话确实很长。而且，尤其是听像我这样的单调讲解，简直是大煎熬。
 - en: I mean， I understand that。 So yeah， thanks for bringing that up。 Talking speed。
     Yeah。 that's also a problem。 Sorry， like， you know， I tend to speak like 60 words。
     per minute or maybe even more on a bad day。 So yeah， I'll try to slow down。 And
     also one thing that helps is if you guys ask questions， out loud， I mean。
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的意思是，我理解。是的，谢谢你提到这一点。说话速度。是的，那也是个问题。抱歉，你知道的，我说话的速度大概是每分钟60个单词，或者在不好的情况下甚至更多。所以我会尽量放慢速度。还有一件事就是，如果你们能大声提问，那会有所帮助。
 - en: that's for sure what break， like， you know， my talking， right？
+  id: totrans-172
   prefs: []
   type: TYPE_NORMAL
+  zh: 这肯定是为了休息，像你知道的，我的讲话对吧？
 - en: Because if I'm going like 60 miles per hour， or 60 words per minute， then like，
     you know。 if you ask me something， then I have to stop。 So that's actually by
     far like the best way。 to actually stop me。 And then there were also a lot of
     comments。 about like office hours and sections。 So the--， That's right。 Yeah。
     In terms of asking questions。
+  id: totrans-173
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为如果我以每小时60英里的速度，或者每分钟60个单词说话，那你知道的。如果你问我问题，我就得停下来。所以其实这就是最好的方式，真的让我停下来。然后也有很多关于办公时间和分组讨论的评论。所以--，没错。是的。关于提问的部分。
 - en: the other thing that I would add， for both of us， it's not just Alvin， is just
     ask questions。 There's no--， I mean， there's no such thing as a bad question。
     Just ask a question。 help sort of punctuate the class。 The more questions you
     ask， the more questions you ask。 on chat is fine too。 And if there's a question
     on chat that we think others， will have you。
+  id: totrans-174
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一点我想补充的，不只是阿尔文，大家都可以，就是提问。没有--，我意思是，没有什么问题是错误的。只管提问。帮助让课堂更加有节奏感。你问的问题越多，问的问题越多。聊天室也可以。如果聊天室里有问题，我们认为其他人也会有类似的问题。
 - en: we'll elevate that。 So just ask questions。 And I think overall， we'll try our
     level best。 to slow down as well。 So I think that's something that we are both
     working on。 So thanks for that feedback。 Yeah。 Anything else to add for lectures？
     OK。 So for our hours and sections， I mean， so you notice that we have been trying
     to consolidate。
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们会提升这些。所以下次提问吧。我认为总体上，我们也会尽量放慢速度。所以我想这是我们俩正在努力的方向。感谢你的反馈。是的。还有什么要补充的吗？好，关于我们的办公时间和分组讨论，嗯，你们也注意到，我们一直在努力进行整合。
 - en: sections times to have free TA resources， to run more office hours。 But of course，
     there's--。 we notice that there are comments about the ticket， line being really
     long。 So we're actually still working on that。 So we have wrote out a bunch of
     changes already。 It's probably noticed on the--， on PSFO。 So for instance， clearing
     out the queue。
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 分组讨论的时间有更多自由的助教资源来进行办公时间。 但当然，我们注意到关于排队问题的评论，确实排队很长。所以我们仍在解决这个问题。我们已经写出了一些改动方案。你们可能已经在PSFO上看到了。例如，清除排队等待。
 - en: after blocks of office hours。 And also it tries to double up after we have consolidated。
     the section times。 So yeah， thanks for those feedback as well。 Anything to add
     there， Aditya， Jerry。 or any other TAs？ Yeah， so as I said， I mean， this is like--。
     this is a brand new world for all of us， really。 So we're still working out how
     to actually better。
+  id: totrans-177
   prefs: []
   type: TYPE_NORMAL
+  zh: 在办公时间块之后。它还会在我们整合了章节时间之后尝试加倍安排。所以是的，感谢你们的反馈。阿迪提亚，杰瑞，或者其他助教有要补充的吗？是的，正如我所说的，这对我们来说是一个全新的领域，真的。所以我们还在努力找到更好的方式。
 - en: serve you guys。 So that's why on the office hour question。 we're still figuring
     out what are the best ways， to mix most efficient use of time from the GSI。 point
     of view and also from you guys。 If there are other suggestions that you have on
     how Alvin。 and my officers can be used， let us know。 We tried running sort of
     mini topic review section sessions。
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 服务你们。所以关于办公时间的问题，我们仍然在摸索最有效的方式，既能从GSI的角度，也能从你们的角度，合理利用时间。如果你们对如何使用阿尔文和我的办公时间有其他建议，请告诉我们。我们曾尝试举办迷你主题复习小组。
 - en: But there weren't that many students who showed up。 So either that's not what
     you folks want。 and there's something else that we could be doing。 Maybe you just
     want to go to the GSI sections。 and not hang out with us。 It's just fine to--
     sections and officers， and not hang out with us。 That's fine too。 Jerry brought
     up the point about having a lost section。
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: 但实际上并没有很多学生来参加。所以要么这不是你们想要的，要么我们还能做些什么。也许你们只是想去GSI的章节，不想和我们待在一起。没关系的——去上章节课，参加办公时间，不用和我们待在一起。也没关系。杰瑞提到有个迷失的章节问题。
 - en: And I think you should try that out。 I think they take their time with the material。
     And if you're really feeling lost， I think that's a section to go to。 Yeah。 So
     we are also happy to run many lectures， through the doing office hours。 So feel
     free to just let us know too。 So that's also another thing that we can do。 But
     obviously。
+  id: totrans-180
   prefs: []
   type: TYPE_NORMAL
+  zh: 我认为你应该尝试一下。我觉得他们会花时间来处理这些材料。如果你真的觉得迷茫，我觉得那部分内容可以去看看。是的。所以我们也很高兴通过办公时间进行许多讲座。所以随时告诉我们。那也是我们可以做的另一件事。但显然。
 - en: we might not be able to turn every office hour， every office hour， like a DTM，
     an ice office hour。 into a mini lecture。 So because other people have also specific
     questions too。 But I think。 periodically， we can also， do that mini lectures to
     keep people on track。 And again。 ask your friends to go to attend lecture， because
     it's the only way that we can get feedback。
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可能无法让每一小时的办公时间，每一小时的办公时间，像DTM那样，变成迷你讲座。因为其他人也有具体问题。不过我认为，我们可以定期安排迷你讲座，帮助大家保持进度。再次提醒，邀请你的朋友参加讲座，因为这是我们获得反馈的唯一方式。
 - en: like from you guys。 Yeah， I mean， you guys can watch the recording。 So then
     we don't get to hear what your questions are， at that point。 So it's really hard
     for us to get the feedback that way。 And we'll just run through materials。 right？
     We don't want that to happen either。 So if you want us to slow down， come to lecture。
+  id: totrans-182
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如你们。是的，我的意思是，你们可以观看录播。所以到那个时候我们就无法听到你们的问题了。这样我们很难通过这种方式获得反馈。我们只会过一遍材料，对吧？我们也不希望那样发生。所以如果你们希望我们放慢速度，就来上课吧。
 - en: I think that's a good forcing function。 Yeah。 Yeah。 No。 And then there are also
     a lot of questions。 about the midterm on the survey。 I mean， I guess part of it
     is because at that point。 the midterm just passed。 Some people said it was difficult。
     Some people talk about the formats。 So I guess， difficult-wise， maybe this one，
     was slightly on the more difficult edge。
+  id: totrans-183
   prefs: []
   type: TYPE_NORMAL
+  zh: 我认为这是一种很好的强迫机制。是的。对的。然后在调查中也有很多关于期中的问题。我猜部分原因是因为那个时候期中刚结束。有些人说它很难，有些人讨论了格式。所以我猜，难度方面，这次的考试可能稍微偏难。
 - en: But you also saw the distribution was pretty normal， I guess。 maybe the mean
     was not as high as what， we had hoped for。 But I think we're just adjusting。 Just
     like you guys， we're also first time exam writers， for an entirely online-based
     exam。 So that's definitely going to be--， has been challenging for us。
+  id: totrans-184
   prefs: []
   type: TYPE_NORMAL
+  zh: 但你们也看到了，分布情况还算正常，我猜。也许平均分并不像我们预期的那么高。但我认为我们正在调整。就像你们一样，我们也是第一次编写考试，完全是基于在线的考试。所以这对我们来说无疑是一个挑战。
 - en: And there are also questions about formatting。 So I think some of it has to
     do like exam tool。 and then being able to render the questions in a nice way。
     And then there are also questions about whether we're， using the format as in
     previous exams。 So I think in general， I wouldn't anticipate the exam， questions
     to be exactly in the same format。
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有关于格式的问题。我认为其中一些与考试工具有关，然后需要能够以良好的方式呈现问题。然后也有关于我们是否会使用之前考试的格式的问题。所以我认为一般来说，我不预计考试题目会与之前的格式完全相同。
 - en: as in previous exams。 Because we're doing so basically means。 we can only ask
     like certain types of questions。 And certain types of questions are easier。 when
     it is a paper exam。 And in terms of grading， for instance。 and some questions
     are easier when they're online。
+  id: totrans-186
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为我们这样做基本上意味着我们只能问某些类型的问题。有些类型的问题在纸质考试中比较容易处理。而在评分方面，举个例子，有些问题在在线考试中更容易。
 - en: So I think sometimes we need to adapt the format to the online。 So that's one
     thing。 And the other thing is also people， asking about more partial credit and
     also your ways。 to explain the answers。 And I think that's also something that
     we're， looking into for midterm two。 So one thing to also keep in mind is there
     are like 650 of you， and there are 20 of us。
+  id: totrans-187
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我认为有时候我们需要调整格式以适应线上考试。所以这是一个问题。另一个问题是，有人问关于更多的部分评分以及你们解释答案的方式。我认为这也是我们正在考虑的内容，针对第二次期中考试。所以还有一点要记住的是，你们有大约650个，而我们只有20个。
 - en: So I suppose you guys wanted the midterm to be graded， at some point before
     the semester ends。 So it's basically a huge challenge for us， in order to be able
     to get them back to you in a timely manner。 So if we make the entire exam a lot
     of more choice， it was like scans on。 I mean。 that would be the easiest thing
     to do。 But that would also be free and fair to you guys。
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我想你们希望期中考试在学期结束前的某个时刻被评分。所以这对我们来说是一个巨大的挑战，我们必须确保能及时将成绩反馈给你们。所以如果我们把整个考试做成更多选择题，像扫描一样。我的意思是，这将是最简单的做法。但是这样对你们来说就不公平了。
 - en: because there's no way to award partial credits。 So it's definitely going to
     be a trade-off。 because we obviously don't want to read 600 essays， for instance，
     for every single person。 So that's something that we're working on。 And probably
     there's not going to be a perfect solution that。 will work for everyone， but it's
     just hard， as you can imagine。 And if you guys have suggestions。
+  id: totrans-189
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为没有办法给予部分分数。所以这肯定是一个取舍。因为显然我们不想为每个人读600篇作文。这是我们正在努力解决的问题。可能没有完美的解决方案，适用于每个人，但你可以想象，真的很难。如果你们有建议，
 - en: we welcome them as well。 So just let us know， like， either way。 Yeah。 but we
     definitely don't want the entire exam， to be like scan-thon-based。 I mean。 that
     would be better。 And if you were talking about， like， what we're going to do。
     with the recordings， so I think they were basically all set。
+  id: totrans-190
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们也欢迎。随时告诉我们，无论是哪种方式。是的，但我们绝对不希望整个考试变成类似扫描答题的模式。我是说，这样更好。如果你们在问我们，关于录音的处理，我认为它们基本上已经准备好了。
 - en: to be automatically expired after maybe 30 days or something。 So we'll definitely
     not keeping track of them， after， like， you know。 for the purpose of this midterm。
     So don't worry about them。 We're not like sending them anywhere。 And then there
     are also comments about， like， projects。
+  id: totrans-191
   prefs: []
   type: TYPE_NORMAL
+  zh: 可能会在30天后自动过期之类的。所以我们肯定不会追踪它们，至少在这次期中考试期间不会追踪。所以不用担心它们，我们不会把它们发送到任何地方。然后也有关于项目的评论。
 - en: and also the waiting on them and also the schedule。 So as you saw。 we're basically
     extending project， for deadline already to help you guys during these times。 And
     then we're also working out what to do， with the last two projects。 So just keep
     that in mind。 But as you saw， like， you know， this semester， we make projects
     of care-wise。
+  id: totrans-192
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有等待他们的回复以及时间安排。所以如你所见，我们实际上已经延长了项目的截止日期，以帮助你们度过这段时间。然后我们也在考虑如何处理最后两个项目。所以请记住这一点。但正如你们所见，这学期我们根据关怀项目做了调整。
 - en: as opposed to individuals。 So hopefully that was going to help。 So and then
     as always。 if you have further comments about that， feel free to let us know。
     So one of the things that I want to emphasize， is that we don't want you to be
     stressed， right？
+  id: totrans-193
   prefs: []
   type: TYPE_NORMAL
+  zh: 与个人相比。所以希望这能有所帮助。然后像往常一样，如果你有进一步的意见或评论，随时告诉我们。所以我想强调的一点是，我们不希望你们感到压力，对吧？
 - en: I mean， this is a hard class， right？ There's a lot of material to cover some
     of the concepts。 at least the ones that we've been covering recently， are not
     particularly easy。 The projects are not particularly easy。 But that said， we do
     want to make it as--。 we want you to learn the content， because I think it's kind
     of a deep dive。
+  id: totrans-194
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的意思是，这是一门很难的课程，对吧？需要覆盖的内容很多，其中一些概念，至少是我们最近讲的那些，并不特别容易。项目也不特别简单。但话说回来，我们确实希望你们能够学到内容，因为我觉得这是一次深入的学习。
 - en: into data-based system technology， that you're not going to get anywhere else。
     And so we want you to learn that， but we want it， to be as little stress as possible，
     which。 is why we've been trying to be， at least， very responsive。 with giving
     out more slip days and extending deadlines， and things like that。
+  id: totrans-195
   prefs: []
   type: TYPE_NORMAL
+  zh: ……我们采用的是基于数据的系统技术，这种技术是你在其他地方无法接触到的。所以我们希望你们能学到这些，但我们也希望让这个过程尽可能少一些压力，这也是我们一直在努力的方向，至少在给予更多休息日和延长截止日期等方面，我们已经尽力做到及时响应。
 - en: Just to make it a little easy， we， know that everyone is going through a lot。
     And so if there's anything that you're going through personally， just let us know。
     We'd be happy to find ways to work with you on that。 And so I think we're open
     to more suggestions。 But again， if we rely on you to give us feedback， as to what
     becomes stressful， and we're。
+  id: totrans-196
   prefs: []
   type: TYPE_NORMAL
+  zh: 只是为了让事情稍微简单一点，我们知道大家都在经历很多事情。如果你有个人方面的困扰，请告诉我们，我们很乐意找出办法与你合作解决。所以我觉得我们对更多的建议持开放态度。不过，还是得说，如果我们依赖你们提供反馈，关于哪些事情变得有压力，而我们……
 - en: happy to work around that。 And one of the things that I think。 Alvin is going
     to get to this next is part of also， the stress aspect。 I mean。 we are wanting
     to have you be less stressed， and that's why we're canceling a lecture on Election
     Day。 We know that many of you， this is a stressful time。 Of course。
+  id: totrans-197
   prefs: []
   type: TYPE_NORMAL
+  zh: 很高兴能在这方面与大家合作。还有一个我认为Alvin接下来要讲的内容，也是与压力相关的一部分。我是说，我们希望让你们尽可能少受压力，这也是我们取消选举日讲座的原因。我们知道很多同学，这段时间压力很大。当然。
 - en: we also want you to go vote if you haven't already。 And we're not going to be
     able to tell you who to vote for。 But this is a stressful week for us。 the coming
     week。 And we didn't want you to be overwhelmed with too many。 deadlines and too
     many things on your mind， when we are dealing with political chaos。 So Alvin。
+  id: totrans-198
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们也希望你们如果还没投票的话能去投票。我们不能告诉你们该投给谁。但这一周对我们来说也是充满压力的一周，接下来的这一周。我们不希望你们在应对政治混乱时，还要被太多的截止日期和其他事情压得喘不过气来。所以，Alvin……
 - en: I'll let you continue。 Oh， yeah， so that's all I have。 So I've literally--。
     I think we have all literally read through all of your comments。 So thanks for
     doing it。 Do you have other suggestions？ Or like， obviously， we cannot get to
     every one of your comments。 So if you would like us to address a particular thing，
     let me feel free to let us know。
+  id: totrans-199
   prefs: []
   type: TYPE_NORMAL
+  zh: 我会让你继续。那么，这就是我所说的所有内容。所以，我真心的——我认为我们已经逐条阅读了你们的所有评论。非常感谢大家的反馈。你们有没有其他建议？或者，显然，我们不可能逐一回应每一条评论。如果你希望我们特别关注某个问题，请随时告诉我们。
 - en: We'll be happy to also talk offline as well。 So if you feel more comfortable
     with that one。 So we greatly appreciate the fact that many of you， have given
     such detailed feedback to us。 I mean。 it's--， That's amazing。 It's just like we
     really appreciate it。 Yeah。 You guys took the time to actually talk the survey。
     I mean， hopefully not just for the extra point。
+  id: totrans-200
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们也很乐意在课后与大家进一步讨论。如果你更倾向于那种方式的话。所以，我们非常感谢你们给予的详细反馈。我的意思是——真的，很棒。我们真心感谢。是的，你们花时间填写调查问卷。我希望这不仅仅是为了额外的加分。
 - en: Yeah， so we definitely want to make sure that they are addressed。 Maybe we cannot
     address everybody's concern。 I mean， there's an equally number of people。 saying
     that the exam was hard from people who are saying it was OK。 So it was like。 we
     can't satisfy everyone's needs。 But for things like breaks and all that stuff。
+  id: totrans-201
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，我们当然希望确保大家的问题都得到解决。也许我们无法解决每个人的担忧。我的意思是，有同样多的人认为考试很难，也有同样多的人觉得考试还行。所以说，我们无法满足每个人的需求。但像休息时间这种事情，我们会尽力考虑。
 - en: we definitely want to make sure that they can get their input。 And obviously。
     our change is another step。 Cool。 Any other questions about the midterm feedback？
     OK， so if not。 then let's try to finish up。
+  id: totrans-202
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们当然希望确保大家能够发表意见。而且显然，我们的改变也是迈出的另一大步。很好。还有关于期中反馈的其他问题吗？如果没有，那我们就尽量完成今天的内容。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_27.png)'
+  id: totrans-203
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_27.png)'
 - en: with the rest of the recovery lecture， within the remaining 10 minutes or so。
+  id: totrans-204
   prefs: []
   type: TYPE_NORMAL
+  zh: ……将在剩下的10分钟左右完成恢复讲座的内容。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_29.png)'
+  id: totrans-205
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_29.png)'
 - en: So we actually just got to the most fun part， which is how to do recovery。 And
     I hope we actually were able to finish that， by the end of the class today。 Sorry。
     I need you to learn the tricks to fast forward and powerful。 I think there is
     a--。 Just type a number and then hit enter。 You'll go to that slide number。 Yeah。
+  id: totrans-206
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们实际上已经进入了最有趣的部分，那就是如何进行恢复。我希望我们今天能在课程结束之前完成这部分。抱歉，我需要你学会快速前进和强有力的技巧。我想这里有一个——只需输入一个数字，然后按回车。你就可以跳到那个幻灯片了。是的。
 - en: except I forget what is the slightest answer， opposed to go to。 OK， two bets。
     All right。 I guess I pressed fast enough after all the gaming， exercises out。
     OK。 OK。 so how do we actually do recovery， right？ So yeah， so the first thing
     to notice is that we only。 need to do recovery from the last chapter。 And this
     one is apparent， right， from the fact。
+  id: totrans-207
   prefs: []
   type: TYPE_NORMAL
+  zh: 除非我忘了什么是最轻微的答案，反对转到。好的，两项选择。好了，我猜我在所有的游戏练习之后终于按得够快了。好了。好了，那么我们到底如何进行恢复呢？对吧？是的，首先要注意的是，我们只需要从最后一个检查点开始恢复。而且这一点很明显，因为我们做了检查点。
 - en: that we are doing checkpointing to begin with。 So we're not going to--。 we don't
     need to actually go back to the very beginning， of the law。 However， the problem
     is， right。 in a non-fussy checkpoint， situation， that will have been easy， as
     I said。 because everything that is before the checkpoint can be tossed。
+  id: totrans-208
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是因为我们一开始就做了检查点。所以我们不需要——我们不需要回到程序的最开始。然而，问题在于，在一个非模糊检查点的情况下，这本来很容易，正如我所说，因为检查点之前的所有内容可以被丢弃。
 - en: And then we just need to deal with things， that are after the checkpoint。 But
     now we have fuzzy checkpoints， right？ So meaning that we now need to handle all
     those nasty transactions。 that were actually still active when the checkpoint
     was taken。 And also。 it means that all the pages that were dirty， are not flush
     to the page yet。
+  id: totrans-209
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们只需要处理检查点之后的事务。但是现在我们有了模糊的检查点，对吧？这意味着我们现在需要处理那些在检查点创建时仍然处于活动状态的脏事务。而且，这也意味着所有已经脏化的页面还没有刷新到磁盘。
 - en: So the main principles behind areas of recovery algorithm。 is to make sure that
     we first redo all the actions before the crash。 such that we bring back the database
     to the exact same page， as it was at the time of the crash。 Of the crash， right？
     You notice， not at the time of committing。
+  id: totrans-210
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以恢复算法的主要原则是，确保我们首先重做崩溃前的所有操作，以便将数据库恢复到崩溃时的确切状态。崩溃时的状态，对吧？你会注意到，不是提交时的状态。
 - en: or anything at the time of the crash。 And then we're going to unroll all the
     changes。 from incomplete transactions when the database crash。 So this part is
     just like before， right？
+  id: totrans-211
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者在崩溃发生时的任何内容。然后我们将撤销所有来自不完整事务的更改，当数据库崩溃时。所以这一部分就像之前一样，对吧？
 - en: We just want to unroll things that were made from the incomplete transactions。
     And then we're going to-- this is new。 So we're going to now log all the changes
     that were undone。 to ensure that they are not undone in the future。 So see what
     that means in just a second。 So here is a picture。 So we have the lock record
     and then times go sideways to the right。
+  id: totrans-212
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们只想撤销那些由不完整事务引起的更改。然后我们将会——这是新的——我们现在将记录所有被撤销的更改，以确保它们将来不会被撤销。稍后你会明白这是什么意思。这里有一张图。我们有锁记录，然后时间沿着右侧展开。
 - en: And then at some point， we just crashed。 So we took a checkpoint， let's say。
     in the middle of this lock。 There are two types of transactions that we need to
     worry about。 The first type is something like the following。 So this transaction
     started before the checkpoint happened。 It was still running when the checkpoint
     was taken。 And in fact。
+  id: totrans-213
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后在某个时刻，我们就崩溃了。假设我们在这个锁的中间做了检查点。我们需要关注两种类型的事务。第一种类型是像下面这样的事务。这个事务是在检查点发生之前开始的，当检查点创建时它仍在运行。事实上，
 - en: it was still running at a time of the crash。 So for these type of transactions。
     we need to undo all the changes， because this one did not complete。 So therefore。
     we need to undo all the changes that it made all the way up。 until in the very
     beginning when it first started。 So these ones we need to undo。
+  id: totrans-214
   prefs: []
   type: TYPE_NORMAL
+  zh: 它仍然在崩溃时运行。所以对于这些类型的事务，我们需要撤销所有的更改，因为该事务没有完成。因此，我们需要撤销它从最初开始时所做的所有更改。直到最开始的地方。所以这些我们需要撤销。
 - en: And then here's another type of transactions。 It first started some time before
     the checkpoint。 It made some writes。 It was still running when the checkpoint
     was taken。 And then at some point。 it committed after the checkpoint。 And before
     it crashed。 So in this case。 this is something that has committed。 So for these
     type of transactions， we。
+  id: totrans-215
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后这是另一类事务。它在检查点之前的一段时间就开始了，做了一些写操作，在检查点时仍然在运行，后来在崩溃前提交了。所以在这种情况下，这是一个已经提交的事务。因此，对于这种类型的事务，我们需要执行相应的操作。
 - en: need to be able to redo the actions。 Because for this type of transaction。 it
     was still running at the checkpoint。 And it actually eventually decided to commit。
     So for these transactions， we need， to be able to redo the actions corresponding
     to them。 The question， however， is how do we actually find these two places？
+  id: totrans-216
   prefs: []
   type: TYPE_NORMAL
+  zh: 需要能够重新执行操作。因为对于这种类型的事务，它在检查点时仍然处于运行状态。并且最终决定提交。因此，对于这些事务，我们需要能够重新执行与之对应的操作。然而，问题是我们到底该如何找到这两个位置？
 - en: Meaning that the first time that it writes something。 to the log for the transactions
     that we need to redo。 And for the ones that we need to undo， right？
+  id: totrans-217
   prefs: []
   type: TYPE_NORMAL
+  zh: 这意味着它第一次写入日志时，记录了我们需要重新执行的事务。而对于需要撤销的事务呢，对吧？
 - en: I mean， how many actions do we need to undo？ We need to undo all the way up
     to the very beginning。 of that particular transaction。 So how do we find these
     two points？
+  id: totrans-218
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的意思是，我们需要撤销多少操作？我们需要撤销直到该事务开始的最早时刻。那么，我们该如何找到这两个点呢？
 - en: So the area is recovery algorithm uses three phases， to do recovery。 The first
     one is called analysis。 It's exactly trying to do what I was asking。 on the previous
     slide。 We basically tried to recover all the dirty pages。 and the status of the
     active transactions， at a time the checkpoint was taken。 And then after that。
+  id: totrans-219
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这个区域的恢复算法使用三个阶段来进行恢复。第一个阶段叫做分析。它正是我在上一张幻灯片上问的那个问题。我们基本上尝试恢复所有脏页，以及在检查点时处于活动状态的事务状态。然后，之后我们做什么呢？
 - en: we're going to redo all the operations， that needs to be redone because they
     correspond。 to the transactions that committed after the checkpoint was， taken。
     But they were still active when the checkpoint was taken。 And then we want to
     do an undo pass。 where we want to unroll all the transactions that were incomplete。
+  id: totrans-220
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将重新执行所有需要重新执行的操作，因为它们对应于在检查点之后提交的事务。但它们在检查点时仍然处于活动状态。然后，我们会执行一个撤销操作，撤销所有未完成的事务。
 - en: So the area is algorithm going three phases in that way。 So let's go through
     that one by one。 What is the analysis phase trying to do？ It's basically trying
     to first figure out。 what is the first point in the log that we need to redo the
     actions。 And we want to be able to determine the set of pages， that were dirty
     when we crashed。
+  id: totrans-221
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这个区域的算法分为三个阶段。我们一个一个地来讲解。分析阶段的目的是什么？它基本上是先搞清楚日志中我们需要重新执行操作的第一个位置。我们还需要能够确定在崩溃时，哪些页面是脏页。
 - en: And then we want to identify the active transactions that， were running when
     we crashed。 So the first point is clear because those， are the transactions that
     eventually committed。 So therefore， we need to redo all the actions， that needs
     to be from those transactions。 And then the second and the third one， and the
     third points were basically trying。
+  id: totrans-222
   prefs: []
   type: TYPE_NORMAL
+  zh: 接下来，我们需要识别在崩溃时仍在运行的事务。所以第一个点是明确的，因为那些是最终提交的事务。因此，我们需要重新执行所有需要从这些事务中恢复的操作。第二点和第三点，基本上我们在尝试做什么呢？
 - en: to figure out what were the incomplete transactions， so that we can unroll them。
     How are we going to do that？ So， I think Nicholas has a question。 Oh， sorry， Nicholas。
     I just wanted to ask really quickly， when you say， like when the checkpoint is
     taken。 is that referring to the begin checkpoint or the end checkpoint？
+  id: totrans-223
   prefs: []
   type: TYPE_NORMAL
+  zh: 找出哪些是未完成的事务，以便我们可以撤销它们。我们该怎么做呢？我想尼古拉斯有个问题。哦，抱歉，尼古拉斯。我只是想快速问一下，当你说检查点时，这指的是开始检查点还是结束检查点？
 - en: It's referring to the begin checkpoint。 OK。 Yeah。 Yeah， OK， so what do we do
     during analysis？
+  id: totrans-224
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里指的是开始检查点。好的。是的，没错。那么，在分析阶段我们该做什么？
 - en: So we first rebuild the transactions table and the 30 page， table from the data
     that we have saved。 So this part now， you understand why we are writing， all those
     things to the disk。 Because when we try to recover， we need to first reconstruct，
     those two things。 And those things have already been saved in a file。 So that's
     great。
+  id: totrans-225
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们首先从我们保存的数据中重建事务表和 30 页表。所以现在你明白了为什么我们将所有这些内容写入磁盘。因为当我们尝试恢复时，我们需要首先重建这两个东西。而这些东西已经保存在文件中。所以这很好。
 - en: And then we need to be able to recover them， as I said， from the lock。 And then
     now we want to compute the first lock record， that we need to recover from。 And
     that one。 as you can guess， actually， comes from the recovery。 LSN's that we have
     saved for all the individual pages， in the buffer pool。 Again。
+  id: totrans-226
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们需要能够从锁中恢复它们，正如我所说的。接下来我们想要计算出我们需要从哪个第一个锁记录开始恢复。正如你所猜测的那样，实际上，这个记录来自于我们为缓冲池中所有单独页面保存的恢复
+    LSN。再一次。
 - en: why are we doing this？ Because， as I said， when we take the checkpoint。 the
     begin part of the checkpoint， we， have the statuses of all these transactions
     and also。 the status of the 30 pages。 And we need to figure out where do we start
     the redo phase。 Because those corresponds to the actions done， by transactions
     that eventually commit after the checkpoint。
+  id: totrans-227
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么我们要这么做呢？因为正如我所说，当我们进行检查点时，检查点的开始部分会包含所有这些事务的状态，以及这 30 页的状态。我们需要弄清楚从哪里开始重新执行阶段。因为这些对应的是在检查点之后最终提交的事务所做的操作。
 - en: was done。 And for those transactions， we need， to be able to redo all the actions
     correspond to them。 So the analysis phase is exactly how， going to help us do
     that。 How？ Well。 so remember that the 30 page table stores， this recovery， LSN，
     which corresponds to the first LSN。 that made each of these pages 30。 So if you
     look at all of them and find the minimum LSN。
+  id: totrans-228
   prefs: []
   type: TYPE_NORMAL
+  zh: 已经完成了。对于这些事务，我们需要能够重新执行所有对应的操作。因此，分析阶段正是帮助我们做到这一点的方法。怎么做呢？好吧。记住，这 30 页表存储了这个恢复
+    LSN，它对应于使每个 30 页生效的第一个 LSN。所以如果你查看所有记录并找出最小的 LSN。
 - en: from all the LSNs that we have， that， got to be the first time。 It's basically
     corresponds to the first LSN that， made any of the pages in the 30 page table
     30。 So that gives us a starting point。 That is exactly the place that we。 need
     to start redoing the actions。 Because that is the first LSN that。
+  id: totrans-229
   prefs: []
   type: TYPE_NORMAL
+  zh: 从我们拥有的所有 LSN 来看，应该是第一次。这基本上对应于使 30 页表 30 中的任何页面生效的第一个 LSN。所以这为我们提供了一个起点。那正是我们需要重新执行操作的地方。因为这是第一个
+    LSN。
 - en: made the right to the 30 page table。 And that 30 page table was not flushed
     to the disk yet。 by the time the check point was taken。 So therefore， let's be
     conservative。 and redo all the actions corresponding to that LSN and onwards。
     OK？
+  id: totrans-230
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为写入 30 页表的操作，且在检查点创建时，这个 30 页表还没有刷新到磁盘。所以我们采取保守做法，从那个 LSN 及其之后的所有操作重新执行。好吗？
 - en: So the main principle behind the redo phase， as I said， is to be able to just
     redo everything。 So we're basically going to process the lock going forward。 from
     the first LSN that we have identified， from the analysis phase。 We're going to
     read every lock record sequentially， at that point。
+  id: totrans-231
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以正如我所说，重新执行阶段的主要原则就是能够重新执行所有操作。所以我们基本上将从我们在分析阶段识别出的第一个 LSN 开始，依次处理锁记录。我们会按顺序读取每个锁记录。
 - en: And then we're going to selectively do actions that， needs to be redone from
     the lock。 So how are you going to do that？ So we're basically going to go through
     the lock record。 And then each of the lock update record， is going to have an
     entry， like the one。 that I'm showing you here， right？ It's going to show which
     transaction touch， which page。
+  id: totrans-232
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们将有选择地执行需要从锁中重新执行的操作。那么你将如何做呢？我们基本上会遍历锁记录。然后每个锁更新记录将会有一个条目，就像我这里展示的那样，对吧？它会显示哪个事务触及了哪个页面。
 - en: and then the old value that was there， and then the new value that was written。
     So how are we going to do this？ We're just going to write the new value to the
     page。 And then there's a question。 We want to be only able to redo the actions
     that， needs to be redone。 So how do we actually determine that， right？ And why
     do we actually have actions。
+  id: totrans-233
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后是那里旧的值，再是写入的新值。那么我们该如何做呢？我们只需将新值写入页面。那么有一个问题。我们只希望能够重新执行需要重新执行的操作。那么我们到底如何确定这一点呢？为什么我们实际上会有操作？
 - en: that we don't want to redo？ So let's do this on a case-by-case basis。 So for
     each lock record entry that corresponds， to this format here， there's a case。
     where the page itself is actually not in the 30 page table， even though it's referenced
     in the lock。 So how can that possibly happen？ How can it possibly happen that
     we have a lock entry。
+  id: totrans-234
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们不想重新执行这个操作？所以让我们根据具体情况来处理。所以对于每个对应这种格式的锁记录条目，存在一种情况，其中页面本身实际上不在30页表中，尽管它在锁中被引用。那么这怎么可能发生呢？怎么可能出现一个锁条目
 - en: that we are supposed to replay or redo？ But somehow it's actually not showing
     up in the 30 page table。 And by the way， I'm not talking about the case， where
     there's a buck， right？
+  id: totrans-235
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们应该回放或重新执行的页面吗？但不知为何它实际上没有出现在30页表中。顺便说一句，我不是在说有故障的情况，对吧？
 - en: So we're assuming that we have implemented this algorithm correctly。 So why
     is there such a case？
+  id: totrans-236
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们假设我们已经正确实现了这个算法。那么为什么会有这样的情况呢？
 - en: Well， so it can be such a case because the page itself， yeah。 was flush to the
     database after the checkpoint was taken， right？ Sorry。 before the checkpoint was
     taken。 So it's actually removed from the check point--。 from the 30 page table
     by the time the checkpoint was taken。 So therefore。
+  id: totrans-237
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，这种情况是可能发生的，因为页面本身，嗯，是在检查点完成后被刷新到数据库的，对吧？抱歉，应该是在检查点之前被刷新到数据库的。所以在检查点完成时，它实际上已经从30页表中移除。因此，
 - en: when we actually record downward， is inside the 30 page table， when， we take
     the checkpoint。 the page is not there。 So for those， we don't want to replay，
     because those pages have actually。 been flushed when we actually do the checkpointing。
     So we don't want to replay that。 So that's great。 Here's another case。 So in this
     case， the page is in the 30 page table。
+  id: totrans-238
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们实际上向下记录时，它位于30页表中，而当我们进行检查点时，页面不在表中。所以对于那些页面，我们不想回放，因为这些页面在我们进行检查点时实际上已经被刷新。所以我们不需要回放它们。好了，这里还有另一种情况。在这种情况下，页面在30页表中，
 - en: But the recovery， the LSN， is actually， greater than the LSN that we are trying
     to replay at that time。 How can this happen？ This can happen because the page
     was made， 30 at the green LSN。 It was removed from the 30 page table before the
     checkpoint。 But it was actually read in again。 and we inserted it into the page
     table， with a later recovery LSN number。
+  id: totrans-239
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是恢复的LSN实际上大于我们当时试图回放的LSN。这怎么会发生呢？这种情况发生的原因是，页面是在绿色LSN之后更新的，且在检查点之前已经从30页表中移除。但是它实际上又被重新读取并插入到页面表中，且带有一个更新的恢复LSN编号。
 - en: That happened after the checkpoint was taken。 So again， in this case， we also
     don't。 want to replay that action， right？ Because that action corresponds to something
     that。 has already been flushed to the disk。 And finally， we might also have a
     case where the page LSN。 is actually greater than the green one that we are trying，
     to replay at the moment。
+  id: totrans-240
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种情况发生在检查点已经完成后。所以在这种情况下，我们也不想重新执行该操作，对吧？因为该操作对应的内容已经被刷新到磁盘了。最后，我们也可能遇到一种情况，即页面的LSN实际上大于我们当前尝试回放的绿色LSN。
 - en: How can this happen？ Well， so this can happen because the page was updated again。
     and then subsequently flushed。 So that basically means that we have multiple writes。
     to the same page， and then we're not at the latest one yet。 So in that case。 we
     also don't need to replay that， because we are going to see another lock record
     later on。
+  id: totrans-241
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种情况怎么可能发生呢？好吧，这种情况可能是因为页面再次被更新，然后随后被刷新。基本上意味着我们对同一页面进行了多次写操作，而我们还没有看到最新的写入。所以在这种情况下，我们也不需要回放该操作，因为稍后我们会看到另一个锁记录。
 - en: with the purple page LSN number。 So unless it falls on any three of these categories。
     otherwise we are basically going to redo that action， from the lock。 OK。 so I
     think we are getting running out of time。 So let me just take maybe 10 minutes
     on the next lecture。 to finish up the details for areas， and then we'll move on
     to other topics。
+  id: totrans-242
   prefs: []
   type: TYPE_NORMAL
+  zh: 带有紫色的页面LSN编号。所以除非它属于以下三类，否则我们基本上会从锁记录中重新执行该操作。好的，我想我们快没时间了。所以让我在下一讲中再花10分钟，完成这个领域的细节，然后我们将继续讲其他主题。
 - en: And if you have questions， please stay otherwise。 I will just see you on Thursday。
     And then let me just stop the recording。
+  id: totrans-243
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你有问题，请留下来，否则我就星期四见了。然后让我停止录音。
 - en: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_31.png)'
+  id: totrans-244
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_31.png)'

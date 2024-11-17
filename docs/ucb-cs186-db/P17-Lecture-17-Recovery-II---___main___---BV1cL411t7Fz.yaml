@@ -1,92 +1,124 @@
 - en: P17：Lecture 17 Recovery II - ___main___ - BV1cL411t7Fz
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: P17：第17讲 恢复 II - ___main___ - BV1cL411t7Fz
 - en: Okay。 I could try if you can。
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。我可以试试，如果你能的话。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_1.png)'
+  id: totrans-2
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_1.png)'
 - en: Oh， I didn't know you were here。 Alan， I think he， since I was already started。
     I think it might be too late。 Okay， let's just get。 Yeah， just get started。 Okay。
     All right。 So， um。 you were talking about recovery。 And， uh， yeah， good luck，
     Franklin。 Um。 talking about recovery and basically we were talking about how，
     um。
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 哦，我不知道你在这里。阿兰，我想他，既然我已经开始了，我觉得现在可能太晚了。好的，咱们开始吧。是的，开始吧。好的。好吧，嗯，你在讲恢复。嗯，祝好运，富兰克林。嗯。讲的是恢复，基本上我们在讨论如何，嗯。
 - en: what are the different flavors of ways in which things could go wrong。 And how
     can you recover from those failures？ Right。 So we talked about， um。 various types
     of mistakes。 Um， you could have operator error configuration error software failures
     or hardware failures。 We also have a natural case where you want to sort of， um，
     roll back the effects of a transaction。
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，事情可能出错的不同方式是什么？又该如何从这些故障中恢复？对吧。所以我们讨论了，嗯，各种类型的错误。嗯，你可能会遇到操作员错误、配置错误、软件故障或硬件故障。我们还有一个自然的情况，就是你可能希望回滚一个事务的影响。
 - en: a border transaction。 For example， you have a sort of issues with the integrity
     constraints， right？
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 边界事务。例如，你遇到了完整性约束的问题，对吧？
 - en: And you want to enforce those integrity constraints。 So you roll back or a border
     transaction。 So these are all sort of like motivation for why the cover is an
     important topic and the two properties that we want to sort of satisfy our atomicity
     and durability。
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后你希望强制执行这些完整性约束。所以你回滚或边界事务。所以这些都是为什么恢复是一个重要主题的动机，而我们希望满足的两个属性是原子性和持久性。
 - en: And that's going to be our focus。 So atomicity again is basically saying， Hey。
     I want the effects of a transaction to be present either in its entirety or not
     at all。 Dutability is basically saying， um， after a transaction has committed
     its effects need to be， um。 on disk， right？ It needs to be there in perpetuity。
     That's what we want as a guarantee。 Okay。
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 这将是我们的重点。所以原子性基本上是说，嘿。我希望事务的效果要么完全出现，要么完全不出现。持久性基本上是说，嗯，一个事务提交后，它的效果需要，嗯，保存在磁盘上，对吧？它必须永久存在。这就是我们作为保证所希望的。好的。
 - en: so now we're going to talk about the mechanics of how recovery happens。 And
     so the assumption that we're going to make is that we have basically some flavor
     of concurrency control。 So in particular， we're going to assume strict to PL。
     And then we're also going to make an assumption that updates are happening in
     place。 So basically。
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在我们将讨论恢复发生的机制。我们假设我们基本上有某种并发控制的方式。特别是，我们将假设严格的两阶段锁定（strict 2PL）。然后我们还将假设更新是就地发生的。所以基本上。
 - en: data is brought in to the buffer pool in the granularity of pages。 And then
     these pages are overwritten and then written back to the disk。 Okay。 so the transactions
     are not done on private copies of the data。 Everything is happening to these pages
     that are in the buffer pool。 So， um， the challenge。
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 数据以页面的粒度被加载到缓冲池中。然后这些页面被覆盖，再写回磁盘。好的。所以事务并不是在数据的私有副本上完成的。所有操作都是在缓冲池中的这些页面上进行的。所以，嗯，这就是挑战所在。
 - en: of course， is the fact that these are discontinuous， right？
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 当然，这些操作是离散的，对吧？
 - en: So you have the changes that are happening to memory and then these changes
     have been written to disk and these are not happening all instantaneously。 So
     things will be brought in from this to memory changes are made to memory and then
     written to disk。
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你有一些正在内存中发生的变化，然后这些变化被写入磁盘，而这些变化并不是瞬间发生的。所以数据将从磁盘加载到内存，修改之后再写回磁盘。
 - en: So that's one issue of discontinuity。 The other issue of discontinuity is that
     there is a minute。 There's often many changes that happen across objects。 And
     as Alvin mentioned in the previous lecture， you could have like locks being grabbed
     on various at various granities。 but a given transaction could have many different
     SQL statements and modify。
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是离散性问题之一。另一个离散性问题是有一个时间差。通常会发生许多跨对象的变化。正如阿尔文在上一讲中提到的，你可能会在不同的粒度上抓取锁。但一个给定的事务可能包含许多不同的SQL语句并进行修改。
 - en: either individual tuples or collections of tuples， what have you， right？
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 无论是单独的元组，还是元组的集合，都是如此，对吧？
 - en: So you could have many different sort of sequences of operations that are happening
     for a given transaction。 So we， it's useful to sort of recap about the buffer
     manager very quickly so you have this。 And then pages are brought in the buffer
     pool and these occupy frames within your buffer pool in main memory。 And so the
     blue squares here， the blue sort of rectangles in the grid refer to frames that
     are filled in with the disk pages。
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，对于一个给定的事务，你可能会有许多不同的操作序列。因此，快速回顾一下缓冲管理器是很有用的，这样你就能理解这些操作。然后，页面被加载到缓冲池中，这些页面在主内存中的缓冲池中占据了帧的位置。这里的蓝色方块，网格中的蓝色矩形，表示被磁盘页面填充的帧。
 - en: And so bringing these pages from disk or writing it out is known as fetching
     or flushing。 Okay。 so that's a terminology that we're going to be using。 And so
     you have some slots in the buffer manager for free frames that could sort of be
     used to to to house the next page that is brought in from this。 And as page requests
     happen from the higher level code for reading or writing various objects within
     these pages。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，将这些页面从磁盘带入或写出称为读取或刷新。好的，这就是我们将使用的术语。你在缓冲管理器中有一些空闲的槽位，可以用来存放从磁盘带入的下一页面。随着页面请求发生，来自更高层代码的读取或写入操作也会作用于这些页面中的各个对象。
 - en: these translate to fetches from disk of those pages into the buffer pool and
     then modifications happening to the buffer pool pages。 And then they are written
     out out， which is flushed。 And then one page here。 as the convention be followed
@@ -94,145 +126,196 @@
     talk about the primitive operations here and the reason why we are being a little
     fussy about these primitive operations is because it'll help us understand this
     discontinuity that I was talking about。
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些操作表示从磁盘中读取页面到缓冲池，并且在缓冲池页面上进行修改。然后这些修改会被写出，即被刷新。接着是一个页面，按照之前讲座中的约定，一个页面对应一个磁盘块。好的，接下来我们来讨论这里的基本操作，之所以我们对这些基本操作有些挑剔，是因为它们将帮助我们理解我之前提到的那种不连续性。
 - en: So when are things modified， where are they modified and how are things sort
     of written from memory to disk and so on。 We're going to use this sort of command
     read x， t basically saying that you copy the value of this data item x into a
     transaction local variable t。
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，什么时候修改，在哪里修改，以及如何从内存写入磁盘等。我们将使用这样的命令：read x，t，基本上是说将数据项x的值复制到事务的本地变量t中。
 - en: And this x could be， for example， a to go。 Right。 Right， x。 t is basically saying
     I'm going to take this transaction local variable and then write it into this
     data item。 Okay。 So the， these read and write are happening， basically from something
     that is in memory or to memory。 Okay。 So that's the way I would think about this。
     So the fetches on the other hand are the relationship between memory and disk
     so fetch x basically brings a page containing data item x to the memory buffer。
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个x可能是，例如，a。对吧？对，x。t基本上是在说，我将把这个事务本地变量的值写入这个数据项中。好的，所以这些读写操作发生的基本上是内存与内存之间的操作。好的，这就是我对这个的理解。因此，fetch操作则是内存与磁盘之间的关系，fetch
+    x基本上是将包含数据项x的页面带到内存缓冲区中。
 - en: And flush rights the page containing data item x to the to disk from memory
     to disk。 Okay。 so these are the four operations that we're going to be working
     with。 So let's take this very simple example one single transaction。 Let's say
     a is equal to B is equal to eight at the start。 Okay。
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 刷新操作将包含数据项x的页面从内存写回到磁盘。好的，这些就是我们将要操作的四个基本操作。接下来我们来看一个非常简单的例子，假设一个事务开始时，a = 8，b
+    = 8。好的。
 - en: so we're not even talking at the granularity of two posts it's just a single
     values two single values a and B。 And so this transaction reads in a into this
     temporary variable t and then multiply it by two and then writes that temporary
     variable into back into a region B writes it into sort of reads the value of B
     into the temporary variable。
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们甚至没有讨论到两个操作的粒度，只讨论单个值a和b。因此，这个事务将a的值读取到临时变量t中，然后将其乘以2，再将这个临时变量的值写回b，读取b的值到临时变量中。
 - en: t again multiplies it by two and then writes it back to be and then comments。
     Okay。 so this is this simple transaction example。 And here。 a Thomas city that
     Thomas city guarantee that we want from our database means that either t commits
     and then。 is equal to 16 or T does not commit and is equal to be is equal to eight。
     Okay， so these are。
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: T 再将其乘以 2，然后写回 B，并进行注释。好的，这是一个简单的事务示例。在这里，我们从数据库中所期望的托马斯城市保证意味着，要么 T 提交并且值为
+    16，要么 T 不提交，B 值为 8。好的，接下来就是这些。
 - en: this is the basic guarantee that we want from our database the guarantee of
     a Thomas city。 Any question so far。 Okay， so here's let's talk about the sequence
     of operations spanning transactions local variables the buffer pool and the disk
     as various actions are taken。
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是我们希望从数据库中获得的基本保证，即托马斯城市的保证。到目前为止有任何问题吗？好的，接下来让我们讨论涉及事务、局部变量、缓冲池和磁盘的操作顺序，随着各项操作的进行。
 - en: Okay， so， let's say that for a this object a it's current value is eight on
     disk。 And be the current value on disk is eight。 Now， by saying fetch a what I'm
     doing is I'm going to bring in the page containing a into a frame in the buffer
     pool。 I am going to read a the value of a to my temporary variable t。 So I'm taking
     the value of a from that page， and then placing it within T。
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，假设对于对象 A，其当前磁盘上的值是 8，B 的当前值是 8。现在，通过说 fetch A，我的意思是将包含 A 的页面加载到缓冲池中的一个帧里。我将读取
+    A 的值到我的临时变量 T 中。所以，我从该页面取出 A 的值，然后将其放入 T 中。
 - en: I'm multiplying it by two to give 16 writing a back to T。 or writing T back
     to a so I'm writing it back to making， the page to the page in the buffer pool。
     And then I'm proceeding to fetch be read be multiplied T by read be into T multiply
     T by two and then write P to write T to be。 Okay， so again， let's walk through
     this。 So fetch be basically brings in the page containing be into memory。
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 我将其乘以 2 得到 16，然后将 A 的值写回 T，或者将 T 的值写回 A，即将其写回缓冲池中的页面。然后我继续取出 B，读取 B，将 B 的值存入
+    T，并将 T 乘以 2，然后写回 B。好的，再次让我们回顾一下这个过程。所以，fetch B 基本上是将包含 B 的页面加载到内存中。
 - en: And then I'm reading the value of B into this temporary variable T， I'm multiplying
     T by two。 and then I'm writing T to be。 So basically， I'm writing this value 16
     into this location。 So I'm going to take this page in the buffer pool。 And then
     I'm flushing a and B。 So what that means is I'm going to take the page corresponding
     to a from the buffer pool。
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，我将 B 的值读入这个临时变量 T，并将 T 乘以 2，然后将 T 写回 B。所以基本上，我将这个值 16 写入该位置。所以我将取出缓冲池中的该页面。然后，我会进行
+    flush A 和 B。那是什么意思呢？意味着我要将对应于 A 的页面从缓冲池写到磁盘。
 - en: and write it to disk， and then take the page corresponding to be and then， write
     it to disk。 Okay。 and then I can commit。 So let's see。 So this is the sequence
     of operations。 Okay， so these are。 this is what is happening from this to to the
     pages in the buffer pool。 and then operations that are happening to the pages
     in the buffer pool。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后取出对应于 B 的页面，并写入磁盘。好的，然后我可以提交。接下来，让我们看一下。这个就是操作顺序。好的，这些就是发生的事情，从缓冲池中的页面到对缓冲池中页面的操作。
 - en: and then stuff that is written back out from the buffer， pool to disk。 Now let's
     see that was a crash， right， so between this flush a and flush B there was a crash。
     Now。 is this bad。 Well， it's bad。 Right。 So firstly， you are left with a value
     of a on disk as 16。 and be on disk as eight。 And this is not the guarantee that
     we want right we want it to either be eight and eight。
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，将从缓冲池写回磁盘的内容。现在我们看到，这是一次崩溃，对吧？所以在 flush A 和 flush B 之间发生了崩溃。现在，这有问题吗？嗯，有问题，对吧？首先，磁盘上的
+    A 值是 16，B 值是 8。这不是我们想要的保证，对吧？我们希望它们要么都是 8，要么都是 16。
 - en: and the transaction does not commit。 Or to be 16 and 16 and the transaction
     has committed。 So crash here is going to be problematic for us。 Let's take another
     example。 Let's say it was a crash here。 Okay。 Is this a problem for us。 And some
     yeses。 So turns out this is also a problem。 It's also a problem because a is equal
     to B is equal to 16。
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务没有提交，或者值为 16 和 16，并且事务已提交。所以崩溃对我们来说是一个问题。让我们再看一个例子。假设这里发生了一次崩溃。好的，这对我们来说是个问题吗？一些情况是的。所以，事实证明这也是一个问题。这也是个问题，因为
+    A 等于 B 等于 16。
 - en: But this is not committed。 And so because it's not committed。 potentially the
     user may try this transaction again。 thinking that their original transaction
     did not commit。 So they may try it again。 They may now go from 16 16 to 32 32。
     Right。 So this is this is not ideal。 Okay， so。 All right。
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 但这是没有提交的。所以，因为没有提交，用户可能会尝试重新进行事务，认为他们原来的事务没有提交。所以他们可能会再次尝试。他们可能现在会从16、16变成32、32。对吧。这个就不理想了。好的。那么，嗯。
 - en: so let's take one more example。 So here I'm， I have a crash between the eight，
     eight and 16， eight。 So between these two steps。 Right。 So this is not a problem
     or not。 This is not a problem。 Okay。 And the reason why this is not a problem
     is that you have a crash。 but you've not changed your original data and you've
     not told the user that the thing committed。
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们再看一个例子。假设这里，我遇到了一个在8、8和16、8之间的崩溃。就在这两步之间。对吧。那么这是个问题吗？不是问题。好的。之所以这不是问题，是因为你遇到了崩溃，但是你没有改变原始数据，而且你没有告诉用户操作已经提交。
 - en: So the transaction did not commit so the user can certainly try again。 And then
     updated subsequently to 16 16 if they wanted。 Okay。 so in this case we are good
     because the transaction did not change the database state。 From eight to something
     either 16， eight or 16 16。 Right。 So they didn't change the database state。
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以事务没有提交，所以用户当然可以再次尝试。然后他们如果愿意，之后可以更新到16、16。好的。所以在这个情况下，我们是安全的，因为事务没有改变数据库的状态。从8变到16、8或者16、16。对吧。所以它们没有改变数据库的状态。
 - en: So we are actually in a good shape。 But we still had two cases of problematic
     crashes right between flush and flush B and after both the flushes are done。 So
     both of these cases were problematic for us。 Now。 given that we had issues with
     sort of synchronizing the flushing。 What if， for example。 we delayed the flush
     to after the commit。 Okay。 So what have we said， look。
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们实际上处于一个好的状态。但我们仍然遇到了两种问题性崩溃，分别发生在flush和flush B之间，以及两次flush完成后的状态。所以这两个问题对我们来说是有影响的。现在，考虑到我们在同步刷写方面遇到问题，假如，比如说。我们把flush延迟到提交之后。好的。那么我们说，看看。
 - en: let's not mark with the data on disk。 Let's wait until that commit has been
     completed。 And then and only then to be flush things to disk。 Okay， so let's delay
     writing things out to disk。 So delay flushing things out to disk until we finished
     committing。 And let's see if this helps us。 So here， I have a commit and then
     I'm flushing a and B。 So， are there any problematic crashes here。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们不立即在磁盘上标记数据。我们等到提交完成之后，然后再刷写数据到磁盘。好的，所以我们延迟写数据到磁盘。也就是延迟刷写数据到磁盘，直到我们完成提交。看看这是否能帮助我们。这里，我有一个提交，然后我刷写了A和B。那么这里有没有问题性的崩溃呢？
 - en: So， you could commit， but then not actually right if you crash in between that's
     precisely it。 Right。 So you could commit， but you've not actually written anything
     out。 Right。 So you could commit。 And then there could be a crash here。 Or here，
     and you may end up， sorry。 here or here。 And you would end up with problems。 So
     what if it is a crash that happened here。 Well。
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，你可以提交，但是如果在两者之间发生崩溃，那就不算提交。对吧。所以你可以提交，但实际上什么也没有写出去。对吧。所以你可以提交。然后这里可能会发生崩溃。或者这里，抱歉，应该是这里或这里。你可能会遇到问题。那么如果崩溃发生在这里怎么办呢？嗯。
 - en: here you've told the user that you， they， their transaction has committed。 but
     it's not actually committed。 So the user might actually be deceived into thinking
     that the values have been multiplied by two。 but it's actually not。 So here if
     things have crashed between the flush and flush be your left in this weird state
     where one of the values is 16 one of the values is eight。 you no longer have this，
     the consistency of the values of a and being the same。 Right。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这里，你告诉用户他们的事务已经提交了。但实际上它并没有提交。所以用户可能会被误导，认为值已经被乘以2了，但实际上并没有。所以如果崩溃发生在flush和flush
+    B之间，你就会留下一个奇怪的状态，其中一个值是16，另一个值是8。你不再保持A和B的值一致了。对吧。
 - en: So you left in this funky state。 So you do have problematic crashes in this
     context as well。 So the solution for all of this is to write things down。 Right。
     So before you go ahead and update at the highest level before you go ahead and
     update before you go ahead and update update data on disk。 You write things down。
     Right。 And before you go ahead and commit your right things down。
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你就会留下这种奇怪的状态。所以在这个上下文中，你确实会遇到问题性的崩溃。所以解决方法就是记录数据。对吧。在你更新数据之前，在最高级别进行更新之前，在你更新磁盘上的数据之前，你先把数据记录下来。对吧。然后在你提交之前，先记录数据。
 - en: So you basically write things down before you go and take certain actions。 And
     so that notion of writing things down ahead of what you need to do ahead of what
     you're going to do is what is known as the right ahead log。 Okay， and so this
@@ -240,374 +323,483 @@
     to and try to try to understand as much as you can。 So this notion of a right
     ahead log is basically it's just this file where you keep appending elements that
     are log elements or log records to this file to the end of the file。
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你基本上是在采取某些行动之前先把事情写下来。所以在你需要做的事情之前先写下内容，这个概念就叫做预写日志。好的，所以这是一个重要的解决方案概念，我希望你能关注并尽量理解。预写日志的概念本质上就是在这个文件中不断添加日志元素或日志记录，追加到文件的末尾。
 - en: Okay。 And this log is kept usually on a different disk separate from the data
     pages so you keep the data pages as they are but you also have a separate right
     ahead log that just recording all the actions that you're taking。 So for every
     update， commit or abort operation， you end up writing a log record。 Okay。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。这个日志通常保存在一个与数据页分开的不同磁盘上，所以你保持数据页不变，但你也有一个单独的预写日志，只记录你所做的所有操作。所以每次更新、提交或中止操作，你都会写入一个日志记录。好的。
 - en: so you're just logging these operations as you get it as as you as you make
     changes。 So you do have multiple transactions running concurrently because we
     are in to PL mode。 And。 and you do have multiple transactions running concurrently。
     So these log records would be interleaved across these transactions。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你在进行更改时只是记录这些操作。所以你确实有多个事务并发执行，因为我们处于两阶段锁定模式。并且，你确实有多个事务并发执行。所以这些日志记录会交错出现在这些事务之间。
 - en: And then after you have a system crash these this log is used to ensure both
     durability and atomicity。 So you basically use a log to redo transactions that
     did commit and redoing ensures that you the transactions that commit persist。
     Okay， so they are durable。 And you use the log to undo transactions that didn't
     commit。 And then the transaction didn't commit during at the point of the crash。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，在系统崩溃之后，这个日志会被用来确保持久性和原子性。所以，你基本上是用日志来重做已经提交的事务，重做确保了提交的事务得以持久化。好的，所以它们是持久的。你还可以使用日志来撤销那些未提交的事务。然后在崩溃时，这些事务就没有提交。
 - en: We basically undo all of their effects。 And you get back to a point where the
     transaction it。 it's almost as if the transaction never executed so undo ensures
     atomicity。 And then you can use some performance implications of a log as opposed
     to page rights。 The first thing is that log the log is sequentially written as
     opposed to page rights and page rights could have random i。
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们基本上撤销它们的所有影响。你会回到一个事务几乎从未执行过的状态，所以撤销确保了原子性。然后，你可以使用日志的性能优势，而不是页面写入。首先，日志是顺序写入的，而页面写入则可能是随机的。
 - en: So， if you remember， you're just sort of adding things at the bottom。 So it's
     writing things in sequence and if you remember our disk lectures sequential i
     is much faster than random i。 The second performance benefit that you get from
     a log is that a log can be compact。 And so you only need to store the delta as
     opposed to storing the writing out things at writing out an entire page independent
     of the change that you made。
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，如果你记得，你实际上只是将内容添加到底部。所以它是按顺序写东西，如果你记得我们讲的磁盘讲座，顺序写入的效率要比随机写入快得多。日志的第二个性能优势是它可以是紧凑的。因此，你只需要存储增量，而不是存储整个页面的内容，独立于你所做的更改。
 - en: Okay， so， for example， if all that you did was you touched one tuple in a page
     you can just record the old version of that to pull in the new version of the
     two。 you don't need to record the rest of that page。 Right， so as part of your
     log。 And so what this gives you by storing these deltas you can pack many， many。
     many log records into a log page， often spanning the changes that you have made
     to multiple pages。
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，举个例子，如果你做的只是修改页面中的一个元组，你可以只记录该元组的旧版本，而将新版本的元组放进来。你不需要记录该页面的其余部分，对吧，作为日志的一部分。所以，通过存储这些增量，你可以将许多许多日志记录打包到一个日志页中，通常跨越你对多个页面所做的更改。
 - en: Okay。 Okay， so now that you know what a right ahead log means。 there are two
     important decisions that we need to make in terms of logging policies。 So the
     first decision is whether we are using what is known as steel or no steel。 Okay。
     so this is the decision one， and the steel no steel decision allows us to it impacts
     the notion of atomicity。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。现在你知道什么是前写日志了。在日志策略方面，我们需要做出两个重要的决定。所以第一个决定是我们是否使用所谓的钢性策略还是非钢性策略。好吧，这是第一个决定，而钢性与非钢性决策影响原子性这一概念。
 - en: The second decision that we'll talk about will impact durability。 Okay。 so the
     steel policy basically says， I will allow the buffer pool or equivalently another
     transaction to steal a pinned page of an uncommitted transaction by flushing it
     to disk。 So basically what this means is， if you have an uncommitted transaction
     that has updated some data page。 this dirty data could be flushed or disk and
     override disk pages。
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将讨论的第二个决定将影响持久性。好吧。钢性策略基本上说，我将允许缓冲池，或者等同地，另一个事务通过将页面刷新到磁盘来窃取未提交事务的固定页面。所以基本上这意味着，如果你有一个未提交的事务更新了某些数据页，这些脏数据可能会被刷新到磁盘并覆盖磁盘上的数据页。
 - en: The no steel approach on the other hand， this allows this from happening。 Okay。
     So why is still potentially a problem。 Right。 If we allow steel。 then we need
     to deal with the fact that you have an uncommitted transaction。 That is。 that
     is updating pages on disk。 And therefore to ensure atomicity。
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一方面，非钢性策略允许这种情况的发生。好吧。那么为什么钢性策略可能是一个问题呢？对。如果我们允许钢性，那么我们就需要处理未提交事务更新磁盘页面的事实。因此，为了确保原子性。
 - en: we need to support the undo of these uncommitted transactions。 Right。 because
     this uncommitted transaction may end up not committing it may end up getting aborted
     or there could have been a system crash。 Right， so any changes that it makes to
     disk， it needs to be undone。 Okay， so for steel。 we need to be able to support
     the undo of these uncommitted transactions because they are mocking with clean
     data on this and making it dirty。
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们需要支持这些未提交事务的撤销。对，因为这个未提交事务可能最终不会提交，可能会被中止，或者系统可能崩溃。所以它对磁盘的任何更改都需要撤销。好吧，对于钢性策略，我们需要能够支持这些未提交事务的撤销，因为它们在这个数据上进行修改，使得数据变脏。
 - en: On the other hand， the no steel approach has poor performance。 because if there's
     a transaction that is like hogging a bunch of pages。 then another transaction
     can't simply say， you know。 you need to write your pages out to disk so that I
     can get some pages。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一方面，非钢性策略的性能较差。因为如果有一个事务占用了大量页面，那么另一个事务就不能简单地说，你知道吗，你需要把你的页面写入磁盘，这样我才能获得一些页面。
 - en: So basically it's limiting buffer replacement。 So no steel has poor performance
     because you get saddled with lots of pages that are pinned by uncommitted transactions。
     But on the plus side， you don't need undo。 Right， you get a domesticity for free。
     So the only time you're writing things out to disk is when a transaction has committed
     rather than for uncommitted transactions。 So this is the first decision and some
     an important one。 The second decision is force on no force。
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以基本上它限制了缓冲区替换。因此，钢性策略会导致性能较差，因为会因为未提交事务而被大量页面固定。但是，优点是你不需要撤销操作。对，你可以免费获得持久性。因此，唯一需要将数据写入磁盘的时机是事务已提交，而不是未提交的事务。所以这是第一个决定，且是一个重要的决定。第二个决定是强制与非强制。
 - en: And this impacts the other property， which is durability and consequently redo。
     So force basically ensures that all updates to a transaction are forced to disk
     prior to commit。 And on the other hand， the no force property doesn't have this
     restriction。 So what are the impacts of no force。 Okay。 So the impacts of no force
     is that you can have committed transactions。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 而这也影响了另一个属性，即持久性，因此也影响了重做操作。强制策略基本上确保所有对事务的更新在提交之前都被强制写入磁盘。另一方面，非强制策略则没有这个限制。那么非强制的影响是什么呢？好吧，非强制的影响是你可以有已经提交的事务。
 - en: whose effects may not be visible on disk。 And therefore they may not be durable。
     Right。 So if you basically say， you know what， you're not forced to make your
     changes to disk prior to commit。 then a transaction could have committed and left
     the system and its effects may not be reflected on。 Right。 And the user has been
     notified。 Hey， your transaction committed。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 它的影响可能不会在磁盘上可见。因此，它们可能不是持久的。对。所以如果你基本上说，你知道吗，你不需要在提交之前强制将更改写入磁盘。那么事务可能已经提交并离开系统，其影响可能没有反映在磁盘上。对，用户已经被通知。嘿，你的事务已提交。
 - en: they decided to go have a party。 They think the transaction is committed。 but
     it's actually not committed。 Right。 It's not reflecting on this。 So in order to
     enforce。 ensure durability， we therefore need to support redo of these committed
     transactions。 Right。 So we need to be able to redo them to ensure that they are
     reflected on disk。
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们决定去开个派对。他们认为事务已经提交了，但实际上并没有提交，对吧？它并没有反映在系统中。因此，为了确保持久性，我们需要支持对这些已提交事务的重做。对吧？因此，我们需要能够重做这些事务，以确保它们反映到磁盘上。
 - en: especially when there is a system crash。 On the other hand， the force option
     has poor performance。 And the reason why it has poor performance is that in order
     for a transaction to commit。 you need to sort of write out all of the pay， all
     of its updates to disk。 And these updates could be all over the place。 Right。
     These updates could be all over the place。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 尤其是在系统崩溃时。另一方面，force 选项的性能较差。而其性能差的原因在于，为了提交一个事务，你需要将所有的支付信息及其更新写入磁盘。而这些更新可能分布在各个地方，对吧？这些更新可能分布在各个地方。
 - en: All of them have to be written out to disk before the transaction is allowed
     to commit。 And another reason why this is problematic is there could be some pages
     that are being updated by many。 many transactions at a time。 And this page， rather
     than allowing it to stay in the buffer pool。 you're forcing it to be written out
     to disk。 Right。 You're forcing it to be written out to disk。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有这些都必须在事务允许提交之前写入磁盘。另一个原因是，这可能会有一些页面被许多事务同时更新。而这些页面，不让它们停留在缓冲池中，而是强制将它们写入磁盘，对吧？你就是在强制它们写入磁盘。
 - en: And so there are all of these issues because of being forced to write things
     out to disk before you commit a transaction。 On the plus side is that no redo
     is required。 You get durability for free because all of the updates made by transaction
     are forced to disk prior to the commit。
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，由于被迫在提交事务之前将内容写入磁盘，出现了这些问题。好的一方面是，不需要重做。由于事务所做的所有更新在提交前都被强制写入磁盘，你可以免费获得持久性。
 - en: you get durability for free。 Okay， so this is the high level sort of buffer
     management design decision summary。 right， from the perspective of recovery。 So
     you have to access force no force and steel no steel。 The steel and no force option
     is the best option from a performance standpoint。 But it's also the option that
     requires both undo and redo。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以免费获得持久性。好吧，这就是从恢复的角度来看，高层次的缓冲区管理设计决策总结。所以，你必须访问“强制/不强制”和“钢化/不钢化”。从性能角度来看，“钢化且不强制”是最佳选择。但它也是唯一一个既需要回滚又需要重做的选项。
 - en: The no steel and force is the worst option。 It requires neither undo not redo。
     On the other hand。 no steel no force requires redo but no undo。 Steel and force
     requires undo but no redo。 Okay。 and so this is what is known as redo logging，
     because you don't need any undo for no steel no force。 This is what is known as
     undo logging because you need no redo。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: '"不钢化且强制"是最差的选项。它既不需要回滚也不需要重做。另一方面，“不钢化且不强制”需要重做但不需要回滚。“钢化且强制”需要回滚但不需要重做。好吧，所以这就是所谓的重做日志，因为对于“不钢化且不强制”来说不需要回滚。这就是所谓的回滚日志，因为你不需要重做。'
 - en: And this is known as undo redo logging and a variant of that which involves
     a lot more sort of mechanisms to make it more efficient is what we're going to
     be studying later。 which is， not redo logging。 So we will start by talking about
     undo logging。 which is forced steel and then talk about redo logging。 which is
     no steel no force and then we'll talk about undo redo， which is areas after that。
     Oh yeah。
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是所谓的回滚重做日志，它的变体包含了更多的机制，使其更加高效，稍后我们会学习这一部分，即非重做日志。所以我们会首先讨论回滚日志，它是强制钢化的，然后谈论重做日志，它是“不钢化且不强制”的，之后我们再谈回滚重做日志，这个部分稍后会继续讲。哦，对了。
 - en: I kind of have two questions。 First of all， is a lock something that we have
     to write to the disk or do we just keep that in the memory。 So look， I mean， the，
     we absolutely have to write the log to disk， right， because I mean， there is。
     as soon as there's a system crash， whatever is in memory disappears。 And so if
     you want。 for example， so imagine that there's a， there is a transaction that
     is uncommitted that is deciding to update some data on disk。
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 我有两个问题。首先，锁是不是必须写入磁盘，还是我们仅仅将其保存在内存中？看，意思是，我们绝对需要将日志写入磁盘，对吧？因为一旦发生系统崩溃，内存中的所有内容都会消失。所以，如果你想……举个例子，假设有一个未提交的事务，它正在决定更新磁盘上的一些数据。
 - en: Okay， you have to， before it updates a data on this， you have to not just write
     it out to a log。 you also have to write that log page out to disk， because otherwise
     anything that's in memory disappears。 Right。 So anything in memory disappears。
     So before you touch that data on disk。 you need to write stuff out and we'll talk
     about examples of that in a little bit。
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，在更新磁盘上的数据之前，你不仅仅需要将它写入日志，你还需要将日志页写入磁盘，因为否则任何在内存中的东西都会消失。对吧？所以任何在内存中的东西都会消失。因此，在你触碰磁盘上的数据之前，你需要先把数据写出去，我们稍后会讨论相关的例子。
 - en: but that log is not just something that resides in memory。 It's also on disk。
     Right。 That kind of brings to the sudden question that I have。 How do we ensure
     there is not a situation where kind of you do the thing， but you crashes。 So you
     fail to actually write the log for that。 Exactly。
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是这个日志不仅仅是驻留在内存中的东西，它也存在于磁盘上。对吧？这就引出了我突然有的一个问题。我们如何确保不会出现你做了某事，但系统崩溃了，导致没有写入日志的情况？确切地说。
 - en: So that could be cases where portions of the log have been written out。 but
     not all of the log can be written out。 And these are all things that we need to
     worry about as part of the policy。 Yeah， so we do need to worry about that。 For
     sure。 Yeah。 Thank you so much。 How is there no undo in like the no steel force，
     because it seems like you're still writing like dirty data to disk before a commit。
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这可能是日志的某些部分已经写入了，但并不是所有日志都能写入。这些都是我们在政策中需要考虑的事情。是的，我们确实需要关注这个问题。肯定的。是的，非常感谢。那么为什么在没有强制写入的情况下没有撤销操作呢？因为看起来你还是在提交之前将脏数据写入了磁盘。
 - en: Okay， that's understood the definition。 No steel no force。 Okay， so let's walk
     through this again。 Okay， so no steel no force basically allows for no transactions
     to the buffer pool。 The buffer manager to not steal any pages that were written
     by uncommitted。 That that are owned by let's say pin by uncommitted transactions。
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，我理解了定义。没有强制，没有偷窃。好的，那么我们再走一遍这个过程。好的，"没有强制没有偷窃"基本上意味着事务不能被写入缓冲池。缓冲管理器不能偷取那些未提交事务所写入的页面。也就是说，不能偷取未提交事务所拥有的、比如说被未提交事务固定的页面。
 - en: And no force basically means that the pages that are。 Okay， so let's let me
     show the definition。 So no force basically says that。 All the updates of a transaction
     are not necessarily forced to disk prior to commit。 Okay。 So how do we ensure。
     How do we ensure that a transactions effects are durable if you're in the no force
     paradigm。 Right。 Well， in order to ensure durability in the no force paradigm。
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 而没有强制的意思是页面……好的，让我展示一下定义。所以没有强制基本上意味着一个事务的所有更新不一定在提交前被强制写入磁盘。好的。那么我们如何确保？如果处于没有强制的范式下，如何确保事务的效果是持久的呢？对吧？嗯，为了确保在没有强制的范式下的持久性。
 - en: you have if a transaction is allowed to commit。 Then this transaction must write
     out to the log。 which then needs to be written to disk。 So the， the， the data
     pages may not be written to disk。 but the log is suddenly written to disk。 So
     you can always use a log to recover and we'll talk about mechanisms for ensuring。
     But that's that makes sense。 Yeah， I think the， the reason that。
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果一个事务被允许提交，那么这个事务必须写入日志，然后需要写入磁盘。因此，数据页可能不会写入磁盘，但日志却会立即写入磁盘。所以你可以始终使用日志来恢复，我们会讨论确保这一点的机制。但是这就有道理了。是的，我认为原因是。
 - en: like from what it sounds like is when you have force， then you might have。 You
     have everything written to disk before your commit。 And so you need undo possibly。
     But you don't need to redo because everything has already been written out of
     commit。 But with no force， you need the undo because you can have the redo because
     you can have dirty pages yet to write。
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 从听起来的情况来看，当你有强制时，你可能会有。在提交之前，你会把所有内容都写入磁盘。所以你可能需要撤销，但不需要重做，因为一切都已经写入了提交。但是如果是没有强制，你需要撤销，因为可能存在还未写入的脏页，因此你需要重做。
 - en: And then a commit crash and so you need to redo it。 Is that accurate？ Yes。 Okay。
     Yes。 I think it's。 it's useful to think of both in tandem。 So the， the， so the
     force decision basically。 if you opt for no force， then you have a committed transaction
     whose effects may not be visible on disk。 So therefore you need to be able to
     support redo。 And if you use steel。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后发生了提交崩溃，所以你需要重新做一次。这样准确吗？是的。好的。是的，我认为把这两者结合起来考虑是有用的。所以，强制决策基本上是。如果你选择没有强制，那么你有一个已经提交的事务，它的效果可能在磁盘上不可见。因此你需要能够支持重做。如果你使用偷窃。
 - en: then you have uncommitted transactions that are mocking with data on this。 Therefore
     you need to undo their effects。 And so in our， that's a。 that's a way I like to
     think about this。 Okay， look。 All right， so let's talk about the undo log。 which
     is basically forced and steel。 Okay。 So in undo logging。
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，你有未提交的事务，它们正在与磁盘上的数据发生冲突。因此，你需要撤销它们的影响。所以在我们看来，这就是一种，我喜欢这样理解的方式。好的，看吧。好吧，让我们谈谈撤销日志。它基本上是强制和钢铁一致性的。好的。所以在撤销日志中。
 - en: you have various types of log records， you have a start transaction。 which basically
     indicates the transaction has begun。 You have commit。 which basically indicates
     the transaction is committed。 Likewise for abort。 And then the update statement，
     which basically says the transaction has updated element X and its old value was
     P。
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 你有各种类型的日志记录，你有一个开始事务，这基本上表示事务已经开始。你有一个提交，这基本上表示事务已经提交。同样，也有中止操作。然后是更新语句，它基本上表示事务已经更新了元素X，且其旧值是P。
 - en: Y is the old value important。 Well， we are in the undo logging paradigm。 And
     so in order to undo。 we need to record the old value before an update has taken
     place。 Okay。 so let's take a snapshot of life under the undo logging paradigm
     and see how things could go wrong。 And how， what are the guarantees that are provided
     by the undo logging paradigm。 Okay。
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: Y的旧值重要吗？嗯，我们处在撤销日志的范式中。所以，为了撤销，我们需要在更新发生之前记录旧值。好的。那么，让我们在撤销日志范式下拍一个快照，看看事情可能会怎么出错，以及撤销日志范式提供了哪些保证。好的。
 - en: So this is a snapshot。 Okay， so here you started your log with the， and you
     had this transaction。 which is reflected in the log as start the， at the point
     where you wrote。 you made a change to this page in memory， you decided to write
     the old version of that change to the undo log。 Likewise， you did the same thing
     for the old version of B。 And then after you had flushed a and B。
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这是一个快照。好的，接下来你在日志中以此开始，并且有了这个事务。它在日志中反映为“开始”，在你写入的那个点，你对内存中的页面做了更改，决定将更改的旧版本写入撤销日志。同样，你也对B的旧版本做了相同的操作。然后，在你刷新了A和B之后。
 - en: you wrote out a commit message。 Okay， so this is what is shown in the log。 This
     is a log on disk。 Okay， so this is what is shown on disk。 Now， let's talk about
     crashes before we talk about the guarantees that are provided by this undo logging
     paradigm。
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 你写出了一个提交信息。好的，这就是日志中显示的内容。这是磁盘上的日志。好的，这就是磁盘上显示的内容。现在，在我们讨论撤销日志范式提供的保证之前，我们先来谈谈崩溃。
 - en: So let's say you have various kinds of crashes。 Let's say we have a crash here。
     So what do we do in this context。 So what we have basically imagine that none
     of this is visible。 Right。 Everything disappears， because all of this is temporary
     state that's in memory。 You've crashed the all that you can see is what's on disk
     and what is in your undo log。
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设你遇到各种类型的崩溃。假设这里发生了一个崩溃。那么，在这种情况下我们该怎么做呢？所以，我们基本上可以想象，所有这些都是不可见的。对吧？所有东西都消失了，因为这些都是临时的内存状态。你发生了崩溃，唯一能看到的是磁盘上的内容和撤销日志中的内容。
 - en: Now looking at your undo log。 What can you tell， right。 So what， what would
     we do in this context。 So looking at the underlog， would you be able to is has
     transaction T committed or not。 It's not committed right so you've not seen a
     commit message。 You， you。 you know that it's not committed。 Since it's not committed。
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，看看你的撤销日志。你能看出什么吗？对吧。那么，在这种情况下我们会怎么做呢？通过查看撤销日志，你能判断事务T是否已经提交吗？它没有提交，对吧？你没有看到提交信息。你知道它没有提交。既然它没有提交。
 - en: since the underlog says it's not committed。 What you end up。 what you're going
     to end up doing is to undo its effects。 Right。 So how do you undo its effects
     well。 You look at the previous value for B and then change it to eight or whatever
     value of B exists on this you change it to it。 And likewise， you update the value
     of a to eight。 And here by logging the old values of a and b on the log。
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 由于撤销日志显示它尚未提交。那么你最终会做什么呢？你最终要做的就是撤销它的影响，对吧？那么，如何撤销它的影响呢？你查看B的前一个值，然后将它更改为8或B在此时的任何值，你将其更改为那个值。同样，你会更新A的值为8。通过在日志中记录A和B的旧值来完成这一操作。
 - en: I can go back or I can undo the effects of any changes I may have made。 In this
     particular case。 not that I only made a change to a on disk。 I didn't actually
     make the change to be but still I can undo that。 I can replace B with the old
     value， which is the same value and it doesn't hurt me。 Right。 Does that make sense。
     So here I can undo by setting B is equal to eight and is equal to eight。
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 我可以回滚，或者我可以撤销我所做的任何更改。在这个特定的情况下，尽管我只在磁盘上更改了a的值，但我并没有修改b，但我仍然可以撤销这个操作。我可以用旧值替换B，而旧值与新值相同，这不会影响我。对吧？这样合理吗？所以在这里，我可以通过将B设置为8，并且将a设置为8来撤销。
 - en: What if I have a crash here。 After the commit。 Do nothing no big deal。 Yeah，
     you're right。 Right。 So the law contains a commit。 That means that I don't really
     need to do anything。 Right。 That means that if I see a commit。 That means that
     the effects of this transaction are on disk。 And I don't need to worry about this。
     Right。 So let's why don't we take。
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果在提交之后发生崩溃怎么办？什么都不做，没关系。是的，你说得对。对。所以日志中包含了提交，这意味着我其实什么都不需要做。对，意味着如果我看到提交，这就意味着这个事务的效果已经写入磁盘，我不需要担心这个问题。对吧？所以我们为什么不……
 - en: Should we take a break Alvin since we are roughly around mid the mid way point。
     Or should I keep going。 Sure。 So it's the next part of the reader part or no I
     still have more on the undo part。 Or should I continue with the undo and then
     take a break after that。 Yeah。 I was thinking about that。 Okay， let me do that。
     Okay。
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: Alvin，我们应该休息一下吗？因为我们大约到达了中途点。还是应该继续？当然。那么是读者部分的下一个部分吗？还是我还需要继续讲撤销部分？还是继续讲撤销，然后休息一下？是的，我在想这个问题。好的，那我就继续。好的。
 - en: so one decision here that I need to make is when should I force pages from my
     log and pages from my buffer pool the data pages to disk。 And so in the undo logging
     paradigm。 I need to have this entry。 The old version of a to be written out before
     I flush a。 Why is that。 Because if you flush it before you log it wouldn't your
     value not be saved or it'll be saved a new value instead。
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么这里我需要做出一个决定：我什么时候应该强制将日志页和缓冲池中的数据页写入磁盘？所以在撤销日志的范式下，我需要确保这条条目，即a的旧版本，在刷新a之前被写入。为什么呢？因为如果在记录之前就刷新了，那么旧值就不会被保存，或者它会被一个新值覆盖。
 - en: Exactly。 If I， if I don't have this entry in my log on disk。 Before I flush
     a。 then I have overwritten a and I have no way of going back to the old value
     of a。 So therefore I must have this on disk this entry on disk before I flush
     a。 Likewise。 I must have this entry on disk before I flush B。 And since we are
     in the force paradigm remember that undo is steel and force。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 没错。如果我，假如我的日志中没有这个条目存在。 在我刷新a之前。那么我就会覆盖a，而且我无法恢复a的旧值。所以，我必须在刷新a之前把这个条目写入磁盘。
+    同样，我必须在刷新B之前把这个条目写入磁盘。既然我们在使用强制写入的范式，记住，撤销是钢铁般的，强制的。
 - en: Since we're in the force paradigm， we want both a and B to be flushed before
     I commit。 Okay。 so overall these are my rules。 I have the log entries to be that
     represent the updates the old versions of whatever I'm updating to be on disk
     first。 And then I want all the flushes to be on disk or basically all the flushes
     to happen。 And then I want my comment log record to be on disk。 Okay， so that's
     the sequence of updates。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 由于我们处于强制写入范式中，我们希望在提交之前刷新a和B。好的。那么总体来说，这些就是我的规则。我需要确保日志条目代表更新的内容，也就是在更新之前，旧版本的内容首先写入磁盘。然后，我希望所有的刷新都发生在磁盘上，基本上所有的刷新都要完成。接着，我希望我的提交日志记录也能写入磁盘。好的，这就是更新的顺序。
 - en: So let's go through these rules in a bit more formal sense。 So the first rule
     basically says。 if T modifies x， then T x V， the old value of x must be on disk
     before I flush x。 So the reason why I have this rule is that I want to record
     the old value before the new value replaces the old value permanently on disk。
     Okay。 I need this so that I can record the old value and I can undo the effects
     of this uncommitted transaction if needed。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么让我们以更正式的方式来回顾这些规则。第一个规则基本上是说：如果T修改了x，那么T x V，也就是x的旧值必须在我刷新x之前写入磁盘。之所以有这个规则，是因为我希望在新值将旧值永久替代到磁盘之前，先记录下旧值。好的，我需要这样做，以便记录旧值，并在需要时撤销未提交事务的影响。
 - en: The second rule basically says， if T commits then flush of x must happen before。
     So all the changes written by T have been reflected before T is allowed to commit。
     This is because we are in a force paradigm。 Right。 So we want to not worry about
     redoing。 We want durability for free。 So that's what we get from the second rule。
     So that allows for steel。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 第二个规则基本上说，如果 T 提交，那么 flush x 必须在提交前发生。所以所有 T 所做的更改都必须在 T 被允许提交之前反映出来。这是因为我们处于强制执行的范式中，对吧？所以我们不想担心重做，我们想要免费的持久性。所以这就是第二个规则带来的好处。这样可以确保数据的稳定性。
 - en: The second rule is basically forcing updates to happen with to be reflected
     on this before a comment happens。 And so here。 Flushes are done early before the
     transaction commits and we'll contrast this to redo logging。 What in？ Yeah， I'm
     a little confused because early on you define flush to be writing the page to
     this。 And here it seems that we are distinguishing that like writing to disk and
     flushing。 Yeah。
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 第二个规则基本上是强制更新在事务提交前反映在此之前。所以在这里，flush 操作会在事务提交之前执行，我们将其与重做日志进行对比。嗯？是的，我有点困惑，因为早些时候你定义了
+    flush 是将页面写入磁盘。而这里看起来我们在区分“写入磁盘”和“刷新”操作。是的。
 - en: so this is this is a typo。 So flush x must happen。 Let's say it must happen。
     Before committee。 does this make more sense。 Flush x is basically the operation
     that flushes x to。 To be even more precise flush x for all updated pages。 X must
     must happen before committee。 Yeah。 just to clarify。 Then for the first rule when
     you say that we need to write it as before we flush。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这是一个打字错误。所以必须执行 flush x。假设它必须发生。在提交之前。这更有意义吗？flush x 基本上是将 x 刷写到磁盘的操作。更精确地说，flush
+    x 是对所有更新过的页面执行的操作。X 必须在提交之前发生。嗯，澄清一下。那么对于第一个规则，当你说我们需要在刷新之前写它时。
 - en: And that is， is the flush referring to just getting rid of the value from the
     buffer pool。 Yeah。 flushes refer referring to the data page containing x to be
     written out to disk。 So this entry TXV is a log entry。 We want the log entry to
     be written out of the log before you update the corresponding data element in
     some data page。 Basically， the page in your buffer pool is written back out to
     disk。 All right， thank you。 Okay。
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，这个 flush 是指仅仅从缓冲池中移除值吗？是的，flush 是指将包含 x 的数据页写入磁盘。所以这个条目 TXV 是一条日志条目。我们希望日志条目在更新对应的数据页元素之前被写出日志。基本上，你缓冲池中的页面会被写回磁盘。好的，谢谢。好的。
 - en: so let's talk about recovery with an undo log。 So there are several questions
     that we need to address。 First is which updates need to be undone。 Well， the updates
     that we need to undo are all updates made by all uncommitted transactions。 Right。
     These are all of the updates that need to be undone when a crash happens。 So far
     back to we need to go in the log。 Well， we need to go far as back as the start
     of the earliest uncommitted transaction。
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么我们来谈谈使用撤销日志的恢复。我们需要解决几个问题。第一个是哪些更新需要撤销。那么，需要撤销的更新是所有未提交事务所做的更新，对吧？这些更新都是在崩溃发生时需要撤销的更新。那么我们需要回溯日志多远呢？我们需要回溯到最早未提交事务的开始。
 - en: Right。 So you， you need to retrace your steps up to the start of the earliest
     uncommitted transaction。 Unfortunately， if you don't have mechanisms to say where
     that earliest uncommitted transaction started。 then you're out of luck。 You have
     to basically read through all of your log。 So this is has some severe performance
     and implications。
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 对，所以你需要追溯到最早未提交事务的开始。不幸的是，如果你没有机制来标记最早未提交事务的开始位置，那么你就没办法了。你必须基本上遍历所有日志。因此，这样做会带来严重的性能和其他影响。
 - en: Some of these performance implications are fixed by the scheme that that admin
     will present later。 The third question is what happens if there's a second crash
     during recovery。 Right。 so let's say you're doing the recovery and there's a second
     crash that happens。 That again is kind of okay because here on do is the item
     portant。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 一些性能问题可以通过管理员稍后介绍的方案来解决。第三个问题是，如果在恢复过程中发生第二次崩溃，会发生什么？对吧？假设你正在进行恢复，并且发生了第二次崩溃。那也是可以接受的，因为在这里，撤销是关键。
 - en: So if you undo and undo that's okay。 You basically had already correctly replaced
     and a new value that was made by an uncommitted transaction to an old value。 Now
     you're going to replace a whole value with the same value again and that's okay。
@@ -615,465 +807,629 @@
     because if you keep crashing and you keep repeating the undoes that's not ideal。
     So again， AD says mechanisms to improve on this。 So in recovery。 So these are
     the steps that happen。
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以如果你撤销并不断撤销，那是可以的。你基本上已经正确地将一个未提交事务生成的新值替换了旧值。现在你将再次用相同的值替换整个值，那也是可以的。所以对于这些重要的项，那是没问题的。再说一遍，这有一些性能问题，因为如果你不断崩溃并不断重复撤销，那就不是理想情况。所以再次强调，AD
+    提供了一些机制来改善这一点。在恢复时，这些是发生的步骤。
 - en: The first is after a system crash you run the recovery manager。 you decide for
     every transaction whether it's completed or not。 So there are two types of flavors
     of completed transactions。 Either you see a commit or an abort。 And if you don't
     see either a commit or an abort， then it's basically going to be uncommitted or
     incomplete。
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 第一步是，在系统崩溃后，你运行恢复管理器。你需要判断每个事务是否完成。所以有两种类型的已完成事务。要么你看到提交，要么你看到中止。如果你没有看到提交或中止，那么它基本上就是未提交或不完整的。
 - en: And for all of these incomplete transactions， you are going to undo its modifications。
     And so to undo its modifications， you read the log from the end。 So go back in
     time。 If you see a commit or an abort record you basically can mark。 If you see
     an update and if T is not completed， then you replace whatever is the value of
     X on disk with B。
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于所有这些不完整的事务，你将撤销它们的修改。因此，为了撤销它们的修改，你需要从日志的末尾开始读取。也就是回溯。如果你看到提交或中止记录，你基本上可以标记它。如果你看到更新，并且
+    T 没有完成，那么你就用 B 替换磁盘上 X 的值。
 - en: Okay， so you replace X with its old value B。 If it is completed， then you can
     ignore it。 And then if you have， if you encounter start transaction， you can ignore
     that statement。 You don't need to do anything with it。 So how far back do you
     need to go？ I like I mentioned。 you need to go all the way back to the very start。
     And this。
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，所以你将 X 替换为它的旧值 B。如果它已完成，你可以忽略它。如果你遇到开始事务的记录，你可以忽略它。你不需要做任何处理。那么你需要回溯多远呢？正如我之前提到的，你需要回溯到日志的最开始。而且这个……
 - en: you could have a very long running transaction that started at the very start
     of your log。 and it's still continuing to run。 In theory， in the worst case， in
     practice it may not happen。 but you still have no option but to go all the way
     the very start。 This is fixed by this notion called checkpointing， which basically
     allows you to put in。
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可能有一个非常长时间运行的事务，它从日志的最开始就启动，并且仍在继续运行。在理论上，最坏情况下可能发生，但实际上它可能不会发生。但你仍然没有选择，只能回溯到最开始。这是通过一种叫做检查点的概念来解决的，它基本上允许你……
 - en: in some sense， checkpoints， which basically say that I allow。 You can think
     of this as as as as ways to temporarily save state。 so that you don't need to
     go back beyond those checkpoints in the log so it allows you to go back to only
     these checkpoints。 rather than going back all the way to the start。 So what happens
     in this example let's walk through what we might want to do。
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 从某种意义上说，检查点基本上告诉你我允许。你可以把它理解为临时保存状态的方式，这样你就不需要回溯到日志中的这些检查点之外，只需要回溯到这些检查点，而不是回溯到最开始。那么在这个例子中，发生了什么，让我们一步步看一下我们可能需要做什么。
 - en: So you start at the bottom and you go up in recovery with undo。 So you see this
     log statement。 which is basically saying the old value of x two was V two。 So
     what you're going to do is you're going to just simply write V two to x two on
     disk。 Then you see the next statement， the next log statement， which is from transaction
     T three。
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你从底部开始，向上进行撤销恢复。你会看到这个日志记录，基本上是在说 x2 的旧值是 V2。那么你要做的就是简单地把 V2 写入 x2 到磁盘。接着你会看到下一个日志记录，它来自事务
+    T3。
 - en: which is saying the old value of three of x three was V three。 So it's simply
     going to say， okay。 I'm going to write V three to x three on this。 Then you see
     a commit statement。 So what you're now going to do is you're going to say， okay，
     any updates that I see from T five。 I don't need to worry about it because it's
     committed。 Okay， so you're going to keep committed。
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 它是在说 x3 的旧值是 V3。所以它简单地会说，好吧，我要把 V3 写入 x3 到磁盘。然后你会看到一个提交语句。那么你现在要做的是，你会说，好吧，我看到的任何来自
+    T5 的更新，我不需要担心，因为它已经提交了。好了，所以你会保持已提交状态。
 - en: Transactions， and you're going to record five that T five there。 because you
     need to no longer worry about its updates everything else you need to undo。 Then
     you can mark T five as completed。 You undo the effect of this update from T four。
     then this update， which is from T five you can skip over because you know that。
     T five committed。
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务，并且你将记录T5，T5在那里。因为你不再需要担心它的更新，其他所有需要撤销的内容。然后你可以标记T5为已完成。你从T4撤销此更新的效果。然后这个更新来自T5，你可以跳过它，因为你知道T5已经提交。
 - en: You undo the effects of T one。 You undo the effects of T six and so on。 Okay。
     so basically you go back from the bottom to the top。 You identify if a transaction
     is committed or not， if it is committed。 you don't need to undo its effects all
     other， all other updates you need to undo。 Any questions。
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 你撤销T1的效果。你撤销T6的效果，依此类推。好的，所以基本上你是从底部到顶部回退。你确定一个事务是否提交，如果已提交，你就不需要撤销它的效果，所有其他更新你都需要撤销。有什么问题吗？
 - en: Nicholas。 So I just had a general question on like how， like， what is it for
     snow steel would work。 Because you mentioned that like sort of no steel allows
     us to not have to undo。 but if we have like for snow steel， then we have to write
     the changes to disk before we commit。 But if like for example we write we're writing
     changes to disk。
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: Nicholas。所以我只是有一个一般性的问题，关于雪钢是如何工作的。因为你提到过，雪钢让我们不必进行撤销操作。但是如果我们使用雪钢，那么在提交之前，我们必须先将更改写入磁盘。但如果，比如说，我们正在将更改写入磁盘。
 - en: and then we crash before we commit them don't we still have to like， you know。
     go back and undo the changes that we wrote to the disk。 Okay。 hang on a second
     go a little slow and let's talk about which which variant you're talking about
     which reading into where you're talking about again。 I'm talking about force no
     steel。 Okay， you're talking about no undo and no redo。 Okay。
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们在提交之前崩溃了，我们岂不是仍然需要像你知道的那样，回去撤销我们写入磁盘的更改吗？好的，稍等一下，慢一点，我们来谈谈你说的是哪一种变体，哪一种读取情况。我说的是强制无钢。好的，你说的是没有撤销和没有重新执行。好的。
 - en: So in that case。 So what was your question again。 Yeah。 so I guess sort of since
     we have force we have to write changes to disk before we log that we committed
     right。 But if we like， you know， write changes to disk and then crash before we
     commit wouldn't we still have to undo those changes that we wrote out。 Correct。
     Yeah， so that is a。 So in fact this particular。
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么在这种情况下，你的问题是什么？是的。所以我猜，既然我们必须在日志中记录我们已经提交之前将更改写入磁盘，对吧？但是如果我们像你知道的那样，把更改写入磁盘，然后在提交之前崩溃了，我们岂不是仍然需要撤销那些我们已经写入磁盘的更改吗？没错。是的，实际上这是一个。
 - en: This particular combination does not provide atomicity without actually having
     this not provide either atomicity or durability。 This is an exact this in fact
     is a case that is described in the textbook。 As a case that does not provide either
     atomicity or durability。 But this is not a case that is that is desirable either
     not just because it has worse performance but also does not have guarantees without
     additional。
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种特定的组合实际上并没有提供原子性，没有提供原子性或持久性。这实际上是教科书中描述的一个案例。一个既没有提供原子性也没有提供持久性的案例。但这并不是一个理想的案例，不仅因为它性能较差，还因为没有保证，除非有额外的措施。
 - en: In this case， let's see， would it be undo or redo mechanisms。 In this case。
     since you are forcing updates to disk， you still have a log。 And so you can ensure
     that the log allows you to。 Let's see。 I'm confused。 I confused myself。 I think
     the problem there is you won't be able to tell whether something has committed
     or not。
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这种情况下，让我们看看，是撤销还是重新执行机制。在这种情况下，既然你强制将更新写入磁盘，你仍然有日志。因此，你可以确保日志允许你……让我看看，我有点困惑。我自己搞混了。我认为问题在于，你无法判断某个事务是否已经提交。
 - en: Right， because like what you said Nicholas， you could have not written the commit
     yet to the to the desk。 And then you have written everything else already。 Right。
     So you need a mechanism to say if you are you need to redo or not。 Is that what
     you're saying。 Alvin？ Yeah。 So you still might need redo in that context。
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 对，因为就像你说的，Nicholas，你可能还没有将提交写入磁盘。而且你已经写入了其他所有内容，对吧？所以你需要一个机制来判断是否需要重新执行。Alvin，这就是你所说的吗？是的。所以在这种情况下，你可能还是需要重新执行。
 - en: even though it claims that you're in neither undo nor redo。 You're basically
     unrecoverable because you basically can't tell whether something has fully committed
     or not。 So that's the problem。 Yep。 In this case， even without the fact that you
     might still need other mechanisms to recover for that particular case。 it also
     has really bad performance。 So it's a case that we should ideally not worry about。
     Okay。
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使它声称你既不处于撤销状态也不处于重做状态，你基本上是不可恢复的，因为你根本无法判断某个操作是否已经完全提交。所以这是问题所在。嗯。即使没有其他机制来恢复这种特定情况，它的性能也非常差。所以这是我们理想中不应该担心的情况。好的。
 - en: thank you。 Okay， so let's keep going。 I don't I take a。 why don't we take a
     break since we come finish the undo logging and we are about to start redo logging。
     So why don't we take a break and we'll， we can play a video while we take a break。
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 谢谢。好的，我们继续吧。我觉得我们可以休息一下，既然我们已经完成了撤销日志的处理，现在马上就要开始重做日志了。那我们休息一下，休息时我们可以播放一个视频。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_3.png)'
+  id: totrans-108
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_3.png)'
 - en: Well， but before that I think I would actually encourage everyone to turn on
     their videos as much as possible because we need to use a laughter meter to figure
     out whether that's something is funny or not。
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 嗯，不过在那之前，我其实建议大家尽可能打开视频，因为我们需要使用笑声计量器来判断这是不是好笑。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_5.png)'
+  id: totrans-110
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_5.png)'
 - en: Now we need to work harder on that。 I'm finding good stuff right so yeah you
     guys tell us。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们需要更加努力地做这件事。我找到了不错的东西，对吧？所以，是的，大家告诉我们。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_7.png)'
+  id: totrans-112
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_7.png)'
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_8.png)'
+  id: totrans-113
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_8.png)'
 - en: Okay。 I mean you guys can give us my thumbs up or down afterwards。 Okay， so
     I don't know if I can。
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。我的意思是，大家之后可以给我们点个赞或者点个倒赞。好的，嗯，我不知道我是否能做到。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_10.png)'
+  id: totrans-115
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_10.png)'
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_11.png)'
+  id: totrans-116
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_11.png)'
 - en: Can I give you the link sorry I think it's not allowing me to share sound。 Okay。
     how are you sending it to me or I okay let me let me send it to you via。 Okay。
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 我可以给你链接吗？抱歉，我觉得它不允许我分享声音。好的。你是怎么发给我的？或者我好吧，让我通过…发给你。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_13.png)'
+  id: totrans-118
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_13.png)'
 - en: I mean do you see it。 Okay， I'm going to open it。 Okay。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的意思是，你看到了吗？好的，我要打开它了。好的。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_15.png)'
+  id: totrans-120
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_15.png)'
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_16.png)'
+  id: totrans-121
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_16.png)'
 - en: Okay。 Okay。 Okay。 So， I put on audio。 I don't think the audio is going to help
     much。 I think it's just sort of supposed to be the vague angry ranting that。 Okay。
     Okay。 Okay。 Okay。 Sorry。 Okay。 Okay。 Okay。
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。好的。好的。所以，我已经开启了音频。我觉得音频帮助不大。我想它只是某种模糊的愤怒咆哮。好的。好的。好的。抱歉。好的。好的。好的。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_18.png)'
+  id: totrans-123
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_18.png)'
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_19.png)'
+  id: totrans-124
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_19.png)'
 - en: Okay。
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_21.png)'
+  id: totrans-126
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_21.png)'
 - en: Okay。 Yeah。 Okay。 Let's share。 I'll try to find the link and share it with everyone
     as well。 So。 I'm going to quickly return to Nicholas's question for a second。
     And so I think basically this is the policy that we're talking about is no steel
     and force。 And so what happens there like Alvin mentioned just to recap。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。嗯。好的。让我们分享。我会尽快找到链接并分享给大家。嗯。接下来，我要快速回到尼古拉斯的问题。所以我认为基本上我们所谈论的策略是“无强制与窃取”。所以像艾尔文提到的那样，简要回顾一下，发生了什么。
 - en: You are forcing all of these dirty pages to disk at commit time until that commit
     time all dirty pages tape pin in the buffer pool。 So at least from a performance
     standpoint， it's not great。 But at commit time you're forcing all of those dirty
     pages to disk。 And so as you're forcing some of these dirty pages to disk。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 你们在提交时强制将所有这些脏页写入磁盘，直到提交时，所有脏页才会被固定在缓冲池中。所以至少从性能角度来看，这并不理想。但在提交时，你强制将这些脏页写入磁盘。因此，当你强制将一些脏页写入磁盘时。
 - en: If you have a crash halfway through that， you basically not recoverable， like
     Alvin said。 so you basically in a state where you have， you don't have a Thomas
     city。 Right。 So unless you add in and logging and then undo from that you don't
     need redo you do need undo because you don't have a Tom city。 Make sense。 Nicholas。
     Okay。 Okay， so returning to redo logging， which is no force and no steel。
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你在执行过程的中途崩溃，基本上无法恢复，就像Alvin说的那样。你处于没有原子性的状态。对吧？所以除非你添加了日志记录并进行回滚，否则不需要重做，你确实需要回滚，因为没有原子性。明白了吗？尼古拉斯。好的。好的，接着说回重做日志，它是无强制且无钢化的。
 - en: All right。 So in redo logging， we have a change to the log elements。 And so
     the change the log elements is that we update。 we change the value V that we're
     storing for each element to be the new value， not the old value。 Okay。 So here's
     the snapshot of the execution with the log shown here。 And so in this case。
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。所以在重做日志中，我们对日志元素进行了一些更改。更改日志元素的方式是我们更新。我们将每个元素的值V更改为新值，而不是旧值。明白吗？这里是执行的快照，日志显示在这里。所以在这种情况下，
 - en: you have your start T and then T and 16 is written so this is a new value that
     is being written out because the value in the buffer pool was updated from eight
     to 16。 Likewise for B。 And then you have the commit log record。 And then the flushes
     happen。 Okay。
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 你有开始T，然后T和16被写入，所以这是一个新的值，因为缓冲池中的值从8更新到16。对于B也是一样。接着你有提交日志记录。然后刷新操作发生。好的。
 - en: in this paradigm the flushes happen after commit。 And we'll talk about that
     in a second。 So let's start by talking about crashes。 So if you have a crash here。
     What do you do。 How do we recover。 So you have to go out 16 to a and B again。
     Yes。 Right。 So you have committed。 Right。 You are in the no force paradigm。 You
     have committed。
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这个范式中，刷新操作发生在提交之后。我们稍后会讲这个。所以让我们先讲一下崩溃。如果你在这里发生崩溃，怎么办？我们如何恢复？你必须再次将16写入a和b，对吧？对。对的。所以你已经提交了，对吧？你处于无强制范式中，已经提交了。
 - en: But you don't know if the effects of the transaction are durable。 In fact。 you
     could have been in between writing the changes made by the transaction to disk
     and then have had the system crash。 So you basically redo the effects of this
     transaction。 So you basically write out 16 to a and to be。 Even if you crashed
     here you would still make that same decision you would still write out 16 to a
     and B。
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 但你不知道事务的效果是否持久。事实上，你可能刚刚写入事务所做的更改到磁盘，然后系统崩溃。所以你基本上要重做这个事务的效果。你实际上会将16写入a和b。即使你在这里崩溃了，你仍然会做出相同的决策，仍然会将16写入a和b。
 - en: Even if you crashed here you would make the same decision。 Okay。 So this is
     all cases where you redo by setting a is equal to 16 and these equal to 16。 If
     you crashed here between right before the commit statement。 How do we recover。
     Do we need to do anything。 No， right。 And the reason for this is that because
     it's not committed you know that there's nothing that the transaction would have
     done to data on disk。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使你在这里崩溃，你仍然会做出相同的决策。好的。所以这是所有情况下的重做，通过设置a等于16，b也等于16。如果你在提交语句之前崩溃了，如何恢复？我们需要做什么吗？不需要，对吧？原因是因为它没有提交，所以你知道事务没有对磁盘上的数据做任何更改。
 - en: Okay， so you know that it did not， it did not commit and therefore it's not
     yet touched data on disk。 So you're in okay shape。 So in this context， when should
     we force pages to disk so the log pages as well as the flushes。 Since we are in
     the no steel paradigm。 The commit has to happen first before any data on this
     is touched。 So the flushes happen after commit in this。 So in the redo logging
     paradigm you have a single rule which basically says if T modifies X。
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，所以你知道它没有提交，因此它还没有触及磁盘上的数据。所以你现在的状态还可以。那么在这种情况下，我们应该什么时候强制将页面写入磁盘，包括日志页面和刷新操作？由于我们处于无强制（no
+    force）范式中，提交必须先发生，才会触及磁盘上的任何数据。所以在这种情况下，刷新操作发生在提交之后。所以在重做日志范式中，有一条简单的规则，基本上说如果T修改了X，
 - en: then both TXV as well as commit T must be written to X must be written to the
     disk before the flushes happen。 Okay， so simply you can just ignore this you can
     just say commit T must be written to this because commit T implies that all of
     the updates made by T are also written。
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，TXV以及提交T必须在刷新操作发生之前写入磁盘。好的，所以简单来说，你可以忽略这个，只需要说提交T必须写入磁盘，因为提交T意味着T所做的所有更新也已经写入磁盘。
 - en: So in this case， the flushes are done late， because again we're in a no steel
     regime so the commit has to happen and then the flushes will happen。 Okay， any
     questions about this。 So how do we do recovery with a redo log。 So after a system
     crash happens you run the recovery manager。 you check for every transaction whether
     it's completed or not。 So if you have。
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以在这种情况下，刷新操作会晚一些执行，因为我们再次处于无钢化状态，因此必须先执行提交操作，然后才会进行刷新。好，关于这个有任何问题吗？那么我们如何通过重做日志进行恢复呢？系统崩溃后，你会运行恢复管理器，检查每个事务是否已完成。如果你有。
 - en: if you have either seen a commit or an abort statement。 then this transaction
     has completed so you don't need to worry about it。 So if you haven't seen a committer
     abort， then you need to read， then。 then you don't need to worry about it。 Sorry。
     If you have seen a committer abort statement。
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你已经看到提交或中止语句，那么这个事务已经完成，所以你不需要担心它。如果你没有看到提交或中止，那么你需要继续读取日志。抱歉，如果你看到提交或中止语句。
 - en: then you， you know that you need to undo its effects。 Or redo its effects。 If
     you haven't seen a commit statement yet， then you don't need to worry about it。
     So you read the log from the beginning and you redo all the updates of the committed
     transactions。 So you basically check。 Once again step one you check if each transaction
     has completed or not。
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，你知道你需要撤销它的效果，或者重做它的效果。如果你还没有看到提交语句，那么你不需要担心它。所以你从日志的开头开始读取，重做所有已提交事务的更新。所以你基本上要检查。再一次，第一步是检查每个事务是否已完成。
 - en: So these two either commit or an abort means that the transaction has completed。
     If you see it start transaction with no commit or abort that means the transaction
     has not completed so you don't need to worry about it。 It's not touched anything
     on this for all of the transactions that have completed and have committed。 Those
     are the ones that you want to do。 So you start the log from the read read the
     log from the beginning and you redo all of the updates made by the committed transactions。
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这两个要么提交，要么中止，意味着事务已完成。如果你看到事务开始但没有提交或中止，那就意味着该事务未完成，所以你不需要担心它。它没有修改任何内容。对于所有已完成并已提交的事务，那些是你要处理的。所以你从日志的开头开始读取，重做所有已提交事务所做的更新。
 - en: Okay， so again this is going to be slow potentially because you start from the
     log and then you go all the way down。 You fix this with checkpointing and this
     is going to be covered as part of the series logging undo redo logging system。
     So how would redo logging work。 So you start by looking at the first statement。
     which is start t one。 Actually before that you need to figure out which transactions
     have committed or not in this case。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，所以这可能会很慢，因为你从日志开始，然后一直读到末尾。你可以通过检查点来解决这个问题，这部分内容会在系列日志撤销重做日志系统中讲解。那么重做日志如何工作呢？你从查看第一个语句开始，也就是开始T1。实际上，在那之前，你需要弄清楚哪些事务已经提交。
 - en: Right。 So here you， you notice that T two has committed。 If you recall the previous
     page。 we had to determine which transactions have committed or not。 And you want
     to redo the updates of the committed transactions。 So the first step is to identify
     which transactions are committed in this case。 It's just T two。
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 对。这里你注意到T2已经提交。如果你回顾上一页，我们需要确定哪些事务已经提交，哪些没有。你需要重做已提交事务的更新。所以第一步是确定哪些事务在这种情况下已经提交。就是T2。
 - en: Then you start at the top of the log and then you redo the effects of T two
     alone everything else you can skip over because you know that those transactions
     have not touched this。 So you skip over the update made by T one， you skip over
     the update made by T。
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后你从日志的顶部开始，只重做T2的效果，其他的你可以跳过，因为你知道那些事务没有修改过这个内容。所以你跳过T1所做的更新，跳过T3所做的更新。
 - en: Actually for T two you need to write。 You need to redo its effect。 You skip
     over the update made by T one， you skip over update made by T three and then skip
     over the update made by T one。 So in this particular case， you didn't actually
     have to do much you just had to write me to two x two on desk。 So replace redo
     the action that T two had taken to x two。 B two is a new value of x two。
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上，对于T2，你需要写入，你需要重做它的效果。跳过T1所做的更新，跳过T3所做的更新，然后再跳过T1所做的更新。所以在这种特定情况下，你实际上不需要做太多事情，你只需要在磁盘上写入T2的值。也就是替换重做T2所做的动作到X2。B2是X2的新值。
 - en: So we actually efficiently determine if a transaction has committed or not。
     Right。 So。 this is going to be the focus of the Aries part but one simple way
     the naive way would be to go through the entire log and see all the transactions
     for which you've seen a commit entry。
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们实际上可以有效地确定一个事务是否已经提交。对。这将是 Aries 部分的重点，但一种简单的方法，也就是天真的方法，就是遍历整个日志，查看哪些事务已经看到提交条目。
 - en: This is obviously not ideal。 So the mechanisms that we're going to be talking
     about in Aries will allow you to skip the large。 a large fraction of the log by
     taking checkpoints that allow you to use the checkpoints to sort of read only
     suffix of the log rather than reading all of the log。
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 显然，这并不是理想的做法。因此，我们将在 Aries 中讨论的机制将允许你跳过大量日志，通过创建检查点来使用这些检查点，从而只读取日志的后缀部分，而不是读取完整的日志。
 - en: Theoretically， we could never know when we flushed to disk right since it's
     not trapped in the log。 Yeah， so all that you have is the log and you know you
     have the data pages。 So you basically have to do forensics here by trying to correlate
     what you see in the data pages and the log to reverse engineer。 How far you need
     to go and which actions you need to undo which actions you need to redo and so
     on。
+  id: totrans-147
   prefs: []
   type: TYPE_NORMAL
+  zh: 理论上，我们永远无法知道何时刷新到磁盘，因为这并没有记录在日志中。是的，你唯一拥有的是日志和数据页。所以，你基本上需要通过尝试将数据页和日志中的内容进行关联来进行法医分析，反向推断你需要回溯多远，以及需要撤销哪些操作，重做哪些操作，等等。
 - en: In this case just we do。 Okay， so quick comparison of undo redo logging so undo
     logging basically ends up flushing data pages early。 So since you are in the steel
     policy you flush stuff early。 And if a commit is seen。 then he has definitely
     written all of its data to disk。 Things are durable because again this is steel
     and force so we are forcing everything to disk before the commit。
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这种情况下就这样做。好了，撤销和重做日志的快速对比，撤销日志基本上会提前刷新数据页。所以因为你处于强制策略中，你会提前刷新。如果看到提交，那么它一定已经将所有数据写入磁盘。由于这是强制策略，事务在提交前，所有数据都会被强制写入磁盘，所以事务的持久性得到了保证。
 - en: So you don't need to undo in this case。 Right， if you have seen。 if you don't
     haven't seen a commit you need to undo that transactions effects and redo logging
     the pages。 Page flushes must be done late。 Since we are in the no steel paradigm。
     And if commit is not seen then he is definitely not written any of its data to
     disk so there's no data on disk only data the disk is only touched if commit has
     been seen。
+  id: totrans-149
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以在这种情况下你不需要撤销。对，如果你已经看到提交，那么如果没有看到提交，你就需要撤销该事务的影响并重做日志中的页面。页面刷新必须推迟执行。因为我们处于无强制策略中。如果没有看到提交，那么它肯定没有将任何数据写入磁盘，所以磁盘上没有数据，磁盘只会在提交被看到时被触碰。
 - en: And so for all of the committed transaction you would need to redo。 So the pros
     and cons for undo logging and redo logging on to again a steel force。 The pro
     is that it's less memory intensive because you flush these updated data pages
     as soon as the log records are flushed。 So as soon as you are confident that the
     log has everything that you need to undo。
+  id: totrans-150
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于所有已提交的事务，你需要进行重做。因此，撤销日志和重做日志各有优缺点。在撤销策略下，优点是它占用的内存较少，因为你会在日志记录刷新之后立即刷新这些更新的数据页。所以只要你确定日志包含了所有撤销所需的信息。
 - en: You can flush the updated page up data pages and move on。 And then and only
     then you commit。 This has a higher latency because you are forcing all of the
     dirty buffer pages to be flushed prior to commit。 Right， so unlike the redo logging
     case where you don't force this it's no force here you're forcing everything to
     be flushed prior to a commit。 And this could have lots of random I like we described
     earlier。
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以刷新更新后的页面数据并继续。然后，只有在此之后你才会提交。这样做的延迟较高，因为你强制所有脏缓冲页面在提交前被刷新。对，和重做日志的情况不同，后者不强制这样做，而是强制所有内容在提交前被刷新。这可能会有很多随机的I/O，就像我们之前描述的那样。
 - en: The redo logging case you're in no steel no force。 So the con is that this is
     more memory intensive you are holding on to these pages in the buffer pool。 all
     the pinned pinned pages stay in the buffer pool。 All the pages from an uncommitted
     transaction stay in the buffer pool until the commit message has been flushed
     if the commit message has been flushed then you can start flushing。
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 在重做日志的情况下，你处于无强制策略。所以缺点是这更占内存，你需要将这些页面保留在缓冲池中。所有的固定页面都会停留在缓冲池中。所有未提交事务的页面都会停留在缓冲池中，直到提交日志被刷新。如果提交日志已经刷新，那么你可以开始刷新。
 - en: The pro here is that this slightly lower latency you don't need to wait until
     all of the data pages are flushed in order to commit because you're not in the
     force paradigm in the no force。 Okay。 So， returning to our slide here， we covered
     these two we're going to cover this next。
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: 这样做的好处是稍微降低了延迟，你不需要等到所有数据页面被刷新到磁盘才能提交，因为你不在强制模式，而是在无强制模式。好的，那么回到我们的幻灯片，之前我们讨论了这两个内容，接下来我们要讨论这个。
 - en: as part of the scheme。 So for this under redo logging team I'm going to be it
     up for an element to take take on the mantle of governing areas。 The log is now
     going to look slightly different。 We're going to have the transaction ID。 We're
     going to have the page ID， as well as old data and new data。 So you have both
     old version and the new version because you need to support both undo and redo。
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 作为这个方案的一部分。所以，对于这个撤销重做日志团队，我将为元素做一个准备，让它承担起治理的责任。日志现在将稍微有所不同。我们将有事务ID，我们将有页面ID，以及旧数据和新数据。因此，你需要同时保留旧版本和新版本，因为你需要支持撤销和重做。
 - en: And this is kind of like abstracting away some details is additional information。
     like different types of different flavors of log records and so on。 And we'll。
     we'll see all of that in a little bit。 Okay， so far this law logging protocol。
     there are two conditions that need to be met and if you have understood redo logging
     and under logging these two conditions will make sense to you。
+  id: totrans-155
   prefs: []
   type: TYPE_NORMAL
+  zh: 这有点像抽象掉一些细节，是附加的信息。例如不同类型的日志记录和其他相关内容。我们稍后会看到这些内容。好的，到目前为止，这个日志协议有两个条件需要满足，如果你理解了重做日志和撤销日志，这两个条件应该能让你理解。
 - en: So the first condition basically says， you must force the log record for an
     update before the current corresponding data page gets to disk。 So you must log
     what you're going to do before you end up mocking with the data on disk。 This
     is for an uncommitted transaction。 So you must do must make this change before
     you dirty data on this。 The second thing is you must force all the log records
     for a transaction before a commit。
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以第一个条件基本上是说，在当前对应的数据页面写入磁盘之前，必须强制执行更新的日志记录。你必须在修改磁盘上的数据之前先记录你将要做的操作。这是针对未提交事务的。也就是说，你必须在修改磁盘上的数据之前做出这个更改。第二点是，在提交之前，必须强制执行一个事务的所有日志记录。
 - en: So transaction is not committed until all of its log records。 including the
     commit log are committed record are on the stable log。 This allows us to correctly
     determine whether a transaction has been committed or not by looking at the log。
     Okay。 So this first rule， along with undoing health is guarantee atomicity。
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，在所有日志记录（包括提交日志）被提交并写入稳定日志之前，事务不会被提交。这使得我们能够通过查看日志，正确判断事务是否已经提交。好的，那么这个第一个规则，加上撤销操作的健康性，保证了原子性。
 - en: because you have uncommitted transactions that are updating pages on disk。 but
     because you have the log record you can undo its effects。 So the second rule。
     along with redoing health is guarantee durability。 you're not forcing all of the
     data pages to be on disk before commit you're only forcing the log records。
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为你有未提交的事务正在更新磁盘上的页面，但因为有日志记录，你可以撤销它的影响。所以第二条规则，加上重做操作的健康性，保证了持久性。你并不是强制要求所有数据页面在提交前都写入磁盘，而只是强制日志记录。
 - en: including the commit log record to be on disk。 And so using the log record you
     can redo the effects of a committed transaction that has not yet been reflected
     on this。 So overall， both of these allow us to implement steel and no force。 Okay。
     so that's the one that we want because it gives us maximum flexibility。 Okay。
     so I think that's all that I wanted to cover here。 I'm happy to take questions
     while Alvin sets up。
+  id: totrans-159
   prefs: []
   type: TYPE_NORMAL
+  zh: 包括提交日志记录需要写入磁盘。因此，通过使用日志记录，你可以重做一个已提交事务的影响，尽管这些影响尚未反映到磁盘上。总的来说，这两者允许我们实现**强制**和**无强制**。好的，这就是我们想要的，因为它提供了最大的灵活性。好的，我想这就是我在这里要讲的内容了，我很高兴在
+    Alvin 设置的时候回答问题。
 - en: I'll go。 Sure。 There's also five minutes left so it's not a lot。 Yeah。 Yeah。
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 我可以开始了。好的。还有五分钟时间，所以不多了。是的，是的。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_23.png)'
+  id: totrans-161
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_23.png)'
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_24.png)'
+  id: totrans-162
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_24.png)'
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_25.png)'
+  id: totrans-163
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_25.png)'
 - en: Yeah， so this part basically brings up on what a detail was saying earlier。
     So just to remind ourselves， right。 So in this world。 we have four different types
     of operations that we wanted to do。 We write fetching a page from the disk and
     flushing it right。
+  id: totrans-164
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，所以这一部分实际上是在回应刚才讲到的细节。提醒一下自己，对吧？在这个世界里，我们有四种不同的操作需要执行。我们从磁盘读取一个页面，并将其刷新。
 - en: And then these are just lies that a detail was talking about just now。 So I'm
     not going to repeat that so just to just remember that in this where we use right
     headlock right ahead logging。 meaning that everything has to first persist to
     the lock before actually happen onto the disk。 Right。 So we already went to undo
     logging and then we also went through redo logging right in terms of what actually
     gets locked。
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后这些就是刚才讲到的细节，所以我不再重复了。只要记住，在这里我们使用的是**前写日志（write-ahead logging）**，意味着所有操作必须先写入日志，然后才能真正写入磁盘。我们已经讲过撤销日志，也讲过重做日志，至于具体锁定了哪些内容。
 - en: Well， the problems with this undo and redo logging mechanism is every time we
     need to recover from the very beginning of the lock。 which is computationally
     intensive。 So I did， yeah。 basically mentioned about that for a few times already。
     So the whole goal of this portion of the lecture is to basically talk about another
     scheme that allows us to not always start from the very beginning in order to
     do recovery。
+  id: totrans-166
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，这个撤销和重做日志机制的问题在于每次我们需要从锁的最开始恢复，这在计算上是非常密集的。所以我确实提到过，嗯，基本上已经提了好几次了。这个部分讲座的整体目标就是基本上讲解另一种方案，它允许我们不必每次都从最开始就进行恢复。
 - en: Although I would also say that， like you know， from the even in the redo and
     undo scheme right for recovery。 If we already have knowledge， have the knowledge
     about like， you know。 what are the committed transactions that we actually might
     not need to always read all the way to the very beginning。 or all the way down
     to the very end of the lock right now to recover。 So just to keep that in mind。
+  id: totrans-167
   prefs: []
   type: TYPE_NORMAL
+  zh: 虽然我也会说，就像在重做和撤销方案中进行恢复时，如果我们已经知道了哪些是已提交的事务，实际上我们可能不需要每次都从最开始读取，或者从锁的最末尾一直读取到最后。现在恢复时，我们可能并不总是需要做到这一点。所以要记住这一点。
 - en: So I have three minutes left so I guess I'll just introduce what this is all
     about and then we actually go on。 go on to the actual mechanics of the algorithm
     next week。 So this areas algorithm is a recovery technique that combines both
     redoing and undoing。 It was actually developed right here in the Bay Area is down
     in Almadin so by San Jose by a person by researcher。
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我还有三分钟时间，我想我就简单介绍一下这是什么，然后我们下周再继续讲解算法的具体机制。所以这个“区域算法”是一种恢复技术，结合了重做和撤销操作。它实际上就是在这里的湾区开发的，位于圣荷西的阿尔马丁，由一位研究员开发。
 - en: cost C Mohan。 I think they will really send out the paper in the chat so I'm
     not suggesting you to read that paper because it's actually very dense paper to
     read。 But you're interested you can also just， you know， scheme through it if
@@ -1081,66 +1437,86 @@
     we cover in this class is kind of like the most basic one。 The one that you implement
     in the project is pretty much follow the lecture format except that there are
     a few extra thousand whistles that were thrown in to make it even more efficient。
+  id: totrans-169
   prefs: []
   type: TYPE_NORMAL
+  zh: 成本C·莫汉（C Mohan）。我想他们会在聊天中分享论文链接，所以我并不是建议你阅读那篇论文，因为它其实是一篇非常难懂的论文。但如果你感兴趣，你也可以简单浏览一下。如果你去查看不同的实现版本，你会看到他们实际上做了这个算法的不同变种。我们在这门课中讲的就是最基本的那个版本。你在项目中实现的基本上跟讲座内容一致，唯一的区别是为了让它更高效，加入了一些额外的优化。
 - en: But you see different versions of it if you go out to check out different implementations。
     So the first thing to understand in areas is this notion of a checkpoint。 And
     this is also where we will stop also for today。 What is checkpointing。 Chat pointing
     is basically a mechanism to somehow save the states of the entire database periodically。
+  id: totrans-170
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是如果你去检查不同的实现，你会看到不同的版本。理解区域算法的第一件事就是理解“检查点”的概念。今天我们就停在这里。什么是检查点？检查点基本上是一种机制，可以定期保存整个数据库的状态。
 - en: What are we doing a checkpoint。 We stop the world。 We stop anyone from from
     issuing new transactions。 So someone goes to the website that we are implementing
     that we just。 it would just say something when you please come back later or something。
     So we stop the world。
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么我们在做检查点时做了什么呢？我们暂停了所有事务。我们阻止任何新的事务发出。所以，当有人访问我们正在实施的网站时，我们会显示类似“请稍后再来”的信息。我们暂停了整个系统。
 - en: We wait until all the ongoing transactions are completed。 And then we completely
     flush the lock to the disk。 And we also flush all the 30 pages to the disk。 And
     after then， and only after that right we now write a checkpoint record to this
     to the to the lock and then flush the lock as well。 So as you can tell right this
     checkpoint record here is something that is new just for doing checkpointing。
+  id: totrans-172
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们等待直到所有正在进行的事务完成。然后我们将锁完全刷新到磁盘。接着，我们还将所有30个页面刷新到磁盘。之后，只有在这之后，我们才会写入一个检查点记录到锁中，并且刷新锁。所以，正如你所看到的，这个检查点记录是为做检查点而新增的内容。
 - en: So this is basically a new form of lock record。 So why do we do this。 Because
     at this point we basically know that all the changes made by committed transactions
     have been persisted to the disk。 So meaning that we no longer need anything that
     is like you know before the checkpoint on in the lock。 Right， because everything
     that is 30 has already made it to the disk。
+  id: totrans-173
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，这基本上是一个新的锁记录形式。那么为什么我们要这样做呢？因为在这一点上，我们基本上可以确定所有由已提交事务所做的更改都已经持久化到磁盘。也就是说，我们不再需要任何类似于检查点之前的内容在锁中。对吧，因为所有的30个页面已经被写入磁盘了。
 - en: All the transactions that need to come that that need to go through have already
     completed right where they have all boarded themselves or or they have all committed
     one way or the other。 So there's no ongoing transactions anymore we have stopped
     everybody。
+  id: totrans-174
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有需要完成的事务已经全部完成了。它们要么已经提交，要么已经以其他方式结束。所以，所有的事务都已经停止了，我们已经暂停了所有操作。
 - en: So therefore we are completely done。 We have cleaned up the pipeline by now。
     So basically we don't need to ever look at anything that is before the checkpoint
     in the lock anymore。 So we might as well just truncate the lock if that's what
     you wanted to do。 And after after all these different steps have done。
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，我们已经完全完成了。我们已经清理了事务管道。所以，基本上我们不再需要关注锁中检查点之前的任何内容。所以，如果你想的话，我们可以直接截断锁。在这些步骤完成后。
 - en: then we can now resume processing of transactions so we can now allow new transactions
     to show up and then we can now go on with business as that's before。 So， pictorically，
     here's a picture that you see。 So you see that there's one new record here called
     checkpoint right which basically annotate or it's basically telling us that we
     have already taken a checkpoint at that point point of luck。
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们就可以恢复事务处理。我们可以允许新的事务出现，并继续我们之前的工作。因此，图示上，你可以看到有一个新的记录叫做“检查点”，它基本上标记了我们已经在那个锁的位置进行了检查点。
 - en: So if we crash。 What would happen is we basically only look at find the first
     checkpoint in the lock right assuming that we have not truncated anything。 So
     we go back to the end of the lock and then we find the first checkpoint that is
     closest to the end of luck。
+  id: totrans-177
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，如果发生崩溃，发生什么事情呢？我们基本上只需要查找锁中的第一个检查点，假设我们没有截断任何东西。那么我们会回到锁的末尾，然后找到最接近锁末尾的第一个检查点。
 - en: And then we basically realize that everything beforehand right we don't need
     to recover them anymore because by virtual what the checkpoint is about。 We would
     already know that they have all made their changes to the disk。 So the only things
     that we need to worry about is thing if any。 all the transactions that started
     after the checkpoint record has made it to the lock。 So。
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们基本上可以意识到，在检查点之前的所有内容我们不再需要恢复，因为通过检查点的作用，我们已经知道它们的更改已经全部写入磁盘。所以，我们只需要关注的是在检查点记录之后开始的任何事务，看看它们是否已写入锁中。
 - en: so for instance in this case notice that like you transactions to see to see
     five basically started right after the checkpoint。 So therefore we would need
     to recover them。 If we crash at the very end of the screen here。 So you can already
@@ -1148,19 +1524,27 @@
     the world so that's not that nice right so like you know we cannot process anything。
     While we're taking the checkpoint and then if there are a lot of transactions
     that are still outstanding when we take the checkpoint。
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以举个例子，在这种情况下，注意到像你的事务基本上是在检查点之后才开始的。所以如果我们在屏幕的最后发生崩溃，我们就需要恢复它们。你可以想象一下这会有什么问题，比如说我们停止了世界的进程，这并不太好，对吧？我们在进行检查点时不能处理任何事情。如果在进行检查点时还有很多未完成的事务。
 - en: then we have that we might need to wait for a quiet while。 So those are some
     of the problems that will encounter with doing checkpointing。 So on Tuesday we'll
     actually start with something known as fuzzy checkpointing。 where we somehow allow
     to still do checkpointing while transactions are still ongoing。
+  id: totrans-180
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们可能需要等待一段时间。所以这些是我们在进行检查点时会遇到的一些问题。接下来周二我们将开始讨论所谓的模糊检查点（fuzzy checkpointing）。在这种方法中，我们可以在事务仍在进行时继续做检查点。
 - en: So we don't need to stop the world， and we can still allow transactions to proceed
     while we take the checkpoint。 Okay cool so with that I think I'm going to stop
     here and let you guys ask questions and I'll also stop the recording。
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们不需要停止世界的进程，且在进行检查点时可以允许事务继续进行。好，明白了，所以我想在这里停下来，让你们提问，我也会停止录音。
 - en: '![](img/cdf7441b4bd316e116edba77d09c12e9_27.png)'
+  id: totrans-182
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/cdf7441b4bd316e116edba77d09c12e9_27.png)'
