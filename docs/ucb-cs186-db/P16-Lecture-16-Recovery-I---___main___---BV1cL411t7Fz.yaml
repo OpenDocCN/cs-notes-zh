@@ -1,722 +1,946 @@
 - en: P16：Lecture 16 Recovery I - ___main___ - BV1cL411t7Fz
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: P16：第16讲 恢复 I - ___main___ - BV1cL411t7Fz
 - en: Okay， hi everyone and welcome to the Tuesday lecture of 186。 So the plan for
     this week is。
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，大家好，欢迎来到186的周二讲座。这个星期的计划是。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_1.png)'
+  id: totrans-2
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_1.png)'
 - en: the first finish up of whatever that we have left from last week， from last
     Thursday about。 transactions， wrap up the entire section and then we're actually
     going to move on to talk。 about recovery。 And then we'll do the announcements
     in between。 Okay， so first I just want to like。 revisit what we talked about last
     week。 I know it has been a couple of days， so like。
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们首先要完成上周剩下的部分，特别是上周四讲的关于事务的内容，整理好整个部分，然后我们将实际开始讨论恢复（recovery）。然后我们会在其中做一些公告。好的，首先我想回顾一下我们上周讨论的内容。我知道已经过去几天了，所以。
 - en: you know some of you might have already forgotten what we have been talking
     about。 So the topic。 of discussion has been transactions， right？ Okay， it has
     been about from currency control。 Otherwise known as how do we ensure that we
     allow multiple operations to process it。 to make progress at the same time within
     the same database system。 So I did TS portion of。
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 你们中的一些人可能已经忘记了我们之前讨论的内容。所以我们讨论的主题是事务，对吧？好的，它是关于并发控制的，也就是我们如何确保在同一个数据库系统中允许多个操作同时进行，以便能够取得进展。所以我已经做了TS部分的。
 - en: the lecture already talked about all these different concepts about like what
     it means。 to be running the running a transaction， what does it mean to be a serializable，
     conflict。 serializability and all that other good stuff。 And then on Thursday，
     we started talking about。 how to actually implement that， right？ So those are
     very nice concepts to have or many。
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 这堂课已经讨论了许多不同的概念，比如运行事务是什么意思，什么是可串行化的，冲突可串行化等所有其他相关内容。然后在周四，我们开始讨论如何实际实现这些概念，对吧？所以这些概念是非常有用的，它们有很多实际应用。
 - en: of the things can be made in a in a serializable manner， right， where if schedules
     can be made。 to be conflict serializable， then that has a lot of different nice
     properties。 But how。 do we actually make that happen in real life， right？ And
     how do we implement it？ So for the。 purpose of this class and other purpose of
     your projects， we basically are going to use。
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 许多事情都可以以可串行化的方式来进行，对吧？如果一个调度可以做到冲突可串行化，那么它就有很多非常好的特性。但是我们如何在实际生活中实现这一点呢？我们如何进行实现？因此，在这堂课以及你们的项目中，我们基本上将使用。
 - en: lock based implementations， which as you may recall， lock in this case just
     means exclusive。 access to a section of code， right？ That is not run by anybody
     else。 So this is like these。 are some of the slides that we have gone through
     on Thursday。 So we basically talked about lock。 based implementations in this
     class， even though they are like a wide variety of different。
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 基于锁的实现方式，正如你们可能记得的那样，在这里，锁意味着对一段代码的独占访问，对吧？这段代码不能被其他人运行。所以这些就是我们在周四讲过的一些幻灯片内容。我们基本上在这堂课上讨论的是基于锁的实现方式，尽管实际上有许多不同的实现方式。
 - en: implementations out there that you guys have pleased to explore if you're interested。
     And。 in particular， we're talking about this concept of a theta element， because
     we're talking。 about what's actually locked， right？ And then as you will see later
     on， this come in also。 a whole bunch of different ways we can do this， right？
     So we can either lock the entire database。
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 你们有很多不同的实现方法可以探索，如果你们感兴趣的话。而且，特别地，我们在谈论这个叫做theta元素的概念，因为我们正在讨论什么是被锁住的，对吧？接下来你们会看到，这也有很多不同的方式可以实现，对吧？所以我们可以锁定整个数据库。
 - en: which of course guarantees serialize ability， because that basically means only
     one instruction。 can make progress at any time。 And then if that instruction is
     not finished， then nobody。 else can do anything on the same database。 So therefore，
     of course， it's going to be serializable。 But unfortunately， that is going to
     not be very efficient， right？ Because we're basically。
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 这当然能保证可串行化性，因为这基本上意味着在任何时候只有一条指令可以取得进展。如果那条指令还没有完成，那么其他人就不能在同一个数据库上做任何事。所以，当然，它会是串行化的。但是不幸的是，这样做并不高效，对吧？因为我们基本上。
 - en: blocking everybody else。 Now， we can also lock the individual records， right，
     all the way。 down to the only touching the two posts that are records that we
     need to do that we need。 to process。 And all of these， you can imagine a spectrum，
     right？ We can lock a page， we can。 lock a single table， we can lock a bunch of
     two posts， so on and so forth。 And then we'll。
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，我们也可以锁定单独的记录，对吧？一直到只锁定我们需要处理的两个记录的字段。所有这些，你可以想象成一个范围，对吧？我们可以锁定一个页面，可以锁定一个单一表格，可以锁定一组两个记录，依此类推。然后我们将看到后面选择不同选项时的差异。
 - en: see the difference rate off later on in terms of choosing among different options。
     So for， locking。 we need to talk about what we can do with the locks， right？ You
     guys have heard。 probably heard about or remember from 61C where you can grab
     a lock and then go into a critical。 section and then run the code within that
     critical section。 But to abstract all of these， right？
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以关于锁定，我们需要讨论我们能对锁做什么，对吧？你们可能听说过或者还记得61C课程中，你可以抓取一个锁，然后进入临界区，接着在这个临界区中运行代码。但是为了抽象化这一切，对吧？
 - en: So for the purpose of 186， we adjust to abstract all the locks to have only
     two。 different operations that you can do on it。 Namely， locking it and unlocking
     it。 That's， it。 After we've locked something， then we have exclusive access to
     that particular data， elements。 whatever that data elements might mean， like the
     whole database， might be a， table。
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以为了186的目的，我们将所有锁操作抽象为仅有两种操作，即锁定和解锁。就是这样。在我们锁定某些内容之后，我们就拥有对这些特定数据元素的独占访问权。无论这些数据元素意味着什么，可能是整个数据库，可能是一个表格。
 - en: might be a tool pole， so on and so forth。 And then vice versa for the unlock。
     We。 went through a bunch of different schedules， as you may recall from Thursday。
     So this is。 the original one where we wanted it to be conflict serializable。 And
     then by inserting。 all these different locks that you see here in the schedule，
     and then with the corresponding。
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 可能是一个记录，依此类推。然后，解锁的操作则是相反的。我们通过了许多不同的调度，如你从周四的课上可能记得的那样。所以这是最初的调度，我们希望它是冲突可串行化的。然后，通过插入你在这个调度中看到的所有不同的锁，并且相应地执行。
 - en: unlocking statements， then we basically guarantee that this is going to be conflict
     serializable。 So I'm not going to go through the details again， but then you can
     also see there can。 be problems because depending on how things are unlocked，
     right？ And how， like， you know。 which lock is actually granted to which transaction
     we may still end up in a problematic situation。
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们首先解锁语句，那么我们基本上可以保证这个调度是冲突可串行化的。所以我不再重复细节了，但你也可以看到，仍然可能会出现问题，因为根据事务解锁的方式以及哪个锁被分配给哪个事务，我们仍然可能会陷入问题情况。
 - en: like the case that you see here on the screen。 And of course， then once again，
     the test shows， up。 So we then discuss what is known as the 2PL or the two phase
     locking rule， which says。 that for every transaction， all the locking requests
     have to precede all the unlocking， requests。 So you can see why the previous schedule
     on the， on the previous slide actually。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 就像你在屏幕上看到的情况一样。当然，测试也会出现。所以我们接下来讨论的是所谓的2PL或者两阶段锁定规则，它规定对于每个事务，所有的锁请求必须在所有解锁请求之前。因此你可以理解为什么前面的调度会存在问题。
 - en: violates that particular constraint， because we have started unlocking before
     the last。 lock statements。 So this is not allowable per 2PL rule， right？ So this
     is the rewritten version。 of the same schedule， except that now you can see we
     are graphing all the locks before actually。 unlocking anything here。 Right？ So
     that works。 2PL works， except that we now have a new problem。
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 违反了这个特定的约束，因为我们在最后一个锁语句之前就开始了解锁了。所以根据2PL规则，这是不允许的，对吧？所以这是相同调度的重写版本，唯一的不同是，现在你可以看到我们在实际上解锁任何内容之前，先画出了所有的锁。对吧？所以这样是可以的，2PL是可行的，除了现在我们遇到了一个新问题。
 - en: right？ Which was otherwise known as the non-recoverable schedule。 In this case，
     the problem is that。 like your one transaction turns out to roll back or abort
     while the other one decides to， commit。 Even if we stick to the 2PL locking mechanism，
     in this case， we still have the。 problem of the second transaction here on the
     right hand side of the screen being able。
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？这个问题也被称为不可恢复调度。在这种情况下，问题在于，如果一个事务回滚或中止，而另一个事务决定提交，即使我们坚持使用2PL锁定机制，仍然会有问题。这里屏幕右侧的第二个事务可能会阻塞其他所有事务。
 - en: to read something that was made that was changed that was written by transaction
     one on the， left。 Now transaction one is a set desire to abort， so therefore we
     need to somehow unroll。 or roll back the changes that transaction one has made。
     But unfortunately that would somehow。 need to， we would somehow need to also unroll，
     right？ Or abort transaction two， because transaction。
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 去读取一些已经被事务一方修改过的内容。现在事务一方决定中止，所以我们需要以某种方式回滚或撤销事务一方所做的更改。但不幸的是，这样做也许还需要我们回滚，或者中止事务二，因为事务。
 - en: two has seen things that have， that it should not have seen， right？ Does that
     make sense？
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务二看到了它不该看到的内容，对吧？这说得通吗？
 - en: But unfortunately transaction two already committed， right？ So we're kind of
     in a weird。 situation now， right？ Because T1 wants to abort， but we also need
     to roll back or abort T2。 you know， because of that。 But then T2 has already committed
     so we can no longer undo。 So that's the problem。 How do we deal with that problem？
     Well， we enforce another rule。
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 但不幸的是，事务二已经提交了，对吧？所以我们现在处于一个奇怪的局面，对吧？因为事务一想要中止，但我们也需要回滚或中止事务二，你知道的，因为什么原因。但是事务二已经提交，我们就不能再撤销了。所以这就是问题。我们该如何处理这个问题呢？好吧，我们制定了另一条规则。
 - en: known as the straight 2PL rule。 So same thing as before， except that in this
     case we are。 requiring that all the unlocks have to have all the unlocks can only
     be done together with either。 a commit or abort， otherwise known as the end of
     the transaction， right？ And you can see from the。 example that we have on the
     previous slide， right？ Now doing the straight 2PL thing， in this case。
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是所谓的严格2PL规则。所以跟之前一样，除了在这种情况下我们要求所有的解锁操作必须与提交或中止一起进行，也就是事务的结束，对吧？你可以从我们上一页的例子中看到，对吧？现在执行严格2PL规则，在这种情况下。
 - en: we guarantee that we don't have this non-recoverable schedule problem。 because
     now we are only unlocking， everything after either a rollback or a commit。 Does
     this make sense？ So this also turns out to be pretty easy to implement， because
     like， you know。 we basically， just need to insert the locking and the unlock statements
     at the appropriate places in the。
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们保证不会遇到不可恢复的调度问题。因为现在我们只有在回滚或提交之后才会解锁。这样说得通吗？所以这实际上也变得相当容易实现，因为，像你知道的那样，我们基本上只需要在合适的位置插入锁定和解锁语句。
 - en: transaction and then just let the lock play out， right？ In terms of who gets
     the lock first doesn't。 matter anymore， and then we'll be able to do the right
     thing， so to speak， right？ By ensuring。 conflict， serializability， and also recoverability。
     But does that mean that is the end of out-trouble？ And unfortunately， that's also
     not the case。
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 事务，然后就让锁定进行下去，对吧？在谁先获得锁的方面已经不再重要，然后我们就能做出正确的决定，可以这么说，对吧？通过确保冲突、可串行化性以及恢复性。但这是否意味着问题就解决了？不幸的是，情况并非如此。
 - en: right？ And as you recall from last week what I was saying， right？
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？你还记得我上周说的是什么吧？
 - en: I mean transactions or concurrency control is always a story written in blood
     and， crying， right？
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的意思是，事务或并发控制永远是一个写满血泪与眼泪的故事，对吧？
 - en: Or like， you know， tears or whatever， one of those bad things。 Well。 I guess
     it depends on which side you're on， right？ Because if you are the banking， transaction。
     right， then you ended up getting free money。 I mean， I don't think you'll be，
     crying。 Maybe you'll only be crying in the case of a in a sense of too happy about
     it， right， or， something。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者像你知道的那样，眼泪或者其他一些糟糕的事情。嗯，我想这取决于你站在哪一边，对吧？因为如果你是银行交易的一方，对吧，那么你最终会得到免费的钱。我是说，我认为你不会哭泣。也许只有在你对这件事感到过于高兴时，你才会哭泣，对吧？或者，什么的。
 - en: But somebody else will be in trouble， okay？ So let's put that right， right？
     Right？ So。 what is the problem now？ Right？ The problem now is we can stick with
     strict to be out， but then now。 we have this problem of deadlock。 So deadlock
     in the sense that nobody， none of these transactions。 can actually make any progress，
     right？ So here we have T1 holding on the lock to A and then。
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 但其他人会遇到麻烦，好吗？所以我们把这个问题放在那儿，对吧？对吧？那么现在的问题是什么呢？对吧？现在的问题是我们可以坚持严格的2PL规则，但现在我们遇到了死锁问题。死锁的意思是没有任何一个事务能够继续进行，对吧？所以这里我们看到事务一持有着锁A，然后。
 - en: waiting for B and then T2 waiting for B， holding the lock on B and then waiting
     for A。 So need a。 transaction can make progress。 We have a problem。 So that's
     kind of like where we stop， right？ So。 we were talking about， okay， now we have
     a deadlock。 Basically three things that we need to learn about。
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 等待B，然后T2等待B，持有B上的锁再等待A。所以需要有一个事务能够进展。我们遇到问题了。所以就是这样，我们停在这里，对吧？所以，我们在讨论，好的，现在我们有了死锁。基本上，我们需要了解三件事。
 - en: First is how to prevent it from happening altogether。 If so， that's great， right？
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 首先是如何彻底防止它发生。如果能做到，那就太好了，对吧？
 - en: The second one is if we cannot avoid it， as in we will have deadlocks， how do
     we deal with it？
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 第二种方法是如果我们无法避免死锁，那我们该如何处理它？
 - en: How do we detect it？ And how do we get rid of it？ So basically those are three
     things that we talked。 about。 The first one preventing is easy。 One way we can
     do that is by basically setting up an。 arbitrary order on how things are like，
     you know， on the ordering for which each of the transactions。 can grab the locks，
     right？ So I can arbitrarily say that。
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们如何检测它？如何消除它？所以基本上这就是我们讨论的三件事。第一种方法预防是简单的。我们可以通过设置一个任意的顺序来做，规定事务如何获取锁，对吧？所以我可以随便说。
 - en: So just using in this case an example from， 162， I can arbitrarily say that
     like， you know。 the screen has preff has priority over network， card and over
     printer。 So therefore if the screen is trying to grab the lock on the same thing
     that。 the network card is trying to grab， then the screen always wins。 Completely
     arbitrary， right？ So no。
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如在这个例子中，162，我可以随便说屏幕优先于网络卡和打印机。所以如果屏幕尝试获取与网络卡相同的锁时，屏幕总是会赢。完全是随便的，对吧？所以没有。
 - en: I have no reason why the printer has to be like your last， you know， in terms
     of priority。 But at。 least that solves the problem because we will no longer get
     into a deadlock situation。 The， problem。 however， for us in 1986 is that how do
     we impose an arbitrary order on a bunch of tables。 and two posts， right？ We don't
     have fixed devices that we deal with， right？ We have all kinds of。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 我没有理由认为打印机必须排在最后，优先级最低。但至少这样能解决问题，因为我们将不再进入死锁状态。然而，1986年的问题是，如何在一堆表格和帖子上施加一个任意的顺序？对吧？我们没有固定的设备来处理这些，对吧？我们处理的是各种各样的。
 - en: tables that people can create。 So like it's hard for us to arbitrarily impose
     an order without knowing。 what tables or what two posts are going to be involved
     in a query。 Okay， so if we cannot avoid it。 then let's try to sorry， if we cannot
     prevent it completely， then let's try to avoid it by being。 able to detect and
     then being able to deal with the situation when it arrives。 How do we do that？
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 人们可以创建表格。所以在不知道会涉及哪些表格或哪些帖子会参与查询的情况下，我们很难随意施加顺序。好的，如果我们无法完全避免它，那我们就尽量通过能够检测并在情况发生时进行处理来避免它。我们该怎么做呢？
 - en: Well， so one way of doing that is use this notion of an age of a transaction。
     Basically， the amount。 of time that has been spent on that particular transaction。
     And then every time we detect a。 deadlock， which I'll talk about on the next slide，
     then we have a couple of options。 The first one that， you see here on the top
     here， right？ So again。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，一种方法是使用事务的年龄这个概念。基本上，就是在特定事务上花费的时间。然后每当我们检测到死锁时（我会在下一张幻灯片中讲解），我们有几个选项。第一个你可以看到的就在上面，右边，对吧？所以，再次。
 - en: this is the stinky example that was using last week。 about people going to the
     restrooms is to basically either have the older transaction。 older in this case
     in terms of the time that it has taken to process it to wait。 And then if it。
     turns out that the younger transaction is going to wait， then just kill itself。
     Killing itself in。
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是上周使用的臭例子，关于人们去洗手间的例子，基本上是让较老的事务（在这里指处理时间较长的事务）等待。如果最后发现较新的事务需要等待，那就让它自杀。自杀时。
 - en: this case just means like， you know， go back to the end of the line and then
     like， you know。 start waiting， again。 Right。 Why does this prevent deadlock？
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种情况意味着你知道，返回队列的末尾，再次开始等待，对吧？为什么这样可以防止死锁？
 - en: This prevents deadlock because we don't have a sick， click situation anymore。
     So it's not like。 you know， the old transaction needs to wait for the， younger
     one。 And then the younger one have cases where it needs to wait for the older
     one。 Right。 Because in this case， because of this dire situation， right， anytime
     when the young， situation。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 这样就能避免死锁，因为我们不再有循环等待的情况了。所以不是那种情况。你知道，旧事务需要等待年轻事务。而且年轻事务也会遇到需要等待旧事务的情况。对吧。因为在这种情况下，由于这个严重情况，每当年轻事务。
 - en: when the younger transaction needs to wait for the older one， it always just
     kill， itself and then。 you know， wait， go back to the end of the line。 So therefore，
     we prevent the cycle， from happening。 The older transaction always wins， right，
     in this case。 Unless like， you know。 someone's already in the bathroom。 So the
     older transaction also has to wait in that case。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 当年轻事务需要等待旧事务时，它总是会自我终止，然后你知道，去到队列的最后。这样我们就防止了循环的发生。旧事务总是会获胜，对吧，在这种情况下。除非，像你知道的，有人已经在使用资源。那么在这种情况下，旧事务也需要等待。
 - en: And then another one， right， is basically the other way around。 So， you know，
     or actually not the。 other way around， but like another way of doing with this
     deadlock situation， right。 We can have。 the younger transaction wait。 And as in
     this case here， and then if the older transaction actually。 needs to use the bathroom，
     just kill off whoever that is in it。 Right。 As a not clear example。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后另一个方式，对吧，基本上是相反的方式。所以，你知道，或者实际上不是完全相反的方式，而是处理死锁情况的另一种方法，对吧。我们可以让年轻事务等待。就像这个例子一样，然后如果旧事务实际上需要使用资源，就终止在使用中的任何事务。对吧。作为一个不太清楚的示例。
 - en: I know， right， but then like， you know， at least that gets the cycle broken。
     Same idea。 So we now have the， younger transaction always wait。 but then the older
     transaction will never needs to wait， right。 because as soon as it needs to use
     the bathroom or grab a lock， it's always going to win， right。
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 我知道，对吧，但是至少这样就打破了死锁循环。一样的思路。所以我们现在有了，年轻的事务总是等待。但旧事务永远不需要等待，对吧。因为一旦它需要使用资源或获取锁，它总是能抢先成功，对吧。
 - en: So therefore， that's not going to be an issue anymore。 So we again avoid the
     problem of。 needing the older transaction wait for the younger one， while the
     younger one may also need to wait。 for the older one and other circumstances。
     Does this make sense？
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，理应这不再是问题。所以我们再次避免了问题。即不再需要旧事务等待新事务，而新事务也可能需要等待旧事务，以及其他情况。这样说有道理吗？
 - en: Are there any questions about this so， far？ So Nicholas is asking wouldn't wait，
     died possibly。 resound in a transaction repeatedly， killing a self consuming cycles。
     Yeah。 So in this case， I mean。 we only guarantee that block avoidance， right，
     we didn't guarantee progress。 So it's definitely going to be the case， it might
     be the case that。
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 到目前为止，有没有什么问题？所以，尼古拉斯在问，是否会因为等待而死锁，可能会。事务中重复发生阻塞，导致自我消耗的循环。是的。所以在这种情况下，我的意思是。我们只保证阻塞避免，对吧，我们并没有保证进展。所以，确实可能会发生这种情况，可能会是这样。
 - en: the young transaction is just going to repeatedly go back to the end of the
     line。 go up to the party， and adjust to see that the old transaction is still
     being processed。 So therefore， I'm just going to， kill myself again， and then
     go back to the end of the line， right。 That can totally happen， but unless， like，
     you know。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 年轻事务会不断地回到队列的最后，回到队伍中，调整自己，看到旧事务仍在处理当中。所以，我就再次自杀，然后回到队列的最后。对吧。这完全可能发生，但除非，像你知道的。
 - en: the old transaction is going to take up forever， enough finishing is business，
     right。 So you speak。 otherwise， eventually， the newer， the younger transaction
     is going to keep。 being able to get the lock， right， or in this case， being able
     to use the party。 So therefore， like。 you know， it will eventually make progress
     that way。 But then you're right， in the meantime。
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 旧事务会一直占用资源，直到完成其任务，对吧。这样说。否则，最终年轻事务将能够不断获取锁，或者在这种情况下，能够使用资源。因此，像你知道的，它最终会这样取得进展。但你说得对，在这期间。
 - en: you know， it might， we might be spending a lot of time just like， you know，
     waiting in line。 getting back and lying， and then， you know， killing myself and
     then going back and lying just like。 just to do the same thing again。 Okay。 Not
     funny in real life， right， but like， you know。 in the transaction， well， I guess
     we can tolerate a little bit of this kind of churning， okay。
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 你知道的，可能，我们可能花很多时间在排队，来回等待，然后，又要终止自己，然后再回去排队，就像是。只为了再次做同样的事情。好吧，现实生活中不太有趣，对吧，但在事务处理中，我猜我们可以容忍一些这种反复的过程，好吧。
 - en: Great。 So now also， we also talked about like， you know。 how to detect a deadlock
     from the beginning。 And then one way of doing that is to use something known as
     a wait for graph。 So I'm not going to repeat， the entire concept here。 but it's
     basically a graph that talks about which transaction is holding。
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 很好。那么现在我们也讨论了，比如，如何从一开始就检测死锁。一个方法是使用一种被称为“等待图”（wait-for graph）的方法。所以我不会在这里重复整个概念，但基本上它是一个图，表示哪个事务正在持有。
 - en: onto the same block that another transaction is trying to graph。 So in this
     case， for instance。 we have an， we have an etch or an arrow here between T1 and
     T2， because T1 is trying to read。 the data element B， but then T2 is currently
     holding onto that block， right。 So there's an arrow。 between T1 and T2。 It's very
     similar to the dependence graph concept， which you may recall， right。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们进入另一个事务正在尝试获取的相同区块时。比如，在这种情况下，我们在T1和T2之间有一条箭头，因为T1正在尝试读取数据元素B，而T2当前持有该区块，对吧。所以T1和T2之间有一条箭头。这与依赖图的概念非常相似，你可能记得吧。
 - en: from a DTS lecture。 But in this case， we are basically annotating the graph
     with an arrow。 every time when there's a locking situation between two transactions。
     And then if there's a cycle between， in the graph， then we have basically detected
     a deadlock。 And then I already talked about what， you have to do with that on
     the previous slide， right。
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 来自DTS讲座。但在这种情况下，我们基本上是用箭头标注图表，每次两个事务之间存在锁定情况时。然后如果图中有循环，我们就基本上检测到了死锁。然后我已经在前面的幻灯片中讲过，你应该怎么处理它了，对吧。
 - en: when such a situation happens， okay。 And then just as an empirical fact。 these
     deadlocks tend to be small。 So it usually doesn't involve a， lot of different
     transactions。 So therefore， even if we have to kill off these transactions， they're
     a newer one。 they're the newer transactions， we might not need to actually kill
     off a lot of them。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 当这种情况发生时，好吧。然后，就作为一个经验事实，这些死锁往往是小规模的。因此，通常不会涉及大量不同的事务。所以，即使我们必须终止这些事务，它们是新的事务，可能我们不需要终止很多它们。
 - en: empirically speaking。 Although， of course， you can construct an apathylogical
     example。 where we have， a huge cycle of like tens or even thousands of transactions。
     But I would just say that that， turns out to be relatively rare in practice。 Okay。
     So that log is bad， and we want to avoid it， but another way of actually trying
     to avoid it is actually look at the situation where we really。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 从经验来看，尽管当然你可以构造一个反常的例子，假设我们有一个由数十个甚至上千个事务组成的大循环。但我想说，这在实践中相对较为罕见。好吧，死锁是坏的，我们想避免它，但另一种尝试避免死锁的方式是实际观察事务之间的情况。
 - en: need to have a deadlock。 An example is what if all the transactions are actually
     just trying to。 read the same data elements， let's say a tuple。 If they're all
     reading， then even though like。 you know， they're reading the same thing， as long
     as what none of them is actually writing to the。 same tuple， we can actually let
     all those transactions make progress， right。
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 需要处理死锁。举个例子，如果所有事务实际上都在尝试读取相同的数据元素，比如一个元组。如果它们都在读取，那么即使它们在读取相同的东西，只要没有事务实际上写入相同的元组，我们实际上可以让所有这些事务继续进行，对吧。
 - en: They can still keep reading， it。 I mean， as long as no one is writing， that's
     fine。 But then in the previous slides， then we， will be basically trying to grab
     blocks and then like keep。 we basically have to keep waiting on them， right， because
     only one transaction can read that element at the same time。 So to implement that，
     idea， one way to think about that is to basically have different types of logs。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 它们仍然可以继续读取，没问题。我的意思是，只要没有人进行写操作就行。但在前面的幻灯片中，我们基本上是在尝试获取区块，然后保持等待。我们基本上必须一直等待它们，因为同一时间只有一个事务可以读取该元素。所以要实现这个想法，一种思路是基本上有不同类型的日志。
 - en: So now we are getting， fancy， right？ So we're moving beyond like， you know，
     strict to be out。 we're moving beyond like， you know， having having like， you
     know， deadlock detection。 all that stuff。 So all that is basically， under us now。
     So now we are talking about how to be more efficient。 We can be more efficient
     if。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在我们变得更复杂了，对吧？我们超越了像是严格事务顺序的范畴。我们也超越了像死锁检测这种东西。所以这些东西基本上已经被我们处理好了。现在我们在讨论如何提高效率。如果。
 - en: we have different types of locks to begin with。 So let's say we can have a lock
     that transactions。 can get for just reading a data element and an exclusive lock
     for writing it or writing to the。 same data element。 We're going to， you know，
     play with play by strict to be as I said earlier。 right。 So， you know， nobody
     is like， you know， we have to adhere to the locking and the unlocking mechanism。
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们一开始就有不同类型的锁。那么，假设我们可以为仅仅读取数据元素的事务获取一个锁，而对于写入或修改相同数据元素的事务，则使用排他锁。我们将按照严格的事务顺序来进行操作，正如我之前所说的那样。所以，大家知道的，我们必须遵循锁定和解锁机制。
 - en: But then I claim that with shared locks， multiple transactions can make progress
     now， as opposed to。 needing to wait for one another。 In the case， let's say they're
     just trying to wait， but not right。 to that data element。 But then now the problem
     is we now have different types of locks。 So how。 are they compatible？ So to do
     with that， we invented something known as the lock compatibility matrix。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 但我认为，在使用共享锁的情况下，多个事务现在可以继续进行，而不需要相互等待。在这种情况下，假设它们只是尝试等待，但并没有对数据元素进行操作。那么现在的问题是，我们有了不同类型的锁。那么，它们是如何兼容的呢？为了解决这个问题，我们发明了一个叫做锁兼容矩阵的东西。
 - en: The way to read that is to basically say that assume one of the transactions
     has grabbed a。 shared lock on a data element， and then a new transaction shows
     up and tries to grab the same。 shared lock on this on that element。 And by this
     matrix， having a checkmark basically means we。 are going to grant that request。
     And you if you think about it， it makes sense in real life， right。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种情况的意思基本上是，假设一个事务已经在数据元素上获取了共享锁，然后一个新的事务出现并尝试在该元素上获取相同的共享锁。根据这个矩阵，有勾选符号基本上意味着我们会批准这个请求。如果你仔细想想，这在现实生活中是有道理的，对吧？
 - en: because in this case， we have two transactions trying to read the same data
     elements。 So they。 should both be able to proceed， right。 Does that make sense？
     So of course， the question then is。 like， you know， why is this a， why is there
     a cross here？ Well， think about what this， what is the。 real life situation that
     corresponds to， right， this corresponds to the case where one of the。
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为在这种情况下，我们有两个事务试图读取相同的数据元素。所以它们都应该能够继续进行，对吧？这样说有道理吗？当然，接下来的问题是，像你知道的，为什么这里会有一个交叉呢？嗯，想一想这个，实际上是什么情况呢？它对应的是一个这样的情况，其中一个事务。
 - en: transactions tries to write the same data element that another transaction is
     trying to read。 So we cannot allow that， right， because if so， then we break serializability
     by doing so。 So therefore， we are not going to allow that lock to be granted in
     that case。 And the same situation happens vice versa， right。 So it doesn't matter
     who already has。
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果一个事务试图写入另一个事务正在尝试读取的数据元素，那么我们不能允许这样做，因为如果允许，我们就会破坏可序列化性。因此，我们不会批准这种情况下的锁请求。同样的情况也适用于反过来的情况，对吧？所以不管谁已经拥有锁，情况都一样。
 - en: whether like， you know， the first transaction has the exclusive lock or the
     first transaction has。 the shared lock。 It doesn't matter。 So we're just not going
     to grant the second request for the lock。 Cool。 So you might ask the question，
     right。 So how are these locks actually implemented in practice。 right。 How are
     they actually who is keeping track of all these different types of locks， right。
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 无论是，像你知道的，第一个事务拥有排他锁，还是第一个事务拥有共享锁，这并不重要。所以我们不会批准第二个锁请求。很酷吧？那么你可能会问，实际上这些锁是如何实现的呢？对吧？谁在跟踪这些不同类型的锁呢？
 - en: So it turns out in the database system， we have something known as the lock
     manager。 which basically does this。 And inside the lock manager is basically a
     hash table based on the。 names of the objects being locked。 If the names of the，
     if the objects here are tables， then we。 have one row for every single table。
     And if we are talking about two posts and we have one row for。
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 结果发现，在数据库系统中，我们有一个叫做锁管理器的东西，基本上就是做这些事情。在锁管理器内部，基本上是基于被锁对象名称的哈希表。如果这里的对象是表，那么我们就为每个表有一行。如果我们讨论的是两个帖子，那么我们就有一行…
 - en: two pull。 And then the lock manager keeps track of who currently has the lock
     and what are the。 transactions that are currently waiting for it。 So you see an
     example here。 So we have two data。 elements here， A and B。 And then the grant
     is set here basically talks about like， you know。 which transactions are currently
     granted access to that data element。 So you can see that on the。
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 拉取。然后锁管理器会跟踪当前谁拥有锁，以及当前有哪些事务在等待它。所以你看到一个例子，这里有两个数据元素，A和B。然后这里的授予集合基本上是在讨论哪些事务当前已经获得了对该数据元素的访问权限。所以你可以看到，在…
 - en: in the first row， we have two transactions having granted the shared lock versus
     on the second row。 we have a one transaction being granted the exclusive lock。
     The weight queue is basically。 just talking about who are the other transactions
     waiting for it。 So you can see that transaction。 three is trying to grab the exclusive
     lock on A。 But since like， you know， two other transactions。
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 在第一行中，我们有两个事务获得了共享锁，而在第二行中，我们有一个事务获得了独占锁。等待队列基本上是在讨论哪些其他事务在等待它。所以你可以看到，事务三正在尝试获取A的独占锁。但由于，像你知道的，另外两个事务…
 - en: currently has to share lock by the compatibility matrix， we cannot allow that
     to happen。 So therefore， we have to wait， we have the weight queue here。 basically
     having everybody else line up。 So when a request arrives at the lock manager。
     it basically checks this hash table to figure out， whether we can allow that request
     to go through。
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 目前，由于共享锁的兼容性矩阵，我们无法允许这种情况发生。因此，我们必须等待，这里就有等待队列，基本上是让其他所有事务排队。所以当一个请求到达锁管理器时，它会检查这个哈希表来判断是否能够允许该请求通过。
 - en: If nobody is holding on to any locks of that data， element。 then we can just
     insert that into the grantor sets and then let it move on with this， business。
     If not， then we just like， you know， have it put in the queue。 And then you can
     also。 imagine upgrading a lock， right？ So if I already have a shared lock， and
     then， and then now if I。
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果没有人持有任何该数据元素的锁，那么我们可以直接将其插入到授予者集合中，然后让它继续处理这个业务。如果不是的话，我们就像，你知道的，将它放入队列中。然后你也可以想象一下升级锁，对吧？如果我已经拥有一个共享锁，那么现在，如果我…
 - en: want to actually write to the same data elements， then I need to basically upgrade
     my locking。 my lock， right， to be the exclusive one。 And it's the exact same mechanism。
     So you can， like。 you know， imagine how you can resolve that too。 And basically
     look at the weight queue and see。 like， if anyone is trying to grab the exclusive
     lock or already holding the exclusive lock on that。
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我想写入相同的数据元素，那么我需要基本上将我的锁升级。我的锁，对吧，升级为独占锁。而这正是相同的机制。所以你可以，像你知道的，想象一下你如何解决这个问题。基本上看一下等待队列，看看是否有任何人正在尝试获取独占锁，或者已经持有该数据元素的独占锁。
 - en: And then based on that， we can figure out whether we want to grant the request。
     Any questions about this so far？ Yeah。 Yeah， Nicholas。 Oh， sorry。 I just had a
     question about。 do those policies like weight， die and wouldn't wait。 do they
     still apply those when you have multiple lock modes？ Great question。 Yeah。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 基于此，我们可以判断是否要授予请求。到目前为止，有什么问题吗？是的，尼古拉斯。哦，对不起，我只是有个问题。那些像等待死锁（wait-die）和不等待（wound-wait）的策略，当你有多个锁模式时，它们是否仍然适用？好问题，嗯。
 - en: you can still apply that if you have the same， if you have different lock， modes。
     And of course。 like， you know， in this case， we only used to apply that when。
     when one of the transactions is trying to grab an exclusive lock， right？ Because
     if everything is。 all the transactions are just trying to grab a shared lock，
     then we just let all of them have it。
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你有不同的锁模式，你仍然可以应用这些策略。当然，就像你知道的，在这种情况下，我们只有在其中一个事务尝试获取独占锁时才会应用这些策略，对吧？因为如果所有的事务都只是尝试获取共享锁，那么我们就让它们全部获取。
 - en: That's fine。 So the only situation that we need to do with that is if someone
     is trying to grab an。 exclusive lock on a data element where there's already a
     previous transaction that is already。 holding the exclusive lock or holding a
     shared lock on it。 Thank you。 Question。 Great。 So you might。 think all of our
     troubles are solved， right？ Well， it turns out that there's still another problem。
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 那也没问题。所以我们需要处理的唯一情况是，如果某人在试图对一个数据元素获取排他锁，而这个数据元素上已经有另一个交易持有排他锁或共享锁。谢谢。问题。很好。那么你可能会觉得我们所有的问题都解决了，对吧？但是事实证明，仍然有另一个问题。
 - en: So now we're not talking about correctness here， right？ We're talking about，
     we're talking about。 efficiency。 So this is a typical graph that you see when
     people try to plot the number of transactions。 against throughput， which is a
     measure of how many transactions are processed per second。 So obviously， higher
     the better， right？ But you'll basically see at some point that， like， you know。
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在我们讨论的不是正确性，对吧？我们讨论的是效率。所以这是一个典型的图表，当人们尝试绘制交易数量与吞吐量之间的关系时，吞吐量是每秒处理多少交易的一个衡量标准。所以显然，越高越好，对吧？但是你基本上会看到，在某一点，你知道。
 - en: the performance starts to drop。 And the reason why that is the case is because
     the more transactions。 we have， then the higher chance that they will be waiting
     for each other on these locks， right？
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 性能开始下降。而之所以会这样，是因为我们有更多的交易时，它们彼此在这些锁上等待的概率就更高，对吧？
 - en: Doesn't matter whether it's exclusive or shared or whatever。 It's just a matter
     of the number of locks， that are out there is going to or like being induced。
     right？ Or being weighted on is going to， increase as we have more and more transactions。
     So you get into something that is threshing， right？ I mean， so， you know。
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 不管它是排他锁、共享锁还是其他什么的，问题是锁的数量，这些锁的数量或者说被引发的锁，等待的锁，会随着交易数量的增加而增加。所以你会陷入一个阈值问题，对吧？我的意思是，像这样。
 - en: you start hearing your fan comes off， goes off， right， on your laptop， for，
     example。 So that's bad。 So how can we mitigate this problem？ Right？ One way of
     doing with that is to。 basically do something known as granular locks。 So this
     basically goes back to the discussion about。 like， you know， at what level should
     these data elements be， right？ We may talk about locking a。
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 你开始听到你的笔记本风扇开始转动，停止工作了，对吧？例如说。这是坏的。那么我们如何缓解这个问题呢？对吧？一种方法是，基本上做一些被称为细粒度锁的事情。所以这实际上回到我们之前讨论的，像是，知道在什么级别下这些数据元素应该是什么？对吧？我们可能会讨论锁定一个。
 - en: data element。 Should they be at the individual tuple level？
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 数据元素。它们应该是单个元组级别的锁吗？
 - en: Or should they be at the entire database， level？ So if there's only one lock
     for the entire database。 then， you know， we don't have that， we won't have the
     threshing problem because there's only one lock。 but then we basically kill off，
     efficiency。 So therefore。 we can only process one transaction at a time， right？
     And then if we have， a lot of different locks。
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者它们应该是整个数据库级别的锁吗？所以如果整个数据库只有一个锁，那么你知道，我们就不会有阈值问题，因为只有一个锁。但这样的话，我们基本上就会杀掉效率。所以那样的话，我们一次只能处理一个交易，对吧？然后如果我们有很多不同的锁。
 - en: right？ So imagine I have one lock per tuple， and I have a million， to oppose
     in a table。 So we're talking about potentially a million locks being in use。 and
     wait for and then kill it off and die and all that other stuff， right？ So part
     of that is。 going to contribute to this threshing problem that was talking about
     on the previous slide。
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？所以假设我每个元组都有一个锁，而且我有一百万个要在表格中对抗的锁。我们说的可能是有一百万个锁在使用。然后等待，再把它杀掉，死掉，还有其他所有事情，对吧？所以这一部分会导致我们在上一张幻灯片上讨论的阈值问题。
 - en: So now the question becomes， can we actually try to change this granularity，
     right？ Because if。 there's a whole wide spectrum between like what types of locks
     that we can offer， then that might。 be a good solution to this problem here。 But
     it's kind of hard to decide a priority about like what。 to lock， right？ Because
     there are different levels that we can lock things， but then。
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在的问题是，我们是否可以尝试改变这种粒度呢？对吧？因为如果在不同类型的锁之间存在一个广泛的选择范围，那么这可能是解决这个问题的一个好方法。但其实很难决定锁定什么的优先级，对吧？因为我们可以在不同的级别锁定东西，但接着。
 - en: and we already， understand that there's a trade-off between whether we want
     to thrash or we potentially run。 through threshing， or on the other hand， only
     have like one transaction of progress at any point of。 time， right？ At any point
     in time。 The question then is like， can we actually have both？
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们已经理解了，在是否我们想要产生资源争用，或者我们可能会经历资源争用之间存在一种权衡，另一方面，在任何时刻只有一个事务在进展，对吧？任何时刻。问题是，能不能实现两者兼得？
 - en: Somehow we want to be able to grab locks at different levels， and then still
     be able to， like。 you know， avoid the problem of thrashing by dynamically choosing
     at what level we want to grab all these。 different locks。 So that's the problem
     set up。 So the way that we're going to solve this problem。 as I said， is by basically
     having different types of locks at different levels。 So let's define a。
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 不知怎么地，我们希望能够在不同层次上获取锁，然后仍然能够避免通过动态选择我们要在哪个层次上获取所有这些不同锁的问题。问题就是这样设置的。解决这个问题的方法，正如我所说，是基本上在不同层次上拥有不同类型的锁。我们来定义一个。
 - en: hierarchy of different granularity。 We have two posts nested within a table，
     and we have tables。 nested within the database， for instance。 If we have a hierarchy
     of these different data elements。 then we can represent things as a tree， and
     then we can now try to grab locks from the topmost level。 all the way down to
     the individual tuple as needed， right？ So now when we try to， in this world。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 不同粒度的层次结构。我们有两个帖子嵌套在一个表中，并且有表嵌套在数据库中，例如。如果我们有一个这些不同数据元素的层次结构，那么我们可以将其表示为一棵树，然后我们可以从最上层开始，按需一直向下获取锁直到单个元组，对吧？所以现在，当我们尝试在这个世界中。
 - en: right， of a hierarchy of locks， we need to have a discipline in terms of what
     does it mean when。 we try to grab a lock in this world。 So I'm just going to arbitrarily
     make the decision that if we。 lock a node in this tree that I'll show you in here，
     then we're basically just implicitly locking。 everything in terms of its descendants。
     So just to check our intuition。 So if I grab the lock on。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 对，关于锁的层次结构，我们需要有一个规范，明确当我们尝试在这个世界中获取一个锁时，它意味着什么。所以我将随便做个决定，如果我们锁定了我在这里展示的这个树中的一个节点，那么我们实际上就是隐式地锁定了它所有的后代。为了检查我们的直觉。如果我获取了这个锁。
 - en: the entire database， basically the root node， that basically means I'm grabbing
     the lock on。 everything in this tree， all the tables and all the tuples。 And then
     if I'm grabbing a lock on。 let's say， one of these pages here in a table， then
     I'm implicitly also grabbing the lock on each。 of the individual tuples that you
     see here as descendants。 I'm not actually explicitly grabbing。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 整个数据库，基本上是根节点，这基本上意味着我正在锁定树中的所有内容，所有的表和所有的元组。然后，如果我在表中的某个页面上获取锁，那么我隐式地也锁定了每个在这里作为后代的单个元组。我实际上并没有显式地获取。
 - en: the locks on those tuples， right？ Because if we ended up doing that， then we
     might as well just。 have like lock per tuple。 But we're just basically making
     up this hierarchy， such that when we grab。 a lock at a high level， it's just going
     to be implicitly meaning that we'll also grab the locks。 at the lower level as
     well， even though we're not doing that explicitly in the code。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 锁定这些元组的锁，对吧？因为如果我们最终这样做，那么我们不如直接为每个元组设置锁。但我们基本上是在构建这个层次结构，以便当我们在高层次上获取锁时，这就意味着我们也会隐式地获取低层次的锁，尽管在代码中我们没有显式地这么做。
 - en: Does that make sense？ Yeah， so we now have like different types of different
     types of binary， right。 when we try， to lock anything in the in the street。 So
     if we try to grab locks at like， you know。 the lowest level， so for example， the
     tuple level。 then we might have a lot of overhead or we might even run into， a
     threshold， right。
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 这有意义吗？对，所以现在我们有了不同类型的二进制，对吧？当我们尝试锁定街道中的任何东西时。比如说，如果我们尝试在最低层次上获取锁，比如元组层次。那么我们可能会有很大的开销，甚至可能遇到一个阈值，对吧？
 - en: the same problem as before。 And then if we grab locks at a higher level。 then
     we can potentially avoid other transactions making progress by doing so， right。
     So we're。 basically losing concurrency。 And in the real world， you will see， like，
     you know， there are。 actually many different levels of locks。 So on the previous
     slide， I've only shown you， like。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 和之前相同的问题。如果我们在更高的层次上获取锁，那么我们就可能通过这样做避免其他事务的进展，对吧。所以我们基本上是在失去并发性。在现实世界中，你会发现，实际上有很多不同级别的锁。所以在上一张幻灯片中，我只展示了。
 - en: you know， a hierarchy of like， you know， four different levels。 And we're where
     there are actually。 many， many different levels of locks that you can grab。 And
     then it all depends on like the。 different implementation。 But now with this new
     idea， we still need to talk about like， you know。 how are we going to grab the
     locks in this case， right？ We have lots of different level。 And then。
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 你知道，像是四个不同级别的层次结构。实际上，你可以获取许多不同级别的锁。然后，这一切都取决于不同的实现。但现在有了这个新概念，我们仍然需要讨论，如何在这种情况下获取锁，对吧？我们有许多不同的级别。然后。
 - en: with the understanding that if I grab a lock at the higher level， then all the
     locks at the lower。 levels are also also grabbed as well， right， that is the understanding。
     But then how do we tell。 all the other transactions， which lock we want to grab。
     So the solution to that problem is to invent， yet another type of locks。
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: 理解是，如果我在更高层次获取一个锁，那么在下层的所有锁也会被获取，没错，这是理解方式。但是，我们如何告诉其他事务，我们要获取哪个锁呢？解决这个问题的方法是发明另一种锁类型。
 - en: known as intention in 10 blocks， basically。 The understanding is that。 before
     grabbing a shared lock or an exclusive lock， a transaction must obtain all the
     intent， locks。 right， on the ancestors in this hierarchy of locks。 For example，
     if I want to grab a lock。 at the page level。 So notice in this case， I'm grabbing
     a shared lock at the page level。
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 通常称为意图锁，基本上理解是，在获取共享锁或独占锁之前，事务必须先在该锁层级结构中的所有祖先上获取意图锁。例如，如果我想在页面级别获取锁。那么请注意，在这种情况下，我正在页面级别获取一个共享锁。
 - en: I first need to grab a intent lock at the table level and also at the database
     level。 Again。 the understanding is that if I have an intention lock， it basically
     telling other。 transactions that I am going to grab a lock somewhere lower in
     the tree hierarchy， right。 So if you look at the first lock here that I've obtained，
     right， the intention lock on the database。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 我首先需要在表级别和数据库级别获取一个意图锁。再次强调，理解是，如果我有一个意图锁，它基本上是在告诉其他事务，我将在树形结构的某个更低层次获取锁，对吧？所以如果你看我这里获得的第一个锁，没错，是在数据库层级上的意图锁。
 - en: it's just basically telling a transaction that， hey， look， there's someone at
     work here， right。 And someone at work here at the lower level， the hierarchy somewhere。
     So just to make sure that。 like， you know， you know something is going on， right。
     So basically， basically。 they're now going to， be three different lock most。
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 它基本上是在告诉一个事务，“嘿，看看这里有人在工作。”而且有某人在层级结构的较低层次上工作。所以只是为了确保你知道，像是有事情发生了。对，基本上，基本上，它们现在将有三种不同的锁。
 - en: complimenting the shared lock and exclusive lock that we have already， talked
     about earlier。 There's the intent to get a shared lock at a lower level in the
     tree， otherwise。 known as final granularity。 There's the intent to grab an exclusive
     lock。 And then there's also。 getting a shared lock and getting an intent to grab
     an exclusive lock at the same time。
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是对我们之前讨论过的共享锁和独占锁的补充。在树的更低层次，还有获取共享锁的意图，通常称为最终粒度（final granularity）。还有获取独占锁的意图。并且，还有同时获取共享锁和获取独占锁意图的情况。
 - en: So we should understand SIX is basically getting a shared lock plus getting
     the intent to get an。 exclusive lock。 So why do you think that would be useful？
     Any guesses about like。 why do I want to grab a shared lock， but also try to grab
     an intent to。 an intent for an exclusive lock at a particular level in the hierarchy？
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们应该理解，SIX基本上是获取一个共享锁并加上获取独占锁的意图。那么你认为这有什么用处呢？你能猜到为什么我既想获取一个共享锁，又想在层级结构的某一特定级别上获取独占锁的意图吗？
 - en: You could be like reading and writing。 So like， you want to use shared lock
     for reads and then。 the writes， like the IX， the right， the X-s。 Exactly。 So a
     bunch of people also mentioned that in the， chat， right。 So yeah。 so you might
     be reading something and then later on decide to actually。
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可能在做读写操作。所以，你想在读取时使用共享锁，然后写入时，比如使用IX（意图排他锁）、X锁。完全正确。所以也有很多人提到过这个问题，对吧？是的。所以你可能正在读取某些内容，然后稍后决定实际进行写入。
 - en: grab the exclusive lock on it， right。 A good example is like， you know， something
     like。 I want to read， all students with name， first name， Alvin， and then gives
     them an A in this class。 right。 So you first want to read the students， right，
     but student names。 and then you might actually， end up like， you know， changing
     a record in that hierarchy of the tree。
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 获取排它锁，对吧。一个好的例子就是，比如说，我想读取所有名为Alvin的学生，然后给他们在这门课上打个A。对吧。所以你首先想要读取学生数据，对吧，但学生的名字。然后你可能最终会像你知道的那样，改变那个层级结构中的一个记录。
 - en: Okay， yeah， people are， changing names now。 Okay， cool， right。 So like now we're
     getting a little bit more fancy， right， because now we have different lock modes。
     like we not just have shared and exclusive， we also have， these kinds of different
     intention locks。 So the question then becomes， how do we reason about， what lock
     is compatible with what？
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，是的，人们现在在更改名字。好的，酷，对吧？所以现在我们有点更复杂了，因为现在我们有不同的锁模式。我们不仅有共享锁和排它锁，还有这些不同的意图锁。那么问题就变成了，我们怎么推理什么锁与什么锁是兼容的？
 - en: So the basic thing I would do in this case is think about how。 they would interact
     in the case where there's no intention lock。 And then you can， you should be。
     able to reason about like， you know， how to actually fill up this compatibility
     matrix that I'm showing。 you on this， on this slide here。 So I'm going to claim
     the following。 So I want to say that if I。
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我在这种情况下做的基本事情是，考虑它们在没有意图锁的情况下如何交互。然后你应该能够推理出，像你知道的那样，如何填充我在这张幻灯片上展示的兼容性矩阵。所以我将提出以下声明。
 - en: want to get a shared lock on a particular note or intent to share lock or intent
     to， yeah， to grab。 a shared lock， then I must hold an IS or an IX node on a parent
     node。 And then if I want to get an。 exclusive lock， then I must hold either an
     intent for exclusive lock or an SIX node as an SIX lock。 on the parent node。 And
     then I'm going to release locks in the bottom up order。 So， and then again。
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我想在某个特定节点上获取共享锁，或者是意图共享锁，或者是意图，嗯，去获取一个共享锁，那么我必须在父节点上持有IS或IX节点锁。然后如果我想要获取一个排它锁，那么我必须持有排它锁的意图锁，或者持有父节点上的SIX节点锁，作为SIX锁。然后我会按照从底向上的顺序释放锁。然后，再次这样做。
 - en: right， we're going to do like， you know， two PL or straight 2PL just like before。
     I claim that this protocol is correct。 If we basically follow this particular
     mechanism of。 when to act， when what kind of locks are grabbed， and then when
     to actually release them。 Look us。 you have a question。 Yeah， I'm still confused
     on the purpose of intent locks， like， why we do them。
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧，我们将像以前一样进行2PL或直接2PL。我宣称这个协议是正确的。如果我们基本上遵循这种特定机制，知道何时行动，抓取什么类型的锁，什么时候实际上释放它们。看我们。你有问题吗？是的，我仍然对意图锁的目的感到困惑，为什么我们要使用它们。
 - en: Yeah， so the purpose is basically we want to be able to allow multiple transactions
     to make。 progress at the same time。 We want multiple transactions that are not
     interfering with each。 other to be able to make progress。 Right。 So if you go
     back to the previous example of the hierarchy。 so for instance， if we only have
     one single lock at a database level。
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，基本上目的是让我们能够允许多个事务同时进行进展。我们希望多个互不干扰的事务能够同时取得进展。对吧？所以如果我们回到之前的层级示例，比如说，如果我们在数据库层级只有一个锁。
 - en: then I'm basically killing off， all concurrency， right？ I do not allow any other
     transaction。 The only one transaction can make， progress at any given time。 Right。
     But then if I grab lock。 if I only do locking at the lowest level， right， in terms
     of the tuple level， then， you know。 I might end up in a thrashing or deadlock
     situation， because like， you know。
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么基本上，我在这种情况下就是杀死所有的并发性，对吧？我不允许任何其他事务。任何时候只有一个事务能进展。对吧？但是如果我只在最低级别进行锁定，在元组级别，那么，你知道的。我可能会最终陷入一种死锁或冲突状态，因为你知道。
 - en: all the transaction trying to grab locks and then nobody can also make progress。
     And that's the case。 So why does it thrash if you only lock at the lowest level？
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有的事务都在试图获取锁，然后没有人能够进展。这就是情况。所以如果你只在最低级别锁定，为什么会发生这种死锁？
 - en: Because if I have a lot of two posts， then there are already a lot of lock objects，
     right？
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为如果我有很多两个帖子，那么已经有很多锁对象了，对吧？
 - en: So remember， each lock is unique， right？ It's a separate variable。 So we'll
     have a lot of transactions， track， checking all these different locks， right。
     which may or may not be currently held。 And then just the checking， just running
     all the checks。 right， already consumes CPU， as opposed to actually doing real
     work on the data。 Thank you。 Yeah。
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 记住，每个锁都是唯一的，对吧？它是一个独立的变量。所以我们会有很多事务，跟踪并检查所有这些不同的锁，对吧，这些锁可能已经被占用，也可能没有。而且，仅仅是检查，运行所有的检查，对吧，已经消耗了
+    CPU 资源，而不是实际在数据上执行工作。谢谢。是的。
 - en: So then the idea is， wouldn't it be nice if we allow transactions to grab locks
     at different levels at safe needs。 right？ So that's where the similarity thing。
     I did。 Yeah。 Yeah。 I'll just add to that。 So Lucas。 if you imagine， let's say
     you have one transaction。 let's say it didn't grab intent locks down the hierarchy，
     it just directly went and locked。
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，想法是，如果我们允许事务在不同级别上根据安全需要获取锁，那不是很好吗？对吧？这就是我做的相似性问题。是的。是的，我只是补充一下。所以，Lucas，如果你想象一下，假设你有一个事务，假设它没有在层级上获取意图锁，而是直接去锁定。
 - en: leaf element， right？ Now you have another transaction that wants to do something
     to the。 entire database， right？ Let's say you want to change the scheme of the
     database。 Now that。 transaction needs to know that there is someone at the leaf
     doing some change to a specific tuple。 so that they can coordinate their accesses，
     right？
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: leaf 元素，对吧？现在你有另一个事务，想要对整个数据库做一些操作，对吧？假设你想改变数据库的模式。现在这个事务需要知道，有人在 leaf 处对一个特定的元组做了一些改变，这样他们才能协调各自的访问，对吧？
 - en: So the database system can coordinate their accesses。 having this intent at
     various levels of the hierarchy allows that coordination to happen more。 seamlessly。
     Does that make sense？ Yeah。 Thank you。 Okay。 Great。 So as I said， right？
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以数据库系统可以协调它们的访问。拥有在层级的不同级别上的意图锁，可以让这种协调更加顺畅地进行。这样说得通吗？是的。谢谢。好的。太好了。正如我之前说的，对吧？
 - en: So we need to now figure out how to lock， when to what kind of locks， to grab
     and when。 and then I'm just going to go with this protocol here。 If I want to
     grab a lock。 at any one of these levels in the hierarchy， I must have intent locks
     on the higher levels in the。 hierarchy。 And then same thing also goes with the
     difference between a shared lock and an exclusive。
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们现在需要弄清楚，什么时候锁定，应该获取什么样的锁，以及何时获取。然后我将遵循这个协议。如果我想在层级中的任何一个级别上获取锁，我必须在更高层级上有意图锁。然后，关于共享锁和独占锁之间的差异，也是同样的道理。
 - en: lock。 The question， however， is how should this lock compatibility matrix actually
     looks like？
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 锁。不过，问题是，这个锁的兼容性矩阵应该是什么样子的呢？
 - en: So for instance， if someone has an intent to， has an IS lock and if another
     transaction。 tries to grab the Ix lock， let's say， you know， for that particular
     note in the tree， should we。 allow that to proceed or not？ And the reason about
     that， as I said。 think about what should happen in， a case where we have two tuples
     and like， you know。
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如，如果某个事务有意图，持有 IS 锁，而另一个事务尝试获取 Ix 锁，假设你知道，在树中的某个特定节点，我们应该允许这个操作继续执行吗？关于这个问题，正如我之前说的，想一想，应该发生什么情况，比如我们有两个元组，像你知道的那样。
 - en: a single page， for example。 Okay。 So let's say in， this case。 we want to reason
     about whether Ix lock is compatible with the Ix lock at the page level。 for instance。
     What does this mean？ Right。 So if you follow the previous slide， someone grabbing
     an。 IS lock， right， on a page basically means that I'm going to grab a shared
     lock in one of the two。
+  id: totrans-110
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如在单页上。好的。假设在这种情况下，我们想要推理 Ix 锁是否与页面级别的 Ix 锁兼容。例如，这是什么意思？对吧。所以如果你跟随前一张幻灯片，某人获取了一个
+    IS 锁，对吧，意味着我将在两个页面之一上获取共享锁。
 - en: posts within that page， right？ Based on our protocol。 because if you need a
     shared lock on any one of， the two posts。 then you must already have an IS lock
     in the higher level， right？ So for example。 the page containing the tuple。 And
@@ -725,6 +949,7 @@
     an Ix， lock， right， on one of the。 on the page that actually contains that tuple，
     right？ So in this case。 should we allow this to happen or not？ So should we allow
     one transaction to have a shared lock on。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
 - en: the tuple and then have an exclusive lock on another tuple that resides on the
@@ -732,16 +957,19 @@
     It's not a trick question， by the way。 right？ I mean， I'm basically saying that
     two transactions are trying to touch two different。 two posts， and they're trying
     to grab the locks on it， right？ One has a shared lock because it's。
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
 - en: reading it。 The other one has an exclusive lock because it's writing it。 Well，
     I mean， these two。 two posts are different anyway， so it doesn't matter whether
     they're writing or reading， right？
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
 - en: But that basically means we can have the IS lock and the Ix lock be compatible
     at the page level。 right？ So remember， this IS and this Ix lock is at the page
     level， not at the tuple level， right？
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
 - en: So it basically means that we can allow the IS and the Ix lock to be both granted
@@ -749,6 +977,7 @@
     table， right？ And also。 likewise， of course， in the same database。 Does that make
     sense？ So if you don't know what I mean。 right？ So reason about this， as I said，
     right， by looking at， the tuple， single tuple level。
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
 - en: and then try to come up with a scenario where like， you know。 you can see which
@@ -756,6 +985,7 @@
     about that is to think about whether we can allow something like this to happen，
     sorry。 whether we can allow a situation like this to happen， a shared lock on
     one tuple and an exclusive。
+  id: totrans-116
   prefs: []
   type: TYPE_NORMAL
 - en: lock on another tuple， right？ So now let's say I want to reason about whether
@@ -763,6 +993,7 @@
     to？ So that would correspond to。 having the exclusive lock by one transaction
     on T1 and then having the exclusive lock by another。 transaction on T2， right？
     And since those two tuples are completely separate， that situation。
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
 - en: should be allowed， right？ So that basically means the Ix locks should be compatible
@@ -770,6 +1001,7 @@
     the same page。 so that's something that， you need to remember。 Any questions about
     this so far？ Well。 so one parent note can have multiple intent locks， right？ Yeah。
     And for let's say that you're。
+  id: totrans-118
   prefs: []
   type: TYPE_NORMAL
 - en: trying to read two different tuples in one page， would you only need one Ix
@@ -777,903 +1009,1220 @@
     page or tuple？ So yeah。 you're trying to read two pages， two tuples within the
     same page。 And so for that page， itself。 would you only have one Ix lock for both
     pages because you're only reading both？ I said for。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你在一个页面中尝试读取两个不同的元组，你只需要一个Ix锁，还是需要为每个元组分别加两个Ix锁？一个，等等，抱歉，是页面还是元组？嗯，是的，你尝试读取同一页面中的两个元组。那么对于那个页面本身，你只需要一个Ix锁，因为你只在读取这两个元组？我说的是页面上的锁。
 - en: both tuples。 Yeah， so there's only one Ix lock at the page level， just like
     there's only one lock。 at the tuple level。 So each lock has its own lock， sorry，
     each tuple has its own lock。 each page has its own lock， and each table has its
     own lock， and each database has its own lock。 Okay， thank you。 So we're now talking
     about whether we should grant a Ix lock request for the same page。
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 两个元组。是的，所以页面级别只有一个Ix锁，就像元组级别只有一个锁一样。所以每个锁都有它自己的锁，抱歉，每个元组有它自己的锁，每个页面有它自己的锁，每个表有它自己的锁，每个数据库有它自己的锁。好的，谢谢。那么我们现在讨论的是是否应该批准同一页面的Ix锁请求。
 - en: while some other transactions already holding on to the Ix lock of the same
     page。 So does that。 mean like the maximum number of locks that a parent note can
     hold is three or like isix and， six or？
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: 而其他事务已经持有相同页面的Ix锁。所以这是不是意味着一个父节点最多可以持有三种锁？比如IS锁、Ix锁和SIX锁？
 - en: Well， it basically means so it's the same thing， it's the same thing， right？
     So each。 page currently would have like a locking table like what I was showing
     you on the previous slide。 and then it will basically show which transaction currently
     has what type of lock on that particular。 page。 Some transactions would have the
     is lock on that page， some transactions would have the Ix。
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，这基本上意味着它是一样的，对吧？所以每个页面目前都会有一个锁表，就像我在上一张幻灯片上展示的那样，然后它基本上会显示当前哪个事务对这个特定页面持有什么类型的锁。一些事务会对该页面持有IS锁，另一些事务会持有Ix锁。
 - en: lock on that page， for instance。 But can you can stack different like the on
     the right side of the。 screen， you wrote the the page has both an is and an Ix
     lock？
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如，对于该页面的锁。但是你能否叠加不同的锁？就像你在屏幕右侧写的，页面同时有IS锁和Ix锁？
 - en: Is it possible to have both of them plus， the six and lock the six？ Oh， you
     tell me， right？
+  id: totrans-124
   prefs: []
   type: TYPE_NORMAL
+  zh: 是否有可能同时拥有它们，再加上SIX锁？哦，你告诉我吧，对吗？
 - en: So you're now basically asking the question of whether， this what should happen
     in this case， right？
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你现在基本上是在问，在这种情况下应该发生什么，对吧？
 - en: And I try to reason about that， right？ So let's say。 if I have some transaction
     already having the is lock and another transaction having an Ix lock on。 on page
     P， and then a third transaction comes around and say， Hey， I want the six lock
     on this page。 should we grant it or should we not？ Right。 So I'm claiming yes，
     because you can see that there's a。
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我尝试推理一下，对吧？假设我有一个事务已经对页面P持有IS锁，另一个事务则持有Ix锁，然后第三个事务过来，假设说：“嘿，我想要在这个页面上获得SIX锁。”我们应该批准吗，还是不应该批准？对吧？我声称应该批准，因为你可以看到，已经有一些事务持有该页面的Ix锁。
 - en: true in this box here。 And then there's a false in this box here basically，
     that means if some。 transaction already has an Ix lock on that page， then we cannot
     allow an six lock request to go through。 Okay。 And so then that table shows that
     if you were to have those kind of locks in a parent。 know what other locks can
     exist with it。 Yeah。 Okay， thank you。 Yeah， that's why this is got a。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个框里的值是“真”。然后这个框里的值是“假”，基本上意味着如果某个事务已经对该页面持有Ix锁，那么我们就不能允许通过SIX锁请求。好的。所以这个表格展示了，如果你在父节点中持有这些类型的锁，那么还可以存在其他哪些锁。嗯，好的，谢谢。是的，这就是为什么这里有一个。
 - en: lock compatibility matrix。 Oh， so this is you might think， okay， we have five
     different locks。 and that's already like， you know， scaring the heck out of me，
     right？ Like， you know， I have to。 reason about 25 different entries。 I use， are
     you serious， right？ I mean， try to reason about this。 This is kind of like what
     happens to the real world， right？ So like， you know。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 锁的兼容性矩阵。哦，所以你可能会想，好吧，我们有五种不同的锁，这已经让我有点害怕了，对吧？你知道，我得推理出25种不同的组合。你说，认真吗？我的意思是，试着推理一下，这有点像现实世界中的情况，对吧？所以你知道。
 - en: there's definitely way more different types of locks that you can get。 And of
     course。 the matrix just like， you know， keep expanding。 So therefore， like， you
     know， it's to be able to。 reason about that too， right？ But fortunately， if you
     did your homework， right， right。 then you just， basically need to reason about
     each box once。 And then it。
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以获得的锁的类型肯定多得多。而且当然，矩阵就像你知道的那样，不断扩展。因此，就像你知道的那样，我们也需要能够推理这些内容，对吧？但幸运的是，如果你做了功课，没错，那么基本上你只需要推理每个框一次。然后它就行了。
 - en: and then this matrix is also symmetric， across the diagonal。 So it's basically
     mirror image of one another。 So it just needs a reason。 about half of this gigantic
     table， not the whole thing， if that makes you any happier。 Okay。 so like， you
     know， that would happen the end of the story， except that we still have。
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，这个矩阵在对角线两侧也是对称的。所以它基本上是彼此的镜像。所以你只需要推理这个巨大表格的一半，而不是整个表格，如果这样能让你更开心的话。好的，像你知道的那样，这个问题就到此为止，除了我们仍然有……
 - en: yet another problem known as the phantom problem， right？ And I think that's
     a good timing。 because in， 10 days we'll have Halloween。 It has nothing to do
     with that kind of phantom。 unfortunately。 It's much more boring in that sense。
     So the problem is the following。 So so far。 we have assumed， that the database
     is basically a static collection of two books。 Nothing's changed。
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有另一个问题，叫做幻读问题，对吧？我认为这是个好时机，因为在10天后我们将迎来万圣节。遗憾的是，这与那种幻读问题无关。它从某种意义上来说更无聊。问题如下：到目前为止，我们假设数据库基本上是两本静态书的集合。没有任何变化。
 - en: right？ We're not， inserting， we're not deleting things actively。 So if we start
     to insert and delete things as part， of a transaction。 then this problem will
     show up。 What does this mean？ Here's an example。 So I have。 two transactions here。
     The first one trying to select all the blue products， and the second one。
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？我们没有在主动插入或删除东西。所以如果我们开始在事务中插入和删除东西，那么这个问题就会出现。这是什么意思？这里有一个例子。所以我有两个事务。第一个事务试图选择所有的蓝色产品，第二个事务……
 - en: tries to insert a new blue product。 And then this first transaction for whatever
     reason decides to。 reissue the same query again， right？ So let's first ask the
     question， is this schedule serializable？
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 尝试插入一个新的蓝色产品。然后第一个事务出于某种原因决定再次发出相同的查询，对吧？所以我们先问一个问题，这个调度是可串行化的吗？
 - en: The answer is no， because T1， right， actually sees a new product that is being
     inserted。 known as A3， right？ So this is not equivalent to any way you can order
     like your T1 to be。 fully executed before T2 or vice versa。 So therefore， this
     is not a serializable schedule。 Now。 the question is， is this actually a conflict
     serializable schedule？ And if you remember from。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 答案是否定的，因为T1实际上看到一个正在插入的新产品，称为A3，对吧？所以这与任何你能想到的T1完全执行在T2之前或反之的排序方式都不等价。因此，这不是一个可串行化的调度。现在，问题是，这实际上是一个冲突可串行化的调度吗？如果你还记得……
 - en: a DTS lecture， the way to do this test is to basically try to reorder the operations
     that are。 involved in the two transactions here， and then see if we can reorder
     it to a point where all。 the operations from T1 precedes all the operations from
     T2 or vice versa。 So here。 I'm assuming that， there are existing two blue products
     in the database。
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: 在DTS讲座中，进行这个测试的方式基本上是尝试重新排序这两个事务中的操作，然后看看我们能否重新排序到一个点，在这个点上T1的所有操作都在T2的所有操作之前，或反之亦然。所以在这里，我假设数据库中已经有两个蓝色产品。
 - en: otherwise known as A1 and A2， and then A3 is the， new product being inserted
     by T2。 So at this point， this is not a conflict serializable schedule， right？
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 也就是A1和A2，然后A3是T2插入的新产品。所以到目前为止，这不是一个冲突可串行化的调度，对吧？
 - en: Because we have operations intermixed between T1 and T2。 But then since A3 has
     nothing to do with。 A2 or A1， by the rules that DTS went through in the lecture，
     we are actually allowed， right？
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为我们有操作在T1和T2之间交织。但是，由于A3与A2或A1无关，根据DTS在讲座中讲解的规则，我们实际上是允许这样做的，对吧？
 - en: To shift， A3， the operation namely the right to be before the read operations
     on A1 and A2。 Therefore， moving， all the operations from T2 to be before T1。 So
     therefore， by like， you know。 the lecture that we， had earlier， this is actually
     conflict serializable。 But we still know that there's a problem， here， right？
     So this is not good。
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 要将A3的操作，具体来说，是在对A1和A2的读取操作之前。因此，所有T2的操作都需要移动到T1之前。因此，正如我们之前讲座中提到的那样，这实际上是冲突可串行化的。但是我们仍然知道这里有一个问题，对吧？所以这不好。
 - en: So either that means this notion of conflict serializability has。 an issue or
     basically that means a DTS has something wrong， right？ So we can't use this， definite。
     we can't use this text， right？ Now， of course， like， you know， he was right。 So
     like， you know。 this test does actually allow us to do conflict serializability
     checks。 It's basically。
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这要么意味着冲突可串行化性有问题，要么意味着DTS有问题，对吧？所以我们不能使用这个方法，不能用这个测试，对吧？当然，像你知道的，他是对的。所以，像你知道的，这个测试实际上允许我们进行冲突可串行化性检查。基本上就是这样。
 - en: just that's when we are now talking about things that are inserted or like，
     you know， deleted。 within a transaction， then this phantome problems happens and
     conflict serializability no longer。 holds。 And that's a boomer， right？ Because
     like， you know。 we were hoping that this is going to help us， but well， kind of
     all that's a loss。
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 就是当我们现在谈论的是在一个事务中插入或删除时，就会发生幻影问题，且冲突可串行化性不再成立。这就是一个大问题，对吧？因为我们原本希望它能帮助我们，但结果却像是全盘皆输。
 - en: And this is a problem when we have these kind of dynamic。 transactions that
     are not just reading or writing a single element or existing elements。 We are。
     talking about cases where transactions are inserting and deleting things。 So that's
     bad。 Okay。 so how do we deal with these phantoms？ Quick solution。 Just lock the
     entire， you know， table。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们处理这些动态事务时，这就成了一个问题。它们不仅仅是读取或写入单个元素或现有元素。我们讨论的是事务插入和删除数据的情况。所以这很糟糕。好的，那么我们如何解决这些幻影问题？快速解决方法：锁住整个表。
 - en: Slock the entire， like， you know， freaking table， right？ So that's great。 So
     if we just lock。 the entire table that nobody can make progress， that also means，
     right？ Like， you know， you can。 insert and delete all you want， no more phantoms。
     But we already saw that that's bad， right？
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 锁住整个表，对吧？这就太棒了。所以如果我们锁住整个表，没人可以继续操作，那也意味着，对吧？你可以随便插入和删除，幻影问题就没有了。但我们已经看到，这样做是有问题的，对吧？
 - en: So let's， try not to do that。 Another way we can do that is like， you know，
     if there's an index。 then we can， lock the index instead， right？ Because if there's
     an index。 then we're trying to insert into it。 That basically means the index
     is going to be outdated。 So if someone is trying to read by looking， through the
     index， then like， you know， that process。
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们尽量不这么做。另一种做法是，如果有索引，我们可以锁住索引，对吧？因为如果有索引，我们试图插入数据。那基本上意味着索引会变得过时。所以如果有人试图通过索引来读取数据，像你知道的，那时候过程就会有问题。
 - en: that operation will be blocked， right？ So we'll be able to prevent the problem
     that was talking about earlier。 Or you can do something， known as pedicant blocks，
     which basically says I'm going to first run。 first do a drive run， of figuring
     out which two posts am I going to read？
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 该操作将被阻塞，对吧？所以我们将能够防止之前提到的问题。或者你可以做一些称为“等待块”的操作，基本上就是先进行一次预演，确定我要读取的是哪两个帖子？
 - en: And then once I figure out the set of two posts， I'm going to read。 I'm going
     to grab the locks on those two posts before actually proceeding， with the actual
     read。 So I'm not going to go through the details here， but you can already。 imagine
     that dealing with these phantoms。 It's just very expensive， right？ Because neither
     of these。
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，一旦我确定了要读取的两个帖子，我会在实际读取之前先对这两个帖子加锁。所以我不会在这里详细讲解，但你可以想象，处理这些幻影问题非常昂贵，对吧？因为这些方法都不便宜。
 - en: solutions is as clean or simple as the ones that we have talked about earlier
     in the class。 But if you are doing of a situation where there are transactions
     that can be inserting or deleting。 things into the database， then this is the
     problem that you might need to deal with。 Or you might just say， you know， heck，
     I don't care。 I'm not guaranteeing that you might。
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 解决方案可能并不像我们在课堂上之前讨论过的那样简单或干净。如果你正处理的情况涉及到可以插入或删除数据库中的事务，那么这就是你可能需要解决的问题。或者你可能会说，随便了，我不在乎。我不保证你能做到。
 - en: you may not see phantoms。 I mean， you may see phantoms in this database I'm
     implementing right now。 so tough if that's the case， right？ You can also tough
     it out too。 So I leave that to be your choice。 Okay， so that's all I wanted to
     say。 So as a summary。 we basically talk about different types， of serializability
     in these set of lectures。
+  id: totrans-147
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可能看不到幻影。我是说，现在我正在实现的这个数据库中，你可能会看到幻影。所以如果是这种情况，那就挺难受的，对吧？你也可以选择忍受它。所以这由你来决定。好的，这就是我想说的全部内容。总结一下，我们基本上讨论了这些讲座中不同类型的可串行化性问题。
 - en: And then we talked about different ways to actually。 deal with or ensuring that
     we have a conflict serializability。 Make sure you understand the。 difference between
     them。 And then at the very end， we talk about this notion of。 phantom problem
     or dynamic database where conflict serializability no longer holds。
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们讨论了几种不同的方式，实际上如何处理或确保我们具有冲突串行化。确保你理解它们之间的差异。最后，我们讨论了“幻像问题”或动态数据库的概念，其中冲突串行化不再成立。
 - en: And then overall， we talked about like this correctness notion of what it means
     to be serializable。 And it's something that many systems provide as a way to make
     sure that the asset property is。 preserved。 We talk about using locking as a way
     to ensure this serializability。 And by having。 different schemes or different
     protocols for when to grab the locks and what kind of locks to grab。
+  id: totrans-149
   prefs: []
   type: TYPE_NORMAL
+  zh: 总的来说，我们讨论了什么是可串行化的正确性概念。这是许多系统提供的功能，确保事务的资产（ACID）特性得以保留。我们谈到了使用锁来确保可串行化，并且通过不同的方案或协议来确定何时获取锁以及应该获取什么类型的锁。
 - en: we can ensure serializability to go through。 And then we also talk about efficiency
     aspects。 and how to mitigate thrashing if it ever arrives。 And the way to do that
     in this class。 we talk about using having locks at multiple levels of granularity。
     And then as I said， right？
+  id: totrans-150
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可以通过这种方式确保可串行化。然后我们还讨论了效率方面的问题，以及如何缓解出现冲突时可能发生的抖动（thrashing）。在这门课中，我们谈到了通过在多个粒度级别上使用锁来实现这一点。正如我之前所说的，对吧？
 - en: There are many other different kinds of currency control mechanism that doesn't
     use locks。 So you。 might also want to look into that if you're interested。 And
     we can also talk about that。 offline if you are if you would like to know more
     about those as well。 And that's all we want to say for transactions for now。 Later
     on at the that the final part of。
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有许多其他种类的并发控制机制，并不使用锁。所以，如果你感兴趣，你可能也想了解这些内容。如果你想了解更多这方面的信息，我们也可以私下讨论。这就是我们目前关于事务的所有内容。稍后在课程的最后部分。
 - en: this course， we actually want to revisit all the transactions that we've been
     talking about in the。 context of parallel databases。 Otherwise known as how do
     we run transactions when we have multiple。 databases going on at the same time。
     But for now， I'll stop and then let you guys ask questions while。 I did the prepare
     the next part。 Felix。 Yeah， so earlier， there was a statement。
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这门课程中，我们实际上想要重新审视我们一直在讨论的所有事务，特别是在并行数据库的背景下。也就是说，当我们有多个数据库同时运行时，事务该如何进行？不过现在，我先停一下，让你们提问，我将准备下一部分内容。Felix。是的，之前有一个陈述。
 - en: they're saying that a transaction must like obtain all intent locks on all its
     ancestors before you。 can get it。 That seems to be like this。 And then there's
     the other part when we were discussing like。 the lock compatibility matrix， where
     we like， you know， had the example of we have two transactions。 and they had like
     intent locks as an X on like the page level， but they were operating on like they。
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们说一个事务必须在获取它所需的锁之前，先获得所有祖先上的所有意图锁。似乎就是这样。然后在我们讨论锁兼容性矩阵时，记得我们举了一个例子，两个事务分别在页面级别上拥有意图锁，并且它们在处理...
 - en: had their individual SNX locks on different tuples。 So in that case。 like what
     what comes first when。
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们在不同的元组上拥有各自的 SNX 锁。在这种情况下，像是什么先发生呢？
 - en: '![](img/29600da32d3999ef340320b507cbdadb_3.png)'
+  id: totrans-155
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_3.png)'
 - en: like a transaction wants to get an S or X lock is it like does the transaction
     first like try。 obtaining all the intent locks first and then once it gets to
     like the you know。 the object it wants。
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 当一个事务想要获取 S 锁或 X 锁时，事务是首先尝试获取所有的意图锁吗？还是它会先获取到自己想要的对象，然后再进行处理？
 - en: '![](img/29600da32d3999ef340320b507cbdadb_5.png)'
+  id: totrans-157
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_5.png)'
 - en: then it gets the S and X lock there or like is it possible for a transaction
     to like basically grab。 intent locks， but then at some point it's impossible for
     to actually grab the S or X lock that it wants。 Yeah， great。 So I don't have the
     screen anymore， but I think there's one clear slide that we'll talk。 about the
     order for which these lock has to be grabbed。 So if you revisit that slide， or
     basically。
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，事务获取 S 和 X 锁时，是否可能出现事务首先获取了意图锁，但最终无法获得它所需要的 S 或 X 锁的情况？是的，太好了。我现在没有屏幕，但我想有一张清晰的幻灯片可以讲解这些锁的获取顺序。如果你回顾一下那张幻灯片，或者基本上...
 - en: tell you that you need to grab the lock from the highest level in the hierarchy
     before you can move。 on to the lower one。 It's not an arbitrary order because
     exactly of the problem they've mentioned。 right？ So you can grab all the intention
     locks that you want until you get to the final point for。 which you might realize
     that oh somebody already has the exclusive lock on the same tuple that I'm。
+  id: totrans-159
   prefs: []
   type: TYPE_NORMAL
+  zh: 告诉你在可以继续向下层移动之前，你需要先从层级的最高层获取锁。这个顺序不是随意的，正是因为他们提到的问题。对吧？所以你可以抓取所有你想要的意图锁，直到你到达最终点，而你可能会意识到哦，有人已经在同一个元组上持有独占锁了。
 - en: trying to grab the lock exclusive lock on。 And at that point， we just basically
     stop， right？
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 尝试获取独占锁。到那时，我们基本上就停止了，对吧？
 - en: Or we just wait。 So the order for which you need to grab the lock definitely
     matters and you basically need to do。 that on the topmost level on the hierarchy
     and then release the locks in the reverse order。 Got it。 So even in like， so in
     the example， we were like constructing like an example of。 like proving that like，
     well just showing that like you can have an Ix and an Ix lock。
+  id: totrans-161
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者我们只是等待。所以获取锁的顺序确实很重要，你基本上需要在层级的最上层进行操作，然后按相反的顺序释放锁。明白了。所以即使在这个例子中，我们也在构建一个例子，像是证明或者展示你可以有一个Ix锁和一个Ix锁。
 - en: there is still the possibility that like a transaction has the Ix lock but it
     just doesn't。 actually have the S or X lock on the t-shirt。 Yeah。 Okay。 Thank
     you。 Yeah， sure。 Any other questions？ Yeah， I asked that in the chat but since
     the hash map and the tree are also accessed by different。 threats when you know
     their concurrency happening due to do data structure also has to be locked。
+  id: totrans-162
   prefs: []
   type: TYPE_NORMAL
+  zh: 仍然有可能发生这样的情况：一个事务已经有了Ix锁，但它并没有实际拥有该表的S锁或X锁。对吧？好的，谢谢。是的，当然。还有其他问题吗？是的，我在聊天中问过这个问题，但由于哈希表和树也被不同的线程访问，当你知道它们发生并发时，数据结构也必须被锁定。
 - en: Yeah。 So the typical way of doing that is by basically having the lock manager
     control all。 these different requests coming in。 So there's one component that
     is receiving all these requests。 and then you can think of that as basically having
     a line of different requests that needs to be。 certified and lock manager and
     lock manager basically have exclusive access to the hash table of the。
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，通常这样做的方法是让锁管理器控制所有这些不同的请求。所以有一个组件接收所有这些请求，然后你可以把它想象成一个接收不同请求的队列，这些请求需要由锁管理器进行验证，锁管理器基本上对哈希表有独占访问权限。
 - en: different locks。 So the lock manager basically has to be serialized or like
     single thread。 single thread。 Yeah。 Okay。 Thank you。 You can have multiple。 thread
     lock manager but then you still have to have a locking mechanism for each of the
     rows。 in the table， right？ So that's no two threads actually trying to manipulate
     the same lock at the same time。
+  id: totrans-164
   prefs: []
   type: TYPE_NORMAL
+  zh: 不同的锁。所以锁管理器基本上必须是串行化的，或者像单线程一样。单线程。对。好的，谢谢。你可以有多个线程锁管理器，但你仍然需要为表中的每一行设置锁机制，对吧？所以没有两个线程会在同一时间尝试操作同一把锁。
 - en: Cool。 Thank you。 So I think we promised a scratching break。 I don't know if
     we should still do that or， like， you know， why don't we take a couple of minutes。
     And I think we are still looking for， TikTok or whatever。 Cat， Jiff's。 Well。 so
     I think we do have a number of answers and I think， we just played them now and
     then like， okay。
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 很酷，谢谢。所以我想我们答应了一个小休息。我不知道我们是否还应该继续，或者你知道的，我们不如休息几分钟。我觉得我们还在找TikTok或者其他的猫咪、表情包。嗯。所以我想我们确实有一些答案，我想我们现在就播放它们，然后，好吧。
 - en: let's do it。 Okay， then you should， you should just like， okay。 The end mine。
     Right。 So you guys be like， judge about like， you know， what any of these。
+  id: totrans-166
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们做吧。好的，那你应该……你应该像这样，好吧。结束我的任务。对吧？所以你们可以判断，像是你知道，这些有什么问题。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_7.png)'
+  id: totrans-167
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_7.png)'
 - en: '![](img/29600da32d3999ef340320b507cbdadb_8.png)'
+  id: totrans-168
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_8.png)'
 - en: is fun and like， you know， they're relatively short， unfortunately。 So I don't
     know。 So this is one of。
+  id: totrans-169
   prefs: []
   type: TYPE_NORMAL
+  zh: 很有趣，而且它们相对较短，不幸的是。然后我不确定。所以这是其中之一。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_10.png)'
+  id: totrans-170
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_10.png)'
 - en: the things that we've received。 As literally just that， right？ Okay， great。
     And then let's see。 We have another entry here with a Jiff。 And I guess talking
     about three efficiency。 That's great。
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们收到的东西。就只是这些，对吧？好的，很好。然后让我们看看。我们这里还有一个条目是一个表情包。我猜是在讨论效率问题。太好了。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_12.png)'
+  id: totrans-172
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_12.png)'
 - en: This one， I guess is more fun。
+  id: totrans-173
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个，我猜是比较有趣的。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_14.png)'
+  id: totrans-174
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_14.png)'
 - en: '![](img/29600da32d3999ef340320b507cbdadb_15.png)'
+  id: totrans-175
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_15.png)'
 - en: Can I close cage driving？ Oops。 And then there's actually sound。 I'm not sure
     if you can actually hear。
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 我可以关闭笼子驾驶吗？哎呀。然后其实是有声音的。我不确定你们是否真的能听到。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_17.png)'
+  id: totrans-177
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_17.png)'
 - en: Okay， let me replay that again。
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，让我再放一次。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_19.png)'
+  id: totrans-179
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_19.png)'
 - en: '![](img/29600da32d3999ef340320b507cbdadb_20.png)'
+  id: totrans-180
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_20.png)'
 - en: Yeah。 Okay， I hope that's not how you guys are feeling right now。 I don't know。
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的。好吧，我希望你们现在的感觉不是这样。我不知道。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_22.png)'
+  id: totrans-182
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_22.png)'
 - en: And then the last one is the question on midterm to is how is this relevant
     to our class？
+  id: totrans-183
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后最后一个问题是关于期中考试2的，它是如何与我们课程相关的？
 - en: '![](img/29600da32d3999ef340320b507cbdadb_24.png)'
+  id: totrans-184
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_24.png)'
 - en: Not sure what that means。 Okay， so that's it。 Well， so as I said， right？ I mean，
     like。 we are still soliciting new videos。 I mean， if you guys want to take a break，
     I mean， like。 you guys better send in some good stuff， right？ I mean， you're otherwise。
     we'll just keep plowing through and that won't be fun for anyone。
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: 不确定那是什么意思。好的，差不多就是这些了。就像我之前说的那样，对吧？我意思是，我们还在征集新的视频。如果你们想休息一下，我是说，你们最好提交一些好的内容，明白吗？否则我们就会继续推进，这对任何人来说都不有趣。
 - en: And so I checked out the submissions that we got and basically， Alvin just played
     all of them。 So we are seriously looking for more。
+  id: totrans-186
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我查看了我们收到的提交，基本上，Alvin已经播放了所有的提交。所以我们真的是在寻找更多的提交。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_26.png)'
+  id: totrans-187
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_26.png)'
 - en: Yeah。 Okay， so let's start with some announcements。 So I think we are still
     on track for trying。 to mod some sections， but I don't remember what the update
     was on that。 Alvin， do you remember？
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，好吧，我们开始一些公告。我想我们仍然在努力修改一些部分，但我不记得那方面的更新是什么了。Alvin，你记得吗？
 - en: I think we decided to merge maybe one or two of them。 I forget。 Jerry， are you
     here？ Yeah。 Amy's section is canceled and it's merged with Jennifer's and that's
     part of the reason why。 they opened the law section。 Yeah。 Awesome。 Thanks， Teddy。
     Yeah。 So Amy and maybe Jennifer are running， the law section。
+  id: totrans-189
   prefs: []
   type: TYPE_NORMAL
+  zh: 我记得我们决定可能合并其中一到两个部分。我忘记了。Jerry，你在吗？是的。Amy的部分取消了，和Jennifer的部分合并了，这也是他们开启法律部分的原因之一。是的。太棒了，谢谢，Teddy。是的。所以Amy和可能是Jennifer在主持法律部分。
 - en: So they are basically going to be going over the concepts in transactions。 concurrency
     control in more detail and slowly。 So I encourage you to go to these sections
     if you。 want more sort of some sense， a little bit more handholding through these
     concepts。 These are。 pretty hard concepts。 I encourage you to go attend the law
     section。 I think this is like a。
+  id: totrans-190
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以他们基本上会更详细、慢慢地讲解事务的概念和并发控制。所以如果你们希望在这些概念上得到更多的帮助，或者更有指导性，我鼓励你们去参加这些部分。这些是非常难的概念。我鼓励你们去参加法律部分。我觉得这应该是一个……
 - en: R and a half long section， I believe。 And so Jerry has posted information about
     Mid-term 2。 It's basically the same setup as Mid-term 1。 So yeah， so I think hopefully
     you have。 some practice based on Mid-term 1 and what to expect in terms of the
     setup at least。 The one caveat that I wanted to mention is that the set of topics
     that are going to be part of Mid-term 2。
+  id: totrans-191
   prefs: []
   type: TYPE_NORMAL
+  zh: 我相信这个部分大约有R和一个半小时。所以Jerry发布了关于期中考试2的信息。基本上，它和期中考试1的设置相同。所以，是的，我希望你们有一些基于期中考试1的练习，至少对考试的设置有所预期。唯一的注意事项是期中考试2的题目范围。
 - en: is slightly different from the set of topics that have been covered in Mid-term
     2s in previous years。 So there may be questions that you may be like， "Huh， I
     have no clue how to answer it。" Well。 that might be just because you've not covered
     that topic yet and it's not part of our Mid-term 2 syllabus。 Okay。 So the other
     thing that I want to mention， I want to mention that you want to mention about
     the office hour for like no office hour this week。
+  id: totrans-192
   prefs: []
   type: TYPE_NORMAL
+  zh: 和以往几年期中考试2的题目范围稍有不同。所以可能会有一些问题，你们可能会想，“嗯，我完全不知道怎么回答。”嗯，这可能只是因为你们还没有覆盖到这个话题，它不在我们的期中考试2大纲中。好的。所以我还想提到的是，本周没有办公时间。
 - en: Oh yeah。 So I am still looking for， so Alvin， I think conducted a conceptual
     going through the。 slides kind of office hour today。 It's basically a mini lecture
     where you focus on。 I don't remember， what you covered， Alvin。 Was it joint algorithms？
+  id: totrans-193
   prefs: []
   type: TYPE_NORMAL
+  zh: 哦，对了，我仍然在找，Alvin，我觉得今天Alvin进行了一个概念性的幻灯片讲解办公时间。这基本上是一个小型讲座，你专注于...我不记得Alvin讲了什么。是讲联接算法吗？
 - en: Joint algorithms and activities today。 Okay。 Joint algorithms and selectivity。
     I noticed a couple of posts on， Piazza around query optimization sort of walking
     through query plans and counting IOs。 I was thinking of covering that during my
     office hour if there are other requests。 So basically what I was planning to do，
     I don't know what Alvin did， but what I was planning to do。
+  id: totrans-194
   prefs: []
   type: TYPE_NORMAL
+  zh: 今天的联接算法和活动。好的，联接算法和选择性。我注意到Piazza上有几篇关于查询优化的帖子，讨论了查询计划和计算IO的内容。我考虑在办公时间讲解这些，如果有其他请求的话。所以基本上，我原计划要做的，我不知道Alvin做了什么，但这是我原本的计划。
 - en: was to just like go through the slides based on questions that you bring and
     sort of focus on。 possible misconceptions。 Sort of like be like， "Huh， why was
     that this value？" I can sit and try to。 explain that in more detail。 So that's
     the goal of that。 So we want to make sure。 we sort of got a sense that some of
     you are feeling stuck and not getting some of the content。
+  id: totrans-195
   prefs: []
   type: TYPE_NORMAL
+  zh: 目的是根据你提出的问题来浏览幻灯片，并集中关注可能的误解。就像是想，“嗯，这个值为什么是这样？”我可以坐下来，尽量详细解释。这就是我们的目标。所以我们要确保大家能够感受到一些同学遇到困惑，没能理解某些内容。
 - en: so we want to help you get unstuck and really sort of come get catch up， get
     back to speed。 So that's a goal of our using our office hour in that way。 So the
     other thing that I wanted to mention was sort of issues from Mid-term One。 There
     were。 we did find fairly quite a few logistical issues in Mid-term One。 And so
     basically we provided a。
+  id: totrans-196
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们希望帮助你们解困，尽快赶上进度，恢复正常节奏。这也是我们在使用办公时间时的目标。接下来，我想提到的是期中考试一的一些问题。我们发现期中一有一些后勤问题。所以基本上，我们提供了。
 - en: bunch of sort of instructions and there were quite a few students who had sort
     of， who did not sort。 of follow the instructions in the letter and this is totally
     understandable given that this is the。 first time you're doing something like
     this。 But so the issues range from sort of small ones like。 not showing your SID
     or your face going on the internet and are recording dropping for a few。
+  id: totrans-197
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里有一堆指示说明，实际上有不少同学没有严格按照说明操作，虽然这些问题完全可以理解，因为这是你们第一次进行这样的操作。但问题的种类从小的，比如没有展示SID或面部信息，去上网，录制中途掉线，直到一些更大的问题。
 - en: minutes， so maybe more larger ones like no recordings at all having extra screens。
     having extra devices。 So these are all logistical issues that we hope that you
     will avoid in Mid-term Two。 And the other thing that we found too much to our
     sadness was that there may be potential， again。 right？ So there's not we don't
     have any proof of this yet， but potential academic integrity。
+  id: totrans-198
   prefs: []
   type: TYPE_NORMAL
+  zh: 有些更大的问题，比如完全没有录音，额外的屏幕，额外的设备。这些都是后勤问题，希望你们在期中二时能够避免。另一个让我们感到遗憾的发现是，可能存在学术诚信的问题。我们目前没有确凿证据，但还是有潜在的学术诚信问题。
 - en: issues we still need to look into this。 Again， I know that most of you are approaching
     this class。 with the spirit that it's intended just trying to learn the content
     and so this is something。 that we look into but we're looking into ways to sort
     of evaluate and verify these cases。 not meant to be stressful in any way， we just
     want to be fair。
+  id: totrans-199
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们仍在调查此事。我知道你们中的大多数同学是以学习内容为目标来上这门课的，所以这件事我们会调查，但我们也在寻找评估和验证这些情况的方式。我们不是想让大家感到压力，我们只是想确保公平。
 - en: And for those with sort of logistical， issues to avoid having this kind of verification。
     just please try to find ways around them。 And if， you're having trouble finding
     ways around them。 we can always help， right？ And if there's some aspect， of this
     Mid-term setup。 this exam setup that's really just causing trouble to a lot of
     you， we are。
+  id: totrans-200
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于那些有后勤问题的同学，为了避免出现这种验证问题，请尽量找出解决方法。如果你在找解决方法上有困难，我们随时可以提供帮助，对吧？如果在期中考试安排上有什么让大家困扰的地方，我们也会处理。
 - en: happy to just change that。 But we want we would like to know。 So keep us posted
     if there are specific， things that lead to the logistical issues that we're talking
     about。 And again， if you're feeling， stuck， if you're having trouble with the
     content。 let us know and tell us how you can help。 One thing。
+  id: totrans-201
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们很高兴改变这个。但我们希望知道。如果有具体的事情导致了我们讨论的后勤问题，请随时告诉我们。如果你感到困惑，或者在理解内容时遇到困难，告诉我们，并告诉我们怎么帮你。有一件事。
 - en: that we haven't yet done is gone through your Mid-term survey。 So it's possible
     that many of you。 have given us useful feedback that we can build off of to sort
     of improve both our presentation of。 the content as well as sort of projects and
     sections and all of that。 I thought I saw hand raised。 Was that a hand raised？
     That was， that was me。 But I think my question was answered。 It was if。
+  id: totrans-202
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们还没有做的是查看你们的期中调查。所以可能很多人已经给了我们有用的反馈，我们可以利用这些反馈来改进我们内容的呈现以及项目和各个部分。我好像看到有举手。是举手吗？是我。但我觉得我的问题已经得到了回答。
 - en: we were going to get feedback in case we accidentally broke one of the rules
     and didn't realize it。 And， I guess the answer is no。 So I think what we might
     do for sure is sort of just。 have a list of common issues。 I think just going
     through， so I think it， so we did spot checks on。 various videos and try to identify
     possible issues。 But of course， we can't be exhaustive， right？
+  id: totrans-203
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们原本会在这里收集反馈，以防我们不小心违反了某些规则而没有意识到。然后，我猜答案是否定的。所以我认为我们可能做的事情是，只是简单地列出常见问题。我认为我们会通过视频进行抽查，尝试识别可能的问题。但当然，我们无法做到面面俱到，对吧？
 - en: We， can't sit and watch every one of you take all of your like through like
     two hours or whatever。 right？ The entire exam。 That's impossible for us to do。
     So there's no way we will be exhaustive。 in catching these issues。 And so I don't
     want to promise that at all。 What we can certainly do is。 identify a list of common
     issues that we found in the videos and share that with you so that。
+  id: totrans-204
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们不能坐在那里，盯着你们每一个人完成考试，像是花两个小时或其他时间，整个考试。对吧？我们无法做到这一点。所以我们不可能对这些问题做到面面俱到。所以我不想承诺这一点。我们能做的，当然是列出我们在视频中发现的常见问题，并将其分享给你，以便。
 - en: that can be like a handy reminder that， hey， show your SID， show your face，
     make sure that the。 recording is this way， make sure that your cell phone is connected
     to the charger， blah， blah。 right？ So we can certainly send that before as a reminder。
     Jerry， does that sound good？
+  id: totrans-205
   prefs: []
   type: TYPE_NORMAL
+  zh: 这可以是一个便捷的提醒，比如“嘿，显示你的SID，展示你的脸，确保录制是这样的，确保你的手机已连接充电器，等等。”对吧？所以我们当然可以在之前发出这样的提醒。Jerry，这听起来怎么样？
 - en: Anything to add？ Jerry is in charge of exam stuff。 Yeah， I think that's， that's
     fine。 There's a question chat of we want people to look over the videos。 Go ahead
     and come to any of our。 office hours for that。 Yeah， so it's the same setup as
     before， right？ So I think we offer to。 do that like even before midterm one， right？
     So basically check your， like， you know， help。
+  id: totrans-206
   prefs: []
   type: TYPE_NORMAL
+  zh: 有什么要补充的吗？Jerry负责考试相关的事宜。是的，我认为没问题。聊天室里有个问题，我们希望大家查看视频。可以，直接来我们的任何办公时间。我想，和之前一样，对吧？所以我认为我们之前也提供过，甚至是在第一次期中考试之前就有提供，基本上是检查你的，知道了，提供帮助。
 - en: your eyes check your setup and then， and then all that stuff。 So same thing。
     You can， you。 prefer it to just drop by any of the office hours。 I think there
     was also another concern raised about what are we doing with your videos？ Your
     video。 second promise you the only way we're using them is to look to the spot
     check and that's， it， right？
+  id: totrans-207
   prefs: []
   type: TYPE_NORMAL
+  zh: 你能检查你的设置，等等。所以同样的，你可以选择直接参加任何一场办公时间。我想还有一个问题是关于我们如何处理你的视频。你的这些视频，第二个承诺是我们使用它们的唯一方式，就是进行抽查，仅此而已，对吧？
 - en: And， and we are once we are done with the spot checks， once we are done with
     sort of。 figuring out who we might want to sort of look into further， we will
     get rid of them。 We don't need。 access to them。 So we will let you know when we
     don't need access to them， you can just go ahead。 and revoke access if you'd like。
     I think it's also set to automatically expire after maybe 30 days。
+  id: totrans-208
   prefs: []
   type: TYPE_NORMAL
+  zh: 一旦我们完成了抽查，一旦我们弄清楚了哪些人可能需要进一步审查，我们就会将他们移除。我们不再需要访问他们的信息。所以当我们不再需要访问时，我们会通知你，你可以直接撤销访问权限，如果你愿意的话。我认为系统也设置了，可能在30天后自动过期。
 - en: or something。 Yeah， so Zoom， at least the， the Cal Zoom accounts are basically，
     yeah， delete the。 videos after 30 days。 Okay， look。 All right， so let's move to
     recovery。 I don't have a ton of time。 to cover recovery， so we will do what we
     can。 Okay， so taking a step back， so Alvin covered。 concurrency control， basically，
     it's useful to step back and look at the rest of the transactional。
+  id: totrans-209
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者其他情况。是的，至少Zoom，Zoom帐户基本上会在30天后删除视频。好吧。好了，我们开始讨论恢复。我没有太多时间来讲解恢复，因此我们将尽力而为。好的，退后一步，Alvin已经讲过并发控制，基本上，回顾一下剩余的事务。
 - en: sort of guarantees， the properties， these so-called asset properties that we
     want a transaction to。 satisfy。 So， Adomicity， if you remember， is basically saying，
     hey， all the actions for transaction。 happen or none of them happen。 Consistency
     basically says if the database state is consistent。 so it， obeys some constraints，
     integrity constraints， for example， it ends up consistent after that。
+  id: totrans-210
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些保证，即事务需要满足的所谓ACID属性。首先是原子性，如果你还记得的话，它基本上意味着事务中的所有操作要么全部发生，要么一个都不发生。一致性则意味着数据库状态是一致的，遵循某些约束条件，例如，事务结束后仍然保持一致性。
 - en: Isolation is what is guaranteed by these locking schemes is ensuring that execution
     of one。 transaction is isolated from that of the others。 And durability basically
     says that if a transaction。 commits， then its effects persist， they outlive that
     of the transaction。 So today， we're going to。 start talking about the recovery
     manager。 The recovery manager is responsible for ensuring。
+  id: totrans-211
   prefs: []
   type: TYPE_NORMAL
+  zh: 隔离性是这些锁定方案所保证的，它确保一个事务的执行与其他事务的执行相互隔离。持久性基本上是说，如果一个事务提交了，那么它的效果将会持久化，超越该事务的生命周期。所以今天，我们将开始讨论恢复管理器。恢复管理器负责确保。
 - en: atomicity and durability。 And also rollback transactions that violate consistency。
     Okay。 so the motivation for atomicity is that transactions may abort。 Either the
     request to abort。 or the system may abort them， and we want to sort of ensure
     that their effects are not persisted on。 the database。 So we really want it to
     be either the transaction effects are not at all present。
+  id: totrans-212
   prefs: []
   type: TYPE_NORMAL
+  zh: 原子性和持久性。另外，回滚那些违反一致性的事务。好的。所以原子性的动机是事务可能会中止。无论是请求中止，还是系统中止它们，我们都希望确保它们的效果不会被持久化到数据库中。因此，我们真的希望要么事务的效果完全没有存在。
 - en: all of the effects are present。 Durability basically is ensuring that if， for
     example。 the database stops running， the effects of a transaction that is committed
     still stay on。 they stay in perpetuity。 So in this example， you have a few transactions
     that have committed。 and aborted， and then there was a system crash。 And so what
     do we want in this case？ So after the。
+  id: totrans-213
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有的效果都会被保留。持久性基本上是确保如果数据库停止运行，已提交的事务效果仍然存在，永久保存。所以在这个例子中，你有几个事务已提交和中止，然后发生了系统崩溃。那么我们在这种情况下希望什么？崩溃后。
 - en: system restarts， what we want is these two transactions T1 and T3 that were
     committed。 you want their effects to be durable。 And T2， T4 and T5 should be aborted。
     So either T2 was explicitly， already aborted before the crash。 while T4 and T5
     were incomplete transactions at the time of the crash。
+  id: totrans-214
   prefs: []
   type: TYPE_NORMAL
+  zh: 系统重启时，我们希望这些已提交的事务T1和T3的效果是持久化的。而T2、T4和T5应该被中止。因此，要么T2已经明确在崩溃前中止，要么T4和T5在崩溃时是未完成的事务。
 - en: we want their effects to be rebooted。 So we want them to be aborted as well。
     So we only want when there's a crash in the system recovers after a crash。 we
     want any transactions that were uncommitted at that time of the crash。 their effects
     should not be seen after that。 So let's talk about two questions about why。
+  id: totrans-215
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们希望它们的效果被回滚。所以我们也希望它们在崩溃后被中止。因此，当系统崩溃并恢复时，我们希望任何在崩溃时未提交的事务，其效果不应在恢复后显现。那么我们来谈谈两个问题，关于为什么。
 - en: are there aborts and why do database systems stop running？ And then we'll talk
     about mechanisms for。 ensuring recovery。 So why do transactions abort？ Well， the
     first is the user application explicitly。 says， I want to no longer proceed with
     this transaction。 Another reason for why transactions。 may abort is over the course
     of a transaction， if the database determines that an integrity constraint。
+  id: totrans-216
   prefs: []
   type: TYPE_NORMAL
+  zh: 数据库系统为什么会中止运行？接下来我们将讨论确保恢复的机制。那么为什么事务会中止呢？首先是用户应用程序明确表示，我不再继续执行这个事务。另一个事务可能中止的原因是在事务执行过程中，如果数据库确定有完整性约束。
 - en: is violated， then it can abort a transaction。 It can be like， hey， you're violating
     this。 primary key constraint， this foreign key constraint， what have you， the
     database system can be like。 look， I'm going to abort this transaction。 None of
     the effects of that transaction should be persisted。 It could happen due to a
     deadlock。 The schemes that Alvin mentioned， you could certainly look at。
+  id: totrans-217
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果违反了某些约束，它可以中止一个事务。就像是，嘿，你违反了这个主键约束，外键约束，等等，数据库系统可以说，看看，我要中止这个事务，那个事务的任何效果都不应该被保留。它也可能由于死锁而发生。阿尔文提到的那些方案，你当然可以查看。
 - en: you can try to take a transaction that's part of a cycle and then cause that
     to be aborted。 You could also have a transaction abort because of system failure
     prior to a successful commit。 So if the system itself fails， then we will， this
     is a transaction that's not yet gotten to。 a commit state yet。 We are going to
     abort that transaction upon system recovery。
+  id: totrans-218
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以尝试将一个事务作为循环的一部分，然后导致它被中止。你也可以因为系统故障而中止一个事务，前提是该事务在成功提交之前未完成。因此，如果系统本身失败，那么这个事务还没有到达提交状态。我们将在系统恢复后中止该事务。
 - en: So I believe we talked about this earlier as well。 So in terms of transactions
     in SQL。 you should begin transaction command and then you say commit to assist
     the effects of that transaction。 and rollback if you want to rollback the effects
     of that transaction。 So this is how you would。 sort of interact with a database
     in a transactional sense via SQL。
+  id: totrans-219
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我相信我们之前也讨论过这个。关于 SQL 中的事务，你应该使用 `begin transaction` 命令来开始一个事务，然后你使用 `commit`
+    来提交该事务的效果，如果你想回滚该事务的效果，就使用 `rollback`。所以这就是你如何通过 SQL 与数据库进行事务交互的方式。
 - en: You also have this convenient notion of save points， which allows you to save
     state within a。 transaction。 So you can declare a save point by having save point
     and then give it a name。 And then you can release a save point， basically say
     that erase a save point。 making as if the save point never existed by using this
     release save point name command。
+  id: totrans-220
   prefs: []
   type: TYPE_NORMAL
+  zh: 你还有这个方便的保存点概念，它允许你在事务中保存状态。所以你可以通过 `save point` 并给它一个名称来声明一个保存点。然后你可以释放一个保存点，基本上是说删除一个保存点，就像保存点从未存在过一样，使用这个
+    `release save point name` 命令。
 - en: And then you can also roll back to a previous save point using this rollback
     to a save point。 command。 What that means is all the actions that you have taken
     in that transaction。 up to backwards up to and including the save point are rolled
     back。 So these save points are。 convenient device to sort of sort of take a bigger
     transaction and break it down into components。
+  id: totrans-221
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后你也可以使用这个 `rollback to a save point` 命令回滚到之前的保存点。这意味着你在这个事务中采取的所有操作，回滚到并包括该保存点，都将被撤销。所以这些保存点是一个方便的工具，可以将一个较大的事务拆分为多个组件。
 - en: that are individually saved and rolled back。 So in this particular example，
     you have a。 big in transaction and a commit and within that you have an insert
     and then a save point that's。 declared basically allows you to go back to this
     point another insert and then here I'm releasing。 this save point， which means
     it's almost as if the save point never existed。 Okay。 And then I have。
+  id: totrans-222
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些是单独保存并且可以回滚的。所以在这个特定的例子中，你有一个大的事务和一个提交，并且在其中有一个插入操作，然后声明了一个保存点，基本上允许你回到这个点，再进行另一个插入操作，然后在这里我释放了这个保存点，这意味着几乎就像这个保存点从未存在过。好的，然后我有。
 - en: another save point。 I've declared another save point as to I've added something
     else to this table。 And then I'm saying， so I've added this no value to this table。
     I now I'm saying roll back to。 save point as to what that means is all of this
     is erased， right？ The effects of this is erased。 And finally， I can I have another
     insert statement。 So I basically have yes， one， two。
+  id: totrans-223
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个保存点。我声明了另一个保存点，添加了某些内容到这个表中。然后我说，所以我向这个表添加了一个空值。现在我说回滚到保存点，这意味着所有这些都会被删除，对吗？这些效果会被删除。最后，我还有另一个插入语句。所以我基本上有了是的，一个，两个。
 - en: and three as part， of this table。 Okay。 So the release and rollback are just
     conveniences that allow me to go back。 to specific points in my transaction and
     undo partial effects of the transaction without。 undoing the entire transaction。
     Okay。 So let's talk about other mechanisms for sort of why。 transaction might
     might abort and that is a violation of an integrity constraint。
+  id: totrans-224
   prefs: []
   type: TYPE_NORMAL
+  zh: 并且作为该表的一部分，三。好的。因此，释放和回滚只是一些方便的操作，允许我回到事务中的特定点，并撤销事务的部分效果，而不撤销整个事务。好的。那么让我们讨论一下其他可能导致事务中止的机制，比如违反完整性约束。
 - en: So here I am showing， an example of an integrity constraint leading to rollback
     of a transaction or a transaction being。 aborted。 So here I have a sealer stable
     and a reserve stable being declared as is my typical。 example。 I also have a foreign
     key constraint from the reserve stable to the sailor's table。 And I've inserted
     pop by into the sailor's table and a reserves element that also refers to the
     same。
+  id: totrans-225
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以在这里，我展示了一个完整性约束导致事务回滚或事务被中止的例子。这里我声明了一个sailor表和一个reserve表，作为我的典型例子。我还从reserve表到sailor表有一个外键约束。我已经将pop
+    I插入到sailor表，并且在reserves表中也插入了一个指向同一条目的元素。
 - en: sailor ID。 Okay， then I'm I decide to start my transaction。 I do a begin。 And
     then I decide。 I want to delete the pop I to go from sailors。 When I try to do
     that， this is going to lead to an。 integrity constraint violation。 Right。 Because
     by deleting this pop I to pull this to pull in the。 reserves table now has nothing
     to point to right because it's pointing to this 123 value this， sid。
+  id: totrans-226
   prefs: []
   type: TYPE_NORMAL
+  zh: sailor ID。好的，然后我决定开始我的事务。我执行`begin`，然后我决定。我想从sailors表中删除pop I。当我尝试这样做时，这将导致一个完整性约束违规。对吧？因为通过删除pop
+    I，从reserves表中删除指向这个sid值（123）的指针。
 - en: So I cannot delete the to pull in sailors that has that sid。 So this immediately
     leads to。 this transaction being aborted。 Okay， so this transaction basically
     being is aborted。 The。 database gives me an error。 This is postgres。 And it says
     update or delete blah blah。 Wireless foreign key constraints and table results。
     And now any other statements in my。
+  id: totrans-227
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我不能删除具有该sid的sailor。这样就会立即导致这个事务被中止。好的，所以这个事务基本上就是被中止了。数据库给我返回了一个错误。这是postgres，并且它说：更新或删除blah
+    blah。外键约束违反，表格reserves。现在，在我的任何其他语句中，
 - en: transaction after this are also not executed are basically avoided。 So insert
     into sailors value。 blah blah。 Olive oil is not is ignored。 That's because again，
     the database system tells me the。 current transaction is aborted。 So all commands
     until the end of the transaction block are ignored。 And so if I do a select star
     from sailors， I have not managed to delete pop I and I'm not inserted。
+  id: totrans-228
   prefs: []
   type: TYPE_NORMAL
+  zh: 之后的事务也不会被执行，基本上会被避免。因此，插入到sailors表的值。blah blah。橄榄油会被忽略。这是因为数据库系统再次告诉我，当前事务已被中止。所以事务块结束之前的所有命令都会被忽略。所以，如果我执行`select
+    star from sailors`，我发现并没有成功删除pop I，也没有插入。
 - en: olive oil in this particular case。 Okay， so this is a instance of this transaction
     being rolled back。
+  id: totrans-229
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个特定案例中的橄榄油问题。好的，这是一个事务回滚的例子。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_28.png)'
+  id: totrans-230
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_28.png)'
 - en: Okay， so let's talk about durability。 Why do databases crash？ Right。 So in this
     day and age。 there are many reasons we can come up with for why a database to
     make crash。 Could be a fire。 could be a pandemic， could be some other form of
     a pop-up。 But sort of more， seriously。 there are more sort of banal boring reasons
     for why a database might crash。 And this。
+  id: totrans-231
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，我们来谈谈持久性。为什么数据库会崩溃？对吧？在今天这个时代。我们可以想出很多原因为什么数据库会崩溃。可能是火灾，可能是疫情，也可能是其他形式的弹窗。但更严肃的来说，还有一些更加普通无聊的原因，为什么数据库可能会崩溃。比如，
 - en: could be operator error。 So you might end up tripping over a power card。 And
     this could lead to the server being unplugged and the system crashing。 Right。
     You might end up typing some wrong command。 This could also lead to the system
     crashing。 It could also be a configuration error。 You may end up running out of
     this space。 There could be。
+  id: totrans-232
   prefs: []
   type: TYPE_NORMAL
+  zh: 也可能是操作员错误。比如你可能会不小心踩到电源线。这可能导致服务器断电，系统崩溃。对吧？你可能会输入错误的命令，这也可能导致系统崩溃。也有可能是配置错误。你可能会耗尽空间。也可能是，
 - en: memory issues。 It could also be file permission issues。 So the files that you're
     writing to the。 heap file could be potentially corrupted。 The permissions could
     be changed by other processes。 There's all kinds of weird things that could go
     wrong。 There could also be software failures。 This is less likely， but could also
     happen。 VBMS bugs。 Like if you've heard of SQL injection。
+  id: totrans-233
   prefs: []
   type: TYPE_NORMAL
+  zh: 内存问题。也可能是文件权限问题。你写入堆文件的文件可能会被损坏。权限可能会被其他进程更改。也有很多奇怪的事情可能会出错。也可能会有软件故障。这个不太可能，但也是有可能发生的。比如VBMS的bug。如果你听说过SQL注入，
 - en: attacks， that's a kind of adversarial sort of interaction with the database
     that can cause it。 to crash。 You could have OS bugs。 All of these could lead to
     the database crashing。 You could also have media or server failures too。 So you
     could have your， disk crashing and so on。 Okay。 So let's start our recovery discussion。
     And we'll do what we can。 We won't get very far。
+  id: totrans-234
   prefs: []
   type: TYPE_NORMAL
+  zh: 攻击，这是一种与数据库的对抗性互动，可能导致数据库崩溃。你可能会遇到操作系统的错误。所有这些都可能导致数据库崩溃。你还可能遇到媒体或服务器故障。所以你可能会遇到磁盘崩溃等问题。好了，让我们开始讨论恢复。我们会尽量做我们能做的，虽然我们不会走得很远。
 - en: But for discussing recovery， we're going to， assume that we have concurrency
     control the way Alvin described it。 So we're going to use strict， 2pl。 And we
     are going to assume that updates are happening in place。 So data， this is standard。
     So， data is modified in the buffer pool and pages in the database are overwritten。
     So these transactions， are not operating on private copies of the data。
+  id: totrans-235
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是在讨论恢复时，我们将假设我们拥有 Alvin 描述的并发控制方式。所以我们将使用严格的 2pl（两阶段锁协议）。我们还将假设更新是在原地进行的。所以数据，这是标准做法。数据在缓冲池中被修改，并且数据库中的页面被覆盖。所以这些事务并不是在数据的私有副本上进行操作。
 - en: So you bring in these pages from disk， and then you change those pages and then
     write them out。 Now the challenge of course in recovery， is a fact that you have
     this buffer manager。 So changes are performed in memory and then， written to disk。
     And the fact that there's a discontinuity， you're not directly writing to disk。
+  id: totrans-236
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你从磁盘中读取这些页面，然后修改这些页面，再将它们写回磁盘。现在，恢复中的挑战当然是你有这个缓冲区管理器。所以更改首先是在内存中执行的，然后再写入磁盘。由于存在不连续性，你并不是直接写入磁盘。
 - en: is what is complicating recovery。 The discontinuity in this context is what
     is complicating recovery。 So to briefly recap the role of a buffer manager， given
     a disk， your buffer manager has various。 frames or a buffer manager manages the
     buffer pool， each of which consists of various frames。 This is in main memory，
     each of which could hold a disk page。 And this is requested on demand from。
+  id: totrans-237
   prefs: []
   type: TYPE_NORMAL
+  zh: 正是这种不连续性使得恢复变得复杂。在这个上下文中，不连续性就是使恢复变得复杂的因素。所以简要回顾一下缓冲区管理器的角色，给定一个磁盘，你的缓冲区管理器有多个帧，或者说缓冲区管理器管理着缓冲池，每个缓冲池由多个帧组成。这些都在主内存中，每个帧可以存放一个磁盘页面。这些页面是按需请求的。
 - en: disk。 And so you a buffer pool could have many filled frames with disk pages
     and also free frames。 that don't yet have this pages。 And as page requests happen
     from higher levels of the stack。 the database system stack， this leads to read
     or write that is issued to this these buffer pool。 pages， which lead to input
     and output of the pages from disk。
+  id: totrans-238
   prefs: []
   type: TYPE_NORMAL
+  zh: 磁盘。所以你的缓冲池中可能有许多已经填充了磁盘页面的帧，也有一些尚未包含页面的空闲帧。随着页面请求从栈的更高层次发出，数据库系统栈就会发出读或写操作，这会导致页面从磁盘输入或输出。
 - en: So this is the level of granularity at， which we are going to be operating when
     reasoning about recovery。 And in our context， as is typical， one page corresponds
     to one disk block。 So these are the operations， like I mentioned the previous。
     slide that we're going to be working with。 You have a read operation and a write
     operation。
+  id: totrans-239
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这是我们在推理恢复时所操作的粒度级别。在我们的上下文中，通常一个页面对应一个磁盘块。所以这些是之前我提到的操作，我们将要处理的操作。你有一个读操作和一个写操作。
 - en: these are operations in memory and the input and output， this is going from
     memory to disk or。 disk to memory。 And since I'm at exactly at time， maybe I shouldn't
     go any further and I should。 instead take questions。 Lucas， this is about the
     why do databases crash slide。 One of the things is operator error type， the wrong
     command。 Isn't that。
+  id: totrans-240
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些是在内存中的操作，输入和输出，这是从内存到磁盘，或者从磁盘到内存。由于我正好在时间限制内，也许我应该不再继续，而是应该开始回答问题。卢卡斯，这是关于数据库崩溃的原因幻灯片。其中一个原因是操作员错误，错误的命令。是不是这样？
 - en: isn't that more of a software failure？ Because ideally you would write。 the
     database just so that a bad input would just get rejected rather than causing
     the database to。 crash， right？ Yeah， so this could be a configuration parameter
     at this。 This is less about the user。 So this is unlikely that this is because
     of， for example， me having a typo in my SQL command， right？
+  id: totrans-241
   prefs: []
   type: TYPE_NORMAL
+  zh: 这不是更像是软件故障吗？因为理想情况下，你应该写入数据库，使得错误输入被拒绝，而不是导致数据库崩溃，对吧？是的，所以这可能是一个配置参数的问题。这个问题与用户关系不大。所以这不太可能是因为比如我在
+    SQL 命令中打了个错别字，对吧？
 - en: It could be instead because of the system administrator， database system administrator。
     typing something incorrectly， right？ So this is something that is more of the
     database system。 configuration level rather than at the level of SQL queries，
     which is less likely to cause an error。 You're right。 You will catch those mistakes。
     So for example， you refer to a table that didn't。
+  id: totrans-242
   prefs: []
   type: TYPE_NORMAL
+  zh: 这可能是因为系统管理员，数据库系统管理员，输入错误对吗？所以这更像是数据库系统配置层面的问题，而不是 SQL 查询层面的问题，这种情况更不容易出错。你是对的。你会捕捉到这些错误。所以例如，当你引用一个不存在的表时。
 - en: exist。 We'll catch that mistake and not cause the database system to crash。
     Thank you。 Another hand raised Felix。 Yeah， just a quick question。 Maybe this
     will be answered in the next lecture， but。 about like on the picture where we
     have like the disk and the buffer manager。
+  id: totrans-243
   prefs: []
   type: TYPE_NORMAL
+  zh: 存在。我们会捕捉到这个错误，避免导致数据库系统崩溃。谢谢。还有人举手，Felix。是的，快速问一下，或许下节课会讲到这个，关于我们在图中看到的磁盘和缓冲区管理器。
 - en: is there like a distinction of which parts， like what line we draw between like。
     disk or whatever or like the buffer frame like in terms of recovery， like because
     I know the。 database management system is like done in software。 So like on a
     disk failure， is it still the。 database management system's responsibility to
     like， you know， do something about that？ Yeah。
+  id: totrans-244
   prefs: []
   type: TYPE_NORMAL
+  zh: 是否存在一种区分，即在哪些部分，像是磁盘或缓冲区帧之间，关于恢复的线在哪里？因为我知道数据库管理系统是基于软件的。所以，如果发生磁盘故障，数据库管理系统是否仍然负责，像是，知道该怎么处理这种情况？是的。
 - en: so a disk failure is something that is not that is in some sense beyond the
     scope of a。 recovery manager。 And then a disk failure is usually handled via other
     mechanisms， for example。 redundant disks。 So you might use a read sort of set
     up to allow for multiple copies of。 given this so that there is some redundancy。
     So even if you have one disk failing， you have other。
+  id: totrans-245
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以磁盘故障在某种程度上超出了恢复管理器的范畴。磁盘故障通常通过其他机制来处理，例如冗余磁盘。所以你可能会使用某种读取设置来允许给定数据的多个副本，以便提供冗余。即使你有一个磁盘故障，其他磁盘也能提供数据。
 - en: disks that that that that can still maintain a copy of it and still still recover。
     We can still operate on that。 So the case that we are talking about are much more
     common。 which are software failures， right？ So unplugging stuff， software crashing，
     all of these are issues。 where basically whatever you're doing in memory just
     evaporates instantly。 And so that's a kind of。
+  id: totrans-246
   prefs: []
   type: TYPE_NORMAL
+  zh: 磁盘可以依然保持其副本并且依然能够恢复。我们依然可以操作它。所以我们讨论的这种情况是更常见的。即软件故障，对吗？所以断开设备、软件崩溃，所有这些问题基本上都会导致你在内存中的操作瞬间消失。所以这是一种。
 - en: recovery that is much more common that we have to deal with。 And so that's what
     we're going to be。 focusing on。 So that makes sense。 Yeah， thank you。 I have a
     question about。 I think it's slide seven， it was when you were doing the SQL queries
     about Popeye and 123。 So you showed in the code that it。
+  id: totrans-247
   prefs: []
   type: TYPE_NORMAL
+  zh: 恢复是我们更常需要处理的情况。所以这也是我们接下来要重点讲解的内容。这样讲得通吗？是的，谢谢。我有一个问题，关于我想是第七张幻灯片，当你在做关于 Popeye
+    和 123 的 SQL 查询时。你在代码中展示了它。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_30.png)'
+  id: totrans-248
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_30.png)'
 - en: aired as soon as you tried deleting the key。 And it makes sense as to why it
     would air because now。 that the reserves table is referencing a sailor's sailor
     that doesn't exist。 So does that mean that。 the entire transaction gets like gets
     aborted as soon as that command occurs？ Because after the。 when you try to insert
     a new sailor， it says error current transaction is important。
+  id: totrans-249
   prefs: []
   type: TYPE_NORMAL
+  zh: 错误会在你尝试删除键时出现。这也解释了为什么会出错，因为现在 reserves 表引用了一个不存在的水手。所以这是否意味着，整个交易会在这条命令执行后被中止？因为当你尝试插入一个新的水手时，它显示错误，当前交易非常重要。
 - en: So does it decide， to roll back or like abort as soon as you make a bad query？
     Exactly， right？
+  id: totrans-250
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以它是否决定，在你执行错误查询后，立即回滚或中止？没错，是的？
 - en: So as soon as you make， as soon as you have an error of this type。 you are going
     to abort that transaction because the。 guarantee that you're provided is that
     transaction either executes in its entirety or not at all。 So you can't simply
     say， Hey， this thing is an error。 I'm going to skip over it and do something。
+  id: totrans-251
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以一旦你犯了这种类型的错误，交易就会被中止，因为你所得到的保证是：交易要么完全执行，要么根本不执行。所以你不能仅仅说，嘿，这个是个错误，我跳过它，做点别的事情。
 - en: else。 Because I mean， what if you did do things and then the third thing was
     an error， right？
+  id: totrans-252
   prefs: []
   type: TYPE_NORMAL
+  zh: 其他的情况。因为我的意思是，如果你做了操作，而第三步出错了，对吧？
 - en: So for， example， you transferred money， you deleted money from one account。
     And then while transferring it to， the other account， there was a mistake。 You
     don't want the first one to stay while the second one has， an error， right？
+  id: totrans-253
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如说，你转账，删除了一个账户里的钱，然后在将钱转到另一个账户时出现了错误。你不想让第一个账户的钱保持不变，而第二个账户却出错，对吧？
 - en: So you basically the system instead， the database system will instead say。 I'm
     going to none of this is going to work。 I'm going to just say there was an error
     in step two。 You figured it out。 Tell me what I should be doing from the from
     scratch rather than doing some。 partial stuff。 So my， my， I think my question
     was more along the lines of like。
+  id: totrans-254
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以你基本上是说，数据库系统会说，我要声明这一切都不行。我会说第二步出现了错误。你弄明白了。告诉我从头做什么，而不是做一些部分性的操作。所以我，嗯，我的问题更多是关于。
 - en: do they consistently check， for， sorry， did they check for consistency throughout
     the transaction or only once at the end？
+  id: totrans-255
   prefs: []
   type: TYPE_NORMAL
+  zh: 它们是否始终检查，抱歉，它们是检查整个事务的一致性，还是只在结束时检查一次？
 - en: Because， what I thought was that you check the beginning and at the end of the
     transaction and see if your。 consistency is still there and then decide to commit
     or abort based off that。 But since it's。 airing in between， does that mean that
     it's checking throughout the whole transaction？ Yeah， so。 so that's a good question，
     right？ So maybe a different implementation code， for example。
+  id: totrans-256
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为我认为的是，你在事务开始和结束时检查，看看你的**一致性**是否仍然存在，然后基于此决定提交或中止。但既然它是在中间出错，那是不是意味着它会在整个事务中都检查？是的，所以，这是个好问题，对吧？也许是不同的实现代码，例如。
 - en: avoid checking consistency until the end of the transaction。 And then because
     you could。 for example， fix the the integrity constraint that you have here by
     adding in an appropriate tuple in a subsequent。 step is maybe that's what you're
     getting at。 So you could have each individual sequel statement。 might violate
     consistency， but the entire transaction doesn't violate consistency。 So that，
     I think。
+  id: totrans-257
   prefs: []
   type: TYPE_NORMAL
+  zh: 避免在事务结束之前检查一致性。然后，因为你可以。例如，通过在后续步骤中添加一个合适的元组来修复你在这里遇到的完整性约束，也许这就是你想表达的。所以你可以让每个单独的
+    SQL 语句可能违反一致性，但整个事务并不违反一致性。所以，我认为。
 - en: is an implementation choice。 I think here， and in most typical database systems。
     you check consistency， after every SQL statement， because that's a granularity
     at which you execute stuff。 And you， will check consistency as you're executing。
     rather than waiting until the entire end of the transaction， then。
+  id: totrans-258
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是一个实现选择。我认为在这里，和大多数典型的数据库系统中，你会在每个 SQL 语句之后检查一致性，因为那是你执行操作的粒度。而且你会在执行时检查一致性，而不是等到事务结束时再检查。
 - en: and then sort of checking consistency。 Because what if it's a very long transaction
     with lots of。 statements， right？ Rather than you would end up sort of waiting
     until the very end to catch an error。 rather than doing it at each step。 So this
     is， this latter thing is just more resource efficient。 too。 I see。 I thought it
     would be more inefficient because you have to check every single time。
+  id: totrans-259
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后再检查一致性。因为如果这是一个非常长的事务，包含很多语句，对吧？那样你最终可能会等到最后才发现错误，而不是在每个步骤都检查。所以这种后者方式只是更有效率。嗯。我明白了。我原以为每次检查会更低效，因为你必须每次都检查。
 - en: but I think that makes sense because if you catch the error early on。 Okay。
     Thank you so much。 Yeah。 but then just to add， right， but there must also be a
     mechanism to get out of the situation。 like what you're seeing here， right？ Because
     if it checks for every single statement， then， like。 you still need a way to be
     able to remove the tuple。 Always complain that， like， okay。
+  id: totrans-260
   prefs: []
   type: TYPE_NORMAL
+  zh: 但我认为这有道理，因为如果你能早点捕捉到错误。好的，非常感谢。是的。但我还想补充一点，对吧，但也必须有一个机制来解决这种情况。就像你现在看到的那样，对吧？因为如果它检查每一个语句，那么，就像你说的，你仍然需要一种方法来删除元组。总是会抱怨说，像是。
 - en: there's a foreign key constraint， and so you cannot delete it。 So how can you
     ever delete it？ Right？
+  id: totrans-261
   prefs: []
   type: TYPE_NORMAL
+  zh: 有外键约束，所以你不能删除它。那么你怎么能删除它呢？对吧？
 - en: Because， like， you know， when you try to， delete on the other side， also say
     that， well。 there's a foreign key constraint， I mean， someone is holding on to
     that tuple。 so you cannot delete either way， right？ So it must。 be a way that
     you can delete both of them at the same time。
+  id: totrans-262
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为，比如说，当你尝试删除另一侧的数据时，还会说，有外键约束，意思是某个地方引用了那个元组，所以你不能删除数据，对吧？所以一定有一种方式，允许你同时删除两者。
 - en: Wouldn't you just delete the foreign key reserves on first and then the sailor
     or？ Yeah。 so that's one way of doing it， right？ Or another way is to basically
     specify what was。 being typed in the chat， right？ So， like， you can say， when
     you define the table。 that when something， is deleted， then you also want all
     the rows that are holding foreign keys to that to also guess。
+  id: totrans-263
   prefs: []
   type: TYPE_NORMAL
+  zh: 你是不是应该先删除外键约束，再删除水手，或者呢？对，这是一种方法，对吧？另一种方法是基本上指定聊天中输入的内容，对吧？所以，比如说，你可以说，当你定义表时，当某个数据被删除时，你还希望所有持有该外键的行也一并删除。
 - en: how much I'm saying is like deleted at the same time。 What is this？ Yeah。 so
     you can delete multiple， rows in different tables at the same time。 We just have
     to write in one。 Yeah， so you basically， in， addition to these constraints。 you
     describe what would happen if tuples are deleted or updated。
+  id: totrans-264
   prefs: []
   type: TYPE_NORMAL
+  zh: 我说的意思是同时删除。这个是什么？对，所以你可以同时删除不同表中的多行数据。我们只需要写一次。对，所以除了这些约束外，你还描述了如果元组被删除或更新时会发生什么。
 - en: and how they would impact the multiple tables that are being referenced or are
     referencing， right？
+  id: totrans-265
   prefs: []
   type: TYPE_NORMAL
+  zh: 并且它们会如何影响正在被引用或引用其他表的多个表，对吧？
 - en: And so， for example， like Alvin said， and I don't know if I wasn't following
     chat。 so I don't know what was mentioned， but basically you would say， if you
     delete from sailors。 it also results in a cascading delete of the reserves to
     go and so on， right？ So， or if you。 update something in sailors， you change 123
     to 341， it results in a cascading update of reserves。
+  id: totrans-266
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，举个例子，像Alvin说的，我不知道我是否没有跟上聊天，我也不知道提到什么了，但基本上你会说，如果从水手表中删除数据，也会导致级联删除预定记录，依此类推，对吧？或者，如果你更新水手表中的某个数据，将123更改为341，它会导致预定表的级联更新。
 - en: Or you could sort of say on an update， you set the reserves value to null， right？
+  id: totrans-267
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者你可以说，在更新时，将预定值设置为null，对吧？
 - en: A null is perfectly fine as a value for foreign key。 So again， these are all
     things that you can。 specify the schema level itself。 If you can't change the
     schema and you can't change the。 integrity constraint specified in the schema
     and what is done during updates and deletes。 then basically what you might， for
     example， end up having to delete the reserves to pull first。
+  id: totrans-268
   prefs: []
   type: TYPE_NORMAL
+  zh: 空值作为外键的值是完全可以的。所以这些都是你可以在模式级别指定的内容。如果你不能更改模式，也不能更改模式中指定的完整性约束，并且在更新和删除时会执行什么操作，那么基本上你可能最终需要删除预定记录来先行。
 - en: and then the say less to pull if you can't change that。 Okay， I see。 Thank you
     so much。 Sorry for not knowing this。 I kind of skipped Preg's。 I'm a freshman，
     so I didn't really learn， 61C。 so I was kind of confused on the logs one， but
     I think I'm starting to get it。 Cool。 Okay， yeah。 if you have a question， just
     come to all these hours。 Thank you so much。
+  id: totrans-269
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后说，如果你不能更改那个设置，那就删除预定记录。好的，我明白了。非常感谢。抱歉我之前没搞清楚这些。我有点跳过了Preg's部分。我是新生，所以没学过61C，有点困惑日志的部分，但我觉得我开始明白了。太好了。好的，如果有问题，就来所有这些时间段。非常感谢。
 - en: Maybe we should stop recording， Alvin。 I didn't stop it in my end。
+  id: totrans-270
   prefs: []
   type: TYPE_NORMAL
+  zh: 或许我们应该停止录制，Alvin。我这边没有停止。
 - en: '![](img/29600da32d3999ef340320b507cbdadb_32.png)'
+  id: totrans-271
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/29600da32d3999ef340320b507cbdadb_32.png)'
 - en: Sure。
+  id: totrans-272
   prefs: []
   type: TYPE_NORMAL
+  zh: 当然。
