@@ -1,0 +1,1901 @@
+- en: P14：Lecture 14： Memory 2 Virtual Memory (con't), Caching and TLBs - RubatoTheEmber
+    - BV1L541117gr
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P14：第14讲：内存2虚拟内存（续），缓存和TLB - RubatoTheEmber - BV1L541117gr
+- en: Okay， let's get started。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我们开始吧。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_1.png)'
+- en: So we're going to continue talking about virtual memory and then we're going
+    to dive。 into caching and translation locuside buffers。 We'll get to TLBs。 Okay。
+    so remember that with general address translation， the CPU， the processor， and
+    what。 the process sees is virtual addresses。 And then it's the job of the memory
+    management unit or MMU to translate those into physical。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们将继续讨论虚拟内存，然后深入探讨缓存和翻译后备缓冲区（TLB）。我们会涉及到TLB。好的，记住，对于一般的地址翻译，CPU、处理器以及进程看到的是虚拟地址。然后，内存管理单元（MMU）的任务就是将这些虚拟地址翻译成物理地址。
+- en: addresses， which is how we actually access memory。 Now。 we can also have untranslated
+    reads and writes。 So there are two views of memory， right？
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 地址，即我们实际访问内存的方式。现在，我们也可以进行未翻译的读写操作。那么，内存有两种视图，对吧？
+- en: There's the view of memory that the processor has and then there's the view
+    from memory of。 actual physical addresses。 And this translation box is what converts
+    between the two。 So if you think about translation， it makes it a lot easier for
+    us to implement protection。 Right？
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理器有一视图的内存，而从内存的角度来看，实际是物理地址。这个翻译盒就是将两者之间进行转换的工具。所以如果你考虑翻译，它可以使我们更容易实现保护。对吧？
+- en: If one process can't see other processes' memory， can't see the operating system's
+    memory， then。 implicitly we're protecting those processes from that process and
+    we're protecting the。 operating system from that process。 Okay， now there's another
+    benefit。 which is if we've decoupled what one processes as， its view of memory
+    from all other processes。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果一个进程不能看到其他进程的内存，不能看到操作系统的内存，那么我们隐式地保护了这些进程不被那个进程访问，同时也保护了操作系统不被那个进程访问。好，现在还有另一个好处，那就是如果我们将一个进程的内存视图与其他进程的内存视图解耦。
+- en: then we can let every process have the same， view of memory。 So memory that
+    starts in a virtual address space at zero and goes to， you know， two to。 the 31st
+    minus one。 Okay， so remember from last time we had the multi-segment model where
+    we have a segment。 map that gets stored in the processor， the segment map just
+    contains a set of base and， limit pairs。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们就可以让每个进程都有相同的内存视图。所以内存从虚拟地址空间的零开始，直到2的31次方减一。好的，记得上次我们讲过的多段模型，其中有一个段映射表存储在处理器中，这个段映射表包含了一组基地址和限制地址对。
+- en: So here we have， you know， eight of them and we take our virtual address， divide
+    it up。 into two fields。 One field is a segment number that we use to index into
+    that table。 That gives us a base。 We add our offset and that gives us the physical
+    address that we're going to use。 We have to perform some checks。 We have to make
+    sure we didn't run off the end of the table。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，我们有八个字段，我们将虚拟地址分成两个字段。一个字段是段号，我们用它来索引到那个表格。它给我们一个基地址。我们加上偏移量，就得到了我们要使用的物理地址。我们需要进行一些检查，确保没有越界。
+- en: We also have to make sure that the size of the region is greater than the offset。
+    Now we can also。 here I have the segment number encoded into the virtual address。
+    It can also be coded into the instruction。 So for example， in x86。 here we have
+    a move and we're going to use the ES or extra segment。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还必须确保区域的大小大于偏移量。现在我也可以在虚拟地址中编码段号，它也可以被编码到指令中。例如，在x86中，我们有一个移动指令，将使用ES或额外段。
+- en: with the address being the BX register。 We're going to move the contents of
+    memory at that location into AX。 We also need some metadata here。 We're going
+    to， over the next few lectures。 really look at what that metadata is right， now。
+    In this case， it's just a valid and not valid bit。 But it could also be permission
+    bits like read， write， read or read write or execute only。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 地址是BX寄存器。我们将把该位置内存的内容移到AX寄存器。我们还需要一些元数据。接下来的几讲，我们将深入探讨这些元数据是什么。现在，在这个例子中，元数据只是一个有效和无效位。但它也可以是权限位，例如读取、写入、读取或读写，或者仅可执行。
+- en: or whatever。 Okay。 So the question is， does translation save us from copying
+    100 copies of the same program？
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者其他什么内容。好的，问题是，翻译是否能帮助我们避免复制100份相同的程序？
+- en: So to a certain extent， yes。 We could have one shared code segment for everyone
+    who's running the IDE。 And that would just be marked as say， execute only and
+    could be mapped to the same base。 zero register。 So the same zero segment rather。
+    So then the code would appear in everybody's virtual address space at the same
+    location。 All right。 Now， what do we do if we're in a situation where not all
+    of the segments will fit in memory。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在一定程度上，是的。我们可以为所有运行IDE的用户共享一个代码段。它将标记为只读执行，并可以映射到相同的基址零寄存器。所以相同的零段就能出现在每个人的虚拟地址空间中的相同位置。好的。那么，如果我们遇到的情况是并非所有段都能装入内存，我们该怎么办？
+- en: either for an individual program or for a set of programs？
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是针对单个程序还是一组程序？
+- en: Well we can do an extreme form of context switching。 All right。 So if you think
+    about it。 like in this case， when we context switch， what do we have to， do？
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，我们可以做一种极端形式的上下文切换。好的。如果你仔细想想，在这种情况下，当我们进行上下文切换时，我们需要做什么？
+- en: Save this segment map out and load the new segment map。 That will change the
+    processor's view of memory to be that for the new process。 For the new process。
+    Same thing we have to load all the CPU registers for the old process， load all
+    the CPU registers。 for the new process。 Well an extreme form of this would say
+    if everything doesn't fit into memory。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 保存这个段映射并加载新的段映射。这将改变处理器对内存的视图，使其变为新进程的视图。对于新进程，同样我们必须加载旧进程的所有CPU寄存器，加载新进程的所有CPU寄存器。嗯，这的极端形式是，如果一切都不能装入内存。
+- en: then we， just swap out segments from memory out to disk。 So when we're going
+    to run process P1。 we load its segments into memory and unload process， P0 out
+    to disk。 Now that seems extremely slow and kind of unreasonable， but that was
+    actually the approach。 that was used on many early computers because we didn't
+    have enough physical memory and we。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们只需要将段从内存交换到磁盘。因此，当我们要运行进程P1时，我们将它的段加载到内存中，并将进程P0从内存卸载到磁盘。现在这看起来非常慢，有点不合理，但这实际上是许多早期计算机上采用的方法，因为我们没有足够的物理内存，而且我们。
+- en: wanted to do multi programming。 So we paid the price with very， very expensive
+    context switches。 Okay。 So what might be a better alternative？ Well if you think
+    about it。 programs spend most of their time in a relatively small amount， of their
+    code。 For most programs。 not all， but for many programs if you look at like what
+    are the hotspots。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想做多道程序。于是我们付出了非常昂贵的上下文切换代价。好的。那么，什么是更好的替代方案呢？嗯，如果你仔细想想，程序大部分时间都在其代码中的一个相对小的部分上。对于大多数程序，虽然不是所有程序，但对于许多程序，如果你看看什么是热点。
+- en: the active regions of a program， they're much smaller。 Now with the segment
+    model。 we either have to have an entire segment in memory or an entire， segment
+    out on disk。 We can't have both。 Right， there's no way to say well I just want
+    this part of the segment to be in memory。 and this part you can put out the disk。
+    So we want finer granularity of control。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 程序的活动区域要小得多。现在在分段模型下，我们要么必须将整个段装入内存，要么将整个段放到磁盘上。我们不能同时拥有这两者。对吧，无法说我只想让段的这一部分在内存中，而另一部分可以放到磁盘上。所以我们需要更细粒度的控制。
+- en: We just keep those parts of a segment in memory that are actually being used
+    and everything。 else we can leave out on the disk and pay a really expensive cost
+    if we actually go and， access it。 Okay， so if we look at segmentation， you know，
+    some of the problems that we run into are like。 these variable size chunks that
+    we have to fit into memory。 We play Tetris with memory。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们只保留段中实际使用的部分在内存中，其他部分可以放在磁盘上，只有在实际访问时才会付出非常高的代价。好的，如果我们看看分段，你会发现我们遇到的一些问题，比如这些我们必须装入内存的变大小块。我们在内存中玩俄罗斯方块。
+- en: As programs start and finish， we're going to end up with different size holes
+    based on。 the sizes of their segments in memory。 Now when new processes come along
+    and we're trying to fit their segments into memory。 you， may have to do a lot
+    of copying around and move things around。 So that gets very expensive。 Everything
+    with if we want to grow a segment， you might have to shuffle things around。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随着程序的启动和结束，我们最终会根据它们在内存中段的大小，得到不同大小的空洞。现在，当新进程到来，我们试图将它们的段装入内存时，可能需要做大量的复制和移动操作。因此，这会非常昂贵。如果我们想扩展一个段，可能需要重新排列一些东西。
+- en: So lots of moving around。 We also have these limited options for swapping to
+    disk in that we can only swap at the granularity。 of an entire segment。 And segments
+    are large。 That's a lot of data to copy out and if it contains some regions that
+    are active。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以需要大量的移动。此外，我们在交换到磁盘时也面临着有限的选择，因为我们只能按整个段的粒度进行交换。而且段通常很大。这意味着有大量的数据需要复制出去，而且如果其中包含一些活跃的区域...
+- en: we're， then going to turn around and copy it back into memory。 So we have two
+    different types of fragmentation issues。 So one is external fragmentation。 Those
+    are the gaps that are created between segments。 And our solution there is we have
+    to move things around。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们将把它复制回内存。所以我们有两种不同类型的碎片化问题。一个是外部碎片化。那些在段之间创建的空隙。我们的解决方案是我们必须移动一些东西。
+- en: The other is that segments may grow over time， but they don't shrink。 And so
+    we end up with internal fragmentation where say we've allocated a stack segment。
+    that's 64 kilobytes， but we're only actually using 16 kilobytes of that 64。 So
+    that other 48 is just wasted space。 Everybody can use it。 So we need something
+    that's better。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个问题是，段可能会随着时间的推移而增长，但它们不会收缩。因此，我们最终会遇到内部碎片化问题，比如说我们分配了一个堆栈段，大小为64KB，但实际上我们只用了其中的16KB。那么剩下的48KB就成了浪费空间。每个人都可以使用它。所以我们需要一种更好的方式。
+- en: And if we think about what we want to do， what we want to do is we have this
+    view of。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们考虑我们想做什么，我们想做的是我们对它的视图是这样的。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_3.png)'
+  id: totrans-25
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_3.png)'
+- en: memory from a processes virtual address space here， program one and program
+    two。 And we're using the translation map to convert that into what are the physical
+    addresses and。 the physical layout of memory。 And here I've done a segment like
+    model。 There's a code region in virtual address space and that maps to a contiguous
+    code region in。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从进程的虚拟地址空间获取内存，这里有程序一和程序二。我们使用翻译映射将其转换为物理地址，以及内存的物理布局。在这里，我做了一个段式模型。虚拟地址空间中有一个代码区域，它映射到一个连续的代码区域。
+- en: physical memory。 But this is just a map function。 And so we could map any virtual
+    address to any other physical address。 So there's no need for this to be all nice
+    contiguous regions。 That would give us a lot more flexibility。 And so the really
+    the question is like。 what's the right granularity？ Is it down to the individual
+    byte， the translation map？
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 物理内存。但这只是一个映射函数。因此我们可以将任何虚拟地址映射到任何其他物理地址。所以不需要这些地址是连续的区域。这将给我们带来更多的灵活性。那么真正的问题是，合适的粒度是多少？是到单个字节的翻译映射吗？
+- en: Is it down to the individual bytes of the address space to give them locations？
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是否是到地址空间的单个字节来给它们分配位置？
+- en: Or is it at the granularity of segments？ Well， we saw there's a bunch of issues
+    with segments。 so we know we want something smaller。 We probably don't want it
+    down at the granularity of bytes because that would make the complexity。 of these
+    translation maps really， really hot。 We'd have more bookkeeping information than
+    we'd actually have memory and use。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还是按段的粒度？我们看到段存在一些问题。所以我们知道我们需要更小的粒度。我们可能不希望它小到字节粒度，因为那样会让这些翻译映射的复杂性变得非常高。我们需要的书面记录信息可能会比实际使用的内存还要多。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_5.png)'
+  id: totrans-30
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_5.png)'
+- en: So that brings us to paging， which is we're going to think about organizing
+    our physical。 memory into fixed size uniform chunks。 So instead of allocating
+    memory in these variable size。 segment size chunks， we're going to allocate， them
+    in pages。 Now if you think about it。 if I allocate with pages， how can I determine
+    whether a given， chunk of memory is free or allocated？
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就引出了分页的问题，我们将考虑如何将物理内存组织成固定大小的均匀块。所以我们不再按这些可变大小的段来分配内存，而是按页面分配内存。如果你仔细想一想，如果我按页面分配内存，如何确定给定的内存块是空闲的还是已分配的呢？
+- en: Well， if they're fixed sizes， I can just use a bit vector。 And in that bit vector。
+    if there's a zero， it means that page is free。 If there's a one。 it means it's
+    been allocated to some process。 So now when I need to find a free page to give
+    it to a process because it wants some memory。 I just scan quickly through that
+    bit vector， as soon as I hit a zero， I allocate it。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，如果它们是固定大小的，我可以直接使用位向量。在那个位向量中，如果有一个零，意味着该页是空闲的。如果是一个一，意味着它已经被分配给某个进程。所以现在，当我需要找到一个空闲页面并将它分配给一个进程，因为它需要一些内存时，我只需快速扫描那个位向量，一旦遇到零，我就分配它。
+- en: Now an important thing to think about is that every page in memory is equivalent。
+    It takes the exact same amount of time to read or write any page in memory。 It
+    doesn't matter if I allocate two pages continuously or I allocate them at opposite。
+    ends of memory。 The access time is the same。 So now we really can think about
+    this translation map。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在一个重要的考虑因素是，每个内存页面都是等价的。读取或写入任何页面所需的时间是完全相同的。无论我连续分配两个页面，还是把它们分配在内存的两端，访问时间都是一样的。所以现在我们真的可以考虑这个转换映射。
+- en: It's just mapping any virtual page to any physical page。 Okay。 Now， how big
+    do we make those pages？
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它只是将任何虚拟页面映射到任何物理页面。好的。那么，我们应该把这些页面做多大呢？
+- en: It's like kind of like alluded to it。 We don't want to make it so small that
+    the bookkeeping overhead exceeds the size of our。 pages。 But we don't want to
+    make it as large as segments because if we make it really large。 we'll end， up
+    with a lot of internal fragmentation。 If we had four megabyte size pages and we
+    have 64 kilobyte size stacks， then that page。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像之前提到的那样。我们不希望把它做得太小，以至于管理开销超过我们页面的大小。但我们也不想把它做得像段那样大，因为如果我们把它做得非常大，我们最终会出现大量的内部碎片。如果我们有四兆字节大小的页面，而堆栈是64千字节大小，那么这个页面。
+- en: allocated to the stack is mostly going to be wasted。 And again， memory in this
+    case。 physical memory is precious。 So not as big， but not too small。 And so over
+    time。 people have evolved and typical sizes today are about one kilobyte to。 four
+    kilobytes or even 16 kilobytes in size。 Some architectures include support for
+    much larger page sizes where we know we have physical。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 分配给堆栈的空间大部分将会被浪费。而且，记住，在这种情况下，物理内存是珍贵的。所以不要太大，但也不能太小。因此，随着时间的推移，很多人已经演变出今天的典型大小，大约是1千字节到4千字节，甚至16千字节大小。一些架构支持更大的页面大小，我们知道我们有物理。
+- en: objects that are going to be very large。 And we'll touch on that later on。 So
+    now if we think about it， to represent the sort of same information that we were
+    storing。 in a segment， we potentially are going to need a lot of pages。 It's not
+    going to be like before we just had one segment， we had eight segments， so we'll。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目标是将对象做得非常大。稍后我们会讨论这个问题。所以现在，如果我们考虑一下，要表示我们之前存储的相同信息，可能会需要很多页。它不像之前只有一个段，而是我们有了八个段，所以我们。
+- en: just have eight pages to represent our program。 It might have many， many more。
+    hundreds more of pages than we had segments or even more。 Okay。 so how do we implement
+    simple paging？ We're going to start with the very simplest way we can do it。 which
+    is in the processor， we're going to have a page table pointer。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们只是有八个页面来表示我们的程序。它可能有更多的页面，远远超过我们之前的段数，可能是几百页，甚至更多。好的，那么我们如何实现简单分页呢？我们将从最简单的方式开始，即在处理器中，我们会有一个页表指针。
+- en: That page table pointer will point to a location in physical memory that contains
+    a table。 That table just consists of a combination of physical page numbers and
+    permission bits。 All right。 so now we're going to take our virtual address and
+    again we're going to split， it into two fields。 So there's going to be an offset
+    field， which will be the offset into a page of the data。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个页表指针将指向物理内存中一个包含表格的位置。这个表格由物理页号和权限位的组合构成。好吧，现在我们将取出我们的虚拟地址，然后再次将其分为两个字段。所以会有一个偏移量字段，它是数据所在页面的偏移量。
+- en: that we're trying to retrieve。 Now since it's into a page and we're dealing
+    with things on page granularity。 we can just， copy that offset over into our physical
+    address。 So there's no addition that we have to do like with segments。 Because
+    we don't know where a segment starts in physical memory， that's why we had to
+    increment。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们尝试检索的数据。现在，既然它已经进入了页的层面，且我们在按页粒度进行操作，我们可以直接将那个偏移量复制到物理地址中。所以我们不需要像段那样进行加法运算。因为我们不知道一个段在物理内存中的起始位置，所以我们必须进行增量。
+- en: that start point， that base with our offset。 Here we know the boundaries of
+    pages are uniform。 And so it's just the offset from the start of a page。 Okay，
+    so for example。 if we have a 10-bit offset， that gives us pages that are 1，024
+    bytes in， size。 If we have a 12-bit offset， how big are our pages going to be？
+    Yeah， 4，096。 Okay。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 起始点，即基地址与我们的偏移量结合。这里我们知道页面的边界是统一的。所以它只是页面起始位置的偏移量。好的，举个例子。如果我们有一个10位的偏移量，那就意味着每个页面的大小是1,024字节。如果我们有一个12位的偏移量，我们的页面大小会是多少呢？对，是4,096字节。好的。
+- en: you're going to learn powers of two if you didn't learn them already。 Okay。
+    so now we're going to take the rest of our address， the virtual page number， and。
+    that's just an index into our table here。 So we index into the table that gives
+    us the physical page number。 We combine that with the offset and we get the physical
+    address。 Now， of course。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你还没有学过二的幂，你将要学习它。好的，现在我们将使用地址的其余部分，即虚拟页号。这只是我们表中的一个索引。所以我们根据这个索引查找表，得到物理页号。然后我们将其与偏移量结合，得到物理地址。当然。
+- en: we always have to do lots of checking。 I'll say it again。 Don't forget to do
+    checking。 It might show up on the midterm or something like that。 You want to
+    make sure that the entry that is being referenced is actually valid。 Both it's
+    a valid entry and also for the access mode that the processor is using。 Okay。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们总是需要做很多检查。我再说一遍。不要忘记做检查。这可能会出现在期中考试或者类似的地方。你要确保被引用的条目是有效的。它既是有效条目，同时也要符合处理器使用的访问模式。好的。
+- en: so like for example， this page here is a read-only page。 So we want to make
+    sure that the access is like an instruction fetch or a load and not， a store。
+    Okay， so we check the permission bits。 If they don't match。 like you're trying
+    to write to this page， that would generate a fault。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 比如说，这个页面是只读页面。所以我们要确保访问操作是像指令获取或加载，而不是存储操作。好的，我们检查权限位。如果它们不匹配，比如你试图写入这个页面，那将会引发一个故障。
+- en: Or if the page is invalid or if you run off the end of the page table。 So we
+    also have to look at the virtual page number versus the page table size。 So two
+    registers that we're going to store in the processor， the page table pointer，
+    and。 the page table size。 Okay， so the rest of the bits of our address。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者如果页面无效，或者如果你超出了页表的末尾。所以我们还需要查看虚拟页号与页表大小的关系。所以我们将在处理器中存储两个寄存器：页表指针和页表大小。好的，地址的其余位。
+- en: our virtual address is going to be our virtual， page number。 So if we had a
+    32-bit address。 it would be 10 bits for our page and then the remaining 22。 bits
+    would be used for our virtual page number。 And two to the 22 is roughly 4 million。
+    So we could have up to 4 million， roughly 4 million entries in our page table。
+    Okay， questions？ Yes。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的虚拟地址将是我们的虚拟页号。所以如果我们有一个32位地址，页号会占用10位，剩余的22位将用于我们的虚拟页号。2的22次方大约是400万。所以我们在页表中最多可以有大约400万条条目。好的，有问题吗？是的。
+- en: So the question is given a physical address， how do we know if that physical
+    address represents。 the data that's in memory or maybe out on disk？ So that's
+    where the metadata and the bookkeeping will come into play。 So for example， if
+    it was out on disk， we might mark that entry as invalid。 So now if I try to reference
+    it， what's going to happen？ When a page fall， right？
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以问题是，给定一个物理地址，我们如何知道该物理地址表示的是内存中的数据还是可能在磁盘上的数据？这时元数据和账本记录将发挥作用。举个例子，如果它在磁盘上，我们可能会将该条目标记为无效。那么如果我试图引用它，会发生什么呢？页面错误，对吧？
+- en: Because I tried to access something that's marked as invalid。 Now the operating
+    system checks its books and realizes， oh， that page is actually out， on disk。
+    And so it'll have to fetch it into disk and then put it someplace， update the
+    page table。 entry with the actual physical page number of where it put it and
+    then set the bit valid。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我尝试访问一个被标记为无效的内容。现在操作系统检查它的记录并意识到，哦，那个页面实际上在磁盘上。所以它将必须从磁盘中获取该页面，并将其放置到某个地方，更新页表条目，记录实际的物理页面号，并将该位标记为有效。
+- en: and then it'll restart the instruction。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后它将重新启动指令。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_7.png)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_7.png)'
+- en: Okay， so let's go through a really simple example。 So we're going to have four
+    byte pages and here's our virtual memory。 We got three pages in our virtual memory。
+    We've got a page table with three entries and here's our physical memory。 Okay，
+    four byte pages。 How many bits do we need to represent that for our offset？ Two。
+    Two， two。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，让我们来看一个非常简单的例子。所以我们将使用四字节页面，这里是我们的虚拟内存。我们的虚拟内存中有三页。我们有一个包含三个条目的页表，这里是我们的物理内存。好的，四字节页面。我们需要多少位来表示偏移量？两个。两个，两个。
+- en: two is four。 Okay， so the rest of our address will be our virtual page number。
+    So if we look at address zero， right， that's going to be virtual page number zero
+    and so。 that's going to be， if we look in our page table， we'll see it's at physical
+    page four。 which will write everything out in binary， that's one zero zero and
+    so here it is at。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 二是四。好的， 那么我们其余的地址将是我们的虚拟页号。所以如果我们看地址零， 对吧， 那将是虚拟页号零。然后， 如果我们在页表中查找，我们会看到它在物理页四。我们将一切写出为二进制，
+    那是一个零零零，然后它就在这里。
+- en: 10 hex in physical memory。 Similarly， if we look at our next one， so where is
+    four hex located？
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 十十六进制在物理内存中。类似地，如果我们看下一个，那么四十六进制位于哪里呢？
+- en: That's zero， one， zero， zero。 So offset zero， page is one， that maps to three，
+    which is one。 one and so that maps to， Charlie hex。 And finally， if we look at
+    eight hex， that's going to be one。 zero， zero， zero， zero， two， to the three and
+    then that'll be page two and that's one。 so that's going to be up down， here，
+    rather up here at four hex， so one， zero， zero， right？ Okay。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是零， 一， 零， 零。所以偏移量是零， 页是一个，对应到三， 也就是一。 然后再来看，查理十六进制。最后，如果我们看八十六进制，那将是一个。零， 零，
+    零， 零， 二， 三的三次方，然后那将是第二页， 那是一个。所以，这将是上下， 这里， 还是上面， 在四十六进制的位置，所以一， 零， 零， 对吧？好的。
+- en: that's the simple。 Now let's actually look at some offsets。 So what if I give
+    you address six？
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是简单的。现在让我们来看一些偏移量。那如果我给你地址六呢？
+- en: What is that map to？ So all we're going to do is we're just going to write it
+    out in binary。 So if we write it out in binary， we'll see that it is zero， one，
+    one， zero。 So our offset is one。 zero， so we copy that over to our physical address
+    and it's on page。 one and page one is three or one， one。 So we're going to end
+    up with one， one， one， zero， right？
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么它映射到哪里呢？所以我们所做的只是将它写成二进制。所以如果我们把它写成二进制，我们会看到它是零， 一， 一， 零。所以我们的偏移量是一个。零，所以我们把它复制到物理地址，它在页。一个，页一是三或一，
+    一。所以我们最终得到的是一， 一， 一， 零，对吧？
+- en: Which in hex is zero， e hex， right？ And do one more， we'll do， let's do nine。
+    So where does nine hex lie？ So again， we'll convert nine hex into binary。 So that's
+    going to be one。 zero， zero， one。 So offset is one and page is one， zero， or two。
+    So there's page two， that's one。 so it's going to be one， zero， one， or five。
+    Five hex。 Okay。 So again， we're doing paging。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在十六进制中是零， e十六进制，对吧？再做一个，我们做九。那么九十六进制位于哪里呢？所以我们再次将九十六进制转换为二进制。所以它将是一个。零，零，一。所以偏移量是一个，页是零，或二。所以页二，那是一个。所以它将是一个，零，一，或五。五十六进制。好的。所以我们再次做分页。
+- en: copy over the offset， look up the virtual page number， check， the permission
+    bits。 combine the physical page number， and you get your target address。 All right。
+    Now there was a question about sharing in the chat。 So how do we do sharing with
+    pages？ Well。 it's actually very easy。 So here is one process， process A's， page
+    table。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 复制偏移量，查找虚拟页号，检查权限位。合并物理页号，得到目标地址。好的。现在在聊天中有一个关于共享的问题。那我们如何进行页面共享呢？嗯，其实很简单。所以这里是一个进程，
+    进程A的，页表。
+- en: and it's associated with a page table， pointer。 If we want to share a particular
+    page。 let's say we want to share page two， we just simply。 add that same entry
+    into that second page processes page table。 All right。 Now a caveat here。 So they're
+    both， the same physical page will appear in both processes。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且它与页表指针相关。如果我们想共享一个特定的页面。假设我们想共享第二页，我们只需简单地将该条目添加到第二个进程的页表中。好的。现在这里有一个警告。所以它们都，
+    相同的物理页将在两个进程中出现。
+- en: But does it appear in the same place？ Now， right， and one， it's virtual page
+    two， and the other。 it's virtual page four。 What might be the implications of
+    that？ A potential problem？ Yeah。 Exactly。 Yeah。 So we'll have different virtual
+    addresses that are pointing to the same physical addresses。 which means if we
+    have objects that say process A creates that have pointers and things like， that。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但它是否出现在相同的位置呢？现在，右边是虚拟页二，另一个是虚拟页四。那可能会有什么影响呢？潜在的问题？对， 正确。是的。所以我们将有不同的虚拟地址指向相同的物理地址。这意味着如果我们有对象，比如进程A创建的对象，里面有指针之类的。
+- en: those virtual addresses for those pointers won't work when we look at it from
+    process B's。 point of view。 So we can share， basically， we can share just values
+    and things like that。 But if we wanted to share objects， we'd want to make sure
+    that we map them both， say， in， page two。 or we map them both in virtual page
+    four so that the virtual addresses with the。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '从进程B的角度来看，这些指针的虚拟地址将不起作用。所以我们可以共享基本的值和类似的东西，但如果我们想共享对象，我们需要确保将它们都映射到，例如，页面二，或者我们将它们都映射到虚拟页面四，这样虚拟地址就会相同。  '
+- en: same mapping to the same physical addresses。 That way， if I had a tree or something
+    like that。 the pointers would all work， otherwise， they won't work。 Okay。 So this
+    is a little caveat that you just have to worry about if you're going to map the
+    same。 page into different address spaces。 So the question and chat is。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '相同的映射到相同的物理地址。这样，如果我有一个树结构或类似的东西，指针都会起作用，否则它们就不起作用了。好的。所以如果你要将同一个页面映射到不同的地址空间，这就是你必须担心的小细节。接下来，聊天中的问题是，  '
+- en: does this mean both processes can modify the same address？
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '这是否意味着两个进程可以修改相同的地址？  '
+- en: They can both modify the same physical address with different virtual addresses。
+    And they can read the same physical address with different virtual addresses。
+    The question is。 when we do swapping， do we just swap the page or the whole segment
+    in， which the page is located？
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '它们可以使用不同的虚拟地址修改相同的物理地址，也可以使用不同的虚拟地址读取相同的物理地址。问题是，当我们进行换页时，我们是仅交换页面还是交换该页面所在的整个段？  '
+- en: So here， we can swap on the granularity of an individual page。 So an individual
+    page could live in physical memory or it could live out on disk。 Whereas with
+    segments， it was the entire segment lived in memory or the entire segment。 lived
+    out on disk。 So now you can kind of think， you know， how we can use this to our
+    advantage。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在这里，我们可以以单个页面为粒度进行换页。因此，单个页面可以保存在物理内存中，也可以存储在磁盘上。而对于段，整个段要么保存在内存中，要么整个段存储在磁盘上。所以现在你可以大致想象我们如何利用这一点来为自己带来好处。
+- en: If most of the pages in our address space aren't really being used actively，
+    they don't。 need to be in memory。 It can be out on disk。 And that frees up physical
+    memory。 which is expensive for other processes。 So we can now fit more processes。
+    active portions into memory。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '如果我们地址空间中的大多数页面实际上并未被积极使用，它们就不需要在内存中。它们可以存储在磁盘上。这可以释放出宝贵的物理内存供其他进程使用。所以我们现在可以将更多的进程活跃部分装载到内存中。  '
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_9.png)'
+  id: totrans-67
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_9.png)'
+- en: Okay。 So where do we use sharing of pages？ Well we can map the kernel region
+    of a process to have the same operating system kernel code。 and data structures
+    across all processes。 And this is nice because now it means that when we go into
+    kernel mode。 the operating， system can access all of its code and data and it
+    can access the processes code and data。 And so it doesn't have to do any translation。
+    The translation is done for the kernel。 Now of course。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '好的。那么我们在哪里使用页面共享呢？我们可以将一个进程的内核区域映射为所有进程共享相同的操作系统内核代码和数据结构。这非常好，因为这意味着当我们进入内核模式时，操作系统可以访问它所有的代码和数据，并且可以访问进程的代码和数据。所以它不需要进行任何转换。转换已经为内核完成了。当然，  '
+- en: we have to make sure that when we're in user mode， we can't access that， portion
+    of the page table。 Okay。 We can also have， as you know， first question we got
+    today。 we can also have different processes， that are using the same binary。 We
+    just map the pages for the code into the physical pages for the code， into all
+    of the。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '我们必须确保当我们处于用户模式时，不能访问页面表的那部分。好的。你知道的，今天我们第一个问题就是。我们还可以有不同的进程，它们使用相同的二进制文件。我们只需将代码的页面映射到物理内存中的代码页中，映射到所有的。  '
+- en: processes running that binary。 Market execute only， and that way nobody can
+    modify it。 Okay。 We can also use it for user level libraries， system libraries。
+    So only one copy of libc needs to be loaded。 Not multiple copies。 Again。 we market
+    execute only so that we don't have to worry about anybody modifying it。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '运行该二进制文件的进程，只能将其标记为只读执行，这样就没有人可以修改它。好的。我们还可以用它来处理用户级库和系统库。因此只需要加载libc的一份副本，而不是多个副本。同样，我们将其标记为只读执行，这样就不必担心有人修改它。  '
+- en: And then we can also， as we talked about earlier， have shared memory between
+    processes。 The two processes that can see the same set of data， if we put it at
+    the same place in。 the virtual address space， they can share objects。 So if you
+    think about it。 it's like very similar to the sharing that we have between threads。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后正如我们之前讨论的那样，我们也可以在进程之间共享内存。两个进程可以看到相同的一组数据，如果我们将它们放在虚拟地址空间中的同一位置，它们可以共享对象。所以如果你仔细想想，这和线程之间的共享非常相似。
+- en: It doesn't require any context which is， into the kernel， to do communication
+    between two。 processes。 I just read and write memory， and other processes that
+    are sharing that same memory can see my。 reads and my writes。 So that's a good
+    thing。 It's also a bad thing because obviously we're going to need things like
+    synchronization。 and all of those sorts of things to make sure that everybody
+    sees consistent views of data。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它不需要任何上下文，也就是说，不需要进入内核来在两个进程之间进行通信。我只需读写内存，而其他共享相同内存的进程可以看到我的读取和写入操作。所以这是一个好处。同时，它也是一个坏处，因为显然我们需要诸如同步等机制，以及所有这些确保每个人都能看到一致数据视图的事情。
+- en: structures we modify。 All right。 So remember the layout that we had for memory？
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们修改的结构体。好的。那么记住我们之前讲的内存布局了吗？
+- en: We have the kernel getting mapped into every single address space。 Again。 this
+    gives us the advantage of the kernel can copy to and from its buffers， from， user
+    buffers。 and have all the translation be done in hardware。 We have our stack。
+    We have our memory。 We have our heap。 We have our code， our initialized， and our
+    uninitialized data segments。 Now。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们让内核映射到每个地址空间中。这样做的好处是，内核可以从用户缓冲区复制到内核缓冲区，所有翻译工作都由硬件完成。我们有堆栈，有内存，有堆，有代码，有初始化数据和未初始化数据段。现在。
+- en: some of the security things that we do， and it might be a little hard to read
+    this。 on the slide as it's projected， but the start of our stack starts somewhere
+    randomly offset。 from 2 to the 31st minus 1。 Similarly， our heap starts at some
+    random offset。 and our code can start at some random， offset from 0。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们所做的一些安全处理，可能会有点难以阅读，因为投影的幻灯片上显示的可能不太清楚，但我们栈的起始位置从2的31次方减1开始的某个随机偏移。同样，我们的堆从某个随机偏移开始，代码可以从0开始的某个随机偏移开始。
+- en: And we do that as part of a address space randomization。 So to make it harder
+    for an attacker to guess where a particular data structure might be。 located in
+    memory or where a return value， a return address might be located on the stack。
+    or local variables in the stack frame are located， we do this randomization。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们通过地址空间随机化来做到这一点。为了让攻击者更难猜测某个特定数据结构在内存中的位置，或者返回值、返回地址在栈上的位置，或者局部变量在栈帧中的位置，我们进行了这种随机化处理。
+- en: That way if someone's doing some kind of buffer overflow or code injection attack，
+    they're。 not able to know directly where a particular routine might be loaded
+    or where a particular。 data value might be。 The caveat here is if you operate
+    with a 32-bit machine。 that's only 4 gigabytes， and， the amount of randomization
+    you can do is going to be limited。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样，如果有人进行缓冲区溢出或代码注入攻击，他们就无法直接知道某个特定例程加载的位置，或者某个特定数据值的位置。这里的警告是，如果你在一个32位机器上操作，那只有4GB的地址空间，所能做的随机化是有限的。
+- en: And so if I have enough ability to probe， I can usually guess where things are
+    located。 On a 64-bit machine， that's not an issue because it's very hard to try
+    and guess where。 something might be randomly placed in a 64-bit address space。
+    Okay。 another thing is because of Meltdown， we realized that user programs could
+    figure。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我有足够的探测能力，通常可以猜测出一些东西的位置。在64位机器上，这不是一个问题，因为很难猜测某个东西可能会随机地被放置在64位地址空间中的某个位置。好吧，另一个问题是由于Meltdown漏洞，我们意识到用户程序可能会推测出。
+- en: out what kernel data structures contained， especially security sensitive ones。
+    And so now what we do is we actually don't map the entire kernel into all address
+    spaces。 So those sensitive things get mapped into a separate kernel address space。
+    And we only map things like buffers for copying to and from the kernel and simple
+    code routines。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于内核数据结构的内容，尤其是那些对安全敏感的结构。所以现在我们做的是，不将整个内核映射到所有地址空间中。那些敏感的东西会映射到一个单独的内核地址空间中。我们只映射一些简单的内容，比如用于内核和用户空间之间复制的缓冲区和简单的代码例程。
+- en: into the processes address space。 So that protects the kernel from these kinds
+    of observation attacks。 but it comes at a， cost。 Now when the kernel wants to
+    access that code or access that data。 it has to switch the， context for the address
+    space。 And that's expensive。 We'll see why， you know。 when we get into caching
+    and TLBs。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 进入进程的地址空间。这就保护了内核免受这些观察攻击的影响。但是这也带来了成本。现在，当内核需要访问这些代码或数据时，它必须切换地址空间的上下文。这是昂贵的。我们稍后会看到为什么，特别是当我们讨论缓存和TLB时。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_11.png)'
+  id: totrans-81
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_11.png)'
+- en: Okay so to summarize what we get with paging。 So we're able to now take that
+    view of the virtual address space and through the page。 table we can map it to
+    any physical memory view that we want on a page granular。 Now here I've just used
+    the same sort of models we had with segments。 So contiguous regions in our virtual
+    address space happen to map the contiguous regions。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，来总结一下分页所带来的好处。我们现在可以通过页面表将虚拟地址空间映射到任何我们想要的物理内存视图，并且是按页面粒度来映射的。现在这里我使用的模型与段式管理类似。虚拟地址空间中的连续区域恰好映射到物理地址空间中的连续区域。
+- en: in our physical address space。 But that's not a requirement。 If our stack here
+    grows down。 if we look over here in physical memory， there isn't enough。 space
+    for those two additional page frames we need。 But that's fine。 Because every page
+    in memory is， physical memory is equal。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的物理地址空间中。但是这并不是一个必须的条件。如果我们的栈在这里向下增长，如果我们看看物理内存，这里没有足够的空间来容纳我们需要的两个额外的页面框架。但这没关系。因为每一个内存页面都是，物理内存是等价的。
+- en: So we can put those two stack frames anywhere we want。 So I might choose to，
+    let's say。 put them there。 Or I could put one here and put another one down here。
+    Or anywhere else。 It doesn't matter。 There's no benefit that we gain from making
+    them be contiguous。 Because of that。 you know， we get a lot of flexibility in
+    how we can place things in memory。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们可以将这两个栈框架放在任何我们想要的位置。我可能会选择，例如，把它们放在这里。或者我可以把一个放在这里，另一个放在这里。或者放在任何其他地方。没关系。让它们是连续的并不会带来任何好处。正因为如此，你知道，我们在如何放置内存中的内容时获得了很大的灵活性。
+- en: We now don't have to worry about external fragmentation。 We're not going to
+    ever have to move things around to make room for another process。 The only thing
+    we might do is we might take one or more pages and copy them out to disk。 to free
+    up memories that we can allocate memory to another process。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们不必担心外部碎片。我们不需要为了给另一个进程腾出空间而移动东西。我们唯一可能做的是，我们可能会将一个或多个页面复制到磁盘，以释放内存，使我们可以为另一个进程分配内存。
+- en: But we're not going to do random moving around within memory。 Okay。 But there's
+    some challenges。 Look at this table in the middle。 Which maps all of our virtual
+    addresses or virtual pages rather to physical pages。 And what do you notice？ It's
+    got a lot of empty spots。 And you also notice that the size of the table is proportional
+    to the number of pages。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是我们不会在内存中随意地移动东西。好的。但是有一些挑战。看一下中间的这个表。它将我们所有的虚拟地址或虚拟页面映射到物理页面。你注意到什么了吗？它有很多空位。而且你还注意到，这个表的大小与页面数量成正比。
+- en: in our virtual address space。 So we've got a table that's mostly empty that's
+    really large。 So that。 of course， you can ask the question， well， just how big
+    do things get？
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的虚拟地址空间中。所以我们有一个表，它大部分是空的，但非常大。那么，当然，你可能会问，嗯，事情到底能有多大？
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_13.png)'
+  id: totrans-88
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_13.png)'
+- en: Well if we had a 32-bit address space， right， that allows us to have 4 gigabytes。
+    And we use a typical page size of 4 kilobytes。 How many bits do we need for our
+    offset？ 12。 The 12 is 4096。 And so how many bits are we going to end up for our
+    virtual page numbers？
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们有一个32位地址空间，对吧，那它允许我们拥有4GB的内存。我们使用典型的页面大小4KB。那么我们需要多少位来表示偏移量呢？12位。12位对应的是4096。那么，最终我们为虚拟页面号分配多少位？
+- en: We end up with 20。 Right？ So those 20 bits translates into a page table。 each
+    of which entry was about a word。 So we're going to have 4 megabytes for our page
+    table。 So 4 megabytes of physical memory where again， if we look back here， it's
+    mostly empty。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最终我们得到了20位，对吧？所以这20位转化成了一个页面表，每个条目大约是一个字。因此，我们将需要4兆字节的页面表。也就是4兆字节的物理内存，而如果我们回头看看，这部分大部分是空的。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_15.png)'
+  id: totrans-91
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_15.png)'
+- en: So that's not very efficient， right？
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这并不是很高效，对吧？
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_17.png)'
+  id: totrans-93
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_17.png)'
+- en: What about a 64-bit machine？ Well， if you think about it， okay， a 64-bit。 2
+    to the 64 divided by 2 to the 12， how many， virtual pages are we going to have。
+    is 2 to the 52nd virtual pages？ Or what is that？ 4。5 exa entries。 Each of which
+    is going to be 8 bytes in size。 So we're going to need 36 times 10 to the 15 bytes
+    of physical memory。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那64位机器呢？嗯，如果你想一下，64位的话，2的64次方除以2的12次方，我们将会有多少虚拟页？是2的52次方虚拟页？那是多少？4.5 exa条条目，每个条目的大小是8字节。所以我们需要36乘以10的15次方字节的物理内存。
+- en: Just to store the page table。 So clearly that's not going to work as an approach。
+    We're going to have more memory taken up with the bookkeeping than actually used
+    by the program。 And so that's just not going to work。 Okay。 So the problem we
+    have here is our address space is sparse。 And yet with the single table that we
+    have， we need to keep track of every single entry。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只是为了存储页表。所以显然，这种方法行不通。我们会有更多的内存被用来做记录，而不是被程序实际使用。所以这肯定行不通。好的，我们这里的问题是我们的地址空间是稀疏的。然而，使用单一的页表，我们需要跟踪每一个条目。
+- en: So what if instead we had a way of trying to keep track of just the entries
+    that were。 likely to be in use？ How could we do that？ That's what we'll get to
+    in just a moment。 Oh。 so there was a question， why do we need to map some kernel
+    space into user space？
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那如果我们尝试以某种方式仅跟踪那些**可能**正在使用的条目呢？我们该怎么做呢？我们马上就会讲到这个问题。哦。这里有个问题，为什么我们需要将某些内核空间映射到用户空间？
+- en: Because the user never able to access things in the kernel space。 Yes， that's
+    correct。 So the user can never access kernel space。 The reason why we map things
+    into the back to it。 So the reason why we map this kernel space into the process
+    of the process space is that。 when you go from user mode to kernel mode and the
+    kernel let's say you want to write something。
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为用户永远无法访问内核空间中的内容。是的，没错。所以用户永远不能访问内核空间。我们将内核空间映射回进程的原因是，当你从用户模式切换到内核模式时，假设你想写点东西。
+- en: into a file。 Do you provide the kernel with a buffer that buffer could be spread
+    across many different。 pages depending on how your virtual address space maps
+    those pages to physical pages。 By being able to use the processes process map，
+    it's a table page table， the kernel can。 just simply say， oh， just copy in virtual
+    address space， this buffer for this number。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到一个文件中。你是否给内核提供了一个缓冲区，这个缓冲区可能会跨多个不同的页，取决于你的虚拟地址空间如何将这些页映射到物理页。通过使用进程的进程映射表，也就是页表，内核可以。直接说，哦，只需复制虚拟地址空间中的这个缓冲区，大小为这个数。
+- en: of bytes into a buffer in kernel space。 Since the kernel space is mapped into
+    the processes page table。 So it makes that really convenient。 Otherwise， if you
+    were in kernel space。 you'd then have to manually kind of walk the page。 table
+    and translate all of the addresses in order to do that copy。 So this makes it
+    much easier。
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将字节复制到内核空间中的缓冲区。由于内核空间被映射到进程的页表中，所以这使得操作变得非常方便。否则，如果你在内核空间中，就需要手动遍历页表并翻译所有的地址，以便进行复制。这样就使得操作变得更简单。
+- en: let's just use the hardware to do that。 And we use protection to make sure that
+    the user process can't access the kernel data。 structures or code。 Okay， so some
+    discussion。 So what do we need to switch on a context switch？
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们就用硬件来做这件事。并且使用保护措施来确保用户进程无法访问内核的数据结构或代码。好的，接下来是讨论。那么在上下文切换时，我们需要切换什么？
+- en: Well， we just need to switch the page table pointer and the limit。 Those are
+    the only things that we need to say。 Yeah， question？ [inaudible]， Yeah。 so the
+    question is if we're in kernel mode and we want to access the kernel data。 the
+    memory of another process from one process， then typically what you would do is
+    you would。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗯，我们只需要切换页表指针和限制。这是我们需要做的唯一事情。对，问题？[听不清]，是的。那么问题是，如果我们在内核模式下，并且想要访问另一个进程的内核数据或内存，通常你会怎么做？
+- en: copy from the source process into a kernel buffer， then change the page table
+    to point。 to the new process。 Now you're going to have its translations， then
+    copy from that same buffer。 Again， this is why you map the kernel into all of
+    the processes into that processes buffer。 So that would be an example of inter-process
+    communication。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从源进程复制到内核缓冲区，然后改变页表指向新的进程。现在你将拥有它的翻译，然后从同一个缓冲区中复制。再次说明，这就是为什么要将内核映射到所有进程的缓冲区中。那就是进程间通信的一个例子。
+- en: So I do like a Unix pipe or something like that and that's going to copy from
+    one processes。 address space into another。 But it's mediated by the kernel and
+    so I have to do a system call into the kernel in order。 to do that。 That's why
+    being able to map a page of memory into multiple processes is really nice。 Because
+    then I'm just reading and writing directly to that page。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，我做一个类Unix管道之类的操作，它将会从一个进程的地址空间复制到另一个进程的地址空间。但是这个过程是由内核调解的，所以我必须做一个系统调用才能执行。正因为如此，能够将一页内存映射到多个进程中是非常好的。因为这样我只需要直接读写那一页。
+- en: The kernel isn't getting involved in copying the data。 And in fact， there is
+    no copy。 You just copy it into that page。 No additional copying， I should say。
+    Okay。 What provides a protection for us？ Well， we get protection through translation。
+    The page table entries limit what you can actually access。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内核并没有参与数据的复制。事实上，根本没有复制。你只是将数据复制到那个页面。可以说没有额外的复制。好吧。那么，什么为我们提供了保护呢？嗯，我们通过翻译来获得保护。页表条目限制了你实际可以访问的内容。
+- en: If there's no virtual to physical mapping that lets you access another processes
+    memory。 or the kernels memory， then you can't access them。 You can only generate
+    physical addresses that correspond to mappings in your table。 We use dual mode
+    operation to keep the user from modifying that table。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果没有虚拟到物理的映射，允许你访问其他进程的内存或内核的内存，那么你就无法访问它们。你只能生成与你的表中的映射相对应的物理地址。我们使用双模式操作来防止用户修改该表。
+- en: The only the kernel gets to modify the table。 All right。 So what are some of
+    the advantages here？
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只有内核可以修改该表。好吧。那么，这样做有什么优点呢？
+- en: Well， we get really simple memory allocation。 Right。 We just use a bit vector
+    to tell us this page is in use。 That page is not in use。 So we can just scan right
+    through and find a free page really quickly。 It's really easy to do sharing。 Right。
+    We just map the same page into multiple address spaces。
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗯，我们得到的是非常简单的内存分配。对吧。我们只需要使用一个位向量来告诉我们，某个页面正在使用，某个页面没有使用。所以我们可以通过扫描很快找到一个空闲页面。这非常容易实现共享。对吧。我们只需要将同一个页面映射到多个地址空间中。
+- en: But what are some of the disadvantages？ Well， our address spaces oftentimes
+    are sparse。 And so we end up with these really huge tables that could be larger
+    than the actual data。 that we're actually trying to code data， heap， stack， and
+    everything else。 So that's a problem。 Another problem is that not all the pages
+    are being used at any given time。
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，这样做的缺点是什么呢？嗯，我们的地址空间往往是稀疏的。所以我们最终会得到一些非常大的表，这些表可能比我们实际要存储的数据要大，比如我们要编码的数据、堆、栈等等。所以这是一个问题。另一个问题是并不是所有页面在任何给定时刻都在使用。
+- en: And we want to really kind of think about just keeping in memory those pages
+    that are。 being used and letting the rest of the pages live out on disk。 We need
+    some mechanism for doing that in the context of page tables。 All right。 So this
+    simple page table is just too big。 So this is not an approach that we can use
+    unless we're going to go to maybe really large。
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们真的要考虑的事情是，只保留那些正在使用的页面在内存中，剩余的页面则存放在磁盘上。我们需要在页表的上下文中实现某种机制来做到这一点。好吧。因此，这种简单的页表就太大了。所以，除非我们准备使用非常大的存储，否则我们无法使用这种方法。
+- en: pages and then we'd end up with tremendous amount of internal fragmentation。
+    So what if we had some kind of multi-level scheme？ Right。 Where we had multiple
+    levels of page tables， like a tree of page tables or a tree with segments。 and
+    pages。 Let's look at what that might look like。
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 页面的话，我们就会遇到巨大的内部碎片化问题。那么，如果我们有一种多级方案呢？对吧。我们可以有多个级别的页表，就像一个页表树或包含段和页的树。让我们看看这可能是什么样的。
+- en: So if we think first about what a page table is kind of providing for us， it's
+    just a map。 that maps from some virtual page number to a given physical page number
+    that we've allocated。 for that page。 If we take a virtual address， give it to
+    the page table and the page table returns the。 associated physical address。 And
+    so really it's just a lookup table， a really large lookup table。
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，如果我们首先考虑页表为我们提供的功能，它只是一个映射。它将某个虚拟页面号映射到我们为该页面分配的一个物理页面号。如果我们拿到一个虚拟地址，交给页表，页表返回相关的物理地址。所以它其实就是一个查找表，一个非常大的查找表。
+- en: But there are lots of different ways that we can implement a lookup table。 So
+    we can use those to try and do something that's more efficient than just having
+    a giant。 linear table that takes up a ton of contiguous memory， physical memory，
+    and also。 Okay。 So what are some of the other structures we might be able to use
+    here？ We kind of gave one away。
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是我们可以实现查找表的方式有很多种。所以我们可以利用这些方式，尝试做一些比仅仅拥有一个巨大的线性表更高效的事情，后者会占用大量连续的物理内存。好的。那么我们可以在这里使用哪些其他的数据结构呢？我们刚刚提到了其中的一种。
+- en: which is maybe a tree。 We could also use something like a hash table。 All we
+    need is just some mapping function that we give it a virtual page number and it。
+    returns a physical page number。 That's all。 All right。 So let's look at one potential
+    fix。 which is a two level page table。 Okay。 So we're going to have a tree of page
+    tables and we're going to take our virtual address。
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许是树形结构。我们还可以使用类似哈希表的结构。我们需要的只是一个映射函数，给它一个虚拟页面号，它就能返回物理页面号。就是这样。好的。那么让我们来看一下一个潜在的解决方案，那个就是二级页表。好的。我们将有一个页表树，我们将把虚拟地址分割成一种神奇的方式。
+- en: and we're going to divide it up in kind of a magical way。 So we're going to
+    take 12 bits and use that for our page size。 12 bits is 4096 bytes。 All right。
+    So that takes away 12 bits out of our 32 bit address that leaves us with 20 bits。
+    We're going to divide that evenly and have 10 bits for our top level page table
+    and 10。
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将取12位作为我们的页面大小。12位就是4096字节。好的。所以这就从我们的32位地址中去除了12位，剩下了20位。我们将均匀地分割这20位，取10位作为顶级页表的索引，另外10位作为下级页表的索引。
+- en: bits for our next level of page tables。 Each page table entry is going to be
+    four bytes in size。 All right。 How big is our page？ Four kilobytes。 How big is
+    our page table entry？ Four bytes。 How many entries do we have per page？ 1024。
+    How many bits do we need to index into 1024？
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下一层页表的位数。每个页表条目的大小是四个字节。好的。我们的页面有多大？四千字节。我们的页表条目有多大？四个字节。每个页面有多少个条目？1024个。我们需要多少位来索引1024个条目？
+- en: Due to the 10 or 10 bits。 So that's where our magic 10 comes from。 Right。 If
+    you think about it。 this page here contains the entire page table for that level。
+    So a page table for a level is 4096 bytes divided into four byte entries， 1024
+    of those。 entries indexed with 10 bits。 That's why this is kind of a magic breakdown
+    of a 32 bit number。 Okay。
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于这10位或者说10位的缘故，这就是我们所谓的“魔术10”位的由来。如果你仔细想一想，这一页包含了这一层的整个页表。因此，一层页表的大小是4096字节，除以每条四个字节，就是1024个条目，用10位来索引。这就是为什么这是一种“魔法”分解32位数字的方式。好的。
+- en: So we have a page table pointer which we store in the processor。 We don't need
+    a page table size pointer。 Why？ It's fixed size。 Right。 It's limited by the size
+    of this page。 And the fact that the size of that page contains all two to the
+    10 entries。 So we just need one pointer。 And we're going to take our top level，
+    top 10 bits。
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们有一个页表指针，它存储在处理器中。我们不需要页表大小指针。为什么？因为它是固定大小的，对吧？它的大小由页面的大小限制。而且该页面的大小包含了2的10次方个条目。所以我们只需要一个指针。我们将使用我们的高10位来索引页表的根。
+- en: index into our root of our page table。 And that is going to give us the physical
+    page number of our next level page table。 Right。 So that's this physical page
+    here。 Right。 And then we will。 Oh， so I should point out。 you know， when we do
+    a context switch， the only thing we have。 to save is this page table pointer on
+    x86。 It's the CR3 register。 Okay。
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将为我们提供下一级页表的物理页面号。对吧？所以这就是这里的物理页面。然后我们会……哦，我应该指出，当我们进行上下文切换时，唯一需要保存的是这个页表指针，在x86架构下它是CR3寄存器。好的。
+- en: So we're going to take our next 10 bits and use that as an index into this page
+    table。 And it's going to give us the physical page number of the page in memory。
+    We then combine that with our offset。 And that gives us the physical page and
+    the actual offset on that page。 All right。 Now we also need to have valid bits
+    on all of these entries because now we don't have a。
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们将取接下来的10位，并将其用作这个页表的索引。这将为我们提供内存中页面的物理页面号。然后我们将这个物理页面号与偏移量结合起来，就得到了该物理页面上的实际偏移。好的。现在我们还需要在所有这些条目上有有效位，因为现在我们没有……
+- en: length。 So， you know， it might be that we're only using the first， you know，
+    500 entries in our top。 level page table。 So we need valid bits to tell us whether
+    some entries are valid or invalid。 We don't need every one of these second level
+    page tables。 Right。 If the entry here is invalid in the top level table， then
+    there's going to be no associated。
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 长度。所以，你知道，可能我们只使用了顶级页表中的前500个条目。所以我们需要有效位来告诉我们某些条目是有效的还是无效的。我们不需要每一个第二级页表。对。如果顶级表中的条目无效，那么就不会有相应的第二级表。
+- en: second level table。 So now we only really need to map those regions of the virtual
+    address space that are in use。 If it's not in use， we don't need to have a second
+    level table associated with it。 So for our sparse address spaces， this is going
+    to be really good。 Because we've now drastically reduced the number of these like
+    second level tables that， we need。
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二级表。所以现在我们只需要映射那些正在使用的虚拟地址空间区域。如果没有被使用，我们就不需要为其关联第二级表。对于稀疏地址空间来说，这将非常有用。因为我们现在大大减少了需要的这些第二级表的数量。
+- en: The other thing is while we keep our top level table in memory， these second
+    level tables。 can actually live out on disk if they're not being used。 And again。
+    we just need to do some bookkeeping in this top level table to tell us， oh， hey。
+    I put this second level table out on disk。 It's not actually the case that it's
+    invalid。
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另外一点是，虽然我们把顶级表保存在内存中，这些第二级表其实可以存放在磁盘上，如果它们不被使用。而且，我们只需要在顶级表中做一些记录，告诉我们，“哦，嘿，我把这个第二级表存放到磁盘上了。”实际上它并不是无效的。
+- en: It's just out on disk。 All right。 So we get a lot more flexibility。 Now we can
+    just keep the page tables and memory that are actually being used。 And the ones
+    that are actually active stay in memory。 The ones that aren't as active go out
+    to disk。 Okay。 So here's an example of 32-bit address translation on x86。
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它只是存在于磁盘上。好的。所以我们获得了更多的灵活性。现在我们可以只保留实际被使用的页表在内存中。那些真正活跃的页表保持在内存中，而不那么活跃的则转存到磁盘。好的。这里是x86上32位地址转换的一个示例。
+- en: Their terminology is the top level directory is called a page directory and
+    it has page。 directory entries， PDEs instead of PTEs。 And this base register。
+    CR3 provides the physical address of that page directory。 We take our top bits。
+    We use that as an index into that to get our PDE。 That gives us the physical page
+    number of our page table。
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们的术语中，顶级目录叫做页目录，它包含页目录项（PDE），而不是页表项（PTE）。这个基址寄存器CR3提供了那个页目录的物理地址。我们取出顶级位，将其用作索引来获取我们的PDE。这给我们提供了页表的物理页号。
+- en: our second level table。 We use the next 10 bits to index into that。 That gives
+    us our physical 4K page。 And we use our offset to get the physical address。 All
+    right。 So when we context switch， we just save out the CR3 from the old process，
+    load the CR3。 from the new process， and now we get a different page directory。
+    Yes， question。 Okay。
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们使用接下来的10位来索引到那个表。这给我们提供了物理4K页。然后我们使用偏移量来获得物理地址。好。所以当我们进行上下文切换时，我们只需要保存旧进程中的CR3，加载新进程中的CR3，这样我们就得到了不同的页目录。是的，问题。好的。
+- en: So he's the guy I asked to be in the audience so he could ask the question that
+    set me up。 for the next slide。 So the reason why we need lots of bits in the page
+    table is because what do we need？
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以他就是我让他在观众席上坐着的那个人，这样他就可以提出那个问题，为我切换到下一个幻灯片。所以我们为什么需要在页表中使用很多位呢？因为我们需要什么？
+- en: We need to know what's the pointer to the next level of the page table or what's
+    the。 pointer to the physical page？ That's not a lot of bits， right？ So what else
+    are we doing？
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要知道下一级页表的指针是什么，或者说指向物理页的指针是什么？这需要的位数不多，对吧？那么我们还在做什么？
+- en: We have permission bits， right？ So we need to keep track of is this valid， is
+    it invalid。 is it read right， is it read-only， is it execute-only， is it out on
+    disk？ When was it last access。 is it clean， dirty？ You know， there's lots and
+    lots of information that we're going to store in the page table。 entry。 And so
+    that's why that's the answer to why it's four bytes。 So you can see here， for
+    example。
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有权限位，对吧？所以我们需要追踪的是它是有效的还是无效的，是可读写的，还是只读的，是否仅可执行，是否存放在磁盘上？上次访问是什么时候？是干净的，还是脏的？你知道，我们会在页表项中存储大量的信息。所以这就是为什么它是四个字节的原因。你可以在这里看到，例如。
+- en: there's some free bits。 These are allocatable to the operating system。 The operating
+    system can use these bits for bookkeeping。 So it could use these bits to say，
+    oh。 this page is actually out on disk。 So use the other bits in the PTE to figure
+    out where it's on disk。 Like maybe it's the logical block number of the disk block
+    that contains the page table。 All right。
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一些空闲位。这些可以分配给操作系统。操作系统可以使用这些位来进行记录。所以它可以利用这些位来表示，哦，这个页面实际上是在磁盘上。那么可以利用页面表项中的其他位来确定它在磁盘上的位置。比如，可能是存放页面表的磁盘块的逻辑块号。明白吗？
+- en: But there's a lot of other things。 So， you know， valid， writeable。 Has it been
+    accessed recently？
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是还有很多其他的事情。所以，你知道，是否有效、可写。它最近有被访问过吗？
+- en: When we get into paging， that's something that we'll use to say， this is a page。
+    It's been accessed recently， so it's active as opposed to a page that has not
+    been accessed。 recently。 So， you know， it doesn't really need to live in memory。
+    Maybe it could live out on disk。 There's other bits like， is it dirty？ So has
+    it been modified？ Has it been written recently？
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们进入分页时，这是我们用来表示一个页面的方式。它最近被访问过，所以是活跃的，相对于那些没有被最近访问过的页面。你知道的，它其实不需要一直待在内存中。也许它可以存放在磁盘上。还有其他的位，比如，它是脏的？是否已经被修改过？是否最近被写入过？
+- en: And that's going to be important because if we wanted to say， evict this page
+    from memory。 it means we'd actually have to copy it to disk。 Okay。 And there are
+    other bits that are， you know。 architecturally dependent。 Okay。 So how do we use
+    the PTE？ Right。 And in valid page table entry could mean multiple things。 It could
+    mean that， yeah。
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这很重要，因为如果我们想要说，从内存中驱逐这个页面，就意味着我们实际上必须将它复制到磁盘上。好的。还有一些位，你知道的，是架构相关的。好的。那么我们如何使用页面表项（PTE）呢？对吧？有效的页面表项可能意味着多种情况。它可能意味着，是的。
+- en: really this is invalid and your program stepped in this location。 It's a landmine
+    and we're just going to seg fault and terminate your program。 Right？
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其实这就是无效的，你的程序已经访问了这个位置。这是一个雷区，我们就会发生段错误并终止你的程序。对吧？
+- en: Or it could mean， you know， the page or the directory is just somewhere else。
+    It's not in memory。 It's out on disk。 So we check the validity and then we use
+    those other bits to figure out， hey。 where is it， located on disk？ If it's not
+    in memory。 So demand paging is where we're only going to keep the active pages，
+    as I said， in memory。
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者这可能意味着，页面或目录实际上在别的地方。它不在内存里。它在磁盘上。所以我们检查有效性，然后利用其他的位来判断，嘿，它在哪里？如果不在内存里。那么需求分页（demand
+    paging）就是我们只会将活跃的页面，像我之前说的，保留在内存中。
+- en: We're going to use that active bit to tell us which pages are active。 If the
+    page is not active。 we can feel free to send it out to disk。 And of course then
+    we mark the page table entries invalid and the bookkeeping bits to tell。 us where
+    that page got stored on disk。 Another example is remember fork。 Right？ When I
+    do a fork。 it's really fast。 Right？ Because I don't actually copy all of the parents
+    address space and create a copy for。
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用那个活跃位来告诉我们哪些页面是活跃的。如果页面不活跃，我们就可以放心地将它发送到磁盘上。当然，我们会将页面表项标记为无效，并用记录位来告诉我们这个页面存储在磁盘的哪个位置。另一个例子是记得
+    fork 吗？对吧？当我做 fork 操作时，它非常快。对吧？因为我并没有真正复制父进程的所有地址空间并为它创建一份副本。
+- en: the child。 Instead， I just copy the page tables。 So I copy all of the page tables。
+    which is going to be much， much smaller。 And I mark any entries that were read
+    right as read only。 So now it's going to happen。 The program， the child or the
+    parent is running along and it goes to write something。 It's going to generate
+    a fault because I'm trying to write a page that's marked as read， only。
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于子进程，我直接复制页面表。所以我复制所有的页面表，这样会小得多。我会将所有被读写的条目标记为只读。接下来会发生什么呢？程序，无论是子进程还是父进程，继续执行，它试图写入某些内容时，会生成一个异常，因为它试图写入一个标记为只读的页面。
+- en: Now I trap into the operating system。 The operating system looks at the page
+    table entry and says。 oh， I did a copy on write。 So now what it will do is it
+    will take that page and it will clone it。 Take two copies， one in the parent，
+    one in the child and mark both pages as write， write。 a vote read write， and then
+    restart the instruction。 So that's where copy and write comes from。
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我进入操作系统的陷阱。操作系统查看页面表条目，然后说，哦，我进行了写时复制（copy on write）。所以接下来它会做的事情是，复制这个页面，生成两个副本，一个在父进程，一个在子进程，并将两个页面标记为可写，重新启动指令。所以，这就是写时复制的来源。
+- en: Because we're only going to copy the pages when the child or the parent actually
+    tries。 to do a write to them。 Everybody follow that？ That's how we make fork really
+    fast。 Okay。 Another example is allocating memory。 So when I allocate memory to
+    a process。 I call malloc or I call espray to get more memory， I ask the operating
+    system。
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我们只会在子进程或父进程真正尝试对页面进行写操作时才会复制这些页面。大家都明白吗？这就是我们让 fork 操作非常快速的方法。好，另一个例子是分配内存。所以当我给一个进程分配内存时，我调用
+    malloc 或 espray 来请求更多内存，我向操作系统请求。
+- en: give me some physical pages。 And the operating system returns a set of physical
+    pages。 Now if those pages were used by another application， the operating system
+    has to zero out those。 pages。 Why？ Well， what if that was a sensitive server process
+    or it was the kernel using that physical memory？
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 给我一些物理页面。操作系统返回一组物理页面。现在，如果这些页面曾被另一个应用程序使用，操作系统必须将这些页面清零。为什么？嗯，假如那是一个敏感的服务器进程，或者是内核在使用这些物理内存呢？
+- en: It might contain secrets or SSH keys or other sensitive information。 And so
+    the kernel always will give you a memory page that's been zero。 But it's expensive
+    to actually go through and zero 4，096 bytes and do that a lot。 And so typically
+    what the operating system does is it allocates the page table entries。
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它可能包含机密信息、SSH 密钥或其他敏感数据。所以内核总是会给你一个已经清零的内存页。但实际上去清零 4,096 字节并且多次执行这一操作是非常昂贵的。因此，操作系统通常会分配页表项。
+- en: and then in the background it's got a process that's running through and scrubbing
+    empty。 pages and making sure they're zero。 Then when you actually try to reference
+    that page。 it swaps in one of those zero pages。 And that way you don't have to
+    wait when you're allocating for zero pages to be created。 They're created basically，
+    they're allocated basically on demand。 Or I should say assign。
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后在后台有一个进程，它正在清理空的内存页，确保它们被清零。当你实际上尝试访问该页面时，它会将一个已清零的页面交换进来。这样，你就不需要等待清零页面的创建，它们基本上是按需分配的。或者我应该说是分配。
+- en: they're allocated when you make your request assigned actually。
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们是在你发出请求时被分配的，实际上是分配的。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_19.png)'
+  id: totrans-143
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_19.png)'
+- en: on demand。 Okay， how do we do sharing？ Well， sharing is really easy。 Right？
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 按需分配。好的，我们如何实现共享呢？共享其实很简单，对吧？
+- en: So here we have multi-level page tables。 We can share at the granularity of
+    an entire page table。 Or we can share at the granularity of an individual page
+    or both。 All right。 so we get a lot more flexibility。 So we can have the page
+    tables associated with code and those get shared across all of the。 programs，
+    processes rather running the same binary。
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在这里我们有多级页表。我们可以在整个页表的粒度上共享，或者我们可以在单个页面的粒度上共享，或者两者都共享。好的，这样我们就获得了更多的灵活性。我们可以将页表与代码关联，这些页表会在所有运行相同二进制文件的程序、进程之间共享。
+- en: Or pages assigned to libc and all of those get mapped into every address space。
+    So it makes it really efficient for us to do sharing between processes。 So there
+    was a question。 so the physical page number is 20 bits。 Yeah， so the actual physical
+    page number。 in this case it was 20 bits， it'll depend on， the machine architecture。
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者分配给 libc 的页面，这些页面会被映射到每个地址空间中。所以这使得在进程之间进行共享变得非常高效。那么有个问题，物理页号是 20 位。是的，实际的物理页号，在这种情况下是
+    20 位，它会依赖于机器架构。
+- en: 20 bits is not a lot of memory。 And so， you know， as machines have gotten larger
+    and larger。 now you can have， you know， machines with a terabyte of memory， you
+    need more physical bits。
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 20 位并不是很多内存。所以，你知道，随着机器变得越来越大，现在你可以拥有带有一 terabyte 内存的机器，你需要更多的物理位。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_21.png)'
+  id: totrans-148
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_21.png)'
+- en: More physical page number bits。 Okay， so summary for two-level pageing is before
+    we just had one table in the middle。 that kind of mapped any page on the left
+    to any page on the right。 Now we're going through a top-level page table and then
+    going through a second-level page， table。 So you can see here I've divided up
+    our addresses into three fields。
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更多的物理页号位。好的，关于二级分页的总结是：之前我们只有一个中间表，它将左边的任意页面映射到右边的任意页面。现在我们通过一个顶级页表，然后经过一个二级页表。所以你可以看到这里我将地址分成了三个字段。
+- en: So our lower three bits are offset。 Then our， what is our next two bits in green。
+    our second-level table， and our three top bits， are our top-level page table。
+    So top-level page table has eight entries。 And then our middle tables here have
+    four。 and then we have eight bytes on each page。 Yes。 So the question is。
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以下三位是偏移量。然后，我们绿色的两位是第二级表，我们的三个位是顶级页表。所以顶级页表有八个条目。然后我们的中间表这里有四个。每个页面有八个字节。是的。那么问题是。
+- en: did the page table structure at the top level the same as the page table。 structure
+    at the next level？ Yeah， usually。 It's the page table entries are the same at
+    every level。 And that's just because it's easiest to do that in hardware to have
+    uniformity。 If you had two different types of page table structures that it would
+    make for more complex。
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 顶级页表的结构和下一级页表的结构一样吗？是的，通常是一样的。每一级的页表项都是一样的。这是因为在硬件中做这样统一的结构最容易。如果你有两种不同类型的页表结构，它会让事情变得更复杂。
+- en: hardware。 Yes。 [ Inaudible ]， The question is， if the operating system wants
+    to modify a page table。 does it do it， in virtual space or physical？ It's in physical
+    address space。 So page tables are stored in physically addressed memory。 But you
+    could also store page tables in virtually addressed memory。
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 硬件。是的。[听不清]，问题是，如果操作系统想修改页表，它是在虚拟空间中做的还是物理空间中做的？是在物理地址空间中。所以页表存储在物理地址内存中。但你也可以把页表存储在虚拟地址内存中。
+- en: But it depends on the machine architecture。 [ Inaudible ]， Yes。 Well。 it's never
+    the kernel isn't doing the address translation。 It's setting up the tables。 Then
+    the memory management unit in hardware is walking through the tables to actually
+    do。 the translation for you。 So operating system sets everything up and says，
+    these are the rules。
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这取决于机器架构。[听不清]，是的。嗯，实际上内核并没有做地址翻译。它是在设置表格。然后硬件中的内存管理单元会遍历这些表格来实际为你做翻译。所以操作系统设置好一切，并说，这是规则。
+- en: This is what these tables look like in terms of mapping from virtual to physical。
+    And then the hardware actually implements walking through these tables so that
+    it's fast。 [ Inaudible ]， Yes。 So the operating system can either generate translated
+    addresses。 But it can also remember， I don't know where it is in my slides now。
+    But we have two views， right？
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是这些表格在从虚拟地址到物理地址映射时的样子。然后硬件实际上通过这些表格来实现快速遍历。[听不清]，是的。所以操作系统既可以生成翻译后的地址，也可以记住，我现在不知道它在哪里。但我们有两种视图，对吧？
+- en: There we go。 Slide number two。
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好了，我们开始。第二张幻灯片。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_23.png)'
+  id: totrans-156
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_23.png)'
+- en: So there's the CPU generating virtual addresses， but the kernel can generate
+    untranslated addresses。 The kernel can actually say， I want to write this physical
+    location of memory。 It has to be able to do that because if it's going to pull
+    a page in from disk and write。 it somewhere， it has to be able to access untranslated
+    addresses also。 Okay。 Question？
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，CPU会生成虚拟地址，但内核可以生成未翻译的地址。内核实际上可以说，我想写入这个物理内存位置。它必须能够这样做，因为如果它需要从磁盘中加载一个页面并写入到某个位置，它也必须能够访问未翻译的地址。明白了吗？问题？
+- en: '[ Inaudible ]。'
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[听不清]。'
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_25.png)'
+  id: totrans-159
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_25.png)'
+- en: So the question is， when I do a malloc， am I going to get a page that， if I
+    read it， is。 going to have all zeros or could it have random data on it？ The answer，
+    unfortunately， is yes。 You could， if the page is freshly allocated by the kernel，
+    get a page that is all zeros。 and has been zeroed out。 If， however， you've done
+    a bunch of mallocs and a bunch of freeze and a bunch of mallocs。
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以问题是，当我做malloc时，我得到的页面，如果我读它，它会是全零吗？还是可能有随机数据？不幸的是，答案是肯定的。如果页面是内核新分配的，你可能会得到一个全零的页面，且已经被清零。但如果你做了很多malloc，很多free，再做很多malloc。
+- en: it depends on the implementation of malloc and whether you call something like
+    zalloc which。 will zero the page。 When you do a free， it just puts the page or
+    puts the memory back into the heap。 It doesn't necessarily zero it out for you。
+    That's why there's a zalloc， I think it's called zalloc。 a c library function
+    which gives， you a zero， a zero out page。
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这取决于malloc的实现，以及你是否调用像zalloc这样的函数，它会将页面清零。当你调用free时，它只是把页面或者内存放回堆中。它不一定会为你清零。这就是为什么有zalloc，我认为它叫做zalloc，一个C库函数，它会给你一个清零的页面。
+- en: It guarantees the page is going to be zero。 Okay。 So here， you know， if we want
+    to grow the heap。 you know， add a new page to the heap， we simply， just， or a
+    reference a page rather on the heap。 We simply just look in the top level tables，
+    so this is going to be entry 100 in red。 Then the next level is going to be one
+    zero。 We look there and that gives us this 10。
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它保证该页面将是零。好的，所以在这里，如果我们想扩展堆，添加一个新的页到堆中，我们只需在顶级表中查找，看看这是红色的100号条目。然后下一层是10，我们在这里查找，这会给我们这个10。
+- en: 000 in binary which maps to right here， 80 hex。 Right？
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 二进制中的000映射到这里，十六进制是80。
+- en: So we just walk through our tables and that tells us what the physical address
+    is。 Copy over the offset。 So in the best case， right， the total size of the pages
+    that we're going to have our page。 tables here is going to be proportional to
+    the number of pages being used by the program's。 virtual address space。 Right？
+    That's much smaller than before where it was proportional to the maximum size
+    of the virtual。
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们只需要遍历这些表，这样就能告诉我们物理地址是什么。复制偏移量。所以在最好的情况下，对吧，我们将使用的页表的总大小将与程序的虚拟地址空间中使用的页数成正比。对吧？这比之前要小得多，因为之前是与虚拟地址的最大大小成正比。
+- en: address space。 So assuming the programs are relatively small。 it means our page
+    tables are going to be relatively， small and for these second level tables。 they
+    can live out on disk if we're not using it。 The price we pay now is just to do
+    a memory read or write or instruction fetch。 We're now going to do two additional
+    memory reads。
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 地址空间。所以假设程序相对较小，这意味着我们的页表会相对较小，对于这些二级表，它们可以存储在磁盘上，如果我们不使用它。现在我们付出的代价只是进行一次内存读写或指令获取。现在我们要做的是额外的两次内存读取。
+- en: So we effectively made our memory three times slower。 And it's already expensive
+    to go out to memory。 It's nanoseconds to access something on chip。 It could be
+    hundreds of nanoseconds to go out to memory。 Now we've made that three times more
+    expensive。 And if some of these second level tables are living out on disk。
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们实际上使得内存变得三倍慢了。而访问内存已经是很昂贵的了。在芯片上访问某些东西只需要纳秒级的时间，而访问内存可能需要几百个纳秒。现在我们让它变得三倍更加昂贵。如果一些二级表存储在磁盘上。
+- en: that's going to make that， even more expensive。 We're going to need a solution。
+    And we'll come back to that in a moment。
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将使得代价更加昂贵。我们需要一个解决方案，我们稍后会回到这个问题。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_27.png)'
+  id: totrans-168
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_27.png)'
+- en: Okay。 Let's look at another approach。 That was a tree of tables。 Instead we
+    can try and combine the benefits we get from segments with the benefits we get。
+    from pages。 So the lowest level is going to be a page table in any tree-oriented
+    structure。 Why？
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我们来看另一种方法。那是一个表的树结构。相反，我们可以尝试将段的好处和页的好处结合起来。所以最低级别将是一个页表，位于任何树形结构中。为什么？
+- en: Because a really simple allocation， right？ We don't have to worry about external
+    fragmentation。 We put page tables at the top and segments at the bottom。 We have
+    to worry about moving these segments around in physical memory， finding large
+    enough。 contiguous chunks of memory to be able to allocate those segments。
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为它是一个非常简单的分配，对吧？我们不必担心外部碎片问题。我们将页表放在顶部，段放在底部。我们必须担心将这些段在物理内存中移动，找到足够大的连续内存块，以便能够分配这些段。
+- en: So it's much better to use page tables at the lowest level。 Okay。 Then we just
+    use our bitmap。 Our levels could be segments。 We could have any number of levels。
+    But we'll make our top level in this case be a segment。 So now our virtual address
+    is going to look like this。 At the top we have a segment number。
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在最低级别使用页表要好得多。好的。然后我们就用位图。我们的层级可以是段。我们可以有任意数量的层级。但我们将把顶层设置为段。所以现在我们的虚拟地址看起来像这样。最上面是一个段号。
+- en: a virtual segment number。 And then we have our virtual page number。 And then
+    we have our offset。 Because our lowest level is a page table， we can just copy
+    the offset over。 Fix size pages。 Our top level， we use a segment map that we store
+    in the processor。 So here we have eight entries。 base and limit。 And those each
+    point to a page table。
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个虚拟段号。然后是我们的虚拟页号。接下来是偏移量。因为我们最低级别是页表，所以我们可以直接复制偏移量。固定大小的页。我们的顶层使用的是存储在处理器中的段映射。所以在这里我们有八个条目，基本地址和限制，每个都指向一个页表。
+- en: And then we use our second level of our address， our virtual page table of virtual
+    page number。 rather， the index into that table to find the physical page number。
+    And of course， as always。 don't forget we have to check to make sure we didn't
+    run off， the end of the table。 We have to also check all of our permission bits
+    to make sure there's no issues with the。
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们使用地址的第二级，即虚拟页表中的虚拟页号。实际上，是通过索引查找物理页号。当然，像往常一样，不要忘记我们需要检查确保没有超出表的范围。我们还需要检查所有的权限位，以确保没有任何问题。
+- en: access mode。 All right。 Now， when we do a context switch before when we had
+    a tree of tables。 we just needed to， save out that page table base pointer， CR3
+    register。 Now it's just like with segments， we have to save out the segment map。
+    All right。 So it's a relatively small amount of data that we have to save on a
+    context switch between。
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 访问模式。好的。现在，当我们进行上下文切换时，以前当我们有一棵表格树时，我们只需要保存那个页表基指针，即CR3寄存器。现在就像使用段一样，我们必须保存段映射。好的。因此，我们在上下文切换时需要保存的数据量相对较小。
+- en: two different address spaces， between two processes。
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 两个不同的地址空间，位于两个进程之间。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_29.png)'
+  id: totrans-176
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_29.png)'
+- en: Now how can we do sharing？ Well， we can share now at the level of a complete
+    segment。 So we just simply point to a page table representing the shared segment，
+    like our shared code。 Now if we have another process B， it's just simply going
+    to point to that same segment。 It's going to have a segment point to that same
+    shared segment page table。
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们如何进行共享呢？嗯，现在我们可以在整个段的级别进行共享。所以我们只需简单地指向一个表示共享段的页表，比如我们的共享代码。现在，如果我们有另一个进程B，它也只需指向同一个共享段，它将有一个指向相同共享段页表的段。
+- en: And now we have the same data that's visible in both programs。 And again。 if
+    we're dealing with virtual addresses and references and things like that， our
+    pointers。 we're going to want to make sure that we put them into the same segment，
+    that the virtual。 addresses are valid in both address spaces。 If it's just a table
+    of integers or other sorts of strings。
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们有了在两个程序中都能看到的相同数据。再说一次，如果我们处理的是虚拟地址和引用之类的东西，我们的指针，我们需要确保将它们放入相同的段中，这样虚拟地址在两个地址空间中都是有效的。如果只是整数表或其他类型的字符串。
+- en: then we don't have to put， them in the same place。 If we want to have pointers
+    or code or anything like that， they have to go into the same virtual。 segment。
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们不需要将它们放在同一个位置。如果我们需要有指针、代码或类似的东西，它们必须放入同一个虚拟段中。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_31.png)'
+  id: totrans-180
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_31.png)'
+- en: Okay。 So let's take a step back and look at what we learned with multi-level
+    translation techniques。 So advantages。 Well， we only are going to end up allocating
+    as many page table entries as we need for。 our application's usage。 So if we have
+    a really sparse address space， all that sparseness。 it doesn't matter。 There's
+    no data structures that we need to have to track that sparseness。
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的。那么，让我们回顾一下使用多级转换技术学到的内容。优势是什么？嗯，我们只会为我们的应用程序使用的页表项分配必要的数量。所以，如果我们有一个非常稀疏的地址空间，所有这些稀疏性都没关系。我们不需要为此追踪稀疏性而额外创建数据结构。
+- en: That'll all get captured in the top level of our data structure。 Now。 if we
+    just allocate one page uniformly throughout large gaps in the space， yes， then。
+    we'll end up with something that's not very sparse as a set of data structures。
+    But that's not typically how we operate。 We typically have code， data， stack，
+    and heap。
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这一切都会在我们数据结构的顶层得到捕捉。现在，如果我们在空间中的大间隙内均匀分配一个页面，是的，那样的话，我们最终得到的将不是一个非常稀疏的数据结构集合。但这通常不是我们的操作方式。我们通常会有代码、数据、栈和堆。
+- en: And so those regions can be really far apart and we'll take up that much space
+    overall for。 our bookkeeping。 We get easy memory allocation。 As long as we always
+    use page tables at the lowest level。 we can use a bitmap to do our， allocation。
+    We get easy sharing。 We can share an individual set of pages or we can share at
+    the level of a page table。
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，这些区域可以非常远离彼此，总体上我们为管理所占用的空间就会相应减少。我们获得了便捷的内存分配。只要我们始终使用最低级别的页表，我们就可以使用位图来进行分配。我们还可以轻松实现共享。我们可以共享单个页面集，或者在页表级别进行共享。
+- en: our entire segment。 So a lot of flexibility。 But everything comes at a price。
+    And so some of the disadvantages are we still have a pointer per page。 So for
+    every four or 16 kilobytes of memory we want to allocate， we're going to have
+    a。 page table entry。 So that could be expensive。 Oh， there was a question about
+    what is the advantages of using segments and pages versus。
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的整个段。所以有很多灵活性。但一切都有代价。所以一些缺点是我们仍然需要每个页面都有一个指针。所以，对于每个我们想分配的4KB或16KB内存，我们都需要一个页表项。所以这可能会很昂贵。哦，之前有人问过，使用段和页与其他方式相比有什么优势？
+- en: just using a multi-level page table？ It's a design choice。 So whether you choose
+    to use multiple levels of page tables or you choose to use multiple。 levels of
+    segments is really just an architectural design choice。 When the architects are
+    looking at what's the target market for this processor or architecture。
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只是使用多级页表？这只是一个设计选择。所以，无论你选择使用多级页表，还是选择使用多个段，实际上只是一个架构设计的选择。当架构师在考虑这个处理器或架构的目标市场时，他们会做出这样的决策。
+- en: and how are people going to use it， they try to design a memory system that
+    will work well。 with both the applications and the operating systems。 And so segments
+    and page tables or multiple levels of page tables are just two examples。 of the
+    approaches that people have taken。 We're going to look at another example in just
+    a moment。
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，人们将如何使用它呢？他们会尝试设计一个能与应用程序和操作系统都能良好配合的内存系统。所以，段和页表，或者多个级别的页表，只是人们采取的两种方法的例子。稍后我们将看另一个例子。
+- en: But they're all trying to accomplish the same base idea。 Okay。 the other issue
+    we have is that our page tables themselves where they can be more。 than one page
+    have to be stored in contiguous memory。 So that does lead to some potential external
+    fragmentation issues。
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但它们都在试图完成相同的基本目标。好的，我们面临的另一个问题是，我们的页表本身，如果它们占用多个页面，必须存储在连续的内存中。所以，这确实可能引发一些潜在的外部碎片问题。
+- en: If I have a page table that is 20 pages long， I need to find 20 contiguous runs
+    of zeros。 in order to store that page table in memory。 So I might have to do some
+    moving data around in order to make it work。 But if I use the， you know， for a
+    32-bit machine， if I use the 10， 10， 12， my page tables are。 one page and I never
+    will run into that kind of problem。
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我有一个长达20页的页表，我需要找到20个连续的零段，以便将这个页表存储在内存中。所以我可能需要做一些数据搬移才能使其正常工作。但如果我使用32位机器的10、10、12的划分，我的页表就是一页，我就永远不会遇到这种问题。
+- en: So another disadvantage which we just saw is that I have to do multiple lookups
+    in order。 to find each reference。 So I have to walk through multiple page tables
+    doing multiple memory references in order。 to do one reference to memory， a read，
+    write， or instruction fetch rather。 So that's going to be expensive。 That tells
+    us we can't。
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个缺点是，我们刚才看到的，我需要进行多次查找才能找到每个引用。所以，我必须遍历多个页表，进行多个内存引用，才能完成一次内存引用：读取、写入或指令获取。所以这将是非常昂贵的。这告诉我们，我们不能…
+- en: there's no way that it could be feasible for us to do translation。 to actually
+    do the full translation for every single memory reference。 We're going to have
+    to figure out a way of amortizing those costs across many memory references。 Okay，
+    so remember dual mode operation， right？ Do we let the process access its translation
+    table？
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不可能对每个内存引用都做完整的地址转换。我们必须找到一种方法，将这些成本在多个内存引用中摊销开。好的，记住双模式操作，对吧？我们是否允许进程访问它的翻译表？
+- en: No， right？ Because otherwise it could access any memory。 it could access memory
+    associated with other， processes。 could access operating system code and data。
+    The hardware gives us two modes of operation typically。 a user mode and then a
+    kernel， mode or protected mode or supervisor mode or whatever you want to call
+    it。
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不对，正确吗？因为否则它可以访问任何内存。它可以访问与其他进程相关的内存，甚至可以访问操作系统的代码和数据。硬件通常提供两种操作模式：用户模式和内核模式，或受保护模式、超级用户模式，或者你想怎么称呼它都行。
+- en: But it's a special mode that has complete access。 User mode is very restricted。
+    Kernel mode you can do anything。 Now some processors like Intel processors include
+    multiple levels。 So there's actually four different rings that you have that allow
+    you to have different levels。 of access。 So you have your supervisor， your protected
+    mode that has the highest access and then。
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是它是一种特殊模式，具有完全访问权限。用户模式是非常受限的。内核模式下你可以做任何事情。现在一些处理器，比如英特尔处理器，包含多个级别。所以实际上你有四个不同的环级，允许你拥有不同级别的访问权限。所以你有最高访问权限的主管模式和保护模式。
+- en: you have lower levels all the way down to user mode。 And on x86 the level below
+    the highest privilege level is typically used by hypervisors。 Sometimes it's used
+    by device drivers so you can limit what they do and their ability to。 corrupt
+    or cause problems for the operating system。 Now certain operations。
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你有较低的级别，一直到用户模式。在 x86 中，最高权限级别下方的级别通常被虚拟机监控器使用。有时也被设备驱动程序使用，这样你就可以限制它们的操作以及它们对操作系统造成损害或问题的能力。现在某些操作。
+- en: again with dual mode operation， we're going to restrict to being， in kernel
+    mode。 So changing that CR3 register， changing the segment map， you can only do
+    that in kernel， mode。 And that way we can guarantee that the user can't change
+    what their translation mapping， is。 And also， you know， as was， there was a question
+    about reading and writing the page table entries。
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次提到双模式操作，我们将限制为处于内核模式。所以修改 CR3 寄存器，修改段映射，你只能在内核模式下执行这些操作。通过这种方式，我们可以保证用户无法更改他们的翻译映射。并且，正如之前提到的，关于读取和写入页表项的问题。
+- en: themselves that has to be done when you're in kernel mode。 You can't modify
+    them or read them from the user mode。 Okay， so let's make it all real。 So here
+    is an example of x86 which combines both segments at the top level along with，
+    paging。 a multi-level paging scheme。 So it's taking everything and putting it
+    all together。
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你处于内核模式时，必须完成这些操作。你不能在用户模式下修改或读取它们。好了，让我们让一切变得真实。这里是一个 x86 的示例，它结合了顶层的段和分页，一种多级分页方案。所以它将一切结合在一起。
+- en: So you get the segment。 So here we have a logical address or virtual address
+    or what they call a far pointer。 And it could either contain the segment or the
+    segment can come from the instruction itself。 So here the segment comes from the
+    instruction， it's the GS segment and that's the segment。 selector。 The segment
+    selector selects a segment descriptor。
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你获得的是段。这里我们有一个逻辑地址或虚拟地址，或者他们所说的远指针。它可以包含段，也可以由指令本身提供段信息。这里，段来自指令，它是 GS 段，这是段选择符。段选择符选择一个段描述符。
+- en: We look it up in our global descriptor table。 Right？ That's global across all
+    processes。 There's also an LDT or local descriptor table which is specific to
+    an individual process。 And you can actually control which one the lookup happens
+    in。 Okay。 and that is going to give us a base address here for a segment within
+    our linear， address space。
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在全局描述符表中查找它。对吧？这是全局的，适用于所有进程。还有一个本地描述符表（LDT），它特定于某个单独的进程。你实际上可以控制查找在哪个表中进行。好的，这将为我们提供一个基地址，用于在我们的线性地址空间内定义一个段。
+- en: So this is how we go from like our what they call their logical address to our
+    actual address。 in our linear address space。 That linear address is now what we're
+    going to look up in our multi-level page table。 So we're going to divide that
+    linear address into a directory， a table and an offset and。 just do our walkthrough
+    of those tables in order to actually get the physical address that， we want。
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们如何从所谓的逻辑地址转换到实际地址的过程。在我们的线性地址空间中。这个线性地址现在是我们将在多级页表中查找的内容。所以我们将把这个线性地址分为一个目录、一个表和一个偏移量，然后按照顺序遍历这些表，最终获得我们想要的物理地址。
+- en: Right？ So in most cases in x86 they just simply map this linear address space
+    to be all of in。 every segment to be from zero to the top of memory so they're
+    not really using segments。 They're just kind of ignoring it。 The addresses you're
+    generating then are just going to be these linear addresses。 Okay。 So here's an
+    example in x86 for 32-bit addresses。
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对吧？所以在大多数情况下，x86 会将这个线性地址空间映射到内存的所有部分，将每个段从零到内存的顶部，因此他们实际上并没有使用段。它们只是忽略了段。你生成的地址将仅仅是这些线性地址。好了。这里是一个
+    x86 32 位地址的示例。
+- en: So here segments are either again implicit in the instruction or they come from
+    the implicit。 in the instruction or they come from the address。 So there's six
+    segment registers， stack segment。 code segment， data segment， extra segment， and，
+    F and G segments。 And the segment register is just a pointer to this segment descriptor。
+    So again。
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在这里，段要么是指令中隐式包含，要么来自指令中的隐式部分，或者它们来自地址。所以有六个段寄存器：堆栈段、代码段、数据段、附加段，以及 F 和 G 段。段寄存器只是指向这个段描述符的指针。所以再次说明。
+- en: if we look back here， it's an index into this table， the global descriptor table。
+    or an index into the local descriptor table。 So local descriptor table is a per
+    process segment map you can kind of think of it as。 And the global descriptor
+    table is global。 So for example， if I'd shared binaries。 I would put those entries
+    into the global descriptor， table。 So like for shared code。
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们回顾一下，这实际上是一个指向这个表的索引，全球描述符表（GDT）。或者是指向局部描述符表（LDT）的索引。所以局部描述符表是一个每个进程的段映射，你可以把它想象成这样。而全球描述符表是全局的。例如，如果我有共享的二进制文件，我会把这些条目放到全局描述符表中。比如说，对于共享代码。
+- en: Then there's the current requestor privilege level。 And so this is what the
+    actual descriptor looks like。 It contains a lot of information。 I'm not going
+    to go through all of it。 It tells you what kind of segment it is， whether it's
+    a code。 data， or other segment。 And that's important because code segments are
+    executed only。
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后是当前请求者的权限级别。所以这就是实际的描述符长什么样。它包含很多信息。我不会一一讲解。它告诉你这是什么类型的段，是否是代码段、数据段，或者其他段。这很重要，因为代码段只能被执行。
+- en: What else is important？ It tells you what privilege level is required to access
+    it。 You have to make sure that the requestor privilege level is less than the
+    actual segment level。 That way it guarantees that you can， whether you can access
+    it or not。 So if it's kernel。 you wouldn't be able to access it from user mode。
+    And then there are extra bits that you can use for the operating system。
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有什么是重要的？它告诉你访问它所需的权限级别。你必须确保请求者的权限级别小于实际段的权限级别。这样就能保证你是否能够访问它。所以如果是内核段，你就不能从用户模式访问它。然后，还有额外的位可以供操作系统使用。
+- en: The bits in A。
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: A 中的位。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_33.png)'
+  id: totrans-205
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_33.png)'
+- en: And that's probably all that's really important。 OK。 So let's say we wanted
+    to be able to have a 48-bit virtual address space。 Like it's on a 64-bit machine，
+    I could potentially have really large pointers， like 64-bit pointers。 Or more
+    commonly， you have something like a 48-bit pointer。 So that。
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这大概就是所有重要的部分了。好吧。假设我们想要有一个 48 位的虚拟地址空间。比如它在一台 64 位机器上，我可能有非常大的指针，比如 64 位指针。或者更常见的是，你会有像
+    48 位这样的指针。就是这样。
+- en: I could do with a four-level page table。 So I'm going to use the lower 12 bits
+    for my offset。 Now。 because my page table entries are going to have to be bigger，
+    because my physical addresses。 are going to end up being larger， now I'm going
+    to have to go to 8-byte entries。 So if I go to 8-byte entries and I have 4 kilobyte
+    pages， how many entries do I have？ 4。
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我可以使用四级页表。所以我要用低 12 位作为我的偏移量。现在，因为我的页表条目必须更大，因为我的物理地址最终会更大，所以我必须使用 8 字节条目。那么如果我使用
+    8 字节条目并且每页是 4KB，我有多少个条目？4。
+- en: 096 divided by 8。 Hours are 2。 5-12。 Half of 1024。 OK。 How many bits do I need？
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 096 除以 8。小时是 2。5-12。1024的一半。好吧。我需要多少位？
+- en: The index into a table with 512 entries？ 9。 It's right there on the slide too。
+    OK。 so our page table pointer， our CR3 register， points to our base or directory
+    or whatever。 you want to call it， each of these page table entries is 8 bytes
+    in size， there's 512 of， them。 and I just simply go walking through all of these
+    tables until I get the actual。
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个索引指向一个有 512 个条目的表？9。它就在幻灯片上。好吧。所以我们的页表指针，也就是 CR3 寄存器，指向我们的基址或目录，或者你想称之为什么，每个页表条目占用
+    8 字节，共有 512 个条目。我只需要简单地遍历这些表，直到我得到实际的。
+- en: physical page number of the page that I want to reference。 Combine that with
+    my offset。 my 12-bit offset， and now I have my physical address。 All right， and
+    so you can actually do this。 Would you want to do this？ Probably not。 Right， because
+    for every memory reference， I'm doing 1， 2。 3， 4 just to get the address， to then
+    be able to do the fifth reference。
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想引用的页面的物理页号。将它与我的偏移量结合起来，我的 12 位偏移量，现在我就得到了我的物理地址。好吧，实际上你可以这么做。你会想这么做吗？大概不会吧。对吧，因为对于每次内存引用，我都需要做
+    1，2，3，4 才能得到地址，然后才能进行第五次引用。
+- en: which is actually going to be my construction， fetch load or store。 All right。
+    but not very efficient。 Not doable， but not efficient。 So one thing the x86 supports。
+    which kind of helps with some of this， is larger page， sizes。 Right。 and so here's
+    an example where you have five levels of paging。
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这实际上是我的构造、加载或存储操作。好了，但效率不高。虽然可以做到，但不够高效。那么，x86架构支持的一件事，就是支持更大的页面大小。这有助于解决一些问题。对吧？所以，这是一个示例，展示了你有五级分页。
+- en: If instead I have pages that are 2 megabytes in size， right， now I need fewer
+    levels。 But why-- and I can go even larger， right？ I can have one gigabyte-sized
+    pages。 So one might want to do that。 Any ideas？ What would be the benefit to having
+    one gigabyte-sized pages？
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我改成2兆字节的页面大小，对吧，现在我需要的级别更少。但为什么——而且我还可以更大，对吧？我可以使用1千兆字节的页面。那么，为什么要这样做？你有什么想法吗？使用1千兆字节页面有什么好处？
+- en: What would be an application？ Let's see some creativity。 Yeah。 Yeah， exactly。
+    Databases， right？
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，应用场景是什么呢？让我们发挥一下创造力。对，没错，数据库，对吧？
+- en: If I have a database， I want to manage the objects in my database。 I might want
+    to keep a large blob in memory。 And so having a 1 gigabyte page means that I could
+    keep all of that in memory。 right， and manage my access to it。 Video would be
+    another example。 From editing video。 I might have very large video segments， and
+    I can completely fill， the pages。
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我有一个数据库，我想管理数据库中的对象。我可能希望在内存中保留一个大块数据。所以，使用1千兆字节页面意味着我可以将所有数据保留在内存中，并管理对它的访问。视频也是另一个例子。在视频编辑中，我可能会有非常大的视频片段，而我可以完全填充页面。
+- en: The key thing is thinking about applications where， either for， you know， a
+    2 megabyte page。 size or a 1 gigabyte page size， I can completely fill the page。
+    If I don't completely fill the page。 you know， if I put a 64 kilobyte stack on
+    a 1 gigabyte， page。 then I have a lot of internal fragmentation， and I've just
+    wasted my expensive memory。
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关键是要考虑那些应用场景，在这些场景中，无论是2兆字节大小的页面，还是1千兆字节大小的页面，我都能完全填满页面。如果我没有完全填满页面，比如我在1千兆字节的页面上放置一个64千字节的栈，那就会导致大量的内部碎片化，浪费了我昂贵的内存。
+- en: But if I have an application where I'm going to keep those pages full， then
+    this makes。 it very efficient to have a large virtual address space and not have
+    to do 5 memory references。 to do one read/write operation。 Okay。 So， Great for
+    Colonel， you know。 the Colonel can all be in one page rather than in lots， of
+    pages。
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但如果我有一个应用程序，我将确保这些页面被完全填满，那么这就非常高效了，可以拥有一个大的虚拟地址空间，而不需要进行五次内存引用来执行一次读/写操作。好的，所以，这对内核非常有用，知道吗？内核可以全部放在一个页面中，而不是分散在多个页面中。
+- en: and it's great for large libraries and so on。 Okay。 What about 64-bit addresses
+    on a 64-bit machine？
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这对于大库等非常有用。好了，64位机器上的64位地址怎么办？
+- en: You know， I could just have a 6-level page table。 No。 That would be way too
+    slow， right。 because we're going to have to walk through this。 This page table，
+    then this page table。 then this page table， then this page table， then， this page
+    table， this page table。 And then finally， we actually get to do our load in store
+    on every single operation。 So。
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你知道，我可以只用一个6级页表。不行，那样会太慢，对吧？因为我们需要逐级遍历这个页表，然后是这个页表，再是这个页表，然后是这个页表，最后，我们才会在每次操作时进行加载和存储。所以。
+- en: it would be just really inefficient。 Okay。 So， an alternative is what's called
+    for not really good reasons an inverted page table。 You create something， a data
+    structure， you get to name it。 And people don't always pick the best names， let's
+    just say。 So， the way to think about this。 why it's called an inverted page table，
+    is if you think， about what we've looked at so far。
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样会非常低效。好吧。那有一个替代方案，叫做倒置页表，虽然这个名字并不完全恰当。你可以创建某个数据结构，给它起个名字。但人们不总是选最好的名字，我们就这么说吧。那么，为什么叫做倒置页表呢？如果你回想一下我们到目前为止看到的内容。
+- en: all of these we kind of walk through the table。 So， it's a forward path that
+    we take。 mapping from our virtual address to our physical page， number。 And so。
+    the size of our page table is going to be proportional to the amount of virtual。
+    memory that we've allocated to this process。 We'll use one of these multi-level
+    schemes so we don't have sparseness in our data structure。
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有这些我们都要遍历这个表。所以，这是我们走的一条前向路径，从我们的虚拟地址到物理页面号的映射。因此，页表的大小将与我们为该进程分配的虚拟内存量成正比。我们将使用这些多级方案之一，以避免数据结构中的稀疏性。
+- en: But the actual physical memory that we have could be much， much less， right。
+    If you look at a 64-bit machine， with 64-bit pointers， that's a much， much， much
+    larger。 virtual address space， than the actual physical space， you know， our machine
+    might only have。 64 gigabytes of memory。 So， we've got this huge data structure
+    for our mapping and the actual pages that are。
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是我们实际拥有的物理内存可能要小得多，对吧？如果你看一个64位的机器，带有64位指针，它的虚拟地址空间要比实际的物理空间大得多。你知道，我们的机器可能只有64GB的内存。所以，我们有一个巨大的数据结构来进行映射，而实际在内存中的页面要小得多。
+- en: in memory is much， much smaller。 Most of our code and data and everything might
+    be living out on disk。 So， what we're going to use is a hash table。 We're going
+    to take our virtual page number and give it to this hash table。 And it's going
+    to give us back our physical page number。 Now， it's called an inverted page table。
+    The nice thing here is the size of this hash table is proportional to the size
+    of physical， memory。
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的大部分代码和数据可能都存储在磁盘上。那么，我们将使用哈希表。我们会将虚拟页号交给这个哈希表，它会返回我们的物理页号。现在，这个哈希表叫做反向页表。这里的好处是，哈希表的大小与物理内存的大小成比例。
+- en: Because it's just keeping track of what's actually in physical memory。 And where
+    is it？
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为它只是跟踪实际在物理内存中的内容。它在哪里？
+- en: It's not on the hash table， then we have to go look in our bookkeeping data
+    structures。 to figure out， hey， where is it out on disk？ So， that's nice。 The
+    size is now independent of the virtual address space。 It's proportional to the
+    amount of physical memory that we have。 And so。
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果它不在哈希表中，我们就必须去查看我们的记账数据结构，来弄清楚，嘿，它在磁盘的哪里？所以，这样挺好的。现在它的大小不依赖于虚拟地址空间，而是与我们拥有的物理内存量成比例。因此。
+- en: it becomes a really nice solution to when we have a 64-bit address space， right。
+    And we don't want to have six or seven or whatever levels of our page table。 So。
+    the downside here is that hashing， it's hard to come up with good universal hashing。
+    functions that have short chains。 By chains are where you have a collision。
+  id: totrans-225
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这对于我们拥有64位地址空间的情况是一个非常好的解决方案，对吧？我们不想有六七层，或者更多层的页表。那么，这里的缺点是哈希很难找到好的通用哈希函数，能够产生短链。链是指你遇到哈希冲突的地方。
+- en: you go and you look in the bucket and it's not， the item you look for。 So。 you've
+    got to rehash and look in another bucket， rehash and look at another bucket。 We
+    don't want to do a lot of that because then that will be really slow and expensive。
+    You want hashing functions that generate very short chains。
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你去看桶里，它不是你想要找的项。所以，你必须重新哈希并查看另一个桶，再重新哈希并查看另一个桶。我们不想做太多这样的操作，因为那会非常慢且昂贵。你需要的是能生成非常短链的哈希函数。
+- en: And you're doing this typically in hardware。 And so。 that makes it even harder
+    to figure out what are good hash functions。 The other issue you have is if I want
+    to walk through the page table itself， there's no locality。 here， right， because
+    one virtual page number hashes to some location in the hash table。
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常你是在硬件中执行这一操作。因此，这使得很难确定什么是好的哈希函数。另一个问题是，如果我想遍历页表本身，那里没有局部性。因为一个虚拟页号会哈希到哈希表中的某个位置。
+- en: the next virtual page could hash to something far away。 The next virtual page
+    could hash to something far away。 So， there's no locality。 Whereas。 with the approaches
+    we were looking at before， one virtual page table entry was。 right next to the
+    next entry。 It was right next to the next entry。 And in fact。
+  id: totrans-228
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下一个虚拟页可能会哈希到一个很远的地方。下一个虚拟页也可能会哈希到很远的地方。所以，那里没有局部性。而我们之前看的方法，一个虚拟页表项会和下一个项紧挨着。它是紧挨着下一个项的。事实上。
+- en: they all fit on one page。 So， it was very efficient。 Okay。 But the benefit here
+    is the size of our hash table here is proportional to the number of。 pages being
+    used in physical memory， which is going to be much， much smaller than the。 number
+    of pages used in virtual memory。 Okay。 So， I'm just going to end with the next
+    slide。
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们都能装进一页里。所以，这样非常高效。好了。但这里的好处是，哈希表的大小是与物理内存中使用的页面数成比例的，这将比虚拟内存中使用的页面数小得多。所以，我就用下一张幻灯片来结束。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_35.png)'
+  id: totrans-230
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_35.png)'
+- en: So， we looked at a bunch of different translation approaches。 The segmentation。
+    really fast context switching， I just save out the segment map。 The disadvantage。
+    we can end up with external fragmentation。 Paging is nice at the single level
+    because we now we have a uniform rapid way of allocating。 memory， no external
+    fragmentation rather。 But we end up with table sizes that are proportional to
+    our virtual address space and are mostly。
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，我们研究了许多不同的转换方法。分段法，快速的上下文切换，我只需要保存段映射。缺点是，我们可能会遇到外部碎片问题。分页在单级分页时非常好，因为我们现在有了一种统一的、快速的内存分配方式，不会出现外部碎片。然而，我们最终得到的表大小是与虚拟地址空间成比例的，并且大部分是……
+- en: full of empty entries。 So， it doesn't work well for sparse address spaces。 Page
+    segmentation or multi-level paging， both of those approaches make the table size
+    now。 proportional to the number of pages in use in virtual memory。 We get the
+    advantages of fast allocation by using paging at the lowest level。
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 充满了空的条目。所以，它不适合稀疏地址空间。页分段或多级分页，这两种方法使得表的大小现在与虚拟内存中使用的页数成比例。通过在最低级别使用分页，我们能够获得快速分配的优势。
+- en: But the disadvantage is it can be many multiple or many memory references just
+    to do one read。 or one write。 So， we're going to have to fix that。 And that's
+    what we're going to fix in the next lecture。 Inverted page tables。 Now we have
+    a table size that is proportional to the number of pages in physical memory。
+  id: totrans-233
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是缺点是，进行一次读取或写入时，可能需要进行多次内存引用。所以，我们需要解决这个问题。这就是我们在下一讲中要解决的内容。倒排页表。现在我们有一个与物理内存中页数成比例的表大小。
+- en: But the downside is we have these hardware hash functions that can be super
+    complex and。 we don't have locality for our cache of page table entries。 On that，
+    we'll continue on Thursday。
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但缺点是我们需要使用这些硬件哈希函数，这些函数可能非常复杂，而且我们没有页表条目的缓存局部性。对此，我们将在周四继续讨论。
+- en: '![](img/add8f46aa3878f8f5b37316430946de9_37.png)'
+  id: totrans-235
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/add8f46aa3878f8f5b37316430946de9_37.png)'
