@@ -1,0 +1,2008 @@
+- en: P7：Lecture 7 Buffer Management - ___main___ - BV1cL411t7Fz
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P7：第七讲 缓冲管理 - ___main___ - BV1cL411t7Fz
+- en: Okay， I think it is being recorded。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我想它正在录制。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_1.png)'
+- en: Okay， cool。 Okay， great。 So let's get started。 Hello， everyone。 Welcome to Thursday's
+    lecture of one 86。 So today I just want to wrap up the discussion that we had
+    from last from Tuesday about B plus tree and then we'll actually move on to the
+    next topic。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，酷。好的，太好了。那我们开始吧。大家好，欢迎来到星期四的 186 课程。今天，我想总结一下我们上次星期二关于 B+ 树的讨论，然后我们将进入下一个主题。
+- en: which is buffer management。 So I just want to do a little bit of review。 So
+    this is the。 this is the first slide that we showed last on Tuesday about computing
+    the computing the cost of different operations associated with indexes。 So on
+    this page， we're only showing the ones for heap file and sort of files as we talked
+    about last week。 The thing that I want you guys to remember is the fact that for
+    one。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是缓冲管理的内容。我想做一些复习。这是我们在星期二展示的第一张幻灯片，讨论的是计算与索引相关的不同操作的开销。在这一页中，我们只展示了堆文件和排序文件的情况，正如我们上周讨论的那样。我想让你们记住的一点是，对于某个操作，…
+- en: we are interested in the average case cost because the worst case is always
+    going to be just the same thing for he file and sort of file and also for indexes。
+    So that's boring。 And the other aspect to remember is that both reading and writing
+    to the disk will cost IOs。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们关注的是平均情况的开销，因为最坏情况总是一样的，无论是对于文件还是排序文件，当然也包括索引。所以那样比较无聊。另外需要记住的是，读取和写入磁盘都会产生
+    IO 开销。
+- en: And then， like， you know， br and D are basically three different constants that
+    we have defined earlier。 Now， in terms of the index for this class， we're just
+    going to assume that we have a clustered index。 So everything is sorted。 And we
+    are assuming a few factor of two thirds。 And then for fan out。 which is this variable
+    I'm defining here as F is basically the internal branching factor inside the tree。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，像你们知道的，br 和 D 基本上是我们之前定义的三个常数。在这门课的索引部分，我们将假设我们有一个聚集索引。所以所有内容都是排序的。我们假设一个二分之三的因子。然后，fan
+    out 这个变量，我在这里定义为 F，基本上是树内的内部分支因子。
+- en: And that's also something that we have already talked about on Tuesday。 And
+    then unless we are talking about insertions and updates。 otherwise we're just
+    assuming that is a static index。 nobody else is touching the index while we are
+    trying to read it。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也是我们在星期二已经讨论过的内容。除非我们讨论的是插入和更新操作，否则我们假设这是一个静态索引。在我们尝试读取它时，没有其他人会修改索引。
+- en: So we have already gone through actually three， the first three types of operations
+    on the third on the in the class on Thursday。 So I'm not doing to repeat the first
+    two。 I can， so but then let's try to revisit this problem of range search and
+    then try to compute the cost associated with that particular operation。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经实际讨论了前三种类型的操作，在星期四的课上。所以我不会重复前两种类型。我可以，但现在让我们再回顾一下这个范围查询问题，尝试计算与这个操作相关的开销。
+- en: So as you recall， the way that we are going to use the index to do range search
+    is as follows。 The first step， we're going to use the index to figure out what
+    is the。 what is the corresponding heap file page that we need to read as the start。
+    So remember。 in this case， we are trying to find all records between three and
+    seven。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你们回忆的那样，我们使用索引进行范围查询的方法如下。第一步，我们使用索引来确定我们需要读取的对应堆文件页面作为起始页。记住，在这个例子中，我们试图找到所有
+    3 到 7 之间的记录。
+- en: which might perhaps span across multiple heap files， he file pages。 So therefore。
+    we are going to first use the index to figure out what is the first page that
+    we need to read。 And then we are going to scan through the leaf pages in the index
+    to figure out how many other heap file pages that we would also like to read。
+    So remember in the index， we are only storing pointers。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些操作可能会跨越多个堆文件，或者堆文件页面。因此，我们首先会使用索引来确定需要读取的第一个页面。然后我们会扫描索引中的叶子页面，找出其他我们希望读取的堆文件页面。所以记住，在索引中，我们仅仅存储的是指针。
+- en: we're actually not storing the actual records， so therefore we first need to
+    scan through the index。 the leaf pages in the index to figure out what are the
+    heap file pages that store records in this case between three and seven。 and then
+    actually go and read the corresponding pages from the heap file。 So in this case。
+    you see that playing up in the bottom of the screen。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们实际上并没有存储实际的记录，因此我们首先需要扫描索引中的叶子页，以确定哪些堆文件页存储了记录，在这种情况下是三到七之间的记录。然后实际上从堆文件中读取相应的页面。因此，在这种情况下，你可以看到它出现在屏幕底部。
+- en: So what is the I/O cost associated with these three steps。 The first step is
+    just basically going to be what we have seen before， right。 so this lock number
+    corresponds to the number of accesses that we need to go through in the index。
+    in order to get to the leaf page， the first leaf page。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么与这三步操作相关的I/O成本是什么呢？第一步基本上就是我们之前看到的内容，对吧？因此，这个锁号对应的是我们需要通过索引访问的次数，以便到达第一页的叶子页。
+- en: So notice again that there's this plus one right because in this class we define
+    the height of the tree to be everything except for the leaf level。 So therefore
+    we need to basically add back the plus one in order to account for the fact that
+    we are retrieving the first page in the。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以再次注意到这里有一个加一的操作，因为在这节课中，我们将树的高度定义为除去叶子层级之外的所有内容。因此我们实际上需要加回这个加一的操作，以考虑到我们正在获取第一页的事实。
+- en: the first leave index page right that corresponds to records with key value
+    equals to three。 The third step as we talk about last time is just going to be
+    the number of pages where the number of pages here just corresponds to the number
+    of pages that stores records between three and seven。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个叶子索引页对应的是键值为三的记录。第三步，我们上次讨论过的，就是页数的数量，这里的页数对应的是存储键值在三到七之间的记录的页数。
+- en: In this case， it is going to be three。 And then the three halves figure that
+    I'm showing you here is just to account for the fact that each of the heap file
+    page is assumed to have to be only two thirds。 Full right for the field factor
+    so therefore we need to actually grab more key file pages in order to store the
+    same number of records as before。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，它是三。然后我在这里展示的三分之二数值就是为了考虑到每个堆文件页假定只有三分之二满的情况。因此，我们需要实际获取更多的堆文件页，以便存储与之前相同数量的记录。
+- en: So therefore that's why we have this three halves here。 And then finally。 for
+    the number of IOs associated with scanning the number of scanning the leaf pages
+    in the index。 I'm just going to over approximate that to be the same as step number
+    three。 This is definitely a gross over approximation because an index leaf page
+    can definitely store way more pointers。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这就是为什么我们在这里有这个三分之二的原因。最后，关于扫描索引中叶子页的IO数量，我将其近似为与步骤三相同。这个近似值肯定是一个过度的估算，因为索引叶子页显然可以存储更多的指针。
+- en: way more information right then what the heap file was stored because the heap
+    file is actually storing records。 But then in this class we're just going to make
+    that approximation to make the math looks simpler。 So the sum of the total cost
+    for this operation it's just going to be adding these three steps together。 So
+    you notice that in this case we actually need to subtract one right so why are
+    we subtracting one with subtracting one in this case because we have over over
+    counted the first leaf page that will read from the index。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 信息量显然比堆文件存储的要多，因为堆文件实际存储的是记录。但在这节课中，我们将做这个近似处理，使得数学看起来更简单。所以这项操作的总成本就是将这三步加起来。因此你会注意到，在这种情况下，我们实际上需要减去一。为什么要减去一呢？因为我们重复计算了从索引读取的第一个叶子页。
+- en: Right， here we add one because within an account for reading off the actual
+    first page in the。 in the leaf level in the index。 But then like you know for
+    step number two right we actually going to read。 we actually also counted that
+    number as well。 So in order not to over count we actually need to subtract one
+    just to make the accounting correct。 So that's why we ended up seeing this number
+    here that you are seeing on the right hand side of the screen。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对的，这里加一是因为我们需要考虑读取索引中叶子层级的实际第一页。但是对于步骤二，我们实际上也已经计算了这个数字。因此，为了避免重复计算，我们需要减去一，以确保账目正确。所以这就是为什么我们最终会看到屏幕右侧这个数字的原因。
+- en: So this is a total cost here right so the total cost I'm showing you here is
+    basically this number that I've computed from the from the previous page。 Any
+    questions about this so far for range search。 Cool。 So now let's go on to talk
+    about insertions。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这里是总成本，实际上我给你展示的总成本是我从前一页计算出来的这个数字。到目前为止，关于范围查询有任何问题吗？很酷。那么现在我们来谈谈插入操作。
+- en: So what do we do for an insertion right so let's say I want to insert the record
+    4。5 into the into the into the database。 So notice that we also need to go through
+    three steps。 First step again we need to find use the index to figure out like
+    you know which page are we actually going to modify in terms of putting in this
+    record。 Second step is we read the corresponding he file page and then actually
+    do the modification。 Right。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们应该如何进行插入操作呢？假设我要将记录4.5插入到数据库中。请注意，我们也需要经历三步。第一步，我们需要通过索引来确定实际修改哪个页面以插入这条记录。第二步，我们读取相应的键文件页面，并进行实际修改。
+- en: so in this case we're going to modify the page here in blue。 And then finally
+    we need to modify both the index leave page right and also the blue page that
+    we have that we have highlighted here at the bottom。 Right， so we need to update
+    the leave page in the index because we have inserted a new record and we have
+    we have to insert a new pointer right。 And then we also need to update the key
+    file obviously because we have inserted something new into the database。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，我们需要修改这里用蓝色标记的页面。最后，我们需要修改索引的叶子页面和我们在底部标出的蓝色页面。所以，我们需要更新索引中的叶子页面，因为我们已经插入了一条新记录，并且我们必须插入一个新的指针。然后，我们显然也需要更新键文件，因为我们已经向数据库中插入了新内容。
+- en: Right。 So what is the cost associated with these three steps。 First step same
+    thing as before。 We need to basically go up go down the index so that's just going
+    to be the height of the index plus one right because we need to read the leaf
+    page of the index。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对的。那么这三步的成本是什么呢？第一步和之前一样。我们需要基本上上下索引，所以这将是索引的高度加一，因为我们需要读取索引的叶子页面。
+- en: And then the cost for step two right it's just going to be one because we already
+    know which file which he file we which part of the he file we need to read and
+    then in this case we are only inserting one record so therefore we need to grab
+    exactly one page。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后第二步的成本其实就是1，因为我们已经知道需要读取哪部分键文件，而且在这种情况下我们只插入一条记录，因此只需要抓取一个页面。
+- en: And then finally for step three， we actually need to do two IOS right because
+    we need to both right back the modified he file page and also the modified leave
+    page from the index。 Does that make sense。 Sorry could you repeat why there to
+    again。 So two is because we need to go right back to he file page with your which
+    you are seeing here in blue。 and also the leaf page from the index right because
+    we have inserted a new record into the into the。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，第三步，我们实际上需要执行两个I/O操作，因为我们需要将修改后的键文件页面和索引修改后的叶子页面都写回。这样理解吗？抱歉，你能重复一下为什么要进行两次操作吗？第二次操作是因为我们需要将修改后的键文件页面（在蓝色部分看到的）和索引中的叶子页面都写回，因为我们已经向数据库中插入了新记录。
+- en: he file。 So the index leave page need to store where that record actually resides。
+    So remember in this case we are assuming that we are not splitting the index we
+    are not increasing like the level of the of the tree we're not increasing。 We're
+    not increasing the height so therefore like you know that is all kind of like
+    you know ignored at the moment so we're purely just adding and other pointer at
+    the bottom of the index for this in this case。 Okay。 So， so the total cost is
+    just going to be this number that you're seeing here on the screen right so just
+    like you know。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 键文件。因此，索引叶子页面需要存储该记录实际所在的位置。请记住，在这种情况下，我们假设不对索引进行拆分，不会增加树的层级，也不会增加高度，因此目前这部分都可以忽略。所以我们纯粹是将另一个指针添加到索引底部。好的。那么总成本就是你在屏幕上看到的这个数字。
+- en: some of all three steps together。 And there we have it。 So that's the cost associated
+    with insertions， and then I'm not going to show the details of the lesions is
+    basically going to the same deal right so we just go down to three and then modify
+    the pages that we need to modify。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将三步的总和加起来。就这样。所以这是与插入相关的成本，然后我不会展示细节，插入操作基本上是相同的处理方式，我们只需要进入第三级，然后修改我们需要修改的页面。
+- en: and then right back the corresponding pages。 So， there was a excellent question
+    raised at the end of last lecture right saying that I mean we really that。 do
+    we really need to be that meticulous and actually going through the actual details
+    and doing all these different accounting。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，正确地返回相应的页面。因此，上一节课结束时，有一个非常好的问题被提出，问到，嗯，我们真的需要那么精细，真的需要经过这些实际的细节并做所有这些不同的计算吗？
+- en: Right， to figure out like you know what is it， what is the actual cost。 The
+    answers， you know。 not quite right。 So we can actually just do this using big
+    old notation that you probably have already learned。 So if we abstract all of
+    these using big O's you see the here like you know there's a very clear picture。
+    Right。 So for instance if we compare with for equality search。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对的，为了弄清楚实际的成本是什么。答案，嗯，不完全正确。所以我们其实可以使用你们可能已经学过的大O符号来做这个。这样，如果我们用大O来抽象这些，你会看到这里有一个非常清晰的图景。对吧？举个例子，如果我们和相等查找进行比较。
+- en: you can definitely see that the using an index is actually way better than using
+    a sort of file。 Right。 The difference here is basically the base of this logarithm。
+    And then if you recall from the last lecture right this number F is typically
+    going to be a really large number。 So it's typically going to be the case that
+    for each internal note inside the leaf we can point to many different leaf notes。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以清楚地看到，使用索引实际上比使用某种文件要好得多。对吧？这里的区别基本上是这个对数的基数。如果你还记得上节课的内容，这个数字F通常会是一个非常大的数字。所以通常情况下，对于每个叶节点内部的节点，我们可以指向许多不同的叶节点。
+- en: So therefore this F is going to be much much bigger than some， than something
+    like to right。 So therefore the cost associated with equality search is going
+    to be much better if we use an index compared to if we use a sort of file。 And
+    of course also if we use compared to if we use a heap file。 You can still see
+    that in some cases like he file actually wins right for instance in the case of
+    insertion he file is a constant cost right because we just attacked a pending
+    a new record at the end of the he file and that's it。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，这个F会比类似2之类的数值大得多。所以，如果我们使用索引，与使用某种文件相比，相等查找的成本会低得多。当然，如果与使用堆文件比较，结果也是一样的。在某些情况下，堆文件实际上会占优，比如在插入的情况下，堆文件是常数成本，因为我们只需要把新记录附加到堆文件的末尾，仅此而已。
+- en: Versus for the cluster of the index we need to update the index， we need to
+    search over it first。 And then we also need to incur the cost of a pending right
+    somewhere inside the he file。 And then the cost here is actually going to be more。
+    So that's why in this case like you know no one all what no one size actually
+    fit all right so you know it depends on the use case and also the pattern。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相比之下，索引聚集的情况，我们需要更新索引，首先要在索引中进行搜索。然后我们还需要支付在堆文件中某个地方进行附加写操作的成本。这样一来，成本会更高。所以这就是为什么在这种情况下，大家都会说，没有一种方法适用于所有情况。对吧？这取决于使用场景以及模式。
+- en: Now there's actually a reason why we actually talk about constant factors right
+    when we're when I was showing you earlier like this kind of messy of arithmetic
+    picture。 The reason is because if you remember from the disk lecture。 the cost
+    of doing sequential IO is actually quite different from the cost of doing random
+    IO。 at least for the case of magnetic spinning disk right if you remember。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上我们讨论常数因子的原因是有原因的。就像我之前向你们展示那种复杂的算术图景。原因是，因为如果你还记得磁盘讲座的内容，顺序IO的成本实际上和随机IO的成本是完全不同的，至少对于磁性旋转磁盘来说是这样的，如果你还记得的话。
+- en: So let's say the ratio is like you're one to 100 right so we do one random IO
+    with them we can do like 100 sequential I was in terms of page reads let's say。
+    I'm making this up obviously right but let's for for a sake of arguments。 So what
+    does that mean right so in the in a B plus tree right we need to go through these
+    different levels in the tree。 and each one of these internal note page reads right
+    it's basically going to be a random IO。 Right。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设比例是1比100，对吧？所以我们做一次随机IO，我们可以做100次顺序IO，假设是按页面读取的。我显然是在胡编乱造，但为了讨论的方便，假设一下。那么这意味着什么呢？在B+树中，我们需要遍历树中的不同层级。每一个内部节点的页面读取，基本上都会是一次随机IO。对吧？
+- en: definitely not going to be sequential because we can be jumping all the way
+    down to the tree。 So therefore each one of these IOS is going to be random。 So
+    if we find the argument here。 then instead of doing that one single random IO
+    we could have already done a lot of other sequential IO's right。 in fact one to
+    100。 So what does that mean。 So that means we better be very selective when we
+    try to read pages from the B tree right。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 肯定不是顺序的，因为我们可能会跳到树的另一端。所以每一个IO都会是随机的。因此，如果我们找到这个论点，那么与其做一个单独的随机IO，我们本可以做更多的顺序IO。事实上是1比100。所以这意味着什么呢？这意味着我们在从B树读取页时最好非常挑剔。
+- en: because otherwise we can easily just could have done way better。 If we do just
+    let's say like he file。 So in fact in this case is given this ratio of one to
+    100 right it's basically saying that we better be visiting very few pages with
+    random IO。 or in other words， like you know this index right。 hopefully it will
+    not have a lot of pages that we need to traverse in order to go down all the way
+    down to the lead。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为否则我们可能就能做得更好。如果我们只做堆文件。事实上，在这种情况下，给定1比100的比例，这基本上意味着我们最好是访问非常少的页，进行随机IO。换句话说，你知道这个索引对吧？希望它没有很多页，我们需要遍历才能到底到底叶子页。
+- en: Otherwise it doesn't make sense right why we're using an index I mean just use
+    a key file and just scan everything。 So there's typically two ways to ensure this
+    is the case。 The first thing is like you know try to use a clustered index as
+    much as possible。 So that basically means we only need to encourage this in initial
+    cost to traverse down the tree to figure out which is the leaf page to read。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 否则就不成立了，对吧？为什么我们要使用索引？我意思是，直接使用键文件然后扫描所有内容不就行了。通常有两种方式来确保这种情况。首先是尽可能使用聚集索引。基本上这意味着我们只需要在初始成本上做一次遍历，查明哪个是要读取的叶子页。
+- en: and then subsequently at once we land in the first page in the heap file then
+    we can either just fetch that one single page if we are doing equality。 or we
+    can just do sequential weights in terms of solving for the case of range query
+    right。 So that's one possibility。 The other possibility you can call that a hack
+    is to basically say just don't use spinning this right。 You know use flash drives
+    right in flash drives has the property that's sequential and random weights have
+    the same cost。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，一旦我们到达堆文件中的第一页，我们就可以根据需要获取这一页，如果我们在做等值查询，或者我们可以根据范围查询的情况进行顺序读取。所以这是一个可能性。另一个可能性，你可以称之为一种变通方法，就是基本上不使用旋转文件。你知道，使用闪存驱动器，因为闪存驱动器有一个特点，就是顺序读取和随机读取的成本是一样的。
+- en: so we're out of the woods right in that case。 So it's not a trick that you can
+    play here but that piece of only the two that I just want to mention to give you
+    guys an idea about this。 Roman you have a question。 Yeah you probably mentioned
+    it but I somehow missed it what is a full table scan and like what isn't B plus
+    tree is a data structure for a table essentially。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在这种情况下，我们就可以摆脱困境了。所以这不是你能在这里玩的小把戏，只是我想提到的两点中的一部分，目的是给大家提供一个大致的理解。罗曼，你有问题吗？是的，你可能提到过，但我不知怎么漏掉了，什么是全表扫描？B+树本质上是一个表的数据结构吗？
+- en: So the tree is a data structure for the index right so when so for full table
+    scan actually we don't need to use the tree right because we just scan all the
+    heap files right so it doesn't matter if even if we had index we're not going
+    to use it。 So the only case that would make a difference is if we're actually
+    doing any of one of these operations that was showing you on the previous slide
+    here right。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 树是索引的数据结构。所以对于全表扫描，实际上我们不需要使用树，因为我们只是扫描所有的堆文件。所以即使我们有索引，它也不会被使用。因此，唯一会产生差异的情况是如果我们正在执行前一张幻灯片上显示的这些操作之一。
+- en: So let's say if I'm doing an insertion right。 So then having an index。 we need
+    to update both the index and the heap file。 So the extra cost incurred in that
+    case right。 And then if I want to do equality search likewise。 Is the decision
+    whether to use a heap file or sort of file user based or is it depends on the
+    data。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以假设我正在进行插入操作。那么在这种情况下，需要同时更新索引和堆文件。所以这时会产生额外的成本。然后如果我想进行等值查询，类似地，决定是否使用堆文件或排序文件是基于用户的，还是取决于数据。
+- en: So that's a great question so in most database implementations that choice is
+    actually kind of thrown back to the user。 So as a user， we can actually define
+    which we can actually declare which they which type of data structure we want
+    to use to store the heap。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是个很好的问题。在大多数数据库实现中，这个选择实际上通常是交给用户的。所以作为用户，我们实际上可以定义或者声明我们想用哪种类型的数据结构来存储堆文件。
+- en: the heap file like sorry to store the actual data。 and also which data structures
+    you use to store the index。 So we can declare a cluster index we can declare an
+    unclustered index。 and that's up to us to define as the user。 And then we can
+    really answer the question right because like you know that's just basically throwing
+    throwing the user under the bus right it's basically saying that well you go figure
+    it out。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 堆文件，比如用来存储实际数据的部分。以及你用来存储索引的数据结构。所以我们可以声明聚集索引，也可以声明非聚集索引，这由我们作为用户来定义。然后我们就能真正回答这个问题，因为这基本上是把问题抛给用户，让用户自己解决。
+- en: So in reality what usually happens is either the database administrator needs
+    to already understand what the queer workload tends to be。 So are we talking about
+    insertion heavy workload are we talking about weed heavy workload right and if
+    so you can choose like you know the right data structures you use based on this
+    slide。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以实际上通常发生的情况是，数据库管理员需要提前了解工作负载的特点。我们是在讨论插入密集型的工作负载，还是查询密集型的工作负载？如果是这样，你就可以根据这一点选择合适的数据结构。
+- en: So we just tune it over time。 So maybe initially we declared one clustered index
+    on a specific attribute。 but turns out that like people actually not queuing on
+    that particular attribute that much so therefore we might as well use another
+    attribute instead for the cluster index。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们会随着时间调整它们。也许最初我们为某个特定属性声明了一个聚集索引，但事实证明人们并没有对这个特定属性进行太多查询，因此我们可能会选择另一个属性来代替作为聚集索引。
+- en: So that can also happen。 Yeah， you have a question。 Please play again which
+    mean by selective。 Yeah so selective in this case just means like you know just
+    don't read that many pages。 It's it's not a technical term it's just basically
+    saying that like just don't do a lot of random I was for the sake of argument
+    because of the ratio that you see here on this slide。 Okay， thank you。 So if SSDs
+    have basically almost the same cost for random it's a country is that implying
+    that like SSDs use like source or heat files。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也可能发生。是的，你有问题吗？请再说一遍“selective”是什么意思？是的，这里“selective”只是意味着你不要读取太多的页面。这不是一个技术术语，基本上就是在说，不要做太多随机的I/O操作，只是为了论证这个比例，如你在这个幻灯片上看到的。好的，谢谢。那么，如果SSD在随机读取时几乎有相同的成本，这是否意味着SSD使用的是源文件或热文件？
+- en: Is that like the case or the other like other structures that they use。 So it
+    just means that like it doesn't really matter in that case like which data structure
+    we use right I mean all these data structures we are using is actually residing
+    in software。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是不是这样，或者是其他结构在使用呢？这意味着在这种情况下，使用什么数据结构并不重要，所有这些我们正在使用的数据结构实际上都是软件实现的。
+- en: So it's not like a hardware thing that we are doing all of these are basically
+    software implementations。 Okay， cool。 Yeah。 But of course as you know right fast
+    drives are more expensive so you're actually paying a premium for doing this right
+    so just to be aware。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这不像是硬件方面的事情，我们做的这些基本上都是软件实现的。好的，明白了。是的。但当然，如你所知，快速驱动器更贵，所以你实际上是在为正确的做法支付额外的费用，所以需要注意这一点。
+- en: So in summary right so in this part of the course for the last two lectures
+    we talked about you know different types of green structures we also talk about
+    data storage at the TIA was basically mentioning about all these different types
+    of indexes and how the actual data can be stored in a。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以总的来说，在这部分课程中，在过去的两节课里，我们讨论了不同类型的树形结构，我们也讨论了数据存储，TIA基本上提到的就是这些不同类型的索引以及实际数据是如何存储的。
+- en: file。 And then just now we also went through like you know the b plus tree and
+    then also the cost model as associated with it。 So obviously as you may know there
+    are actually many different types of index structures out there not just be b
+    plus trees。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后刚才我们也讨论了，比如B+树和与之相关的成本模型。所以显然，正如你可能知道的那样，实际上有很多不同类型的索引结构，而不仅仅是B+树。
+- en: So， and so I encourage you to explore more if you're interested。 And many of
+    them actually domain specific and also create specific depending on what kind
+    of pre use case you have。 So， so if you're ready to hand if you have questions
+    if not I'm just going to switch over in the meantime to the next lectures set
+    up slides。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，如果你感兴趣的话，我鼓励你进一步探索。实际上，很多东西是特定于领域的，也取决于你有什么样的预期使用场景。所以，如果你准备好了，或者有问题的话，随时可以提问，如果没有问题的话，我就会切换到下一个讲座的幻灯片。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_3.png)'
+  id: totrans-51
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_3.png)'
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_4.png)'
+  id: totrans-52
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_4.png)'
+- en: Any other questions in the meantime。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这期间还有其他问题吗？
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_6.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_6.png)'
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_7.png)'
+  id: totrans-55
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_7.png)'
+- en: So， not then let me try to share again。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，那么如果没有问题的话，我再试着分享一次。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_9.png)'
+  id: totrans-57
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_9.png)'
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_10.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_10.png)'
+- en: Cool。 Okay， so for the next lecture for the next topic that we want to talk
+    about we actually want to talk about buffer management。 And here's the big picture
+    that you have seen earlier when we were starting this。 series of lectures on database
+    internals。 So we have already talked about the sequel client right so you guys
+    have already played around with it since the first project。 And you have played
+    around with SQL likes or you know what a sequel client looks like。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 很酷。那么，对于下一个讲座，我们将要讨论的下一个主题是缓冲区管理。这里是你们之前看到的关于数据库内部的系列讲座的大图。我们已经讨论过 SQL 客户端了，你们从第一个项目开始就已经接触过它了。你们也已经玩过
+    SQL 类似的工具，或者说你们知道一个 SQL 客户端是什么样子的。
+- en: We have already talked about the disk。 We talk about a little bit of the technologies
+    involved we also talk about how this actually organized。 We talk about indexes
+    right we talk about different ways to organize files and we also talk about different
+    index structures。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经讨论过磁盘，谈到了一些相关的技术，还讨论了这些是如何组织的。我们讨论了索引，讨论了如何以不同的方式组织文件，也讨论了不同的索引结构。
+- en: So now let's talk about buffer management。 So I'm assuming that probably not
+    many of you understand like what do I mean by buffer management。 It's actually
+    just another level of abstraction。 Right。 as the usual saying goes right anything
+    in computer science can be solved with another layer of abstraction。 So if we
+    already have an abstraction for the disk I mean why not also have one for the
+    buffer or in other words for the memory。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么现在让我们来谈谈缓冲区管理。我假设你们中的大部分人可能不太明白“缓冲区管理”是什么意思。其实它只不过是另一个抽象层次。对吧，正如常说的那样，计算机科学中的任何问题都可以通过增加一层抽象来解决。那么如果我们已经有了磁盘的抽象，为什么不也为缓冲区，或者换句话说，为内存做一个抽象呢？
+- en: So the analogy is the following。 So we have for disk space management we have
+    the disk right we have we have the disk space management。 which basically abstract
+    away the disk。 And then now we're talking about how do we abstract away the main
+    memory。 Right， so in this case main memory is like ran right typically the case。
+    Okay。 so that's what we are calling as buffer management。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类比是这样的。对于磁盘空间管理，我们有磁盘，我们有磁盘空间管理，它基本上抽象化了磁盘。现在我们在讨论如何抽象化主内存。对，在这种情况下，主内存就像 RAM，通常情况下是这样的。好吧，这就是我们所说的缓冲区管理。
+- en: How does it actually work how is this structured。 So as you remember the disk
+    space manager basically have all these different pages right inside is implementation。
+    And then for the last couple of lectures we were basically talking about like
+    how to bring pages into memory。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它是如何工作的？它是如何组织的？正如你们记得的，磁盘空间管理器基本上有所有这些不同的页面，在它的实现中。接下来的几次讲座中，我们基本上是在讨论如何将页面加载到内存中。
+- en: So the abstraction that we have talked about for the disk is basically this
+    like you know page structure as the finer as the lower at the lowest level。 So
+    for main memory we're going to do the same game。 But let's call it something else
+    right so that we don't confuse ourselves with this concept of a page。 So I'm just
+    going to use this term frame which is also what your textbook uses and the next
+    uses as the abstraction that the buffer manager is going to use to represent main
+    memory。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们谈到的磁盘抽象基本上就是这种结构，你知道，页面结构作为最底层的部分。因此，对于主内存，我们也要做同样的事情，但我们叫它别的名字，这样就不会让我们在理解页面的概念时感到困惑。所以我打算使用“框架”这个术语，它也是你的教科书和下文中缓冲区管理器所使用的抽象，来表示主内存。
+- en: So just like we have pages of data so we can also load in from the disk into
+    main memory in these frames。 So for instance in this case I've loaded three different
+    pages from the disk into the free three different frames in the buffer manager。
+    So just like the disk space manager， the go off the buffer manager is also try
+    to create this illusion of somehow manipulating frames in of memory as opposed
+    to needing to deal with。 Are we talking about multiple hierarchy of Rams， are
+    we talking about distributed or like you know local ram and all that stuff。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像我们有数据页面一样，我们也可以将数据从磁盘加载到主内存中的这些框架中。例如，在这种情况下，我已经将三个不同的页面从磁盘加载到了缓冲区管理器中的三个不同框架中。所以，和磁盘空间管理器一样，缓冲区管理器也试图创造一种错觉，让我们像操作内存中的框架一样操作，而不是需要处理多个层级的RAM，或者是分布式的，或者是你知道的本地RAM等等。
+- en: So all that is abstract away with just frames and a bunch of it。 Okay。 In terms
+    of the API is actually very similar to what a disk space manager provides。 So
+    we call that the disk space manager provides this API of reading and writing a
+    page。 So likewise the buffer who manager is just going to also provide this API
+    that says like you know。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有这些都被抽象化为框架和一些内容。好的。在API方面，其实与磁盘空间管理器提供的非常相似。所以我们称磁盘空间管理器提供的API是读取和写入页面。类似地，缓冲区管理器也会提供这个API，用来做一些你知道的事情。
+- en: fast read a page or write a page or write a write yeah or write a frame for
+    example。 So typically operation works like this。 So the higher level in the database
+    implementation is going to call the API from the buffer manager to basically say。
+    I want to read page number one from the desk。 So the buffer manager is going to
+    check with a page number one already exists in one of his frames。 And it's this
+    case in the since that's not the case。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 快速读取一页，或者写入一页，或者写入一份，嗯，或者写入一个框架，例如。通常操作是这样进行的。所以数据库实现中的更高层级会调用缓冲区管理器的API，基本上是说：“我想从磁盘读取第一个页面。”于是缓冲区管理器会检查页面编号一是否已经存在于他的某个框架中。如果存在那是这样，但在这种情况下并不存在。
+- en: it's going to go and talk to the disk space manager。 So ask it to please fetch
+    page number one。 and then put it into the one of the frames that it has。 And then
+    return to the higher level。 Same thing， you know， if another request comes， if
+    another request from comes for like reading page number two。 so we just do the
+    same thing right you know go to the disk because it's not already in memory。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它将去与磁盘空间管理器进行交互，请求它获取页面编号一，并将其放入缓冲区管理器的一个框架中，然后返回给更高层级。一样的事情，你知道的，如果有另一个请求，比如请求读取页面编号二，我们就照做，去磁盘读取，因为它还不在内存中。
+- en: Bring it into one of the frames and then return likewise， so on so far。 So you
+    guys are probably thinking about like you know。 what are the issues involved in
+    like your buffer management right in this under this picture。 Two things first，
+    how do we handle 30 pages。 And second of all。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将其加载到其中一个框架中，然后像之前一样返回，依此类推。你们可能会想到，你们的缓冲区管理有什么问题呢？在这个框架下，涉及到两个问题，首先，如何处理30个页面。其次。
+- en: what happens when we run our frames right exactly what Alex is saying。 So what
+    do I mean by 30 pages。 Well， so we are going to make modifications to the database
+    right so let's say we update a record we insert something we delete something。
+    So all these pages that we have brought into main memory is going to get 30 in
+    a sense right so they have they have been modified。 So we need to be able to handle
+    them by being able to write them back to the disk right in order to preserve persistence。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行完所有的帧时会发生什么呢？正如Alex所说的。那么，我说的脏页面是什么意思呢？我们将对数据库进行修改，比如更新记录、插入或删除内容。因此，所有我们加载到主内存中的页面都会被标记为脏，意思是它们已经被修改。所以我们需要能够处理这些页面，将它们写回磁盘，以便保持持久性。
+- en: Well， how is the buffer manager going to find out which page actually 30 one
+    solution is to always write out every single frame that it has to the disk right
+    but that is wasteful。 So let's keep a little bit of accounting。 So we're going
+    to add a dirty bit to each page that has been brought into main memory in one
+    of these frames。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，缓冲区管理器如何知道哪些页面实际上已经修改了呢？一个解决方案是始终将它拥有的每一个帧都写到磁盘上，但这会造成浪费。所以我们需要做一点点账务管理。我们将在每个已加载到主内存中的页面中加入一个脏位。
+- en: And then we're going to just mark the 30 bit to be one right if it's actually
+    modified by the database。 And what do we do with a 30 page， but we need to write
+    it back using the disk manager right and that we have already discussed in the
+    last lecture。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，我们将标记该脏位为1，如果数据库实际上修改了这个页面。对于脏页面，我们需要将它写回磁盘管理器，这一点我们在上一讲已经讨论过了。
+- en: And you guys should by now be experts in terms of figuring out what is the cost
+    associated with with doing so。 So one other one other question that two other
+    questions that we that we might want to ask before going into the problem of like
+    what happens if we want run out of frames right。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，你们应该已经是专家，能够评估执行这些操作时的成本了。那么，在我们进入“如果我们运行完所有帧会发生什么”这个问题之前，可能还会有两个问题需要我们讨论。
+- en: The first one， what happens if there are multiple concurrent operations on a
+    single page that has been brought into memory。 How can that happen。 Well， maybe
+    you have like two different queries running at the same time trying to update
+    like you know different records or maybe even the same record right on the on
+    the page that has been brought into one of these frames。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个问题是，如果对一个已经加载到内存中的页面进行多个并发操作会发生什么？这种情况怎么发生呢？也许你有两个不同的查询同时运行，试图更新不同的记录，甚至是同一条记录，位于那个已加载到某个帧中的页面上。
+- en: Well so remember this picture that I showed you earlier。 there's this kind of
+    cross cutting module right called the concurrency control mechanism that we'll
+    talk about later on in this semester。 which is responsible for handling that particular
+    situation。 So hold your horses if that's what you have questions about。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，记得我之前给你们展示的那张图吗？有一个跨越性模块，叫做并发控制机制，我们将在本学期后续讲解，它负责处理这种特定情况。所以，如果你有关于这个的疑问，耐心等待。
+- en: Also what happens right if the system actually crashed before the buffer manager
+    able to write anything back to the disk right。 That's also bad right because we
+    try to insert a bunch of records you know in resize and memory。 but then you know
+    the whole thing crash before like you know it's actually persisted onto the disk。
+    Well， so that's why we also have this other cross cutting component called recovery
+    manager。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么如果系统在缓冲区管理器能够将数据写回磁盘之前实际上崩溃了，会发生什么呢？这也是不好的，因为我们试图插入一堆记录，你知道，它们被放入了内存并进行调整。但然后，整个系统崩溃了，数据并没有被真正写入磁盘。那么，这就是为什么我们还需要另一个跨越性的组件——恢复管理器。
+- en: which is responsible for doing that。 And these both of these aspects are cross
+    cutting because of the fact that they pertain not just to the buffer manager。
+    They also pertain to the disk management as well right as you can imagine the
+    same situation。 The disk manager tries to write something back and right before
+    it actually land onto the data right。 you know right before the data actually
+    lands onto one of these platters on the disk。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两个方面的操作都是跨越性的，因为它们不仅仅涉及缓冲区管理器，还涉及磁盘管理器。如你所见，磁盘管理器试图写入某些数据，而就在它实际写入数据之前，数据还没有写到磁盘的某个盘片上。
+- en: The whole thing crash right。 So what now。 Same problem right。 And what happens
+    if like you know multiple page multiple multiple API's get calls from the disk
+    manager to try to write back like you know the same page to the disk right what
+    happened in that case。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 整个系统崩溃了，对吧？那现在怎么办？同样的问题。然后如果像你知道的那样，多个页面，多个API从磁盘管理器发出调用，试图将同一页面写回磁盘，会发生什么？
+- en: So we have we need to have a concurrency control mechanism as well。 But as I
+    said。 we'll cover these extensively in the later part of this semester so don't
+    worry about that for now if that's what your question is about。 Yeah。 So my question
+    is， how is this different from the buffer management in the operating system。
+    Excellent question， just hold on to that and I'll try to answer that if not like
+    you know racial question again。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们需要有一个并发控制机制。但正如我所说，稍后学期的后半部分我们会详细讨论这些内容，所以现在不用担心，如果你的问题是关于这个的。对，是的。那么我的问题是，操作系统中的缓冲区管理和这个有什么不同？非常好的问题，稍等一下，我会尽力回答，如果没有的话，就像你知道的，可能又是一个种族问题。
+- en: Okay， thank you。 No other questions。 Okay， so let's take a look at what is the
+    implementation of a buffer manager really internally what happens。 As I said，
+    we need to keep track of a bunch of frames right。 So the way that it works typically
+    is the buffer manager just calls the operating system and try to allocate a huge
+    amount of memory。 So this also answer the question of the interest right so you
+    know how is this different from the operating systems。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，谢谢，没有其他问题。那么，让我们来看看缓冲区管理器的实现到底是怎样的，内部到底发生了什么。如我所说，我们需要跟踪一堆页面。所以它通常的工作方式是，缓冲区管理器调用操作系统，尝试分配大量的内存。这也回答了兴趣的问题，知道吗，和操作系统有什么不同。
+- en: It's very similar， except that just like in the this manager case if you remember
+    the lecture that I had like you know to last week about how we can bypass the
+    OS in terms of like you know。 allocating a gigantic file and then claiming that
+    we're managing it ourselves。 Same story here。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它非常相似，除了就像在这个管理器的例子中，如果你记得我前两周的讲座，讲的是我们如何绕过操作系统来进行内存分配，比如说分配一个巨大的文件，然后声称我们自己在管理它。这是同样的道理。
+- en: We asked the OS to basically gives us as much memory as we need。 and then we
+    just tell the OS to please go away。 If you take 162 or any anybody from 162 here
+    is like you know you guys might just like you know kick my butt right you know
+    saying that you know the OS actually Mike also be able to manage that like why
+    we doing this like you know inside the database manager。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们请求操作系统基本上给我们需要的所有内存，然后我们只告诉操作系统请离开。如果你上过162课或者任何一个162的同学在这里，你们可能会说你知道的，你们可能会说操作系统其实也能管理这些，为什么我们要在数据库管理器内部做这个？
+- en: The DBS right and the reasons because in some cases we actually have more precise
+    information about the workload。 No better than the OS in terms of like you know
+    when do we want a particular page to be written back to the disk。 So therefore，
+    for most implementations that we are aware of for DBS。 We basically just try to
+    take over the operating system by asking it to just allocate a whole bunch of
+    memory just like for this manager case。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据库系统对工作负载有更精确的信息，这在某些情况下比操作系统更好，知道吗，比如我们什么时候想把特定页面写回磁盘。因此，对于我们所知的大多数数据库系统实现，我们基本上只是试图通过请求操作系统分配一大块内存，像在这个管理器的例子中一样，来接管操作系统。
+- en: So like this is not the only design， so you can definitely stop rely on the
+    operating system if that's if that's what you want it。 But then I'm just claiming
+    that the DBS usually has more application knowledge or knowledge about how the
+    workflow is going to be using these frames so therefore it might be able to make
+    better utilization compared to the operating system。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这不是唯一的设计，你完全可以选择不依赖操作系统，如果那是你想要的。但我在这里声称，数据库系统通常对如何使用这些页面的工作流程有更多的应用知识或了解，因此它可能比操作系统更好地利用这些资源。
+- en: So that's the first part of a buffer manager。 So we need to keep track of all
+    these different frames。 And we need to do a little bit of accounting right so
+    as I said we need to we need to somehow store this 30 bit。 Right， basically whether
+    each of the pages brought into the frame has been updated。 So for that we're going
+    to implement that using some smallish array or some hash table if you like right
+    this is purely in memory。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是缓冲区管理器的第一部分。我们需要跟踪所有这些不同的帧，并且需要做一点账务管理。正如我所说，我们需要以某种方式存储这个固定计数位，基本上表示每个被载入帧的页面是否已被更新。为了实现这一点，我们会使用一个小的数组或者类似哈希表的结构，这完全是在内存中进行的。
+- en: So this is just basically going to store for each frame。 which this page do
+    we actually have we actually fetch right if any。 and then we're going to basically
+    say like you know how many where is 30 or not。 This pin count we're going to go
+    into detail in just a second。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这基本上就是为每个帧存储我们实际上获取了哪个页面，如果有的话。然后我们基本上会记录，比如说它是“被固定”的，或者是否为30。这部分的固定计数我们稍后会详细讨论。
+- en: Okay so for us questions so dirty basically just means where do we have modified
+    a particular page that we have brought into main memory。 So a typical operation
+    is something like this right so like you know we have all these pages brought
+    from the disk into these frames。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，接下来是问题。脏位基本上表示我们是否修改了已载入主内存的某个特定页面。一个典型的操作是这样的：我们将所有这些页面从磁盘载入到这些帧中。
+- en: Some of them will be modified by the database as part of an update or insertion
+    or deletion。 And then some of it might be read by the database because it's trying
+    to answer query right。 So in all these cases we don't want to get rid of that
+    page right we cannot write that page back or like evake that or empty that frame
+    because somebody else right is actually operating on it。 whether it's right or
+    read or whatever。 So that's where this pin count is actually coming into play。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中一些页面会被数据库修改，作为更新、插入或删除的一部分。还有一些可能会被数据库读取，因为它试图响应查询。因此，在所有这些情况下，我们都不希望丢弃那个页面。我们不能将页面写回或驱逐它，或者清空那个帧，因为其他查询仍在操作它，无论是写操作、读操作还是其他操作。所以，这就是固定计数派上用场的地方。
+- en: So the pin count is basically going to tell us that someone。 somebody right
+    some other query is actually operating on this page。 So please try。 please don't
+    empty it or please don't evake it yet。 So notice that this is different from the
+    dirty bit right。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，固定计数基本上会告诉我们，某个查询实际上在操作这个页面。因此，请不要清空它，也不要驱逐它。请注意，这与脏位是不同的。
+- en: because a query can be just reading a page and not actually modifying it。 And
+    even in that case we don't want that page to be evicted。 So it's definitely the
+    case that if someone is making modification because of a right we definitely don't
+    want to kill off that page right by like you know emptying it or like writing
+    it back to this yeah right because the operation might not have finished。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为查询可能只是读取页面，而实际上并没有修改它。即使在这种情况下，我们也不希望该页面被驱逐。因此，绝对可以确定，如果有人因为写操作而进行修改，我们肯定不希望通过像清空页面或将其写回等操作来移除该页面，因为操作可能尚未完成。
+- en: And the same thing also for a read right。 So we're just using this pin count
+    as a way to keep track of how many queries are we actually is actually operating
+    on a single page。 And it's not enough to just keep a binary zero or one right。
+    Why do you think that's the case I mean why do we actually need to count as opposed
+    to just a binary bit to say that like you know whether zero or one right why do
+    we need to actually keep track of it as a number。 Anyone。 We need to make sure
+    that all the users that are on the page are done before we eat。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于读取操作也是一样的。所以我们使用这个固定计数来跟踪多少个查询实际上在操作一个单一页面。仅仅使用一个二进制的零或一是不够的。你们觉得这是为什么呢？为什么我们需要记录它作为一个数字，而不仅仅是一个二进制位来表示“是”或“否”？有谁知道吗？我们需要确保在驱逐页面之前，所有在页面上的用户都已经完成了操作。
+- en: Exactly right so imagine the case where we have multiple queries trying to read
+    a particular page right maybe page six right in this case。 So even if one of the
+    queries is done， we need to figure out that we need to make sure that the other
+    query right is also finished before we can evict page number six right for example。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完全正确，假设我们有多个查询试图读取某个特定页面，比如第六页。那么即使其中一个查询已经完成，我们仍然需要确保在驱逐第六页之前，其他查询也已经完成。
+- en: So that's why it's actually a number is not sufficient to just keep that as
+    a binary variable。 Good job。 So what happens now then right so if a page is requested
+    right so as I said。 if we find a page that is not actually in the buffer pool
+    then the first thing that we do is we basically try to figure out if there's a
+    page that we can。 that we can replace right maybe a page that is not pin for example。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，这就是为什么仅仅使用一个数字作为二进制变量并不足够。做得好。那么接下来会发生什么呢？如果请求一个页面，正如我所说，如果我们发现一个页面实际上不在缓冲池中，那么我们首先要做的就是弄清楚是否有一个页面可以替换，可能是一个没有被固定的页面。
+- en: And then if the frame is actually dirty， then we just write it back to the disk
+    and then we mark that slot to be available。 And then we just read from the from
+    the disk manager right and then that's it and then we just returned that after
+    pinning it right because we now know that somebody is operating on that particular
+    page that we have just brought into memory。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，如果页框实际上是脏的，那么我们就把它写回磁盘，然后标记该位置为可用。接着，我们从磁盘管理器那里读取数据，对吧，然后就这样，之后我们将它返回，经过固定操作，因为我们现在知道有人正在操作我们刚刚带入内存的那一页。
+- en: Now it would be great right if we can somehow predict right what are the pages
+    that is going to be a used。 Same thing also for the disk manager right if we can
+    prefetch them that's awesome。 because as you remember all the things associated
+    with sequential reads and all that good stuff right so we can perform sequential
+    scans that's great for the disk。 And it's also great for us at the buffer management
+    as well right because we know how many slots we need to be able to allocate because
+    we。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，如果我们能以某种方式预测哪些页面将会被使用，那将会是非常好的。同样，对于磁盘管理器来说也是如此，如果我们能预取它们，那就太棒了。因为正如你记得的那样，所有与顺序读取相关的操作都很有利，因此我们可以进行顺序扫描，这对磁盘来说是非常好的。对于缓冲管理来说也非常有利，因为我们知道需要多少个插槽才能分配，因为我们...
+- en: because if that because we can predict how many pages will be operated on。 So
+    of course then the million dollar question is like you know what happens if the
+    buffer pool is actually full。 And besides that we need to basically evict some
+    of the existing pages that we have right， and to。 to be systematic about this，
+    the way that we decide which page to actually get rid of is based on something
+    called a page replacement policy。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为如果这样做的话，我们可以预测将有多少个页面会被操作。所以，当然，百万美元的问题是，如果缓冲池实际上已经满了会怎样？除此之外，我们还需要驱逐一些已经存在的页面。为了有系统地处理这个问题，我们决定到底驱逐哪个页面是基于一个叫做页面替换策略的东西。
+- en: There are many different page replacement policies out there and for the sake
+    of this class we just described two of the simplest ones that that is actually
+    used these days and actual implementations。 First one is something called least
+    recently used or you。
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有许多不同的页面替换策略，为了本课程的目的，我们只描述了两种当前实际实现中使用的最简单策略。第一个叫做最近最少使用（least recently used），或者简称
+    LRU。
+- en: And there's an approximation scheme based called clock policy。 which is basically
+    a modification of you。 And then there's also something called MOU that we'll discuss
+    in this class。 Now all of these actually have huge impacts on the number of IOs
+    as you can imagine right because depending on which page we will evict that will
+    also take how many pages we can bring into memory。 And how we are bringing pages
+    into memory， depending on whether we are doing a sequential random I'll that we
+    have already seen has a huge impact in terms of overall costs。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一个叫做时钟策略（clock policy）的近似方案，实际上它是你的一种修改。然后还有一个叫做 MOU 的东西，我们将在本课程中讨论。现在，所有这些实际上都会对
+    IO 的数量产生巨大影响，正如你可以想象的那样，因为根据我们将驱逐哪一页，决定了我们能够带入内存的页数。而我们将页带入内存的方式，取决于我们是否正在进行顺序读取或随机读取，正如我们已经看到的那样，这对整体成本有很大的影响。
+- en: So what is the MOU policy， it's pretty simple。 So we just basically try to evict
+    the page that is least recently used right I mean as the name suggests。 So we
+    basically try to first of all we're not going to evict anything that is pinned。
+    because we know that those are not available to be replaced。 And then we somehow
+    just track the time right that each frame was has elapsed since each page was
+    last and pinned。
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么 MOU 策略是什么呢？其实很简单。我们基本上是尝试驱逐最近最少使用的页面，正如名字所示。所以我们基本上首先要做的是，不会驱逐任何被固定的页面，因为我们知道这些页面不能被替换。然后我们会以某种方式追踪每个页框自上次固定以来已经过去的时间。
+- en: And then we just pick the frame that was least recently used in terms of these
+    this time in terms of the time。 and then we'll just evict it。 So for example，
+    in this case I've added this last use column right so this is again metadata that
+    the buffer manager keeps。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，我们就选出最后使用时间最久的帧，也就是那个最久未使用的帧，接着驱逐它。例如，在这个例子中，我添加了一个“最后使用”列，这也是缓冲池管理器所保留的元数据。
+- en: And then you know you see that in this case， which one should we evict we just
+    evict the one that is like you know the least use here right so like you know
+    for example like this 111 here will you。 You will recall hopefully that this is
+    actually something that has already been covered in 61 C。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，你知道在这种情况下，我们应该驱逐哪一个？我们只需要驱逐那个使用最少的条目，就像你看到的这个111，对吧？你应该能回想起来，这其实是在61 C课程中已经讲过的内容。
+- en: Right。 And just so we remind ourselves of what this means right actually went
+    on to the 61 C course website and just to check it out right that this is actually
+    covered to ensure that that's in the case。 But this was in another context right
+    so in this class they were covering it in terms of trying to figure out which
+    of the cash entries to evict。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对，为了提醒自己这个是什么意思，我实际上去了61 C课程的网站检查了一下，确认这部分内容确实已经讲过。只是这次是在不同的上下文中讲的，在这门课上他们是在讨论如何确定驱逐哪些缓存条目。
+- en: So similar story here right except that we're not evicting cash entries we actually
+    evicting pages or frames right from a buffer manager。 some， some， it's basically
+    the same thing。 And just so that we are we knew my thing you know I'm thinking
+    up this some some some like you know ancient semesters actually something that
+    was covered in the spring right just to ensure that we're all on the same page
+    here。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里的情况类似，区别在于我们不是驱逐缓存条目，而是从缓冲池管理器中驱逐页面或帧。某些情况下，实际上两者是相似的。而且为了确保我们理解，我想起了某些古老的学期内容，实际上这些内容是在春季学期讲过的，只是为了确保我们都在同一页上。
+- en: All right， so yeah as I said right so in this case we are going to evict the
+    first one that was least used right so in this case frame number four because
+    like you know based on the last use。 Time that's like basically the least。 And
+    then if we need a second page we're going to evict the second least use right
+    in this case like you're the one with 15。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，正如我所说的，在这种情况下，我们将驱逐第一个最少使用的页面，也就是根据最后使用时间来看，帧号四的页面，它基本上是最少使用的。如果我们需要第二个页面，我们将驱逐第二个最少使用的页面，在这个例子中就是那个使用了15次的页面。
+- en: This is obviously a very simple policy you can imagine。 and it's also good for
+    temporal locality just like what we have already discussed hopefully 61 C as well。
+    But it's this actually can be costly right， because we need to always try to figure
+    out what is the least。 We least recently used page right in order to do that we
+    need to not just keep around this last use column。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然，这是一种非常简单的策略，你可以想象得到。而且它对时间局部性也很有效，就像我们在61 C中讨论的那样。可是，这种策略实际上是有成本的，因为我们需要不断地找出最少使用的页面。为了做到这一点，我们不仅仅需要保留这个“最后使用”列。
+- en: and also run a query right so to speak。 So figure out what is the last used
+    page right。 There are different ways you can solve the problem for instance there
+    are like different specialized data structures just to find the minimum。 So like
+    a priority heap for example， can be used， or we can always just scan all the pages
+    right and figure out which one is the least used I mean you can use your favorite。
+    algorithm here。 So， there's also something else that we can do which is an approximation。
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你还可以运行一个查询，换句话说，找出最后使用的页面。解决这个问题有不同的方法。例如，有一些专门的数据结构可以用来找到最小值。例如，优先队列（priority
+    heap）就可以使用，或者我们也可以扫描所有的页面，找出哪个是最少使用的。我意思是，你可以使用你喜欢的任何算法。所以，我们还可以做一些近似处理。
+- en: So let's say I don't want to keep account of everybody in terms of this last
+    used number。 but I still want to approximate least recently used。 How can I do
+    that we can use something called the clock policy。 So here's the state of the
+    buffer pool manager， as we were talking about earlier。
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我不想根据最后使用的编号来记录每个人，但我仍然希望近似实现最近最少使用（LRU）。我该怎么做呢？我们可以使用一种叫做时钟策略（clock policy）的方法。以下是缓冲池管理器的状态，就像我们之前讨论的那样。
+- en: what we are trying to use this clock thing for right it's basically an approximation
+    scheme to figure out which is the least recently used page。 Approximately speaking。
+    So， it's not always going to return the really least recently used it can return
+    something that is actually not the most recently used。
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们使用这个时钟机制的目的是，它基本上是一种近似的方案，用来找出最不常使用的页面。大致来说，它并不总是会返回真正最不常使用的页面，但它可以返回一些实际上并非最常使用的页面。
+- en: but then in terms of the overhead and maintaining this data structure。 it will
+    be actually something simpler。 So let's see how it works。 So as the name suggests
+    is called the clock， because we actually have a clock hand。 which is basically
+    the next page that we will consider as the candidate for eviction。 So。
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在维护这个数据结构的开销方面，它会更简单。所以让我们看看它是如何工作的。正如其名，它叫做时钟，因为我们实际上有一个时钟指针。它基本上是下一个我们将考虑作为驱逐候选的页面。所以。
+- en: in each of the pages， we're going to add one other bit， called the reference
+    bit。 which is basically just something that we use to keep track of whether this
+    is something that actually has been recently used。 you see how that works in just
+    a second。 So instead of keeping track of this number， right。 of time right that
+    it was least that was last used。
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在每个页面中，我们将添加一个额外的位，叫做参考位。它基本上是我们用来跟踪这个页面是否是最近被使用过的内容。你很快就能明白它是怎么工作的。所以我们不再追踪这个数字了，对吧？我们追踪的是它最后一次被使用的时间。
+- en: I'm just going to modify this to just use one single bits right like just like
+    what I was saying。 And then we're going to keep this extra variable called the
+    clock hand I was alluding to earlier to figure out what is the next page that
+    we should check。
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我只是修改这个，只使用一个位，就像我之前说的那样。然后我们会保持这个额外的变量，叫做时钟指针，正如我之前提到的，来确定我们应该检查的下一个页面是什么。
+- en: So， the next thing that works is the following。 So let's say something now comes
+    along and say I want to be able to read page number seven。 which is not currently
+    in the buffer。 So we're going to look at the clock hand and try to see if we should
+    if this is if whatever page that is pinned that is currently pointed to by the
+    clock hand is the victim that should be evicted。
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，接下来工作的是这样的。假设现在有某个请求，想要读取页号七，而它当前不在缓冲区。所以我们将查看时钟指针，看看是否应该驱逐当前时钟指针指向的、已经固定的页面。
+- en: So this page is not because this actually has been pinned right。 Somebody is
+    actually looking at this page at the moment so we cannot evict that so let's skip
+    that。 So then so then we advanced the clock hand to the next page。 So the next
+    page now is going to do the same check right I mean is it pinned。 No， it's not
+    pinned。
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这页并没有被驱逐，因为它已经被固定了。有人正在查看这页，因此我们不能驱逐它，所以跳过这一页。然后我们将时钟指针移动到下一页。所以接下来的页面现在也要进行相同的检查，意思是它是否被固定？不，它没有被固定。
+- en: but then this reference pin here is sorry this reference bit here is actually
+    a sex。 So it basically means that is probably something that was recently fairly
+    recently used。 So we're also going to skip that as well。 We're going to advance
+    the clock and again。 and then we'll find a page in this case page number four，
+    which is not pinned。
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是这个参考位在这里实际上是一个标志。所以它基本上意味着这可能是最近被使用过的内容。所以我们也将跳过这一页。我们将再次前进时钟指针。然后我们会找到一个页面，在这个例子中是页号四，它没有被固定。
+- en: And also not set in terms of this reference bit， meaning that it's something
+    that has been read or used fairly fairly far away in time right。 So in this case，
+    this is actually going to pay to be the page that we will replace with page number
+    seven。 So， but then right now that we have brought page number seven into the
+    buffer pool we need to make sure that we're not going to evict that。 like you
+    know on the next cycle let's say right。 So this is by exactly setting both this
+    pin because somebody is reading it and also set this reference bit that you see
+    here。
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且也不会根据这个参考位来设置，意味着它是某个被读取或使用过的内容，且距离现在的时间已经有一段较远的距离了。所以在这种情况下，这实际上就是我们将用页号七来替换的页面。所以，现在我们已经将页号七带入缓冲池，我们需要确保在接下来的周期中不会将其驱逐。就像你知道的那样，假设在下一个周期。所以，这正是通过设置这个固定标志，因为有人正在读取它，同时也设置你在这里看到的这个参考位来实现的。
+- en: Right。 So in this case we're setting both the reference bit for page number
+    seven because that basically signifies that we have recently brought us into frame
+    into the main memory。 And then we're going to be dependent because we know that
+    somebody else is going to be using that and。
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对。在这种情况下，我们设置了第七页的参考位，因为这表示我们最近将这个页面加载到主内存中。然后我们会依赖它，因为我们知道其他地方也会使用它。
+- en: and like you know after we return。 Right。 So we're just going to advance the
+    clock because basically that means like next time when we need to evict another
+    page we're not going to evict page seven immediately we're going to look at the
+    next one。 In this case page five。 And then we're going to return a pointer to
+    page seven to the upper level and then we are done。
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像你知道的，返回之后。对。我们只是推进时钟，因为基本上这意味着下次当我们需要驱逐另一页时，我们不会立即驱逐第七页，而是会查看下一页。在这种情况下是第五页。然后我们会把指针返回给第七页，传递给上层，然后我们就完成了。
+- en: Does this make sense to people who people have questions about this policy。
+    I had a question about ref reference bit what can you repeat what's that all about。
+    So the reference bit is basically approximation as to how recently has a particular
+    page been used。 Oh， so this is replacing the method where we count how many times
+    is that we're not carrying anymore we're just using one single bit。
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家能理解吗？有没有人对这个策略有问题？我有个问题，关于参考位的，能重复一下这是怎么回事吗？参考位基本上是一个近似值，用来表示某个页面最近是否被使用过。哦，所以这是取代之前的方法，我们不再统计页面被访问的次数，而是只用一个位来表示。
+- en: So if we visit a page that was not pinned， but has the reference bit sets for
+    instance in this case patient number three。 We're not going to evict that because
+    it's basically saying that is very recently used。 But then we're going to unset
+    that bit right because next time we visited it then is no longer recently used
+    whatever recently used me。 So it's basically an approximation。 So if you're traversing
+    through these things and you're not using it you're going to unset the bit。
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果我们访问一个没有固定但参考位已设置的页面，比如这个例子中的第三页，我们不会驱逐它，因为这表示它最近被使用过。但我们会取消设置这个位，对吧？因为下一次访问时，它就不再是最近使用的页面了。不管“最近使用”是什么意思，反正这就是一种近似值。所以如果你遍历这些页面而不使用它，就会取消设置这个位。
+- en: And that's how they get removed。 Well， so a page needs to be first unset sorry
+    a page needs to be first unpinned and then also unset before it will be considered
+    as a candidate for eviction。 I see。 So the unpinning is done when the query is
+    done right so that's we understand。
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是它们被移除的方式。嗯，所以一页需要先取消固定，然后再取消设置，之后才会被视为候选页来进行驱逐。明白了。那么取消固定是在查询完成后进行的，对吧？这点我们理解了。
+- en: And then the unsetting of the bit is done by this clock hand。 So every visitor
+    page that is unpinned， but with the reference bit set。 Then the thing that we're
+    going to do is we're going to just unset that bit and then move on。 We're not
+    going to touch that page yet。 So that's the approximation here。 Felix。
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后这个取消设置位的操作是由时钟指针完成的。所以每次访问一个取消固定但参考位已设置的页面时，我们会做的事情就是取消设置那个位，然后继续前进。我们不会立即处理那个页面。所以这就是这里的近似方法。Felix。
+- en: Is there anything like is it like convention that's just one bit or is there
+    anything like stopping us from maybe using like two or three if like there's a
+    lot of frames。 Yes， sure。 So in fact it doesn't so the one bit is enough to basically
+    notify the clock hand right that this this particular page has been recently used
+    right。
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么这种方法是像约定俗成只使用一位吗？还是有什么原因不允许我们使用两位或三位，比如说当页面数量很大时？是的，没错。实际上，一个位就足够了，基本上可以通过它来通知时钟指针，表示这个页面最近被使用过。
+- en: So now the question that you asked is like you know why not use more bits to
+    represent that。 Sure。 In fact， we can use 32 right。 If we use 32 bits， then we
+    just reduce down to the to the our policy that we had from before。 We're just
+    keeping track exactly off like you know how recently something has been used we're
+    just going back to the integer number。 Thank you。 Yeah， makes sense right so we're
+    basically just approximating that number 32 bits of 64 whatever we're just one
+    single bit to approximate。
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你刚才问的问题是，为什么不使用更多的位来表示呢？当然。实际上，我们可以使用32位。若使用32位，那么我们就回到之前的策略。我们只是精确追踪某个页面最近是否被使用，就回到整数的表示方式。谢谢。是的，明白了，实际上我们就是在用32位、64位或者其他任何单一位来近似表示。
+- en: So， you know， if there's a situation where all the pages are pinned。 Is there
+    any kind of like a way to for other pages that to come in。 Yeah。 then in that
+    case we really screwed I'm sorry。 If everything if all the pages are pinned right
+    that means like you know some query somebody is basically touching them all like
+    all of those pages at the same time。 So we can the only thing that we can do is
+    just like you know delay processing the next query。 Yeah。
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，你知道，如果有一种情况，所有页面都被固定了。有没有办法让其他页面进入呢？是的，那么在这种情况下，我们真的很糟糕，对不起。如果所有页面都被固定了，那就意味着某个查询正在触及所有这些页面。所以我们能做的唯一事情就是推迟处理下一个查询。
+- en: thank you。 I'll just buy more this。 Bye。 So this hand mechanism。 Like how do
+    you know which one will be next。 Yeah so it's somewhat arbitrary right so I'm
+    just using this pictorial pictorial illustration of like a clock on rotating to
+    basically go around and like you know check which one should be the next victim。
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谢谢。我会再买一些。再见。所以这个机制。你怎么知道下一个应该是哪个呢？是的，所以这有点任意对吧，我只是用这种图示来表示一个旋转的时钟，基本上就是绕一圈，检查哪个页面应该成为下一个受害者。
+- en: But you can basically like you know use your own mechanism to figure out what
+    is the way to to go around all these pages right。 So obviously we don't want to
+    always just visit one or two of the pages because that basically means like you
+    know only those two will be evicted but like everybody else will not so that's
+    bad。
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但你基本上可以使用你自己的机制来搞清楚如何遍历这些页面，对吧。显然，我们不想总是只访问其中一个或两个页面，因为那样基本上意味着只有这两个页面会被淘汰，其他页面则不会，这样就不好了。
+- en: So we definitely want to go around everyone。 But then we regard to like you
+    know what is the way to go around I mean that's somewhat arbitrary。 Oh， and then
+    H。 Sorry。 I'm not sure what your name is。 Yes。 just curious like is the least
+    frequently used data structure ever used compared to L。 R。 U。 and like why is
+    L。 R。 U。 much more popular compared to the L。 F。 U。 Oh。
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们绝对想要遍历每个页面。但至于如何遍历，我是说，这有点任意。哦，然后H，抱歉，我不确定你的名字是什么。是的，挺好奇的，最不常用的数据结构是否曾经与LRU进行过比较，为什么LRU比LFU更受欢迎？
+- en: at least frequently used I see so it all depends right so in fact that's the
+    next thing that we want to talk about right so when is something good for these
+    two different policies right you can already see the difference here。 So I would
+    actually claim that for repeated access to popular pages this is actually good
+    because for you and also for the clock policy。
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 至少是我看到的最不常用的，所以一切都取决于对吧，事实上，这就是我们接下来想要讨论的内容，对吧，什么时候这种策略适用于这两种不同的策略，对吧，你已经可以看到这里的区别了。所以我实际上会认为，对于对流行页面的重复访问，这种策略其实是有效的，因为对于你和时钟策略来说都是如此。
+- en: We won't evict those pages， but I'm not claiming that this is like the ideal
+    case right it actually all depends on what is the access pattern that we have。
+    Right。 But then at least in comparison between L R U and clock you can already
+    see that for clock policies cheaper right because we don't need to find out the
+    exact minimum in terms of the most recently。
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不会淘汰那些页面，但我并不认为这是理想的情况，实际上，一切都取决于我们所拥有的访问模式，对吧。但至少在比较LRU和时钟策略时，你已经可以看到，时钟策略更便宜，因为我们不需要找到最近最少访问的确切页面。
+- en: most least recently used。 And it's also less costly because we are approximating
+    numbers with a single bit。 Right。 And like you know that's basically one of the
+    one of the ideas and then you can basically try to find cases where they actually
+    different and I actually encourage you to do that right let's say you want to
+    compare to L。
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最近最少使用。并且它的成本也较低，因为我们用一个单独的位来逼近数字，对吧。就像你知道的那样，这基本上是其中一个思路，然后你基本上可以尝试找到它们实际不同的情况，我实际上鼓励你去做这个，对吧，假设你想要和L进行比较。
+- en: F。 U。 or any other schemes。 But even in the case of you right there was already
+    a problem for you and clock policies as well。 And people think about like when
+    these two policies is particularly bad。 Maybe if you're like accessing things
+    like a cycle but it's like。 Yeah so like if you're accessing something and then
+    like it takes a while before you access it again but it's like a repeated process
+    you're just going to have to like read those stuff。
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: F、U 或者其他任何方案。但即使在你的情况下，时钟策略也已经存在问题了。人们会思考这两种策略何时特别差。也许是当你访问像循环这样的东西时，但就像，是的，如果你正在访问某些内容，然后在一段时间后再次访问它，但这是一个重复的过程，你只会继续读这些东西。
+- en: Exactly right。 So what's it like that right so let's say I want to repeat a
+    scan。 What do I mean by that well I we see here at the bottom of the screen we
+    have a disc manager of like you know seven different pages。 So let's say I want
+    to go through pages from one to seven in that order over and over again。 Maybe
+    we're running the same clearly over and over again right。 So let's do the experiment。
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没错。那么这是什么样的情况呢？假设我要重复扫描。那么我指的是什么呢？你看，屏幕底部我们有一个磁盘管理器，里面有七个不同的页面。假设我想按从第一页到第七页的顺序反复扫描。也许我们正在反复执行同一个查询，对吧？那么让我们来做个实验。
+- en: So we have six pages in memory we have seven pages on the disc。 If we want to
+    first read the first page great we read it in bring it into the frame。 Second
+    page likewise right you get the drill。 We basically fill up this entire buffer
+    pool with the six first six pages。 But now the fun begins right with the seventh
+    one because now we need to be able to evict something。
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的内存里有六个页面，磁盘上有七个页面。如果我们先读取第一页，那就太好了，我们将它带入缓冲区。第二页也是如此，对吧，你明白了。我们基本上填满了这个缓冲池，里面是前六个页面。但现在有趣的部分来了，问题出在第七个页面上，因为我们需要逐出一个页面。
+- en: Right so now we will miss every time right so why because we try to bring in
+    right the seventh page。 And then based on our you right we are going to evict
+    the first one because the first page was the least recently used。 Okay， so for
+    the seventh attempt we are going to bring back bring in page number seven kill
+    off page number one。 But then in this case we have this repeated scan right we're
+    going to scan through these seven pages from the disc repeatedly in that order。
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对了，现在我们每次都会错过对吧，为什么呢？因为我们尝试将第七页带入。然后根据我们的操作，我们将逐出第一页，因为第一页是最近最少使用的。好吧，所以在第七次尝试时，我们将带入第七页，逐出第一页。但是在这种情况下，我们会反复扫描这七个页面，从磁盘按这个顺序不断读取。
+- en: So we want to bring back page number one but unfortunately page number one is
+    already out right is not in the buffer pool。 So we need to evict something。 What
+    is the next thing。 So we need to make it to page number two。 Right， I mean you
+    get the idea here right so in this case we're basically not going to get ever
+    any cash hit at all。 Right， because we always need to bring something in。
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们想要带回第一页，但不幸的是，第一页已经不在了，对吧？它不在缓冲池中。所以我们需要逐出一些东西。接下来要逐出什么呢？我们需要逐出第二页。对，我是说你明白我的意思吧？所以在这种情况下，我们基本上不会再得到任何缓存命中。对吧，因为我们总是需要带入一些内容。
+- en: And like you know the you know you get the you get the idea here right so we
+    basically just need to just keep losing。 A term for this because this happens
+    so often is actually cost something is something called sequential flooding。 We're
+    just going to flood the cash with all these different rates but it's actually
+    not doing any good for us。 Not hitting the cash， we're not utilizing the all these
+    different frames that were brought in right so we might as well just go to the
+    disc manager every single time。
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像你知道的，你知道我的意思吧？所以我们基本上只会不断地失去。因为这种情况发生得很频繁，所以有一个术语来描述它，叫做顺序洪泛。我们只是将缓存用各种不同的页面填满，但实际上对我们没有任何帮助。没有命中缓存，我们没有有效利用所有带入的不同页面。所以我们不如每次都直接去磁盘管理器。
+- en: So how can we get out of it right so there's zero percent cash hit in this case
+    right。 but like you know as I said right this actually can be something very common
+    because of the fact that like you know it might be the same query getting executed
+    over and over again。
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们怎么摆脱这种情况呢？在这种情况下缓存命中率是零，对吧？但是就像我说的，这种情况其实很常见，因为可能是同一个查询反复执行。
+- en: And in fact you see something happening like in when we process joints。 So how
+    can we do better。 So that's motivates for something else right call most recently
+    used。 So what happens is exactly opposite of what we wanted to do。 So we stuck
+    in this case again with six pages we need to bring in the seventh one。
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事实上，你会在处理连接时看到类似的情况。那么我们怎么才能做得更好呢？这就是为什么需要引入另一种方法——最近最常使用（MRU）策略。它的做法恰好与我们想要做的相反。在这种情况下，我们又被困住了，需要将第七个页面带入。
+- en: So for the seventh one， we're actually not going to kill off the least recently
+    used。 We're going to kill off the most recently used。 In this case。 it's going
+    to be page number six right。 Great。 We kill off page number six we're bringing
+    in page number seven。 And then we go around again， we need to read page number
+    one and great right I mean page number one is actually already in the buffer pool。
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以对于第七个页面，我们实际上不会淘汰最久未使用的页面，而是淘汰最近最少使用的页面。在这种情况下，它会是页面六。太好了，我们淘汰了页面六，加载了页面七。然后再次循环，我们需要读取页面一，太好了，页面一已经在缓冲池中了。
+- en: So page number one is already in the buffer pool I counted as a cash hits。 Right。
+    you can call that a buffer head or like you know frame hit or whatever you want
+    caught。 So it's basically just saying that we don't need to go to the disc manager
+    to bring in that page。 Likewise right for a second page great I mean also got
+    a hit right。
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，页面一已经在缓冲池中了，我算作一个缓存命中。对吧。你可以称之为缓冲命中或者框架命中，随你怎么叫。基本上就是在说我们不需要去磁盘管理器加载那个页面。同样，页面二也命中了。
+- en: So you see this count here kind of counting up right third page also awesome
+    right it's also also already brought in。 Fourth page to get the drill right so
+    the only the only time that we need to bring in something is actually when we
+    try to hit the sixth page right because in this case the sixth page is not there。
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你看到这里的计数在增加，第三个页面也很棒，已经加载进来了。第四个页面也是一样，你知道了。所以，唯一需要加载的页面是第六个页面，因为在这种情况下，第六个页面不在缓冲池中。
+- en: We need to evict the most recently used。 And in this case that is going to be
+    patient number five。 So we're going to replace patient number five。 Great because
+    the next thing we're going to read is patient number seven so that's again right
+    in the buffer pool。
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要淘汰最近最少使用的页面。这个页面就是页面五。所以我们要替换掉页面五。太好了，因为接下来我们要读取的是页面七，而它又在缓冲池中了。
+- en: So that is also going to be a hit right。 So you get the idea right so we're
+    just going to repeat that。 And then like you know we're just going to like you
+    know kill off the most recently used and then we'll still get quite a bit off
+    hit in the buffer pool because of the fact that many of the pages。
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这也是会成为一个命中的。你明白这个意思了吧，所以我们就会重复这个操作。然后就像你知道的，我们只会去淘汰最近最少使用的，然后我们仍然会在缓冲池中获得相当多的命中，因为许多页面。
+- en: Already residing inside the buffer pool。 So while I enjoyed doing like you know
+    clicking all throughout this entire animation that I've made earlier any other
+    questions for now about this policy。 So in fact we can be a little bit more generic
+    or try to do a little bit more math about this right so in this case what we had
+    was we have B number of pages in the buffer。
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 已经驻留在缓冲池内。所以尽管我很喜欢点击我之前制作的整个动画，但现在还有其他关于这个策略的问题吗？实际上，我们可以更泛化一点，或者尝试用更多的数学来处理这个问题。对吧？所以在这种情况下，我们有B个页面在缓冲区中。
+- en: We have more pages in this case in the he file that we are trying to bring in。
+    Right。 For sequential weed workload for the first and pages that we are going
+    to bring into the buffer。 We're going to get zero hits right because none of those
+    pages is in the buffer we need to fill in the buffer so awesome right we'll just
+    get basically get no hits。 But then for the next and attempts right we're going
+    to get everything except for the one of the pages as a hit。
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，我们有更多的页面，我们正在尝试加载。这对于顺序读取工作负载来说，前面的页面我们加载进缓冲池时会没有命中，因为那些页面不在缓冲池中，我们需要填充缓冲池，所以实际上会没有命中。但接下来几次读取时，除了某些页面之外，我们都会命中。
+- en: Right。 So you already saw that on the previous slide right so i'm not going
+    to go back there。 You already see that we only need to kill off one page right
+    so that's great。 And likewise right so that pattern is just going to be repeated
+    for every like you know for a next read at hand for next and pages we're just
+    going to do the same thing again。 Except that the victim that got a victim it's
+    just going to be a different page every single time but for all the cases that
+    we had from the last on the last slide is just going to be one single page。
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对。所以你在前一张幻灯片上已经看到过这个对吧，我不打算再回去讲了。你已经看到我们只需要淘汰一个页面，对吧？那太好了。同样地，这个模式会在每次读操作中重复，对于每一批接下来的页面，我们都会做同样的事情。只是被淘汰的“受害者”每次都会是不同的页面，但在上一张幻灯片中的所有情况中，受害者总是单一的页面。
+- en: So on average right we're just going to get b minus one divided by n for every
+    single attempt。 Right。 Because we get b minus one hits over and different attempts
+    so on average we're just going to approximately get that many hit hit rates。 So
+    compare that with least recently used right where we got zero so this actually
+    is pretty good。 Right。 Because like you we are actually getting some hits so that's
+    awesome。
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以平均而言，我们每次尝试都会得到 `b-1` 除以 `n`。对吧？因为我们在不同的尝试中得到了 `b-1` 次命中，所以平均来说，我们大概会得到这个命中率。与最近最少使用策略相比，我们得到了零，所以其实这个表现相当不错。对吧？因为我们实际上得到了一些命中，这是很棒的。
+- en: So we can actually even do better。 So if we can actually do profession right
+    for example we know that this is going to be a sequential read query we need to
+    basically just read all the pages。 We might as well ask the this manager to just
+    prefetch whole run of pages right so therefore we don't even need to check whether
+    that's already in the buffer pool because we know that is going to be in the buffer
+    pool。
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们实际上可以做得更好。如果我们能提前知道这是一个顺序读取查询，我们就可以提前加载所有相关页面。我们甚至可以让缓存管理器提前加载整段页面，这样我们就不需要检查它们是否已经在缓存池中了，因为我们知道它们一定会在缓存池中。
+- en: Right。 So an example in this case is just like you know if we ask patient but
+    one to be read we might also bring in pages two to five。 As I said how is this
+    going to help is it's going to help us because we know that random IO is costly。
+    And if we can do sequential read that's also great that's great。 And other aspect
+    of this is also because if we can both do reading of sequential pages while also
+    trying to answer queries at the same time。
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对。所以这个例子就是，如果我们请求读取第一个页面，我们也可能会加载第2到第5页。正如我所说，这怎么有帮助呢？它有帮助是因为我们知道随机I/O操作是很昂贵的。如果我们能做到顺序读取，那就太好了。另一个方面是，如果我们能在尝试同时回答查询的同时，也进行顺序读取，那就更加棒了。
+- en: So let's say if we have two different threats right for example。 That also is
+    going to be great because we can fetch things in the background while trying to
+    serve queries with our other hand。 But as I said right you know no one size fit
+    all so unfortunately this is not also going to be the end of our problems right。
+    In fact， I will claim that we need a hybrid because sometimes our view is actually
+    better。 Right。
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我们有两个不同的线程，例如，这也会非常棒，因为我们可以在后台预取数据，同时用另一个线程处理查询。但正如我所说的，没有一种方法适合所有情况，所以不幸的是，这也不是我们问题的终结。事实上，我认为我们需要一个混合策略，因为有时我们自己的方法实际上会更好。对吧？
+- en: let's say we actually want to do random access of pages so let's say we're not
+    doing sequential reads of all the pages we actually just want to jump around。
+    So in that case， our US actually better， you can try to work that out later on
+    in class。 sorry after class if you're interested。 And， and you actually is better
+    in the case of repeated sequential weeds。 And we have already seen cases where
+    like you know that behavior would exist right let's say it's the same query that
+    scans through all the pages over and over again and we're running that query for
+    multiple times。
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我们确实想对页面进行随机访问，而不是顺序读取所有页面。我们实际上只想跳来跳去。那么在这种情况下，我们的US策略实际上会更好，你可以在课后再尝试解决这个问题。如果你感兴趣的话。而且，实际上在重复顺序读取的情况下，US策略也更好。我们已经见过这种行为，例如，同一个查询反复扫描所有页面，而我们运行这个查询多次。
+- en: So needless to say right people have come up with many different fancier policies
+    right they go from completely random you know least frequently used right or not
+    recently used or even use your favorite neural network right these days that's
+    something that is really。
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不用多说，大家已经提出了许多更复杂的策略，从完全随机、最不常使用到最近未使用，甚至现在流行的使用神经网络来预测，这些都是很有意思的做法。
+- en: hot right and very popular， but use a neural network to predict what is the
+    next page that might be least used or like what is the next page that should be
+    evicted and then go with that。 There exactly it sounds like 285 top。 Right。 And
+    but one thing to be to be worried about right is like you need to keep track of
+    the cost of running these policies。
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 很热门且非常流行，但使用神经网络预测哪个页面最可能是最少使用的，或者哪个页面应该被驱逐，然后基于这个做出决策。这听起来确实像是285顶级策略。对吧？但需要担心的一点是，你需要追踪这些策略运行的成本。
+- en: The attractive bit about clock and now you for example is the fact that like
+    you know they're really easy to implement。 and they're also very like you know
+    not that costly in terms of running it right I mean we just advanced the clock
+    so we speak。 And then we just check where the reference bit has been set and then
+    with that we already figured out which page to make。 If you do something as complicated
+    as newer network right。
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于时钟算法，吸引人的地方是，例如你知道的，它们非常容易实现，而且在运行时也不算太昂贵。我们只需要简单地推进时钟，然后检查引用位是否被设置，基于这一点，我们就能弄清楚该淘汰哪个页面。如果你做的是像更新网络这样的复杂操作，那么情况就不一样了。
+- en: then maybe the time that it takes to do inference。 It's costly enough right
+    that you might as well just like you're bringing everything from the disk right
+    because remember random I can kill。 Right， so that's something that you need to
+    be worried about right if you do some complicated like you know bird or some kind
+    of crazy neural network to decide in this case。 So that's why even something like
+    you know simple as random my also work because it's kind of like you screw it
+    I mean I don't want to incur all these costs of like you're figuring out which
+    page actually you make just pick a random thing right and just like you think
+    that and then we're done right。
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后也许推理所需的时间已经足够昂贵，足以让你决定直接从磁盘读取所有内容，因为记住，随机访问会非常耗时。所以在这种情况下，如果你做一些复杂的操作，比如说鸟类算法或一些疯狂的神经网络来做决定，那么这是你需要担心的事情。所以即使是像随机访问这么简单的方式，也可能奏效，因为它就像是你说“算了，我不想承担计算哪些页面需要被替换的所有成本，干脆随机选一个页面”，然后就这样做，结束了。
+- en: Oh。 So that's all I wanted to say for this right so in summary。 what I've told
+    you guys about this is about all these different buffer buffer management policy
+    is like you know this aspect of keeping kept keeping trial pin count。 keeping
+    trial 30 bits。 I think these two things we need that regardless of what policy
+    we want it right because we need to figure out like you know which page is actually
+    being used right now and which page is actually dirty because we need to write
+    them back to the disk。
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 哦，所以这就是我想说的全部内容，总结一下，我告诉你们的关于这个的内容就是各种不同的缓冲区管理策略，比如你知道的，保持试探页面计数、保持试探30位这些方面。我认为这两点我们是需要的，无论我们想要什么策略，因为我们需要弄清楚当前到底是哪些页面在被使用，以及哪些页面实际上是脏的，因为我们需要把它们写回磁盘。
+- en: So those two things I will claim we cannot avoid， but you know， just like。 just
+    like everything else there are many different policies that we can use to implement
+    the actual page replacement algorithm。 And I encourage you to check out on Wikipedia
+    page right or even like you know go back to a 61 C slides to figure out to see
+    other policies that are available。 And just be worried right for instance in the
+    case of databases that sequential flooding can indeed be a real problem because
+    of the fact that queries tend to read all the pages in the case of let's say a
+    select star。
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我认为这两点是我们无法避免的，但就像其他任何事情一样，我们可以使用很多不同的策略来实现实际的页面替换算法。我鼓励你们去查看一下维基百科页面，或者甚至回去看看61C的幻灯片，了解其他可用的策略。需要注意的是，数据库的情况可能会特别复杂，因为查询往往会读取所有页面，特别是像`select
+    *`这样的查询，顺序泛滥确实可能成为一个问题。
+- en: So in that case we need to figure something out。 Something better or at least
+    being able to deal with sequential flooding as a problem。 I have for buffer management。
+    Anybody have any questions for me。 Yeah。 So do we know what the general access
+    patterns like for database。 What's the what pattern like the general just like
+    the access pattern for database。
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在这种情况下，我们需要想出一些方法，至少能够应对像顺序泛滥这样的情形。我对于缓冲区管理有一些看法。有人有问题吗？是的。那么我们知道数据库的一般访问模式是什么样的吗？数据库的一般访问模式是什么样的呢？
+- en: Do we know what the access pattern is for database or。 Yeah。 So it all depends
+    on what application is actually using the database right or what are the users
+    right。 So if the if you have a single user and then if， if you somehow know ahead
+    of time that what that person is going to issue in terms of queries then great
+    for you。 Right。 But that's not always the case that you can imagine so。 Yeah。
+    It's hard hard to say。
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道数据库的访问模式是什么吗？是的。其实这完全取决于使用数据库的应用程序是什么，或者是用户是谁。如果是单一用户，并且你提前知道这个人会发出什么样的查询，那对你来说就太好了。但通常情况下，情况并非如此。所以，很难说。
+- en: but people are indeed like you know there has actually been a lot of research
+    and trying to predict and also trying to study in terms of recognizing patterns
+    and queries right so that they can predict。 What are the pages that are going
+    to be used。 Okay， thank you。 So， Yeah。
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但确实有很多研究尝试预测和研究查询中的模式识别，这样他们可以预测哪些页面会被使用。好，感谢。是的。
+- en: because we need more like different ways that you can implement right so like
+    you know。 but we need a per page pin count and also a per page 30 bit。 So you
+    can store this as to get it with the frame you can store it as a separate table。
+    you can store it in a ray and store that in a hash table whatever you like。
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我们需要更多不同的实现方式。对吧。比如说，我们需要每页的固定计数，也需要每页的30位。你可以将其存储为与帧相关的内容，或者将其存储为单独的表格，甚至存储在一个数组中，存储在哈希表里，随你喜欢。
+- en: but it needs to be kept somewhere inside the buffer manager。 Thanks。 Thanks。
+    Thanks。 Great question so for the purpose of this class we're just going to assume
+    that this is all like software software implementation。 but there actually has
+    been work trying to do this implement all these things inside the inside the hybrid
+    as well。 So you recall from 61 see that like you know cash management for instance
+    right is something that is typically handled inside the hardware。
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但它需要被保存在缓冲区管理器内部的某个地方。谢谢。谢谢。谢谢。很好的问题，所以在本课程中，我们就假设这一切都是像软件一样的软件实现。但实际上确实有一些工作尝试将所有这些东西都实现到混合硬件中。所以你还记得在61c课程中，我们讨论过类似缓存管理的内容，它通常是在硬件内部处理的。
+- en: How do you draw the line is completely arbitrary right so like you know somebody
+    basically make the decision that caches as something that like you know all kinds
+    of applications including operating systems databases we need to use。 So therefore
+    that's implement that into hardware because that's coming enough。 Right。
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如何划定界限是完全随意的。对吧。就像你知道的那样，有人做出决定，缓存是所有应用程序，包括操作系统和数据库，都需要使用的。因此，决定将其实现到硬件中，因为它已经变得足够普遍了。对吧。
+- en: But maybe there aren't that many like you know database servers out there or
+    like the need is not high enough such that people actually want to bake that into
+    hardware。 So there actually has been work done in the past where like you know
+    they tried to build what they call database machines in hardware。
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但也许并没有那么多数据库服务器，或者需求并不够高，导致人们不愿意将其嵌入硬件。因此，过去确实有一些工作，尝试构建他们所称之为“数据库机器”的硬件。
+- en: So all that machine support is basically related relational operations。 Right。
+    everything that we talked about in 186。 So in that case it actually makes sense
+    to try to bake some of these into the into the hardware。 But of course you're
+    going to ready to see the trade up right we bake something to the into the hardware
+    just like in 61 see we can change it afterwards right unless you're willing to
+    pay more。 So it's a flexibility that we can actually try to change things if we
+    want。 So choose your poison。
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以所有这些机器支持基本上都与关系操作有关。对吧。我们在186中讨论的所有内容。所以在这种情况下，尝试将一些操作嵌入硬件中是有意义的。但当然你将会看到权衡，就像在61c中一样，我们将某些东西嵌入硬件之后，就无法再进行修改，除非你愿意付出更多的代价。所以，实际上我们可以选择保持灵活性，进行更改。因此，选择你的毒药。
+- en: I guess。 Cool。 Thanks。 Yeah， there's no thing is yeah no such thing is free
+    lunch unfortunately。 Was that time I said another question or。 Cool。 Okay。 so
+    if no other questions I'm going to switch over to a did yeah。
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我猜。酷。谢谢。是的，没什么是免费的，不幸的是。那时我说的是另一个问题吗？酷。好的。如果没有其他问题，我将切换到另一个话题。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_12.png)'
+  id: totrans-167
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_12.png)'
+- en: Any folks hear me。 Yeah。
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 各位能听到我吗？是的。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_14.png)'
+  id: totrans-169
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_14.png)'
+- en: Okay。 All right。 Okay， so we're going to be talking about relational algebra
+    now and。
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的。好的。那么现在我们将讨论关系代数。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_16.png)'
+  id: totrans-171
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_16.png)'
+- en: So I know the slides for relational algebra not on the website yet I wasn't
+    actually anticipating getting to cover relational algebra but we managed to rush
+    through buffer management so we have a chance to tell you about relational algebra
+    today so that's great。
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我知道关系代数的幻灯片还没有放到网站上，我原本没打算覆盖关系代数的内容，但我们成功地快速讲完了缓冲区管理，因此今天我们有机会向你们介绍关系代数，这真是太好了。
+- en: So the slides will be up shortly after lecture。 Okay。 so what have we learned
+    about database systems so far。 Well。 we've talked about the disk space management
+    we've talked about buffer management as we saw today。 We've talked about how files
+    and indexes are managed right。
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，幻灯片会在讲座后不久发布。好的。那么，迄今为止我们学到了什么关于数据库系统的知识呢？我们讨论了磁盘空间管理，讨论了今天所看到的缓冲区管理。我们讨论了文件和索引是如何管理的，对吧？
+- en: And we've also like we started at the very start by talking about SQL clients
+    right and how you would be issuing queries to database for our DML and D D L queries
+    that allow you to define your schema and then modify your data。 Okay， now we're
+    going to be talking about stuff in the middle。 Right。
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还从一开始就讨论了SQL客户端，对吧？以及如何向数据库发出查询，针对我们的DML和DDL查询，它们允许你定义架构并修改数据。好了，现在我们要讨论的是中间的部分。对吧？
+- en: So the query parsing and optimization as well as relational operators。 So today
+    specifically we're going to be talking about relational operators。 And we're going
+    to stay at the logical level。 So we're going to be talking about the definition
+    of the relation operations will be talking about the implementations subsequently。
+    And this is going to be interesting because it's going to be really going to be
+    understanding how a database system internally reasons about a SQL query。
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以查询解析和优化以及关系操作符。今天我们特别要讨论的是关系操作符。我们将停留在逻辑层面。我们将讨论关系操作的定义，并随后讨论它们的实现。这个过程会很有趣，因为它将帮助我们理解数据库系统是如何在内部推理一个SQL查询的。
+- en: Right。 So SQL query is just a representation for users。 It's what the user communicates
+    to the system。 The database system operates at a different level and that's the
+    level that we're going to be talking about today。 Okay， so let's talk about before
+    we do this。 Let's talk about what happens when you have a SQL query and how does
+    this gets translated into this internal representation that we're talking about。
+    So it goes to several phases。 The first phase is， let's say a user inputs a SQL
+    query。
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对。SQL查询只是一个用户的表示方式。它是用户与系统之间的通信方式。数据库系统在不同的层级上运行，而那正是我们今天要讨论的层级。好的，那么在我们继续之前，让我们先讨论一下，当你有一个SQL查询时，它是如何被转换成我们所说的这个内部表示的。它会经过几个阶段。第一个阶段是，假设用户输入一个SQL查询。
+- en: We sort of have this query parser and optimizer that transforms it into a representation
+    that looks like this。 So this is called a relational algebra expression。 This
+    relational algebra expression gets translated into a logical query plan which
+    basically describes the sequence in which these operations are performed。 Right。
+    So in this particular case， we'll talk about these operators specifically。
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一个查询解析器和优化器，它将查询转换为类似于这样的表示形式。所以这被称为关系代数表达式。这个关系代数表达式会被转换为一个逻辑查询计划，它基本上描述了这些操作执行的顺序。对吧？在这个特定的情况下，我们将特别讨论这些操作符。
+- en: but in this particular case you're doing a join between reserves and sailors
+    and then you are sub selecting some tuples at maximum condition and then you're
+    deciding that a certain set of attributes are displayed to the user。 Again， don't
+    worry about if you don't get what what these symbols mean these Greek symbols
+    mean that's going to be our focus today。
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个特定的案例中，你正在进行一个关于预留表（reserves）和水手表（sailors）的连接操作，然后你会在最大条件下选择一些元组，然后你决定展示给用户的一组属性。再次强调，不必担心如果你不了解这些希腊符号的含义，这些符号会是我们今天关注的重点。
+- en: Okay， so we went from relational algebra to this logical query plan。 The final
+    step is this physical query plan， which is what is actually executed physically。
+    What are the physical algorithms that are executed on the data。 Right。 And again。
+    the data is going to be basically from the pages which are brought into memory
+    via the buffer manager and then each of these pages you operate on again。
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我们从关系代数到达了这个逻辑查询计划。最后一步是物理查询计划，这就是实际执行的部分。哪些物理算法会在数据上执行。对吧？再一次，数据将基本来自通过缓冲区管理器加载到内存中的页面，然后你将在这些页面上再次进行操作。
+- en: There's a lot of stuff that I'm covering in this slide。 It's totally fine if
+    you don't get it。 I just want to give you a bird's eye view into what is going
+    to happen。 Starting from a sequel query to what is actually executed by the database。
+    Okay。 So overall the database system will end up creating a so called physical
+    query plan which involves physical operators that operate on relation instances。
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这一页涵盖了很多内容。如果你不理解也完全没问题。我只是想给你提供一个鸟瞰视角，了解从SQL查询到数据库实际执行的过程。好的。所以总体来说，数据库系统最终会创建一个所谓的物理查询计划，这涉及到操作关系实例的物理操作符。
+- en: Okay， so again， this is very high level。 At the， at the， at the sort of 10，000
+    feet view。 You start with the sequel query， which is basically a user saying they
+    want this result in this particular case they want to do a join between reserves
+    and sailors based on some conditions。
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，先来说一下，这只是一个非常高层次的概述。从大约10,000英尺的视角来看。你从SQL查询开始，基本上是用户说他们想要这个结果，在这个特定的例子中，他们想在某些条件下对`reserves`和`sailors`进行连接。
+- en: And it's a user says they declare that they want to see this。 They don't specify
+    how it's done。 That is a job of the database system and internally a database
+    system is going to come up with a sequence of operations that represents the result
+    of the sequel query。
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户只需要声明他们想看到什么，他们不需要指定如何完成。这是数据库系统的工作，数据库系统内部会生成一系列操作来表示SQL查询的结果。
+- en: And then come up with a sequence of operations， which is basically this sequence
+    of operations is called a query plan。 Okay， and the system is going to execute
+    this query plan and produce a result for the users。 Okay。 All right， so what is
+    the difference between sequel and relational algebra。 Okay。 so there are two different
+    representations for us to think about。 The first is sequel。
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，生成一系列操作，基本上这系列操作叫做查询计划。好的，系统会执行这个查询计划并为用户生成结果。好的。那么SQL和关系代数之间有什么区别呢？好的，实际上我们有两种不同的表示方式可以思考。第一种是SQL。
+- en: which we've already covered and this is what humans express right humans like
+    sequel。 because it's declarative you say what you want you don't say how you're
+    going to get it。 And the job of the system is to figure out how to execute it
+    right so you don't be when we talked about sequel we didn't actually worry about
+    whether it's going to be an efficient query or not right where how quickly is
+    a database system going to be executing that。
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们之前讲过的内容，而这就是人类所表达的，正确吗？人类喜欢SQL，因为它是声明式的，你只需说你想要什么，而不必说明如何获得它。系统的任务是找出如何执行它。所以当我们谈到SQL时，我们并不担心它是否会成为一个高效的查询，或者数据库系统执行查询的速度有多快。
+- en: And even how is it going to be executing it that's not wasn't a concern for
+    us at all。 Systems。 So the database system internally is going to use relational
+    algebra to represent the sequel query and then compose a result for the sequel
+    query and the relational algebra expression looks something like this with these
+    Greek symbols。
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 甚至连它是如何执行的，这对我们来说并不是一个关注点。系统内部会使用关系代数来表示SQL查询，然后组合出SQL查询的结果，而关系代数表达式看起来大致是这样的，带有这些希腊符号。
+- en: And the relational algebra is easier for a relation for a relational database
+    system to manipulate because operational it's describing how stuff is manipulated
+    in order to compute a query result。 So overall database systems internally transformed
+    sequel into relational algebra expressions manipulate and simplify it。
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关系代数对于关系型数据库系统来说更容易操作，因为它描述了如何操作数据以计算查询结果。所以总体来说，数据库系统内部将SQL转换为关系代数表达式，然后进行操作和简化。
+- en: and then figure out the best operational mechanism to compute the sequel query
+    result。 So this is going to be the focus for the next several lectures。 Well let's
+    talk about relational algebra in particular because that's going to lay the foundation
+    for the internals of this query processing and optimization stuff that we're going
+    to be focusing on。 So algebra is basically an algebra。 So it's a very sort of
+    it has a very formal sound rigorous foundation so it's an algebra that operates
+    on relation instances so these are instances of relations。
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后找出最优的操作机制来计算SQL查询结果。所以接下来的几节课我们会专注于这个内容。现在让我们特别讨论关系代数，因为它将为我们后续关注的查询处理和优化的内部机制打下基础。关系代数基本上就是一种代数。它有着非常严谨和正式的基础，它是操作关系实例的代数，这些就是关系的实例。
+- en: So there's just like any other algebra like if you're high school elementary
+    algebra or your linear algebra right in elementary algebra you had variables that
+    you were manipulating in along with sort of arithmetic。 And linear algebra you
+    were manipulating matrices right so you could do matrix multiplication and so
+    on。
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像任何其他代数一样，无论是高中代数还是线性代数，在初等代数中，你都有变量进行操作，结合算术运算。在线性代数中，你操作的是矩阵，对吧？你可以进行矩阵乘法等操作。
+- en: So just like that relational algebra operates on relations at a time so you
+    compose expressions。 And then you compose expressions on those expressions it's
+    sort of a compositional sort of framework that allows you to compose more complicated
+    expressions from simpler expressions。
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像关系代数一次操作一个关系一样，它组合表达式，然后再将这些表达式组合成更复杂的表达式，这是一个组合性的框架，允许你从更简单的表达式组合出更复杂的表达式。
+- en: So in this particular sort of example again I'll talk about these symbols later
+    but as there is something happening to RNS so these are two relations some expression
+    is being computed on RNS。 And then some other expression is being computed on
+    that result and finally this last sort of operation is performed on the result
+    of that so that's a sort of an algebraic expression in this case relational algebraic
+    expression。
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个具体的例子中，我稍后会讲解这些符号，但目前有一些操作发生在RNS上。这是两个关系，一些表达式正在对RNS进行计算。然后，另一个表达式正在对该结果进行计算，最后，最后一个操作应用于这个结果。所以这就是一个代数表达式，在这种情况下是一个关系代数表达式。
+- en: So what are there are some nice properties of this algebra so the first property
+    is that the result is also a relational instance right so it's also a relation。
+    You your input is a relation your output is a relation。 This allows us to compose
+    these relational algebra expressions right so you can for example take two expressions
+    and union them together join them together or apply take an expression and perform
+    a selection on top of it again we talk about these operations in a second。
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么这个代数有什么优良的特性呢？第一个特性是结果也是一个关系实例，也就是说它也是一个关系。你的输入是一个关系，输出也是一个关系。这使得我们可以组合这些关系代数表达式。例如，你可以将两个表达式联合起来，或将它们连接在一起，或者对某个表达式进行选择操作，稍后我们会讨论这些操作。
+- en: So this is just like what you would do with relation algebra right as a sorry
+    a linear algebra right so linear algebraic expression on matrices returns a matrix。
+    right， and you can it is compositional so you can take an expression and then
+    multiply。 that expression is another expression and compose even larger larger
+    expressions and the result is closed right so the result that you get is still
+    a matrix。 So this is an important property that an algebra gives in this particular
+    instance is that the input schema the schema the relations that you operate on
+    determines the output schema。
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就像你使用关系代数一样，抱歉，是线性代数的操作。线性代数中的矩阵运算会返回一个矩阵。对吧？并且它是组合性的，你可以取一个表达式然后进行乘法运算，得到的表达式可以与另一个表达式组合，甚至组合成更大的表达式，结果是封闭的，也就是说，得到的结果仍然是一个矩阵。因此，这是代数在这种特定情况下所提供的一个重要特性，即你操作的关系的输入模式（schema）决定了输出模式（schema）。
+- en: And this is very important because you can statically check whether queries
+    are going to be legal or not so you don't actually need to look at the data to
+    test whether a query is going to be legal or not you can just look at the schema
+    to determine this。
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这非常重要，因为你可以静态检查查询是否合法，因此你实际上不需要查看数据就能测试查询是否合法，你只需要查看模式来判断。
+- en: So I mean you have the same study for linear algebra as well right so the input
+    sizes the rows and columns determine the output sizes so it's not very different
+    for relation for linear algebra as well。 So pure relation algebra actually has
+    set semantics okay remember that we talked about set semantics is a bag semantics
+    when we talked about SQL pure relational algebra actually has set semantics that
+    are no duplicate tuples in relation。
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我是说，线性代数的学习也有类似的情况，对吧？所以输入的大小（行和列）决定了输出的大小，因此对于关系代数和线性代数来说其实没有太大区别。纯关系代数实际上具有集合语义。记住我们之前提到的集合语义与袋语义的区别，当我们讨论SQL时，纯关系代数实际上具有集合语义，在关系中没有重复的元组。
+- en: And this is going to dominate most of our discussion we're going to be focusing
+    on set semantics SQL of course as we saw has bag semantics or multi set semantics。
+    We will talk about multi set semantics as it pertains to sort of the system discussion
+    discussion so as we're talking about these operators as they relate to SQL we
+    will talk about the connection to multi sets。
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将占据我们大部分的讨论，我们将重点讨论集合语义，SQL当然如我们所见有袋语义或多重集语义。我们将讨论多重集语义，尤其是在系统讨论中，因此当我们谈论这些操作符时，也会讨论它们与多重集的关联。
+- en: Okay， so relational algebra operations come in various flavors there are a unary
+    operations which operate on a single relation sort of binary operations that operate
+    on multiple relations。 And so we'll talk about unary operations first there are
+    three fundamental unary operations。 Okay。
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，关系代数操作有不同的形式，有一元操作作用于单一关系，也有二元操作作用于多个关系。我们先讨论一元操作，基本有三种基本的一元操作。好的。
+- en: so the first is projection。 So this only retains desired columns of your input
+    relation。 So it's basically doing vertical selection。 So the next operation is
+    the selection operation this selects a subset of rows。 So it is a horizontal operation。
+    So it's basically keeping a subset of the rows。 Then you have the renaming operation
+    which basically allows you to rename the attributes of your relation as well as
+    the relation name itself。
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个操作是投影。它只保留输入关系中的所需列，基本上是进行垂直选择。下一个操作是选择操作，它选择一个行的子集，所以这是一个水平操作，基本上是保留某个行的子集。然后是重命名操作，它允许你重命名关系的属性以及关系本身的名称。
+- en: Okay。 And so， whoops。
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，接下来，哎呀。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_18.png)'
+  id: totrans-199
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_18.png)'
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_19.png)'
+  id: totrans-200
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_19.png)'
+- en: So these these operations also have symbols right so there is pie which is the
+    projection operation Sigma which is a selection and row which is a renaming operation。
+    Okay。 So these are all unary operations。 We also have binary operations right
+    so binary operations happen on pairs of relations。
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这些操作也有符号，譬如投影操作用π表示，选择操作用Sigma表示，重命名操作用row表示。好的，所有这些都是一元操作。我们还有二元操作，二元操作作用于一对关系。
+- en: So the first version is， or the first operation is union。 And simply tuples
+    that are in one relation or in the other relation set difference which are tuples
+    in one relation but not in the other relation。 And cross product or Cartesian
+    product which allows us to combine two relations by taking every combination of
+    tuples in the two relations。 Again， you may， as you're， as you're going through
+    this you may immediately see analogs to sequel and I'll try to connect back to
+    sequel as much as I can。
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，第一个版本，或者第一个操作是并集。简单来说，就是在一个关系中的元组或者在另一个关系中的元组。集合差是指那些在一个关系中但不在另一个关系中的元组。笛卡尔积或交叉积则允许我们通过获取两个关系中元组的所有组合来合并两个关系。再次强调，当你在学习时，你可能会立即看到SQL中的相似之处，我会尽量将两者联系起来。
+- en: As I'm describing these operations。 Any questions so far。 And this is the symbols
+    here are straightforward you have a cup or a u minus for set difference and an
+    x for cross product。 Okay， so what do why do we mean when we say relation algebra
+    deals with sex。 This is the formalism right so we're talking about an algebra
+    and the algebra is typically defined in a set context of course in practice。
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我描述这些操作时，有什么问题吗？这些符号很直接，你有一个合并操作符“∪”表示并集，一个“-”表示集合差，和一个“×”表示笛卡尔积。好的，那么当我们说关系代数处理集合时是什么意思呢？这就是形式化的定义，关系代数通常在集合的上下文中定义，当然在实际操作中。
+- en: Since sequel is a multi set assumes multi set semantics people certainly sort
+    of switch to my discussing what it means to operate on relations which are multi
+    sets right to the same operations on multi sets what would they look like we'll
+    talk about that as well。
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于SQL是基于多重集的语义，大家肯定会转向讨论如何在多重集的关系上进行操作，针对多重集的相同操作是什么样的，我们也会讨论这个问题。
+- en: Any other questions。 Okay。 You also have other operations that are not part
+    of the basics of operations but these are derived operations these are what I
+    would call macros for the six operations above that allow you to express certain
+    frequent operations。
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有其他问题吗？好的。你还有一些其他操作，它们不是基本操作的一部分，但它们是派生操作，是我所说的宏，用来表达上述六个操作中的某些常见操作。
+- en: Right。 And so one example of that is intersection and certainly you may have
+    sort of realized this that intersection can be expressed using unions and differences。
+    And so intersection has this operation which is the inverse you。 And then there
+    is there are the join operations again we've talked about joins in in in sequel。
+    And so joins are expressed using both eyes and there are several flavors of joins。
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对的。所以其中一个例子是交集，当然你可能已经意识到，交集可以通过并集和差集来表达。所以交集有这个操作，它是你的逆操作。然后就是连接操作，我们之前在 SQL
+    中讲过连接。所以连接通过使用“and”来表达，并且连接有多种类型。
+- en: We'll talk about all of those flavors subsequently。 Okay。 Joins as the name
+    suggests is combining relations while also satisfying certain predicates right
+    so we talked about natural join we talked about inner and outer joints。 Those
+    are all flavors of joints that we'll talk about。 We'll also add in theta joints
+    and equid joints as special cases。 Okay。
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们稍后会讨论所有这些类型。好的，连接，顾名思义，是将关系结合在一起，同时满足特定的谓词。对吧，我们讲过自然连接，讲过内连接和外连接。这些都是我们会讲的连接类型。我们还会加入
+    theta 连接和等式连接作为特殊情况。好的。
+- en: so this is a bird's eye view for the operations。 So these are the basic operations
+    these six operations。 And these are the derived operations that are shortcuts
+    for frequently used expressions that can be composed using these basic operations。
+    Any questions so far。 I'm not sure if this is totally in scope of what like we
+    covered but how are we like like defining arguments for like selection and projection。
+    Yeah， so we'll talk about that right now。 As in when I cover the when I cover
+    these operations in more detail。
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这是一个从全局视角看待这些操作。这些是基本操作，这六个操作。而这些是派生操作，它们是常用表达式的快捷方式，可以通过这些基本操作组合得出。到目前为止有任何问题吗？我不确定这是否完全在我们已经覆盖的范围内，但我们如何定义选择和投影的参数呢？是的，我们现在就会讲到。也就是说，当我更详细地讲解这些操作时，我们会讨论。
+- en: So this is not going to be the only time I mentioned these operations。 I'll
+    talk about examples and I'll talk about a set of what are the formal foundations
+    for these operations。 Okay。 Any other questions。 Okay， so let's start by talking
+    about projection or pie。 Okay。 so here's an example of a projection。 So let's
+    say I have my relation instance， S2， and I'm doing。
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这不是我第一次提到这些操作。我会讲例子，并讲解这些操作的正式基础。好的，还有其他问题吗？好的，那么我们开始讲解投影或 π 操作。好的，下面是投影的一个例子。假设我有我的关系实例
+    S2，并且我正在做。
+- en: So S2 has four attributes， S ID， S name rating and age。 and I'm doing a projection
+    and I'm listing S name and age。 Okay。 what this essentially means is I want you
+    to only give me。 S name and age as part of the output。 So I'm sub selecting S
+    name and age from S to。 Okay， so the output is going to be S name and age。
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以 S2 有四个属性：S ID、S name、rating 和 age。我正在进行一个投影，并列出 S name 和 age。好的，这基本上意味着我只希望你给我
+    S name 和 age 作为输出的一部分。所以我从 S 中选择了 S name 和 age。好的，所以输出将是 S name 和 age。
+- en: And so， if， if this seems familiar。 Well， yes， it should be familiar because
+    we talked about this earlier in SQL。 This is basically the select operation in
+    SQL right so select operation allows you to list the attributes that you want
+    to see as part of the output。
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，如果这听起来很熟悉，嗯，是的，它应该很熟悉，因为我们之前在 SQL 中讲过这个。这基本上就是 SQL 中的 select 操作，对吧，select
+    操作允许你列出你希望在输出中看到的属性。
+- en: That's essentially what the projection operation is doing as well。 So the schema
+    is basically determined by the schema of this attribute list。 So basically by
+    listing S name followed by age， it basically saying。 I want the output to contain
+    these two attributes in this order。
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这基本上就是投影操作所做的事情。所以模式基本上由这个属性列表的模式决定。所以基本上通过列出 S name 然后是 age，它基本上是在说：我希望输出包含这两个属性，按这个顺序排列。
+- en: So the names and types correspond to the are basically this list that you use
+    is selected from the input。 So the names must correspond to names from the input
+    and the types are inherited from the input as well。 So the input to S to here。
+    So you're basically doing a vertical selection of a subset of columns in this
+    particular operation。 Okay， so there is a subtlety here， which is what happens
+    when there are when there are duplicates。
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以名称和类型基本上是从输入中选出的这个列表。名称必须对应输入中的名称，类型也会从输入中继承。所以 S 到这里的输入，你基本上是在做这个操作中的列的垂直选择。好的，所以这里有一个微妙之处，就是当出现重复时会发生什么。
+- en: Right。 So since relational algebra assumes set semantics。 If you did a projection
+    of age。 you end up with a multi set as an intermediate result。 Right。 So you basically
+    threw away these columns and you've only kept this column， which is age。 Now you
+    have two copies or three copies of 35。 So the final result for this projection
+    has to transform this multi set in back into a set。
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对。所以由于关系代数假设集合语义。如果你对年龄做投影，最终会得到一个作为中间结果的多重集合。对吧。所以你基本上丢弃了这些列，只保留了这一列，就是年龄。现在你有两个副本或三个副本的
+    35。所以这个投影的最终结果必须将这个多重集合转换回集合。
+- en: So this is the right result for doing a relational projection as you mean set
+    semantics。 So the set semantics with projection often results in fewer rows。 especially
+    if you have duplicates after having projected out some columns。 So， of course。
+    as we saw with SQL， real systems don't remove duplicates。 Right。 And it's。
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，这是进行关系投影时的正确结果，如果你意味着集合语义的话。集合语义下的投影通常会导致较少的行，特别是当你在投影某些列之后仍然有重复项时。当然，正如我们在
+    SQL 中所看到的，真实系统并不会去除重复项。对吧。并且它。
+- en: it's cheaper to not remove duplicates and also because this is the semantics
+    that users expect with SQL。 Right。 How would you remove duplicates any thoughts。
+    This thing。 Right， but that is the query。 but I am thinking more about the algorithm。
+    What algorithm would you use to remove duplicates。 So some folks have mentioned
+    using a hash。 Well， that is one approach。
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不去除重复项反而更便宜，并且这是用户对 SQL 所期望的语义。对吧。你会怎么去除重复项，有什么想法吗？就是这个。对，但是那是查询。其实我更在想算法。你会使用什么算法来去除重复项？有些人提到过使用哈希。嗯，那是其中一种方法。
+- en: Another approach is to use sorting。 Both of these are valid approaches。 Right。
+    But it's both of them are expensive。 Right。 So you can certainly use hashing to
+    try to determine if multiple tuples hash to the same value。 Or you can do a sort
+    of all of these， all of these tuples。 output tuples to determine if there are
+    two tuples。
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一种方法是使用排序。这两种方法都是有效的。对吧。但这两者都很昂贵。对吧。所以你当然可以使用哈希来尝试确定多个元组是否哈希到同一个值。或者你可以对所有这些元组进行排序，输出元组，以确定是否有两个元组。
+- en: There's a sequence of tuples that are identical in which case you retain one
+    copy and throw out the rest。 Okay。 Okay。 Okay。 So I think I will stop at this
+    point。 And I will cover the rest in the next class。 Do I have any questions。 Is
+    it a whole different， like relational algebra when it's dealing with multi sets
+    with just different definitions for everything。 Yeah， essentially， I mean， there
+    are parallel analogs of the operations and the semantics and also。
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一系列相同的元组，在这种情况下，你保留一个副本，丢弃其余的。好的。好的。好的。所以我想我会在这里停一下。剩下的内容我将在下节课讲解。我有任何问题吗？当处理多重集合时，是否完全是另一种关系代数，所有定义都不同？是的，本质上是的，我是说，操作和语义上都有平行的类比。
+- en: as we will talk about， there are analogs for the rewriting rules that would
+    apply to。 Right。 Different rewrite rules may apply for the set semantics and for
+    multi set semantics。 So it's important to sort of keep the distinction between
+    the two。 By rewrite rules。 I mean basically taking an expression and simplifying
+    it right like you would simplify algebraic expressions or。
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们将要讨论的那样，对于重写规则，也有适用的类比。对吧。对于集合语义和多重集合语义，可能适用不同的重写规则。所以，区分这两者是非常重要的。重写规则，我指的基本上是将表达式简化，就像你简化代数表达式或矩阵表达式一样。
+- en: sorry， elementary algebraic expressions or matrix expressions。 Again。 here we
+    want to simplify these relational algebraic expressions and different rules for
+    those simplifications apply for sets versus bags。 Oh， so that's actually， actually，
+    let me ask a trivia question right so why do you guys think these are the Greek
+    letter names that we use for these operations。 So for instance， why is projection
+    pie。 For pie。 Yeah， Greek alphabet。
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对不起，代数表达式或矩阵表达式。再说一次，这里我们要简化这些关系代数表达式，并且不同的简化规则适用于集合与袋（bag）之间。哦，所以这其实，实际上，让我问一个小知识问题，为什么你们认为我们用这些希腊字母名称来表示这些操作呢？比如，为什么投影是用π（pi）表示？是π。对，希腊字母。
+- en: Exactly so what do you think like you know， this。 What is it that what is it
+    doing。 It's actually a very good， it's actually a very good new model。 Yeah， way
+    of actually， yeah。 demonic， yeah sorry， it's actually very good， demonic。 Select
+    right。 Yes。 Yeah。 I thought that I thought that more is like the where clause
+    in the sequel。 So， but yeah。
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确切地说，你觉得怎么样？你知道的，这个是什么？它在做什么？实际上这是一个非常好的，实际上是一个非常好的新模型。是的，实际上是的。恶魔的，抱歉，实际上是非常好的，恶魔的。选择正确。是的。是的。我认为我认为更多的是像
+    SQL 中的 `where` 子句。所以，不过是的。
+- en: I guess that makes sense。 With the proper yeah the proper relational algebraic
+    term is selection right。 Yeah。 So what is very confusing and I think we should。
+    Given that beer over time we should we should stop what is very confusing and
+    I'll mention this again in the next class is that selection which is sigma doesn't
+    actually correspond to the select clause in sequel。 And that is just an unfortunate
+    unfortunate choice of names right so the select clause in sequel response to projection。
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我猜这有道理。用正确的，是的，正确的关系代数术语是选择，对吧？是的。所以非常令人困惑，我认为我们应该。鉴于这个问题随时间发展，我们应该停下来说，这个非常令人困惑的地方，我会在下一课中再次提到，就是选择（σ）实际上并不对应于
+    SQL 中的 `select` 子句。那只是一个不幸的命名选择，所以 SQL 中的 `select` 子句实际上对应的是投影。
+- en: Essentially right and but the where clause corresponds to selection。 So that's
+    all a little confusing and this is something for us to discuss next time。 Yeah。
+    and then Franklin's that's good that kind of them go right I mean hold on to your
+    thoughts I mean we'll see what actually happens later on in the next lecture actually
+    but。 Okay anyway so that's the end of my trigger a question。 Maybe we should stop
+    recording just。 Okay。
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本质上是对的，但是 `where` 子句对应的是选择。所以这一切有点令人困惑，这是我们下次讨论的内容。是的，然后是富兰克林的那个，挺好的，他们就这样去做，我是说，抓住你的想法，我们看看接下来会发生什么，实际上是在下一讲中。不过，好吧，总之，这就是我的触发问题的结尾。也许我们应该停止录制。好的。
+- en: that's the question that's right。 Thanks everyone。 Bye。
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个问题是对的。感谢大家。再见。
+- en: '![](img/8d64a543749ac3a1da9df3fba621e7d9_21.png)'
+  id: totrans-225
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/8d64a543749ac3a1da9df3fba621e7d9_21.png)'
+- en: If you have questions please stay。
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你有问题，请留下来。
