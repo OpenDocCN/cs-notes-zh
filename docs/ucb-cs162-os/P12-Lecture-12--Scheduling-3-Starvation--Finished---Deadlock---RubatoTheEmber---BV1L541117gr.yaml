@@ -1,1280 +1,1713 @@
 - en: P12：Lecture 12： Scheduling 3 Starvation (Finished), Deadlock - RubatoTheEmber
     - BV1L541117gr
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: P12：第12讲：调度3 饿死（已完成），死锁 - RubatoTheEmber - BV1L541117gr
 - en: Okay， can everyone hear me？
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，大家能听到我说话吗？
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_1.png)'
+  id: totrans-2
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_1.png)'
 - en: All right， let's get started。 So this is our third lecture on scheduling。 And
     we're going to talk about some more scheduling albums。 Then we're going to talk
     about starvation。 And then we're going to talk about deadlock。 how to detect it，
     and how to avoid it or prevent， it。 Okay。
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，开始吧。这是我们关于调度的第三讲。我们将讨论一些其他的调度算法。然后我们会讨论饿死问题，接着谈谈死锁，如何检测死锁以及如何避免或防止死锁。好的。
 - en: so remember from the previous lectures on real-time scheduling that the goal
     here。 is predictability of performance。 So we want to predict with high confidence
     what the worst case response time is going。 to be for a given system。 Now in a
     real-time system。 the performance guarantees are going to be either task or they，
     could also be class related。
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以请记住，在之前的实时调度讲座中，我们讲到的目标是性能的可预测性。所以我们希望能够以高度的信心预测出给定系统的最坏响应时间。现在，在实时系统中，性能保证可能是任务级别的，也可能是类别级别的。
 - en: And we want to guarantee them in advance， a priori。 So we want to contrast that
     when we think about conventional systems where performance。 is going to be system-oriented
     or it might be throughput-oriented。 And we kind of look back to see。 you know，
     how did we do in terms of our throughput， our， performance in the last， you know。
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们希望提前保证这些任务的可预测性。所以，当我们对比常规系统时，我们看到的是，常规系统的性能可能是系统导向的，或者可能是吞吐量导向的。然后我们回头看，看看我们的吞吐量、性能在上一次怎么样。
 - en: say minute or 10 minutes。 Now for real-time systems， it's all about enforcing
     predictability， right？
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如一分钟或者十分钟。对于实时系统，关键是强制执行可预测性，对吗？
 - en: And that's not necessarily going to be the same thing as fast computing。 So
     when we think about hard real-time systems， right， so this is like the anti-awk
     breaks。 in your car or something like that， right， they're time-critical safety
     systems many， times。 It could also be factory automation， you've got robots or
     something like that。
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 这不一定等同于快速计算。所以当我们考虑硬实时系统时，这就像你车上的防抱死制动系统，或者类似的东西，它们是时间关键的安全系统。很多时候，这也可能是工厂自动化，你有机器人之类的。
 - en: We want to meet all of the deadlines if it's at all possible。 We want to design
     our system。 resource our system， to ensure that we can always meet， the deadline。
     So the number of tasks we're going to put into the system versus the resources
     we have。 to service those tasks and determine that in advance。
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们希望在可能的情况下满足所有的截止日期。我们希望设计我们的系统、配置我们的资源，确保我们始终能够按时完成任务。因此，我们需要根据系统中的任务数量以及我们拥有的资源来提前确定如何为这些任务提供服务。
 - en: Lots of different scheduling algorithms that we looked at for being able to
     do that。 Now in contrast， there are soft real-time systems that we use for multimedia。
     So for those of you who are at home， there's lots of systems between me and you。
     All of them are using soft real-time to try and guarantee that my video， my audio
     gets。
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们看了很多不同的调度算法，以便能够做到这一点。现在，相比之下，还有我们为多媒体使用的软实时系统。对于在家中的你们来说，之间有很多系统，它们都在使用软实时来尽力保证我的视频和音频能够顺利传输。
 - en: there uninterrupted。 But there's no guarantees which means occasionally you
     may see a frame skip or hear an audio。 skip。 Okay， now if we look at algorithms
     like shortest remaining time first or multi-level feedback。 cues， are they prone
     to starvation？ So if you think about it， right。 in something like shortest remaining
     time first， we might。
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是没有中断的。但是没有保证，这意味着偶尔你可能会看到帧跳跃或者听到音频跳跃。好的，现在如果我们看看像“最短剩余时间优先”或者“多级反馈队列”这样的算法，它们容易发生饿死吗？如果你仔细想想，在像“最短剩余时间优先”这种情况下，我们可能会遇到...
 - en: starve those long running jobs in favor of the short running jobs， right， because
     it's。 shortest remaining time first。 We have that same fundamental problem with
     priority scheduling where we give all of the。 time to the high priority jobs and
     no time to those low priority jobs。 Now if we look at something like multi-level
     feedback cues， that's just an approximation。
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 这样做就会让那些长时间运行的任务因为短时间运行的任务而饿死，对吧？因为这是最短剩余时间优先算法的特点。我们在优先级调度中也遇到了相同的根本问题——我们把所有时间都给了高优先级的任务，而不给低优先级任务分配时间。现在，如果我们看看像多级反馈队列这样的算法，它只是一个近似方法。
 - en: for us trying to implement SRTF。 We're looking back at the past to see what
     the performance was rather than knowing what。 the performance is going to be in
     the future in terms of like the CPU bursts for an application。 So it's going to
     have the same problem， right？ We're going to start with， right， jobs are going
     to。 long running jobs are going to start， up here in the high priority， the short
     quantum cues。
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于我们来说，实施 SRTF（最短剩余时间优先）时，我们更多是回顾过去的性能，而不是预测未来应用程序的 CPU 使用情况。所以它会遇到同样的问题，对吧？我们将从长时间运行的任务开始，这些任务会在高优先级队列中启动，短时间量的队列。
 - en: and they're going to keep hitting the， end of the quantum and still want to
     run。 And so they're just going to get demoted all the way down to the lowest cue。
     And if we look at how much CPU gets allocated， well if there are things in these
     higher priority。 cues， they're going to get run， which means those other jobs
     are just， the long running。
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 它们将不断地到达时间片的末尾，但仍然希望继续运行。所以它们最终会被降级到最低优先级队列。如果我们看一下 CPU 分配的情况，如果高优先级队列中有任务，它们会先被运行，这就意味着其他长时间运行的任务将只能等待。
 - en: jobs are going to get started。 Okay， now think about it， right？
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 任务将会被启动。好，现在想想看，对吧？
 - en: The policies that we've studied so far for scheduling are all around priorities。
     We want to give the CPU to some job that has higher priority， which means that
     those jobs。 that have low priority or no priority， they might never get to run。
     They get started。 But we didn't use priorities as， here's what we want the system
     to do。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 到目前为止，我们研究的调度策略都围绕着优先级。我们希望将 CPU 分配给那些优先级更高的任务，这意味着那些优先级低或者没有优先级的任务可能永远无法运行。它们会被启动，但我们没有用优先级来表示“我们希望系统做什么”。
 - en: It was more to basically give classes of actions for the system。 We wanted to
     give intentions of the system to say， hey， this job is more important than， this
     job。 not to say only run this job and completely ignore that other job。 So instead。
     if you think about it， our end goal here is we have systems with lots of different，
     jobs。
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 这主要是为了给系统提供不同类别的任务处理方式。我们希望能够让系统明确表示，嘿，这个任务比那个任务更重要，而不是只运行这个任务，完全忽略其他任务。所以，如果你这样想，我们的最终目标是：我们希望系统能够处理大量不同类型的任务。
 - en: some are CPU-bound， some are I/O-bound， some are interactive computations， some
     are， multimedia。 and we want the system to run all of the jobs， not just simply
     favor one class。 and only run one class over the others。 So we think about it，
     right？ Our I/O-bound jobs。 when they complete an I/O burst， they need just enough
     CPU so they。
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 有些任务是 CPU 密集型的，有些是 I/O 密集型的，有些是交互式计算的，有些是多媒体任务。我们希望系统能够运行所有任务，而不仅仅偏向某一类任务，只运行其中一类。所以我们需要考虑这一点，对吧？我们的
+    I/O 密集型任务，当它们完成一个 I/O 操作后，它们只需要足够的 CPU 时间来继续执行。
 - en: can schedule the I/O device to do the next I/O operation。 Similarly， if we have
     interactive jobs。 we want performance to be good。 When you type a keystroke。 we
     don't want it to take several seconds for that keystroke， to pop up。 And for our
     CPU-bound jobs。 we want to be efficient。 We want to run those through。
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以调度 I/O 设备进行下一个 I/O 操作。同样地，如果我们有交互式任务，我们希望性能良好。当你输入一个按键时，我们不希望按键的响应需要几秒钟的时间才能显示出来。而对于我们那些
+    CPU 密集型的任务，我们希望它们高效运行。我们希望能够快速执行它们。
 - en: grind them through the system as quickly as we can。 Things like context switching。
     those are only going to make those CPU jobs run， bound jobs， run slower。 because
     you can be overhead of context switching。
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 尽可能快速地将任务处理完。像上下文切换这样的操作，只会让 CPU 密集型任务运行得更慢，因为上下文切换会带来额外的开销。
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_3.png)'
+  id: totrans-20
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_3.png)'
 - en: At the same time， think about the landscape we're operating it。 When we think
     back to the dawn of computing， back in the 50s and the 60s， it was all about。
     the mainframe， right？ And you had a lot of people per computer。 There were only
     a few mainframes in the world at the very start， and they were serving millions。
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 同时，也要考虑我们所处的环境。当我们回顾计算机发展的初期，回到 50 年代和 60 年代，那个时候的计算主要依赖大型计算机，对吧？每台计算机背后都需要很多人共同使用。刚开始时，世界上只有少数几台大型计算机，它们服务着成千上万的用户。
 - en: of users。 And so if you think about the cost of those mainframes。 it was anywhere
     from tens of millions， to hundreds of millions of dollars。 So very expensive cycles
     on those machines。 But now look where we're at， at the Internet of Things。 If
     you sit in a modern automobile， you're surrounded by dozens of computers。
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你想想这些主机的成本，它们的价格从数百万到数千万美元不等。所以在这些机器上，计算周期是非常昂贵的。但是现在看看我们所处的位置，物联网时代。如果你坐在一辆现代汽车里，你会发现自己被数十台计算机所包围。
 - en: There could be potentially 40 different computers， microcontrollers， microprocessors
     around you。 Just look around this room。 There's computers and everything that
     you look at。 So the ratios have completely flipped。 Lots of computers per people。
     Cycles are cheap now。 But when we first started thinking about scheduling， it
     was in this context where it's these ever。
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 你周围可能有40台不同的计算机、微控制器、微处理器。只要环顾四周，你会发现计算机无处不在。所以，比例发生了彻底的变化。每人拥有多台计算机。现在计算周期便宜了。但是，当我们最初开始考虑调度时，是在那种背景下——成千上万的用户共享计算资源。
 - en: so precious cycles that we need to share between thousands of users using our
     mainframe。 And so schedulers really were designed around priorities for doing
     that， for allocating for。 the CPU intensive， the I/O intensive， and so on。 In
     the 80s， we saw the rise of personal computing。 So now that ratio flipped from
     being thousands to being one person per computer。
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们需要在成千上万的用户之间共享如此宝贵的计算周期，这些用户使用我们的主机。因此，调度程序的设计确实是围绕优先级来进行的，以便为CPU密集型任务、I/O密集型任务等分配资源。在80年代，我们看到了个人计算的崛起。因此，计算机的使用比例从成千上万的人共享一台计算机，变为一人一台计算机。
 - en: Cycles are a lot less valuable at that point。 Even when we look at workstations
     or server on the network。 a departmental file server， serves 100 people， maybe。
     So different machines now we also start to think about having different purposes。
     I have a network file server。 It's a computer dedicated just to serving files。
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 在那个时候，计算周期的价值大大降低。即使我们看工作站或网络服务器，像是部门文件服务器，它可能只服务100个人。所以，现在的不同机器开始有了不同的用途。我有一个网络文件服务器，它是专门用来提供文件服务的计算机。
 - en: Not doing any compute。 Nothing interactive， just serving up content。 The shift
     now is sort of the fairness and avoiding the extremes。 We don't want to have starvation
     in these environments。 Now we think about in the 90s。 we had the emergence of
     cloud computing data centers。 So 50，000 machines in a warehouse。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在不进行任何计算。没有互动，只是提供内容。现在的转变是公平性和避免极端情况。我们不希望这些环境中出现资源饥饿。回想一下90年代，我们看到了云计算数据中心的兴起。于是，50,000台计算机被放置在一个仓库里。
 - en: Now I think about running Google's Docker， Google slides to make my slides for
     the class。 Not running it on my laptop。 It's running in a data center that I'm
     sharing with millions of other users in the area。 It almost got back to the mainframe
     error， except instead of a single computer， it's。 tens of thousands of computers
     that are working together as efficiently as possible。
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我考虑在谷歌的Docker上运行Google幻灯片，制作我的课程幻灯片，而不是在我的笔记本电脑上运行它。它是在一个数据中心运行的，我和这个区域内的数百万其他用户共享这个资源。几乎回到了主机时代，只不过不再是单一的计算机，而是成千上万台计算机协同工作，以尽可能高效的方式运行。
 - en: to give me an interactive experience that's identical to if I was running PowerPoint
     locally。 on my machine。 And so now when you start to think about it。 it's now
     instead about predictability in terms， of things like the 95th percentile performance
     guarantees。 And it's pretty amazing the amount of engineering that systems engineering
     that you have to do。
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 为我提供一种交互体验，几乎和我在本地运行PowerPoint时一模一样。所以当你开始思考时，现在你要考虑的是可预测性，比如95百分位的性能保证。你不得不做大量的系统工程，这真是令人惊叹。
 - en: to make that 50，000 computer perform the same as my local application running
     locally。 But I get advantages around server consolidation。 Far more efficient
     to manage a data center filled with 50。000 computers than it is to， manage a bunch
     of desktop PCs。 At the same time。 you also have to deal with things like flash
     crowds。 Think about if you're， I don't know， CNN。
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 目标是让这50,000台计算机表现得和我本地运行的应用程序一样。但我也得到了服务器整合的好处。管理一个填满了50,000台计算机的数据中心，比管理一堆桌面PC更高效。同时，你还需要处理一些突发流量。想象一下，如果你是CNN。
 - en: com or you're the New York Times。 Last week， you watched your network and system
     traffic go from whatever your baseline is。 up by a hundredfold in the matter of
     a few minutes to hours。 And yet for the end users。 they saw that same 95th percentile
     performance because of the。 tremendous amount of scaling that you can do in these
     data centers。
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如说你是《纽约时报》的一员，上周你观察到你的网络和系统流量，在几分钟到几小时的时间内，从原来的基准值增加了100倍。尽管如此，最终用户仍然看到了相同的第95百分位性能，因为你在这些数据中心里做了大量的扩展。
 - en: Much harder if it's just a single machine and I've suddenly got to deal with
     100x the， traffic。 Okay。 So we can ask really the question here is if we're going
     to prioritize some jobs， does。 that necessarily mean that we're going to starve
     those jobs that aren't prioritized？ Well。 with the approaches we've looked at，
     that's exactly what's going to happen。 Right？
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果只有一台机器，而我突然需要处理比平常高 100 倍的流量，那就难得多了。好的。那么我们真正要问的问题是，如果我们要优先处理一些工作任务，是否意味着那些没有被优先处理的任务将会被饿死？嗯，按照我们所看过的方法，的确会发生这种情况。对吧？
 - en: Those jobs that have lower priority， if there are enough high priority jobs，
     those lower。 priority jobs will never get to run。 All of our CPU will get allocated
     to those higher priority jobs。 So we can look at some approaches that can work
     to guarantee that you always get some。 share of the CPU given to those lower priority
     jobs。 Right？ So with priority based scheduling。
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 那些优先级较低的工作，如果有足够的高优先级工作，这些低优先级工作将永远无法执行。我们的所有 CPU 都将分配给这些高优先级工作。因此，我们可以考虑一些方法，确保始终为这些低优先级工作分配一定的
+    CPU 份额。对吧？所以，采用基于优先级的调度。
 - en: we're always going to prefer to give the CPU to a job that， has higher priority。
     If there is a job on the ready queue with higher priority， it gets to run。 Which
     means lower priority jobs could get starved。 So in contrast。 what we could do
     is think about allocating the CPU proportionally。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们总是会倾向于将 CPU 优先分配给优先级更高的任务。如果就绪队列中有优先级更高的任务，它就会得到执行。这意味着低优先级的任务可能会被饿死。那么相反的做法是，我们可以考虑按比例分配
+    CPU。
 - en: Because ultimately that's what we want。 Right？ You know。 we have this mix of
     diverse applications that are running and we want each of those。 applications
     to get some fraction of the CPU。 The higher priority ones。 we want to get more
     of a fraction of the CPU。 The lower priority ones。
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为最终，这就是我们想要的。对吧？你知道，我们有一组多样化的应用程序在运行，我们希望每个应用程序都能得到一定份额的 CPU。优先级更高的应用程序，我们希望分配更多的
+    CPU 份额。优先级较低的应用程序。
 - en: we want to get less but some CPU。 If we didn't want them to get any CPU。 we
     would just simply not admit them to the system。 Right？ Okay。 So the goal is if
     each job is share of the CPU according to its priority， low priority。 jobs will
     run less often but they will run， there will be no starvation until they'll be。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们希望获得更少的 CPU 份额，但仍能获得一些 CPU。如果我们不希望它们获得任何 CPU，我们就根本不会将它们接入系统。对吧？好的。所以目标是，如果每个任务根据其优先级分配一定的
+    CPU 份额，那么低优先级任务的运行频率会更低，但它们仍然会运行，不会饿死，直到它们完成。
 - en: able to make progress。 Right。 So remember lottery schedule。 The basic idea here
     is you give。 given a set of jobs， our mix of jobs， we're going to allocate， each
     with a share of tickets。 Right？
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 能够取得进展。对吧。记住彩票调度法。这里的基本思想是，在给定一组工作任务，或者说工作任务的混合时，我们将为每个任务分配一定份额的票数。对吧？
 - en: So in this case， we're going to give 50% of the CPU to job A， we're going to
     give 30%。 to job B and we're going to 20% the last 20% to job C。 And so we're
     going to give out。 tickets according to a jobs priority。 So we can see here that
     for example。 job A in red gets lots of tickets。 It gets 50% of the tickets。
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以在这种情况下，我们将把 50% 的 CPU 分配给任务 A，30% 分配给任务 B，剩下的 20% 分配给任务 C。因此，我们将根据任务的优先级分配票数。我们可以看到，例如，任务
+    A（红色）获得了大量票数。它获得了 50% 的票数。
 - en: And job C gets 20% of the tickets and job B in blue gets 30% of the tickets。
     Now in every quantum。 every tick， we have to make a scheduling decision。 We're
     going to draw one of those tickets at random and schedule that job or thread to，
     run。 So simple mechanism that we can use is to just take the sum of all of our
     tickets that are。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 任务 C 获得 20% 的票数，而任务 B（蓝色）获得 30% 的票数。现在，在每个时间片，每次时钟滴答声中，我们都需要做一个调度决策。我们将随机抽取一张票，安排相应的任务或线程运行。所以我们可以使用的简单机制是将所有票数加总起来。
 - en: outstanding， pick a dart， throw that dart and jobs record the allocated number
     of tickets。 they have， order them by their tickets and then we just select the
     first J tickets such。 that the sum of that is greater than where our dart landed。
     All right。 The problem with this approach is it works well when we look at the
     long term but in the。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 非常棒，选一个飞镖，投掷那个飞镖，然后任务记录它们分配到的票据数量。它们按票据数量排序，然后我们就选择前J个票据，使得这些票据的总和大于飞镖落的位置。好的，这种方法的问题是，它在长期内表现良好，但在短期内却不一定有效。
 - en: short term we can have tremendous amount of unfairness。 So we have two jobs。
     job A and job B that have the same priority and the same runtime。 So we give them
     each 50% of the tickets you would expect that the runtime of A relative。 to the
     runtime of B would be the same。 That ratio would be， if we took a ratio it would
     be 1。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 在短期内，我们可能会遇到大量的不公平现象。所以我们有两个任务，任务A和任务B，它们具有相同的优先级和相同的运行时间。我们为它们分别分配50%的票据，按理说，任务A的运行时间相对于任务B的运行时间应该是相同的。若我们计算它们的比率，那比率应该是1。
 - en: What you find is for shorter running job lengths it can be very unfair。 Now
     why？
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 你会发现，对于较短的运行时间任务，它可能非常不公平。那么，为什么呢？
 - en: Why wouldn't it just be 50%？ It has half the tickets。 Any ideas？
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么它不会正好是50%呢？它有一半的票据。有什么想法吗？
 - en: How am I picking which one gets to run？ I use a pseudo， oh， how do I pick？
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 我是如何选择哪个任务运行的？我使用一个伪，哦，我是怎么选择的？
 - en: I use a pseudo random number generator which has that keyword pseudo。 It's not
     a truly random generator。 It's going to have some biases in the values it produces。
     And as an aside， the author of a lot of rescheduling spent months trying to design
     a random， pseudo。 random number generator that was both fast and efficient but
     also was very uniform in。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 我使用了一个伪随机数生成器，其中有“伪”这个关键词。它不是一个真正的随机生成器，它会在生成的值中存在一些偏差。顺便说一下，很多重新调度的工作花费了几个月的时间来设计一个既快速又高效，同时在调度决策中非常均匀的伪随机数生成器。
 - en: the distribution of values that it generated。 Turns out in practice even if
     you try to do that if you look at smaller draw sets from。 drawing only a few because
     my scheduling， the amount of time I'm going to make scheduling。 number of times
     I'm going to make scheduling decisions is small， I'm going to see those， biases。
     If I generate millions of pseudo random number from my pseudo random number generator
     it'll。
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 它生成的值的分布。事实证明，实际上，即使你尝试这么做，如果你看较小的抽样集，因我的调度，调度决策的次数很少，所做的调度决策次数不多，我会看到那些偏差。如果我从我的伪随机数生成器中生成数百万个伪随机数，它会。
 - en: look very uniform。 But in a small subset it could look very， very biased。 And
     that's a problem when you're trying to generate random numbers。 Just same problem
     shows up all over the place it shows up in security contexts where I'm。 trying
     to generate random bits for a key。 And if I know what pseudo random number generator
     using and I know the biases and I know the。
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 看起来很均匀。但是在一个小子集中，它可能看起来非常、非常有偏差。而这是生成随机数时遇到的问题。这个问题出现在各个地方，特别是在安全上下文中，我正在生成一个密钥的随机位。如果我知道使用了什么伪随机数生成器，并且了解其中的偏差，我就能知道它生成的。
 - en: starting conditions and seeds， I can oftentimes with high probability predict
     what your secret。 key is going to be。 There's a lot of work that goes into designing
     the random number generators for cryptographic。 applications where we don't want
     people to be able to guess the keys simply by guessing。 what random numbers get
     picked。 Okay， so that's the problem here is a randomness is not truly random and
     that throws off the。
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 初始条件和种子，我通常可以通过高度的概率预测出你的秘密密钥是什么。很多设计加密应用中随机数生成器的工作，目的就是避免别人通过猜测随机数的选择来猜出密钥。好的，这里面临的问题是，随机性并非真正的随机，这破坏了。
 - en: scheduling decisions。 So as an alternate approach people proposed stride schedule。
     So here the ideas we want to achieve this proportional share of schedule given
     to CPU。 given each one of our jobs but we're going to do it without having to
     use randomness。 So we'll avoid that sort of inverse of the law of large numbers，
     the law of small numbers。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以作为一种替代方法，人们提出了步幅调度（stride scheduling）。在这里，思想是我们希望在给定每个任务的情况下，实现相对CPU的比例调度，而不需要使用随机性。因此，我们将避免使用类似大数法则的逆法则，也就是小数法则。
 - en: biases problem that we saw。 So the stride of a job is going to take some big
     number divided by the number of basically。 your share。 And so if you think about
     it the larger the share of tickets that you have the smaller。 the stride that
     you're going to end up。 So here in this example if we set w to be 10。000 and we
     give a hundred tickets then we're going。
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们看到的偏差问题。所以任务的步长是一个大数除以基本上你分配到的份额。所以如果你考虑一下，你拥有的票证份额越大，你最终的步长就越小。所以在这个例子中，如果我们将
+    W 设置为 10,000，并且给 a 100 个票证，那么我们会。
 - en: to give b 50 tickets and see 250 tickets then a ends up with a stride of 100
     b ends up with。 a stride of 200 and c ends up with a stride of 40。 Now each job
     is going to have a pass counter and what we're going to do is a scheduler is。
     going to pick the job to run that has the lowest pass。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 给 a 分配 50 个票证，b 分配 250 个票证，那么 a 的步长是 100，b 的步长是 200，c 的步长是 40。现在每个任务都会有一个通过计数器，调度器将会选择通过计数器最小的任务来运行。
 - en: After that job runs we take the stride and add it to the pass counter。 After
     it runs for the quanta add the pass counter。 So if you think about this what this
     is going to mean is jobs that have lots of tickets。 have low stride are going
     to be moving that pass counter up more slowly than jobs that。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 在那个任务运行后，我们会获取步长并将其添加到通过计数器中。在运行一个量子后，添加通过计数器。因此，如果你考虑一下，这意味着拥有大量票证的任务，步长较小的任务，其通过计数器的增加速度会比其他任务慢。
 - en: have fewer tickets larger strides and so their pass counter is going to go up
     much faster。 And since we're picking the one that has the lowest pass counter
     we're going to run those。 jobs that have more tickets more often。 But eventually
     their pass counter is going to exceed that of the jobs that have fewer。 tickets
     their pass counter and so then that job that has fewer tickets will get to run。
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 拥有更少的票证和更大的步长，因此它们的通过计数器会更快地增加。由于我们选择的是具有最小通过计数器的任务，因此我们会更频繁地运行那些拥有更多票证的任务。但最终，它们的通过计数器将超过那些票证较少任务的计数器，然后票证较少的任务将会运行。
 - en: You can see here we're pre computing what we want that fraction to be effectively
     and。 we've removed randomness from the equation。 Yeah so the question is what
     if we have a really long running job that has like really。 small number of tickets
     do we have to deal with things like the counter overflowing。 And yeah so there
     are lots of messy issues we have to worry about because we want to。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以看到，我们在预先计算我们希望的分数，并且我们已经从方程中去除了随机性。是的，问题是，如果我们有一个运行时间非常长但票证数很少的任务，我们需要处理像计数器溢出这样的问题。是的，所以有很多复杂的问题我们需要担心，因为我们希望。
 - en: be able to deal with the fact that over time even if we have lots of short running
     jobs。 eventually our pass counter is going to roll over also you have new jobs
     coming into the。 system what do you set their default pass counter to be so that
     they don't always just。 get to run till they catch up with the rest of the system。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 要能够处理这样一个事实，即使我们有很多短时间运行的任务，随着时间的推移，我们的通过计数器也会溢出，另外，你有新的任务加入系统，我们应该将它们的默认通过计数器设置为多少，以避免它们总是运行直到赶上系统中的其他任务。
 - en: So there's always like you know details like that that we have to worry about。
     But the key thing is that even for that really long running job that only has
     a few tickets。 it still gets to run and so that solves a problem that we have
     with priority based systems。 Any other questions or comments？ Okay all right so
     let's look at another schedule the Linux completely fair scheduler。
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以总是有像这样的细节问题我们需要担心。但是关键是，即使是那个只有少量票证的运行时间非常长的任务，它仍然能够运行，这就解决了我们在基于优先级的系统中遇到的问题。还有其他问题或评论吗？好，好的，那么我们来看一下另一个调度器，Linux
+    完全公平调度器。
 - en: So the goal of this scheduler is we want to give each process an equal share
     of the CPU。 Oh the question is is W just an arbitrarily chosen large number。 Yeah
     we want to pick a W that is really large so that we have a good range for our
     basically。 for our strides。 Okay so the goal here is each process gets an equal
     share of the CPU we have n threads。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个调度器的目标是，我们希望给每个进程分配相等的 CPU 时间。哦，问题是 W 是否只是一个任意选择的大数？是的，我们希望选择一个非常大的 W，这样我们就可以有一个良好的范围来设置我们的步长。好的，所以这里的目标是每个进程都能获得相等的
+    CPU 时间，我们有 n 个线程。
 - en: that are simultaneously executing on so the way to think about it is you've
     got n threads。 simultaneously executing on one end of the CPU。 So it's sort of
     like that concept we looked at earlier with simultaneous multi threading。 where
     we could take and run multiple threads simultaneously by using the fact that we
     have。 extra functional units。 So giving each thread one one end of the CPU cycles。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们需要一些东西来保持同步，以便最终能够实现这样的情况：当我们查看时，我们可以看到所有线程在CPU上**几乎同时执行**。所以可以这样理解：你有n个线程同时在一个CPU的周期上执行。这就像我们之前讨论过的**同时多线程**的概念，我们可以通过利用额外的功能单元，来同时运行多个线程。
 - en: So if it was a perfect environment perfect world you know if we looked at it
     at any given。 time what we would see is an equal allocation of the CPU time that's
     been used right so T1。 would have 1n， T2 would have 1n and thread 3 would have
     1n。 And on general we can't do that right because real hardware doesn't work that
     way we have。
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果这是一个完美的环境，完美的世界，我们如果在任何时刻查看，我们会看到CPU时间的分配是均等的。也就是说，线程1、线程2和线程3每个都有一个周期。通常来说我们无法做到这一点，因为真实的硬件并不是这样工作的。
 - en: to give the entire CPU or you know with SMT we could potentially schedule a
     small number。 like 2 simultaneous threads。 So for a given quanta for now we're
     just going to assume one thread gets the CPU one for some。 cycles。 So we're going
     to need something that's going to keep us in sync so that we ultimately have。
     this situation where you know when we look at it we're a little bit of time we
     basically。
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了让整个CPU工作，或者通过SMT技术，我们可能会调度少量的线程，比如2个线程同时执行。因此，对于一个特定的量度，现在我们暂时假设一个线程将获得CPU的一个周期。
 - en: see that they're all getting the equal amount of CPU time。 Alright so here's
     the kind of basic framework for what we're going to do。 We're going to track how
     much CPU time has been used for thread and then schedule the。 threads to make
     sure that we get to that one end point right so everybody's at the one。
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们看到它们都得到了相等的CPU时间。好了，这里是我们要做的基本框架。我们将跟踪每个线程使用的CPU时间，然后调度线程，确保我们能够达到每个线程一个周期的目标。所以每个人都应该有一个周期的时间。
 - en: end equivalent。 So same average rate of execution basically。 So how do we do
     this？
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 也就是说，平均执行速率基本相同。那么我们该如何实现呢？
 - en: Well it's all about the scheduling decisions。 Which thread do we pick to run？
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 这完全是关于调度决策的问题。我们该选择哪个线程来运行？
 - en: Well when we have to make that decision we look at all the threads and we try
     to repair。 the thread that's farthest behind on its average rate of execution。
     So that's going to repair this illusion of complete fairness。 So here's an example
     where thread one it's ahead it's run for more than one end。
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们需要做出这个决定时，我们会查看所有线程，并尝试修复**执行速度最慢的线程**。所以这将修复这个**完全公平的错觉**。这里有一个例子，线程一已经领先，它的运行时间已经超过了一个周期。
 - en: Thread two has run for less than one end and thread three hey we actually hit
     one over。 end for thread three。 So which one are we going to pick if we're trying
     to repair the illusion？
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 线程二运行时间少于一个周期，而线程三则已经完成了一个周期。所以，如果我们要修复这个错觉，我们会选择哪个线程呢？
 - en: Yeah we'll pick the blue one thread two。 Because thread two is behind。 So it
     doesn't have that illusion of having gotten its fair share because its fair share。
     would be one over end。 And it's very similar to a concept called fair queuing
     that we'll talk about later in。 the semester when we talk about networking。 Alright
     so we're going to do this using a heap like scheduling queue that gives us nice。
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，我们会选择蓝色的线程二。因为线程二落后了。所以它没有那个“公平”错觉，因为它的公平份额应该是一个周期。而且这与稍后我们在讲解网络时会讨论到的一个叫做公平排队的概念非常相似。好，我们将使用一个堆调度队列来实现这一点，它可以为我们提供不错的**等效的平均执行率**。
 - en: behavior in terms of it'll be order log n where ends are number of threads to
     add or remove。 threads and so we get nice efficiency for making our scheduling
     decisions。 Okay now if you think about it thread that's asleep it's CPU time's
     not going to advance。 So what's going to happen when you type a keystroke and
     the thread that was waiting on。
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 它的行为将是O(log n)的复杂度，其中n是线程的数量，用来添加或移除线程，所以我们可以高效地做出调度决策。好，现在想想看，如果一个线程处于休眠状态，它的CPU时间就不会前进。那么当你敲击键盘时，等待中的线程会发生什么呢？
 - en: that IO event gets woken up。 Well it's going to be behind so it's going to run
     right away。 That's going to be really good for interactive performance and responsible。
     Okay so in addition to having fairness we want to have a system that has a low
     response。 time that makes it good for interactive computing and we want to make
     sure it's free from any。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 当IO事件被唤醒时，它会滞后，所以它会立即运行。这对于交互性能和响应性非常有利。所以，除了保证公平性，我们还希望系统有一个低响应时间，这使它适合交互式计算，并且我们希望确保它不会受到任何。
 - en: kind of starvation。 But everyone should get to run at least a little bit。 So
     we have a couple constraints we have to deal with here。 One is that we want to
     have a target latency so we want to have a bound on how long it takes。 before
     a thread gets responded to the response time。
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 所谓的饥饿现象。但是每个进程至少应该能运行一点。因此，我们必须解决几个约束条件。一个是我们想要有目标延迟，所以我们需要设定一个线程得到响应的时间上限。
 - en: So this will be our quanta so then we have to set our scheduling quanta and
     our scheduling。 quanta is going to be a function of our target latency over the
     number of threads that we。 have in the system。 So if our target latency is 20
     milliseconds and we have four processes then our quanta。 is just simply going
     to be a 5 millisecond time slice。
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这将是我们的量子，接下来我们必须设置我们的调度量子。量子将是我们目标延迟与系统中线程数的函数。因此，如果我们的目标延迟是20毫秒，而我们有四个进程，那么我们的量子将只是简单地设置为5毫秒的时间片。
 - en: Okay that makes a lot of sense but what if we have a lot of threads， a lot of
     processes， 200？
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，这很有道理，但是如果我们有很多线程，很多进程，比如200个呢？
 - en: Well that would argue that we should have a 0。1 millisecond quanta。 That's a
     problem。 Remember back to round robin what was one of the big issues with round
     robin was picking。 the right size quantum so we didn't end up just spending all
     of our time saving and。 loading registers。 So that's why we're going to want to
     have a minimum bound on our quantum。
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么这就意味着我们应该使用0.1毫秒的量子。这是一个问题。回想一下轮询调度算法，轮询调度的一个大问题就是选择合适的量子大小，以免我们最终把所有时间都花在保存和加载寄存器上。所以这就是为什么我们需要对我们的量子设置最小值的原因。
 - en: Even if it means we can't hit that target latency the tradeoff is yeah we could
     try。 to run with a 0。1 millisecond quanta and we just spend all our time context
     switching。 So we wouldn't hit it anyway。 Okay another goal that we have with the
     Linux CFS is throughput and so that means we have。 to avoid excessive overhead
     which means we can't have too many context switches。
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使这意味着我们无法达到目标延迟，权衡的结果是，我们可以尝试使用0.1毫秒的量子，但最终我们将会花费大量时间在上下文切换上。因此，我们无论如何都无法达到目标延迟。好的，Linux
+    CFS的另一个目标是吞吐量，这意味着我们必须避免过多的开销，这也意味着我们不能有过多的上下文切换。
 - en: So that's really going to set us give us a minimum granularity that we're going
     to want。 to have on our quantum。 So that we're not spending all of our time context
     switching。 So we're going to pick for given architecture what should be a reasonable
     lower bound on。 quanta and thus a reasonable upper bound on the overhead that
     we're going to have from。
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这实际上会给我们设定一个最低的粒度，量子也应该遵循这一规则，这样我们就不会把所有时间都花在上下文切换上。因此，我们将为特定架构选择一个合理的量子下限，从而得出合理的开销上限。
 - en: context switching。 Alright so now our target latency might be 20 millisecond
     with a minimum granularity of。 1 millisecond and say 200 processes so we'll give
     each process a 1 millisecond time slice。 Alright a little bit of an aside because
     we need to talk about how priorities get how。 users interact with priorities and
     practice and Unix systems。
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 上下文切换。好的，现在我们的目标延迟可能是20毫秒，最小粒度为1毫秒，假设有200个进程，那么我们将给每个进程分配1毫秒的时间片。好吧，稍微偏题一点，因为我们需要讨论一下优先级是如何设置的，用户在Unix系统中如何与优先级交互。
 - en: So when we look at the industrial operating systems that people use back in
     the 60s and。 70s priority was just like an integer you'd specify and that enforced
     whatever your target。 scheduling policies were。 When they were developing Unix
     here at Berkeley they were thinking well you know rather than。 thinking about
     it as just like priorities we want users to be nice to each other。
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，当我们回顾人们在60年代和70年代使用的工业操作系统时，优先级只是一个整数，你指定它并强制执行你所设定的目标调度策略。当他们在伯克利开发Unix时，他们的思考是，与其将其视为简单的优先级，不如让用户彼此友好。
 - en: And so in Unix there's actually a system call a nice system call that you use
     to set the。 priority of a process。 And priority ranges from negative 20 to positive
     19。 Negative values as sort of the connotation would imply they're not nice。 Positive
     values are nice。 So if you want to be nice to your friends who you're sharing
     a system with you nice your。
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 在 Unix 中，实际上有一个系统调用叫做 nice 系统调用，用于设置进程的优先级。优先级的范围从负 20 到正 19。负值意味着进程不友好，正值表示友好。所以，如果你想对与你共享系统的朋友好一点，你就将你的进程的
+    nice 值调高。
 - en: processes to higher values。 That will cause the system to give less time to
     you your process will spend more time on。 the ready queue。 Their processes will
     get more of the CPU。 That's where the opposite side is if you don't want to be
     nice to your friends then you just。 nice all your processes to minus 20 and they
     run and you know that's not a good way to。
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 这将导致系统给你分配更少的 CPU 时间，你的进程将花更多时间在就绪队列中。你的朋友的进程将获得更多的 CPU 资源。相反，如果你不想对你的朋友好，你只需将所有进程的
+    nice 值设为 -20，它们就会运行，你知道这样做并不好。
 - en: keep friends out。 Okay so the scheduler is going to take those higher nice processes
     and keep them on the。 ready queue。 They're not going to get to run as often whereas
     the lower nice processes they get to run more。 often。 Now with an order one scheduler
     this is just going to translate directly into priorities。 But we're going to look
     at it differently with Linux CFS。
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 保持朋友们在外面。好的，那么调度器将会把那些优先级较高的进程保留在就绪队列中。它们不会那么频繁地运行，而优先级较低的进程将能更频繁地运行。现在，对于一个一阶调度器，这将直接转化为优先级。但在
+    Linux CFS 中，我们将以不同的方式来看待这个问题。
 - en: Okay so with Linux CFS we're going to change instead the rate of the CPU cycles
     that we。 give to processes as a function of their nicest or prior。 So how are
     we going to do that？
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，那么在 Linux CFS 中，我们将改为根据进程的 nice 值或优先级来调整它们获得的 CPU 周期速率。那么我们该如何做到这一点呢？
 - en: Well think about it right if we want to give more CPU to some and less CPU to
     others so。 we want different proportional shares but guarantee everybody gets
     some you know our。 model is we want to effectively want different threads to get
     different numbers of cycles。 over a period of time。 So those that we want to give
     higher priority to will get more cycles over some period of。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，想一想，如果我们想给一些进程更多的 CPU 资源，而给其他进程更少的 CPU 资源。那么我们想要不同的比例分配，但要保证每个进程都能得到一些资源。我们的模型是，我们希望不同的线程在一段时间内能够获得不同数量的
+    CPU 周期。
 - en: time。 Those we want to give less priority to go get less cycles over that period
     of time。 So the easiest way for us to do this is just with weight。 So we're going
     to assign a weight to each process W sub i and that will compute what。 our switching
     quanta is going to be how long we let it run for。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 那些我们希望给予较低优先级的进程，在一段时间内将获得较少的 CPU 周期。所以，最简单的方法就是通过权重来实现这一点。我们将为每个进程分配一个权重 W_i，这样我们就能计算出切换时间片的大小，也就是我们允许进程运行的时长。
 - en: So if everyone were to get an equal share we just simply set everyone's weight
     to one。 And then what we're going to do is apply basically so that would be one
     over so it would be one。 over。 With a weighted share if we set everybody to one
     what's it going to be it will be one。 over the sum of all of our weights times
     the target latency。 Well that's just n。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果每个进程都获得相等的份额，我们只需简单地将每个进程的权重设为 1。然后，我们就可以应用基本的计算方式：这就是 1 除以总权重的和，乘以目标延迟。那就是
+    n。
 - en: It's just going to be one over n times our target latency so that's our basic
     equal share。 And now we have the flexibility if we want to increase or decrease
     somebody's priority。 we just change their weight and that's going to give them
     a different share。 Let's look at this in practice。 So we're going to reuse nice
     as our stand in for priority because that's how users and。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 它将是 1 除以 n 乘以我们的目标延迟，这就是我们基本的平均分配。现在，我们有灵活性，如果我们想增加或减少某个进程的优先级，只需更改它的权重，这样就能给它不同的资源份额。让我们看一下实际应用。我们将用
+    nice 值作为优先级的代表，因为这是用户设置优先级的方式。
 - en: Unix tell the system this is higher priority or lower priority so lower value
     negative not。 nice higher priority higher values are nicer than lower priority
     so it's a little little。 inverse if you want to think about it that way。 And so
     we're going to use the nice value to scale our weights we're going to do it with。
     an exponential function。 So it's going to be 1024 divided by 1。
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: Unix会告诉系统这个任务的优先级高或低，较低的值表示较低的优先级，负值表示“不友好”，较高的值则表示优先级较高。所以可以理解为一个反向的关系，如果你这样思考的话。我们将使用“nice值”来调整我们的权重，通过一个指数函数来实现。所以它会是1024除以1。
 - en: 25 raised to the power of the nice value。 So if we have two CPU tasks that are
     separated by a nice value of five。 And that means the lower priority or lower
     nice value is going to end up with three times。 the weight of that higher priority。
     So it's 1。25 to the fifth is roughly three。 Yes。 So the question is if it is three
     times the rate does it run three times as much。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: nice值的5次方的25。假设我们有两个CPU任务，它们的nice值差为5。这意味着优先级较低或nice值较低的任务将最终获得三倍于高优先级任务的权重。所以1.25的5次方大约等于3。是的。所以问题是，如果它是三倍速率，它是否就能运行三倍的时间。
 - en: Yeah it's going to run three times longer。 It's going to get longer quanta that
     it gets scheduled for。 And then we also you'll see in a moment we also have to
     deal with like how do we deal with。 CPU time and accounting for who we select
     to run next。 Okay and that gets us right at our next point which is instead of
     using actual CPU time。
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，它将运行三倍的时间。它将获得更长的量子时间，并且会按照调度的方式来执行。接下来，我们还需要处理如何分配CPU时间以及如何选择下一个要运行的任务。好了，这就引出了我们下一个要讨论的点，那就是我们将不再使用实际的CPU时间。
 - en: so sort of wall clock time we're going to use this notion of virtual runtime。
     I'll explain what that is in just a moment。 Alright so here's an example our target
     latency is 20 milliseconds and our minimum granularity。 is one millisecond we
     have two CPU bound threads so they could just run continuously if we。 let them。
     We'll say thread A has weight one and thread B has weight four。
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，我们将使用虚拟运行时间的概念，而不是壁钟时间。我稍后会解释这是什么意思。好了，给你一个例子，我们的目标延迟是20毫秒，最小粒度是1毫秒，我们有两个CPU绑定的线程，它们可以在我们允许的情况下持续运行。假设线程A的权重是1，线程B的权重是4。
 - en: What's going to be our time slice for thread A but what's our total weight five。
     Alright so A has a weight of one so again if we go back to here it's going to
     be one over。 the sum five times our target latency so one fifth of twenty which
     is going to be four。 milliseconds。 That's how long A will run when it's scheduled。
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么线程A的时间片是多少，另外我们的总权重是5。好了，A的权重是1，回到之前的例子，它将是1除以总权重5，再乘以目标延迟20，得到的结果是4毫秒。这就是A在被调度时的运行时间。
 - en: For B its time slice will be four that's its weight over the sum five times
     the target。 latency twenty or fifths times twenty is sixty so it'll run for sixteen
     milliseconds。 So we'll hit our target latencies or we're going to allocate it
     with one fifth twenty。 percent going to A and eighty percent going to B。 So if
     we were to look at what our physical CPU time or wall clock time might look like。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于B，它的时间片将是4，这就是它的权重4除以总权重5，再乘以目标延迟20，得到的结果是60，因此它将运行16毫秒。这样，我们就能达到目标延迟，或者我们将按照20%的比例分配给A，80%分配给B。如果我们查看物理CPU时间或壁钟时间，可能会是这样的。
 - en: we would see this kind of asymmetry right B is running in these sixteen millisecond
     chunks。 and A is running in these smaller four millisecond chunks but instead
     we're going to track a。 thread virtual time and basic way to think about it it's
     actually really complicated but。 the simplistic way of thinking about it is that
     if you have a higher weight your virtual。
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们会看到这种不对称性，B会在这16毫秒的时间段内运行，而A会在更小的4毫秒时间段内运行。但我们将跟踪线程的虚拟时间，简单地理解就是，如果你有更高的权重，你的虚拟。
 - en: runtime is going to grow slower and if you have a lower weight your virtual
     runtime is。 going to grow more quickly。 And so in this sort of virtual world we
     can keep A and B getting equal shares but when。 they actually run B is going to
     run a lot longer and get scheduled more often。 Okay so all of our scheduler decisions
     are based on virtual time so we just keep our。
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 运行时间将增长得较慢，如果你的权重较低，你的虚拟运行时间将增长得更快。因此，在这个虚拟世界中，我们可以保持A和B获得相等的份额，但当它们实际运行时，B将运行得更长，并且会更频繁地被调度。好了，我们的所有调度决策都基于虚拟时间，因此我们只需继续跟踪我们的。
 - en: red black tree that holds all the runnable processes and we look for the left
     most element。 the smallest element the smallest virtual time because again we're
     trying to repair that。 illusion of everyone getting one end but it's one end in
     virtual time not one end in CPU。 time we get order one to decide which to run
     and we can even cache that so it's always。
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 红黑树包含了所有可执行的进程，我们会寻找最左边的元素，也就是最小的虚拟时间元素，因为我们再次尝试修复这个问题。每个人都得到一个时间片的幻觉，但实际上是虚拟时间中的时间片，而不是
+    CPU 时间。我们通过`O(1)`时间来决定运行哪个进程，我们甚至可以将其缓存，以确保始终如此。
 - en: in memory and then it's going to be order log in when we need to add or remove
     a thread。 from the red black tree。 So when we're ready to schedule we just grab
     that left most node and that's what we schedule。
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 在内存中，当我们需要添加或移除一个线程时，它将会是`O(log n)`时间复杂度。所以当我们准备进行调度时，我们只需抓取最左边的节点，这就是我们要调度的进程。
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_5.png)'
+  id: totrans-94
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_5.png)'
 - en: Okay so we've shown you lots of different scheduling algorithms and at the end
     of the。 day when you're designing a system you look at the application and then
     you pick one of。 these scheduling algorithms to run and it's going to depend on
     what is the application， use case。 Now in some cases you'll need something that
     works for general purpose computing in other。
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，我们已经向你展示了许多不同的调度算法，最终，当你设计一个系统时，你会根据应用场景来选择一种调度算法。具体选择哪种算法将取决于应用场景和用例。在某些情况下，你可能需要一些适用于通用计算的算法，而在其他情况下……
 - en: cases you might need something that like a robot operating system or something
     like a。 network file storage operating system and so you'll pick a scheduler that
     meets those。 requirements so if you care about CPU throughput then you use first
     come first serve。 If you care about which is like what you might use in a high
     performance computing environment。
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 在某些情况下，你可能需要像机器人操作系统（ROS）或网络文件存储操作系统那样的调度系统，因此你会选择一个符合这些要求的调度器。如果你关心 CPU 吞吐量，那么你可以使用先到先得（FCFS）调度算法，这在高性能计算环境中是可能使用的算法。
 - en: if you care about average response time then maybe you use something that's
     an approximation。 of shortest remaining time first。 You care about IO throughput
     similar SRTF works well for that。 If you care about fairness in terms of CPU time
     you could use something like the Linux， CFS。 If you care about fairness in terms
     of say the wait time to get the CPU then maybe use。
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你关心的是平均响应时间，那么也许你会使用类似最短剩余时间优先（SRTF）这种近似算法。如果你关心的是 IO 吞吐量，类似的 SRTF 算法也适用。如果你关心的是
+    CPU 时间的公平性，可以使用类似 Linux 的 CFS（完全公平调度器）算法。如果你关心的是 CPU 等待时间的公平性，那可能需要使用……
 - en: something like round robin if you care about meeting deadlines it's a real time
     system。 and you use EDF or another real time scheduling algorithm or the earliest
     deadline first。 If you care about favoring the most important tasks maybe you
     just use a strict priority。 schedule but you have to be aware that there might
     be starvation that occurs。
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你关心按时完成任务，那么类似轮转调度的算法可以应用于实时系统。你可以使用 EDF（最早截止时间优先）或其他实时调度算法。如果你更关心优先处理最重要的任务，可能会使用严格优先级调度，但你必须意识到，可能会发生饿死现象。
 - en: The bottom line is in many cases we're dealing with systems that are multipurpose
     with a。 diverse workload and so you kind of pick one of these that meets most
     of the workloads。 requirements but that means it's not going to meet all of the
     workloads requirements。
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 总的来说，在很多情况下，我们处理的系统是多用途的，工作负载各异，因此你需要选择一个能够满足大多数工作负载需求的调度算法，但这意味着它不能满足所有工作负载的需求。
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_7.png)'
+  id: totrans-100
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_7.png)'
 - en: Final word on scheduling。 When do the details of which scheduling policy and
     fairness and all of that really matter？
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 关于调度的最后一言。当调度策略、调度的公平性和相关细节真正重要时，何时才是关键呢？
 - en: The answer is we don't have enough resources to go around。 We don't have enough
     resources。 The other way to think about this is like I've got a bunch of engineers
     when do I buy an。 engineer a faster computer or if I'm an urban planner when do
     I need to add another lane。 to a highway or bridge or get a faster network link
     for my company。
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 答案是，我们没有足够的资源来满足需求。我们没有足够的资源。另一种思考方式是，比如我有一群工程师，什么时候该为工程师购置一台更快的计算机？或者如果我是一个城市规划师，什么时候需要在高速公路或桥梁上增加一条车道，或为我的公司增加一条更快的网络连接？
 - en: So one approach is buy it when it's going to pay for itself and improve response
     time。 If you think about it like that engineer that developer you're paying them
     a couple hundred。 thousand dollars a year。 If they're sitting there at their computer
     waiting for the computer to do something that's。 lost productivity you're paying
     for them to just sit there and stare at the screen or。
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以一种方法是在它能够自我回收成本并提高响应时间时购买。你可以这样想，那个工程师，那个开发人员，你每年支付他们几万美元。如果他们坐在那里等待计算机做某事，那就是浪费生产力，你支付给他们的钱只是让他们坐在那里盯着屏幕或者。
 - en: maybe play wordle in a window or something。 And so buying them a faster computer
     will pay for itself very quickly in terms of improved。 productivity。 If you're
     serving a web population putting in a faster computer means they can check。 out
     their orders faster。 Because they're less likely to go to some competitor which
     has a faster check out process or more。 convenience。 And so there's lots of reasons
     why you want to make sure you've right sized your resources。
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 也许在窗口里玩wordle之类的游戏。所以购买更快的电脑将在提高生产力方面迅速收回成本。如果你正在为一群网站用户提供服务，购买更快的电脑意味着他们可以更快地完成订单结算。因为他们不太可能转向某个有更快结账流程或更高便利性的竞争对手。所以有很多原因让你要确保你已经合理配置了资源。
 - en: Now you might think okay as I hit that you know hundred percent utilization
     point that's。 when I just go out and I buy the next computer。 But here's a graph
     of response time versus utilization。 What you can see is as utilization approaches
     a hundred percent response time goes to infinity。 You end up spending all your
     time context switching or entering and leaving queues and。
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在你可能会想，好吧，当我达到百分之百的利用率时，那就是我去买下一台电脑的时候了。但是这里有一个响应时间与利用率的图表。你可以看到，随着利用率接近百分之百，响应时间趋向无穷大。你最终会花费所有时间进行上下文切换，或者进出队列。
 - en: dealing with all the overhead。 The overhead starts to dominate。 And so really
     the time to buy where all the scheduling algorithms matter and where they。 work
     is in this linear portion of the curve。 And it's right before you get to this
     knee that's when you buy the new computer the faster。 link that's where you make
     that decision to increase resources。
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 处理所有的开销。开销开始占主导地位。所以实际上，所有调度算法起作用的时间，尤其是它们有效的时间，就是在这条线性部分的曲线中。而且正是在你接近这个拐点时，才是你购买新电脑的时机，或者更快的链接，那就是你做出增加资源决策的时候。
 - en: Before that it doesn't you know you can pick the algorithm the algorithm will
     help you manage。 the available resources because you're not overloading those
     resources。 It's when you start to get closer to overloading them that it just
     doesn't matter。 Okay any questions about schedule？ Yes。 Between which two ones？
     LLC。
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 在此之前，你知道你可以选择算法，算法将帮助你管理可用资源，因为你不会让这些资源过载。只有当你开始接近过载时，才会变得无关紧要。好吧，有关时间表的任何问题吗？是的。在哪两个之间？LLC。
 - en: Yeah so the question is what is the difference between the Linux completely
     fair scheduler and。 say round robbing。 The round robbing is just simply giving
     everybody an equal shot at the CPU giving them equal。 size quanta。 With the CFS
     we adjust the size of that quanta dynamically as a function of priority。 Yeah
     so the question is if we had equal， so like for example if it equal priorities。
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，问题是Linux完全公平调度器和轮转调度之间有什么区别。轮转调度只是简单地给每个人一个平等的机会使用CPU，给他们相同大小的时间片。而CFS则根据优先级动态调整这个时间片的大小。是的，问题是，如果我们有相等的优先级，比如说。
 - en: between all of the threads would it then be pretty much the same between the
     Linux completely。 fair scheduler and round robbing。 Yeah they both basically be
     going through round robbing through right because you're always。 going to be picking
     with the CFS the thread that's furthest you know sort of behind in。 virtual time
     they're all going to be advancing virtual time the same rate since they all have。
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 在所有线程之间，那么在Linux完全公平调度器和轮转调度之间，它们基本上会是一样的吗？是的，它们基本上都会按轮转调度进行，因为你总是会用CFS挑选在虚拟时间中落后的线程。它们都会以相同的速度推进虚拟时间，因为它们都有。
 - en: the same fairness and so you're just going to simply cycle through。 Quances
     are all going to be the same since they have the same priority。 Yeah so they'd
     be very similar。 Yeah so the question is if a thread goes to sleep and then you
     wake up do you compensate。 for the fact that it's like kind of behind in its content。
     Yeah exactly。
+  id: totrans-110
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是相同的公平性，因此你将简单地轮流进行。队列的顺序将是一样的，因为它们的优先级相同。是的，所以它们会非常相似。是的，问题是，如果一个线程进入休眠，然后你把它唤醒，是否会补偿它在内容上落后的部分。是的，正是如此。
 - en: So that's the benefit is like if you're always looking at like who's furthest
     behind and those。 threads are going to be further behind and you're going to like
     sort of catch them up。 The devil's in the details of how you catch them up like
     and not just give them all of。 the CPU so you still are running the other jobs
     also。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这就是好处，如果你总是关注哪些线程进度最慢，这些线程会被进一步推迟，你会努力让它们赶上来。关键在于细节，如何让它们赶上，而不是简单地把所有的CPU时间分配给它们，这样你仍然需要运行其他任务。
 - en: And also again you have new jobs that come into the system and you know you
     have to figure。 out where they fall in terms of their virtual time。 It's not easier
     thinking about these in steady state but in implementation you have to worry。
     about all the edge cases。 Okay so we have some administrative stuff。
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 另外，再次提到，你会有新的任务进入系统，你需要弄清楚它们在虚拟时间中的位置。虽然在稳态下思考这些问题更容易，但在实现过程中，你必须担心所有的边界情况。好了，我们有一些行政事务要处理。
 - en: I have office hours that will start next week， Tuesdays from one to two and
     Thursdays from。 twelve to one。 I'm still trying to find a room but it'll be somewhere
     on the fourth floor of soda。 Today you have a deadline， project one， code， report，
     final report and your group evaluations。 is due。 homework two is due on Thursday
     and we have midterm two， seems like we just had the midterm。
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的办公时间从下周开始，周二从一点到两点，周四从十二点到一点。我还在找房间，但应该会在Soda大楼的四楼某个地方。今天你们有一个截止日期，项目一、代码、报告、最终报告和小组评估都要提交。作业二截止日期是周四，而期中考试二，好像我们刚考完期中。
 - en: but midterm two conflict requests are due Friday。 The term is moving very quickly。
     Okay so with that we'll take a four minute break。 Okay so now let's switch gears
     and talk about sort of the deadly version of starvation。 So people get very confused
     when we talk about deadlock and we talk about starvation。 I'm going to try and
     go through it and explain it if you have any questions you know raise。
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是期中考试二的冲突请求截止日期是星期五。学期进展得非常快。好了，接下来我们休息四分钟。好了，现在让我们换个话题，讨论一下“饿死”的致命版本。人们在讨论死锁和饥饿时常常感到非常困惑。我将尽力讲解清楚，如果你有任何问题，随时举手提问。
 - en: your hand and we'll go over it again。 So with starvation。 starvation means that
     the thread waits indefinitely。 So a low priority thread like we talked about could
     end up starve because there is a continuous。 stream of high priority threads coming
     through the system。 Deadlock is different。
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 请举手，我们再讲一遍。关于饥饿，饥饿意味着线程会无限期地等待。像我们讨论的低优先级线程可能最终会饿死，因为系统中会不断有高优先级线程进入。死锁则不同。
 - en: Deadlock means that we have some circular waiting for resources。 So here we
     have thread A that owns resource one。 So it's using resource one while it's waiting
     for resource two。 resource two is being is owned being held being used by thread
     B。 Thread B is waiting for resource one which we just heard was being held and
     owned by， thread A。
+  id: totrans-116
   prefs: []
   type: TYPE_NORMAL
+  zh: 死锁意味着我们有一些循环等待资源的情况。这里有线程A，它拥有资源一。它在使用资源一的同时，等待资源二。资源二由线程B拥有并使用。线程B在等待资源一，而我们刚才提到，资源一由线程A持有。
 - en: So there's this circular waiting for resources。 Now the key distinction here
     is thread A is waiting indefinitely。 Thread B is waiting indefinitely。 So there
     is starvation。 So deadlock implies that you have starvation。 There are threads
     that cannot make progress。 The difference between deadlock and starvation is starvation
     can end。
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这是一个循环等待资源的情况。这里的关键区别在于，线程A在无限期等待，线程B也在无限期等待。所以这就是饥饿的现象。因此，死锁意味着你会有饥饿的情况。线程无法前进。死锁和饥饿的区别是，饥饿是可以结束的。
 - en: If we stop getting high priority threads into the system， those low priority
     threads will。 start to run。 With deadlock it will not end unless we have some
     external intervention。 There's no way that we can change this situation here such
     that thread A is going to run or。 thread B is going to run。 There's nothing that
     those threads can do that will change that situation。
+  id: totrans-118
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们停止将高优先级的线程引入系统，低优先级的线程就会开始运行。发生死锁时，除非有外部干预，否则它不会结束。在这里没有办法改变这种情况，使得线程A或线程B能够运行。这些线程无法做任何事情来改变这种情况。
 - en: Those are both stuck in on wait piece。 Let's look at an example。 Let's start
     with a real world example。 This is a bridge across a canyon。 It's on California
     Route 140 on your way to Yosemite National Park or if you're coming。 back from
     Yosemite National Park。 For this example we're going to assume that cars have
     to own segments of roads。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 这两辆车都被困住了。让我们看一个例子。我们从一个现实世界的例子开始。这是一座横跨峡谷的桥，位于加利福尼亚140号公路上，通往优胜美地国家公园，或者如果你是从优胜美地国家公园回来。为了这个例子，我们假设汽车必须占有公路上的段落。
 - en: We'll think of our resource here as being segments of the highway。 Car has to
     own the segment under them and if it wants to move forward it has to acquire。
     the segment in front of it that it's going to move into。 It's holding the segment
     under it and trying to acquire the segment in front。
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将资源看作是高速公路的段落。每辆车必须占有自己下方的段落，如果它想前进，必须获得前方的段落。它持有下方的段落并试图获得前方的段落。
 - en: For the bridge we're going to divide the bridge into two halves。 Why two halves？
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于这座桥，我们将桥分为两半。为什么分成两半呢？
 - en: Because that makes it easier to think about。 Across the bridge you're going
     to have to acquire a segment to go onto the bridge。 You're going to have to acquire
     the segment for the other half of the bridge and enter。 that and then you're going
     to have to exit the bridge。 We can only have traffic in one direction at a time
     if you think about it。
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为这样更容易理解。通过这座桥，你必须获得一个段落才能上桥。你还需要获得另一半桥的段落并进入，然后你需要离开桥。你可以认为，一次只能有一个方向的交通流动。
 - en: We've got these two segments and we've got the orange and red car that's owning
     its。 half of the bridge。 We're trying to acquire the segment held by the green
     car which is holding that segment。 and trying to go in the other direction。 Here
     we have dead land。 Orange and red is waiting for the east half and owning the
     west half and green is owning。
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们有这两段路段，橙色和红色的车占有它们的桥的一半。我们试图获取绿色车所占有的段落，而绿色车则持有该段落并试图向另一个方向行驶。这里我们有死地。橙色和红色的车在等待东半部分，同时占有西半部分，而绿色车占有东半部分。
 - en: the east half and waiting for the west half。 We have dead land。 How can we resolve
     this situation？
+  id: totrans-124
   prefs: []
   type: TYPE_NORMAL
+  zh: 东半部分的车等着西半部分的车。我们有了死地。我们该如何解决这种情况呢？
 - en: Well， the green car could back up releasing that segment allowing the orange
     and red。 car to acquire it。 But it's not that simple because there's the blue
     car right behind the green car。 The blue car would have to back up but it can't
     back up because there's the purple car behind， it。 The purple car would have to
     back up and the blue car backs up and the green car backs。
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，绿色车可以倒车，释放那个段落，让橙色和红色的车占有它。但事情并不简单，因为绿色车后面还有蓝色车。蓝色车必须倒车，但它不能倒车，因为后面还有紫色车。紫色车也必须倒车，然后蓝色车倒车，绿色车也倒车。
 - en: up and now the orange and red car can go through。 So starvation but not deadlock
     would be the situation where we have a convoy of cars going。 from west to east。
     In that situation every car is acquiring the segment in front of it as it's being
     released。
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，橙色和红色的车可以通过了。所以饥饿但不是死锁的情况是这样的：我们有一队从西向东行驶的车队。在这种情况下，每辆车会在前方的段落释放时获取该段落。
 - en: by the car going in the same direction。 And those are starving the traffic that
     wants to go west instead。 That's a situation that will resolve。 Once the east
     going cars stop then the west going cars can go。 That's different from this situation
     that we have right here where there's no resolution， here。 There's no way for
     either of those cars to make forward progress。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 由同一方向行驶的汽车组成。这些车正在使想要向西行驶的交通饥饿。这种情况最终会得到解决。一旦向东行驶的车停止，向西行驶的车就可以通过。这与我们现在所处的情况不同，后者没有解决办法。在这里，那些车无法前进。
 - en: They're both stuck waiting on something held by someone else。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 它们都被困住了，等待着其他人持有的资源。
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_9.png)'
+  id: totrans-129
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_9.png)'
 - en: Okay。 So now let's look at locks。 Here's an example using two threads thread
     A and thread B where thread A is going to。 try and acquire the X lock and the
     Y lock do some work and release Y release X。 Thread B is going to acquire the
     Y lock then acquire the X lock do some work then release。 X then release Y。 This
     is the worst kind of deadlock because it's non-deterministic。
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，接下来我们来看一下锁的情况。这里有一个例子，使用两个线程，线程A和线程B，其中线程A会尝试获取X锁和Y锁，做一些工作后释放Y锁，再释放X锁。线程B会获取Y锁，然后获取X锁，做一些工作后释放X锁，再释放Y锁。这是最糟糕的死锁情况，因为它是非确定性的。
 - en: Sometimes it doesn't happen。 Other times like two o'clock in the morning before
     the project is due it keeps happening。 As soon as you look at it it stops happening。
     As soon as you submit it to the autograder it happens。 Non-deterministic is a
     really bad thing because it makes it really hard to debug。 The app debugging changes
     the timing and makes the bug go away。 But it also is bad for deployment。
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 有时候不会发生这种情况。而其他时候，比如项目截止前的凌晨两点，它就会一直发生。你一看它就不发生了，一提交给自动评分系统它就又发生了。非确定性是一件非常糟糕的事情，因为它让调试变得非常困难。应用程序调试改变了时序并使得bug消失了，但这对于部署来说也是不好的。
 - en: If you're deploying this for your company and just randomly it deadlocks that's
     a problem。 Okay。 So let's look at the unlucky case。 So in the unlucky case thread
     A acquires lock X。 Then for whatever reason a context which occurs thread B gets
     scheduled。 It acquires lock Y。 Now we context switch back to A and it tries to
     acquire Y and it gets put on the way queue。
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你为你的公司部署这个程序，而且它会随机死锁，那就是个问题。好的，接下来我们来看一下不幸的情况。在不幸的情况下，线程A获取了锁X。然后由于某些原因，发生了一个上下文切换，线程B被调度，它获取了锁Y。现在我们再切换回A，A尝试获取Y，并被放入等待队列。
 - en: So Y is being held by B。 So now we pick another thread to run eventually B gets
     to run and it goes to acquire X and。 X is being held by thread A。 So it gets put
     on the way queue。 And it's also stalled。 And the rest of the code is unreachable。
     And there's no way this situation is going to resolve itself because A cannot
     make progress。 and B can't make progress。 So we have no alternative here。
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以Y被B占用了。现在我们选择另一个线程来运行，最终B可以运行，并且它去获取X，而X被线程A占用了。所以它被放入等待队列。它也被阻塞了，剩下的代码无法访问。并且这种情况不会自行解决，因为A无法继续执行，B也无法继续执行。所以我们在这里没有其他选择。
 - en: So we have the situation where thread A is holding lock X while waiting for
     lock Y which。 is being held by thread B which is waiting for lock X。 So you can
     see again we have this circular dependency graph。 All right。 So neither thread
     gets to run。 It's deadlock。 Now in the lucky case and there are many examples
     of lucky cases but one lucky case is that。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们遇到的情况是，线程A持有锁X，同时等待锁Y，而锁Y被线程B持有，而线程B又在等待锁X。所以你可以看到我们又有了一个循环依赖图。好吧。于是没有线程可以运行，这是死锁。现在，在幸运的情况下，有很多幸运的情况，一个幸运的例子是：
 - en: A runs acquires X acquires Y starts doing something。 We context switch。 B goes
     to acquire Y。 It stalls。 We context switch back and finish whatever we're doing
     in A。 Release X or release Y rather， release X and then eventually we context
     switch back to B。 It acquires X。 That's what it wanted to do。 Then releases X
     releases Y。
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: A线程获取了X锁，获取了Y锁，开始做一些工作。我们发生了上下文切换。B线程去获取Y锁。它被阻塞了。我们切换回A，完成A线程正在做的工作，释放Y锁，或者说释放X锁，最终我们切换回B线程。B获取了X锁。这是它想要做的。然后释放X锁，释放Y锁。
 - en: And there are many other similar lucky interleaving that we can have。 There's
     only a couple of unlucky interleaving but there are lots of lucky interleaving。
     So most of the time this will work。 And then occasionally the rocket blows up。
     Okay。 Here's another example from networking。 So here we have a set of trains
     and all of the trains these are we have these crossings。
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有很多其他类似的幸运交错情况。只有几个不幸的交错，但幸运的交错有很多。因此大多数时候这个程序会正常工作。然后偶尔火箭爆炸。好的，接下来是一个来自网络的例子。这里我们有一组火车，所有的火车都有这些交叉点。
 - en: here。 Trains can go east west。 They can go north south or in this case south
     north。 And then they're trying to turn。 So this every train is trying to turn
     right。 Right。 So we end up with a circular dependency where it wants to turn right
     but that track is。 occupied by another train and that train is trying to turn
     right on to track occupied。
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里。火车可以向东向西行驶。它们可以向南向北行驶，或者在这个例子中是南北行驶。然后它们尝试转弯。所以每列火车都在试图向右转。对，结果我们就得到了一个循环依赖，它想向右转，但那条轨道被另一列火车占用了，而那列火车也在试图向右转到已经被占用的轨道上。
 - en: by another train and so on for our complete circle between the four trains。
     Very similar problem that we have in multi-processor networks where we're trying
     to route a train。 of messages packets between one microprocessor and another microprocessor
     and our multi-processor。 And the messages are like a little worm。 That's why it's
     called wormhole routing。 The fix。
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 由另一列火车和四列火车之间完整的循环，类似的问题也出现在多处理器网络中，我们需要在不同的微处理器之间路由消息包。在我们的多处理器系统中，消息就像一条小虫子。这就是为什么这种路由方法叫做虫洞路由。解决方案是。
 - en: Even that our grid extends in all four directions and we impose rules。 We say
     there's an ordering of channels。 The way you route something a train a message
     or whatever is you always go in the east west。 direction first and then you go
     in the north south direction。 So that forces us to disallow this north south train
     trying to turn right or this south。
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使我们的网格扩展到四个方向，我们也设置了规则。我们规定了频道的顺序。路由的方式是，你总是先朝东西方向走，然后再朝南北方向走。这样就强制要求我们不允许北南方向的火车试图右转，或者南方的火车。
 - en: or north south train here also trying to turn right。 Because they have to do
     that east west first not second。 This is called dimension ordering where we do
     x dimension first and y dimension and z， and so on。 We're going to see in a little
     bit why ordering is also the way we could solve that problem。
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者北南方向的火车也试图向右转。因为它们必须先走东西方向，而不是第二个方向。这被称为维度排序，我们先处理x维度，再处理y维度和z维度，依此类推。稍后我们会看到为什么这种排序方式也能解决这个问题。
 - en: that we just saw with thread A and thread B。 Okay lots of other types of deadlock
     that we can have。 Pick a resource if threads have to wait on that resource we
     can have deadlock so that。 could be locks it could be terminals it could be printers
     it could be CD drives DVD drives。 memory it could be other threats threads will
     block waiting on pipes waiting on sockets。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们刚才看到的线程A和线程B的情况。好吧，我们可以发生许多其他类型的死锁。选一个资源，如果线程必须等待这个资源，那么就可能会发生死锁。资源可以是锁，也可以是终端、打印机、CD驱动器、DVD驱动器、内存，甚至是其他线程，线程会在管道或套接字上阻塞等待。
 - en: from other threads。 Any of those anything that's a resource that meets certain
     criteria that we block on we。 can have deadlock on。 Okay we could for example
     deadlock on space。 So here's a program thread A is going to allocate or wait for
     megabyte of memory and。 it's going to allocate or wait for another megabyte of
     memory do some stuff then free。
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 来自其他线程。任何资源，只要符合某些标准，我们就会阻塞在上面。我们可能会发生死锁。例如，我们可能会在空间上发生死锁。那么，假设有一个程序线程A，它将分配或等待分配1MB内存，接着它会再分配或等待分配另一个1MB内存，然后执行一些操作，再释放。
 - en: that megabyte and then free the other megabyte。 And thread B is going to try
     and do the same thing。 Well we have a machine that only has two megabytes of memory
     we can have the same deadlock。 situation。 If we first run thread A and it grabs
     a megabyte and then we run thread B and it grabs a megabyte。 then now neither
     thread can grab another megabyte of memory and they're both just going to sit。
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，分配1MB内存后再释放另一个1MB内存。线程B会尝试做同样的事情。假设我们有一台只有2MB内存的机器，这时我们就可能会遇到同样的死锁问题。如果我们先运行线程A，它占用1MB内存，然后运行线程B，它也占用1MB内存，那么现在两个线程都无法再占用更多的内存，只能静静地等待。
 - en: there waiting。 Okay so there's a famous problem in computer science called the
     dining philosophers problem。 We like to call it instead the dining lawyers problem。
     Here's the basic parameters of the problem。 These lawyers they go to a restaurant
     it's an inexpensive restaurant they're seated at。 a circular table all five of
     the lawyers here but the restaurants really cheap and so they。
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是计算机科学中著名的问题——哲学家就餐问题。我们通常把它叫做律师就餐问题。问题的基本参数如下：这些律师去一家餐馆，这是一家便宜的餐馆，他们坐在一张圆形桌子旁，桌子上有五个律师。由于餐馆非常便宜，所以他们。
 - en: only give them each they only put five chopsticks around on the table。 This
     is a nice big bowl of rice in the middle。 Now we all know if we want to eat some
     rice we're going to need not one but two chopsticks。 And so we say okay dinner
     time time to eat what are the lawyers going to do well every。 lawyer is going
     to go and grab a chopstick。 What happens if every lawyer grabs a chopstick at
     the same time？
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们每人只在桌子上放五根筷子。桌子中间有一大碗米饭。我们都知道，如果我们想吃米饭，不止一根，而是需要两根筷子。那么我们说，好，吃饭时间到了，律师们会怎么做呢？每个律师都会去拿一根筷子。如果每个律师同时都拿了一根筷子，会发生什么呢？
 - en: Deadlock。 Right？ Everyone's going to have one chopstick and they're all going
     to stare at each other with this。 nice bowl of rice in the middle and they're
     going to starve。 Really starve。 Okay well how could we fix this deadlock？ Well
     we could turn to one of the lawyers and say be nice give up your chopstick to
     someone。 else。 Good luck with that。 I don't think that's going to happen。 Right？
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 死锁。对吧？每个人都拿着一根筷子，大家互相对视着，中间有一碗米饭，结果大家都饿死。真的饿死。那么，如何解决这种死锁呢？我们可以对一个律师说，做个好人，把你的筷子让给别人。祝好运。我觉得这不太可能发生，对吧？
 - en: But if they did if there was an altruistic lawyer if we found a unicorn they
     would give。 up the chopstick and then another lawyer would have two chopsticks。
     And they could eat then return the chopsticks to the pool to more lawyers could
     eat and。 so on and so on until all the lawyers had to eat。 Right？
+  id: totrans-147
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是，如果他们这么做，如果有一个无私的律师，如果我们找到了独角兽，他们会放弃筷子，然后另一个律师就能得到两根筷子。然后他们可以吃饭，吃完后把筷子放回池子，其他律师就可以吃饭，依此类推，直到所有律师都吃上饭。明白吗？
 - en: And so that might give us a flavor for how we could resolve these kinds of deadlock
     situations。 But the caveat here is it would require convincing one of them to
     give up a resource that they。 hold。 All right how could we prevent deadlock？ Well
     we could set table rules and say you can't take the last chopstick if it means
     that。 somebody at the table would not have two chopsticks。 Right？
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: 这可能给我们一些启示，了解如何解决这些死锁情况。但这里的警告是，这将需要说服其中一个人放弃他们持有的资源。好吧，我们如何预防死锁呢？我们可以制定桌面规则，规定如果拿最后一根筷子会导致桌上的某人没有两根筷子，那就不能拿。明白吗？
 - en: Because as long as there's one chopstick left and there's one lawyer at least
     with one chopstick。 they could take that chopstick and have two chopsticks they
     could eat and then return those。 chopsticks to the pool and the other lawyers
     could eat。 All right？
+  id: totrans-149
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为只要剩下一个筷子，而且至少有一个律师手里有一个筷子，他们可以拿到这个筷子，然后就有两根筷子可以吃饭，吃完后再把筷子放回池子里，其他律师就可以吃了。明白吗？
 - en: So that's a way we could avoid a deadlock situation with a rule like that。 So
     you could think about like trying to formalize that right？ How would we formalize
     this？
+  id: totrans-150
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这就是我们可以通过类似规则来避免死锁的方式。你可以考虑如何将其正式化，对吧？我们该如何正式化这一点？
 - en: What happens if you know we had a bunch of octopuses sitting at the table right？
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: 假如你知道，桌子上坐着一群章鱼，会发生什么呢？
 - en: How would we turn that kind of thing into a rule which would guarantee that
     all of the。 octopuses as they're super smart would be able to eat with you know
     a chopsticks and all。 that kind of stuff。 All right。 Let's first start by formalizing
     what we mean by deadlock。 So there are four requirements for deadlock to occur。
     The first is we have to have mutual exclusion。
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 那我们如何将这种情况转化为一个规则，确保所有的章鱼——它们非常聪明——能够使用筷子吃饭，做所有那些事情呢？好吧，让我们先从正式化死锁的定义开始。死锁发生需要四个条件。第一个是必须有互斥。
 - en: So only one thread at a time gets to use a particular resource or an instance
     of that， resource。 Second is we have to have hold and wait。 So a thread holding
     at least one resource is waiting to acquire some additional resources。 that are
     being held by other threads。 Next no preemption。 So if a thread is holding a resource
     we cannot take that resource away from the thread until。
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，每次只有一个线程可以使用特定的资源或资源的某个实例。第二个是必须有占用等待。所以，持有至少一个资源的线程正在等待获取其他线程持有的资源。接下来是不可抢占。所以，如果一个线程持有资源，我们不能在它还没有用完资源之前从它手中抢走资源。
 - en: it's done using that resource。 So in the case of the dining lawyers it means
     if a lawyer is holding a chopstick we can't。 go over grab the chopstick out of
     their hand before they finish eating。 We can't preamble。 And then finally we have
     to have circular waiting。 That is that there's a set of threads and threads where
     T1 is waiting for some resources。
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 就像在律师用餐的案例中，意味着如果一个律师拿着筷子，我们不能直接过去抢走筷子，直到他们吃完。我们不能插手。最后，我们必须有循环等待。即存在一组线程，其中T1正在等待某些资源。
 - en: held by T2。 T2 is waiting for resources held by T3。 T3 is waiting for resources
     held by T4 and so on and so on all the way up to Tn is waiting。 for resources
     held by bread one。 Now here's the thing about deadlock。 These are the four requirements
     for a system to be in deadlock。
+  id: totrans-155
   prefs: []
   type: TYPE_NORMAL
+  zh: 被T2持有。T2正在等待T3持有的资源。T3在等待T4持有的资源，依此类推，一直到Tn在等待由bread one持有的资源。现在，关于死锁有一点需要注意。为了使系统发生死锁，必须满足四个条件。
 - en: Remove any one of those requirements。 We don't have deadlock。 We might have
     starvation but we do not have deadlock。 If a system is in deadlock and we can
     remove any one of these we can take it out of deadlock。 Alright， any questions？
     Okay。 Alright， so first thing we need to do is figure out how can we tell that
     our system is in。
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 移除这些需求中的任何一个。我们就不会有死锁。我们可能会有饥饿现象，但我们不会有死锁。如果系统处于死锁状态，且我们可以移除其中任何一个要求，那么我们就能将其从死锁状态中解救出来。好了，有什么问题吗？好的。那么，首先我们需要做的是，弄清楚如何判断我们的系统是否处于死锁状态。
 - en: deadlock。 So we're going to use what we call a resource allocation graph。 So
     here's the model。 We have threads。 So here we have threads T1 and T2。 We have
     a little box here and we have end of those threads and then we have resources。
     There are different resource types。 So there could be CPU， it could be memory。
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 死锁。我们将使用我们所谓的资源分配图。所以这是模型。我们有线程。在这里我们有线程T1和T2。我们有一个小框，这里是这些线程的结束点，然后我们有资源。有不同类型的资源。比如CPU，或者是内存。
 - en: CPU is not actually a really good example because we can preempt the CPU。 So
     we can take the CPU away from someone and give it to someone else but it's a resource。
     We can have disk drives， printers， locks， anything can be a resource and then
     we have。 some resources that have multiple instances and we'll denote having multiple
     instances。
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: CPU实际上不是一个非常好的例子，因为我们可以抢占CPU。我们可以从某个线程那里拿走CPU并将其分配给另一个线程，但它仍然是一个资源。我们可以有磁盘驱动器、打印机、锁等，任何东西都可以是资源，然后我们还有一些资源有多个实例，我们将通过标记有多个实例来表示。
 - en: by these extra dots。 The extra dots mean there's like in this case resource
     two has three instances。 That means three threads that hold an instance of resource
     two or one thread can hold all。 three or whatever some combination。 Okay。 Now，
     threads utilize a resource by requesting that resource。 Like acquire using that
     resource and then releasing that resource back into the pool。
+  id: totrans-159
   prefs: []
   type: TYPE_NORMAL
+  zh: 通过这些额外的点。额外的点意味着像在这种情况下，资源二有三个实例。这意味着有三个线程持有资源二的一个实例，或者一个线程可以持有所有三个实例，或者任何其他组合。好，现在，线程通过请求资源来使用资源。比如获取该资源并在使用完毕后将资源释放回池中。
 - en: We generate a resource allocation graph as follows。 Our graph V is partitioned
     into two types。 We have one set of， we have threads and we have resources and
     then we have directed edges。 between those sets of resources， those two sets，
     our threads and our resources。 Now a request edge is an edge directed from a thread
     to a resource like so from T1 to R1。
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们生成资源分配图的方式如下。我们的图V被分为两种类型。我们有一组，包含线程和资源，然后我们有指向这些资源的有向边。指向这两组之间的资源，线程和资源之间的边。现在，请求边是指从线程指向资源的边，就像这样，从T1指向R1。
 - en: this instance of R1。 Assignment， so something holding a resource is a directed
     edge in the opposite direction。 So from the resource instance to the particular
     thread。 So say from this first dot here to thread two， that would mean that an
     instance of that resource。 is owned by or held by thread two。
+  id: totrans-161
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个R1的实例。分配，所以持有资源的对象是指向相反方向的有向边。也就是说，从资源实例指向特定的线程。所以说，从这个第一个点到线程二，这就意味着该资源的一个实例由线程二持有。
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_11.png)'
+  id: totrans-162
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_11.png)'
 - en: Okay。 So here's an example of a resource allocation graph。 So here resource
     one。 an instance of it is held by thread two。 Resource two， an instance is held
     by thread three。 resource four， an instance is held by， thread three and then
     resource three here has two instances。 One is held by thread one and one is held
     by thread two。 So first question。
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。那么这是一个资源分配图的例子。这里有资源一，它的一个实例被线程二持有。资源二，一个实例被线程三持有。资源四，一个实例被线程三持有，然后资源三这里有两个实例，一个由线程一持有，另一个由线程二持有。那么，第一个问题是。
 - en: is this system in deadlock？ No。 It's not in deadlock。 Because for example。 thread
     two here is waiting for resource two， which is held by thread three。 And thread
     three is not waiting for anything。 It holds an instance of resource two。 it holds
     an instance of resource four。 So it can run the completion and exit the system。
+  id: totrans-164
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个系统有死锁吗？没有。它没有死锁。因为例如，线程二在等待资源二，而资源二被线程三持有。线程三不在等待任何东西。它持有资源二的一个实例，它持有资源四的一个实例。所以它可以完成任务并退出系统。
 - en: And that would free up this resource two。 Then thread one， two rather could
     run， right？
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 这样就会释放资源二。那么线程二可以运行，对吧？
 - en: Because it would have an instance of resource one， instance of resource two
     and instance of。 resource three。 It would then release resource one and then thread
     one could get an instance of that and。 run to completion。 So this is not a system
     that's in deadlock。 Here is an example of deadlock。 We have a circular graph here，
     right？ Thread one holds an instance of resource three is waiting for an instance
     of resource。
+  id: totrans-166
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为它将拥有资源一的一个实例、资源二的一个实例以及资源三的一个实例。它将释放资源一，然后线程一可以获得该实例并执行直到完成。所以这不是一个死锁系统。这里是死锁的一个例子。我们这里有一个循环图，对吧？线程一持有资源三的一个实例，并在等待资源一的实例。
 - en: one， which is being held by thread two， which is waiting for an instance of
     resource two。 which is held by thread three， which is waiting for an instance
     of resource three， which is。 held by thread two and by thread one。 We have circular
     weight here。 None of these threads can proceed。 There's nothing that's going to
     change it。
+  id: totrans-167
   prefs: []
   type: TYPE_NORMAL
+  zh: 资源一由线程二持有，线程二正在等待资源二的实例，而资源二由线程三持有，线程三正在等待资源三的实例，资源三由线程二和线程一持有。我们有一个循环等待。没有任何一个线程能够继续执行。没有任何东西会改变这一点。
 - en: There isn't a thread that can change the free up one of the resources and let
     the other。 threads run。 Now simply because you have a cycle does not mean you
     have deadlock。 Again。 you have to have all of those conditions old true because
     here， thread three is waiting。 on resource two while holding resource， an instance
     of resource one。
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: 没有线程能够释放资源并让其他线程继续运行。仅仅因为你有一个循环，并不意味着你有死锁。再次强调，必须满足所有这些条件才算死锁。因为在这里，线程三正在等待资源二，同时持有资源一的一个实例。
 - en: Thread one is waiting on resource one while holding an instance of resource
     two。 So you might think。 oh， we've got a cycle here。 That's deadlock。 But we have
     two other threads， right？
+  id: totrans-169
   prefs: []
   type: TYPE_NORMAL
+  zh: 线程一正在等待资源一，同时持有资源二的一个实例。所以你可能会想，哦，我们这里有一个循环，可能是死锁。但我们还有两个其他线程，对吧？
 - en: Here we have thread two， which is holding an instance of R one。 Doesn't need
     anything and so could run and exit the system。 Right？
+  id: totrans-170
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里有线程二，它持有资源一的一个实例。不需要任何资源，所以它可以运行并退出系统，对吧？
 - en: That would then free up an instance of R one。 So T one could then grab it。 And
     then T one would have everything it needs to run or thread T four has everything
     it， needs。 It has an instance of R two。 It could run to completion， release that
     instance。 And then thread three could grab it， have everything it needs to one
     to completion。
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 这将释放一个 R1 实例。那么 T1 就可以获取它。然后 T1 将拥有运行所需的所有资源，或者线程 T4 拥有所有它需要的资源。它拥有 R2 的一个实例，可以运行直到完成，释放该实例。然后线程
+    T3 可以获取它，拥有所有它需要的资源并完成任务。
 - en: So as long as there are threads that can run and yield a solution schedule，
     then we know。 our system is not in deadlock。 But in this middle case。 there is
     no way for us to make forward progress。
+  id: totrans-172
   prefs: []
   type: TYPE_NORMAL
+  zh: 只要有线程可以运行并产生解决方案计划，那么我们就知道我们的系统没有死锁。但在这个中间情况中，我们无法取得任何前进进展。
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_13.png)'
+  id: totrans-173
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_13.png)'
 - en: Okay。 So this， if you think about it， gets us towards what we could use as a
     deadlock detection algorithm。 So we're going to say our vector X represents an
     M-ary vector of non-negative integers， which。 are quantities of a given resource。
     So we have free resources for each type。 Right？
+  id: totrans-174
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。如果你仔细想想，这为我们提供了一个死锁检测算法。我们可以说我们的向量 X 代表一个非负整数的 M 元向量，这些整数是给定资源的数量。所以我们为每种资源都定义了空闲资源，对吧？
 - en: So each element of our vector is going to be a given resource resource one，
     two， three， and so on。 And how many instances of that resource are available？
     We have a request vector。 which is the current request from a given thread for
     each of those， resources。 And then we have an allocation vector， which is per
     thread， and represents the resources。
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们向量的每个元素将代表一个给定的资源，资源一、二、三，依此类推。每个资源有多少实例是可用的？我们有一个请求向量，它表示每个线程对于这些资源的当前请求。然后我们有一个分配向量，它是每个线程的资源分配情况。
 - en: that are already allocated to that thread。 So now we can see if task can eventually
     finish on their own。 So here's the algorithm we're going to use。 We're going to
     initialize available that vector to be the free resources that we have。 We're
     going to add all of the nodes into an unfinished set。 And then we're just going
     to do a while loop here， and we're going to iterate over all。
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些资源已经分配给该线程。所以现在我们可以查看任务是否最终能自行完成。那么这是我们将要使用的算法。我们将初始化可用资源向量，使其为我们拥有的空闲资源。我们将把所有节点加入未完成的集合中。接着，我们将执行一个
+    while 循环，并遍历所有节点。
 - en: of the nodes in the unfinished set。 And for each node。 we're going to do this
     check if the request vector for the node is。 less than or equal to the resources
     that are available。 What does that mean？
+  id: totrans-177
   prefs: []
   type: TYPE_NORMAL
+  zh: 在未完成集合中的节点。对于每个节点，我们将进行检查，查看该节点的请求向量是否小于或等于可用资源。这意味着什么？
 - en: It means that no could grab all of the resources it needs and run to completion。
     So we're going to act like it did。 So it'll run to completion， then what's it
     going to do？
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 这意味着没有进程能够获取它所需要的所有资源并运行到完成。所以我们将假设它做了。它将运行到完成，然后它会怎么做？
 - en: It's going to release all of the resources that it was allocated to。 So we're
     going to return its allocated resources to the pool of available resources。 Now
     we're going to look at the next node。 Now maybe that node doesn't have the resources
     it needs。 Maybe its request is greater than the available resources。 So it's going
     to remain in unfinished。
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: 它将释放所有已分配的资源。所以我们将把它分配的资源返回到可用资源池中。现在我们将查看下一个节点。也许那个节点没有它所需要的资源。也许它的请求大于可用资源。所以它会保持在未完成状态。
 - en: And we'll look at the next node。 And we'll just keep iterating over this。 going
     through all of the nodes in unfinished multiple。 times as long as things are changing
     until we get to a point where either nothing changes。 and so our done variable
     remains true or we just simply have no nodes left in unfinished。
+  id: totrans-180
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将查看下一个节点。我们会继续遍历，反复检查所有未完成的节点，只要情况在变化，直到我们达到一个点，要么什么都不变，我们的完成变量保持为真，要么未完成集合中没有节点。
 - en: Now what does it mean if we exit this and we have nodes left in unfinished？
     Or alternatively。 what does it mean？ If we finish this and exit and there's nothing
     left in unfinished。 Of nothing？
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么如果我们退出这个过程，而未完成集合中还有节点，那意味着什么？或者说，如果我们完成了这个过程并退出，而未完成集合中什么都没有，那意味着什么？没有任何节点？
 - en: Yeah。 Yeah。 So if there's nothing left in unfinished， then there's no deadlock。
     If there's nodes left in unfinished and we're deadlocked。 There was nodes that
     could not get the resources they needed even after all the other nodes。 exited
     the system。 There was no path that could be found to let the nodes complete。
+  id: totrans-182
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的。是的。所以如果未完成集合中没有任何内容，那么就没有死锁。如果未完成集合中还有节点，而我们发生了死锁，那么说明即使所有其他节点退出系统后，仍然有节点无法获得所需的资源。没有找到可以让节点完成的路径。
 - en: Let the all of the brides complete now。 So that's our deadlock detection of
     it。 That's going to be how we can tell whether the system currently is deadlocked
     or not。 Okay。 So now the question becomes we're in deadlock。 What do we do？ Well。
     there are a couple of choices or four different choices。
+  id: totrans-183
   prefs: []
   type: TYPE_NORMAL
+  zh: 让所有的进程完成吧。所以这就是我们的死锁检测方法。这将是我们判断系统是否当前处于死锁状态的方式。好的。现在问题变成了，如果我们发生了死锁，我们该怎么办？有几种选择或四种不同的选择。
 - en: One is we could just simply prevent deadlock。 We write our code in such a way
     that we can't deadlock。 So think about that logical ordering of channels。 You
     route in dimension X first， then dimension Y。 then dimension Z and so on。 You
     impose an ordering on the acquisition of walks。 a lexical graphical ordering。
     So you have to always acquire X before Y。
+  id: totrans-184
   prefs: []
   type: TYPE_NORMAL
+  zh: 其中一种方法是我们可以简单地避免死锁。我们编写代码时确保不会发生死锁。想一下频道的逻辑顺序。你先在X维度上路由，再在Y维度上路由，然后是Z维度，依此类推。你对资源获取顺序进行强制排序，字典顺序。你必须总是在获取Y之前先获取X。
 - en: You're not allowed to acquire Y in the next。 Those types of approaches avoid
     deadlock from happening in the first place。 The second approach you could use
     to deal with deadlock is to recover。 The system， you know。 deadlock detection
     says， "Oh， the system is deadlock。 What do you do？
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: 你在接下来的过程中不能获得Y。这些类型的方法从一开始就避免了死锁的发生。第二种你可以用来处理死锁的方法是恢复。系统，你知道，死锁检测会说，“哦，系统发生了死锁。你该怎么办？”
 - en: You figure out how to recover it from it。 Maybe you kill off processes or you
     roll things back。"。 Another approach is to use that things like that deadlock
     detection algorithm to try and， predict。 could a system， if I grant it a request，
     end up in deadlock and then avoid granting。 that request and causing the system
     to potentially deadlock。
+  id: totrans-186
   prefs: []
   type: TYPE_NORMAL
+  zh: 你得找出如何从中恢复。也许你终止一些进程或者回滚操作。”另一种方法是使用像死锁检测算法这样的东西来预测，如果我允许某个系统请求，是否会导致死锁，从而避免批准该请求，防止系统发生死锁。
 - en: Another approach would be just to ignore deadlock。 There's no such thing as
     deadlock。 Move on。 Sometimes use all of these different approaches。 This last
     approach is the easiest approach because you just -- deadlock doesn't exist。 so，
     I'm not going to bother checking for it if it happens a little。 Okay。 so modern
     operating systems， they try to make sure that the operating system doesn't。
+  id: totrans-187
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一种方法就是直接忽略死锁。死锁根本不存在。继续前进。有时会使用所有这些不同的方法。最后这种方法是最简单的，因为你只是——死锁不存在。所以，如果它偶尔发生，我就不打算去检查它了。好吧。现代操作系统会尽量确保操作系统不会。
 - en: have deadlocks。 That's mostly true。 There are bugs that sometimes do cause the
     system to deadlock。 but pretty much， you know， well-designed code， you don't have
     deadlock。 Applications。 they can deadlock all they want。 The operating system
     is just going to ignore that。 So we'll tell you that's the ostrich approach。 Deadlocks
     don't exist for applications。 Okay。
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 遇到死锁。这通常是对的。确实有一些bug偶尔会导致系统死锁，但基本上，你知道，设计良好的代码是不会死锁的。应用程序可以随便死锁。操作系统只是会忽略它。所以我们称这为鸵鸟方法。对应用程序来说，死锁根本不存在。好吧。
 - en: so what are some techniques we could use to try and avoid getting into a deadlock，
     situation？
+  id: totrans-189
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么我们可以使用哪些技术来尝试避免进入死锁情况呢？
 - en: So one is if we have infinite resources， right？ Remember there's instances of
     those resources？ Well。 if we just have an infinite number of instances， then threads
     will never get in。 the situation where they have to wait for a particular resource。
     Now it doesn't really have to be infinite。 It just has to be large enough that
     we're not going to run out of it。
+  id: totrans-190
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以一种方法是，如果我们有无限的资源，对吧？记得那些资源的实例吗？好吧。如果我们有无限数量的实例，那么线程永远不会进入那种必须等待特定资源的情况。现在，它不一定要是无限的，只要足够大，我们就不会用完它。
 - en: right？ So we can give the illusion that we have infinite amounts of memory by
     using virtual， memory。 Then we won't run into that problem where two threads are
     trying to request two megabytes。 of memory， we don't have enough。 Inside a two
     megabytes， we can make it two gigabytes。 Right now。 if you made it two terabytes，
     that might be a problem， right？
+  id: totrans-191
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？我们可以通过使用虚拟内存，制造我们有无限内存的幻觉。这样我们就不会遇到两个线程请求两兆内存，而我们没有足够的内存的问题。我们可以把两兆内存扩展为两千兆内存。对吧？如果你把它扩展到两万兆，那可能就有问题了，对吧？
 - en: That's why I say the illusion isn't perfect， but we can make the illusion large
     enough that。 it appears that we have infinite resources， right？ A beybridge with
     12，000 lanes。 you're never going to have to wait。 Also not very feasible to actually
     implement。 Same with like infinite disk space。 If we don't have any sharing。
+  id: totrans-192
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我说幻觉并不完美，但我们可以让这个幻觉足够大，足以让人觉得我们有无限的资源，对吧？比如一座有12,000条车道的大桥，你永远不需要等待。实现起来当然并不实际。就像无限磁盘空间一样。如果我们没有任何共享的话。
 - en: but if we have completely independent threads with no shared， resources。 then
     we can't have deadlock。 We also don't have anything very useful。 You know。 it's
     very hard to do something if you never interact with the real world， you're。 never
     going to use a terminal， never going to use a printer， never going to do any IO。
     Yeah。
+  id: totrans-193
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是，如果我们有完全独立的线程，没有共享资源。那么我们就不会有死锁。我们也不会有任何非常有用的东西。你知道的。如果你从不与真实世界互动，那么做任何事都会非常困难，你永远不会使用终端，永远不会使用打印机，永远不会进行任何IO操作。是的。
 - en: it's not really feasible。 We get disallow waiting。 This is actually how telephone
     networks work。 If you say， "Oh， call mom and Toledo，" right？ Your call gets routed。
     the setup for that call through the phone company network。 If it ever encounters
     a trunk line that's full or network switch that's full， you just。
+  id: totrans-194
   prefs: []
   type: TYPE_NORMAL
+  zh: 这实际上不可行。我们禁止等待。这其实是电话网络的工作方式。如果你说，“哦，打电话给妈妈和托莱多”，对吧？你的电话会通过电话公司网络进行路由。如果它遇到了一条满的干线或者网络交换机已经满了，你就。
 - en: get a fast busy。 Try again later。 It's kind of like， you know。 imagine you wanted
     to go to San Francisco， you get in your car。 if you ever hit a red light or traffic，
     you just simply get teleported back to Berkeley。 It kind of take a while to get
     into San Francisco。 And it's very inefficient， right？
+  id: totrans-195
   prefs: []
   type: TYPE_NORMAL
+  zh: 变得快速繁忙。稍后再试。这有点像，你知道的。想象一下，你想去旧金山，你开车。如果你遇到红灯或交通堵塞，你就会被瞬间传送回伯克利。进入旧金山可能需要一段时间。这非常低效，对吧？
 - en: Because you have to just keep retrying every time you're getting that busy signal
     to get， through。 Okay。 So， coming back to the notion of virtually infinite resources，
     again， if we had something。 like virtual memory， we could avoid this being a problem
     where we've got two threads that。 are trying to request two megabytes of physical
     memory in a system that only has two megabytes。
+  id: totrans-196
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为你每次都必须继续重试，直到你听到忙音才能通过。好了，回到虚拟资源的概念，如果我们有类似虚拟内存的东西，就能避免这个问题，假设系统只有两兆内存，而两个线程都请求两兆物理内存的话。
 - en: If we make our virtual address space be four gigabytes， we will not have a problem。
     And with hundreds of threads， they can all request their two megabytes of memory
     and。 we won't run into a hold and wait situation。 All right。 So， last slide I
     want to cover。 some of the techniques for preventing deadlock。 You could make
     threads request everything that they need at the very beginning。
+  id: totrans-197
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们将虚拟地址空间设置为四个吉比字节，我们就不会遇到问题。即使有数百个线程，它们都可以请求它们的两兆内存，我们也不会遇到占用等待的情况。好了，最后一张幻灯片，我想讨论一些防止死锁的技术。你可以让线程在一开始就请求所有它们需要的资源。
 - en: The problem is how do I predict everything that I'm going to need at the very
     beginning？
+  id: totrans-198
   prefs: []
   type: TYPE_NORMAL
+  zh: 问题是，如何预测在一开始时我所有需要的东西呢？
 - en: It's really hard。 So， what are you going to do as a developer？ If you get told
     if you're wrong。 your program gets terminated and you have to start all over，
     again。 you're just going to overestimate。 And so， that's going to be very inefficient。
     All right。 But if you could figure out I'm only going to need two chopsticks，
     you could request those。
+  id: totrans-199
   prefs: []
   type: TYPE_NORMAL
+  zh: 这真的很难。那么，作为开发者你该怎么办？如果你被告知程序错了就会被终止，而且你必须从头开始，那你只会高估自己需要的资源。所以，这会非常低效。好了，但如果你能够算出只需要两根筷子，你就可以请求这两根。
 - en: two chopsticks at the same time。 If you don't know if you're going to need two
     or you're going to need five and it's kind。 of the death penalty， if you get it
     wrong， then you're going to request five chopsticks。 even if you only need two。
     You could force all threads to request resources in a particular order。 So， this
     is again where like that order of routing x， y， z or lexicographic ordering。
+  id: totrans-200
   prefs: []
   type: TYPE_NORMAL
+  zh: 同时使用两根筷子。如果你不知道自己是需要两根还是五根，而它又有点像是死刑，如果你弄错了，那你就会请求五根筷子，即使你只需要两根。你可以强制所有线程以特定的顺序请求资源。因此，这又涉及到像是x，y，z的路由顺序，或者字典顺序排列。
 - en: comes into play。 So， we say every lock you're going to acquire。 you have to
     acquire that in lexicographic order， like x， y。 and z or request disc first and
     request memory and so on， you prevent that。 circular chain of waiting。 Since everybody
     is going to request in that same order。 And so。
+  id: totrans-201
   prefs: []
   type: TYPE_NORMAL
+  zh: 这时候就会起作用。所以，我们说每一个锁你要获取时，必须按照字典顺序获取，像是x，y，z，或者先请求磁盘，再请求内存等等，你就能避免那种循环等待的链条。因为每个人都会按同样的顺序请求。因此。
 - en: that's another approach that we can do， but you have to enforce that then either。
     with programming or other practices and tools to make sure that that happens。
     Okay。 Any questions？
+  id: totrans-202
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是我们可以采用的另一种方法，但你必须通过编程或者其他实践和工具来强制执行，确保这一点能发生。好的，有问题吗？
 - en: All right。 I will see everybody on Thursday。 Okay。
+  id: totrans-203
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，我周四见。好的。
 - en: '![](img/e43763a2764cb9b447c151b8565693fa_15.png)'
+  id: totrans-204
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/e43763a2764cb9b447c151b8565693fa_15.png)'
 - en: (breathing deeply)。
+  id: totrans-205
   prefs: []
   type: TYPE_NORMAL
+  zh: （深呼吸）。
