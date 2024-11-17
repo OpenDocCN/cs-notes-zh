@@ -1,1395 +1,1878 @@
 - en: P25：Lecture 25： RPC, NFS and AFS - RubatoTheEmber - BV1L541117gr
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: P25：第25讲：RPC、NFS和AFS - RubatoTheEmber - BV1L541117gr
 - en: Okay， let's get started。
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，让我们开始吧。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_1.png)'
+  id: totrans-2
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_1.png)'
 - en: So this is lecture 25 and we're going to continue talking about TCD， then dive
     into。 remote procedure call and then we're going to look at distributed file systems。
     Okay。 so remember with the， with the laser point up here， with the transmission
     control， protocol。 it's all about delivering。 There we go。 Okay， so it's all about
     delivering bytes reliably from one host to the other。
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是第25讲，我们将继续讨论TCP，然后深入讲解远程过程调用（RPC），接着我们将讨论分布式文件系统。好的，记住，带着激光指示器这里，传输控制协议（TCP）主要是为了可靠地将字节从一个主机传输到另一个主机。
 - en: Now we looked at how we get that reliability using a sliding window protocol
     where we set。 the size of the window to ensure that we don't over on receivers
     buffer。 But remember that one of the other properties that TCP offers is that
     it tries to be a good。 Internet citizen。 That is it's going to try and not overload
     the network between the sender and the receiver。
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们看一下如何通过滑动窗口协议实现可靠性，我们设置窗口的大小来确保不会过度占用接收方的缓冲区。但记住，TCP提供的另一个特点是它尽量成为一个良好的互联网公民。也就是说，它会尽量避免过载发送方和接收方之间的网络。
 - en: So that's what we're going to look at next， which is how we avoid congestion。
     So let me talk about first what I mean by congestion。 Okay。 so congestion is when
     we have too much data that we're trying to flow through some。 part of the system。
     Now it could be the input link or it could be the output link。
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以接下来我们要讨论的是如何避免拥塞。那么，首先让我谈谈我所说的拥塞。好的，拥塞是指我们尝试通过某个系统部分传输的数据过多。它可能是输入链路，也可能是输出链路。
 - en: So it could be the link from the server， the rest of the Internet or it could
     be the link。 between your computer at home and your ISP。 Or it could be any of
     the links in between， right？
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以它可能是来自服务器的链路，或者是互联网的其他部分，或者可能是你家里的计算机和ISP之间的链路。也可能是介于中间的任何链路，对吧？
 - en: Or it could be because there's other traffic in the Internet， right？
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者可能是因为互联网上有其他流量，对吧？
 - en: You're not the only one using the connection between here and some sort or that
     you're connecting。 to in most cases。 And so what is I we do， right？ The Internet
     protocol will just simply drop packets if there's too many too much traffic。 for
     a given link。 Right？ Because if there's too much traffic consistently for a given
     link。 it's going to overflow the， buffers， those output buffers in the world。
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 你不是唯一一个在使用这里和你所连接的某个地方之间的连接的用户。在大多数情况下，情况就是这样。那么我们应该怎么办呢？对吧？互联网协议会在某个链路上流量过多时直接丢弃数据包。对吧？因为如果某个链路上的流量持续过多，它将溢出那个链路的缓冲区。
 - en: And that's completely acceptable， right？ We said IP is best effort。 And so if
     it runs into a situation rather than having something complex in the router， the。
     router is free to just simply start dropping packets。 Now if we think about this。
     what's going to happen to the TCP connection？ If you remember from last time the
     sliding window protocol。
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是完全可以接受的，对吧？我们说过，IP是尽力而为的。所以，当遇到这种情况时，路由器无需复杂的处理，路由器可以直接丢弃数据包。如果我们考虑一下这一点，TCP连接会发生什么呢？如果你记得上次讲的滑动窗口协议。
 - en: if we don't get acknowledgments， we're just going to simply retransmit。 Right？
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们没有收到确认信息，我们就会直接重新传输。对吧？
 - en: And so then we end up with lots of retransmissions。 And those retransmissions
     are going to cause more congestion。 And that congestion is going to cause more
     packets to get drawn。 And more packets getting a drop means more of our acknowledgments
     or source packets are。
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们就会遇到大量的重传。这些重传会导致更多的拥塞，而拥塞又会导致更多的数据包丢失。数据包丢失意味着我们的确认信息或者源数据包也会丢失。
 - en: going to get dropped， which means we'll just keep retransmit。 Right？
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 数据包会被丢弃，这意味着我们会继续进行重传。对吧？
 - en: And so when bandwidth is kind of scarce， we're going to just keep injecting
     more and more。 traffic to get our packets through。 Right？ So that doesn't really
     work。 So instead。 TCP tries to implement congestion avoidance。 So if you think
     about it， we only have congestion。 Right？ How long should we wait to do a retransmission？
     Right？ If we wait too long。
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以当带宽比较紧张时，我们就会不断地注入更多的流量来确保数据包能够通过。对吧？但这实际上行不通。所以，TCP尝试实现拥塞避免。那么，仔细想想，我们只有在出现拥塞的情况下才会遇到这个问题。对吧？我们应该等多久才进行重新传输呢？对吧？如果我们等得太久。
 - en: then we're going to waste time when messages actually get lost。 And we wait
     too short。 then we're going to retransmit when that acknowledgement was just，
     slightly delayed。 And so we're going to waste our precious network bandwidth。
     So there's kind of a stability problem here。 Right？ The more congestion there
     is。
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，如果消息丢失了，我们就会浪费时间。如果等待的时间太短，我们就会在确认稍微延迟时重新传输。这样我们会浪费宝贵的网络带宽。所以这里有一个稳定性问题，对吧？拥塞越严重。
 - en: the more acknowledgments get delayed， the more acknowledgments get delayed。
     the more we're going to unnecessarily climb out and retransmit， the more traffic
     we're。 going to inject causing more congestion， causing our apps to get delayed
     more and so on。 So you can see how this is kind of a vicious cycle。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 当确认的延迟时间增加时，我们会不必要地爬升并进行重传，导致更多的流量注入，造成更多的拥塞，从而使得我们的应用被进一步延迟，依此类推。所以你可以看到，这就是一种恶性循环。
 - en: So it's kind of closely related to the window size of the sender。 Right？
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以它实际上与发送端的窗口大小密切相关。对吧？
 - en: Because if the window size is too large， we're trying to push too much traffic
     through the。 network and the network can't handle it。 So think about how we choose
     the sender's window size。 Right？ Well， we choose it based on the available buffer
     space that the receiver tells us they have。 So the sender doesn't overflow the
     receiver's buffer。 So this kind of， you know。
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为如果窗口大小太大，我们就试图通过网络推送过多的流量，而网络无法处理。所以想想我们是如何选择发送端的窗口大小的。对吧？我们是根据接收端告知我们可用的缓冲区空间来选择的。这样发送端就不会溢出接收端的缓冲区。所以这个过程，实际上。
 - en: now we can think about it。 Okay。 So the only purpose of this window is to ensure
     we don't overflow at the receiver。 But we can also say， well， it's， it's also
     to make sure we don't overflow within the network。 We don't push the network into
     congestion。 So we want to really match the rate at which we send packets with
     kind of the slowest link。 in the network， a bottleneck link。 Okay。 So the way
     the sender does this is it uses an adaptive algorithm to decide what end should。
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们可以考虑一下它。好的。所以这个窗口的唯一目的是确保我们不会在接收端发生溢出。但我们也可以说，嗯，它也是为了确保我们在网络内部不会发生溢出。我们不希望把网络推入拥塞。所以我们真的需要使得发送数据包的速率与网络中最慢的链路匹配，也就是瓶颈链路。好的。所以发送端通过使用自适应算法来决定窗口的大小。
 - en: be。 All right。 So our goal is fill the network between the sender and the receiver。
     And the technique that we use is every time we get an acknowledgement， we're going
     to。 increase the window a little bit until some delay or loss of groups。 And then
     we're going to adapt。 So TCP calls this slow start because we start sending slow。
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。我们的目标是填满发送端与接收端之间的网络。我们采用的技术是，每次收到确认时，我们会稍微增大窗口，直到出现一些延迟或丢包。然后我们会进行调整。所以
+    TCP 称这种方式为慢启动，因为我们一开始发送得很慢。
 - en: Now with each acknowledgement we get back， we're going to open the window by
     one。 All right。 If we have a time now， that's our signal。 All there's congestion
     in the network。 And so we're going to slam the window。 And we're going to put
     it in。 So this is an additive increase， multiplicative decrease algorithm。
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，每次收到一个确认，我们就会把窗口打开一点。好的。如果现在我们发现时间到了，那就是我们信号的标志，表示网络出现了拥塞。于是我们会关闭窗口，把它缩小。所以这就是一种加性增加、乘法性减少的算法。
 - en: And so you can think about other alternatives。 My maybe like。 what if we just
     decrease the window by one？ So is that an increase additive decrease？ Well。 turns
     out that wouldn't respond fast。 And so we'd still have a network of congestion。
     Our goal here is when we push the network into congestion to very quickly kind
     of pull。
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以考虑其他的替代方案。比如说，假如我们每次只是把窗口大小减小一？这样是加性增加，还是加性减少？其实结果是这样的做法反应不够快。所以我们仍然会有网络拥塞的情况。我们这里的目标是，当我们将网络推入拥塞时，能够非常快速地进行恢复。
 - en: back off and pull ourselves out of congestion。 Okay。 So how does TCP do this？
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 后退并从拥塞中自我恢复。好的。那么 TCP 是怎么做到的呢？
 - en: So it's going to artificially restrict the window size if it sees some packet
     loss。 And kind of have to carefully design this control because it's really critical
     that。 we don't overrun the network or overwhelm the network。 But at the same time。
     we want to make sure we're using as much of the network bandwidth， as possible。
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以它会在检测到丢包时人为地限制窗口大小。而且必须小心设计这个控制，因为它非常关键，我们不能让网络过载或淹没网络。但同时，我们又想确保能够尽可能地使用网络带宽。
 - en: So that might argue for multiplicative increase， multiplicative decrease。 All
     right。 But again。 we've got this careful control。 But if we do a multiplicative
     increase。 we're going to push the network way into congestion， before we pull
     it back in。 All right。 So when they were designed the TCP algorithm， the slow
     start algorithm， they looked at all。
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，这可能支持乘法增长，乘法减少。好吧。但再说一遍，我们有这种精确的控制。但是如果我们做乘法增长，我们将会把网络推向极度拥塞，然后再拉回。好吧。所以，当他们设计TCP算法时，慢启动算法时，他们考虑了所有这些。
 - en: these different sort of choices and the design space。 What if we open the window
     really quickly and close the window really quickly or open。 the window quickly
     because it's slowly， you know， and so on。 Right。 And what they found was that
     what gave us the most ability。
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些不同的选择和设计空间。如果我们很快打开窗口，又很快关闭窗口，或者因为是慢慢打开窗口，诸如此类，明白吗？他们发现，给我们最多能力的其实是这种方式。
 - en: And here's the graph on the left that shows time on the x axis and the window
     size on。 the y axis where this solid line is the actual available capacity。 And
     this other one is the actual window size。 What we get with AIMB is an algorithm
     that you can see oscillates a bit。 but it's oscillating， around what our true
     window size is in the network。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是左侧的图表，显示的是时间在x轴，窗口大小在y轴，实线表示实际的可用容量，而另一条线是实际的窗口大小。我们通过AIMD得到的算法，你可以看到它有些波动，但它围绕着我们网络中的实际窗口大小进行振荡。
 - en: So what the network truly can support。 And you can see here， you know， as we
     grow。 we end up pushing the network， you know， packing， packets into the network
     until we see losses。 And then you can see big drop， the window size and hash，
     right？
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以网络真正能够支持的是什么。你可以在这里看到，当我们增长时，我们最终将数据包推入网络，直到看到丢包。然后你可以看到窗口大小的急剧下降，对吧？
 - en: Then try opening it back up and then big cut and open a little bit and， you
     know， keep。 having it until we get to this relatively stable state。 All right。
     Questions。 Yeah。 All right。 Very good question。 So how does congestion management
     interact with not pulling up the receivers buffer？
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后尝试重新打开窗口，再次大幅度增大窗口，再稍微打开一点点，持续这样，直到我们达到一个相对稳定的状态。好吧。问题？是的。好吧，非常好的问题。那么，拥塞管理是如何与不填满接收方缓冲区的情况互动的呢？
 - en: So the cap on the window size is always going to be the receivers advertised
     space。 So we're never going to exceed the receiver space， but at the same time，
     we're not going。 to exceed the network capacity。 Because maybe the receivers are
     server， right？
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以窗口大小的上限总是接收方广告的空间。所以我们绝不会超过接收方的空间，但同时我们也不会超过网络的容量。因为接收方可能是服务器，对吧？
 - en: So it has the ability to have a very large buffer space。 We don't want to overwhelm
     our weakest link， our lowest bandwidth link or capacity constraint。 link in our
     network at the same time。 Right。 And vice versa。 We had a client was the receiver。
     you know， your mobile device and it doesn't have a lot， of buffer space。
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以它有能力拥有非常大的缓冲区空间。我们不希望在网络中同时压倒最弱的链路，即最低带宽链路或容量受限的链路。对吧？反之亦然。如果我们的客户端是接收方，比如你的移动设备，它可能没有太多的缓冲区空间。
 - en: Even if you're connected to， you know， a gigabit network， we want to make sure
     we don't overwhelm。 that device。 Now， one thing I didn't mention is what happens
     when there's a lossy link， right？
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使你连接的是，嗯，千兆网络，我们仍然需要确保不会让那个设备不堪重负。现在，有一件事我没有提到，就是当链路丢包时会发生什么，明白吗？
 - en: So if you're operating at the edge of a cell， you know， cell coverage， well，
     this afternoon。 is actually going to hurt you a lot。 Right。 Because those losses
     that are occurring because of packets getting dropped or acknowledgement。 is getting
     dropped， are going to cause the window size to get closed down really small。 That's
     why if you're like trying to watch some video or something and you're， you know。
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以如果你在蜂窝网络的边缘操作，嗯，你知道，在信号覆盖范围的边缘，那么今天下午的情况实际上会对你产生很大影响。对吧？因为由于丢包或确认丢失，发生的那些丢失将导致窗口大小被压缩得非常小。这就是为什么如果你试图看视频或者做其他事情时，网络变得非常缓慢。
 - en: on the edge of coverage， it'll buffer it'll stutter， go below resolution， because
     the network。 is struggling to try and TCP is struggling to try and keep the window
     open and push packets。 Right。 Because every loss it sees， the thing is the link
     is congested， even if it's not actual， congestion。 So TCP works well until the
     loss rate hits about 10%。 When you get to about 10% loss。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 在覆盖的边缘，它会进行缓冲，会出现卡顿，解析速度下降，因为网络在挣扎，而 TCP 也在努力保持窗口开启并推送数据包。对吧。因为每当它遇到丢包时，链接就会变得拥塞，即使实际上并没有发生拥塞。所以
+    TCP 在丢包率达到大约 10% 时表现良好。当丢包率达到约 10% 时。
 - en: it starts in a feeling with congestion。 Okay。 So remember how we had set up
     a connection over TCP。 we identified our connections by， this five people of the
     source IP address， source port。 destination IP address， destination， port， and
     then protocol， which would be， you know， say。 UDP or TCP。 Now， client port， of
     course， is randomly assigned。
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 它从一种拥塞的感觉开始。好的。所以记住我们如何通过 TCP 建立连接。我们通过源 IP 地址、源端口、目标 IP 地址、目标端口和协议（比如 UDP 或
+    TCP）来标识连接。现在，客户端端口当然是随机分配的。
 - en: The server port is often some kind of well known port， like 480 for web servers
     or 443 for。 web servers using SSL rather and SSH is a platform。 All right。 So
     what are the processes of establishing this connection at the network？ All right。
     So this is that the application layer， we have sockets。 The network layer， there
     are three phases。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 服务器端口通常是一些众所周知的端口，例如网页服务器使用的 80 端口，或者使用 SSL 的网页服务器使用的 443 端口，而 SSH 是一个平台。好的，那么在网络中建立连接的过程是什么呢？好的，在应用层，我们有套接字。网络层分为三个阶段。
 - en: There's connection establishment， which we do with the three way entry。 That's
     how we open the connection。 Then you send bytes back and forth。 like the reliable
     byte stream transfer。 And that's what we looked at last week。 And we looked at
     how we do congestion control today。 If the connection failed， right。
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是连接建立过程，我们通过三次握手来完成。这就是我们如何打开连接。然后你就开始来回发送字节，就像可靠的字节流传输。这就是我们上周看过的内容。今天我们看的是如何进行拥塞控制。如果连接失败，对吧。
 - en: we repeatedly try to transmit it。 You know， eventually a client out occurs and
     you reset the connection。 So you log the web browser and you get the connection
     to the server。 It was reset。 That means TCP failed。 It couldn't get packets to
     whether from the server to the client or the client to the server。 Now when we're
     done， we closed the connection and we need to tear down the connection so。
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们反复尝试传输。你知道，最终会出现客户端超时，连接会重置。所以你打开网页浏览器，你会看到连接到服务器被重置了。这意味着 TCP 失败了，无法传送数据包，不管是从服务器到客户端，还是从客户端到服务器。现在当我们完成时，我们关闭连接，需要拆除连接。
 - en: that the user state associated at both the client and the server both have to
     agree。 Okay。 The connection is now terminated。 All right。 So let's start with
     that first part where we're connecting from a client to a server socket。 All right。
     So we're connecting to that web server on port 80。 So what the client's going
     to do is a three way connection。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 这时客户端和服务器端与用户相关的状态都需要达成一致。好的，连接现在已经终止。好的，那么让我们从连接客户端到服务器套接字的第一部分开始。好的，所以我们要连接到端口
+    80 上的网页服务器。那么客户端将执行三次握手来建立连接。
 - en: So it's going to start with the client initiator sending messages to the server。
     Time goes from top to bottom。 All right。 So on the server， the server calls listen，
     right。 but wait for new connection。 Now the client is going to call connect and
     connect。 It'll provide the server's IP address or name or talking of resolve with
     the rescue and。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以它会从客户端发起，发送消息到服务器。时间从上到下进行。好的。所以在服务器端，服务器调用 `listen`，对吧，等待新的连接。现在客户端将调用 `connect`，它会提供服务器的
+    IP 地址或名称，或者通过解析来获取。
 - en: IP address and afford it。 All right。 So now we will send out a message。 A syntax。
     All right。 So syntax it gets sent from the client to the server proposing an initial
     sequence number。 All right。 So you don't always start to remember at zeros。 You
     pick some random number and start it at that。 That way if you have two hosts that
     are talking back and forth multiple times。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 发送 IP 地址并进行处理。好的。那么现在我们将发送一条消息，一条语法。好的，语法从客户端发送到服务器，提出初始序列号。好的，所以你并不是总是从零开始记。你会选择一个随机数，并从那个数开始。这样，如果两个主机多次相互通信。
 - en: you don't end， up confusing packets from one session。 one connection with packets
     from another connection。 All right。 So it sends here a sin with sequence number
     X and each side is going to do that， right？
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 你不会把一个会话中的数据包和另一个会话的连接数据包混淆。好了。所以这里发送了一个带有序列号X的SYN，每一方都会这么做，对吧？
 - en: Because remember， these are bidirectional connections。 And so the client can
     send the server with one sequence number of space， the server will。 respond back
     with messages in the other direction using sequence numbers from a different space。
     So it'll send back a sin。 So a sin here's my proposed initial sequence number。
     And hey。
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为记住，这些是双向连接。所以客户端可以用一个序列号空间向服务器发送，服务器则会使用另一个序列号空间中的序列号回应。因此，它会发送一个SYN。这里是我提议的初始序列号。嘿。
 - en: I'm acknowledging that I received your packet with sequence number X by sending。
     an acknowledgement with that first one。 And I'm proposing to use one。 So of course
     now the client has to do the same thing。 That's the same thing。 Okay， yes。 there's
     an acknowledgement。 I got the packet walk。 I'm waiting for life。 That's why。
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 我通过发送带有序列号X的确认消息来确认已收到你的数据包，并提出使用一个。自然，客户端也必须做同样的事。这是一样的。好的，是的，已确认。我收到了数据包，我在等下一步。这就是为什么。
 - en: So now our connection has opened and we're going to allocate buffer space at
     the server。 And we're ready to go into the connection。 Now we will schedule some
     thread which can then go and accept that connection and。 you， know， now proceed。
     All right。 So we're going to do our byte exchange back and forth。 We'll look next
     at what we might send back and forth。 But first。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在我们的连接已经打开，我们将在服务器端分配缓冲区空间，并准备好进入连接。现在我们将调度一些线程，线程可以去接受该连接，然后，知道吗，现在继续。好了。所以我们将进行数据交换。接下来我们看看可能会交换什么。但首先。
 - en: we're going to look at what happens when the two parties are dull。 And it's
     a now we want to close the connection。 We send all our data back and forth。 What
     do we do？
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将看看当双方都没反应时会发生什么。现在我们想要关闭连接。我们已发送完所有数据，接下来怎么办？
 - en: So there's a four way turnip， right？ Because both the client has state and buffers
     and the server has state and buffers in each。 direction and we need to throw away
     all of that state。 And both sides have to agree。 Okay。 so the server， the client
     rather host one will say here， it's going to do a close。 So it'll send a thin
     packet to the server。 Right。 So that tells the server， okay。
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以有一个四次挥手，对吧？因为客户端有状态和缓冲区，服务器也有状态和缓冲区，每个方向都有，我们需要丢弃所有这些状态。双方必须达成一致。好的。那么服务器，客户端也就是主机一将说这里，它将进行关闭。所以它会发送一个SYN包给服务器。对吧。这样就告诉服务器，好的。
 - en: I'm done with this connection。 I'm not going to send you any more data。 The
     server responds back。 Okay， I got nerd knowledge meant no more data is coming
     in。 Right。 This connection is now I agree that this connection is close。 If the
     host that host sends subsequent data on that connection， we're going to ignore。
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 我完成了这个连接。我不会再给你发送任何数据。服务器回应，好的，我收到确认了，没有更多数据进来了。对吧。这个连接现在，我同意这个连接已关闭。如果该主机在这个连接上发送后续数据，我们将忽略。
 - en: As Morgan said， you know， we're done。 The socket is closing。 All right。 Now
     on the server will also call close and it's going to send a thin packet and post
     one。 will send back a thin app saying， okay， I agree to close your side of the
     connection。 Right。 And then there's a timeout here。 After that timeout here that
     occurs on host one。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 正如摩根所说，你知道的，我们完成了。插座正在关闭。好了。现在服务器端也会调用关闭，它会发送一个细小的数据包并发布一个。将会发送回一个细小的应用程序，表示好的，我同意关闭你这边的连接。对吧。然后这里有一个超时。超时发生在主机一上。
 - en: we throw away all state associated with， this connection。 That way that the
     timeout occurs because maybe host didn't get me involved。 And so it might want
     to be like， go transmit again， you know， hey， I said I'm closing this。 connection。
     Okay。 All right。 So within that window。
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们丢弃与此连接相关的所有状态。这样超时就发生了，因为也许主机没有收到我的数据。所以它可能想要重新传输，知道吗，嘿，我说了我要关闭这个连接。好吧。好的。所以在这个窗口内。
 - en: we have stayed enough to be able to respond back with the thinner outside， of
     that window。 We don't。 All right。 So that gives us a little bit of a window for
     us to be able to respond back to the second。 host and say， yes， this connection
     is close。 Now before we can actually turn down the connection。 if there are multiple
     file descriptors on the， host that were further at the connection。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们已经保持足够的状态，能够回应来自那窗口外的更薄的确认。我们没有。好了。这样就给了我们一个窗口，让我们能够回应第二个主机并说，是的，这个连接已经关闭。现在，在我们实际关闭连接之前，如果主机上有多个文件描述符与该连接有关联。
 - en: all to a socket， all of those have the floats。 There's some reference down in
     that approach。 The same thing happens with the host to side all anyone holding
     a file descriptor has to。 agree or close。 Yes。 So the question is， how does host
     who know if the host one is not received the fan when。 it's in the fan？ So that's
     why host one send the fan act back。 Right。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 所有都连接到一个套接字，所有这些都有浮动。那种方法中有一些参考。相同的事情也会发生在主机到一侧，任何持有文件描述符的人都必须。 同意或关闭。是的。所以问题是，主机一怎么知道主机一没有收到风扇时。
+    它在风扇中吗？所以这就是为什么主机一会发送风扇确认回传。对吧。
 - en: So how does host one know that host two received the fan act？ Yeah。 So if it
     doesn't get received。 it doesn't matter。 We're still going to crawl away the state
     and it can actually consider。 Uh。 and so that sometimes that'll happen。 Like the
     fan or the fan act doesn't get full truth。 One side thinks it's still connected。
     It will try to send some data and it will get back。
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么主机一怎么知道主机二收到了风扇确认？是的。如果它没有收到确认，没关系。我们还是会继续走状态，它实际上可以考虑。呃。所以有时会发生这种情况。比如风扇或风扇确认没有完全正确。一方认为它仍然连接着，它会尝试发送一些数据，然后它会收到回传。
 - en: I don't know who you are。 And then it just resets the connection。 You see that
     happen。 Open the buzzer。 Um， there's a question in chat。 Why is host two not closing
     the connection when。 uh， it seems the first thing。 Because both sides have to
     agree。 So host one。 all the processes that are using that file descriptor have
     to agree it's closed。 And host two。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 我不知道你是谁。然后它只是重置了连接。你看到这种情况发生了吗？打开蜂鸣器。嗯，聊天室里有个问题。为什么主机二不关闭连接，当。呃，看起来是第一个问题。因为双方必须达成一致。所以主机一，所有使用那个文件描述符的进程必须同意关闭它。并且主机二。
 - en: we also have to agree that it's close。 It's a， that's why there's this four
     way handshake。 And one side doesn't mean a laterally just say connection close。
     All right。 If I do close the connection， I am going to have， you know， once I
     receive that response， uh， thin。 I'm then going to throw away， uh， all of the
     state after， uh， this time out， of groups。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们还必须同意它已关闭。这就是为什么有这个四次握手的原因。一方不能只是简单地说连接已关闭。好了。如果我关闭连接，一旦我收到那个确认响应，呃，薄的确认。然后我将丢弃，呃，在超时之后的所有状态，组。
 - en: And the question is how does host one differentiate data and fit？ Fill is a
     special kind of path。 So， uh， data packets are of data type and send back to a，
     I can send back to it like。 soon and acts are actually can be put in， uh， other
     packets。 And so you can， uh。 piggyback and act on a data packet or even on a soon
     back at all。 So like the。
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 问题是，主机一怎么区分数据和填充？填充是一种特殊类型的路径。所以，呃，数据包是数据类型的，并会发送回到A，我可以像那样回发给它。 立刻，确认实际上可以放入其他数据包中。所以你可以，呃。
+    在数据包上搭载确认，或者甚至是在一个回传确认包上。所以就像是这样。
 - en: the same act that goes back is a packet that contains a soon and a convenient。
     Yeah。 What's the relation between sockets and ports？ So ports are what you're
     listening on or what you're sending out for a server or what。 you're sending from
     as a client。 So ports are at the protocol level。 And then the socket is at the
     application level。 And that is the connection between， uh。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 返回的相同确认是一个包含即刻确认和便利的包。是的。套接字和端口之间有什么关系？端口是你监听的端口，或者是你从服务器发送出去的，或者是你作为客户端发送的。所以端口是在协议层级上的。然后套接字是在应用层级上的。这就是它们之间的连接，呃。
 - en: two missions。 So again， you know， when we define a connection， it's defined
     as a source IP address。 source， port destination， IP address， destination port
     and a protocol。 You see there need to be the typical。 Okay。 Now remember we build
     distributed applications with messages。 right？ So I send a message to a message，
     uh， mailbox， a server report by over a connection。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 两个任务。所以再说一遍，当我们定义一个连接时，它是定义为源IP地址、源端口、目标IP地址、目标端口和协议。你可以看到，需要有这些典型的。好的。现在记住我们是通过消息构建分布式应用程序的，对吧？所以我发送一个消息到一个消息，呃，邮箱，服务器报告通过一个连接。
 - en: So the question is what's in those messages？ All right。 And so that's what we're
     going to talk about。 So it's really a question of how do we represent data in
     a message？
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以问题是这些消息中包含什么？好吧，这就是我们接下来要讨论的内容。其实这就是如何在消息中表示数据的问题。
 - en: Right？ Cause you think about like applications work with objects where I build
     the data structure。 and see or build an object in Java。 And now I want to send
     some representation of that over the network。 All right。 So I want to go from
     a machine specific binary representation to bytes that I can send over。 the network。
     And this is in contrast to when we think about a single process， right？
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 对吧？因为你要考虑到应用程序如何处理对象，在哪里我构建数据结构，或者在 Java 中构建一个对象。现在我想把这个表示发送到网络上。好吧。所以我想从机器特定的二进制表示转换为可以通过网络发送的字节。这与我们考虑单一进程时的情况不同，对吧？
 - en: The threads running in that process can view the data structures that contain
     pointers and。 other sorts of things。 And it's easy for us to follow those points。
     That you just do reference the pointer and that gives us the next thing and say
     a trick。 Right？
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 在那个进程中运行的线程可以查看包含指针和其他各种内容的数据结构。而且我们可以轻松地跟踪这些指针。你只需要引用指针，它就会给我们下一个对象，像一个技巧一样，对吧？
 - en: But we don't have shared memory when we have two separate machines。 So that
     external representation is going to have to take whatever like a tree structure。
     and turn it into some serial sequence of bytes。 So that is actually called serialization
     or Marshall。 And so that's taking a binary representation of an object in a machine，
     a virtual address。
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是当我们有两台独立的机器时，我们就没有共享内存了。所以那个外部表示必须采取某种结构（比如树结构），并将其转换成一系列字节序列。这其实叫做序列化或者 Marshalling。所以这是将机器中的对象的二进制表示（虚拟地址）进行处理。
 - en: space and turning it into a sequence of bytes。 The reverse of this is deserialization
     or un-marsh。 And that's taking the bytes and kind of rehydrating it into what
     could potentially be a complex。 data structure or a video or an audio file or
     a database file。 Okay。 So simple data types。 So like an interview。 The goal is
     I want to write the integer x， the inside of the new x， the file。
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 空间并将其转换成字节序列。这个过程的反向操作是反序列化或者 unmarshalling。即将字节重新转换成可能是复杂数据结构、视频、音频文件或数据库文件的东西。好的，那么简单数据类型，像在面试中一样。目标是我想把整数
+    x 写入文件。
 - en: Like， well， I could just do something like open the file， write， and then I
     have two choices。 I could write it as an ASCII spring。 The ASCII representation
     of say 162， 162。 Right？
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如说，我可以做一些类似打开文件、写入的操作，然后我有两个选择。我可以把它作为 ASCII 字符串写入，表示例如 162，162 的 ASCII 表示形式，对吧？
 - en: And then a new line would say。 Or I could write it as four binary bytes。 Of
     course。 I have to modify it so I open the file with the binary flag。 So I don't
     end up with any translation issues。 Well， there's two different ways I can serialize
     it。 Serialize it as a sequence of bytes that reflect the bytes that I have in
     memory or serialize。
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后可以加上换行符。或者我可以将其写成四个二进制字节。当然，我必须修改它，确保以二进制标志打开文件，这样我就不会遇到任何转换问题。那么，有两种不同的方式可以将其序列化。可以将其序列化为反映内存中字节的字节序列，或者进行序列化。
 - en: it as a set of ASCII parameters。 Now which is the right way？ Turns out， you
     know。 that it doesn't matter。 Both are mechanisms that we could use。 One's a little
     less dense， right？
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 将其作为一组 ASCII 参数表示。那么哪种方式是正确的呢？结果证明，你知道，这无关紧要。两者都是我们可以使用的机制。只不过其中一个稍微不那么紧凑，对吧？
 - en: If I want to represent a large integer as a ASCII string， it's going to take
     more than。 four bytes to represent them。 But I have to make sure that if I write
     an ASCII string at the sender that the receiver。 I parse an ASCII string， a scanable，
     an ASCII string。 Okay。 How do we know that the recipient represents X the same
     way？
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我想将一个大整数表示为 ASCII 字符串，表示它们将需要超过四个字节。但我必须确保，当我在发送端写一个 ASCII 字符串时，接收端能正确解析它，能够扫描并读取
+    ASCII 字符串。好吧，我们怎么知道接收端会以相同的方式表示 X 呢？
 - en: If you think about like a pipe with pipes， that's between two processes on the
     same machine。 so we know that the machine binary representation of the integer
     X is going to be the same almost。 empty machines。 Well， what about sockets？ An
     unissendent between my mat and your windows machine。 Or between my mat and some，
     you know， MIPS machine。 Well。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你考虑一下像管道这种结构，它是在同一台机器上的两个进程之间。我们知道，机器的整数 X 的二进制表示几乎在所有机器中都是一样的。那么，套接字呢？在我的
+    Mac 和你的 Windows 机器之间，或者我的 Mac 和某个 MIPS 机器之间呢？嗯。
 - en: I have to worry about an envious when it comes to integers。 You probably remember
     this from kids you would see， but you know， for a byte address machine。 when I
     refer to a type like an integer， what does that byte address refer to？
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 我需要关注整数的字节序问题。你可能还记得从小看到过这种问题，但你知道，对于字节寻址的机器，当我提到像整数这样的类型时，这个字节地址指的是什么？
 - en: And the case of a big ambient machine， it refers to the most significant bits。
     For a little ambient machine， it refers to both significant bits。 Right？
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于大端机器，它表示的是最重要的位；对于小端机器，它表示的是最不重要的位。对吧？
 - en: And here I have a little chart， right of processors and envious。 All right。
     so we can see that the Motorola 68000 is big and our PC big and until x86 little。
     went by some processors， it kind of depends on the little and the more big。 Right。
     So I had one max little and the bigger and the well， you know， it's something
     that the。
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里我有一个小表格，列出了不同的处理器和字节序。好吧，我们可以看到，摩托罗拉 68000 是大端字节序，我们的 PC 是大端，直到 x86 是小端。通过一些处理器，它可能是小端或大端，取决于不同的架构。对吧？所以我有一个
+    Mac 是小端，一个大端机器，嗯，你知道，它们有一些差异。
 - en: check could check it by running a little program like this， my number of problems。
     If you want to see where all we're going to do is just taking a value and going
     to print。 out the string of that value in representation。 And then we're going
     to print out what each byte wins in a word。 And since this was run on a little
     and new machine， we're going to see that the least。
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以通过运行一个小程序来检查这个，像这样的“我的问题数量”。如果你想看到的话，我们做的只是取一个值并打印出它的字符串表示。然后我们会打印出每个字节在一个字的表现形式。由于这是在一个小端机器上运行的，我们会看到最不重要的位。
 - en: significant bits， the 78， go up first followed by increasing significant bits。
     If I ran this on。 you know， power can see， I'd see the opposite。 Like one， two
     would be first and three， four， five。 six， and seven。 Right。 So then I can ask
     the question if I've got two machines communicating over the internet。 what Indian
     is the internet？ All right。 So what's the network by order from integer in the
     internet versus what might be the host。
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 重要的位，78 位先上升，然后是逐渐增加的重要位。如果我在 PowerPC 上运行这个，你知道的，我会看到相反的结果。比如 1 和 2 会先出现，接着是
+    3、4、5、6 和 7。对吧？那么我就可以问一个问题，如果我有两台计算机通过互联网通信，互联网的字节序是什么？好吧，那么互联网中的整数字节序与主机字节序会有什么不同？
 - en: by order？ And how do I write programs that are right once run anywhere， say
     against the POSIX API？
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 字节序？那么，如何编写“写一次，到处运行”的程序呢，假设它遵循 POSIX API？
 - en: Like the argument behind the POSIX APIs， I write my programs to the POSIX API，
     then I。 can run them on my Mac， I can run them on the windows with the windows
     subsystem for Linux。 installed， I can run it on a power PC with the POSIX API
     and so on。 But if I've got applications that are talking to each other。
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 就像 POSIX API 背后的论点一样，我编写程序时遵循 POSIX API，然后我可以在我的 Mac 上运行它，安装了 Windows 子系统的 Windows
+    上也可以运行，我还可以在带有 POSIX API 的 PowerPC 上运行它，依此类推。但是如果我的应用程序相互通信时。
 - en: how do they know what the representation， is？ So the answer is they don't have
     to think about it。 They just simply call a function。 One of the POSIX functions
     that handles that question。 All right。 So we need to decide on an on wire emptiness
     in case of the internet。 The internet is big and in。 Why is the internet big and
     in？ Because it's big and in。 All right。
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 那它们怎么知道什么是正确的表示呢？答案是它们不需要考虑这个问题。它们只需简单地调用一个函数，一个处理这个问题的 POSIX 函数。好吧。所以我们需要在互联网的情况下决定一种网络传输格式。互联网是大端字节序的。为什么互联网是大端字节序的？因为它就是大端字节序的。好吧。
 - en: It happens that the machines that were first being connected to the internet
     will be in。 the machines or people said， well， you're big and in。 Now why is this
     important actually？
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 恰好第一批连接到互联网的机器都是大端字节序的机器，人们说，“好吧，你是大端字节序。”那么，为什么这个问题重要呢？
 - en: Because if I've got a little ambient machine talking to a big ambient machine，
     then I have。 to convert from little ambient representation to big ambient， put
     it on the network， send。 it across the network and then at the big ambient machine，
     I can use it as it。 If I have two little ambient machines talking to each other，
     they're going to come each。
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为如果我有一台小端机器与一台大端机器通信，那么我就必须从小端表示转换到大端表示，把它放到网络上，传输到网络上，然后在大端机器上，我可以按原样使用它。如果有两台小端机器相互通信，它们会直接通信。
 - en: convert from little ambient to big ambient and then from big ambient back to
     little ambient。 as a representation。 So that's going to impose it over。 And so
     if you actually had say a hyperphone to a few clusters of all little ambient machines。
     you probably wouldn't want to use this as an approach because you're constantly
     going。
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 从小环境转换到大环境，再从大环境转换回小环境，作为一种表示方式。所以这将施加过来。所以如果你真的有，比如说，超电话到一些小环境机器的集群，你可能不想使用这种方法，因为你会不断地。
 - en: to be converting from little ambient to big ambient to little ambient even though
     everyone。 is little ambient。 But in the internet， you don't know the server of
     talking to you is little ambient or big。 ambient and so that's why we need a standard
     format that we're going to use。 Okay。 so we have functions that will convert from
     the native emptiness to the on wire and， these。
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 要从小环境转换到大环境，再到小环境，尽管每个人都是小环境。但在互联网中，你不知道你正在与之通信的服务器是小环境还是大环境。所以这就是为什么我们需要一个标准格式来使用。好的。所以我们有一些函数将把本地的空状态转换到网络上的格式，这些。
 - en: All right， so welcome work from a host HD or H2 network and then there's long
     versions。 and they're short versions， whether they're looking at 16 bit or 32
     bit values。 And then vice versa。 So when we get to the target converting from
     the network format to the host one。 And again。 if I have two little ambient machines
     talking， then each of these functions is actually。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，所以从主机 HD 或 H2 网络上工作，然后有长版本和短版本，无论它们是查看 16 位还是 32 位值。然后反过来也一样。所以当我们到达目标时，从网络格式转换到主机格式。再说一遍。如果我有两个小环境机器在通信，那么每个这些函数实际上就是。
 - en: going to do something。 If I have two big ambient machines talking。 these functions
     are going to be no off。 So we're just going to copy the output。 Okay。 What if
     we have more complicated objects like， you know， from homework zero and one or
     like。 so we have a structure here that has pointers for string and a count of
     integers and then。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 要做的事情。如果我有两个大型的环境机器在交流，这些函数将没有作用。所以我们只是将输出复制。好吧。如果我们有更复杂的对象，比如你知道的，来自作业零和作业一，或者说，我们有一个结构，其中有指向字符串的指针和整数的计数，然后。
 - en: a pointer to another total。 Right。 Well， we do like a kind of word。 It's going
     to just write things out of the sequence of words。 Right。 And so into a file stream。
     you can usually imagine having a basically scatter words that would。 read in and
     we tokenize those at the other end。 So that would， you know。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个指向另一个整体的指针。对吧。嗯，我们做类似一个词的东西。它将把东西按词的顺序写出来。对吧。所以到文件流中，你通常可以想象有一个基本的散布词汇，它会被读取并在另一端进行标记化。所以那个，知道了。
 - en: we could represent the string as we would represent it in the string。 that would
     send over the socket the same way we would represent the string that we would。
     save for the file and read from the file。 Right。 And we write something like a
     pointer。 We don't want to write the actual point because that actual pointer depends
     on the virtual， address。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可以将字符串表示为我们在字符串中表示它的方式，这样它就可以通过套接字发送，就像我们表示将要保存到文件并从文件读取的字符串一样。对吧。我们写的像是一个指针。我们不想写出实际的指针，因为那个实际指针取决于虚拟地址。
 - en: Even on the same machine， if we wrote pointers out to a file and then tried
     to read them in。 another process， they would be enough。 Right。 So we have to take
     pointers and turn them into something that's like an index。 Right。 So instead
     of pointing to somewhere in a memory location。 this points to the second structure，
     that I wrote。 So it's like an index。
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使在同一台机器上，如果我们将指针写出到文件中，然后尝试在另一个进程中读取它们，它们也会不够用。对吧。所以我们必须把指针转换成类似索引的东西。对吧。这样就不是指向内存位置的某个地方，而是指向我写的第二个结构。所以它就像一个索引。
 - en: This points to the third structure that I， this points to the tenth structure
     that I。 haven't written yet， but I'm going to write。 All right。 So if you make
     something relative so that string is completely self-contained。 And when we receive
     it at the other end， we can rehydrate it back into a list or a tree。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 这指向我还没有写的第三个结构，这指向我还没有写的第十个结构，但我会写的。好吧。所以，如果你使某些东西相对，这样字符串就完全自包含。当我们在另一端接收它时，我们可以将它重新转化为一个列表或树形结构。
 - en: of odd ones。 Now there are lots of data serialization formats that people use
     to do this kind of。 stuff like JSON and sent to the markup language。 There's lots
     and lots of ad hoc functions。
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 奇怪的元素。现在有很多数据序列化格式，大家用来做这种事情，比如 JSON 和发送到标记语言。也有很多临时的函数。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_3.png)'
+  id: totrans-87
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_3.png)'
 - en: And in fact， there are tons and tons of data serialized data formats。 And I'm
     not intending to read the columns here， but you know， some of them are human readable。
     with standardized is a， you know， binary format and so on。 So when you're designing
     a protocol to talk between two applications， you know， like， you know。
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 事实上，有大量的数据序列化格式。我并不打算在这里阅读列举，但你知道其中一些是人类可读的，有些是标准化的，像是二进制格式等等。所以当你设计一个协议来让两个应用程序之间进行通信时，你知道，比如说。
 - en: going work for a company that's doing web applications or mobile applications。
     And you have to do a client or a protocol。 You look at these like choices for
     data serialization formats and pick one that meets the criteria。 that we need
     for application。 Because you're in readable one， I think it always kind of humates。
     You look at like JSON， it's very human readable。 It's very verbose， which， you
     know。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你在一家做 Web 应用或移动应用的公司工作，你需要做客户端或协议的工作。你会考虑这些数据序列化格式的选择，并选择一个符合我们应用程序所需标准的格式。因为你需要可读的格式，我认为它总是会让人产生一些联想。你看像
+    JSON，它非常易于人类阅读。它非常冗长，正如你所知道的。
 - en: it's nice if you're trying to do webbing， but it's not， so great dealing with，
     you know。 adjusted limited mobile links or something like that。 And， you know。
     it's a very common format that people use。
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你在做 Web 编程，这很好，但对于像是有限的移动连接之类的情况就不太适用了。你知道，这是一个非常常见的格式，大家都在使用。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_5.png)'
+  id: totrans-91
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_5.png)'
 - en: Okay。 Yes。
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，是的。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_7.png)'
+  id: totrans-93
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_7.png)'
 - en: Yeah。 So the question is， what about objects that are represented differently
     on different machines。 say integers of a 32 bit versus 64。 So in that case， actually
     those are two different data types。 32 bit would be an integer， 64 bits would
     be a long。 I think an example where you have that happen is what's your stringing
     code， like your string。
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的。那么问题是，如何处理在不同机器上表现不同的对象。比如 32 位整数和 64 位整数。实际上，那是两种不同的数据类型。32 位是整数，64 位是长整型。我认为你可以看到的例子是，当你进行字符串编码时，像你的字符串。
 - en: writing and coding like the ASCII， it might be up to date， mainframe， and code。
     It could be double white and coded。 It's， you know。 representing the language
     of some of the Asian languages。 And so that's where like you have to worry about，
     like， I think I'm speaking asking you。
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 写作和编码像是 ASCII，可能已经过时，主机上使用的代码也可能是双字节编码。它代表了一些亚洲语言的字符。所以这是你需要考虑的地方，我想我在跟你说。
 - en: and you're expecting your mainframe， you're expecting up to date。 And so we
     have different character sets that we're using。 And so we'd have to agree。 This
     is what an character string represents。 Is it UTF-A being coded？ Is it asking
     coded？
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 你期望你的主机系统能够保持最新。所以我们使用了不同的字符集。所以我们必须达成一致。这就是字符字符串所代表的含义。它是 UTF-A 编码的吗？是 ASCII
+    编码的吗？
 - en: Is it double white and coded？
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 它是双字节编码的吗？
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_9.png)'
+  id: totrans-98
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_9.png)'
 - en: You know， it's all。 The key thing is both sides have to be able。 And it either
     has to be implicit in the type like everybody knows a short 16 bit， but what's，
     the。 you know， ordering of those or I think the strings， you know， what is the，
     okay。 So if there are other questions， I want to shift gears and talk about or
     local procedure， call。
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 你知道，关键点是双方必须能够理解。它必须是隐式的，像是每个人都知道一个短整型是 16 位，但问题是，它们的顺序是什么，或者我认为是字符串，你知道，什么是，好的。如果有其他问题，我想换个话题，谈谈或本地过程调用。
 - en: All right。 So with local procedure call， we try to move up from the level of
     message。 We don't want users to have to worry about instructing these messages，
     picking these formats。 and these serialization and marshal functions and having
     to sit there right， you know， scan。 apps or other kind of parsing functions。 So
     in order to do this。
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。那么通过本地过程调用，我们尝试从消息级别向上移动。我们不希望用户需要担心如何指令这些消息，选择这些格式，以及这些序列化和编组函数，还要坐在那里，进行扫描，应用程序或其他类型的解析功能。所以为了实现这一点。
 - en: we need something that's going to wrap up all of that information， to be less
     of source。 include all the typing information， and then at the destination is，
     going to include all。 we're going to receive all the information we need to then
     deserialize， a marshal that data， right。 And what procedure call might have to
     wait， you know， for a response or a service。
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们需要一些东西来封装所有这些信息，以减少源的复杂性。包括所有类型信息，然后在目标端，会包含所有这些。我们将接收所有需要的信息，然后反序列化，序列化这些数据，对吧？而且过程调用可能需要等待响应或者服务。
 - en: And at the server， you can have to wait for incoming messages。 And we want to
     deal with all of these message representation issues that we just talked， about。
     So the option here is remote procedure。 The move is up a layer level of indirection
     and hide everything behind our PC。 So I don't have to worry about all that complexity。
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 在服务器端，你可能需要等待传入的消息。我们想处理我们刚才谈到的所有这些消息表示问题。所以这里的选项是远程过程调用。这个步骤是提高一个间接层次，将所有的东西隐藏在我们的过程调用后面。所以我不需要担心所有的复杂性。
 - en: So now making a call to another procedure on our machine， I want to make that
     look almost。 the same as a call to a procedure on the same machine， a ordinary
     function。 And automate everything associated。 So for example， required to see
     simple calls。 remote file system read on the file。 And that's going to do something
     to automatically get translated into a call on the server for。
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在，调用我们机器上的另一个过程，我想让它看起来几乎与对同一台机器上的过程调用，普通函数的调用一样。并自动化所有相关的操作。例如，要求看到简单的调用。远程文件系统读取文件。这将自动转换成对服务器的调用。
 - en: file system read of the file database。 And the bytes will come back。 And when
     this call returns。 I'll have the contents of the file。 Right。 It's very different
     from before。 where we think about open the connection， I'll take， a socket， code，
     and send it off。 In this case。 doesn't have to worry about any of that。 Similarly，
     at the server。
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统读取文件数据库。字节会回来。当这个调用返回时，我将获得文件的内容。对吧？这与之前非常不同，那时我们考虑打开连接，获取一个套接字，发送数据。在这种情况下，根本不需要担心这些问题。类似地，在服务器端。
 - en: it looks like it's getting a local procedure call to the file。 And so on。 So
     the concept here is that the caller calls some function f with some arguments
     we want， to be to。 And there's a client stuff。 So it does a local procedure call
     to this client stuff。 And that's going to bundle up all the arguments， serialize
     them， and send them to the server， stuff。
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 看起来就像是接收到对文件的本地过程调用，依此类推。所以这里的概念是，调用者调用某个带有参数的函数 f，我们想要调用它。然后是客户端，它进行对客户端的本地过程调用。它将把所有的参数打包，序列化并发送到服务器端。
 - en: The operating system will deliver that message to the server stuff， which we'll
     see that message。 on the arguments and do a local procedure call to the server
     with those arguments。 Right。 And then back will come to response data and response
     return values。 Those get bundled up。 serialize sent back to the client stuff，
     which then receives them， and will then un-martial。
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 操作系统将把消息发送到服务器端，服务器端会看到这个消息，处理参数并对服务器进行本地过程调用。对吧？然后，响应数据和返回值会回传。它们会被打包，序列化并发送回客户端，客户端接收后会进行反序列化。
 - en: And then an ordinary procedure call would turn to the client， to the caller。
     Right。 Now。 these could be on the same machine， or they could be on completely
     different machines。 across the network。 All right。 So we could do this with pipes
     or we could do this with sockets。 So how do we go from， you know， I want to make
     that local procedure call to it actually。
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，一个普通的过程调用会转到客户端，转到调用者。对吧？现在，这些可以在同一台机器上，或者可以完全位于不同的机器上，跨越网络。好的。所以我们可以通过管道来做，也可以通过套接字来做。那么，如何从“我想进行那个本地过程调用”到它实际执行呢？
 - en: turns into something that happened remotely on a machine and I get back those
     constants。
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 转变成发生在远程机器上的某些事情，我会得到那些常量。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_11.png)'
+  id: totrans-109
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_11.png)'
 - en: That's the implementation。 So there was a question from earlier。 So essentially。
     is a pointer represented as a relative address effecting， you know， however。 your
     approach and code structure is going to have to take something that was absolute。
     like a pointer and then it's something that's going to be relative to the byte
     stream that。
+  id: totrans-110
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是实现。所以之前有个问题。实际上，一个指针是否表示为一个相对地址，取决于，您的方法和代码结构必须将某些原本绝对的东西，如指针，变成与字节流相关的相对地址。
 - en: you're sending back and forth。 Okay。 So under the covers， it's just request
     response message pass。 All we have is message passing between the two machines。
     The stub gives us the glue， right。 because it's responsible on the client side
     for serializing， the arguments and sending them out。 And then un-martialing， deserializing，
     it was term values。 And on the server。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 你来回发送。好的。所以在背后，它只是请求和响应消息的传递。我们之间只是消息传递。存根提供了粘合剂，因为它负责在客户端序列化参数并发送出去，然后反编组，反序列化它们，得到值。而在服务器端。
 - en: it's responsible for receiving the message containing the arguments and deserializing。
     that and then calling the local procedure and serializing up the results and sending
     it。 back to the point。 So marshal and what happens is going to depend on the system。
     but it's going to involve converting， the values from whatever the binary machine
     representation is into something that we can。
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 它负责接收包含参数的消息并进行反序列化。然后调用本地过程，序列化结果并将其发送回去。所以，marshalling（编组）和发生的事情将取决于系统，但它涉及将值从二进制机器表示转换为我们可以理解的形式。
 - en: send on the wire。 And so some of the values that might be passed in through
     that RPC might be just ordinary。 ordinal values， an integer like a short， some
     might be cleaner， a pointer to an integer。 And so if it's a pointer to an integer，
     the client stuff is going to have to de-martial。 that pointer or de-reference
     value of that pointer， get the integer and send the integer。
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 通过网络发送。所以，RPC中传递的一些值可能只是普通的数值，比如一个短整数，有些可能是指向整数的指针。所以如果是指向整数的指针，客户端存根需要进行反编组，解引用该指针，获取整数并发送整数。
 - en: to the other side。 It's a memory， put it in that memory at the server stub and
     then pass in a pointer to。 that to the server function。 It gets a lot more complicated
     potentially if you have things like a pass in two arguments。 that are the same
     pointer to the same object。 How do you handle it？
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 传递到另一端。它是内存，将其放入服务器存根的内存中，然后传递一个指针给服务器函数。如果你有两个参数，都是指向同一对象的指针，这可能会变得更加复杂。你该如何处理呢？
 - en: You create two copies or one copy of the destination。 So there's lots of devils
     in the detail。 but at a high level， we have to worry about things。 that get passed
     in by value versus things that get passed in by reference。 Okay。 so some more
     details。 If we look at the equivalence between a remote procedure call and a local
     procedure call。
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 你创建目标的两个副本或一个副本。所以细节中有很多复杂之处，但从宏观来看，我们需要关注按值传递和按引用传递的东西。好，更多的细节。如果我们看看远程过程调用与本地过程调用之间的等效性。
 - en: the parameters are what goes into the request message。 The result is what goes
     into the request message。 The name of the local procedure is something that gets
     passed in the request message and。 then applied at the invoke of this at the server。
     The return address here。 so what would be the return address in the local procedure
     call。
+  id: totrans-116
   prefs: []
   type: TYPE_NORMAL
+  zh: 参数是进入请求消息的内容。结果是进入请求消息的内容。本地过程的名称是传递到请求消息中的内容，然后在服务器端调用时应用。返回地址就是这里所说的本地过程调用中的返回地址。
 - en: is effectively like a return mailbox that we provide for the server， the server
     stub。 knows where it suddenly is all about。 Again， in this case it would be a
     stop。 All right。 so we have a， so as a user， you don't have to do this。 The user。
     there is a stub generator where the compiler just simply jights the stubs for。
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上，这就像我们为服务器提供的一个返回邮箱，服务器存根知道它突然在哪里。再一次，在这种情况下，它将是一个停止点。好了，所以作为用户，你不需要做这些。用户有一个存根生成器，编译器只是简单地为它们生成存根。
 - en: you to find stubs in the series。 Question。 Yes， the question is。 does this mean
     that the server procedure can only work with a pass， by value。 instead of call
     by value values， instead of call by reference values。 It could be either。 It would
     be the job of the server stub if things are called by reference arguments to。
+  id: totrans-118
   prefs: []
   type: TYPE_NORMAL
+  zh: 你需要在系列中找到存根。问题。是的，问题是：这是否意味着服务器过程只能处理按值传递，而不是按引用传递？它可以是任意的。如果是按引用传递参数，服务器存根的工作就是处理这个问题。
 - en: basically create those references。 So allocates the memory and then pass the
     pointer to the arguments converted into deserialize。 into that memory into the
     server procedure。 And again。 it gets complicated if what you called on the client
     side contains references。 that point for the same option。 Because then I have
     to figure out how to recreate that at the server with that point。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 基本上是创建那些引用。然后分配内存，再将指针传递给转换后的参数，反序列化到内存中并传递到服务器过程。如果你在客户端调用的内容包含引用，并且这些引用指向相同的选项，那么事情会变得复杂。因为那时我就得想办法在服务器端如何重建那个指针。
 - en: Okay， let's see。 Okay， so how does that compiler generate the stubs？ Well。 the
     input could be some interface definitions that are written in some interface definition。
     language or idea。 And that'll tell us what the types are in the arguments and
     what the types are in the。 returns。 In some environments， this is automatically
     inferred。
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，我们来看一下。那么，编译器如何生成存根呢？输入可能是用某种接口定义语言或IDEA编写的接口定义。它会告诉我们参数的类型以及返回值的类型。在某些环境中，这些会被自动推断。
 - en: So if you have typed structures and things like that， then the compiler can
     automatically。 infer what the types are of the arguments that are returned。 So
     all languages of job that's really super， since everything is strong and tiny。
     The output from this compiler is those stubs。 The stub that runs at the client。
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你有类型化的结构和类似的东西，那么编译器可以自动推断返回值参数的类型。所以所有语言的工作都很简单，因为一切都是强类型且精简的。这个编译器的输出是这些存根。存根在客户端运行。
 - en: the stub that runs at the server。 And it's going to have code again at the client
     will do all of the packing up of the arguments。 sending it out， voting for the
     response， unpack the response， and vice-versa， the server。 it's going to wait
     for requests， unpack the arguments and book the local server procedure。 and then
     wait for response， and then pack up the response variables and send them back。
     Okay。
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 在服务器端运行的存根。它将再次执行客户端的代码，处理所有参数的打包、发送、接收响应、解包响应等，反之亦然，服务器端会等待请求，解包参数并调用本地服务器过程，然后等待响应，再将响应变量打包并发送回去。
 - en: some more details。 What happens if the client and server are different applications
     with different languages？
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 更多细节是什么呢？如果客户端和服务器是不同语言的不同应用程序，怎么办？
 - en: Well， it's just before we have to convert everything to some canonical form，
     determine。 what our white order into the input like that， and then tag every object
     with some indication。 of how it's encoded。 So we can avoid unnecessary conversions。
     So everything's big end-end。 and you know， running code， it's big end-end to the
     other， side。
+  id: totrans-124
   prefs: []
   type: TYPE_NORMAL
+  zh: 嗯，问题是，在我们必须将所有内容转换成某种规范形式之前，我们需要确定输入的顺序，并为每个对象标记出其编码方式。这样我们可以避免不必要的转换。所以一切都是大端模式的。你知道，运行的代码，另一端也是大端模式的。
 - en: It's also big end-end that we don't need to do any conversion。 We take the data
     and the buffer as it is。 Now， how does the client know where to send its messages？
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 它也是大端模式，我们不需要做任何转换。我们直接使用数据和缓冲区本身。那么，客户端如何知道该将消息发送到哪里呢？
 - en: Well， we need some way of converting that remote service request into a remote
     machine。 that we can address and remote port address。 Okay， and so that's the
     process of binding。 So there's some， it could be other than statically。 We picked
     it up in file time that this IP address and port is where you're going to find。
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 嗯，我们需要某种方式将远程服务请求转换成可以寻址的远程机器和远程端口地址。好的，这就是绑定的过程。所以有些情况下，它可能是静态的，也可能不是。我们在文件时就确定了这个IP地址和端口是你要找到的地方。
 - en: remote file server or it can be done dynamically so that we can find where that
     server is。 And doing it dynamic， you know， that is also the benefits because，
     you know， machines can。 fail or substitute the applications。 We don't need to
     recompile our code if you change where the server is located。 And so most systems
     will do dynamic binding。 So with dynamic binding， we need a name service。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 远程文件服务器也可以动态完成，这样我们就可以找到那个服务器在哪里。而且动态的做法有它的好处，因为你知道，机器可能会出现故障或替换应用程序。如果你改变了服务器的位置，我们不需要重新编译代码。所以大多数系统都会使用动态绑定。因此，对于动态绑定，我们需要一个名称服务。
 - en: That name service will provide that dynamic translation between a service and
     where we。 find the data。 So maybe it's， you know， we need to look up something
     with the light， light。 the directory， access protocol， or LDAP， and so when I
     request a lookup， that lookable query。 some name service， to find out where do
     I find the LDAP server or the eks department。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 那个名称服务将提供服务和数据之间的动态翻译。所以，可能是，你知道，我们需要查找某些内容，比如轻量级目录访问协议（LDAP），因此当我请求查找时，这个可查的查询会通过某个名称服务来找出LDAP服务器或相应部门的位置。
 - en: where the active directory， server and so on。 And then they're finding again
     the advantages here are like failover。 something failed， you， can use failover
     transparently， the clients， the different server。 but it also can use the， access
     control。 It's a way， you know， maybe if you're not on campus。 we don't tell you
     what the IP address， is for the LDAP server， where the active directory。
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 其中包括活动目录、服务器等内容。然后，它们再次发现其中的优势，如故障转移。如果某个服务失败，你可以透明地使用故障转移，客户端可以连接到不同的服务器。但它也可以使用访问控制。这是一种方式，你知道，也许当你不在校园内时，我们不会告诉你LDAP服务器或活动目录的IP地址。
 - en: so that way， draw campus， you don't， notice， you can't attack it。 So it's a
     sort of a problem。 It's a little bit of a severity-bob spill。 And then there could
     also be multiple servers。 And so again， we get flexibility in terms of， you know，
     maybe we can do load balancing。 failover and so on。 Yeah， question？ Yes， the question
     is， is this connecting with DNS？
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 这样一来，在校园内，你不会注意到，你无法攻击它。所以这是一种问题。它有点像是一个严重的Bob溢出问题。然后也可能有多个服务器。所以再次，我们在灵活性方面获得了优势，你知道，也许我们可以做负载均衡、故障转移等。是的，问题？是的，问题是，这与DNS有关系吗？
 - en: DNS is an example of dynamic finding， but there are lots of services that lots
     of， you， know。 sort of RPC packages that provide their own kind of game service。
     So we could use DNS for some things like for web server， right， and doing RPC
     to a web。 server that owns DNS to find， you know， the well， and I know it's on
     the well-known port。
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: DNS是动态查找的一个例子，但也有许多服务，很多你知道的RPC包，提供它们自己的游戏服务。所以我们可以将DNS用于一些事情，比如Web服务器，对吧，做RPC到Web服务器，并使用DNS来查找，知道它在知名端口上。
 - en: then I can just use DNS。 But if I'm connecting to something like an active directory
     service， then。 you know， it's， a different protocol that I use， like NetVial or
     something else to find the main map。 You can have router level re-drained。 So
     a lot of load balances。 applications load balances or web server load balances
     are violating， the end end principle。
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我可以直接使用DNS。但如果我连接的是像活动目录这样的服务，那么，你知道，这是一种我使用的不同协议，比如NetVial或其他协议，用来找到主机映射。你可以有路由器级别的重定向。所以，许多负载均衡器、应用负载均衡器或Web服务器负载均衡器在某种程度上违反了端到端原则。
 - en: but they operate in the network and they look at the traffic coming。 in and
     redirect it to whichever web server is like a load。 It gets complicated if you're
     trying to maintain sessions。 So these things will actually look into the packets
     flowing through and see， oh， here。
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 但它们在网络中操作，查看进来的流量，并将其重定向到任何负载均衡的Web服务器。 如果你试图维持会话，事情就变得复杂了。所以这些系统实际上会查看流经的数据包，并看到，哦，原来这里。
 - en: the cookies and I'm going to statefully find this flow to a particular server。
     That way， you know。 for example， if you're logging into a bank， you'll get back
     a cookie。 and you might be connecting to one of a thousand different servers。
     But every time we open a new connection， you're going to get redirected to the
     same server。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: cookies，我将通过状态信息将这个流定向到特定的服务器。这样，你知道。例如，如果你登录到银行，你会收到一个cookie，而你可能连接到一千个不同的服务器中的一个。但每次我们打开一个新连接时，你都会被重定向到同一台服务器。
 - en: as a load balance or look into the packet to see the cookie。 It kind of violates
     end to end。 but we do it for performance， for load balancing and for， flow load
     things like that。 Now if we have multiple clients， then we need to make sure that
     we pass a pointer to the。 client specific return mailbox。 Again， we get this with
     sockets because those are done with the connection and so we have。
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: 作为负载均衡器，或者查看数据包来查看cookie。这有点违背了端到端原则，但我们这样做是为了性能、负载均衡和流量等的优化。如果我们有多个客户端，我们需要确保将指针传递给客户端特定的返回邮箱。再次，我们通过套接字来实现这一点，因为这些是通过连接完成的，所以我们有。
 - en: the client port number。 So that tells us where to go back to。 Questions about
     our decision。 So some issues with different failure modes with RPC than we might
     have with a single machine。 Because now instead of it being just one machine that
     might fail， the client could fail， the。 server could fail， they could both。 And
     so we have to look at what could be different types of code。
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 客户端端口号。所以它告诉我们应该返回哪里。关于我们决策的问题。RPC的故障模式与单台机器可能遇到的故障模式不同。因为现在，不仅仅是一个机器可能失败，客户端可能失败，服务器可能失败，它们可能都失败。所以我们必须看看可能出现的不同类型的代码。
 - en: You might have a usual level bug in the server code that causes it to crash。
     Set call。 We're saying on the client， causes it to set file。 There might be a
     kernel bug or， you know。 powers of life fails， machine， the client flashes， or
     turns off or the server turns on。 Or either those machines get compromised by
     some error。 Now before we had RPC。
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可能在服务器代码中遇到一个常见的错误，导致它崩溃。设定调用。我们在客户端说，会导致它设置文件。可能有一个内核错误，或者你知道的，电源故障，机器，客户端闪退，或者服务器重启。或者这两台机器中的任何一台都可能因为某些错误被破坏。现在在没有RPC之前，我们就会遇到这些问题。
 - en: when we're doing everything on the same machine we shared。 The power supply
     goes out of my laptop。 Everything's gone。 You know， the power point comes in。
     But if I'm doing RPC。 now the server could crash and the client will crash and
     the server， will crash。 And so one is going to keep working while the other stuff。
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们在同一台机器上操作时，我们是共享的。我的笔记本电脑电源断了。一切都没了。你知道，电源恢复了。但如果我在做RPC，现在服务器可能崩溃，客户端也会崩溃，服务器会崩溃。所以一个会继续工作，而另一个就停止了。
 - en: And so now we see some inconsistent view of the work。 If I wrote some data to
     the server。 did it say before the server flat？ Or no？ Did the server do what I
     requested or not？
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以现在我们看到工作的不一致视图。如果我向服务器写了一些数据。它在服务器崩溃之前有没有保存？或者没有？服务器做了我请求的事情了吗？
 - en: So how do we solve this？ What we just saw how to use distributed transactions
     or some kind of Byzantine net protocol？
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么我们如何解决这个问题？我们刚才看到的如何使用分布式事务或某种拜占庭网络协议？
 - en: The guarantee that even if one or the other crashes， we're still able to eventually
     read。 something sensitive。 But now we've added some Hudson because this was not
     a behavior we had to think about in。 our applications before。 So while we have
     transparency in that it looks like we're just making a local procedure。 call，
     we invoke the RPC just as we invoke a local procedure call。 Now weird things can
     happen。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使其中一个崩溃，我们仍然能够最终读取到一些敏感数据，但现在我们添加了一些麻烦，因为这是我们以前在应用程序中不需要考虑的行为。所以虽然我们有透明度，它看起来像是在做本地过程调用，我们就像调用本地过程调用一样调用RPC。但现在奇怪的事情可能会发生。
 - en: I mean， here in failure modes that don't happen in the local procedure call，
     please。 Another issue is performance。 If you look at the wall clock， you'll see
     that RPC is slow。 A local procedure call is micro-sappening or less。 A remote
     procedure call on the same machine or where pipes is more expensive because there's。
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的意思是，这里出现了在本地过程调用中不会发生的故障模式，拜托。另一个问题是性能。如果你看墙上的时钟，你会发现RPC很慢。一个本地过程调用微乎其微，或者更少。而在同一台机器上的远程过程调用或通过管道则更昂贵，因为存在延迟。
 - en: kernel crossing associated with IPC。 And if I have to go to a server。 now instead
     of taking microseconds， you could be talking。 about tens or hundreds of milliseconds
     in latency。 Plus， just in speed of light latency。 but then we also have to account
     for the fact that， we have to marshal the data。
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 与IPC相关的内核交叉。如果我必须去访问一个服务器，现在的延迟不是微秒级别，而可能是几十到几百毫秒的延迟。而且，我们还必须考虑到，必须对数据进行封送处理。
 - en: we have to serialize it and deserialize it。 We have a gigabyte buffer， right？
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们必须对它进行序列化和反序列化。我们有一个千兆字节的缓冲区，对吧？
 - en: And we're acting on that between threads in the same address space。 There's
     no problem。 But if I want， I can pass it by reference， right？ But I want to pass
     it by reference to a server。 I've got to copy that gigabyte to the server。 I have
     to actually copy and pass it by value。 So programs have to know that you're using
     RPC。 And that RPC isn't free。 But it is not just。
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 而且我们在同一地址空间中的线程之间进行操作。没有问题。但如果我想，我可以通过引用传递它，对吧？但如果我想传递给一个服务器，我必须把那个千兆字节的数据复制到服务器。我必须实际复制并按值传递它。所以程序必须知道你在使用RPC。而且RPC并不是免费的。但它不仅仅是这样。
 - en: it is functionally a drop in replacement for local procedure calls。 Mostly it's
     a preferred rate。 But performance-wise， there's a significant cost difference。
     Now。 there's huge benefits that we get in being able to be transformed remotely
     and have it。 look like it's just local， which is the reason why we still use RPC。
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 它从功能上来说是本地过程调用的替代方案。大多数情况下，它是首选方式。但从性能角度看，存在显著的成本差异。现在，我们在能够远程变换并使其看起来像是本地的过程中，得到了巨大的好处，这也是我们仍然使用RPC的原因。
 - en: Almost all the familiar applications are built on top of RPC。 But it's very
     important to recognize。 you know， you can't just drop in replace local， procedure
     calls with remote procedure calls without really thinking through what the performance。
     effects are doing。 Now， we can do caching。 We're going to see how crashing and
     using the sugar file systems。 But we're also going to see how it increases all
     sorts of complexity and consistency issues。
+  id: totrans-147
   prefs: []
   type: TYPE_NORMAL
+  zh: 几乎所有常见的应用程序都是建立在RPC之上的。但很重要的是要认识到，你不能仅仅把本地过程调用替换为远程过程调用，而不真正考虑性能上的影响。现在，我们可以做缓存。我们将看到如何缓存并使用糖果文件系统。但我们也将看到它如何增加各种复杂性和一致性问题。
 - en: All right。 So if we look at how address-based is communicated with each other，
     on a local machine。 it's just， through shared memory or through the file system。
     Or we can do things， you know。 so we can do m-app to get some shared memory， manage
     it， with monitors。 And。 and some afford we can write， you know， like phases of
     the C compiler， write through。
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。所以如果我们看看基于地址的通信是如何在本地机器上进行的，它只是通过共享内存或文件系统。或者我们可以做一些事情，你知道的。我们可以做m-app来获取一些共享内存，管理它，使用监视器。而且，一些工作我们可以通过编写类似C编译器阶段的方式来完成。
 - en: the file system to communicate with one phase or the other with the new types
     and the uni-directional。 mechanism for communicating。 Or now we have this ability
     to use remote procedure calls。 Where that。 again， could be on the same machine
     or different machines on different climates。 This means we can run services where
     it had since。 Right？
+  id: totrans-149
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统用于与一种或另一种新类型进行通信，具有单向的通信机制。或者现在我们有能力使用远程过程调用。在这种情况下，它可以是在同一台机器上，或者是不同的机器、不同的气候下。这意味着我们可以在合适的地方运行服务，对吗？
 - en: So we can put services where maybe we want real reliability and availability
     and durability。 you know， in some cloud data center。 And access them remotely
     from clients。 The clients that want to make sure， you know， I could use my laptop，
     my laptop， could be stolen。 And so it's constantly doing RPC to synchronize the
     contents of my laptop with a Google data。
+  id: totrans-150
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们可以将服务放置在我们需要真正的可靠性、可用性和耐久性的地方，比如某些云数据中心。然后从客户端远程访问它们。客户端需要确保，你知道，我可以使用我的笔记本电脑，我的笔记本电脑可能会被盗。因此，它会不断进行RPC，以将我的笔记本电脑的内容与Google数据同步。
 - en: center， and storing my data in the cloud。 That way， when I lose my laptop， it's
     stolen。 I can get a new laptop and just RPC back all of my data are developed。
     So it makes sense that like that's sort of some place to secure。 And it looks
     the same whether I'm accessing data on a local machine or on some other machine。
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: 中心，并将我的数据存储在云端。这样，当我丢失笔记本电脑或者它被盗时，我可以得到一台新笔记本电脑，然后通过RPC恢复所有我的数据。所以可以理解，这种方式是相对安全的。而且，无论我是在访问本地机器上的数据还是其他机器上的数据，它看起来都是一样的。
 - en: Now there are lots of art and systems out there， Corba is a really old one that
     people， use。 DCOM is what the attributed common on public model is one。 So Corba
     is called common object requests， local architecture， common object model and。
     DCOM is commonly used in Windows environments。 People who's in Java， there's JMI。
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，外面有很多艺术和系统，Corba是一个非常老的系统，人们使用它。DCOM是常见的公有模型之一。所以Corba被称为公共对象请求局部架构，公共对象模型。而DCOM在Windows环境中被广泛使用。使用Java的人们则有JMI。
 - en: Java remote method indication， which as it sounds is aware， of remotely invoking
     Java methods。 You know， hand opening is like exceptions being passed back to the
     current values。 Okay。 any questions about RPC？ All right， so we can take this
     kind of to be extreme。 Right？
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: Java远程方法调用，顾名思义，它是远程调用Java方法的能力。你知道的，打开处理就像是异常被传回当前值。好吧，有关RPC的任何问题吗？好的，我们可以把这个极限化来考虑。
 - en: And that's what we get when we look at things like micro effects。 So we look
     at how we build kernels up till now， we think of the problem with something。 monolith
     and teams are file systems， what's memory management， windowing， networking， thread。
     support and so on。 But a radical way to think about how to do an operating system
     would be to break it up。
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是我们在看类似微效应的东西时所得到的。所以当我们看看我们如何构建内核到现在为止，我们会想到一些问题，比如单体结构和团队文件系统，内存管理，窗口管理，网络，线程支持等等。但思考如何设计操作系统的一种激进方式就是将它拆分开。
 - en: into components。 If the file system and make it an application level sort。 make
     the windowing system and make， it be an application level sort。 Now。 the file
     system is going to look at the same， on the same machine， right？
+  id: totrans-155
   prefs: []
   type: TYPE_NORMAL
+  zh: 到组件中。如果文件系统并将其作为应用级别的排序。让窗口系统也作为应用级别的排序。现在，文件系统在同一台机器上看起来是一样的，对吧？
 - en: But we're going to do everything through RPC instead of here where it's shared
     memory。 in the funnel。 Now， question。 Why would I want to do it？
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是我们将通过 RPC 来处理所有的事情，而不是在这里处理共享内存。在漏斗中。那么，问题来了。我为什么要这么做？
 - en: I want to take my monolithic operating system， we've got all my state of the
     C everything。 and break it up into these micro kernel components。 But benefit
     my identity。 Yeah。 So that's a very good example is， and we're using the size
     of my kernel。 So I'm reducing my trusted code base size。 So I'm trying to validate
     or verify that my kernel is correct in that tamper where in。
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 我想将我的单体操作系统，包含所有 C 语言的状态，拆分成这些微内核组件。但这样做能带来我的身份的好处。是的。所以这是一个非常好的例子，我们正在使用我的内核的大小。所以我在减少我信任的代码基础的大小。因此，我正在尝试验证或确认我的内核在这种篡改的情况下是正确的。
 - en: trustworthy。 I've reduced now a lot of the code。 And you think about how much
     code is in a file system or how much code is in a window。 system management。 I've
     taken all of that。 In the extreme， I can squeeze everything out。 Virtual memory
     management in pajent doesn't need to be in a kernel and make it an application。
     level process。 All right。 And so some of the other reasons are multi-solution。
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: 可信赖性。我现在减少了很多代码。你可以想象文件系统中有多少代码，或者窗口管理系统中有多少代码。我把所有这些都去掉了。在极端的情况下，我可以把所有东西都压缩出去。虚拟内存管理在页面中不需要放在内核中，而是可以作为应用级进程。好了。所以其他的一些原因是多解决方案。
 - en: How systems are incredibly complicated and they have to deal with disks that
     have structures。 that can get damaged。 And if you don't have a proper sanity check。
     you might accidentally try to dereference something。 from a structure created
     by reading the file system， you know， some of the metadata and。
+  id: totrans-159
   prefs: []
   type: TYPE_NORMAL
+  zh: 系统非常复杂，必须处理具有结构的磁盘，而这些结构可能会损坏。如果没有适当的有效性检查，你可能会不小心试图解引用某些东西，这些东西是通过读取文件系统创建的结构中的一些元数据。
 - en: cause a segmentation。 On a monolithic panel， you get the， oh。 your Mac is crash
     or you get a blue screen or black， screen in windows。 Right？ In a microkernel。
     it's like， oops， the file system crash。 We started， right？ And then it just rebuild，
     you know。 all of its data structures， the same as if I just， booted up。 Same thing。
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 这会导致一个分段错误。在一个单体面板上，你会看到，哦，你的 Mac 崩溃了，或者你在 Windows 中看到蓝屏或黑屏，对吧？在微内核中，就像，哎呀，文件系统崩溃了。我们重新启动，对吧？然后它就会重建，知道吗？它所有的数据结构，和我刚刚启动时一样。就是这样。
 - en: the window system can crash and just wipe back up。 Right？ And rebuild all of
     the state。 So it gives you real power in terms of being able to firewall between
     files。 It also， of course。 is modularity。 Right？ And look in the typical kernel，
     it's spaghetti code。 People do things to optimize for all sorts of things。 And
     so making changes to a file system that's。
+  id: totrans-161
   prefs: []
   type: TYPE_NORMAL
+  zh: 窗口系统可以崩溃，然后只需恢复。对吧？然后重建所有状态。因此，它为你提供了真正的能力，可以在文件之间设置防火墙。当然，它还具有模块化性。对吧？看看典型的内核，它是乱七八糟的代码。人们会做一些优化，以满足各种需求。因此，做出改变对文件系统来说是非常复杂的。
 - en: you know， in an integral part of the operating， system。 you really have the
     same thing with a window subsystem， same thing with the page， and system。 Right？
+  id: totrans-162
   prefs: []
   type: TYPE_NORMAL
+  zh: 你知道，在操作系统的一个整体部分，你实际上有与窗口子系统相同的东西，有与页面系统相同的东西。对吧？
 - en: Everything is dependent upon everything else。 And， you know， there's so much
     here at state。 it's really hard to understand sometimes what， the APIs are when
     the APIs have changed。 If you have them in separate processes communicating via
     RPC， the API is very complete。 If you make a lot of incremental or even major
     changes。
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 一切都依赖于其他的一切。而且，你知道，这里有这么多的状态，有时真的很难理解 API 是什么，尤其是当 API 发生变化时。如果你将它们放在不同的进程中，通过
+    RPC 通信，那么 API 就非常完整。如果你做了很多增量甚至是重大更改。
 - en: So I can completely swap out one file system implementation for another。 The
     ground up rewrite implementation of my file system， as long as it uses the same。
     and supports the same remote procedure。 I can also now take components and put
     them somewhere else。 Right？ So I can have my window manager run on a different
     machine。
+  id: totrans-164
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我可以完全交换一个文件系统的实现为另一个。从零开始重写我的文件系统，只要它使用相同的，并且支持相同的远程过程调用。我现在也可以把组件放到别的地方，对吧？所以我可以让我的窗口管理器运行在另一台机器上。
 - en: my frame buffer run on a different， machine。 For my applications that are writing
     to the windows subsystem。 exist on another machine。 So that's really powerful
     from a distributed computing standpoint。 Now there is a caveat here and we've
     seen over a time， you know， operating systems like。 windows went to a completely
     micro kernel version。
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 我的帧缓冲区运行在另一台机器上。对于我的应用程序来说，它们写入的是 Windows 子系统。它们存在于另一台机器上。所以从分布式计算的角度来看，这非常强大。现在这里有一个警告，我们已经看到过，像
+    Windows 这样的操作系统曾经完全转向了微内核版本。
 - en: Everything was pushed out of the kernel that it could。 And then the next version。
     they pulled a bunch of components back in。 Why？ Which is like the rule。 like all
     these benefits around trust， around fault isolation， around， modularity。 and development
     velocity。 Why would you then want to undo all of that and put big chunks of code
     back into the model。
+  id: totrans-166
   prefs: []
   type: TYPE_NORMAL
+  zh: 一切都被推到了内核之外，能够推的都推了出去。然后在下一个版本中，他们把很多组件又拉回来了。为什么呢？这就像一个规则，像所有这些关于信任、故障隔离、模块化和开发速度的好处。那为什么你还要撤销所有这些，并把大块的代码重新放回到模型中呢？
 - en: of the kernel？ In the back。 Exactly。 Increase in overhead。 Right？ Remember，
     remote procedure call。 Even on the same machine。 Is expensive。 Right？ There are
     ways to make it faster using shared memory and things like that。 but there's still，
     a cost。 And what they found was that even though they got all the benefits around
     trust around fault。 isolation around modularity， it came at the cost of performance。
     And so they then looked at， well。
+  id: totrans-167
   prefs: []
   type: TYPE_NORMAL
+  zh: 在内核的背后？没错。增加了开销，对吧？记住，远程过程调用即使是在同一台机器上，也是昂贵的。对吧？有方法可以使用共享内存等方式来加速它，但仍然存在开销。他们发现，即使他们获得了所有关于信任、故障隔离、模块化的好处，但它也带来了性能上的成本。因此他们接着考虑……
 - en: where is that trained off better as a separate process。 versus where is that
     trade off better as we put it back in the kernel。 And then when it crashes。 it'll
     be between all the systems。 Okay。 Question。 Yes。 So why can't I have two versions。
     kind of the monolithic and the microkernel where like。
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: 在作为独立进程的情况下，这种权衡在哪些地方表现得更好？而将其放回内核时，在哪些地方这种权衡更好？然后当它崩溃时，系统会受到影响。好的，问题来了。是的，那为什么我不能有两个版本呢？一种是单体的，一种是微内核的，类似于……
 - en: a file system lives both in the kernel and outside of the kernel。 So that's
     actually kind of sort of something you've worked today。 The virtual file system
     stuff lives in the kernel and then file system implementations。 live as modules
     potentially outside the kernel。 But trade off again。
+  id: totrans-169
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统既存在于内核中，也存在于内核外部。所以这实际上是你今天所做的某些事情。虚拟文件系统的部分存在于内核中，然后文件系统实现可能作为模块存在于内核外部。但这也是一种权衡。
 - en: it's going to be performance and consistent。 Right？
+  id: totrans-170
   prefs: []
   type: TYPE_NORMAL
+  zh: 它将是高性能和一致性的，对吧？
 - en: If I take just two copies of the same file system， then I could keep all of
     the buffers。 and say that the people， you know， open file descriptor tables and
     say， and so it becomes， more。 But typically， I'll choose one or the other， you
     know， I'm going to put it in the kernel， and。 you know， risk it crashing and burning
     the kernel down or it put it outside， which。
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我拿两份相同的文件系统副本，那么我可以保持所有的缓冲区。并且说人们，你知道，打开的文件描述符表，等等。所以它变得更加复杂。但通常我会选择其中一个，你知道，我要把它放到内核里，冒着崩溃和烧毁内核的风险，或者把它放到外面，哪种方式更好呢？
 - en: case I've played some performance costs。 So you'll see environments where， you
     know。 in a moment where we have come both。
+  id: totrans-172
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这种情况下，我会遇到一些性能开销。所以你会看到一些环境，知道的那种环境，我们有两个版本的操作系统。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_13.png)'
+  id: totrans-173
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_13.png)'
 - en: Okay。 So now let's look at network attached storage。 And with network attached
     storage。 we have lots of hosts。 So here are all these hosts。 Here are these servers
     that have storage and these servers are synchronizing the storage。 That's a host
     can read from any server。 And my colleague。
+  id: totrans-174
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。那么现在我们来看一下网络附加存储。对于网络附加存储，我们有很多主机。所以这里有这些主机。这里有这些有存储的服务器，这些服务器在同步存储。任何主机都可以从任何服务器读取数据。我同事……
 - en: Professor Brewer has a theorem of the cap theory。 So between these servers，
     we want consistency。 So changes that are coming in from， say， this client and
     to this server and changes that。 are coming in from this client to this server，
     there's some serial ordering of because they're。 all tuned in the same data， just
     replicated across the stories， one， and sure there's。
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: Brewer 教授有一个关于 CAP 理论的定理。所以在这些服务器之间，我们需要一致性。因此，从这个客户端到这个服务器的变化，以及从这个客户端到这个服务器的变化，必须有某种序列顺序，因为它们都处理相同的数据，只是跨故事进行复制，一切确保一致性。
 - en: some serial order。 Right。 And everyone sees the same serial order。 So a， before
     b。 occurred before c。 You also want availability。 So anybody here can get a result。
     Right。 So if I want to read some value， read some object that's stored in this
     replicated， system。 I can read and get the value。 You also want partition power。
     So if I slice a line， you know。
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 某种序列顺序。对。每个人看到相同的序列顺序。所以 a 在 b 之前，b 在 c 之前。你还需要可用性。所以这里的任何人都可以得到结果。对。所以如果我想读取某个值，读取存储在这个复制系统中的某个对象。我可以读取并得到这个值。你还需要分区容忍。所以如果我划分一个线，
 - en: in this machine here down in the lower right， it's disconnected。 I still want
     the system to continue to be able to work。 So these hosts here are connected to
     this server。 I want them to continue to be able to， you know。 read and write。
     So what the camp theorem says is if you have these， if you want consistency。
+  id: totrans-177
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这个机器上，位于右下角，它是断开的。我仍然希望系统能够继续工作。所以这些主机连接到这台服务器。我希望它们继续能够读取和写入。因此，CAP 理论所说的是，如果你需要一致性，
 - en: you want availability， you want partition tolerance， you can't have all great。
     So for example。 if you want consistency， so everything appears in the same serial
     order。 So this host is writing in the upper left and this host in the lower right
     is upper left。 one is writing here， the root， this server down here， we're writing
     this server， replicating。
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 你想要可用性，你想要分区容忍，你不能同时拥有一致性。所以举个例子，如果你想要一致性，确保所有操作按相同的顺序进行。比如这个主机在左上角写入，另一个主机在右下角写入，这个主机在这里写入，根本，底部服务器写入这个服务器，复制。
 - en: the same modifying the same value。 I want them to see a， b， c， b， e as your，
     you know。 write your goal。 And I want them to see that same order。 So one doesn't
     see a， c， b。 and the other sees a， b， c。 They both see a， b， c。 In fact。 everybody
     reads those same objects or same object sees the right a， then the right， c。
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: 修改相同的值。我希望他们看到 a，b，c，b，e 作为你们的目标。并且我希望他们看到相同的顺序。所以一个人看到 a，c，b，另一个人看到 a，b，c。两者都看到
+    a，b，c。事实上，每个人都读取相同的对象，或者相同的对象看到正确的 a，然后是正确的 c。
 - en: And then availability， I want everybody to be able to be reading and writing
     at the， same time。 Well， if I partition my networks and now this server is disconnected
     and these two hosts。 are writing to the server， then now I can't have， I can't
     have consistency because if these。 servers are writing that same object， they're
     writing D E F， well， these machines over here。
+  id: totrans-180
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后是可用性，我希望每个人都能同时读取和写入。好吧，如果我分区了我的网络，现在这台服务器断开了，这两台主机正写入服务器，那么现在我就无法拥有一致性，因为如果这些服务器在写入同一个对象，它们写的是
+    D E F，而这些机器在另一侧，
 - en: aren't going to see it。 Right。 So I can't have consistency availability and
     then also tolerate position。 And the same thing， if I want availability and the
     ability to talk， how are partitioning。 then you could， everybody could read， but
     I can't allow rights because then I can't have。 consistency。 I don't really have
     availability。 And so you do the mental exercise。
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: 就无法实现了。对。所以我不能同时拥有一致性、可用性，还能容忍分区。而且如果我想要可用性并能够进行通讯，如何分区。那样的话，大家可以读取，但是我不能允许写入，因为那样我就无法保持一致性。我也就无法说拥有可用性。所以你可以进行这种思维练习。
 - en: but if you try to see， you'll see， you say， I want， consistency and partition
     tolerance。 but I can't have availability。 If I want availability and consistency，
     I can't have the control。 And so。 So this is also known as Brewers Theorem。 There's
     developed by Eric Blue proposed by Eric Blue。 Yes。 But then you could dynamically
     switch， but there's going to be， if there's a partition。
+  id: totrans-182
   prefs: []
   type: TYPE_NORMAL
+  zh: 但是如果你尝试理解，你会说，我想要一致性和分区容忍，但是我不能有可用性。如果我想要可用性和一致性，我就不能有分区容忍。所以，这也被称为 Brewer 定理。由
+    Eric Brewer 提出，是 Eric Brewer 提出的。是的。但是如果发生分区，你可以动态切换，但一定会存在，
 - en: I may not be able to see servers or hosts on the other side of that network
     partition。 Right。 So imagine， you know， I cut the US in half， you know， the East
     Coast machines might wouldn't。 be able to see the West Coast machine， but they
     might be able to see some of the central。 machines and vice versa， you know， from
     the West Coast， I can see East Coast， but I could。
+  id: totrans-183
   prefs: []
   type: TYPE_NORMAL
+  zh: 我可能无法看到网络分区另一侧的服务器或主机。对吧？所以想象一下，我把美国一分为二，东海岸的机器可能无法看到西海岸的机器，但它们可能能看到一些中部的机器，反之亦然，从西海岸，我可以看到东海岸的机器，但我可能无法。
 - en: potentially see some of the sample。 So this is really fundamental， right？
+  id: totrans-184
   prefs: []
   type: TYPE_NORMAL
+  zh: 可能会看到一些示例。这真的是基础性的，对吧？
 - en: Because this means when we're thinking about the shrimpy systems and how we're
     dissolving， them。 we have to recognize that we can't have all three of these properties，
     even though， you know。 if I find build a， I don't know， distributed financial
     system， I want all three。 of these properties。 I can't have them。 Okay。 So some
     administrative stuff。
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为这意味着，当我们考虑到分布式系统以及如何解耦它们时，我们必须认识到，即使我建立了一个分布式金融系统，我也无法拥有这三种属性。好的，有些管理事项。
 - en: The term three is coming up on Thursday and it's from seven to nine PM going
     to cover all。 course material with a focus on the material since the last minute。
     It was a review session yesterday and we saved that video for you。 Okay。 So distributed
     file system。 So here we have a client that wants to read a file from the server。
+  id: totrans-186
   prefs: []
   type: TYPE_NORMAL
+  zh: 第三次考试将在周四举行，时间是晚上七点到九点，将涵盖所有课程材料，重点是从上次课程以来的材料。昨天有一个复习环节，我们已经为你保存了视频。好的，分布式文件系统。这里我们有一个客户端，想要从服务器读取文件。
 - en: We want transparent access to files that are stored on our motor。 So the way
     we can do this is we can mount remote file systems into our local file system。
     Now just as transparent， it looks like I'm accessing a local file， but I'm really
     accessing。 a file that's on another server。 We can do this by specifying by hosting
     and port or we can have some binding service that。
+  id: totrans-187
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们希望透明地访问存储在磁盘上的文件。我们可以通过将远程文件系统挂载到本地文件系统中来实现这一点。现在就像透明一样，它看起来像我在访问本地文件，但实际上我在访问另一个服务器上的文件。我们可以通过指定主机和端口来做到这一点，或者我们可以使用某些绑定服务。
 - en: maps automatically to a particular machine or we can do it with global unique
     names or。
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 自动映射到特定的机器，或者我们可以通过全局唯一的名称来做到这一点。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_15.png)'
+  id: totrans-189
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_15.png)'
 - en: all of the above。 What enables this is in units and POSIX like systems。 we have
     the virtual file system。 So the virtual file system。 just think of it as a layer
     of indirection on file systems。
+  id: totrans-190
   prefs: []
   type: TYPE_NORMAL
+  zh: 上述所有内容的实现依赖于在 UNIX 和 POSIX 类系统中的虚拟文件系统。虚拟文件系统，你可以把它看作是文件系统上的一个间接层。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_17.png)'
+  id: totrans-191
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_17.png)'
 - en: So at the user level， we're doing read， that gets translated into the C， we
     call the C library。 function to be read， we do a system call and that traps into
     the kernel and then dispatches。 out the handle。 Instead of dispatching directly
     through the file system of interest。 we're going to dispatch， the virtual file
     system handle。 So the virtual file system handler again。
+  id: totrans-192
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以在用户级别，我们执行读取操作，这会被转换为 C 库函数中的 `read`，我们进行系统调用，然后进入内核，接着分发出句柄。我们不是直接通过感兴趣的文件系统进行分发，而是通过虚拟文件系统句柄进行分发。虚拟文件系统处理器再次如此。
 - en: you can think of it as just a layer of indirection。 So it's providing the same
     kind of functions that a real file system would provide。 So super blocks。 I-nodes，
     files， directories and so on。 And they designed a virtual file system API to be
     consistent with what underlying file。 systems can offer。 Okay。 So four primary
     objects， super block， I-nodes。
+  id: totrans-193
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以把它看作只是一个间接层。所以它提供与真实文件系统相同的功能。比如超级块、I节点、文件、目录等等。他们设计了一个虚拟文件系统 API，使其与底层文件系统所能提供的功能保持一致。好的，四个主要对象：超级块、I节点。
 - en: directory entry and file object。 I don't have time to go into detail but basically
     those map onto what you find in a typical。 file system。 Not every file system
     will have the same analogies and so sometimes I'll have to be a little translation。
     like the fat file system doesn't have a super block。 Okay。 So simple distributed
     file system。 clients issue remote procedure call， open a file。 Okay， read the
     contents of the file。
+  id: totrans-194
   prefs: []
   type: TYPE_NORMAL
+  zh: 目录条目和文件对象。我没有时间详细讲解，但基本上它们对应于典型文件系统中的内容。并不是每个文件系统都有相同的类比，所以有时我需要做一些翻译。比如，FAT文件系统就没有超级块。好了，简单的分布式文件系统，客户端发出远程过程调用，打开一个文件。好的，读取文件内容。
 - en: So we just simply translate those disc calls， read， open， elsie， write， flush
     and everything。 into remote procedure calls。 No cache。 The advantage here is the
     server gives this a consistent view。 right？ Because every request goes from my
     laptop all the way to the server and then comes back。 So multiple clients are
     doing the same thing。 The canonical copy is at the server。 But of course。
+  id: totrans-195
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们只是将这些磁盘调用，如读取、打开、写入、刷新等，转换为远程过程调用。没有缓存。这里的优点是服务器提供了一致的视图。对吧？因为每个请求从我的笔记本电脑发出，经过服务器再返回。所以多个客户端在做同样的事情。服务器端保存的是标准副本。但当然，
 - en: problems here in different formats。 Right？ Because every request I'm making
     goes across the network。 So I'm inferring latency。 I'm going to be limited by
     the bandwidth in the network。 I'm going to be limited by how many requests per
     second IO operations per second， the server。 can do。 So the server is going to
     be a bottleneck。
+  id: totrans-196
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里的问题出现在不同的格式中。对吧？因为我发出的每个请求都要跨越网络。所以我在推断延迟。我将受到网络带宽的限制。服务器每秒能够处理的请求数和IO操作数都会限制它。所以服务器将成为瓶颈。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_19.png)'
+  id: totrans-197
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_19.png)'
 - en: So we can add caches， right？ And so I'll put a cache at the client and at the
     server。 So now some operations can be done locally and reduce the load on the
     server。 So now when I do a read， the read a value for say F1， I'll cache it at
     the server， return。 back the value。 Multiple reads all served out of the cache
     local performance。 Right？
+  id: totrans-198
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们可以添加缓存，对吧？我会在客户端和服务器上放置一个缓存。这样，一些操作可以在本地完成，减轻服务器的负担。现在，当我进行读取时，比如读取F1的值，我会在服务器上缓存它并返回该值。多个读取请求都会从缓存中服务，提高本地性能。对吧？
 - en: So that is an RPC， but it's all local to the virtual file system。 But disadvantage
     is what happens if I do a write and a machine and then crack and lose， the data。
     Right？ Another problem。 So maybe I can write code as an alternative。 Another problem
     is that。 so in this case， if I crack and I wrote it and I got the acknowledgement，
     I know it's okay。
+  id: totrans-199
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这是一个RPC，但它完全是虚拟文件系统本地的。但是缺点是，如果我在一台机器上进行写入，机器崩溃了，数据丢失了，会发生什么？对吧？这是另一个问题。所以也许我可以编写代码作为替代方案。另一个问题是。如果我写入了数据并且收到了确认，我知道它是安全的。
 - en: Another problem is cache consistency。 Right？ When this first post reads。 it's
     going to get the old value not from move out。 It's getting V1 instead of getting
     V2。 Right？
+  id: totrans-200
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个问题是缓存一致性。对吧？当第一次读取时，它将获取旧值，而不是更新的值。它会获取V1而不是V2。对吧？
 - en: So there's inconsistent。
+  id: totrans-201
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以会有不一致的情况。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_21.png)'
+  id: totrans-202
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_21.png)'
 - en: So what happens if the server crashes？ Right？ Does the client wait until it
     comes back up？
+  id: totrans-203
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么如果服务器崩溃会发生什么呢？对吧？客户端会等到服务器恢复吗？
 - en: Does it continue operating out of its cache？ If there were changes in the service
     cache。 were those in nonvolatile RAM instead of be， committed？ Or do they get
     lost？ Right？
+  id: totrans-204
   prefs: []
   type: TYPE_NORMAL
+  zh: 它是否继续从缓存中运行？如果服务缓存发生了变化，那些变化是保存在非易失性RAM中并且已经**提交**了吗？还是它们会丢失？对吧？
 - en: What if there's shared state across the remote procedure code？ Right？ Typically
     in UX， right。 I open a file and then I seek through that file。 Right？ There's
     a file position。 I mean。 when we keep track of that file position in the phone，
     well， if I crash， the， server。 I've lost that seek。 So if I'm doing read， read，
     read， read， read from clients。
+  id: totrans-205
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果远程过程调用之间有共享状态怎么办？对吧？通常在用户体验中，我打开一个文件，然后在文件中查找。对吧？有一个文件位置。我是说，当我们在系统中跟踪这个文件位置时，如果服务器崩溃了，我会丢失那个查找位置。所以如果我从客户端进行读取，读取，读取，读取。
 - en: a crash or come back up， the， clients try to do another read。 we're going to
     read from the beginning of the file。 We need to think about that。 What happens
     if we delete a file at the server and the server crashes before we get an acknowledgement？
+  id: totrans-206
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果发生崩溃或者重新启动，客户端会尝试再次读取。我们将从文件的开头读取。我们需要考虑这个问题。如果我们在服务器上删除了一个文件，而服务器在收到确认之前崩溃了，会发生什么？
 - en: So what we really want is a stateless protocol。 One of which everything that
     we need for that protocol is in that request。 We also want operations to be item
     hope。 So I can repeat them any number of times and I get the same result。 If I
     write 100 for memory， to a given number location， I can do that 10 times。 I can
     do that 100 times。 The end result is always going to be 100 in that number of
     times。
+  id: totrans-207
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们真正想要的是一个无状态协议，其中所有我们需要的东西都在请求中。我们还希望操作是幂等的。这样我可以多次重复它们，并且得到相同的结果。如果我将 100
+    写入内存中的某个特定位置，我可以写 10 次，也可以写 100 次。最终结果总是 100。
 - en: All right。 So in that case， when I find times out， I can just re-try an operation。
     And there are items to be the result is going to be the same。 There are other
     examples of stateless protocols like HTTP， where we put a cookie that encodes。
     our session state in that cookie。 All right。 So I want to talk about two file
     systems。
+  id: totrans-208
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的。在这种情况下，当我发现超时时，我可以重新尝试一个操作。并且有一些条目，结果将是相同的。还有其他无状态协议的例子，比如 HTTP，我们将一个编码了会话状态的
+    cookie 放入其中。好的。那么我想谈谈两个文件系统。
 - en: really quickly， NFS。 Three layers for NFS， Unix file system interface。 So this
     is the standard libc operation to open， close， see， and so on。 The VFS layer。
     that's the layer of indirection that tells which file system type we're going，
     to。 And then there's the NFS service， which implements the protocol。 The RPC encoding
     method。
+  id: totrans-209
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上，NFS 有三层结构。Unix 文件系统接口。这是标准的 libc 操作，用于打开、关闭、查看等等。VFS 层。这是一个间接层，它告诉我们将要使用哪种文件系统类型。然后是
+    NFS 服务，它实现了协议和 RPC 编码方法。
 - en: we use the XDR representation。 So there's a whole library for doing that。 And
     it implements all of the functions that we need， like being able to read and write，
     directories。 manipulate links， delete files， open files， close files， write， and
     so on。 NFS uses write group cache。 So when clients do a write。
+  id: totrans-210
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们使用 XDR 表示法。所以有一个完整的库来实现这个功能。它实现了我们需要的所有功能，比如能够读取和写入目录、操作链接、删除文件、打开文件、关闭文件、写入等等。NFS
+    使用写入组缓存。所以当客户端执行写操作时。
 - en: that gets written all the way back to the server， we wait for， the acknowledgment。
     So we lose some of the benefits of caching， but we know that when we do a write
     in NFS。 it goes to the server。 All right。 So now if we're doing caching。 we need
     some way of figuring out what's going on in the， cache。
+  id: totrans-211
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后所有的数据都会写回到服务器，我们等待确认。所以我们失去了一些缓存的好处，但我们知道当我们在 NFS 中执行写入时，它会写到服务器。好的。那么现在如果我们在做缓存，我们需要某种方式来快速弄清楚缓存中的情况。
 - en: and we'll come back and divide it in just a second。 The servers themselves are
     stateless。 So everything in a request to the server， indeed， everything we need。
     So that means it has to contain a position， not just simply read something from
     an open， file。 And in fact， we don't have open and close because there's no state
     in team at the server。
+  id: totrans-212
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们稍后会回来继续讨论。服务器本身是无状态的。所以请求到服务器的每一项内容，实际上我们所需的一切都在其中。这意味着它必须包含一个位置，而不仅仅是从一个打开的文件中读取内容。事实上，我们没有打开和关闭文件，因为服务器没有状态。
 - en: The request comes in， it's just read from this I know， I number rather， at this
     location。 This number of bytes。 It's item potent， so we can perform multiple requests
     multiple times。 So reading and writing， that's pretty simple。 If you delete a
     file。 we can do that actually multiple times。 You can say， "Rm multiple times。"。
+  id: totrans-213
   prefs: []
   type: TYPE_NORMAL
+  zh: 请求到达后，它只是从这个位置读取这个数字字节的内容。它是幂等的，因此我们可以执行多次请求。读取和写入非常简单。如果删除一个文件，我们实际上可以多次执行这个操作。你可以说，“Rm
+    多次。”
 - en: If the file doesn't exist， the server is just going to say， "Hey， by the way，
     that file。 doesn't exist。"， That's okay。 Failures are where NFS has a problem。
     There's two options。 Server crashes。 What does the client do？ The other option
     is to find just wait。 But what if it takes a week for the server to come back
     up because we have to get a part？
+  id: totrans-214
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果文件不存在，服务器只会说，“嘿，顺便提一下，这个文件不存在。”这没问题。故障是 NFS 的问题所在。有两种选择。服务器崩溃。客户端该怎么办？另一种选择是客户端等待。但如果服务器需要一周的时间才能恢复，因为我们需要获取某个零件怎么办？
 - en: Server is going to wait for the week。 The other alternative is that it returns
     an error。 Well。 what if the client doesn't know about errors because the client's
     written before。 NFS existed and so it expects them to write a file or read a file
     and get back the data。 So that can be a problem。 That's why they allow you to
     have the blocking option is for old clients that don't know。
+  id: totrans-215
   prefs: []
   type: TYPE_NORMAL
+  zh: 服务器将等待直到一致性恢复。另一种选择是返回错误。那么，如果客户端不知道错误该怎么办，因为客户端是在NFS出现之前就已经写入的，因此它期望在写文件或读文件时获取数据。这可能会是一个问题。这就是为什么他们允许你为旧客户端提供阻塞选项，旧客户端不知道的原因。
 - en: how to deal with errors， you have them blocked。 But for modern clients。 they
     get the error and then they figure out how to convey that， to the user。 Okay。
     So here's the architecture。 And again， we have this VFS layer， but you make system
     calls。 They go through the VFS layer to the NFS client。 They get RPCed over to
     the server。
+  id: totrans-216
   prefs: []
   type: TYPE_NORMAL
+  zh: 如何处理错误，你让它们被阻塞。但对于现代客户端，它们会收到错误信息，然后弄清楚如何将其传达给用户。好了，下面是架构。再说一次，我们有这个VFS层，但你进行系统调用时，它们会通过VFS层到达NFS客户端，然后通过RPC传送到服务器。
 - en: And then the server calls the VFS interface to the actual file system。 So I
     can have multiple different types of file systems at my NFL server。 Existency。
     We do consistency with week consistency。 So client poll every three to 30 seconds。
     ask the server as a value has a file change。 The answer is no。 Right。 The answer
     is yes。
+  id: totrans-217
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后服务器调用VFS接口访问实际的文件系统。所以我可以在我的NFS服务器上使用多种不同类型的文件系统。存在性，我们做一致性，采用弱一致性。客户端每隔3到30秒进行轮询，询问服务器文件是否发生变化。回答是没有。对，回答是有。
 - en: Then the client will switch to using the new version。 So here it holds to say
     that one's still okay。 It gets old。 No， it's now the two。 And so now it's a group。
     If multiple clients are writing for the same file， NFS is a problem。 Because they're
     independent。 you know， right， there's no notion of any kind of blocking or， anything
     like that。
+  id: totrans-218
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后客户端将切换到使用新版本。所以这里说的是，旧的版本仍然可以使用。它变得过时了。不是的，现在是第二个版本。所以现在它是一个组。如果多个客户端同时写入同一个文件，NFS会出现问题。因为它们是独立的，你知道的，对，没有任何阻塞的概念，或者其他类似的东西。
 - en: And so when one 62 used to operate off of a common file server， project group
     sometimes。 would use the same directory for everyone。 So you can imagine on the
     night the projects do everybody saving their C files and ending。 up the part like
     blocks would get in from different files。 So we told them when we separate the
     records。 Okay。
+  id: totrans-219
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以以前当62号系统从公共文件服务器运行时，项目组有时会为每个人使用相同的目录。你可以想象，在项目截止的那天，大家都在保存他们的C文件，最终像块一样的数据会从不同的文件中被合并进来。所以我们告诉他们要分开记录。好的。
 - en: So if we think about the kind of ordering that we might want， we want some kind
     of sequential。 ordering constraint。 So what we're going to say is if you started
     a write and finish that right before another。 one starts on another client， you
     get the new value。 If you start that read while the write is in progress， you
     could get either the old。
+  id: totrans-220
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，如果我们考虑一下我们可能需要的排序方式，我们希望有某种顺序的约束。所以我们要说的是，如果你开始写入并在另一个客户端开始之前完成写入，你将获得新的值。如果你在写入进行时开始读取，你可能会获得旧的值。
 - en: value or you get the new value。 Like， that's what would happen on a local machine
     is you might get either the old or。 the new depending on what the order is。 So
     for NFS， if you start more than 30 seconds later。 you're going to get the new
     version。 You start before that， you'll get maybe the old version。 maybe some partial
     version。 It's ill defined。 So NFS is super simple， highly portable。
+  id: totrans-221
   prefs: []
   type: TYPE_NORMAL
+  zh: 值或者你将获得新的值。就像在本地机器上发生的那样，你可能会得到旧的或者新的，取决于顺序。所以对于NFS，如果你在30秒后开始，你会得到新版本。如果你在那之前开始，你可能会得到旧版本，或者是某个部分版本。它的定义不清楚。所以NFS非常简单，具有高度的可移植性。
 - en: the disadvantages sometimes have been consistent， right because of this whole
     employee。 And you have to keep checking。 Right。 So it's like your little brother，
     a little sister， you know。 in the car asking， are we， there yet？ Are we there
     yet？ It's really annoying really quickly。 And kind of if you have a lot of siblings，
     it overloads the service and the polling traffic。
+  id: totrans-222
   prefs: []
   type: TYPE_NORMAL
+  zh: 缺点有时是因为一致性的问题，因为整个过程是非阻塞的。而且你必须不断地检查。对，就像你的小弟弟或者小妹妹在车里问：“我们到了吗？我们到了吗？”真的很烦人，快速地就让人不耐烦。而且如果你有很多兄弟姐妹，这会让服务和轮询流量超负荷。
 - en: can be a problem。 All right。 So I'm going to skip over NFS and go to summary。
     So TCP gives us a reliable byte stream between two processes。 We've seen how we
     can use a window based protocol for acknowledgments and how we dynamically。 adapt
     the congestion。 RPC lets us make remote procedure calls that will be exactly like
     local procedure calls。
+  id: totrans-223
   prefs: []
   type: TYPE_NORMAL
+  zh: 可能会成为问题。好的，我将跳过NFS，直接进入总结。TCP为两个进程提供了一个可靠的字节流。我们已经看到如何使用基于窗口的协议进行确认，以及如何动态地调整拥塞。RPC让我们能够进行远程过程调用，这些调用将和本地过程调用一样。
 - en: Lots of issues under the covers about marshalling and un-marshalling。 And distributing
     file systems give us transparent access to files stored on other machines。 We
     can use passion for performance and we enable all this with a virtual file system。
     layer that gives us a level of interaction that allows us now to have a publicly
     file， system。
+  id: totrans-224
   prefs: []
   type: TYPE_NORMAL
+  zh: 有许多隐藏的问题，比如数据的封送和解封送。分布式文件系统让我们能够透明地访问存储在其他机器上的文件。我们可以使用性能优先的方式，并通过虚拟文件系统层来启用这一切，这给我们提供了一个交互层次，使我们现在能够拥有一个公开的文件系统。
 - en: So this is why modern operating systems are able to support many different file
     systems。 simultaneously that you don't have to change your application every time
     someone adds a。 new file system。 And then with the cache consumes consistency
     in NFS， it uses polling。 I think it has a chance to talk about Andrew， but the
     Andrew file system uses all that instead。
+  id: totrans-225
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是为什么现代操作系统能够同时支持多种不同的文件系统，你不必每次有人添加新的文件系统时就修改你的应用程序。然后，在NFS中的缓存一致性问题，它使用轮询。我认为它有机会谈到Andrew，但是Andrew文件系统使用了所有这些方法。
 - en: And so with that， we've covered lots of topics in this class。 I hope you have
     enjoyed this class。 I hope you've enjoyed the home works and the projects。 They
     haven't been too challenging for you。 And I want to wish everybody good luck on
     midterm number three and say thank you for， taking 162。 Thanks and have a great
     summer also。 Bye。
+  id: totrans-226
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，通过这一点，我们已经覆盖了这门课的许多主题。希望你们喜欢这门课。希望你们喜欢作业和项目。它们对你们来说应该不算太有挑战性。我也想祝大家在第三次期中考试中好运，并感谢你们选修了162课程。谢谢，也祝你们有一个愉快的夏天。再见。
 - en: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_23.png)'
+  id: totrans-227
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/ab8e9f1efbbf4b73bb263d21f10f9285_23.png)'
 - en: '[BLANK_AUDIO]。'
+  id: totrans-228
   prefs: []
   type: TYPE_NORMAL
+  zh: '[空白音频]。'
