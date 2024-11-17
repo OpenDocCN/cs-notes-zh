@@ -1,1271 +1,1667 @@
 - en: P21：Lecture 21： Filesystems 3 Case Studies (Con't), Buffering, Reliabiity, and
     - RubatoTheEmber - BV1L541117gr
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: P21：第21讲：文件系统3案例研究（续），缓冲，可靠性，和 - RubatoTheEmber - BV1L541117gr
 - en: Welcome back everybody to CS162。 We're going to continue where we left off talking
     about file systems。 If you remember last time， we talked about the main components
     of a file system。 Was some sort of way of looking up names。 That's the directory
     structure yielding some sort of index into an i node。 That represents the actual
     file and the i node typically points at data blocks。
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 大家欢迎回到CS162课程。我们将继续从上次的地方开始，讨论文件系统。如果你还记得上次的内容，我们讨论了文件系统的主要组成部分。那是某种查找名称的方式，目录结构提供了某种索引指向i节点，i节点代表了实际的文件，并且i节点通常指向数据块。
 - en: So this is a pretty generic way to look at file systems。 And why do we have
     things like this？ Well。 for one thing， the storage media is divided up into a
     series of data blocks， either 512。 or 4K and 512 bytes are 4K in size。 And so
     we clearly need some way of pointing at which blocks belong and which order。 And
     so that's what the i node is good about。 And the directory structure gives us
     the convenience of name lookup。
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这是一个看待文件系统的相当通用的方式。那么我们为什么需要像这样的东西呢？首先，存储介质被分成了一系列数据块，要么是512字节，要么是4K，而512字节就是4K大小。因此，我们显然需要某种方法来标明哪些块属于哪个文件，以及它们的顺序。i节点正是用于解决这个问题的。而目录结构则提供了方便的名称查找功能。
 - en: Were there any questions on this very high level thing？
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于这个非常高层次的内容，有没有什么问题？
 - en: Because this is what you're thinking about right now for project three。 So we
     talked about the ancient file system that came from MS。DOS called FAT。 And it's
     very simple。 which is why it surrounds still。 And what it is， is it's a series
     of blocks and then a large array called the file access。 table。 And that array
     basically has an entry one to one with every disk block。
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为这正是你现在为项目三所思考的内容。所以我们讨论了来自MS-DOS的古老文件系统，叫做FAT。它非常简单，这也是它至今仍被使用的原因。它的结构就是一系列块和一个叫做文件访问表的大型数组。该数组实际上与每个磁盘块一一对应。
 - en: And the only thing it does is it links blocks together in some order to represent
     a file。 OK。 so in this particular degenerate version of a file system， there's
     not even an i node， here。 This is really simple。 OK， and the way we address a
     file is basically we say， oh。 the file number is 31。 Which represents the first
     block。
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 它唯一的作用就是按某种顺序将块链接在一起，表示一个文件。好的，所以在这个特定的退化版文件系统中，甚至没有i节点。这真的是非常简单。好了，我们寻址文件的方式基本上是这样说的：哦，文件号是31，代表第一个块。
 - en: And then we link them together to get the rest of them。 OK。 and the only thing
     you need to bootstrap this is you need to know kind of where is。 the root directory。
     Well， it turns out with the FAT file system。 the root directory is usually at
     block number， two and then everything goes from there。 All right。
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后我们把它们连接起来以获取其余的部分。好的，你只需要知道如何引导它，你需要知道根目录在哪里。事实证明，在FAT文件系统中，根目录通常在块号2，然后一切就从这里开始。明白了吗？
 - en: questions。 OK， we're good on this。 Now of course， the reason this is not great。
     there's many problems with it， right？ So among other things。 you're always doing
     this linear search through the file system， to find things。 And as a result。 it's
     inefficient in both serial and random access。 So this is just kind of not great
     in all fronts。
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 有问题吗？好的，我们在这方面没问题。现在，当然，这种方式并不完美，它有很多问题，对吧？比如，你总是需要进行线性搜索才能在文件系统中找到东西。因此，它在顺序访问和随机访问上都很低效。所以说，基本上从各个方面来说，这并不理想。
 - en: but it's simplicity， let's you put it in firmware。 So then we said， OK， what
     else could we do？
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 但它的简单性让你可以把它放到固件中。所以我们接着说，好的，那我们还能做些什么？
 - en: And we gave you this original file system from 4。1 BSD， Berkeley standard distribution。
     which looked like this。 And this is kind of like the first I note ever where there
     were direct blocks。 pointers， indirect block pointers， et cetera。 And really，
     what does this mean？ Well。 this means that we have a structure that is the file。
     You can almost say the I note is the file。
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们给你展示了这个来自4.1 BSD Berkeley标准发行版的原始文件系统，长得像这样。这可以说是我见过的第一个包含直接块、指针、间接块指针等等的i节点。那这到底意味着什么呢？嗯，这意味着我们有一个结构就是文件。你几乎可以说，i节点就是文件。
 - en: It's got the metadata in it， which is all of the access permissions。 Who's the
     owner？
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 它包含了元数据，包括所有的访问权限。谁是文件的所有者？
 - en: When was it last written or read？ And then these pointers help point at the
     blocks that are actually in the file and in。 a particular order。 OK， so for instance，
     in the original BSD。 we had 10 of these direct block pointers， which， could point
     to up to 10 blocks。 And then a single indirect block pointer would point at a
     block， which would point at data， blocks。
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 最后一次写入或读取是什么时候？然后这些指针帮助指向文件中实际存在的块，且按特定顺序排列。比如，在原始的BSD系统中，我们有10个直接块指针，这些指针可以指向最多10个块。然后，一个单独的间接块指针会指向一个块，而这个块又会指向数据块。
 - en: and then double would point at a block， the point at a block， et cetera。 And
     as a result。 this structure optimized both for short files and for long ones，
     because。 it could do short files quickly and long ones it could represent。 Now，
     I did have a question。 I think after lecture last week， which was， well， what
     do you do if you have a short file？
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后双指针会指向一个块，再指向一个块，依此类推。因此，这种结构优化了短文件和长文件的存储，因为它可以快速处理短文件，而长文件也能得到有效表示。现在，我确实有一个问题，我想是在上周的讲座后提出来的，那就是，如果有一个短文件，怎么办？
 - en: Do you have to fill all these in？ No， you can make no pointers here。 OK。 so
     the shortest kind of I-node you could make that has any data at all and it would。
     have one pointer to a block as the first pointer and the rest of them are null。
     OK。 And so the pros of this is it's more or less simple。 It's not as simple as
     the fat file system。
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 你必须填入所有这些指针吗？不，你可以在这里不填写任何指针。好的，那么你能创建的最短类型的i节点是，至少包含一个指向块的指针，其他指针都是空的。好的。所以它的优点是，它或多或少是简单的。比起FAT文件系统来说，它并不那么简单。
 - en: but it is pretty simple and it gives you a， way to represent small blocks and
     large-- small files and large files。 The con is that there's no rhyme or reason
     as to where these blocks come from。 So there's nothing in this data structure
     that says this is going to be an efficient。 use of the disk。 Everybody with my
     on that？ The only thing that says is I can represent files on the disk。
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 但它相当简单，并且提供了一种表示小块和大块文件的方式。缺点是这些块的来源没有规律。因此，这个数据结构没有指出这些块的存储方式将是高效的，磁盘的使用没有什么规律可言。大家都理解了吗？唯一能说的是，我可以在磁盘上表示文件。
 - en: It doesn't say that I'll necessarily make them efficient。 And that's the important
     part about this。 This layout is a correctness thing。 It tells me which blocks
     are belonging to the file and in which order。 Since it says nothing about performance，
     it could perform well。 Why？ Well。 if I could somehow make sure that I pick all
     the blocks in order on a track， then this。
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 它并没有说我一定会让它们变得高效。这是这个问题的关键。这个布局关注的是正确性。它告诉我哪些块属于文件以及它们的顺序。由于它并未涉及性能问题，它可能表现得很好。为什么？嗯，如果我能确保在一个轨道上按顺序选择所有块，那么这样做。
 - en: could be very efficient。 On the other hand， if I randomly pick these blocks。
     the file would still work， but it， would be really inefficient。 So this data structure
     says nothing about efficiency。 It's about correctness。 Now we have to be figuring
     out how to make this efficient。
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 可能非常高效。另一方面，如果我随机选择这些块，文件仍然能够工作，但效率会非常低。因此，这个数据结构并没有涉及效率的问题。它关乎正确性。现在我们必须弄清楚如何让它变得高效。
 - en: And I'll tell you what happened amusingly enough is in the original BSD file
     system， 4。1。 you'd make a brand new file system。 You'd reformat the disk。 And
     everything would be。 I'm going to say blazingly fast for the day。 And then as
     you used it and you deleted and added and deleted and added files。 it'd get， progressively
     slower and slower because the way the free list worked， which it linked。
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 有趣的是，在原始的BSD文件系统4.1版本中，你会创建一个全新的文件系统。你会重新格式化磁盘，一切都会，我要说，那时速度飞快。然后随着使用，它不断地删除、添加、删除和添加文件，它会变得越来越慢，因为空闲列表的工作方式是链式的。
 - en: free blocks， the other and stuff。 Eventually， you would get kind of the worst
     ordering of blocks。 You'd start out with the best ordering and you'd get to the
     worst。 Okay？ Everybody with me on that？
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 空闲块，其他的东西。最终，你会得到一种最差的块排序。你会从最好的排序开始，最终变成最差的排序。明白吗？大家都理解吗？
 - en: So now， next thing that came along was 4。2 BSD with the fast file system。 So
     there is a question here in the chat saying， so there's a limit on how many total
     files。 on the disk。 Yes， the limit on the total number of files on the disk depends
     on how many i-nodes you。 have。 So if you only allocate some number of i-nodes，
     that's the maximum number of files you can。
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以接下来出现的是4.2 BSD和快速文件系统。那么这里有一个问题，聊天中有人提到，磁盘上总共有多少文件是有限制的。是的，磁盘上文件的总数限制取决于你有多少个i节点。如果你只分配了一定数量的i节点，那么你最多只能有这么多文件。
 - en: have。 Okay？ And the other thing is every file is at minimum the size of an i-node
     plus one block。 And there's no smaller file。 So even a one byte block has that
     problem。 And usually the i-nodes are like 128 bytes。 And so you're talking about
     128 bytes plus one block is kind of the minimum file size。 for even a one byte
     file。 Okay。 All right。 So 4。2 BSD came around about 1984。
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吗？还有一点是，每个文件的最小大小是一个i节点的大小加上一个块的大小。而且没有比这个更小的文件。所以即使是一个字节的文件，它也会有这个问题。通常，i节点的大小大约是128字节。所以你说的128字节加一个块是最小的文件大小，甚至是对于一个字节的文件。好吗？好。那么，4.2
+    BSD大约是在1984年出现的。
 - en: And same i-nodes structure， because remember what I said was the i-nodes structure
     isn't。 the problem。 The problem was allocating the blocks。 And so it was the same
     header。 triply indirect blocks， et cetera。 They changed the block size a little
     bit。 They went from 1。024 or 1k to 4k。 And that made things a little faster。 Why
     did it make things a little faster？
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 它仍然使用相同的i节点结构，因为记住我之前说过，i节点结构本身并不是问题，问题在于分配块。所以它还是用了相同的头部，三重间接块等等。它们稍微改变了块的大小，从1.024（1k）变成了4k。这让事情变得稍微快了一些。为什么这样做让它变得更快呢？
 - en: Why would changing the block size make this file system a little faster？ Yeah。
     Okay。 But why does that help with the number of blocks per file going down？ Why
     is that faster？
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么改变块大小会让这个文件系统变得更快呢？对的。好吧，但为什么这能帮助减少每个文件的块数呢？为什么它会更快呢？
 - en: Is that again？ Okay。 And how does it average down the overhead？ That's good。
     [inaudible]， Good。 So it's reducing overhead。 So another thing that you were going
     around。 but if we always allocate a block as a series， of consecutive sectors
     on a track。 then a 1k block has two 512 byte sectors。 A 4k block has eight of
     them all on the same track。
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 是什么？好。那么它是如何减少开销的？很好。[听不清]，很好。所以它在减少开销。那么你们在讨论的另一个问题是，如果我们总是按连续的磁道扇区来分配一个块，那么一个1k的块就有两个512字节的扇区，一个4k的块就有八个，且都在同一个磁道上。
 - en: So we get locality out of the disk just by going from a 1k to a 4k block size。
     So yes。 that's reducing overhead， but it's also doing it in a way that's very
     advantageous。 on a spinning disk。 So but then they did a bunch of other things。
     Now I put up this paper。 I don't know if any of you looked at this after last
     time on our resources page， but。
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们通过把块大小从1k改成4k，就能从磁盘中获得局部性。所以是的，这样减少了开销，但也以一种非常有利的方式在旋转磁盘上减少了开销。但是它们还做了很多其他事情。我放了这篇论文，我不知道你们上次在我们的资源页面之后是否看过，但。
 - en: this is a paper that was written by McEw's Nick Joy， Leffler and Fabry on the
     original。 fast file system。 And you can look at it too。 Papers back in the day
     in 1984 look a little different than research papers do today。 but， this is actually
     the first paper we study in 262 even。 But what they did was they optimized the
     file system in lots of ways。 Okay， so among other things。
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是McEw's、Nick Joy、Leffler和Fabry写的关于原始快速文件系统的论文。你们也可以去看看。1984年的论文与今天的研究论文看起来有点不同，但这实际上是我们在262课程中学习的第一篇论文。它们做了很多优化文件系统的方法。好吧，其中之一。
 - en: they distributed the i-nodes throughout the disk。 Okay， so why is that good？
     Well。 it means that now， you know， when they were originally all on the outer
     part of the， disk。 no matter where the file was， you always had to seek all the
     way out to come back and。 get the i-node。 And so if you're doing an LS in a directory，
     you'd seek out， you'd get the data。
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 因为它们将i节点分布在了磁盘的各个位置。好，那么为什么这很好呢？这意味着现在你知道，当它们最初都在磁盘的外侧时，无论文件在哪里，你总是必须寻道到磁盘的外侧，再返回来获取i节点。所以如果你在一个目录中执行LS命令，你会去寻道，然后获取数据。
 - en: you'd seek， out， you'd get the data。 There's a lot of head movement just because
     of where the i-nodes were。 So they distributed them throughout and they got really
     good reliability out of it as well。 because if you ever had a head crash that
     destroyed part of the surface and it happened。 to be on the outside cylinder，
     then you basically have destroyed all the i-nodes and therefore。
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 你会定位，获取数据。由于i节点的位置，头部移动会很频繁。所以他们将i节点分布到不同的地方，这样做也提高了可靠性。因为如果你遇到磁头崩溃，破坏了部分磁道，而恰好是在外部磁道，那么你基本上会毁掉所有的i节点，从而……
 - en: effectively destroyed the file system because you have no idea what's inside
     there。 Okay。 so then the other thing they did was rather than a linked list， free
     list， they。 actually started using bitmaps where one bit per block， very long
     bitmaps would basically。 let them allocate but know what kind of locality was
     involved。 So if you have a long bitmap。
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上摧毁了文件系统，因为你根本不知道里面有什么。好吧。然后他们所做的另一件事是，改用位图，而不是链表的空闲列表。他们实际开始使用每块一个比特的位图，这样的长位图基本上可以让他们分配空间，同时知道涉及到的局部性。如果你有一个很长的位图。
 - en: you could go for a big train of unallocated sectors and。 you could get a lot
     of locality just by finding a bunch of unallocated sectors in a bitmap。 And they
     also attempted to allocate files continuously。 They had a 10% reserve disk space
     which I'll say more about in a second and then they also。
+  id: totrans-29
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以选择使用一大串未分配的扇区。你可以通过在位图中找到一堆未分配的扇区来获得很多局部性。而且他们还尝试了连续分配文件。他们有一个10%的保留磁盘空间，我稍后会详细说明，然后他们还做了其他事情。
 - en: had something called skip sector positioning which I'll also say something about。
     So let's look about the i-node placement for a moment。 So early Unix and the fat
     file system on Windows， all of the metadata， that's the directories。 and i-nodes
     and all that stuff， were stored in one place on the outside。 Okay。
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们有一个叫做跳过扇区定位的机制，我稍后会讲到。那么我们来看一下i节点的布局。早期的Unix和Windows上的FAT文件系统，所有的元数据，也就是目录、i节点和所有相关信息，都存储在磁盘的外部一个地方。好吧。
 - en: Those i-nodes were fixed size when you formatted the disk and basically one
     problem with the。 i-nodes being all in one place is a head crash destroys all
     the data I said that and then。 the i-nodes are not close to the data。 Okay， and
     a secondary problem is when you create a file in Unix。 you don't really know，
     how big it is and so you don't know how much contiguous space to allocate。
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些i节点在你格式化磁盘时是固定大小的，而i节点集中存放在一个地方的问题之一是，磁头崩溃会摧毁所有的数据，正如我所说的那样，而且i节点与数据不在一起。好吧，另一个问题是，在Unix中创建文件时，你其实不知道文件的大小，因此你无法知道该分配多少连续的空间。
 - en: Okay， and the way we get fast out of this file system is if we have a disk with
     100， sectors。 we would like all 100 sectors to be on a small number of tracks
     all next to。 each other because that would give us the fastest performance。 Okay。
     And so really what they did was they spread the i-nodes out and then they came
     up with。
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，我们通过这种文件系统获得快速访问的方式是，如果我们有一个包含100个扇区的磁盘，我们希望所有100个扇区都位于少数几个相邻的磁道上，因为那样能提供最快的性能。好吧。所以他们实际做的是将i节点分散开来，然后提出了……
 - en: an allocation mechanism for making sure that there was locality on average out
     of the allocation。 of blocks。 And so really what they did was they divided things
     the cylinders into a bunch of cylinder。 groups or block groups and you can see
     this these are like you know donuts along the way。 And for each block group they
     put a set of i-nodes for that block group。 Okay。
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 一种分配机制，确保在平均分配的情况下，分配的块有局部性。所以他们实际做的是将磁道分成一组一组的磁道组或块组，你可以看到这些就像是沿路的甜甜圈。对于每个块组，他们为该块组放置了一组i节点。好吧。
 - en: And so often because of this you could have the i-node for a file stored in
     the same cylinder。 group both as the i-node for the directory parent directory
     it's in and in the same block。 group is all the data for the disks。 Now if we're
     accessing something within a given directory all of a sudden everything's。 within
     one block group and it's much faster there's not a lot of seeking going on。 Okay。
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，通常由于这一点，你可能会发现一个文件的i节点存储在同一个磁道组中，同时也作为该文件所在目录的父目录的i节点，并且在同一个块组内存储着该磁盘的所有数据。现在，如果我们在访问某个目录下的内容，突然间所有数据都集中在一个块组内，这样速度就会更快，因为不需要进行大量的寻道。好吧。
 - en: And the so we've divided up into a bunch of block groups which are a set of
     closed tracks。 And remember when we talked about how disk accesses had a C of
     1。5 where the common seek。 was below average。 Well the block groups give you that
     because it means that you seek much less than average。 where average would be
     from every track to every other track you compute the seek time。
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们将磁盘分成了很多块组，这些块组是一组封闭的轨道。记得我们曾谈到磁盘访问时的C值为1.5，其中常见的寻道时间低于平均值吗？好吧，块组给你带来了这个好处，因为这意味着你比平均寻道时间要少得多，平均情况下是从每个轨道到其他轨道的寻道时间。
 - en: and you average them。 That's the average seek time here by staying within a
     block group we'd only move a little。 bit。 And as a result we get much faster access。
     So basically what we've done is we've kind of put a bunch of locales on the disk
     and we've。
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 并且你对它们求平均。这就是这里的平均寻道时间，通过保持在一个块组内，我们只需稍微移动一点点。结果就是我们可以更快地访问数据。所以，基本上我们做的事情是把磁盘分成了许多局部区域。
 - en: put stuff in them to avoid huge seeks。 And the directory and its files are typically
     in a common block group。 Now let me tell you one other thing here so remember
     when we looked at data a couple of。 lectures ago we saw that most files are small
     but most bytes are in large files。 Remember that there was two slides I showed
     you。 So the fact that most files are small works great with this scheme but take
     those really。
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 把东西放进去，避免大范围的寻道。目录和它的文件通常位于一个共同的块组中。现在让我告诉你们另一件事。记得我们在几堂课前看到的数据吗？我们看到大多数文件很小，但大多数字节都在大文件中。记得我给你们展示了两张幻灯片吗？所以，大多数文件都很小这一点与这个方案非常契合，但对于那些非常大的文件。
 - en: large files。 If I have one large file in a block group and I try to put it all
     in that block group。 what happens is I'm going to fill the whole block group up
     with a large file and none。 of the small files will fit。 So what they did was
     they also had heuristics that you would start by allocating in the same。 block
     group as your I node was in but then after you got past a certain number like
     64。
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 大文件。如果我在一个块组中有一个大文件，并且试图将它完全放入这个块组中，结果会是什么呢？我会把整个块组都填满一个大文件，这样就没有空间放入任何小文件。所以他们做的事情是，采用启发式方法，首先在与I节点相同的块组中分配空间，但当你超过一定数量时，比如64。
 - en: kilobytes or whatever then you would go to a run in a different block group
     and run for， a while。 Okay and so what it did was it made sure that you only the
     seek was only every so often。 where every so often was a large number of blocks
     and it reserved room so that small files。 could still fit in there and be close
     to their I node。
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设你有千字节或者其他类似大小的数据，你会去不同的块组中运行一段时间。好的，结果是，它确保了你每次寻道的间隔不会太频繁，而这个间隔就是多个块的大小，并且它预留了空间，这样小文件仍然可以适应，并且靠近它们的I节点。
 - en: So the fast file system is all about a bunch of heuristics to make sure that
     when you。 allocate things they're fast。 Okay so once you've got that kind of scheme
     then the rest of it's pretty easy to think。 about so we have bit maps for every
     block group we do a first free allocation of new blocks。 so we try to grab successive
     blocks that are close to each other and it avoids fragmentation。
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以快速文件系统的核心是通过大量启发式方法来确保分配的东西是快速的。好的，一旦你有了这种方案，剩下的就很容易理解了。我们为每个块组做了位图，我们先进行新的块的空闲分配，尽量选择连续的块来避免碎片化。
 - en: and then there's when big files come into play there's a way of going to multiple
     block groups。 to handle the big files。 Okay the important part about this which
     is initially a little counterintuitive but。 I hope you guys can see where this
     comes from is we want to make sure that we have basically。 10% or more of the
     storage free。 If we do that then we know that it's easy probabilistically to find
     runs of empty blocks。
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，当大文件出现时，有一种方法可以跨多个块组进行处理。好的，关于这一点，最初可能有些反直觉，但我希望你们能够理解它的原理。我们想确保基本上有10％或更多的存储空间是空闲的。如果我们这样做，我们就知道，从概率上来说，找到一段空闲块的序列会很容易。
 - en: on tracks and do a good job with performance。 It's just a probabilistic argument
     and so the way this shows up in a lot of modern。 file systems is that 10% is taken
     right off the top of the total size of the disk and。 you're not even told that
     that exists and instead it's sort of hidden under the covers。 and it's there for
     performance。 And usually as an if you're a system user the root user then you
     can go in and change。
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 在磁盘上跟踪并确保性能良好。这只是一个概率性论证，因此在许多现代文件系统中，这种情况表现为总磁盘大小的10%直接被预留出去，而你甚至没有被告知这一点，它通常被隐藏在系统背后，目的是为了提高性能。而通常作为系统用户，如果你是根用户（root），你可以进入系统并更改这个设置。
 - en: that but I recommend you don't unless you're really desperate for space。 Okay
     so the summary is the i-node layout for small directories you can fit all the
     data。 headers etc in the same cylinder with no seeks file header is much smaller
     than the whole。 block so multiple headers fetched from the disk at once so we
     can grab a bunch of headers。
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 但我建议除非你真的急需空间，否则不要更改。好了，总结一下，对于小型目录，i-node 布局可以将所有数据、头信息等放在同一磁道上，从而避免了寻道。文件头比整个块要小得多，因此可以一次从磁盘中提取多个头信息，这样我们就能一次性获取一堆头信息。
 - en: and therefore a bunch of i-nodes from the same directory。 And the reliability
     is that even if the head crash destroys part of the disk the rest of。 the disk
     is great still。 And so that's kind of think of this as minimizing the damage when
     there's a head crash。 By the way I should tell you what head crash means。
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，我们可以从同一目录中获取一堆i-node。其可靠性在于，即使磁头崩溃摧毁了磁盘的一部分，剩余的磁盘仍然是完好的。所以可以把这个理解为最小化磁头崩溃时的损失。顺便说一句，我应该告诉你“磁头崩溃”是什么意思。
 - en: This is not like a heavy metal enjoyment sort of thing with a wall that's too
     close。 That would also be a head crash。 What we're talking about here is that
     when you've got spinning storage you've got a disk。 that's spinning what's actually
     those little heads there's a little bit of pressure that。 causes them to be floating
     on a micron level bit of air above the disk。
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 这不是那种重金属音乐演奏时，墙壁太近的情况。那种情况也会导致磁头崩溃。我们这里讨论的是，当你使用旋转存储时，磁盘在旋转，实际上那些小磁头上方有一层微薄的气流，造成它们浮在磁盘上方。
 - en: So those heads are not actually touching the disk they're floating because the
     disk is。 flying fast enough and it's causing them to kind of fly above the disk。
     And what a head crash is is when that's going on if you jar the disk the head
     actually hits。 down and digs a trench。 When you do that all the little ones and
     zeros come off the side and you see them kind of。
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以这些磁头实际上并没有接触磁盘，它们是悬浮在上方的，因为磁盘转速足够快，导致磁头漂浮在磁盘上空。而所谓的磁头崩溃，就是在这种情况下，如果你撞击磁盘，磁头会直接接触磁盘并刮出一个凹槽。当发生这种情况时，所有的0和1会从侧面脱落，你就会看到它们。
 - en: drip it out of the side of your computer and you know that you're not recovering
     them。 at that point。 So that's a head crash and there's a lot of stuff that's
     been done over the years to make。 sure that disks don't head crash。 Among other
     things when the machine is off the heads park on a part of the disk that doesn't。
     have any data on it。 But there's also you know like it'll periodically if it's
     idle it'll pull it back to a safe spot。
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 当磁盘掉落到电脑旁边时，你知道那时候你无法恢复数据了。那就是所谓的磁头崩溃。多年来，已经做了很多工作以确保磁盘不会发生磁头崩溃。比如在机器关闭时，磁头会停留在没有数据的区域。另外，当磁盘空闲时，它还会定期将磁头拉回到安全的位置。
 - en: and so on。 But so head crash is a real thing。 Now let's just look at the first
     fit block allocation。 So if you imagine that we have a bit back there where gray
     here is a block in use， white is。 not in use then you can quickly look at this
     and figure out which blocks are allocatable。 And so if we write a two block file
     we can grab two of them that are close to each other。
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 等等。但磁头崩溃确实是一个真实的现象。现在让我们看看第一个适配块分配。如果你想象一下，我们有一个区域，其中灰色代表正在使用的块，白色代表未使用的块，那么你可以快速查看这些块并确定哪些是可以分配的。所以如果我们写一个占用两个块的文件，我们可以选择两个相邻的块。
 - en: or if we want to write a large file we can make sure that we mostly get a bunch
     of blocks。 that are close to each other。 Okay so this is absolutely not rocket
     science but this says that if you have a bit map allocation。 scheme you can easily
     find runs of free blocks just by looking at the bit map okay and that's。 kind
     of what the fast file system did。 Questions？ Yeah。 Yes。 So that's a great question。
+  id: totrans-49
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者如果我们想写一个大文件，我们可以确保大多数块都集中在一起。好的，这绝对不是火箭科学，但这意味着如果你有一个位图分配方案，你可以通过查看位图轻松找到一系列空闲块，而这正是快速文件系统所做的。问题？是的，好的，这是个很好的问题。
 - en: So last lecture I think or maybe the previous one I basically said look modern
     controllers。 remap faulty sectors automatically for you under the covers so therefore
     a scheme like。 this wouldn't work as well because it does not perfectly correlate
     with locality。 So yes that's a problem。 The controller does its best that it can
     to make sure that it's mostly reflecting locality。
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以下一讲我可能说过，或者是之前讲过，我基本上说过，现代控制器会自动重新映射有故障的扇区，因此像这样的方案就不会那么有效了，因为它与局部性并没有完美对应。是的，这是一个问题。控制器尽力确保它大致反映局部性。
 - en: Okay so it's not perfect anymore but it's still pretty good。 Okay but that's
     a very good point。 And that's a good example of you know back in the 4。2 BSD days
     the way you address the。 sector cylinder surface sector number okay or cylinder
     track sector number。 And so you knew exactly the correspondence between your bit
     vector and the location。
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，虽然现在它并不再是完美的，但仍然相当不错。好的，这个点非常重要。这是一个很好的例子，回到 4.2 BSD 时代，你是通过扇区、柱面、磁道扇区号来定位的。因此，你可以准确知道你的位图和位置之间的对应关系。
 - en: Once we went to logical block addresses that it's a little fuzzier but it mostly
     works， still。 So I think the important part here is mostly works gives you a big
     gain in locality and。 performance anyway。 Okay good question though。 Any other
     questions？
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 一旦我们使用逻辑块地址，虽然有点模糊，但它大致上还是有效的。所以我认为这里的关键部分是，大多数情况下它能带来巨大的局部性和性能提升。好的问题，其他问题呢？
 - en: So it's interesting you guys should go look at that paper that I've got up on
     the resources， page。 What's interesting about it is some very simple heuristics
     gave them a huge increase in performance。 because it just made sure that files
     were mostly local。 Had a lot of locality to them made a huge difference。
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 这很有意思，你们应该去看看我在资源页面上放的那篇论文。它有趣的地方在于，一些非常简单的启发式方法让他们的性能大幅提升，因为它确保了文件大多数是局部的，具有很高的局部性，这带来了巨大的不同。
 - en: Here's another thing they did which is kind of interesting。 So a problem about
     missing blocks due to rotational delay。 So here's the idea here。 You read a block
     off the disk and then you put it in the device driver and by the time。 you figure
     out what the next block to read is the disk is rotated too far so the thing。
+  id: totrans-54
   prefs: []
   type: TYPE_NORMAL
+  zh: 他们做的另一个事情也很有意思。解决了由于旋转延迟导致的丢失块问题。这里的想法是，你从磁盘读取一个块，然后将其放入设备驱动程序中，等到你确定下一个块要读取时，磁盘已经转动得太远，所以你想要的块已经过去，你得等它再转一圈，才能读取到该块。
 - en: you wanted is past you and you got to wait for it to go all the way around one
     more rotation。 before you can get the block。 And that's a huge problem because
     it means even if you've got really good locality where。 all the sectors are next
     to each other it means that you still have to rotate once for。 every sector you
     read which is bad right。 And so what they did in the 4。
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是一个大问题，因为这意味着即使你有非常好的局部性，所有扇区都紧挨在一起，你仍然必须为每个读取的扇区等待一次旋转，这很糟糕，对吧。所以他们在 4。
 - en: 2 BSD is they actually use something called skip sector where。 for instance
     if you look at the fuchsia here what happened is those pink blocks represent。
     the blocks of a file and rather than being next to each other they were spread
     out just。 enough to make sure that if you had the latency of pulling the thing
     off doing something with。
+  id: totrans-56
   prefs: []
   type: TYPE_NORMAL
+  zh: 2 BSD 实际上使用了一种叫做跳跃扇区（skip sector）的方法。例如，如果你看看这里的 Fuchsia，发生的事情是这些粉色的块代表文件的块，而这些块不是彼此相邻的，而是被分散开来，恰好足够保证如果你拉取这个东西并进行某些操作时，延迟不会过高。
 - en: it asking for the next one it will not have rotated past but will in fact have
     rotated。 right under what you want。 Okay so this was one of their other optimizations。
     Now as you imagine this can be a problem to get perfect。 And fortunately in today's
     discs basically we have a better solution which is there's。
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 它在请求下一个块时，不会超过它已经转过的区域，而会恰好旋转到你想要的地方。好吧，这就是他们的另一个优化方法。现在你可以想象，做到这一点可能是一个问题，但幸运的是，现在的磁盘基本上有了更好的解决方案，那就是……
 - en: enough DRAM inside the controller that you have what's called track buffers
     and so when。 you go to read a track you just read the whole thing into DRAM on
     the controller and now the。 OS can ask for things at whatever speed it wants because
     it's already been pulled off， the disc。 Okay so this is a great example of an
     obsolete problem that was fixed because we have enough。
+  id: totrans-58
   prefs: []
   type: TYPE_NORMAL
+  zh: 控制器内有足够的 DRAM，用来存储所谓的轨道缓冲区，所以当你读取一个轨道时，你只需将整个轨道读取到控制器的 DRAM 中，这样操作系统就可以以任何它想要的速度请求数据，因为数据已经从磁盘上读取到内存中了。好的，这就是一个典型的过时问题的解决方案，现在已经得到解决，因为我们有足够的内存。
 - en: memory。 And so modern discs and controllers do a whole bunch of these kind of
     things。 So there's track buffers most I would say all of the disc controllers
     do the elevator。 algorithms inside the controller now they do some filtering of
     bad blocks for you so。 there's a lot of stuff the controller does that the OS
     no longer has to。 Okay questions。
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 内存。所以现代的磁盘和控制器做了很多类似的事情。所以现在几乎所有的磁盘控制器都做了电梯算法，并且在控制器内部进行了坏块的过滤处理，这样操作系统就不再需要做这些工作。好的，问题？
 - en: Alright so pros the difference between 4。1 and 4。2 was night and day for performance
     on。 the drives you have very efficient storage for both small and large files
     locality for。 small and large files locality for metadata and you didn't have
     to defragment the disc to。 get good performance。 Okay so that was kind of cool
     and that's all about that 10 percent you have to leave。
+  id: totrans-60
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，优点是，4.1 和 4.2 版本之间的性能差异是巨大的。在你的硬盘上，你可以获得非常高效的存储，无论是小文件还是大文件，都能保持局部性，元数据的局部性也得到了优化，而且你不需要进行磁盘碎片整理就能获得良好的性能。好吧，这很酷，而且这一切都与那
+    10% 必须保留的空间有关。
 - en: a 10 percent along。 So cons are for instance that this particular scheme is
     very inefficient for tiny files。 So a one byte file requires both an i-node and
     a data block。 Okay so you're stuck。 It's inefficient when the file is mostly contiguous
     on disk so in other words if you。 could have a bunch of blocks that were already
     together a better way to describe that would。
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是一种十个百分点的情况。所以缺点是，比如说，这种方案对于小文件非常低效。一个字节的文件需要同时占用一个 i-node 和一个数据块。好吧，这样就卡住了。如果文件在磁盘上大部分是连续的，那这种方式就更低效了。换句话说，如果你有一堆已经在一起的块，一个更好的描述方式是……
 - en: be the track or sector or logical block address of the first and then how many
     blocks it。 is that's a whole description of that whole run of block。 Okay and
     so in this i-node structure you're basically forced to name every block even。
     though they're all together already。 Okay and you need to reserve 10 to 20 percent
     of free space but I will say this is a great。
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 它会是第一个轨道或扇区或逻辑块地址，然后是它包含的块数。这就完整描述了这一整段块的内容。好吧，在这种 i-node 结构下，你基本上被迫为每个块命名，即便它们已经在一起了。好吧，你还需要保留
+    10% 到 20%的空闲空间，但我会说，这是一种很好的平衡。
 - en: trade-off this is hiding some space to prevent fragmentation that's a far as
     I'm concerned。 that's a good trade-off。 Okay so you too can play with this kind
     of thing all you have to do is have Linux and。 use ext probably not two anymore
     you'll probably use three and it looks exactly like the original。 4。2 bsd with
     some small things so it has the same kind of locality idea with block groups。
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是通过隐藏一些空间来防止碎片化，按照我的观点，这是一个很好的权衡。好吧，你也可以尝试这类东西，所需的只是有 Linux 系统并使用 ext 文件系统，可能现在不再是
+    ext2，而是 ext3，基本上它看起来和最初的 4.2 BSD 很相似，只是做了一些小的调整，所以它有和原始系统一样的局部性思想，采用了块组的方式。
 - en: every group has two bitmaps one for i-nodes and one for blocks within a group
     and you。 can set the block size at format time 1k 2k 4k 8k so when you create
     a new file system you。 say what block size you want and that's a clear trade-off
     between locality with larger。 block sizes and wasted space if you have a lot of
     small files right but you can choose。
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 每个组都有两个位图，一个用于 i-node，另一个用于组内的块。你可以在格式化时设置块大小，1k、2k、4k 或 8k。所以，当你创建一个新文件系统时，你可以选择想要的块大小，这就清楚地表明了块大小与局部性之间的权衡问题：较大的块大小带来更好的局部性，但如果你有很多小文件，可能会浪费空间。不过你可以自己选择。
 - en: that and if you were making this file system to do a lot of media you'd probably
     choose。 a larger block size and in reality you'd probably choose ext 4 instead
     of 3 but that's a discussion。 for another day。 So the actual i-nodes structure
     is remarkably similar to 4。2 bsd there's like 12 direct， pointers instead of 10
     but it's otherwise pretty close and the difference between ext。
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你正在创建一个文件系统来处理大量的媒体文件，你可能会选择更大的块大小，实际上你可能会选择ext 4而不是ext 3，但那是另一个话题。实际的i-节点结构与4.2
+    bsd非常相似，只有12个直接指针，而不是10个，但其他方面非常接近，ext之间的差异。
 - en: 2 and 3 is that you take an ext 2 file system which looks like the fast file
     system and you。 add journaling on top to give you reliability and you get a ext
     3。 We may or may not get all the way to journaling today but we'll try。 Okay。
     Questions。 Okay and I'm kind of showing here you know you've got i-node 2 is maybe
     the root file。
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 2和3是你将一个ext 2文件系统与快速文件系统相似的结构结合，再加上日志记录功能，从而提高可靠性，你得到了ext 3。我们今天可能无法完全讲完日志记录，但我们会尽力的。好吧，有问题吗？我在这里展示的是，i-节点2可能是根文件。
 - en: system it points the block 258 which is the root directory you look down you
     find d1 has， i-node 5。03。3 for that directory here you look that up here it is
     the i-node that points。 you at the contents of d1 and so on you can actually trace
     your way through if you wanted。 to to see how the files are laid out on the disk。
     Now let's remember the directory abstraction okay this is sort of the thing you
     use every。
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 系统它指向块258，这就是根目录，你往下查找，发现d1有i-节点5.03.3，这里查找的i-节点指向d1的内容，依此类推，如果你愿意，可以实际追踪查看文件在磁盘上的布局。现在让我们记住目录抽象，这是你每次都使用的东西。
 - en: day /usr/usr/lib 4。3 and then you know an actual file inside that really what
     a directory。 structure is it's the series of files that are serving as directories
     which map names。 to i-nodes or names to i-numbers okay and so you know directories
     are just specialized。 files they have lists of file name file number pairs there's
     system calls to access directories。
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: day /usr/usr/lib 4.3 然后你知道实际的文件就在里面，实际上，目录结构就是一系列作为目录的文件，这些文件将名称映射到i-节点或名称映射到i-编号。好吧，所以你知道，目录实际上就是特殊的文件，它们包含文件名与文件编号对的列表，系统调用可以访问目录。
 - en: directly which are different from the ones that you're used to for accessing
     files like。 make deer removed deer link unlink etc there's a lot of libc support
     for open deer re-dear。 and so on those are the libc functions you can do to traverse
     the directory yourself。 I wanted to talk about what a hard link is so these this
     structure I'm showing you here。
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 直接访问目录，这与访问文件的系统调用不同，比如make deer、removed deer、link、unlink等。还有很多libc支持的函数，比如open
+    deer、re-dear等等，这些都是你可以用来遍历目录的libc函数。我想谈谈什么是硬链接，所以下面我展示的结构就是这样的。
 - en: is representing hard links so for instance if in the /usr/directory i have a
     pointer to。 directory user lib 4。3 what that means is that the /usr/text points
     at an i-number for。 this file which is the directory that's a hard link it's a
     link between the name and。 the i-number okay and if I delete this directory then
     the entry in the this directory goes away。
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 它代表硬链接，例如，如果在/usr/目录中，我有一个指向目录/usr/lib 4.3的指针，这意味着/usr/text指向这个文件的i-编号，而这个文件是目录，这就是硬链接，它是名称和i-编号之间的链接。如果我删除这个目录，那么这个目录中的条目就会消失。
 - en: and that i-nodes is freed up and put back on the bitmap for free okay so when
     do you delete。 file contents when there's no pointers at it so for instance this
     file user lib 4。3/foo。 could have another hard link user user lib foo and then
     I would show two pointers at the。 same file okay so why do I point that out well
     first of all the files are self-contained。
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 并且该i-节点会被释放，并重新放回位图上作为空闲项。所以，当你删除文件内容时，是在没有指向它的指针时进行删除。例如，这个文件/usr/lib 4.3/foo可能有另一个硬链接/usr/lib/foo，这样我就会看到两个指针指向同一个文件。那么为什么我要提到这一点呢？首先，文件是自包含的。
 - en: things they have the metadata the permissions you know all the blocks that's
     an i-node。 how I name it doesn't matter I can have many names for one i-node this
     is sounding very。 Shakespearean right and i-node by any other name it's still
     an i-node so if you look there。 are many paths through the namespace they all
     point at the same i-node the i-node has。
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 它们有元数据、权限和所有的块，这就是i-节点。如何命名它并不重要，我可以为一个i-节点取多个名字，这听起来很像莎士比亚的名句，“一个i-节点，哪怕换个名字，依然是i-节点”。因此，如果你看看，命名空间中有很多路径，它们都指向同一个i-节点，而i-节点本身有。
 - en: its own permission structure you know that file tells who's allowed to access
     it etc。 And the trick is if I go and delete it from those two directories that
     are pointing at。 it the file itself doesn't actually go away until I delete the
     last hard link to it okay。 and in fact you should try this not on a file you care
     about but if you have a file in a。
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 它有自己的权限结构，你知道，那个文件告诉谁可以访问它等等。而诀窍是，如果我从指向它的那两个目录中删除它，文件本身其实并不会立即消失，直到我删除最后一个硬链接，好吗？实际上，你应该尝试一下，但不要在你关心的文件上进行，而是如果你有一个文件在一个。
 - en: file system and you write a program that opens that file and then say goes into
     an infinite。 loop and you delete the file that file doesn't actually go away because
     the i-node is being。 referenced by the internal structures of your process okay
     and so then it's only when that。 process goes away then the file goes away okay
     so this is all reference counted now you。
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 你编写一个程序，打开该文件，然后进入一个无限循环，如果你删除这个文件，它实际上并不会消失，因为i节点仍然被你的进程内部结构所引用，好的，只有当那个进程结束时，文件才会消失。好的，所以这一切都是通过引用计数管理的，现在你。
 - en: probably heard of the notion of soft link what's a soft link well soft link
     is a little different。 than a hard link it's a directory entry that has a path
     at the name of the file so here。 we had a path and the i-number of the file whereas
     a sim link is a path and a name of。 a file so if you look here here's a normal
     directory entry which is a hard link file name。
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可能听说过软链接的概念，什么是软链接？软链接与硬链接稍有不同。它是一个目录条目，包含文件的路径名称。所以这里我们有文件的路径和i号，而符号链接是一个路径和文件的名称。所以如果你看这里，这是一个普通的目录条目，它是一个硬链接文件名。
 - en: points at file number a symbolic link says file name points at a destination
     file name。 and those file names can be in completely different file systems okay
     and so these are。 more like they're supported by open in some of the structures
     you use every day and for。 a lot of things it's similar but it's really just sort
     of a symbolic link is a name to。
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 指向文件编号，符号链接则指向文件名，指向目标文件名。这些文件名可以位于完全不同的文件系统中，好吗？因此，这些链接更像是由某些你每天使用的结构中的open所支持的，对于很多事情来说，它们是相似的，但符号链接实际上就是指向文件系统的名称。
 - en: name pointer okay and the problem with a name to name pointer is this is not
     even guaranteed。 to work so if this name was on some file system that you threw
     out later then you can get。 a bad reference trying to look up a sim link how many
     people have ever run into a system。 like that so typically when you download a
     big piece of software and you unpack it and。
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 名称指针，好吗，问题在于，名称指针并不能保证一定有效。所以，如果这个名称在某个你之后丢弃的文件系统上，那么你可能会遇到错误的引用，尝试查找符号链接时，多少人遇到过类似的系统？所以通常当你下载一个大型软件包并解压时，。
 - en: then you go to compile it what often happens is the compile build directory
     has a series。 of sim links to the actual ccode and then you build in that directory
     and then potentially。 remove all the sim links so that's all happening by the
     make and so the files that are being。 compiled are actually in a different directory
     for protection reasons and so that's a common。
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后你去编译它时，通常发生的情况是，编译构建目录中有一系列符号链接指向实际的代码，然后你就在那个目录中进行构建，之后可能会删除所有的符号链接。所以所有这些操作都是由make进行的，因此被编译的文件实际上是在另一个目录中，出于保护原因，这是一种常见的。
 - en: structure okay any questions yeah ah the permission while they're the same the
     permissions of the。 i-node and the permissions of the file are the same so the
     i-node contains the permissions。 so if you look at the very top of the i-node
     that's the metadata and that metadata says。 kind of what the you know owner group
     world permissions are of that file and that gets。
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 结构，好吗？有问题吗？嗯，权限是一样的，i节点的权限和文件的权限是相同的，因此i节点包含权限。如果你查看i节点的最上面部分，那是元数据，这些元数据会说明文件的拥有者、组和世界权限等信息，并且会。
 - en: taken and that's honored by the file system when you go to open something I
     think the best。 rule of thumb with i-node is an i-node is the file the file is
     the i-node okay that's。 you know if you think of it that way you'll probably be
     in good shape so the file says。 who can modify it who owns it who can read it
     etc which is very different from the fat。
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是一种常见的做法，文件系统会遵守这个规则，当你去打开某个东西时，我认为最好的经验法则是i节点就是文件，文件就是i节点，好吗？如果你从这个角度来看，你应该没问题。所以文件会说明谁可以修改它，谁拥有它，谁可以读取它等等，这与fat文件系统非常不同。
 - en: file system okay where some sense the the permissions are to the extent that
     there are。 any permissions in the fat file system are all in the directory which
     is a little bit different。 it's not actually associated with the file because
     there is no i-node in the fat files。 good questions okay so let's briefly do directory
     traversal in a slightly different way so what。
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统，好吧，在某种意义上，权限在 FAT 文件系统中的权限，若有的话，全部都在目录中，这有点不同。它实际上与文件没有直接关联，因为 FAT 文件系统中没有
+    i-node。好的问题，好吧，让我们简要地用一种稍微不同的方式来做目录遍历。那么。
 - en: happens when we open /home /cs-162/stuff。txt so here you first have to find
     the i-node for。 the root directory so let's say it i-node number two is the root
     directory here's i-node。 number two and i blow it up i look inside it's got a
     bunch of pointers to blocks and the。 block that holds the root directory the first
     block might be say block 49 358 in this example。
+  id: totrans-82
   prefs: []
   type: TYPE_NORMAL
+  zh: 当我们打开 `/home/cs-162/stuff.txt` 时会发生什么呢？在这里，你首先需要找到根目录的 i-node。所以假设 i-node 编号
+    2 是根目录，这是 i-node 编号 2，我展开它，查看里面，它有一堆指向块的指针，而保存根目录的块，第一块可能是示例中的块 49 358。
 - en: and so what I do then is my pull this i-node into a cache down here alright
     i look up that。 i-node okay i block 4958 i look inside i see home that points
     me at a different i-node。 which i look up that i look up there cs-162 that says
     that that's in block 732 okay i look。 at 732 that says that the file itself is
     in 909 okay i look down at this point i read i-node。
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，我所做的是将这个 i-node 拉入下面的缓存中。好吧，我查找那个 i-node，块 4958。我查看里面，看到 `home` 指向另一个 i-node，我查找那个，看到
+    `cs-162`，它说那是在块 732 中。好吧，我查看 732，它显示文件本身在 909 中。接下来，我查看这个，读取 i-node。
 - en: 909 and that starts giving the block to the file so what have i done here i've
     kind of。 shown you these are all the i-node involved in that look up this is the
     contents of the。 i-node this is like cache that we have in the system we'll talk
     about this buffer cache。 a little bit later in the lecture but if you notice i
     cache not only do i cache the blocks。
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 909，然后它开始提供文件的块。那么我在这里做了什么？我大致展示了所有涉及到查找的 i-node，这就是 i-node 的内容，就像是我们在系统中的缓存，我们稍后会在讲座中讨论这个缓冲区缓存。但如果你注意到，我不仅缓存了文件描述符指向的块。
 - en: that i happen to load like the i-node but i also cache parts of the name look
     up which。 says well when i'm looking at slash home it's uh it's i-node 8086 and
     i actually store。 that somewhere in a cache so if i go and try to look up the
     same file again slash home slash。 cs-162 slash stuff。txt i can get that entirely
     out of the name cache without ever going back。
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 我恰好加载了类似于 i-node 的内容，但我也缓存了部分名称查找的内容。也就是说，当我查看 `/home` 时，它的 i-node 是 8086，我实际上把它存储在某个缓存中，因此，如果我再次查找相同的文件
+    `/home/cs-162/stuff.txt`，我可以完全通过名称缓存获取，而不必再去查找。
 - en: to the disk okay and so um i like to say at various times i guess i haven't
     said it that much。 this term but operating systems are all about caches pretty
     much everything in an operating。 systems of cache okay like we talked about virtual
     memory it's a cache right we're talking here。 about disk block look up there's
     a cache we talked about named reversal it's a cache okay so there's。
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 到硬盘上。好吧，我喜欢说，在某些时刻，我想我没怎么说过这个词，但操作系统就是关于缓存的，几乎操作系统中的一切都涉及缓存。好像我们讨论虚拟内存，它是缓存，对吧？我们在这里讨论磁盘块查找，它是缓存；我们讨论命名反转，它是缓存。好吧，所以。
 - en: lots of caches inside of the files that they're inside of the operating system
     this is a good。 example of one okay and then when we've gone all the way to our
     stuff。txt the important thing to。 note is that i-node 909 9909 in this example
     gets put into the file description of the file you open。 so if you open slash
     home slash cs-162 slash stuff。txt and you get back a file descriptor。
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: 在操作系统内部，文件中有很多缓存。这是其中一个好的例子。然后，当我们走到我们的 `stuff.txt` 时，重要的是要注意，示例中的 i-node 909
+    9909 会被放入你打开的文件的文件描述符中。所以，如果你打开 `/home/cs-162/stuff.txt`，并获得一个文件描述符。
 - en: that file descriptor points to a file description in the kernel that file description。
     knows about 909 9909 so that means when you start reading and writing the file
     there's no name。 look up because you have the i-node of the file itself cached
     for you as the file description。 okay all right questions， all right and and by
     the way by the time you get that file description and have the file。
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 还缓存了内核中的文件描述符。该文件描述符知道 909 9909 的内容，所以当你开始读取和写入文件时，就不需要进行名称查找，因为文件的 i-node 已经在文件描述符中为你缓存好了。好吧，明白了吗？好的，顺便说一句，当你得到那个文件描述符并拥有文件。
 - en: descriptor returned we've already checked the metadata of the i-node for all
     of these guys and。 made sure that you actually have permission to use it and that's
     why subsequent reads and writes。 to that file don't do any checking for permissions
     excuse me at that point okay all right now。 so there's uh let's see let me make
     sure i didn't miss anything how big is bitmap to map the entire。
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 描述符返回，我们已经检查了这些文件的 i 节点的元数据，并确保你有权限使用它，这也是为什么对该文件的后续读取和写入操作不会再次进行权限检查。抱歉，到了这个时候，权限检查就不再执行了。好了，现在，让我看看，确保我没有漏掉什么。位图有多大，能够映射整个文件系统呢？
 - en: disk well it's basically within each group block group there has to be uh big
     enough for the file。 for all of the blocks in that block group so you can imagine
     one bit per block that's part of。 formatting the file system okay so let me say
     one thing here which uh i will emphasize。 briefly if i look inside of any directory
     here it's a mapping between names and i numbers if i。
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 磁盘，基本上每个块组（block group）内必须足够大，以容纳该块组中的所有文件的所有数据块。所以你可以想象每个数据块有一位（bit），这就是文件系统格式的一部分。好吧，让我在这里说一件事，我会简要强调一下。如果我查看任何目录，它实际上是一个名称和
+    i 号之间的映射。
 - en: had a directory with a gazillion files in it okay the problem with that kind
     of a directory。 structure is that you have to linearly search through the whole
     directory structure from beginning。 to end to find the file in the directory you
     want okay so how many people have ever seen i don't know。 uh camera software likes
     to do this they like to put you know all 5，000 pictures from your vacation。
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我有一个包含大量文件的目录，问题就在于这种目录结构的缺点：你必须线性地从头到尾搜索整个目录结构，才能找到你想要的文件。好吧，有多少人曾经看到过这种情况？我不知道，嗯，相机软件喜欢这样做，它们喜欢把你假期的
+    5000 张照片都放在一个目录下。
 - en: are in one directory right and you look and you try to look at it and it's just
     this huge。 blah set of a bunch of numbers it turns out that that's like the most
     inefficient way to store。 files in a directory because in order to find a particular
     file on open it's got to actually。 linearly search through every uh every item
     in the directory till it finds the one you want。
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 首先，当你列出一个大文件中的数据块时，你不需要列出每一个数据块。你在一个目录中查看并尝试查看时，它只是一个庞大的，包含一堆数字的集合。事实证明，这是存储文件的最低效方式，因为为了找到一个特定的文件进行打开，它必须线性地搜索目录中的每一项，直到找到你想要的文件。
 - en: um so and especially on Unix so Unix is a very um poorly optimized for large
     directories if you。 get um there are however some variants of Unix like free bsd
     and so on that have this thing called。 directory hash or deer hash that you can
     optionally use which is actually a b-tree okay and a b-tree。 is obviously a much
     more efficient way of storing a huge number of files and so um keep that in mind。
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 特别是在 Unix 系统中，Unix 对大目录的优化非常差。如果你使用一些 Unix 变种，比如 FreeBSD 等，它们提供了一种名为目录哈希（directory
+    hash）或目录哈希表（dir hash）的功能，实际上它使用的是 B 树（B-tree）。B 树显然是一种存储大量文件的更高效方式，所以记住这一点。
 - en: if you're ever wondering why your software that you're using might go to a large
     number of。 directories with a small number of files each it's probably the optimizer
     on this problem and if。 you're ever interested in a system where you want a lot
     of files per directory you might make sure。 check out whether your system can
     do something more efficient than linear on the directories okay。
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你曾经想知道为什么你使用的软件可能会访问多个包含少量文件的目录，那可能是它在优化这个问题。如果你有兴趣使用一个每个目录包含大量文件的系统，你可能需要确保检查一下你的系统是否能在目录中做比线性查找更高效的操作。
 - en: so let's do another case study here so ntfs is the file system you get in windows。
     new technology file system from the 2000s or 1990 something eight maybe so it's
     the default and。 modern windows systems and it's designed in a completely different
     way than the bsd file system。 so first of all when you name out the blocks in
     a large file you don't have to name every block you。
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以我们在这里再做一个案例研究，NTFS 是 Windows 中使用的文件系统。新技术文件系统（New Technology File System），大约是在
+    2000 年代或 1990 年代末期出现的，它是现代 Windows 系统的默认文件系统，并且与 BSD 文件系统的设计方式完全不同。
 - en: can use extents which is you name a beginning position on disk and a number
     of sectors and that's。 an extent okay and instead of a file access table or an
     i-note array the master file table is the。 game here and it's like a database
     with a maximum one kilobyte size for each table entry and pretty。 much everything
     in ntfs is a sequence of attribute value pairs okay which means um which sounds
     a。
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以使用扩展区，这意味着你指定磁盘上的一个起始位置和若干个扇区，这就构成了一个扩展区。它不像文件访问表或i节点数组，而是采用了主文件表（MFT）。它类似于一个数据库，每个表项的最大大小为1KB，而且几乎NTFS中的一切都是属性值对的序列，这意味着嗯，听起来像是一个。
 - en: little confusing but think about it like if i have file name colon a bunch of
     data that's like a file。 okay so attribute value pairs are kind of the name of
     the game and i'll show you some pictures。 but at each entry in the master file
     table contains metadata and the files data directly for small files。 or a list
     of extents for larger files or pointers to other mft entries for really really
     large files。
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 这有点令人困惑，但你可以把它理解为如果我有一个文件名:后面是一堆数据，这就像是一个文件。所以属性值对可以说是关键点，我会给你们看一些图片。每个主文件表条目都包含元数据，并且对于小文件，数据直接存储在条目中，或者对于大文件则是扩展区的列表，或者对于非常大的文件，则是指向其他MFT条目的指针。
 - en: and i want to point you at this very first one for a second here which is notice
     that if you。 have a really small file unlike the bsd file system you can have
     one mft entry that's all of the。 metadata and the data itself in that one little
     structure okay so rather than like an i-note。 plus a block we can actually have
     an m single mft structure and so it's more efficient at small。
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 我想稍微提醒一下第一个例子，如果你有一个非常小的文件，不像BSD文件系统那样，你可以有一个MFT条目，它包含所有的元数据和数据本身，所有这些信息都在一个小结构里。因此，不需要像i节点和块一样分开，我们可以使用一个单独的MFT结构，这样在小文件时效率更高。
 - en: files and so this master file table is like a database with very flexible one
     kilobyte entries。 it's variable sized attribute records for the data and it uh
     and you can extend it with a。 variable depth tree i'll show you an example here
     so here's uh what extents are so if you notice over。 on the on the right i have
     what look like a whole run of blocks and what that represents is a starting。
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统中的主文件表就像一个数据库，具有非常灵活的1KB条目。它是一个可变大小的属性记录，用于存储数据，并且你可以通过一个可变深度的树来扩展它。我这里给你们举个例子，展示扩展区是什么。如果你注意到右边，我有一长串块，这表示的是一个起始位置。
 - en: point and a link on some tracks somewhere and that's an extent okay and so if
     i want to have a really。 large file i can have a bunch of extents that make that
     file up and so this is much more efficient。 from a metadata standpoint i have
     just a couple of extents for a lot of blocks okay now can anybody。 tell me off
     the bat what they think might be the what's your immediate thought on the heart
     what's。
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设在某些地方有一个链接和一些轨迹，这就是一个扩展区。如果我要有一个非常大的文件，我可以使用多个扩展区来组成这个文件，因此从元数据角度来看，这样效率更高，我只需要几个扩展区就可以覆盖大量块。现在有人能直接告诉我他们认为可能的是什么吗，刚刚想到了什么问题？
 - en: hard here yes fragmentation great good use of uh good use of last uh midterms
     terminology yes。 fragmentation exactly so what we've bought here is efficiency
     of use at the expense of having to deal。 with fragmentation okay and so that's
     where there there has to be some continuous uh improvement and。 repositioning
     of things to try to avoid getting too much um fragmentation the other thing is
     this。
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里的碎片化问题很棒，充分利用了上次期中考试中的术语，没错，碎片化。我们这里所做的就是在使用效率方面做出了一些妥协，需要处理碎片化的问题。因此，在这里必须不断进行改进和重新定位，以尽量避免过度的碎片化，另外一个问题是。
 - en: has journaling for reliability by default which is good so that means if you
     crash in the middle of。 something you're less likely to lose data okay so here's
     an example of a small file um you have all。 the metadata which is create time
     modified time access time odor owner i owner ids etc you have the。 name of the
     file um and then the attribute list can be just the data is one attribute so all
     of that。
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 默认情况下，NTFS具备日志功能来提高可靠性，这很不错，这意味着如果在进行某个操作时发生崩溃，你丢失数据的可能性较小。举个例子，假设有一个小文件，你会有所有的元数据，比如创建时间、修改时间、访问时间、所有者等，你还会有文件的名称，然后属性列表可以仅包含一个属性数据，因此所有这些。
 - en: in one structure okay here is a medium size file where we have the same record
     but now the data isn't。 in the the mft it actually points to a series of extents
     so now you can see that immediately we。 potentially get much larger files here
     right we can handle huge files by just putting extents in。 there okay so this
     works well for multimedia okay here is a really big file or one that's really。
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是一个中等大小的文件，我们有相同的记录，但现在数据不在 MFT 中，而是指向一系列扩展区。所以现在你可以看到，立刻我们可能处理更大的文件，对吧？我们可以通过简单地将扩展区放入其中来处理大文件。因此，这对于多媒体文件来说是有效的。这里是一个非常大的文件，或者一个非常大的……
 - en: fragmented where the root mft points at a bunch of other mfts those are off
     the attribute list and。 then all of the data points at a bunch of uh extents so
     you can basically generalize this to。 make a huge file okay automatically and
     unfortunately if you have fragmentation going on you may need to。 do this for
     even a medium size file because all the extents have to be small because you got。
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 当根 MFT 指向其他多个 MFT 时，它们不再位于属性列表中，然后所有数据都指向一系列扩展区。因此，你可以把它推广到做一个非常大的文件。遗憾的是，如果发生了碎片化，你甚至可能需要为一个中等大小的文件这样做，因为所有扩展区必须很小，因为你得……
 - en: fragmentation so there's a lot of uh reason to want to re uh defragment the
     disk on a regular basis。 okay and here's a huge really fragmented etc you get
     the point。 so directories and ntfs are implemented as dtrees by default so if
     you're working on windows you。 don't have that linear search problem so a lot
     of windows boxes uh basically go ahead with large。
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 磁盘碎片化是一个很大的问题，因此有很多原因需要定期进行磁盘碎片整理。好吧，这里是一个非常碎片化的例子，你明白我的意思了。所以，目录和 NTFS 默认实现为
+    d 树，因此如果你在 Windows 上工作，就不会遇到线性查找问题。因此，很多 Windows 机器通常会继续使用较大的文件系统。
 - en: directories um and uh you know basically you can come up with the rest of the
     properties here。 for these three um questions so hopefully what i've shown you
     by a couple of these examples is。 that uh there are many ways to go from the blocks
     in the disk to a a file in a file system okay。 the file system is basically the
     the naming structures plus the way in which files are defined as made。
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 目录，嗯，你知道基本上可以推导出这三条问题的其他属性。希望通过这些例子，我已经向你展示了从磁盘块到文件系统中文件的多种方式。文件系统基本上是命名结构和定义文件方式的结合。
 - en: up of blocks there's lots of ways to do that i just showed you the fast file
     system slash。 ext three and four that's a common one um the ntfs version here
     is common on windows boxes。 and there are a bunch of other file systems out there
     i'll mention a couple of them later but。 i i wanted to give you enough variety
     to kind of see that there are many options here。
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 是的，Linux 可以同时使用多个文件系统。文件系统由块组成，有很多方法可以做到这一点，我刚才给你展示了快速文件系统（Fast File System）/ext3
+    和 ext4，这是一个常见的文件系统，NTFS 版本通常在 Windows 上使用，还有一些其他文件系统，稍后我会提到其中几个。但我想给你足够的选择，让你看到这里有很多种不同的选项。
 - en: right and they're all about making sure that you can map two blocks off of a
     disk。 good now those of you that are busy working on project number two。 number
     three i mean so uh sorry mental apps any questions based on what i just showed
     you here， yes。 yeah so linux let's see have multiple file systems at once。
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 对，它们的重点是确保你能够将两个磁盘块映射出来。好，现在那些正在忙于第二个项目、第三个项目的人，嗯，抱歉，思维有点乱。基于我刚才展示的内容，大家有问题吗？是的。
 - en: okay so that's a great question the question was suppose i uh i have many different
     file systems。 and linux and i open a file system and there's no i note in it what
     do i do。 okay so we're not going to talk about this today but maybe in a week
     there's something called。 the virtual file system layer dfs what the virtual file
     system layer does is it provides something that。
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，这是个很好的问题，问题是：假设我有多个不同的文件系统，在 Linux 中，我打开一个文件系统，但它里面没有 i-nodes，我该怎么办？好吧，今天我们不讨论这个问题，但也许下周会提到。这里有一个叫做虚拟文件系统层（VFS）的东西，它的作用是提供一种方法。
 - en: looks like i-nodes to the upper layers of the operating system even when the
     file system doesn't。 have them and so i don't want to go into this in too much
     depth because i don't want to confuse。 you yet but in the case of mounting a fat
     file system into Unix or linux what happens is that vfs。 layer has a way of faking
     the presence of i-nodes so that from above it looks like there are i-nodes。
+  id: totrans-110
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使文件系统没有 i-nodes，它看起来也像是操作系统上层的 i-nodes。因此我不想深入探讨这个问题，因为我不想让你感到困惑。但在将 FAT 文件系统挂载到
+    Unix 或 Linux 中时，发生的情况是，VFS 层有办法伪造 i-nodes 的存在，这样从上层看就像是有 i-nodes 一样。
 - en: in there even though there aren't in the underlying system and there's a layer
     of adapter code there。 that makes it look right okay so at least in the case of
     linux and Unix variants uh you can have。 many different types of file systems
     all with different properties to them and where this comes。 up is when we start
     talking about the nt or nfs which is the network file system there's an example。
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使底层系统中没有它们，适配层代码会使其看起来正确。好吧，至少在Linux和Unix变种系统中，你可以有许多不同类型的文件系统，每种文件系统都有不同的属性。这个问题出现的地方是在我们开始讨论nt或nfs时，nfs是网络文件系统，这里有一个例子。
 - en: where any i-nodes or anything are up on the net somewhere the vfs layer lets
     you fake it as if。 they're local and so when you're doing open close read write
     operations from above that virtual。 file system layer will turn those into operations
     out on the network for you so i guess the right。 answer to your question is abstraction
     is how this is fixed and in the case of turning a fat file。
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 无论i-nodes或其他内容是否存在于网上，虚拟文件系统（VFS）层会让你假装它们是本地的。所以，当你进行打开、关闭、读取、写入操作时，虚拟文件系统层会将这些操作转化为网络上的操作。所以，我想你问题的正确答案是：抽象是解决这个问题的方式。在将fat文件。
 - en: system into looking like it's got i-nodes there's a good example of uh maybe
     twisting yourself into。 a pretzel for whatever but i don't know if that's a good
     reason or not but it does allow you to have。 many different file systems mounted
     in linux so good other questions。 all right so this is a good uh breaking point
     let's just take a brief break everybody can stand and。
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 系统看起来像是有i-nodes的，可能是一个很好的例子，或许是让自己变得复杂的方式，但我不知道这是个好理由还是什么，但它确实允许你在Linux中挂载多种不同的文件系统。好，其他问题吗？好了，这是一个很好的休息点，大家可以站起来休息一下。
 - en: stretch and we'll uh talk about something slightly different。
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 稍微伸展一下，我们会讨论一些稍微不同的内容。
 - en: '![](img/859b68e7047273cc680143916f10266a_1.png)'
+  id: totrans-115
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/859b68e7047273cc680143916f10266a_1.png)'
 - en: '![](img/859b68e7047273cc680143916f10266a_2.png)'
+  id: totrans-116
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/859b68e7047273cc680143916f10266a_2.png)'
 - en: okay let's pick up so there was an amusing question in chat about uh new technology
     file system where。 does new technology come from well it was new at the time this
     is uh this is the danger of putting。 the word new and anything uh someday it won't
     be um so let's talk a little bit about memory mapping of。 files and um let me
     just get this waking up here hello here so uh so uh。
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，我们继续。有一个有趣的问题在聊天中提到了新技术文件系统，嗯，新的技术来自哪里呢？它当时是新的，这就是加上“新”字的危险——总有一天它不再“新”了。所以，让我们聊聊文件的内存映射，嗯，让我把这部分弄清楚，大家好，所以。
 - en: so traditional i-o that you're all used to involves open read write close system
     calls right and the。 thing about those system calls is there's a lot of copies
     involved because the data comes off the。 disc it's copied into the buffer cache
     and then it's copied into your user buffer on the way to your。 application and
     so um you know that that can be a waste uh but the question might be what if we。
+  id: totrans-118
   prefs: []
   type: TYPE_NORMAL
+  zh: 你们都习惯的传统I/O操作涉及打开、读取、写入、关闭系统调用，对吧。关于这些系统调用的问题是，它们涉及很多复制操作，因为数据从磁盘读取后，它会被复制到缓冲区缓存中，然后再复制到你的用户缓冲区，传递到应用程序。所以，嗯，你知道，这可能是浪费，但问题是，如果我们。
 - en: can map a file directly into an empty region of our address space and then just
     use loads and stores。 and wouldn't that be nicer it's almost an implicit paging
     in when we read it and a write-in eventually。 page out when we write it and so
     uh this is actually not novel if you think about it from what we've。 been telling
     you about in the class because when we talked about exec what happened was the
     uh the。
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以将文件直接映射到我们地址空间中的空白区域，然后仅通过加载和存储来使用。这样会不会更好？它几乎是一个隐式的分页操作，我们在读取时会自动调入，最终写入时会调出。因此，这其实并不新奇，如果你从我们在课堂上讲解的内容来看，因为当我们讨论exec时，发生的是。
 - en: binary you were going to run got mapped into a chunk of memory and then as it
     started running it。 would page fall and pull in the binary and keep running so
     you've already seen this idea but i'm。 going to explicitly make this part of the
     thing the way to think about files for a moment so if you。 remember back to virtual
     memory right we had this slide where you had an instruction that was using a。
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 二进制文件将在运行时映射到一块内存区域，接着它开始运行时，会发生页面调入，继续执行。所以你已经见过这个概念，但我将明确将其作为思考文件的方式来讲解。如果你还记得虚拟内存，我们有一张幻灯片，展示了一个指令使用了一个。
 - en: virtual address it uses the mmu it looks up in the page table that generates
     the the physical frame。 and an offset and that particular one works fine but then
     there might be another one where you go。 to the page table and the entry is marked
     as uh not present or invalid you get a page fault。 then what well of course all
     that happens there is you get an exception it goes to a page fault。
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: 虚拟地址，它使用 MMU，查找页表中的条目，生成物理帧和偏移量，那个特定的条目工作正常，但也可能有另一种情况，你去查找页表，发现条目标记为不存在或无效，你会遇到页面错误。那么接下来怎么办呢？当然，发生的事情是你会得到一个异常，它会触发页面错误。
 - en: handler in the kernel the kernel loads the page off of disk it maps into the
     page table to point at。 it and then it puts the process back on the scheduler
     or the thread back on the scheduler we retry the。 instruction and it works whoo
     okay so that's demand paging that's last midterm right so now。 here we have the
     same idea because this uh page table and mmu is still going to be around but。
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 内核中的处理程序，内核从磁盘加载页面，它将页面映射到页表中指向它，然后将进程或线程重新放回调度程序。我们重试指令，它就能工作了，哇，好吧，这就是需求分页，这就是上次期中考试的内容，对吧？现在，我们有相同的想法，因为这个页面表和
+    MMU 仍然会存在，但。
 - en: we're now going to memory map a file to a region virtual address space so here。
     we're going to go ahead and use the mmap system call and it's going to put some
     entries in the page。 table which are not filled yet but they're essentially going
     to point at the file。 okay and that means that there's a region of virtual address
     space right here that if you do。
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们现在将把一个文件映射到一个虚拟地址空间区域，因此在这里，我们将使用 mmap 系统调用，它将向页表中添加一些条目，这些条目尚未填充，但它们本质上将指向该文件。好的，这意味着这里有一个虚拟地址空间区域，如果你做了。
 - en: reads and writes in there you end up reading or writing the file so for instance
     let's say we。 uh have an instruction that's a load it tries to go in here we get
     a page fault because nothing's。 been loaded to the file the only thing we've done
     is map we go through the page fault handler。 it loads something off the file that
     we access puts it in physical address space and then we're。
+  id: totrans-124
   prefs: []
   type: TYPE_NORMAL
+  zh: 在这里的读写操作，你最终会读取或写入文件。例如，假设我们有一条加载指令，它尝试进入这里，我们遇到页面错误，因为文件还没有加载，唯一做的事情是映射。我们通过页面错误处理程序，它从文件中加载数据并将其放入物理地址空间，然后我们就可以。
 - en: going to map this correctly so that's that dotted blue line and now when we
     retry the instruction。 it just works and we read the contents of the file so notice
     that we're using that virtual memory。 mechanism that's already there to allow
     us to access our file just with regular loads and stores。 or array accesses or
     whatever okay and similarly when we go to write in this region it's going to。
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 这样就会正确地映射，所以那条虚线就是这个过程，当我们重试指令时，它就能工作，我们读取文件的内容。所以注意，我们正在使用已经存在的虚拟内存机制，允许我们通过常规的加载和存储，或者数组访问等方式来访问文件。好的，类似地，当我们在这个区域写入时，它将会。
 - en: update that part of the physical address space and assuming that we close or
     flush it'll get pushed。 back out to the file and so now with mmap we can basically
     access things without open close read。 write well we actually have to do an open
     first and then a mem map but then we can just do we don't。 have to use the read
     and write system faults we just do loads and stores okay questions yeah。
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 更新该物理地址空间的一部分，并假设我们关闭或刷新，它将被推回文件。所以现在使用 mmap，我们基本上可以在不使用 open、close、read 或 write
+    的情况下访问文件。实际上，我们必须先进行 open，然后是 mem map，但之后我们就可以直接使用，不需要使用 read 和 write 系统调用，只需进行加载和存储操作。好的，有什么问题吗？
 - en: so it gets flushed on close and a few other things that's part of this you can
     also explicitly flush。 regions okay that's part of the interface so here's the
     memory map system call you guys can run。 man on it and look it up but notice it's
     got several arguments i know this is a little bit。 hard to read but one of the
     arguments is a part of your virtual address space where you want it。
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以，它会在关闭时刷新以及其他一些操作，这是其中的一部分，你也可以显式地刷新某些区域。这是接口的一部分。这里是内存映射系统调用，你们可以运行 `man`
+    命令查看它，注意它有几个参数，我知道这有点难以阅读，但其中一个参数是你想要它映射到的虚拟地址空间的一部分。
 - en: to map your file okay and so i can actually say well here's a spot that doesn't
     have anything in it。 please put my file here now if you don't want it if you want
     to be lazy you could just put a zero。 there and the operating system will find
     a spot for you okay and then there's a bunch of arguments。 the one i really want
     to point out here is this one which is the file descriptor of the file。
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 要映射你的文件好吧，所以我实际上可以说，嗯，这里有一个地方里面没有任何内容，请把我的文件放在这里。如果你不想这么做，想偷懒的话，你可以直接放一个零在那里，操作系统会为你找到一个位置，好吗？然后这里有一堆参数。我要特别指出的是这个，它是文件的文件描述符。
 - en: and an offset in the file that says kind of what file and how far in it should
     be mapped in the。 memory space okay so uh so the question here is since files
     could be very large won't multiple of。 them drain all the available virtual addresses
     well they would if you map too many large files however。 if you're using a 64-bit
     processor then you're not going to map so many files that you use up the。
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件中的一个偏移量，它表示文件是什么，以及应该在内存空间中映射多远。好吧，所以问题是既然文件可能非常大，多个文件的映射会不会耗尽所有可用的虚拟地址？如果你映射太多大文件，确实会耗尽虚拟地址，但如果你使用的是64位处理器，那么你不太可能映射这么多文件，以至于用光所有的。
 - en: address space so clearly on a 64-bit processor this is a non-issue on a 32-bit
     processor you got to。 just be careful okay hopefully that answered that question
     so it's used for both manipulating files。 and sharing between processes so if
     you look here is an example i'm going to walk you through。 this code very quickly
     but basically we have to include a sys/memman。h but here's a variable。
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 地址空间，所以显然在64位处理器上这不是问题，而在32位处理器上你得小心，好吧，希望这个解答了你的问题。它既用于操作文件，也用于进程间共享。所以，如果你看这里有个例子，我会很快带你走过这段代码，但基本上我们得包含`sys/memman.h`，然后这里是一个变量。
 - en: something that's global set to 162 and we have a couple other variables on the
     stack and then here。 we're printing you know addresses just so we can see where
     things are in memory you know where is the。 global data where's the stack etc
     but here's the key thing now we're going to open the file read。 write okay there's
     the file if it fails we have an error in exit otherwise here we do a memory map。
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 一些全局变量被设置为162，我们栈上有其他几个变量，接着这里我们打印一些地址，只是为了看看内存中东西的位置，像是全局数据、栈等，但关键点在这里，我们现在要打开文件进行读写操作。好吧，文件打开失败时会有错误并退出，否则我们会执行内存映射。
 - en: notice the first argument zero which is saying well pick something for us i
     don't really care what。 address it's at and then over here is the file descriptor
     and offset zero and then we check our。 error returns and then finally we're going
     to say basically we're going to put that's put string。 m file so notice what's
     funny here see this m file that is the address that's returned from。
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意第一个参数是零，它是说，嗯，为我们选择一个位置，我不太在乎是什么地址，然后这里是文件描述符和偏移量零，接着我们检查错误返回，最后我们基本上会说，我们要放入的是`put
+    string`，`m file`，所以注意这里有点搞笑，看看这个`m file`，那是从映射中返回的地址。
 - en: mem map so one way to look at that is there is a string at that address that
     has the whole。 contents of the file so if i do a puts a put s of mem file it's
     going to just print the whole file。 on the screen okay so take a second to see
     how weird that is right that's not the way you normally。 think of accessing a
     file i mapped it in memory and now that memory address which is notice it's。
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 内存映射，所以从这个角度来看，在那个地址处有一个字符串，它包含了文件的所有内容。所以如果我执行`puts`或者`put s`的`mem file`，它就会把整个文件打印到屏幕上。好吧，稍微停顿一下，看看这有多奇怪，对吧？这不是你通常会想到的访问文件的方式，我把它映射到内存中，然后现在这个内存地址——注意它是一个`char
+    star`——所以这是从`mem map`返回的，我可以说`put string`，然后它就会输出整个文件。
 - en: a char star so that came back from mem map i can say put string and ask it and
     it'll put the whole。 thing out and furthermore a little weirder is i say string
     copy into m file plus 20。 let's write over it so what that does is that's actually
     writing over part of the file and as。 soon as i do a close and exit it gets flushed
     out okay and notice how easy it was i just wrote over。
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 更奇怪的是，我说`string copy`到`m file + 20`，让我们覆盖它。这样做其实是在覆盖文件的一部分，一旦我执行`close`并退出，它就会被刷新出去。好吧，注意一下有多简单，我就这么覆盖了。
 - en: a part of the file now if you look here for instance is an example where the
     file test。 had this in it this is line one this is line two this is line three
     this is line four。 and when i run m map test this thing it first tells us those
     addresses and then it tells me。 what address the memory map was at see this address
     here it's different from where the data and the。
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: 比如，如果你看这里，这是一个示例，文件`test`中包含了这些内容：这一行是第一行，这一行是第二行，这一行是第三行，这一行是第四行。当我运行`mmap`测试这个文件时，它首先会告诉我们那些地址，然后告诉我内存映射在哪个地址，看到这个地址了吗？它和数据的地址不同。
 - en: heap and the stack is it's a chunk of free space notice how it's just above
     the data segment a little。 bit and then we ran it it exit but notice that i didn't
     do another put s at the end here i just。 let it string copy over it and then return
     so if i now cat that file test notice it no longer says。 this is line one this
     is line two this is line three this is line four it says this is line one this。
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 堆和栈是一个空闲空间块，注意它就在数据段的上方一点，然后我们运行它，程序退出了，但注意到我没有在这里做另一个`puts`，我只是让它将字符串复制过去然后返回。所以，如果我现在`cat`那个文件`test`，注意，它不再显示“这一行是第一行，这一行是第二行，这一行是第三行，这一行是第四行”，而是显示“这一行是第一行”。
 - en: let's write over it line three this is line four okay so that string copy copied
     over the file。 okay questions， now what's interesting about mam map is i can do
     this i can take a file and i can have two processes。 mam map that file and now
     they can share so this is a way of setting up a shared segment between。 two processes
     where all of the data they're reading and writing is in memory but it's backed
     by a file。
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 让我们覆盖它，这一行是第三行，这一行是第四行，好了，这个字符串已经复制到文件中了。好的，有问题吗？现在，`mmap`有一个有趣的地方，我可以这么做：我可以拿一个文件，然后让两个进程都去映射这个文件，这样它们就可以共享数据了。所以，这是在两个进程之间设置共享内存段的一种方法，在这里，所有读写的数据都在内存中，但它是由文件支持的。
 - en: okay now another thing you could do is you can do what's called anonymous mapping
     where you don't。 even have to have the file and that's a way of basically getting
     shared memory that has no file。 backing that you can share between processes okay
     so i don't want to go into into depths and all。 of the different options you got
     here but this is kind of the idea of how you would map memory so。
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，现在你可以做的另一件事是，你可以做一个叫做匿名映射（anonymous mapping）的操作，在这种情况下，你甚至不需要有文件。它基本上是一种获得没有文件支持的共享内存的方法，可以在进程间共享。好吧，我不打算深入探讨你在这里可以使用的所有不同选项，但这大致是你如何映射内存的思路。
 - en: that you could share reads and writes between processes okay all right question。
     now notice by the way something interesting here the file is a bunch of blocks
     on disk but we've。 mapped the file into memory so that means the way the blocks
     come into memory depends on the file。 system which is actually between the disk
     and the memory and so when we page fault and pull stuff。
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以共享进程间的读取和写入。好吧，问题来了。顺便提一下，这里有个有趣的现象：文件在磁盘上是由一块块的块组成的，但我们已经将文件映射到内存中，这意味着文件块进入内存的方式取决于文件系统，它实际上位于磁盘和内存之间。所以，当我们发生页面错误并拉取数据时，
 - en: into memory we're actually invoking the file system underneath so so all of
     the i-nodes and so on get。 used to figure out sort of what order the blocks of
     the file get put on into memory transparently by。 the way you don't have to worry
     about that because the idea of a file system is you don't worry about。 it right
     the idea of a file system is the files are on the disk and you don't care how
     they're structured。
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将文件加载到内存时，实际上是在调用底层的文件系统。所以，所有的i节点等等都被用来确定文件块在内存中的顺序，透明地被加载。顺便说一句，你不需要担心这一点，因为文件系统的想法就是你不需要关心它，文件系统的核心思想是文件在磁盘上，你不需要关心它们是如何结构化的。
 - en: okay so now let's we've been kind of hinting at the buffer cache so the kernel
     has the copy。 disk blocks to main memory to access their contents i had this question
     a couple times on piazza and。 i think in class here at one point or after class
     why can't you just read a byte off the disk well。 the disk doesn't work that way
     right you got to seek rotate grab a whole sector minimum and then you。
+  id: totrans-141
   prefs: []
   type: TYPE_NORMAL
+  zh: 好吧，现在让我们稍微提一下缓冲区缓存，内核会将磁盘块复制到主内存中以访问它们的内容。我在Piazza上和在课堂上有几次问到这个问题，或者在课后问过：为什么不能直接从磁盘读取一个字节呢？磁盘不是这么工作的，对吧？你必须先定位，然后旋转，至少抓取一个扇区，然后你。
 - en: can't even get one byte out of that sector you got to load it into memory and
     then you can look at it。 okay so basically when the kernel is accessing a disk
     it's either pulling whole sectors in or pushing。 out whole sectors and so where
     does it go where does that data go well there's a cache called the。 buffer cache
     which is a set of physical d-ram that's set up inside the kernel to help cache
     things。
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 你甚至无法从那个扇区中读取一个字节，你必须将它加载到内存中，然后才能查看。好的，基本上，当内核访问磁盘时，它要么是将整个扇区拉入内存，要么是将整个扇区写出。那么数据去哪儿了呢？有一个叫做缓冲区缓存的地方，它是内核内部设置的一组物理D-RAM，用于帮助缓存数据。
 - en: okay and it could be data blocks or i-nodes or directory contents okay that's
     the buffer cache。 or it could even cache names when we do name reference references
     where you trace through a。 bunch of directories that can also go in the buffer
     cache so the key idea of any cache is。 exploiting locality by caching disk data
     in memory okay so let me pause on this too。
+  id: totrans-143
   prefs: []
   type: TYPE_NORMAL
+  zh: 它可能是数据块、i节点或者目录内容，这就是缓冲区缓存。或者它甚至可以缓存名称，当我们做名称引用时，跨多个目录进行追踪的过程也可以存入缓冲区缓存。因此，任何缓存的关键思想是通过在内存中缓存磁盘数据来利用局部性。好的，我在这里也暂停一下。
 - en: why are we caching in d-ram this is different from the processors hardware cache
     that's fast。 inside let's go this way for you guys the processors hardware cache
     that's fast inside the processor。 for accessing d-ram that's a hardware cache
     i'm talking about d-ram's a cache on this really slow。 disk okay which is what
     what's the speed of a disk read relative to instructions。
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 为什么我们要在D-RAM中缓存呢？这与处理器的硬件缓存不同，硬件缓存很快，它在处理器内部。用来访问D-RAM的硬件缓存是我正在谈论的，而D-RAM则是一个缓存，用来缓存这种非常慢的磁盘数据。那么，磁盘读取速度相对于指令的速度是多少呢？
 - en: at least a million right a million instructions maybe off by a few orders of
     magnitude one rare。 another but it's a good number to remember maybe i'll make
     sure it's on the last exam we'll see。 whether you guys remember that but the point
     is the d-ram is a hundred nanoseconds the disk is。 milliseconds that's a big difference
     right so there's a really good reason to cache into to memory。
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 至少有一百万条指令，对吧？可能相差几个数量级，但这是一个值得记住的数字。也许我会确保它出现在最后一场考试中，看看你们是否记得这个数字。关键是，D-RAM的速度是100纳秒，而磁盘是毫秒级别的，这个差距很大，对吧？所以，缓存到内存中是有充分理由的。
 - en: and so the buffer cache is really memory used to cache kernel resources including
     disk blocks。 and name translations and it can have dirty blocks so a dirty block
     as you remember from when we。 talk about virtual memory is a block of a file that's
     been updated but hasn't been pushed out to disk yet。 okay and so here's one way
     to look at this the file system buffer cache。
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 所以缓冲区缓存实际上是用来缓存内核资源的内存，包括磁盘块和名称转换，它可以包含脏块。脏块是你从虚拟内存讨论中记得的，它是文件中已经更新但还没有写回磁盘的块。所以，这是我们观察文件系统缓冲区缓存的一种方式。
 - en: here's our block groups over here there's some memory and the memory just has
     blocks of a。 bunch of different types in it and so for instance let's suppose
     that we uh we could have data blocks。 or gray i-nodes or green directory data
     blocks or yellow maybe the bitmap is is red all of these。 things get allocated
     in the buffer cache and so for instance uh we our process control block might。
+  id: totrans-147
   prefs: []
   type: TYPE_NORMAL
+  zh: 这是我们的块组，这里有一些内存，这些内存中包含了各种类型的块。例如，假设我们可能有数据块、灰色的i节点、绿色的目录数据块，或者黄色的位图块是红色的。这些东西都被分配到缓冲区缓存中。例如，我们的进程控制块可能就是其中之一。
 - en: have a file description that points it's a my node which is in memory okay and
     now if we want to open。 a new file we first have to reach out and find the directory
     block and the directory we're interested in。 that gets put into the buffer cache
     and then it's accessed okay and in that side of that is some name。 to i number
     mapping so there's going to be some block that has our data we potentially pull
     that in。
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: 有一个文件描述符，它指向的是一个内存中的my node。如果我们想打开一个新文件，我们首先需要找到并访问我们感兴趣的目录块。那个目录块被加载到缓冲区缓存中，然后被访问。在那里面是一些名称到i节点的映射，所以会有一些块存储着我们的数据，我们可能会将它拉入内存。
 - en: okay and what you can see if you look really closely is there's little flags
     on each of the。 entries in the buffer cache saying whether it's currently being
     reserved for an access that's。 ongoing and so on so there's some synchronization
     there but the basic idea is that we pull things off。 of the disk into the buffer
     cache and uh you know like we're going to read for the time node we have。
+  id: totrans-149
   prefs: []
   type: TYPE_NORMAL
+  zh: 好了，如果你仔细看，你会看到每个缓冲区缓存条目上都有小标志，表示它当前是否被保留用于正在进行的访问等等，所以这里有一些同步机制。但基本的想法是，我们将数据从磁盘拉入缓冲区缓存，然后就像我们要读取的时间节点那样。
 - en: to find what to read and so on and pull it in if we're writing we'll write things
     which might actually。 you can't you can't see it too well but down here it says
     dirty so certain blocks here are marked as。 dirty and those are ones that the
     file system is going to need to push out uh to disk okay。 and when do we evict
     well we could say that every time we write something in a file we push it out。
+  id: totrans-150
   prefs: []
   type: TYPE_NORMAL
+  zh: 要找到要读取的内容，等等，如果我们正在写入，我们将写一些实际上可能是。你看不太清楚，但在这里它写着“脏”，所以这里有些块被标记为“脏”。这些是文件系统需要推送到磁盘的块。好了，什么时候我们会驱逐呢？我们可以说，每次写入文件时，我们都会将其推送出去。
 - en: immediately to disk except that that's not always desirable can anybody tell
     me why yes。 yeah you do multiple writes to the same block maybe it's a temporary
     file here's a good one。 maybe it's a temporary file that's part of a compile it
     gets created written and thrown out。 right away before you ever push anything
     out to disk well there's an efficient use of the uh。
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: 立即将数据写入磁盘，尽管这并不总是可取的，能有人告诉我为什么吗？是的，你可能会对同一个块进行多次写入，也许是一个临时文件，这是一个好例子。也许它是一个编译过程中产生的临时文件，创建后写入，然后马上丢弃。在你把任何东西推送到磁盘之前，这就有效地使用了。
 - en: delaying right okay so because of this structure you can end up in a situation
     where temporary。 files don't even have to go to disk even though there's a place
     they could go so um this is the。 basic structure and now we can start saying well
     when do we know we have to push dirty data out well。 it's a trade-off between
     trying to get locality of writes and durability way there's data that I。
+  id: totrans-152
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，正因为有这样的结构，你最终会遇到一种情况，即临时文件即使有地方可以存储，也不必写入磁盘。所以这是基本结构，现在我们可以开始讨论，什么时候我们知道必须将脏数据推送出去呢？这是一个在试图获取写入局部性和持久性之间的权衡。
 - en: wrote that I really don't want to lose it's got to get pushed to disk okay and
     so we can start。 having some of this discussion so for instance the buffer cache
     is entirely implemented in software。 unlike memory caches and the tlb which is
     partially in hardware blocks go through transitional states。 as we said between
     free and in use and dirty okay being read from disk written to disk etc。
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: 我写的东西我真的不想丢失，它必须推送到磁盘。好了，我们可以开始进行一些讨论。比如说，缓冲区缓存完全由软件实现。与部分硬件实现的内存缓存和TLB不同，块会经历过渡状态。正如我们所说的，块在空闲、正在使用和脏之间转换。好了，从磁盘读取、写入磁盘等等。
 - en: blocks are used for a lot of purposes from the buffer cache so you can have
     i-nodes in there data。 for directories and files the free map and the os maintains
     pointers in there so i've kind of。 given you this idea that it's this flat thing
     of blocks it is it's a chunk of memory that the。 disk that the os uses to cache
     all sorts of stuff and um on termination like process exit or open or。
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 块被缓冲区缓存用于很多用途，所以你可以在其中有i节点，目录和文件的数据，自由映射，操作系统在其中维护指针。所以我给你们展示了这样一个平坦的块结构，确实，它是磁盘使用的一个内存块，操作系统用它来缓存各种内容，并且在进程退出或文件关闭时。
 - en: read or write then things will get flushed out into the buffer cache often um
     what do you do when。 the buffer cache fills up well that's a replacement question
     remember in virtual memory we had the。 whole discussion about do we do a clock
     algorithm or you know pick one pick your favorite replacement。 algorithm same
     idea here okay um so what's the replacement policy well what's nice about the。
+  id: totrans-155
   prefs: []
   type: TYPE_NORMAL
+  zh: 读写操作后，数据会经常被刷新到缓冲区缓存中。那么，当缓冲区缓存满了怎么办？这个问题是关于替换策略的，记得在虚拟内存中我们有过关于是否采用时钟算法或者选择你最喜欢的替换算法的讨论，基本上是同样的思路。好的，那么替换策略是什么呢？好在于它的延迟写操作。
 - en: buffer cache is since we're doing things at the granularity of disk reads and
     writes we can actually。 link all the blocks together and afford to do l l r u
     unlike in the virtual memory system where。 we're talking about loads and stores
     here we're talking about disk reads and writes and so we。 can do l r u so most
     file system caching is done l r u with the one big disadvantage you should。
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 缓冲缓存是因为我们在磁盘读取和写入的粒度上进行操作，实际上可以将所有块链接在一起，进行LRU（最近最少使用）替换策略，与虚拟内存系统不同。在虚拟内存中，我们谈论的是加载和存储，而在这里我们谈论的是磁盘的读写，因此我们可以使用LRU策略。所以大多数文件系统缓存都是采用LRU策略，唯一的一个大缺点是你应该。
 - en: try this sometime if you do something like this at the that the root find dot
     dash exact crap。 foo at the root file system that's gonna go through every file
     in the whole disk looking for something。 and what do you know well that's gonna
     load all of those files push them into the buffer cache and。 then throw them out
     okay so that's a very non local thing to do and so this is a good example of。
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你有机会尝试这种操作，像是在根目录下做 `find . -name "exact crap" foo` 这样的查找，文件系统会遍历整个磁盘寻找文件。结果是什么呢？它会加载所有文件，把它们推入缓冲缓存中，然后再丢弃掉。所以这是一个非常不局部的操作，这是一个很好的示例。
 - en: bashing a buffer cache and um there are ways around that some file systems let
     you say this is ever。 never gonna be reused okay so what are some other replacement
     policies so some examples are you。 could say i'm only going to use this once don't
     put in the buffer cache etc okay now how big is the。 cache how much memory does
     the o。s。 allocate to it so when we talked about virtual memory we said。
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: 会遇到缓冲缓存的瓶颈，而且有一些方法可以绕过这个问题。有些文件系统允许你指定某些数据是“永远不会被重新使用”的。好的，那么还有其他一些替换策略。举个例子，你可以说，我只会使用一次这个文件，不需要放入缓冲缓存中，等等。好的，现在缓存有多大？操作系统为其分配了多少内存？当我们谈论虚拟内存时，我们曾提到过。
 - en: virtual memory is a cache on the disk where the disk is storing the contents
     of memory now i'm saying。 the buffer cache is a cache on the disk where the disk
     is storing files so those are two slightly。 different uses of DRAM okay for caching
     and so how do you pick do i have more or less virtual memory。 of physical memory
     for virtual memory versus buffer cache and it turned out um you know if。
+  id: totrans-159
   prefs: []
   type: TYPE_NORMAL
+  zh: 虚拟内存是磁盘上的一个缓存，磁盘存储的是内存的内容。而我说的是缓冲缓存是磁盘上的一个缓存，磁盘存储的是文件。它们是两种略有不同的使用方式。好的，那么你怎么决定是分配更多的虚拟内存，还是更多的物理内存用于缓冲缓存呢？结果是，如果。
 - en: there's too much memory of the file system cache then your virtual memory will
     always be a page faulting。 and if there's too little memory for the file system
     cache then applications may run slowly。 because the files don't work well and
     uh the real solution is to have a dynamic adjustment。 which sounds obvious these
     days but it turns out in the old days in the original unices you。
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果文件系统缓存的内存过多，那么虚拟内存将总是发生页面错误。如果文件系统缓存的内存过少，应用程序可能会运行缓慢，因为文件的操作效果不好。真正的解决方案是进行动态调整。现在看起来这似乎是显而易见的，但实际上在早期的UNIX系统中，你。
 - en: actually had to pick how much memory was in buffer cache versus virtual memory
     and you compiled the。 kernel that way and it booted that way okay today it's adjusted
     dynamically based on usage which is。 kind of nice okay so since we have a cache
     a buffer cache now we can start talking about。 prefetching so one of the things
     that happens with the file system in buffer caching is when you read。
+  id: totrans-161
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上，你需要决定在缓冲缓存和虚拟内存之间分配多少内存，你在编译内核时就得决定，并且它会以这种方式启动。现在它会根据使用情况动态调整，这种做法其实很不错。好吧，既然我们现在有了缓冲缓存，我们就可以开始讨论预取了。因此，文件系统在缓冲缓存中的一个操作就是当你读取。
 - en: one block it'll read a couple more that's called prefetching and that's built
     in to the file systems。 and the reason that's useful is we're exploiting the fact
     that most common file access is sequential。 and we have a cache to put stuff in
     so you read a block might as well pull the next couple in。 because it'll be really
     fast by pulling them off disk and you just put them in the buffer cache。
+  id: totrans-162
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个块它会读取更多的块，这就是所谓的预取（prefetching），并且这是文件系统内置的功能。其原因在于我们利用了大多数常见文件访问是顺序的这一事实。我们有一个缓存来存放内容，所以你读取一个块时，不妨把接下来的几个块也一起拉进来。因为从磁盘拉取它们会非常快速，而且你可以把它们存入缓冲缓存。
 - en: and when you go to read stuff it first always checks the buffer cache before
     it goes to the to。 the disk so if you have sequential access this read ahead prefetching
     is doing a really great job。 okay can anybody tell me uh what are we fixing here
     what type of cache miss are we fixing when we do。 prefetching yes yeah these are
     compulsory misses that we're saving yep very good um the other thing is。
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 当你去读取数据时，它总是先检查缓冲区缓存，然后再去访问磁盘。所以，如果你有顺序访问，提前读取的预取会做得非常好。好吧，有人能告诉我，当我们进行预取时，我们在解决什么类型的缓存未命中吗？是的，这些是我们在解决的强制未命中，没错，非常好。嗯，另外还有一件事。
 - en: if you have a bunch of uh accesses being prefetched from different processes
     plus a bunch of things。 being written now potentially you have elevator algorithms
     that can choose which things to pull off。 of disk and to push on to disk to keep
     for locality okay so the idea of having slightly more accesses。 going on that
     are immediately being requested actually is good from an elevator algorithm standpoint。
+  id: totrans-164
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你有一堆不同进程的预取访问，再加上一堆正在写入的操作，那么你可能会有电梯算法，这些算法可以选择哪些内容从磁盘中取出，哪些内容推送到磁盘，以保持局部性。好的，所以从电梯算法的角度来看，立即请求的稍多一些访问实际上是有好处的。
 - en: so how much do you prefetch well too much prefetching basically does what's
     called poisoning or。 dirtying the cache and so you can get delays in other requests
     because you're busy prefetching。 and somebody needs to use the disk for something
     else so there's problems there if you do too little。 then you got a lot of seats
     because you have to keep going back and so how much do they do well。
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么你会预取多少数据呢？其实，过度预取会导致所谓的缓存污染或脏缓存，所以你会因为忙于预取而延迟其他请求，而有人可能需要使用磁盘做其他事情。如果你预取得太少，那么你会有很多缺失，因为你必须不断地回去访问。所以，他们到底做了多少呢？
 - en: a lot of systems grab the next one or two blocks that's a pretty good heuristic
     that works pretty。 well another thing is this delayed write idea which i kind
     of implied just a few moments ago。 these are all of the buffer cache blocks that
     you've written data into but haven't pushed out to。 disk those are called delayed
     writes okay and you know write system call copies data from the user。
+  id: totrans-166
   prefs: []
   type: TYPE_NORMAL
+  zh: 许多系统会抓取接下来的一个或两个数据块，这是一个非常好的启发式方法，效果也不错。另一个是延迟写入的想法，我刚才也暗示了这一点。这些都是你已经写入数据但还没有推送到磁盘的缓冲区缓存块，这些叫做延迟写入。好吧，知道了，写系统调用会将数据从用户空间复制到内存中。
 - en: into the buffer cache and quickly returns to user space so when you write a
     file and it returns that。 does not mean that that file is durable it does not
     mean it's on disk it means it's in the buffer cache。 okay so it turns out that
     there is uh there are system calls like sync that you can call that push。 things
     out if you really care okay but the default is that when you write uh do a write
     system call it。
+  id: totrans-167
   prefs: []
   type: TYPE_NORMAL
+  zh: 数据进入缓冲区缓存后会迅速返回用户空间。所以，当你写一个文件并返回时，并不意味着文件已经持久化，也不意味着文件已经写入磁盘，只是它已经在缓冲区缓存中了。好吧，实际上，有一些系统调用，比如`sync`，你可以调用它们将数据推送出去，如果你真的关心这些的话。但默认情况下，当你执行写系统调用时。
 - en: actually goes into the buffer into the buffer cache not immediately to the disk
     and so read is also。 fulfilled by the cache so because i can read and write and
     it goes into the buffer cache but not the。 disk the buffer cache makes sure that
     i always see a good coherent view so one process wrote some。 stuff and the other
     one reads it it'll immediately see the data even though it's not on disk。
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上数据会进入缓冲区缓存，而不是直接写入磁盘，所以读取操作也会通过缓存完成。因此，我可以读写数据，它会进入缓冲区缓存，但不立即写入磁盘，缓冲区缓存会确保我始终看到一致的视图。所以一个进程写了一些数据，另一个进程读取时，虽然这些数据还没有写入磁盘，它会立刻看到这些数据。
 - en: everybody with me and that's because the buffer cache is there and we just make
     sure we always。 go through it what's going to get really interesting is when we
     start talking about network distributed。 file systems that level of coherency
     is a much bigger deal okay it's harder to get。 you got two processes on different
     nodes and they're accessing a network file system。
+  id: totrans-169
   prefs: []
   type: TYPE_NORMAL
+  zh: 每个人都跟得上，这是因为缓冲区缓存的存在，我们确保总是经过它。接下来会变得非常有趣，当我们开始讨论网络分布式文件系统时，那个级别的一致性就变得更加重要了，好吗？那就更难处理了，你有两个在不同节点上的进程，它们在访问一个网络文件系统。
 - en: then you're not guaranteed that you're going to see each other's rights okay
     and that's going to be。 something we have to deal with but fortunately if we have
     one node we're good and so when does the。 data from a write system call finally
     reach disk well when the buffer cache is full obviously。 that's one reason to
     push things out but the other thing which you probably imagine is important is。
+  id: totrans-170
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后你不能保证你会看到彼此的写入操作，好的，这将是我们必须处理的问题。但幸运的是，如果我们只有一个节点，那么就没问题了。那么，写系统调用的数据何时最终到达磁盘呢？显然，当缓冲区缓存满时，这是推动数据写入的一个原因，另一个重要的原因你可能已经能猜到。
 - en: we periodically flush the dirty things to disk okay and it turns out that original。
     unix had about a 30 second flush period so it's possible if you were to crash
     the machine that you。 would lose the previous 30 seconds worth of rights okay
     so i just want to pause there for a second。 think about that that says if you're
     running something you're writing data on it and you might lose the。
+  id: totrans-171
   prefs: []
   type: TYPE_NORMAL
+  zh: 结果发现，原始的Unix大约有30秒的刷新周期，因此如果你在机器崩溃时，可能会丢失过去30秒的写入数据，好的，我只是想暂停一下，想一想，这意味着如果你正在运行某个程序并写入数据，你可能会丢失这段时间的数据。
 - en: previous 30 seconds when it crashes now the way you fix that is if you really
     care you do flush。 operations okay and sync operations but this is clearly a whole
     and it's the trade-off between。 performance and durability where we've gone for
     more performance less durability and what we're。 going to do probably not today
     but what we'll do next time is we'll look at how can we still get。
+  id: totrans-172
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果机器崩溃了，可能会丢失过去30秒的数据。现在修复这个问题的方法是，如果你真的关心，你可以执行刷新操作，好的，同步操作，但显然这是一个权衡，这是性能和持久性之间的取舍，我们选择了更多的性能，较少的持久性。我们下次可能会做的事情是，看看如何在不写磁盘的情况下快速将数据返回给用户。
 - en: this performance advantage while having the durability and what we're going
     to do is we're。 going to bring logging in okay and logging is going to give us
     a way to keep our rights on some part。 of the disk that we can write really efficiently
     while still having the high performance buffer。 cache in here and okay and that
     will be how we'll fix this so the the advantage of this delayed write。
+  id: totrans-173
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种性能优势同时保证了持久性，我们将引入日志记录，好的，日志记录将为我们提供一种方法，在磁盘的某些部分高效地写入数据，同时仍保留高性能的缓冲区缓存。好的，这就是我们修复这个问题的方式。所以，延迟写入的优势就是我们定期将脏数据刷新到磁盘。
 - en: is return to user quickly without writing the disk the scheduler can potentially
     order a bunch of。 requests by the elevator algorithm because you you let a bunch
     of them be there and you just send them。 out you can delay block allocation so
     it might be possible to allocate a bunch of blocks at a time。 let me pause with
     that for a second you remember how I said you do an open of a brand new file and。
+  id: totrans-174
   prefs: []
   type: TYPE_NORMAL
+  zh: 调度器可以使用电梯算法对一堆请求进行排序，因为你让它们都在那儿，然后将它们逐一发送出去。你可以延迟块的分配，因此可能可以一次分配多个块。让我暂停一下，记得我说过你打开一个全新的文件时吗？
 - en: then you write a few bytes and you write a few more and you write a few more
     if you have delayed。 rights you can make sure that the blocks go into the buffer
     cache before they're actually allocated on。 disk thereby letting the file system
     figure out how large your file actually is so it can allocate。 a nice contiguous
     stream so the buffer cache gives you enough delaying that you can do a better。
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后你写入几个字节，再写入几个字节，再写入更多字节。如果你有延迟写入，可以确保这些块在实际分配到磁盘之前先进入缓冲区缓存，从而让文件系统确定文件的实际大小，这样它可以分配一个合适的连续数据流。所以，缓冲区缓存给你足够的延迟，允许你做得更好。
 - en: allocation job okay and some files never actually make it all the way to the
     disk so this is those。 uh temporary files from compiling okay so buffer caching
     versus demand path uh paging so the replacement。 policy for demand paging you
     can't do lru so we used an approximation uh not recently used or the。 clock algorithm
     for the buffer cache lru is okay the eviction policy is demand paging in uh the
     case。
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 分配作业正常，某些文件实际上并没有完全写入磁盘，这些是编译时产生的临时文件。好的，缓冲区缓存和按需分页路径的替换策略，按需分页的替换策略不能使用LRU，所以我们采用了近似方法，比如“未最近使用”或“时钟算法”。对于缓冲区缓存，LRU是可以的，逐出策略是按需分页的情况。
 - en: of uh or it's a it's a it's a vick not recently used when memory is close to
     full excuse me in the。 buffer cache you write back dirty blocks even if they're
     used recently um dealing with persistence。 state the buffer cache you write back
     dirty blocks periodically to minimize data loss and that's that。 periodic 30 second
     flush and it's a close not foolproof because you can still crash and lose your
     blocks。
+  id: totrans-177
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者，这是一个在内存接近满时的**最近未使用**（vick）算法，抱歉，我在缓冲区缓存中，即使是最近使用过的，你也会写回脏块。嗯，处理持久化状态时，缓冲区缓存会定期写回脏块，以最小化数据丢失，这就是那个每30秒一次的周期性刷新，虽然它不是百分百可靠，因为你仍然可能崩溃并丢失块。
 - en: okay and uh what if the dirty block was for a directory well that really screws
     you up because。 if you have a dirty block for a directory that points at a file
     and it doesn't get pushed out now your。 metadata is inconsistent okay so you can
     lose a pointer to the files i node uh in the file systems。 now inconsistent so
     that's a little non-smile that's a frony face okay so the takeaway is that file。
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，如果脏块是目录的，那可真麻烦了，因为如果你有一个脏的目录块，它指向一个文件但没有被写回，那你的元数据就不一致了。好的，所以你可能会丢失指向文件的i节点，文件系统现在变得不一致了，所以这就有点不太好笑了，那是一个难过的表情。好的，所以要记住的是，文件。
 - en: systems are going to need good recovery mechanisms which is kind of our next
     topic so let me let me。 pause there and give you uh so in conclusion we've been
     talking about what a file system is it's。 transforming the blocks of a disk into
     files and directories it's optimizing for size access and。 usage patterns you're
     maximizing sequential access allowing efficient random access and it projects。
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: 系统将需要良好的恢复机制，这也是我们接下来的话题，所以让我停一下，给你们总结一下。总之，我们一直在讨论文件系统是什么，它将磁盘的块转化为文件和目录，它优化了大小、访问和使用模式，最大化顺序访问，允许高效的随机访问，并且它做出了规划。
 - en: the os protection and security regime regime into dino's so whatever your system
     does for security。 it's in the i-node piece okay files are defined by an i-node
     header naming translates from user。 visible names to actual system resources and
     we talked about how directories are just files used。 for that lookup and then
     4。2 bsd had this multi-level index scheme plus heuristics for locality。
+  id: totrans-180
   prefs: []
   type: TYPE_NORMAL
+  zh: 操作系统的保护和安全机制已经集成到i节点中，所以无论你的系统如何处理安全性，它都在i节点部分。好的，文件是由i节点头定义的，名称从用户可见的名称转换为实际的系统资源，我们讨论了目录如何只是用来查找的文件，接着我们讲到了4.2
+    BSD如何采用多级索引方案，并且加上了局部性启发式。
 - en: the file layout is driven by free space management and so i told you a lot about
     bsd fast file system。 to optimize for sequential access we talked about how you
     can mmap files and so that's a deep。 integration between virtual memory and the
     file system and then we talked a lot about the buffer。 cache which is memory used
     to cache resources including disk blocks and name translations and。
+  id: totrans-181
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件布局由空闲空间管理驱动，所以我告诉过你很多关于BSD快速文件系统的内容，它优化了顺序访问。我们讨论了如何使用`mmap`映射文件，这样就实现了虚拟内存和文件系统之间的深度集成，然后我们还讨论了缓冲区缓存，它是用来缓存资源的内存，包括磁盘块和名称转换。
 - en: we talked about lots of distinct updates to blocks and so next time we're going
     to cover。 how we can recover if we have a bunch of state that's not written to
     disk but we crash okay that's。 going to be the next topic so i'm going to say
     goodbye to everybody so hope you have a great。 rest of your day and i'm not sure
     i'll be here on Thursday Anthony might be but we'll definitely。
+  id: totrans-182
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们谈到了许多不同的块更新所带来的问题，所以下次我们将讨论如果有一些状态还没有写入磁盘，但系统崩溃了，我们该如何恢复。好的，这将是下一个话题，所以我要向大家告别了，希望你们度过愉快的一天。我不确定周四我是否会在这里，安东尼可能会在，但我们肯定会在。
 - en: pick this up when we get the next lecture。
+  id: totrans-183
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们下次讲座时再继续。
 - en: '![](img/859b68e7047273cc680143916f10266a_4.png)'
+  id: totrans-184
   prefs: []
   type: TYPE_IMG
+  zh: '![](img/859b68e7047273cc680143916f10266a_4.png)'
 - en: '[ Silence ]。'
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: '[ Silence ]。'
