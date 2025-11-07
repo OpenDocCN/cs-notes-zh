@@ -1,0 +1,918 @@
+- en: Lecture 1
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://cs50.harvard.edu/sql/notes/1/](https://cs50.harvard.edu/sql/notes/1/)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '[Introduction](#introduction)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Entity Relationship Diagrams](#entity-relationship-diagrams)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Keys](#keys)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Primary Keys](#primary-keys)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Foreign Keys](#foreign-keys)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-1)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Subqueries](#subqueries)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[`IN`](#in)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-2)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[`JOIN`](#join)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-3)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Sets](#sets)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-4)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Groups](#groups)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-5)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Fin](#fin)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Introduction
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Databases can have multiple tables. Last class, we saw a database of books longlisted,
+    or nominated, for the International Booker Prize. We will now see that database
+    has many different tables inside it — for books, authors, publishers and so on.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: First, open up the database using SQLite in the terminal of your [Codespace](https://cs50.dev/).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'We can use the following SQLite command to see all the tables in our database:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This command returns the names of the tables in `longlist.db` — 7 in all.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: 'These tables have some relationships between them, and hence we call the database
+    a **relational database**. Look at the list of tables in `longlist.db` and try
+    to imagine relationships between them. Some examples are:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Authors write books.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Publishers publish books.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Books are translated by translators.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Consider our first example. Here is a snapshot of the `authors` and `books`
+    tables with the author name and book title columns!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Author Name and Book Title columns from different tables"](../Images/1cc4671dfe321c360ec89b39f3258342.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Just looking at these two columns, how can we tell who wrote which book? Even
+    if we assume that every book is lined up next to its author, just looking at the
+    `authors` table would give us no information about the books written by that author.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some possible ways to organize books and authors are…
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**the honor system**: the first row in the `authors` table will always correspond
+    to the first row in the `books` table. The problem with this system is that one
+    may make a mistake (add a book but forget to add its corresponding author, or
+    vice versa). Also, an author may have written more than one book or a book may
+    be co-written by multiple authors.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**going back to a one-table approach**: This approach could result in redundancy
+    (duplication of data) if one author writes multiple books or if a book is co-written
+    by multiple authors. Below is a snapshot of the one-table approach with some redundant
+    data.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["One-table approach: author with multiple books"](../Images/5c1d25299994e6ca97b5d2fa5dfbcfd3.png)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_IMG
+- en: After considering these ideas, it seems like having two different tables is
+    the most efficient approach. Let us look at some different ways in which tables
+    can be related to each other in relational databases.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Consider this case, where each author writes only one book and each book is
+    written by one author. This is called a one-to-one relationship.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["One-to-one relationship"](../Images/38942739f06a26946bbf9c38f4667c45.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: On the other hand, if an author can write multiple books, the relationship is
+    a one-to-many relationship.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["One-to-many relationship"](../Images/8c1f798a65fb766db6c9259d47ab9b8a.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Here, we see another situation where not only can one author write multiple
+    books, but books can also be co-written by multiple authors. This is a many-to-many
+    relationship.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Many-to-many relationship"](../Images/4b42eb30cd7e9c257d41fe3b804f3750.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Entity Relationship Diagrams
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We just described one-to-one, one-to-many and many-to-many relationships between
+    tables in a database. It is possible to visualize such relationships using an
+    entity relationship (ER) diagram.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Here is an ER diagram for the tables in `longlist.db`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Each table is an entity in our database. The relationships between the tables,
+    or entities, are represented by the *verbs* that mark the lines connecting entities.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each line is this diagram is in crow’s foot notation.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The first line with a circle looks like a 0 marked on the line. This line indicates
+    that there are no relations.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The second line with a perpendicular line looks like a 1 marked on the line.
+    An entity with this arrow has to have at least one row that relates to it in the
+    other table.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The third line, which looks like a crow’s foot, has many branches. This line
+    means that the entity is related to many rows from another table.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Lines in ER Diagrams"](../Images/001e48f4a406107479adcb3b3187eb8a.png)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_IMG
+- en: 'For example:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We read the notation left to right. An author writes one book (or, every author
+    can have one book associated with them).
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["1-Relation Notation: an author writes one book"](../Images/f23bedec4064213ef494c004859702b5.png)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_IMG
+- en: Now, not only does an author write one book but a book is also written by one
+    author.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["1-Relation Notation: an author writes one book and one book is written by
+    one author"](../Images/b9796610a33000a7b9ea9b784495fc36.png)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_IMG
+- en: With this addition, an author writes at least one book and a book is written
+    by at least one author. To rephrase, an author could be associated with one or
+    multiple books and a book can be written by one or multiple authors.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Adding multiple lines: an author writes at least one book and a book is
+    written by at least one author"](../Images/6cf762d7f2830e8c88afced01c125181.png)'
+  prefs:
+  - PREF_IND
+  - PREF_IND
+  type: TYPE_IMG
+- en: Let us revisit the ER diagram for our database.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: On observing the lines connecting the Book and Translator entities, we can say
+    that books don’t *need* to have a translator. They could have zero to many translators.
+    However, a translator in the database translates at least one book, and possibly
+    many.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: If we have some database, how do we know the relationships among the entities
+    stored inside of it?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: The exact relationships between entities are really up to the designer of the
+    database. For example, whether each author can write only one book or multiple
+    books is a decision to be made while designing the database. An ER diagram can
+    be thought of as a tool to communicate these decisions to someone who wants to
+    understand the database and the relationships between its entities.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Once we know that a relationship exists between certain entities, how do we
+    implement that in our database?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: We will shortly see how we can use **keys** in SQL to relate tables to one another.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Keys
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Primary Keys
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In the case of books, every book has a unique identifier called an ISBN. In
+    other words, if you search for a book by its ISBN, only one book will be found.
+    In database terms, the ISBN is a primary key — an identifier that is unique for
+    every item in a table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Table with ISBNs and book titles"](../Images/709b78a505de6de2e922ff22c8b86dea.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Inspired by this idea of an ISBN, we can imagine assigning unique IDs to our
+    publishers, authors and translators! Each of these IDs would be the primary key
+    of the table it belongs to.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Foreign Keys
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Keys also help relate tables in SQL.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A foreign key is a primary key taken from a different table. By referencing
+    the primary key of a different table, it helps relate the tables by forming a
+    link between them.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Relating the books and ratings tables using foreign key"](../Images/91a4de930ecc6ac95f9e54bd6011c225.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Notice how the primary key of the `books` table is now a column in the `ratings`
+    table. This helps form a one-to-many relationship between the two tables — a book
+    with a title (found in the `books` table) can have multiple ratings (found in
+    the `ratings` table).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: The ISBN, as we can see, is a long identifier. If each character occupied a
+    byte of memory, storing a single ISBN (including the dashes) would take 17 bytes
+    of memory, which is a lot!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Thankfully, we don’t necessarily have to use the ISBN as a primary key. We can
+    just construct our own using numbers like 1, 2, 3… and so on as long as each book
+    has a unique number to identify it.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Previously, we saw how to implement the one-to-many relationship between the
+    `books` and `ratings` entities. Here’s an example of a many-to-many relationship.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Relating the authors and books tables using a foreign key and another table"](../Images/8ca6cfda5f4b3f3a9cc43ac37ad31efc.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: There is now a table called `authored` that maps the primary key of `books`
+    (`book_id`) to the primary key of `authors` (`author_id`).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Can the IDs of the author and the book be the same? For example, if `author_id`
+    is 1 and `book_id` is also 1 in the `authored` table, will there be a mix-up?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Tables like `authored` are called “joint” or “junction” tables. In such tables,
+    we usually know which primary key is referenced by which column. In this case,
+    since we know that the first column contains the primary key of `authors` only
+    and the second column similarly contains the primary key of `books` only, it would
+    be okay even if the values matched!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If we have a lot of joint tables like this, wouldn’t that take up too much space?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Yes, there is a trade-off here. Tables like these occupy more space but they
+    also enable us to have many-to-many relationships without redundancies, like we
+    saw earlier.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: On changing the ID of a book or author, does the ID get updated in the other
+    tables as well?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: An updated ID still needs to be unique. Given that, IDs are often abstracted
+    away and we rarely change them.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Subqueries
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: A subquery is a query inside another query. These are also called nested queries.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Consider this example for a one-to-many relationship. In the `books` table,
+    we have an ID to indicate the publisher, which is a foreign key taken from the
+    `publishers` table. To find out the books published by Fitzcarraldo Editions,
+    we would need two queries — one to find out the `publisher_id` of Fitzcarraldo
+    Editions from the `publishers` table and the second, to use this `publisher_id`
+    to find all the books published by Fitzcarraldo Editions. These two queries can
+    be combined into one using the idea of a subquery.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Notice that:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: The subquery is in parentheses. The query that is furthest inside parantheses
+    will be run first, followed by outer queries.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The inner query is indented. This is done as per style conventions for subqueries,
+    to increase readability.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To find all the ratings for the book In Memory of Memory
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: To select just the average rating for this book
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'The next example is for many-to-many relationships. To find the author(s) who
+    wrote the book Flights, three tables would need to be queried: `books`, `authors`
+    and `authored`.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: The first query that is run is the most deeply nested one — finding the ID of
+    the book Flights. Then, the ID of the author(s) who wrote Flights is found. Last,
+    this is used to retrieve the author name(s).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '`IN`'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: This keyword is used to check whether the desired value is *in* a given list
+    or set of values.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The relationship between authors and books is many-to-many. This means that
+    it is possible a given author has written more than one book. To find the names
+    of all books in the database written by Fernanda Melchor, we would use the `IN`
+    keyword as follows.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Note that the innermost query uses `=` and not the `IN` operator. This is because
+    we expect to find just one author named Fernanda Melchor.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: What if the value of an inner query is not found?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: In this case, the inner query would return nothing, prompting the outer query
+    to also return nothing. The outer query is thus dependent on the results of the
+    inner query.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Is it necessary to use four spaces to indent a subquery?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: No. The number of spaces used to indent a subquery can vary, as can the length
+    of each line in the query. But the central idea behind breaking up queries and
+    indenting subqueries is to make them readable.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How can we implement a many-to-one relationship between tables?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Consider the situation wherein a book is co-written by multiple authors. We
+    would have an `authored` table with multiple entries for the same book ID. Each
+    of these entries would have a different author ID. It is worth noting that foreign
+    key values can be repeated within a table, but primary key values are always unique.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`JOIN`'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: This keyword allows us to combine two or more tables together.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To understand how `JOIN` works, consider a database of sea lions and their migration
+    patterns. Here is a snapshot of the database.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Sea Lions database with tables: sea lions, migrations"](../Images/871d96677770fc511517b0f7c0c5d5a5.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: To find out how far the sea lion Spot travelled, or answer similar questions
+    about each sea lion, we could use nested queries. Alternately, we could join the
+    tables `sea lions` and `migrations` together such that each sea lion also has
+    its corresponding information as an extension of the same row.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We can join the tables on the sea lion ID (the common factor between the two
+    tables) to ensure that the correct rows are lined up against each other.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Before testing this out, make sure to exit `longlist.db` using the `.quit` SQLite
+    command. Then, open up `sea_lions.db`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To join the tables
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Notice that:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: The `ON` keyword is used to specify which values match between the tables being
+    joined. It is not possible to join tables without matching values.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If there are any IDs in one table not present in the other, this row will not
+    be present in the joined table. This kind of join is called an `INNER JOIN`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some other ways of joining tables that allow us to retain certain unmatched
+    IDs are `LEFT JOIN`, `RIGHT JOIN` and `FULL JOIN`. Each of these is a kind of
+    `OUTER JOIN`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A `LEFT JOIN` prioritizes the data in the left (or first) table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This query would retain all sea lion data from the `sea_lions` table — the left
+    one. Some rows in the joined table could be partially blank. This would happen
+    if the right table didn’t have data for a particular ID.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Similarly, a `RIGHT JOIN` retains all the rows from the right (or second) table.
+    A `FULL JOIN` allows us to see the entirety of all tables.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: As we can observe, an `OUTER JOIN` could lead to empty or `NULL` values in the
+    joined table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Both tables in the sea lions database have the column `id`. Since the value
+    on which we are joining the tables has the same column name in both tables, we
+    can actually omit the `ON` section of the query while joining.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Notice that the result does not have a duplicate `id` column in this case. Also,
+    this join works similarly to an `INNER JOIN`.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In the sea lions database, how are the IDs created? Do they come from the `sea_lions`
+    table or the `migrations` table?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: The ID of each sea lion likely came from researchers tracking the migration
+    patterns of these sea lions. That is to say, the IDs were not generated in either
+    of the tables, but were assigned at the source of the data itself.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If we are trying to join three tables, how can we know which the left or right
+    tables are?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: For each `JOIN` statement, the first table before the keyword is the left one.
+    The one that is involved in the `JOIN` keyword is the right table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When we join tables, does the resulting joined table get saved? Can we reference
+    it later without joining again?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: In the way that we are using `JOIN`, the result is a temporary table or a result
+    set. It can be used for the duration of the query.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There’s many different kinds of `JOIN`. Is there a default one we should use?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: The simplest kind — just `JOIN` — is actually an `INNER JOIN` and that’s the
+    default for SQL.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sets
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Before diving into sets, we will need to exit the database of sea lions and
+    switch to `longlist.db`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: On running a query, the results we see are called a result set. This is a kind
+    of set in SQL.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let’s take another example. In our database of books, we have authors and translators.
+    A person could be either an author or a translator. If the two sets have an intersection,
+    it is also a possible that a person could be both an author and a translator of
+    books. We can use the `INTERSECT` operator to find this set.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Intersection Set of Authors and Translators"](../Images/185f6a12c8577b77276b7f862db6f7ea.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: '[PRE11]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: If a person is either an author or a translator, or both, they belong to the
+    union of the two sets. In other words, this set is formed by combining the author
+    and translator sets.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Union Set of Authors and Translators"](../Images/ef4d181575995715654ee7725381dd1e.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: '[PRE12]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Notice that every author and every translator is included in this result set,
+    but only once!
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: A minor adjustment to the previous query gives us the profession of the person
+    in the result set, based on whether they are an author or a translator.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Everyone who is an author and *only* an author is included in the following
+    set. The `EXCEPT` keyword can be used to find such a set. In other words, the
+    set of translators is subtracted from the set of authors to form this one.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["EXCEPT set including people who are only authors"](../Images/e7968694b86d0d8aa69073fa11996dc0.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: '[PRE14]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We can verify that no author-translator from the intersection set appears in
+    this result set.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Similarly, it is possible to find a set of people who are only translators using
+    `EXCEPT`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How can we find this set of people who are either authors or translators but
+    not both?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Set — people who are either authors or translators but not both"](../Images/01c633b1019b5ccabc983b673cf3df2a.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: These operators could be useful to answer many different questions. For example,
+    we can find the books that Sophie Hughes and Margaret Jull Costa have translated
+    together.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Each of the nested queries here finds the IDs of the books for one translator.
+    The `INTERSECT` keyword is used to intersect the resulting sets and give us the
+    books they have collaborated on.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Could we use `INTERSECT`, `UNION` etc. to perform operations on 3-4 sets?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Yes, absolutely. To intersect 3 sets, we would have to use the `INTERSECT` operator
+    twice. An important note — we have to make sure to have the same number and same
+    types of columns in the sets to be combined using `INTERSECT`, `UNION` etc.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Groups
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Consider the `ratings` table. For each book, we want to find the average rating
+    of the book. To do this, we would first need to group ratings together by book
+    and then average the ratings out for each book (each group).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: In this query, the `GROUP BY` keyword was used to create groups for each book
+    and then collapse the ratings of the group into an average rating!
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Now, we only want to see the books that are well-rated, with an average rating
+    of over 4.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Note that the `HAVING` keyword is used here to specify a condition for the groups,
+    instead of `WHERE` (which can only be used to specify conditions for individual
+    rows).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Is it possible to see the number of ratings given to each book?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Yes, this would require a slight modification with the use of the `COUNT` keyword.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Is it also possible to sort the data obtained here?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Yes, it is. Say we wanted to find the average ratings per well-rated book, ordered
+    in descending order.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE19]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Fin
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: This brings us to the conclusion of Lecture 1 about relating!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

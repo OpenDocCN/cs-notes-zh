@@ -1,0 +1,843 @@
+- en: Lecture 2
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://cs50.harvard.edu/sql/notes/2/](https://cs50.harvard.edu/sql/notes/2/)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '[Introduction](#introduction)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Creating a Database Schema](#creating-a-database-schema)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Normalizing](#normalizing)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Relating](#relating)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[`CREATE TABLE`](#create-table)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-1)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Data Types and Storage Classes](#data-types-and-storage-classes)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Type Affinities](#type-affinities)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Adding Types to our Tables](#adding-types-to-our-tables)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-2)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Table Constraints](#table-constraints)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-3)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Column Constraints](#column-constraints)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Altering Tables](#altering-tables)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-4)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Fin](#fin)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Introduction
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: In this lecture, we will learn how to design our own database schemas.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Thus far, we have primarily worked with a database of books that were longlisted
+    for the International Booker Prize. Now, we will look underneath the hood and
+    see what commands can be used to create such a database.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: First, let us open up the database `longlist.db` from Week 0 on our terminal.
+    As a reminder, this database contained just one table, called `longlist`. To see
+    a snapshot of the table, we can run
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This gives us the authors and titles from the first 5 rows of the table `longlist`.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Here is a SQLite command (not an SQL keyword) that can shed more light on how
+    this database was created.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: On running this, we see the SQL statement used to create the table `longlist`.
+    This shows us the columns inside `longlist` and the types of data that each column
+    is able to store.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Next, let’s open up the same database from Week 1 on our terminal. This version
+    of `longlist.db` contained different tables related to each other.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'On running `.schema` again, we see many commands — one for each table in the
+    database. There is a way to see the schema for a specified table:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Now we see the statement used to create the `books` table. We are also able
+    to see the columns and data types for each column. For example, the `"title"`
+    column takes text and the `"publisher_id"` column is an integer.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Creating a Database Schema
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Now that we have seen the schema for an existing database, let us create our
+    own! We are tasked with representing the subway system of the city of Boston through
+    a database schema. This includes the subway stations, the different train lines,
+    and the people who take the trains.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Boston Subway Map"](../Images/aa88bf7ddc0b147d981c34b183ab1801.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: To break down the question further, we need to decide…
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: what kinds of tables we will have in our Boston Subway database,
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: what columns each of the tables will have, and
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: what types of data we should put in each of those columns.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Normalizing
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Observe this initial attempt at creating a table to represent Boston Subway
+    data. This table contains subway rider names, current stations the riders are
+    at and the action performed at the station (like entering and exiting). It also
+    records the fares paid and balance amounts on their subway cards. This table also
+    contains an ID for each rider “transaction”, which serves as the primary key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["First attempt at table for Boston subway"](../Images/06fa3eab60c71d3c41d0ca02a316f783.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: What redundancies exist in this table?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We may choose to separate out rider names into a table of its own, to avoid
+    having to duplicate the names so many times. We would need to give each rider
+    an ID that can be used to relate the new table to this one.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We may similarly choose to move subway stations to a different table and give
+    each subway station an ID to be used as a foreign key here.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The process of separating our data in this manner is called **normalizing**.
+    When normalizing, we put each entity in its own table—as we did with riders and
+    subway stations. Any information about a specific entity, for example a rider’s
+    address, goes into the entity’s own table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Relating
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: We now need to decide how our entities (riders and stations) are related. A
+    rider will likely visit multiple stations, and a subway station is likely to have
+    more than one rider. Given this, it will be a many-to-many relationship.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We can also use an ER diagram to represent this relationship.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Many-to-many relationship between riders and stations"](../Images/8d98b6b3c2687fe82d6ec018ef4640a2.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Here, we see that every rider must visit at least one station to be considered
+    a rider. A station, though, could have no riders visiting it, because perhaps
+    it is out of order temporarily. However, it is likely that a station has multiple
+    riders visiting it, indicated by the crow’s foot in the ER diagram.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Does the relationship between riders and stations have to be exactly the way
+    described here? For example, why is it okay for a station to have 0 riders?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: It is up to the person designing the database to make decisions about relationships
+    between entities. It is possible to add a constraint that says a station must
+    have at least one rider to be considered a station.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`CREATE TABLE`'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Now that we have the schema for two of the tables, let’s go ahead and create
+    the tables.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let us open up a new database called `mbta.db` — MBTA stands for Massachusetts
+    Bay Transportation Authority and runs the Boston Subway.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If we run `.schema`, we will see nothing because no table has been created in
+    this database yet.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'In this database, we run the following command to create the first table for
+    riders:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: On running this, no results appear on the terminal. But if we run `.schema`
+    again, we will now see the schema for the table `riders`, as defined by us!
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Similarly, let us create a table for stations as well.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Here, we add a column `"line"` to store the train line that the station is a
+    part of.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '`.schema` now shows us the schema for both `riders` and `stations`.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Next, we will create a table to relate these two entities. These tables are
+    often called junction tables, associative entities or join tables!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Each row of this table tells us the station visited by a particular rider.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Is it necessary to indent the lines within the `CREATE TABLE` parantheses?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: ''
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: No, not strictly. However, we indent the column names to adhere to style conventions
+    as always!
+  prefs:
+  - PREF_BQ
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Data Types and Storage Classes
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'SQLite has five storage classes:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Null**: nothing, or empty value'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Integer**: numbers without decimal points'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Real**: decimal or floating point numbers'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Text**: characters or strings'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**Blob**: Binary Large Object, for storing objects in binary (useful for images,
+    audio etc.)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A storage class can hold several data types.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For example, these are the data types that fall under the umbrella of the Integer
+    storage class.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Integer Storage Class and Data Types"](../Images/46a87fcad9669187e92909b90079e0a0.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: SQLite takes care of storing the input value under the right data type. In other
+    words, we as programmers only need to choose a storage class and SQLite will do
+    the rest!
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: 'Consider this question: what storage class would we use to store fares? Each
+    choice comes with affordances and limitations.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Integers: We can store a 10 cent fare as the number 10, but that doesn’t make
+    it very clear whether the fare is 10 cents or 10 dollars.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Text: We can store the fare in text, like “$0.10”. However, now it will be
+    hard to perform mathematical operations like adding up a rider’s fares.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Real: We can store the fare using a floating point number, like 0.10, but it
+    is not possible to store floating point numbers in binary precisely and—depending
+    on how precise we need to be—doing so may lead to miscalculations down the line.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Type Affinities
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: It is possible to specify the data type of a column while creating a table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: However, columns in SQLite don’t always store one particular data type. They
+    are said to have **type affinities**, meaning that they try to convert an input
+    value into the type they have an affinity for.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'The five type affinities in SQLite are: Text, Numeric (either integer or real
+    values based on what the input value best converts to), Integer, Real and Blob.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Consider a column with a type affinity for Integers. If we try to insert “25”
+    (the number 25 but stored as text) into this column, it will be converted into
+    an integer data type.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Similarly, inserting an integer 25 into a column with a type affinity for text
+    will convert the number to its text equivalent, “25”.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Adding Types to our Tables
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: To create the tables in our database again, we will first need to drop (or delete)
+    the existing tables.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let’s try the following commands
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '[PRE7]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '[PRE8]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Running these statements gives no output, but `.schema` shows us that the tables
+    have now been dropped.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Next, let us create a schema file that can be run to create the tables from
+    scratch. This is an improvement over what we previously did—typing out the `CREATE
+    TABLE` command for each table—because it allows us to edit and view the entire
+    schema easily.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Create a file `schema.sql`. Notice the extension `.sql` that enables syntax
+    highlighting for SQL keywords in our editor.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Inside the file, let’s type out the schemas again, but with the affinity types
+    this time.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Now, we read this file within the database to actually create the tables. Here
+    is an updated ER Diagram with the data types included.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Updated ER Diagram with Data Types"](../Images/5272df34a904d9ced917a6bf075c8383.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Previously, we were able to query the tables in our database and see the results
+    in a table-like structure. How do we get the same kind of results to show up here?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: We haven’t yet added any data to the tables. In Lecture 3, we will see how to
+    insert, update and delete rows in tables that we have created!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Do we have a type affinity for Boolean?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: We don’t in SQLite, but other DBMS’s might have this option. A workaround could
+    be to use 0 or 1 integer values to represent booleans.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Table Constraints
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We can use table constraints to impose restrictions on certain values in our
+    tables.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: For example, a primary key column must have unique values. The table constraint
+    we use for this is `PRIMARY KEY`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Similarly, a constraint on a foreign key value is that it must be found in the
+    primary key column of the related table! This table constraint is called, predictably,
+    `FOREIGN KEY`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let’s add primary and foreign key constraints to our `schema.sql` file.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Notice that we created two primary key columns, the ID for both `riders` and
+    `stations` and then referenced these primary keys as foreign keys in the `visits`
+    table.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: In the `visits` table, there is no primary key. However, SQLite gives every
+    table a primary key by default, known as the row ID. Even though the row ID is
+    implicit, it can be queried!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: It is also possible to create a primary key composed of two columns. For example,
+    if we wanted to give `visits` a primary key composed of both the rider and stations
+    IDs, we could use this syntax
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: In this case, we probably want to allow a rider to visit a station more than
+    once, so we would not move ahead with this approach.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Is it possible to include our own primary key for the `visits` table?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Yes! If, for some reason, an explicit primary key was required for the `visits`
+    table, we could create an ID column and make it the primary key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Column Constraints
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: A column constraint is a type of constraint that applies to a specified column
+    in the table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'SQLite has four column constraints:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`CHECK`: allows checking for a condition, like all values in the column must
+    be greater than 0'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`DEFAULT`: uses a default value if none is supplied for a row'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`NOT NULL`: dictates that a null or empty value cannot be inserted into the
+    column'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`UNIQUE`: dictates that every value in this column must be unique'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'An updated schema with these contraints would look like the following:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: The `NOT NULL` constraint ensures that a station name and line are specified.
+    On the other hand, riders are not mandated to share their names, because there
+    is no constraint applied to rider names. Similarly, each station must have a unique
+    name, as dictated by the `UNIQUE` constraint.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Primary key columns and by extension, foreign key columns must always have unique
+    values, so there is no need to explicitly specify the `NOT NULL` or `UNIQUE` column
+    constraints. The table constraint `PRIMARY KEY` includes these column constraints.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Altering Tables
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Consider the following updated ER diagram, where the entity “Rider” has been
+    swapped out with a new entity “Card” used to represent CharlieCards. CharlieCards,
+    in the Boston Subway, can be loaded with money and are used to swipe into and
+    sometimes out of stations.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Updated ER Diagram with CharlieCards and columns"](../Images/a56f3a24753aa7c5909327e0c2d7ca0c.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Notice that a card can be swiped many times in total, but only at one station
+    at a given time.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The “Card” entity has an ID, which is also its primary key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There is also now an entity “Swipe”, with an ID of its own and a type. “Swipe”
+    also records the time at which a card was swiped and the amount that was subtracted
+    (equivalent to the amount of money needed to ride the subway)!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Now, to implement these changes in our database, we need to first drop the `riders`
+    table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Running `.schema` shows us the updated schema without the `riders` table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Next, we need a `swipes` table to represent the “Swipe” entity from our updated
+    ER diagram. We could alter the `visits` table in the following way.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: On running `.schema` we can see that the table `visits` was renamed to `swipes`.
+    However, this is not the only change needed. We also need to add some columns,
+    like the type of swipe.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Notice the type affinity `TEXT` is also mentioned while adding this column.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: We also have the ability to rename a column in an `ALTER TABLE` command. If
+    we wanted to rename the column `"swipetype"` to make it less wordy, perhaps, we
+    could try the following.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Finally, we have the ability to drop (or remove) a column.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: On running `.schema` again, we can confirm that the column `"type"` was dropped
+    from the table.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: It is also possible to return to the schema file `schema.sql` that we had originally
+    and simply make these changes there instead of altering tables. The following
+    is an updated `schema.sql`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Let us take a couple of minutes to read through the updated schema and make
+    a note of the things that seem to have changed!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The tables `cards` and `swipes` are added and the `NOT NULL` column constraint
+    is used to require some values in `swipes`.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The `"datetime"` column is given the type affinity numeric — this is because
+    numeric types can store and display date values.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The foreign key mapping is adjusted as needed, such that `"card_id"` is a foreign
+    key referring to the ID of the `cards` table.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A default value is assigned to the `"datetime"` column so that it automatically
+    picks up the current timestamp if none is supplied. Notice the use of the `CURRENT_TIMESTAMP`
+    — it returns the year, month, day, hour, minute and second combined into one value.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There is a check in place to ensure the amount on a swipe is not 0\. This is
+    implemented through the column constraint `CHECK`, which is used with an expression
+    `"amount" != 0` to ensure the value is not 0.
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Similarly, there is a check on `"type"` to ensure its value is one of ‘enter’,
+    ‘exit’ and ‘deposit’. This is done because when a CharlieCard is swiped, it is
+    usually for one of these three purposes, so it makes sense to have `"type"` assume
+    these values only. Notice the use of the `IN` keyword to carry out this check!
+    Is there a way to implement this check using the `OR` operator instead?
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: On trying to drop the table `riders`, an error comes up because we’re using
+    the ID of `riders` as a foreign key. How can the table be dropped in this case?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Foreign key constraints within the database are checked when dropping a table.
+    Before dropping `riders`, we would need to first drop the foreign key column `"rider_id"`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How different is the syntax for a different DBMS like MySQL or PostgreSQL?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Most of the SQLite syntax definitely applies to other database management systems
+    as well. However, if we tried porting our SQLite code, some minimal changes would
+    be needed.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If we don’t specify a type affinity of a column in SQLite, what happens?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: The default type affinity is numeric, so the column would get assigned the numeric
+    type affinity.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Fin
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: This brings us to the conclusion of Lecture 2 about Designing in SQL! For an
+    interesting story about the origin of the name CharlieCard, read [this](http://www.celebrateboston.com/mbta/charlie-card-origin.htm)
+    article from Celebrate Boston.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

@@ -1,0 +1,862 @@
+- en: Lecture 3
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: 原文：[https://cs50.harvard.edu/sql/notes/3/](https://cs50.harvard.edu/sql/notes/3/)
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '[Introduction](#introduction)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Database Schema](#database-schema)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Inserting Data](#inserting-data)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Other Constraints](#other-constraints)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Inserting Multiple Rows](#inserting-multiple-rows)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-1)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Deleting Data](#deleting-data)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-2)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Updating Data](#updating-data)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Triggers](#triggers)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Creating a “Sell” Trigger](#creating-a-sell-trigger)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Creating a “Buy” Trigger](#creating-a-buy-trigger)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Questions](#questions-3)'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Soft Deletions](#soft-deletions)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Fin](#fin)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Introduction
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Last week, we learned how to create our own database schema. In this lecture,
+    we’ll explore how to add, update, and delete data in our databases.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The Boston MFA (Museum of Fine Arts) is a century-old museum in Boston. The
+    MFA manages a vast collection of historical and contemporary artifacts and artwork.
+    They likely use a database of some kind to store data about their art and artifacts.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When a new artifact is added to their collection, we can imagine they would
+    insert the corresponding data to their database. Similarly, there are use cases
+    in which data might need to be read, updated or deleted.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We will focus now on the creation (or insertion) of data in a Boston MFA database.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Database Schema
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Consider this schema that the MFA might use for its collection.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["MFA Collections Table containing IDs, titles of artwork and other information"](../Images/1d4a6ad032325ea7543c7f7885755730.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Each row of data contains the title for a piece of artwork along with the `accession_number`
+    which is a unique ID used by the museum internally. There is, too, a date indicating
+    when the art was acquired.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The table contains an ID which serves as the primary key.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We can imagine that the database administrator of the MFA runs an SQL query
+    to insert each of these pieces of artwork into the table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To understand how this works, let us first create a database called `mfa.db`.
+    Next, we read the schema file `schema.sql` into the database. This schema file,
+    already given to us, helps us create the table `collections`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: To confirm that the table has been created, we can select from the table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This should give us an empty result, because the table doesn’t have any data
+    yet.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Inserting Data
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The SQL statement `INSERT INTO` is used to insert a row of data into a given
+    table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We can see that this command requires the list of columns in the table that
+    will receive new data and the values to be added to each column, in the same order.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Running the `INSERT INTO` command returns nothing, but we can run a query to
+    confirm that the row is now present in `collections`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We can add more rows to the database by inserting multiple times. However, typing
+    out the value of the primary key manually (as 1, 2, 3 etc.) might result in errors.
+    Thankfully, SQLite can fill out the primary key values automatically. To make
+    use of this functionality, we omit the ID column altogether while inserting a
+    row.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We can check that this row has been inserted with an `id` of 2 by running
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Notice that the way SQLite fills out the primary key values is by incrementing
+    the previous primary key—in this case, 1.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: If we delete a row with the primary key 1, will SQLite automatically assign
+    a primary key of 1 to the next inserted row?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: No, SQLite actually selects the highest primary key value in the table and increments
+    it to generate the next primary key value.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Other Constraints
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Opening the file `schema.sql` will pull up the schema for the database.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'It is specified that the accession number is unique. If we try to insert a
+    row with a repeated accession number, we will trigger a error that looks like
+    `Runtime error: UNIQUE constraint failed: collections.accession_number (19)`.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: This error informs us that the row we are trying to insert violates a constraint
+    in the schema—specifically the `UNIQUE` constraint in this scenario.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Similarly, we can try to add a row with a `NULL` title, violating the `NOT NULL`
+    constraint.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'On running this, we will again see an error that looks like `Runtime error:
+    NOT NULL constraint failed: collections.title (19)`.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: In this manner, the schema constraints are guardrails that protect us from adding
+    rows that do not follow the schema of our database.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Inserting Multiple Rows
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We may need to insert more than one row at a time while writing into a database.
+    One way to do this is to separate out the rows using commas in the `INSERT INTO`
+    command.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Inserting multiple rows at once separated by commas"](../Images/ff24439bb0c509f1c81bf0ee7ee4a194.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Inserting multiple rows at once in this manner allows the programmer some convenience.
+    It is also a faster, more efficient way of inserting rows into a database.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Let us now insert two new paintings into the `collections` table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: The museum may not always know exactly when a painting was acquired, hence it
+    is possible for the `acquired` value to be `NULL`, as is the case for the first
+    painting we just inserted.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: To see the updated table, we can select all rows from the table as always.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Our data could also be stored in a [comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values)
+    format, or CSV. Observe in the following example how the values in each row are
+    separated by a comma.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Paintings data in comma-separated values format"](../Images/e789fafb524dd0bc004121131620fa3c.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: SQLite makes it possible to import a CSV file directly into our database. To
+    do this, we need to start from scratch. Let us leave this database `mfa.db` and
+    then remove it.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We already have a CSV file called `mfa.csv` that contains the data we need.
+    On opening up this file, we can note that the first row contains the column names,
+    which match exactly with the column names of our table `collections` as per the
+    schema.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: First, let us create again the database `mfa.db` and read the schema file as
+    we did earlier.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Next, we can import the CSV by running a SQLite command.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: The first argument, `--csv` indicates to SQLite that we are importing a CSV
+    file. This will help SQLite parse the file correctly. The second argument indicates
+    that the first row of the CSV file (the header row) needs to be skipped, or not
+    inserted into the table.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: We can select all the data from the `collections` table to see that every painting
+    from `mfa.csv` has been successfully imported into the table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The CSV file we just inserted contained primary key values (1, 2, 3 etc.) for
+    each row of data. However, it is more likely that CSV files we work with will
+    not contain the ID or primary key values. How can we have SQLite insert them automatically?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'To try this out, let’s open up `mfa.csv` in our codespace and delete the `id`
+    column from the header row, along with the values in each column. This is what
+    `mfa.csv` should look like once we finish editing:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We will also delete all the rows that are already within the `collections` table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Now, we want to import this CSV file into a table. However, the `collections`
+    table (as per our schema) must have four columns in every row. This new CSV file
+    contains only three columns for every row. Hence, we cannot proceed to import
+    in the same way we did before.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'To successfully import the CSV file without ID values, we will to use a temporary
+    table:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Notice how we don’t use the argument `--skip 1` with this command. This is because
+    SQLite is capable of recognizing the very first row of CSV data as the header
+    row, and converts those into the column names of the new `temp` table.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: We can see the data within the `temp` table by querying it.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Next, we will select the data (without primary keys) from `temp` and move it
+    to `collections`, which was the goal all along! We can use the following command
+    to achieve this.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: In this process, SQLite will automatically add the primary key values in the
+    `id` column.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Just to clean up our database, we can also drop the `temp` table once we’re
+    done moving data.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Can we place columns in specific positions while inserting into a table?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: While we can change the ordering of values in the `INSERT INTO` command, we
+    usually can’t change the ordering of the column names themselves. The order of
+    column names follows the same order used while creating the table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What happens if one of the multiple rows we are trying to insert violates a
+    table constraint?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: While trying to insert multiple rows into a table, if even one of them violates
+    a constraint, the insertion command will result in an error and none of the rows
+    will be inserted!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: After inserting data from the CSV, one of the cells was empty and not `NULL`.
+    Why did this happen?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: When we imported data from the CSV file, one of the `acquired` values was missing!
+    This was interpreted as text and hence, read into the table as an empty text value.
+    We can run queries on the table after importing to convert these empty values
+    into `NULL` if required.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Deleting Data
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We saw previously that running the following command deleted all rows from the
+    table `collections`. (We don’t want to actually run this command now or we’ll
+    lose all the data in the table!)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'We can also delete rows that match specific conditions. For example, to delete
+    the painting “Spring outing” from our table `collections` we can run:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: To delete any paintings with the date acquired as `NULL` we can run
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: As we always do, we will make sure the deletion worked as expected by selecting
+    all data from the table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE19]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We see that the “Spring outing” and “Imaginative landscape” paintings are not
+    in the table anymore.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: To delete rows pertaining to paintings older than 1909, we can run
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE20]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Using the `<` operator here, we are finding the paintings acquired **before**
+    January 1, 1909\. These are the paintings that will be deleted on running the
+    query.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: There might be cases where deleting some data could impact the integrity of
+    a database. Foreign key constraints are a good example. A foreign key column references
+    the primary key of a different table. If we were to delete the primary key, the
+    foreign key column would have nothing to reference!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Consider now an updated schema for the MFA database, containing information
+    not just about artwork but also artists. The two entities Artist and Collection
+    have a many-to-many relationship—a painting can be created by many artists and
+    a single artist can also create many pieces of artwork.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Updated schema with artist and collection entities"](../Images/f58f93a48e8212621493f29a34edc06f.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Here is a database implementing the above ER Diagram.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Three tables: artists, created, collections"](../Images/a46c676e9328b03f588d06f29f307160.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: The `artists` and `collections` tables have primary keys—the ID columns. The
+    `created` table references these IDs in its two foreign key columns.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Given this database, if we choose to delete the unidentified artist (with the
+    ID 3), what would happen to the rows in the table `created` with an `artist_id`
+    of 3? Let’s try it out.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: After opening up `mfa.db`, we can now see the updated schema by running the
+    `.schema` command. The `created` table does indeed have two foreign key constraints,
+    one for the artist ID and one for the collection ID.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Now, we can try to delete from the `artists` table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE21]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'On running this, we get an error very similar to ones we have seen before in
+    this class: `Runtime error: FOREIGN KEY constraint failed (19)`. This error notifies
+    us that deleting this data would violate the foreign key constraint set up in
+    the `created` table.'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: How do we ensure that the constraint is not violated? One possibility is to
+    delete the corresponding rows from the `created` table before deleting from the
+    `artists` table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE22]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This query effectively deletes the artist’s *affiliation* with their work. Once
+    the affiliation no longer exists, we can delete the artist’s data without violating
+    the foreign key constraint. To do this, we can run
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE23]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: In another possibility, we can specify the action to be taken when an ID referenced
+    by a foreign key is deleted. To do this, we use the keyword `ON DELETE` followed
+    by the action to be taken.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ON DELETE RESTRICT`: This restricts us from deleting IDs when the foreign
+    key constraint is violated.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ON DELETE NO ACTION`: This allows the deletion of IDs that are referenced
+    by a foreign key and nothing happens.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ON DELETE SET NULL`: This allows the deletion of IDs that are referenced by
+    a foreign key and sets the foreign key references to `NULL`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ON DELETE SET DEFAULT`: This does the same as the previous, but allows us
+    to set a default value instead of `NULL`.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`ON DELETE CASCADE`: This allows the deletion of IDs that are referenced by
+    a foreign key and also proceeds to cascadingly delete the referencing foreign
+    key rows. For example, if we used this to delete an artist ID, all the artist’s
+    affiliations with the artwork would also be deleted from the `created` table.'
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The latest version of the schema file implements the above method. The foreign
+    key constraints now look like
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE24]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Now running the following `DELETE` statement will not result in an error, and
+    will cascade the deletion from the `artists` table to the `created` table:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE25]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'To check that this cascading deletion worked, we can query the `created` table:'
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE26]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: We observe that none of the rows have an ID of 3 (the ID of the artist deleted
+    from the `artists` table).
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: We just deleted an artist with the ID of 3\. Is there any way to make the next
+    inserted row have an ID of 3?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: By default, as we discussed before, SQLite will select the largest ID present
+    in the table and increment it to obtain the next ID. But we can use the `AUTOINCREMENT`
+    keyword while creating a column to indicate that any deleted ID should be repurposed
+    for a new row being inserted into the table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Updating Data
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: We can easily imagine scenarios in which data in a database would need to be
+    updated. Perhaps, in the case of the MFA database, we find out that the painting
+    “Farmers working at dawn” originally mapped to an “Unidentified artist” was actually
+    created by the artist Li Yin.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: We can use the update command to make changes to say, the affiliation of a painting.
+    Here is the syntax of the update command.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '!["Update command syntax"](../Images/f4d431ce171f05cc1c883af7cf6854a7.png)'
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+- en: Let’s change this affiliation for “Farmers working at dawn” in the `created`
+    table using the above syntax.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE27]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: The first part of this query specifies the table to be updated. The next part
+    retrieves the ID of Li Yin to set as the new ID. The last part selects the row(s)
+    in `created` which will be updated with the ID of Li Yin, which is the painting
+    “Farmers working at dawn”!
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Triggers
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: A **trigger** is a SQL statement that runs automatically in response to another
+    SQL statement, such as an `INSERT`, `UPDATE`, or `DELETE`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Triggers are useful for maintaining data consistency and automating tasks across
+    related tables.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Creating a “Sell” Trigger
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Consider the MFA database with a `collections` table and a new `transactions`
+    table.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE28]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: When artwork is sold (deleted from `collections`), we want it automatically
+    logged in `transactions` with an action of “sold”.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE29]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This trigger runs before a row is deleted from `collections`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**OLD** is a special keyword that refers to the row being deleted.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`OLD."title"` accesses the title column of the row about to be deleted.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The trigger automatically inserts a record into `transactions` with the action
+    “sold”.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Creating a “Buy” Trigger
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: When artwork is bought (inserted into `collections`), we want it logged in `transactions`
+    with an action of “bought”.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE30]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This trigger runs after a new row is inserted into `collections`.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '**NEW** is a special keyword that refers to the row being inserted.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '`NEW."title"` accesses the title column of the newly inserted row.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Can we have multiple SQL statements inside a trigger?
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Yes, you can have multiple statements inside the `BEGIN` and `END` blocks, separated
+    by semicolons.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Soft Deletions
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '**Soft deletion** (or a **soft delete**) means marking data as deleted rather
+    than actually removing it from the database.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'For example, we could add a `deleted` column to the `collections` table with
+    a default value of 0:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE31]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'To “delete” a row, we would update the `deleted` column to 1:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE32]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'Then, to query only non-deleted rows:'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE33]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: This way, data can be recovered if needed and maintains a complete historical
+    record.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: However, it’s still important to comply with data privacy regulations that require
+    data to be truly deleted.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Fin
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: This brings us to the conclusion of Lecture 3 about Writing in SQL!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
