@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Lecture 4</title>
+<link href="../Styles/Style.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<h1>Lecture 4</h1>
+<blockquote>原文：<a href="https://cs50.harvard.edu/sql/notes/4/">https://cs50.harvard.edu/sql/notes/4/</a></blockquote>
+
+                    
+
+<ul id="markdown-toc">
+  <li><a href="#introduction" id="markdown-toc-introduction">Introduction</a></li>
+  <li><a href="#views" id="markdown-toc-views">Views</a></li>
+  <li><a href="#simplifying" id="markdown-toc-simplifying">Simplifying</a>    <ul>
+      <li><a href="#questions" id="markdown-toc-questions">Questions</a></li>
+    </ul>
+  </li>
+  <li><a href="#aggregating" id="markdown-toc-aggregating">Aggregating</a>    <ul>
+      <li><a href="#questions-1" id="markdown-toc-questions-1">Questions</a></li>
+    </ul>
+  </li>
+  <li><a href="#common-table-expression-cte" id="markdown-toc-common-table-expression-cte">Common Table Expression (CTE)</a></li>
+  <li><a href="#partitioning" id="markdown-toc-partitioning">Partitioning</a>    <ul>
+      <li><a href="#questions-2" id="markdown-toc-questions-2">Questions</a></li>
+    </ul>
+  </li>
+  <li><a href="#securing" id="markdown-toc-securing">Securing</a></li>
+  <li><a href="#soft-deletions" id="markdown-toc-soft-deletions">Soft Deletions</a></li>
+  <li><a href="#fin" id="markdown-toc-fin">Fin</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<ul>
+  <li data-marker="*">Thus far, we have learned about concepts that allow us to design complex databases and write data into them. Now, we will explore ways in which to obtain views from these databases.</li>
+  <li data-marker="*">
+    <p>Let’s go back to the database containing books longlisted for the International Booker Prize. Here is a snapshot of tables from this database.</p>
+
+    <p class="w-50"><img src="../Images/37d0c83cc60cc470702cc3f30070fccc.png" alt="&quot;Tables containing books and authors with a many-to-many relationship&quot;" data-original-src="https://cs50.harvard.edu/sql/notes/4/images/4.jpg"/></p>
+  </li>
+  <li data-marker="*">To find a book written by the author Han Kang, we would need to go each of through the three table above — first finding the author’s ID, then the corresponding book IDs and then the book titles. Instead, is there a way to put together related information from the three tables in a single view?</li>
+  <li data-marker="*">
+    <p>Yes, we can use the <code class="language-plaintext highlighter-rouge">JOIN</code> command in SQL to combine rows from two or more tables based on a related column between them. Here is a visual representation of how these tables could be joined in order to line up authors and their books.</p>
+
+    <p class="w-50"><img src="../Images/bd990bcb27da2bf534fd0af8eb8dcbf7.png" alt="&quot;Table joining books, authored and authors&quot;" data-original-src="https://cs50.harvard.edu/sql/notes/4/images/8.jpg"/></p>
+
+    <p>This makes it simple to observe that Han Kang authored The White Book.</p>
+  </li>
+  <li data-marker="*">
+    <p>One can also imagine removing the ID columns here, such that our view looks like the following.</p>
+
+    <p class="w-50"><img src="../Images/1f84dc8f7a24746024223d38fba5816f.png" alt="&quot;Table joining books, authored and authors with the ID columns removed&quot;" data-original-src="https://cs50.harvard.edu/sql/notes/4/images/10.jpg"/></p>
+  </li>
+</ul>
+
+<h2 id="views">Views</h2>
+
+<ul>
+  <li data-marker="*">A view is a virtual table defined by a query.</li>
+  <li data-marker="*">Say we wrote a query to join three tables, as in the previous example, and then select the relevant columns. The new table created by this query can be saved as a view, to be further queried later on.</li>
+  <li data-marker="*">Views are useful for:
+    <ul>
+      <li data-marker="*"><strong>simplifying</strong>: putting together data from different tables to be queried more simply,</li>
+      <li data-marker="*"><strong>aggregating</strong>: running aggregate functions, like finding the sum, and storing the results,</li>
+      <li data-marker="*"><strong>partitioning</strong>: dividing data into logical pieces,</li>
+      <li data-marker="*"><strong>securing</strong>: hiding columns that should be kept secure.
+  While there are other ways in which views can be useful, in this lecture we will focus on the above four.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="simplifying">Simplifying</h2>
+
+<ul>
+  <li data-marker="*">Let us open up <code class="language-plaintext highlighter-rouge">longlist.db</code> on SQLite and run the <code class="language-plaintext highlighter-rouge">.schema</code> command to verify that the three tables we saw in the previous example are created: <code class="language-plaintext highlighter-rouge">authors</code>, <code class="language-plaintext highlighter-rouge">authored</code> and <code class="language-plaintext highlighter-rouge">books</code>.</li>
+  <li data-marker="*">
+    <p>To select the books written by Fernanda Melchor, we would write this nested query.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"title"</span> <span class="k">FROM</span> <span class="nv">"books"</span>
+<span class="k">WHERE</span> <span class="nv">"id"</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="nv">"book_id"</span> <span class="k">FROM</span> <span class="nv">"authored"</span>
+    <span class="k">WHERE</span> <span class="nv">"author_id"</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="k">SELECT</span> <span class="nv">"id"</span> <span class="k">FROM</span> <span class="nv">"authors"</span>
+        <span class="k">WHERE</span> <span class="nv">"name"</span> <span class="o">=</span> <span class="s1">'Fernanda Melchor'</span>
+    <span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">The above query is complex — there are three <code class="language-plaintext highlighter-rouge">SELECT</code> queries in the nested query. To simplify this, let us first use <code class="language-plaintext highlighter-rouge">JOIN</code> to create a view containing authors and their books.</li>
+  <li data-marker="*">
+    <p>In a new terminal, let us connect to <code class="language-plaintext highlighter-rouge">longlist.db</code> again, and run the following query.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"name"</span><span class="p">,</span> <span class="nv">"title"</span> <span class="k">FROM</span> <span class="nv">"authors"</span>
+<span class="k">JOIN</span> <span class="nv">"authored"</span> <span class="k">ON</span> <span class="nv">"authors"</span><span class="p">.</span><span class="nv">"id"</span> <span class="o">=</span> <span class="nv">"authored"</span><span class="p">.</span><span class="nv">"author_id"</span>
+<span class="k">JOIN</span> <span class="nv">"books"</span> <span class="k">ON</span> <span class="nv">"books"</span><span class="p">.</span><span class="nv">"id"</span> <span class="o">=</span> <span class="nv">"authored"</span><span class="p">.</span><span class="nv">"book_id"</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">Observe that it is important to specify how two tables are joined, or the columns they are joined <em>on</em>.</li>
+      <li data-marker="*">Tip: The primary key column of one table is usually joined to the corresponding foreign key column of the other table!</li>
+      <li data-marker="*">Running this will pull up a table containing all the author names next to the titles of the books they have authored.</li>
+    </ul>
+  </li>
+  <li data-marker="*">
+    <p>To save the virtual table created in the previous step as a view, we need to change the query.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="nv">"longlist"</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="nv">"name"</span><span class="p">,</span> <span class="nv">"title"</span> <span class="k">FROM</span> <span class="nv">"authors"</span>
+<span class="k">JOIN</span> <span class="nv">"authored"</span> <span class="k">ON</span> <span class="nv">"authors"</span><span class="p">.</span><span class="nv">"id"</span> <span class="o">=</span> <span class="nv">"authored"</span><span class="p">.</span><span class="nv">"author_id"</span>
+<span class="k">JOIN</span> <span class="nv">"books"</span> <span class="k">ON</span> <span class="nv">"books"</span><span class="p">.</span><span class="nv">"id"</span> <span class="o">=</span> <span class="nv">"authored"</span><span class="p">.</span><span class="nv">"book_id"</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <p>The view created here is called <code class="language-plaintext highlighter-rouge">longlist</code>. This view can now be used exactly as we would use a table in SQL.</p>
+  </li>
+  <li data-marker="*">
+    <p>Let us write a query to see all the data within this view.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="nv">"longlist"</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">
+    <p>Using this view, we can considerably <strong>simplify</strong> the query needed to find the books written by Fernanda Melchor.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"title"</span> <span class="k">FROM</span> <span class="nv">"longlist"</span> <span class="k">WHERE</span> <span class="nv">"name"</span> <span class="o">=</span> <span class="s1">'Fernanda Melchor'</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">A view, being a virtual table, does not consume much more disk space to create. The data within a view is still stored in the underlying tables, but still accessible through this simplfied view.</li>
+</ul>
+
+<h3 id="questions">Questions</h3>
+
+<blockquote>
+  <p>Can we manipulate views to be ordered, or displayed differently?</p>
+</blockquote>
+
+<ul>
+  <li data-marker="*">Yes, we can order books in a view in much the same way as we can in a table.
+    <ul>
+      <li data-marker="*">
+        <p>As an example, let us display the data within the <code class="language-plaintext highlighter-rouge">longlist</code> view, ordered by the book titles.</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"name"</span><span class="p">,</span> <span class="nv">"title"</span>
+<span class="k">FROM</span>  <span class="nv">"longlist"</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="nv">"title"</span><span class="p">;</span>
+</code></pre></div>        </div>
+      </li>
+      <li data-marker="*">
+        <p>We could also have the view itself be ordered. We can do this by including an <code class="language-plaintext highlighter-rouge">ORDER BY</code> clause in the query used to create the view.</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="aggregating">Aggregating</h2>
+
+<ul>
+  <li data-marker="*">
+    <p>In <code class="language-plaintext highlighter-rouge">longlist.db</code> we have a table containing individual ratings given to each book. In previous weeks, we saw how to find the average rating of every book, rounded to 2 decimal places.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"book_id"</span><span class="p">,</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="nv">"rating"</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"rating"</span> 
+<span class="k">FROM</span> <span class="nv">"ratings"</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"book_id"</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">
+    <p>The results of the above query can be made more useful by displaying the title of every book, and perhaps the year in which each book was longlisted. This information is present in the <code class="language-plaintext highlighter-rouge">books</code> table.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"book_id"</span><span class="p">,</span> <span class="nv">"title"</span><span class="p">,</span> <span class="nv">"year"</span><span class="p">,</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="nv">"rating"</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"rating"</span> 
+<span class="k">FROM</span> <span class="nv">"ratings"</span>
+<span class="k">JOIN</span> <span class="nv">"books"</span> <span class="k">ON</span> <span class="nv">"ratings"</span><span class="p">.</span><span class="nv">"book_id"</span> <span class="o">=</span> <span class="nv">"books"</span><span class="p">.</span><span class="nv">"id"</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"book_id"</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">Here, we use a <code class="language-plaintext highlighter-rouge">JOIN</code> to combine information from the <code class="language-plaintext highlighter-rouge">ratings</code> and <code class="language-plaintext highlighter-rouge">books</code> tables, joining on the book ID column.</li>
+      <li data-marker="*">Notice the order of operations in this query — in particular, the placement of the <code class="language-plaintext highlighter-rouge">GROUP BY</code> operation at the end of the query after the two tables are joined.</li>
+    </ul>
+  </li>
+  <li data-marker="*">
+    <p>This <strong>aggregated</strong> data can be stored in a view.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="nv">"average_book_ratings"</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="nv">"book_id"</span> <span class="k">AS</span> <span class="nv">"id"</span><span class="p">,</span> <span class="nv">"title"</span><span class="p">,</span> <span class="nv">"year"</span><span class="p">,</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="nv">"rating"</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"rating"</span> 
+<span class="k">FROM</span> <span class="nv">"ratings"</span>
+<span class="k">JOIN</span> <span class="nv">"books"</span> <span class="k">ON</span> <span class="nv">"ratings"</span><span class="p">.</span><span class="nv">"book_id"</span> <span class="o">=</span> <span class="nv">"books"</span><span class="p">.</span><span class="nv">"id"</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"book_id"</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">
+        <p>Now, let us see the data in this view.</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="nv">"average_book_ratings"</span><span class="p">;</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li data-marker="*">On adding more data to the <code class="language-plaintext highlighter-rouge">ratings</code> table, to obtain an up-to-date aggregate, we need to simply requery the view using a <code class="language-plaintext highlighter-rouge">SELECT</code> command like the above!</li>
+  <li data-marker="*">Each time a view is created, it gets added to the schema. We can verify this by running <code class="language-plaintext highlighter-rouge">.schema</code> to observe that <code class="language-plaintext highlighter-rouge">longlist</code> and <code class="language-plaintext highlighter-rouge">average_book_ratings</code> are now part of this database’s schema.</li>
+  <li data-marker="*">To create temporary views that are not stored in the database schema, we can use <code class="language-plaintext highlighter-rouge">CREATE TEMPORARY VIEW</code>. This command creates a view that exists only for the duration of our connection with the database.</li>
+  <li data-marker="*">
+    <p>To find the average rating of books <em>per year</em>, we can use the view we already created.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="nv">"year"</span><span class="p">,</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="nv">"rating"</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"rating"</span> 
+<span class="k">FROM</span> <span class="nv">"average_book_ratings"</span> 
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"year"</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <p>Notice that we select the <code class="language-plaintext highlighter-rouge">rating</code> column from <code class="language-plaintext highlighter-rouge">average_book_ratings</code>, which already contains the average ratings per book. Next, we group these by year and calculate the average ratings again, which gives us the average rating per year!</p>
+  </li>
+  <li data-marker="*">
+    <p>We can store the results in a temporary view.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TEMPORARY</span> <span class="k">VIEW</span> <span class="nv">"average_ratings_by_year"</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="nv">"year"</span><span class="p">,</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="nv">"rating"</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"rating"</span> <span class="k">FROM</span> <span class="nv">"average_book_ratings"</span> 
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"year"</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h3 id="questions-1">Questions</h3>
+
+<blockquote>
+  <p>Can temporary views be used to test whether a query works or not?</p>
+</blockquote>
+
+<ul>
+  <li data-marker="*">Yes, this is a great use case for temporary views! To generalize a little, temporary views are used when we want to organize data in some way without actually storing that organization long-term.</li>
+</ul>
+
+<h2 id="common-table-expression-cte">Common Table Expression (CTE)</h2>
+
+<ul>
+  <li data-marker="*">A regular view exists forever in our database schema. A temporary view exists for the duration of our connection with the database. A CTE is a view that exists for a single query alone.</li>
+  <li data-marker="*">
+    <p>Let us recreate the view containing average book ratings per year using a CTE instead of a temporary view. First, we need to drop the existing temporary view so that we can reuse the name <code class="language-plaintext highlighter-rouge">average_book_ratings</code>.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DROP</span> <span class="k">VIEW</span> <span class="nv">"average_book_ratings"</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">
+    <p>Next, we create a CTE containing the average ratings <em>per book</em>. We then use the average ratings per book to calculate the average ratings <em>per year</em>, in much the same way as we did before.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">WITH</span> <span class="nv">"average_book_ratings"</span> <span class="k">AS</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="nv">"book_id"</span><span class="p">,</span> <span class="nv">"title"</span><span class="p">,</span> <span class="nv">"year"</span><span class="p">,</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="nv">"rating"</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"rating"</span> <span class="k">FROM</span> <span class="nv">"ratings"</span>
+    <span class="k">JOIN</span> <span class="nv">"books"</span> <span class="k">ON</span> <span class="nv">"ratings"</span><span class="p">.</span><span class="nv">"book_id"</span> <span class="o">=</span> <span class="nv">"books"</span><span class="p">.</span><span class="nv">"id"</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"book_id"</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="nv">"year"</span> <span class="n">ROUND</span><span class="p">(</span><span class="k">AVG</span><span class="p">(</span><span class="nv">"rating"</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="nv">"rating"</span> <span class="k">FROM</span> <span class="nv">"average_book_ratings"</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nv">"year"</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h2 id="partitioning">Partitioning</h2>
+
+<ul>
+  <li data-marker="*">Views can be used to partition data, or to break it into smaller pieces that will be useful to us or an application. For example, the website for the International Booker Prize has a page of longlisted books for each year the prize was awarded. However, our database stores all the longlisted books in a single table. For the sake of creating the website, or a different purpose, it might be useful to have a different table (or view) of books for each year.</li>
+  <li data-marker="*">
+    <p>Let us create a view to store books longlisted in 2022.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="nv">"2022"</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="nv">"id"</span><span class="p">,</span> <span class="nv">"title"</span> <span class="k">FROM</span> <span class="nv">"books"</span>
+<span class="k">WHERE</span> <span class="nv">"year"</span> <span class="o">=</span> <span class="mi">2022</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">
+        <p>We can also see the data in this view.</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="nv">"2022"</span><span class="p">;</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="questions-2">Questions</h3>
+
+<blockquote>
+  <p>Can views be updated?</p>
+</blockquote>
+
+<ul>
+  <li data-marker="*">No, because views do not have any data in the way that tables do. Views actually pull data from the underlying tables each time they are queried. This means that when an underlying table is updated, the next time the view is queried, it will display updated data from the table!</li>
+</ul>
+
+<h2 id="securing">Securing</h2>
+
+<ul>
+  <li data-marker="*">Views can be used to enhance database security by limiting access to certain data.</li>
+  <li data-marker="*">
+    <p>Consider a rideshare company’s database with a table <code class="language-plaintext highlighter-rouge">rides</code> that looks like the following.</p>
+
+    <p class="w-50"><img src="../Images/ceb3b27f1a3a1b8e16b6e2471df11958.png" alt="&quot;Rides table containing destination, origin and riders&quot;" data-original-src="https://cs50.harvard.edu/sql/notes/4/images/41.jpg"/></p>
+  </li>
+  <li data-marker="*">If we were to give this data to an analyst, whose job is to find the most popular ride routes, it would be irrelevant and indeed, not secure to give them the names of individual riders. Rider names are likely categorized as Personally Identifiable Information (PII) which companies are not allowed to share indiscriminately.</li>
+  <li data-marker="*">Views can be handy in this situation — we can share with the analyst a view containing the origin and destination of rides, but not the rider names.</li>
+  <li data-marker="*">To try this out, let us open <code class="language-plaintext highlighter-rouge">rideshare.db</code> in our terminal. Running <code class="language-plaintext highlighter-rouge">.schema</code> should reveal one table called <code class="language-plaintext highlighter-rouge">rides</code> in this database.</li>
+  <li data-marker="*">
+    <p>We can create a view with the relevant columns, while omitting the <code class="language-plaintext highlighter-rouge">rider</code> column altogether. But we will go one step further here, and create a <code class="language-plaintext highlighter-rouge">rider</code> column to display an anonymous rider for each row in the table. This will indicate to the analyst that while we have rider names in the database, the names have been anonymized for security.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="nv">"analysis"</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="nv">"id"</span><span class="p">,</span> <span class="nv">"origin"</span><span class="p">,</span> <span class="nv">"destination"</span><span class="p">,</span> <span class="s1">'Anonymous'</span> <span class="k">AS</span> <span class="nv">"rider"</span> 
+<span class="k">FROM</span> <span class="nv">"rides"</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">
+        <p>We can query this view to ensure that it is secure.</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="nv">"analysis"</span><span class="p">;</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li data-marker="*">Although we can create a view that anonymizes data, SQLite does not allow access control. This means that our analyst could simply query the original <code class="language-plaintext highlighter-rouge">rides</code> table and see all the rider names we went to great lengths to omit in the <code class="language-plaintext highlighter-rouge">analysis</code> view.</li>
+</ul>
+
+<h2 id="soft-deletions">Soft Deletions</h2>
+
+<ul>
+  <li data-marker="*">As we saw in previous weeks, a soft deletion involves marking a row as deleted instead of removing it from the table.</li>
+  <li data-marker="*">
+    <p>For example, a piece of art called “Farmers working at dawn” is marked as deleted from the <code class="language-plaintext highlighter-rouge">collections</code> table by changing the value in the <code class="language-plaintext highlighter-rouge">deleted</code> column from 0 to 1.</p>
+
+    <p class="w-50"><img src="../Images/3ce85ea046490ed360444ef231a1684e.png" alt="&quot;Soft deletion of a row by changing the &quot;deleted&quot; value from 0 to 1&quot;" data-original-src="https://cs50.harvard.edu/sql/notes/4/images/46.jpg"/></p>
+  </li>
+  <li data-marker="*">We can imagine creating a view to display only the art that is not deleted.</li>
+  <li data-marker="*">
+    <p>To try this, let us open <code class="language-plaintext highlighter-rouge">mfa.db</code> in our terminal. The <code class="language-plaintext highlighter-rouge">collections</code> table does not have a <code class="language-plaintext highlighter-rouge">deleted</code> column yet, so we need to add it. The default value here will be 0, to indicate that the row is not deleted.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="nv">"collections"</span> 
+<span class="k">ADD</span> <span class="k">COLUMN</span> <span class="nv">"deleted"</span> <span class="nb">INTEGER</span> <span class="k">DEFAULT</span> <span class="mi">0</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">
+    <p>Now, let us perform a soft delete on the artwork “Farmers working at dawn”, by updating it to have 1 in the <code class="language-plaintext highlighter-rouge">deleted</code> column.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">UPDATE</span> <span class="nv">"collections"</span> 
+<span class="k">SET</span> <span class="nv">"deleted"</span> <span class="o">=</span> <span class="mi">1</span> 
+<span class="k">WHERE</span> <span class="nv">"title"</span> <span class="o">=</span> <span class="s1">'Farmers working at dawn'</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">
+    <p>We can create a view to display information about the rows that are not deleted.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="nv">"current_collections"</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="nv">"id"</span><span class="p">,</span> <span class="nv">"title"</span><span class="p">,</span> <span class="nv">"accession_number"</span><span class="p">,</span> <span class="nv">"acquired"</span> 
+<span class="k">FROM</span> <span class="nv">"collections"</span> 
+<span class="k">WHERE</span> <span class="nv">"deleted"</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">
+        <p>We can display the data in this view to verify that “Farmers working at dawn” is not present.</p>
+
+        <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="nv">"current_collections"</span><span class="p">;</span>
+</code></pre></div>        </div>
+      </li>
+      <li data-marker="*">
+        <p>On soft deletion of a row from the underlying table <code class="language-plaintext highlighter-rouge">collections</code>, it will be removed from the <code class="language-plaintext highlighter-rouge">current_collections</code> view on any further querying.</p>
+      </li>
+    </ul>
+  </li>
+  <li data-marker="*">
+    <p>We already know that it is not possible to insert data into or delete data from a view. However, we can set up a trigger that inserts into or deletes from the underlying table! The <code class="language-plaintext highlighter-rouge">INSTEAD OF</code> trigger allows us to do this.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TRIGGER</span> <span class="nv">"delete"</span>
+<span class="k">INSTEAD</span> <span class="k">OF</span> <span class="k">DELETE</span> <span class="k">ON</span> <span class="nv">"current_collections"</span>
+<span class="k">FOR</span> <span class="k">EACH</span> <span class="k">ROW</span>
+<span class="k">BEGIN</span>
+    <span class="k">UPDATE</span> <span class="nv">"collections"</span> <span class="k">SET</span> <span class="nv">"deleted"</span> <span class="o">=</span> <span class="mi">1</span> 
+    <span class="k">WHERE</span> <span class="nv">"id"</span> <span class="o">=</span> <span class="k">OLD</span><span class="p">.</span><span class="nv">"id"</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">Every time we try to delete rows from the view, this trigger will instead update the <code class="language-plaintext highlighter-rouge">deleted</code> column of the row in the underlying table <code class="language-plaintext highlighter-rouge">collections</code>, thus completing the soft deletion.</li>
+      <li data-marker="*">We use the keyword <code class="language-plaintext highlighter-rouge">OLD</code> within our update clause to indicate that the ID of the row updated in <code class="language-plaintext highlighter-rouge">collections</code> should be the same as the ID of the row we are trying to delete from <code class="language-plaintext highlighter-rouge">current_collections</code>.</li>
+    </ul>
+  </li>
+  <li data-marker="*">
+    <p>Now, we can delete a row from the <code class="language-plaintext highlighter-rouge">current_collections</code> view.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DELETE</span> <span class="k">FROM</span> <span class="nv">"current_collections"</span> 
+<span class="k">WHERE</span> <span class="nv">"title"</span> <span class="o">=</span> <span class="s1">'Imaginative landscape'</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <p>We can verify that this worked by querying the view.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="nv">"current_collections"</span><span class="p">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li data-marker="*">Similarly, we can create a trigger that inserts data into the underlying table when we try to insert it into a view.</li>
+  <li data-marker="*">
+    <p>There are two situations to consider here. We could be trying to insert into a view a row that already exists in the underlying table, but was soft deleted. We can write the following trigger to handle this situation.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TRIGGER</span> <span class="nv">"insert_when_exists"</span>
+<span class="k">INSTEAD</span> <span class="k">OF</span> <span class="k">INSERT</span> <span class="k">ON</span> <span class="nv">"current_collections"</span>
+<span class="k">FOR</span> <span class="k">EACH</span> <span class="k">ROW</span> 
+<span class="k">WHEN</span> <span class="k">NEW</span><span class="p">.</span><span class="nv">"accession_number"</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="nv">"accession_number"</span> <span class="k">FROM</span> <span class="nv">"collections"</span>
+<span class="p">)</span>
+<span class="k">BEGIN</span>
+    <span class="k">UPDATE</span> <span class="nv">"collections"</span> 
+    <span class="k">SET</span> <span class="nv">"deleted"</span> <span class="o">=</span> <span class="mi">0</span> 
+    <span class="k">WHERE</span> <span class="nv">"accession_number"</span> <span class="o">=</span> <span class="k">NEW</span><span class="p">.</span><span class="nv">"accession_number"</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">The <code class="language-plaintext highlighter-rouge">WHEN</code> keyword is used to check if the accession number of the artwork already exists in the <code class="language-plaintext highlighter-rouge">collections</code> table. This works because an accession number, as we know from previous weeks, uniquely identifies every piece of art in this table.</li>
+      <li data-marker="*">If the artwork does exist in the underlying table, we set its <code class="language-plaintext highlighter-rouge">deleted</code> value to 0, indicating a reversal of the soft deletion.</li>
+    </ul>
+  </li>
+  <li data-marker="*">
+    <p>The second situation occurs when we are trying to insert a row that does not exist in the underlying table. The following trigger handles this situation.</p>
+
+    <div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TRIGGER</span> <span class="nv">"insert_when_new"</span>
+<span class="k">INSTEAD</span> <span class="k">OF</span> <span class="k">INSERT</span> <span class="k">ON</span> <span class="nv">"current_collections"</span>
+<span class="k">FOR</span> <span class="k">EACH</span> <span class="k">ROW</span>
+<span class="k">WHEN</span> <span class="k">NEW</span><span class="p">.</span><span class="nv">"accession_number"</span> <span class="k">NOT</span> <span class="k">IN</span> <span class="p">(</span>
+    <span class="k">SELECT</span> <span class="nv">"accession_number"</span> <span class="k">FROM</span> <span class="nv">"collections"</span>
+<span class="p">)</span>
+<span class="k">BEGIN</span>
+    <span class="k">INSERT</span> <span class="k">INTO</span> <span class="nv">"collections"</span> <span class="p">(</span><span class="nv">"title"</span><span class="p">,</span> <span class="nv">"accession_number"</span><span class="p">,</span> <span class="nv">"acquired"</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span><span class="k">NEW</span><span class="p">.</span><span class="nv">"title"</span><span class="p">,</span> <span class="k">NEW</span><span class="p">.</span><span class="nv">"accession_number"</span><span class="p">,</span> <span class="k">NEW</span><span class="p">.</span><span class="nv">"acquired"</span><span class="p">);</span>
+<span class="k">END</span><span class="p">;</span>
+</code></pre></div>    </div>
+
+    <ul>
+      <li data-marker="*">When the accession number of the inserted data is not already present within <code class="language-plaintext highlighter-rouge">collections</code>, it inserts the row into the table.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="fin">Fin</h2>
+
+<ul>
+  <li data-marker="*">This brings us to the conclusion of Lecture 4 about Viewing in SQL!</li>
+</ul>
+
+
+                    
+</body>
+</html>

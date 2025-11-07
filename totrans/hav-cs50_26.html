@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Lecture 4</title>
+<link href="../Styles/Style.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<h1>Lecture 4</h1>
+<blockquote>原文：<a href="https://cs50.harvard.edu/cybersecurity/notes/4/">https://cs50.harvard.edu/cybersecurity/notes/4/</a></blockquote>
+
+                    
+
+<ul id="markdown-toc">
+  <li><a href="#preserving-privacy" id="markdown-toc-preserving-privacy">Preserving Privacy</a></li>
+  <li><a href="#web-browsing-history" id="markdown-toc-web-browsing-history">Web Browsing History</a></li>
+  <li><a href="#http-headers" id="markdown-toc-http-headers">HTTP Headers</a></li>
+  <li><a href="#fingerprinting" id="markdown-toc-fingerprinting">Fingerprinting</a></li>
+  <li><a href="#session-cookies" id="markdown-toc-session-cookies">Session Cookies</a></li>
+  <li><a href="#tracking-cookie" id="markdown-toc-tracking-cookie">Tracking Cookie</a></li>
+  <li><a href="#tracking-parameters" id="markdown-toc-tracking-parameters">Tracking Parameters</a></li>
+  <li><a href="#third-party-cookies" id="markdown-toc-third-party-cookies">Third-Party Cookies</a></li>
+  <li><a href="#private-browsing" id="markdown-toc-private-browsing">Private Browsing</a></li>
+  <li><a href="#supercookies" id="markdown-toc-supercookies">Supercookies</a></li>
+  <li><a href="#dns" id="markdown-toc-dns">DNS</a></li>
+  <li><a href="#virtual-private-network-vpn" id="markdown-toc-virtual-private-network-vpn">Virtual Private Network (VPN)</a></li>
+  <li><a href="#tor" id="markdown-toc-tor">Tor</a></li>
+  <li><a href="#permissions" id="markdown-toc-permissions">Permissions</a></li>
+  <li><a href="#summing-up" id="markdown-toc-summing-up">Summing Up</a></li>
+</ul>
+
+<h2 id="preserving-privacy">Preserving Privacy</h2>
+
+<ul>
+  <li data-marker="*">This is CS50’s Introduction to Cybersecurity.</li>
+  <li data-marker="*">Today, let’s consider what information we are sharing without our knowledge and how we can restrict that sharing.</li>
+</ul>
+
+<h2 id="web-browsing-history">Web Browsing History</h2>
+
+<ul>
+  <li data-marker="*">Your browsing history is both a feature and a potential threat to privacy.</li>
+  <li data-marker="*">You may not want someone to have access to what websites you have visited.</li>
+  <li data-marker="*">You can clear your browser history. However, you may be logged out of all services.</li>
+  <li data-marker="*">Servers typically have <em>logs</em> that track user activities. Therefore, even when you clear your browser history, servers keep track of what you have accessed.</li>
+  <li data-marker="*">
+    <p>A server log may appear as follows:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>log_format combined '$remote_addr - $remote_user [$time_local] '
+                  '"$request" $status $body_bytes_sent '
+                  '"$http_referer" "$http_user_agent"';
+</code></pre></div>    </div>
+    <p>Notice that this includes your IP address, your local time, and other details are shared in these digital envelopes being shared between computers.</p>
+  </li>
+  <li data-marker="*">How can we exert some sort of control over what we can share?</li>
+</ul>
+
+<h2 id="http-headers">HTTP Headers</h2>
+
+<ul>
+  <li data-marker="*">As we discussed, HTTP Headers are key-value pairs sent between your computer and a server.</li>
+  <li data-marker="*">
+    <p>Consider the following URL that may be visited using the link shown in the following HTML file.</p>
+
+    <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"https://example.com"</span><span class="nt">&gt;</span>cats<span class="nt">&lt;/a&gt;</span>
+</code></pre></div>    </div>
+    <p>This HTML presents a link called cats that directs the user to <code class="language-plaintext highlighter-rouge">example.com</code>.</p>
+  </li>
+  <li data-marker="*">When you visit a website, the browser shares by default the link that referred you there.</li>
+  <li data-marker="*">
+    <p>When you click a link, the browser shares with websites what website referred you. Hence, the following header is shared from the browser to the server:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Referer: https://www.google.com/search?q=cats
+</code></pre></div>    </div>
+    <p>Notice that this header shares what you were searching for.</p>
+  </li>
+  <li data-marker="*">
+    <p>Would it not be nice to be able to suppress what is being shared? Consider the following:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Referer: https://www.google.com/
+</code></pre></div>    </div>
+    <p>Notice the following only shares the origin: Not the specific search you were doing.</p>
+  </li>
+  <li data-marker="*">
+    <p>The following meta tags can be added to your website to restrict sharing only the origin of traffic.</p>
+
+    <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"referrer"</span> <span class="na">content=</span><span class="s">"origin"</span><span class="nt">&gt;</span> 
+</code></pre></div>    </div>
+    <p>Notice the <code class="language-plaintext highlighter-rouge">content</code> attribute is set to <code class="language-plaintext highlighter-rouge">origin</code>.</p>
+  </li>
+  <li data-marker="*">
+    <p>One can restrict further by adding the following to your website to provide no referrer information.</p>
+
+    <div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"referrer"</span> <span class="na">content=</span><span class="s">"none"</span><span class="nt">&gt;</span>
+</code></pre></div>    </div>
+    <p>Notice the <code class="language-plaintext highlighter-rouge">content</code> attribute is set to <code class="language-plaintext highlighter-rouge">none</code>.</p>
+  </li>
+</ul>
+
+<h2 id="fingerprinting">Fingerprinting</h2>
+
+<ul>
+  <li data-marker="*">Each browser presents more or less information about your identity and behavior than others.</li>
+  <li data-marker="*">Regardless of the browser you choose, servers log your activities.</li>
+  <li data-marker="*"><em>Fingerprinting</em> is a way by which third parties can identify you based upon clues that are available, even when you have restricted your browser from sharing as much information about you as possible.</li>
+  <li data-marker="*">
+    <p>One such piece of information is the <em>User-Agent</em> request header, which describes your device as follows:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Mozilla/5.0 (Linux; {Android Version}; {Build Tag etc.}) 
+AppleWebKit/{WebKit Rev} (KHTML, like Gecko)
+Chrome/{Chrome Rev} Mobile Safari/{WebKit Rev}
+</code></pre></div>    </div>
+    <p>Notice that your browser, OS version, and device are identified.</p>
+  </li>
+  <li data-marker="*">Web servers can also locate your IP address and log it.</li>
+  <li data-marker="*">Web servers can also discover your screen resolution, extensions installed, fonts installed, and other information.</li>
+  <li data-marker="*">When this information is gathered together over time, it can make you more and more identifiable.</li>
+</ul>
+
+<h2 id="session-cookies">Session Cookies</h2>
+
+<ul>
+  <li data-marker="*">Recall cookies are like a virtual hand stamp to track you individually.</li>
+  <li data-marker="*"><em>Session cookies</em> are a piece of information that servers place on your computer to identify you.</li>
+  <li data-marker="*">
+    <p>A session cookie may appear as follows:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HTTP/3 200
+Set-Cookie: session=1234abcd
+</code></pre></div>    </div>
+    <p>Notice that this cookie tells the server that your session is <code class="language-plaintext highlighter-rouge">1234abcd</code>.</p>
+  </li>
+  <li data-marker="*">Every sequence of session numbers or characters will be unique for each user.</li>
+  <li data-marker="*">Session cookies typically expire after a period of time determined by the server.</li>
+</ul>
+
+<h2 id="tracking-cookie">Tracking Cookie</h2>
+
+<ul>
+  <li data-marker="*"><em>Tracking cookies</em> are designed to track you.</li>
+  <li data-marker="*">
+    <p>Third parties use such cookies to track your behavior on a website. Consider the following:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Set-Cookie: _ga=GA1.2.0123456789.0; max-age=63072000
+</code></pre></div>    </div>
+    <p>Notice that this Google Analytics cookie lasts two years and tracks your activity by presenting itself to each new site you visit.</p>
+  </li>
+</ul>
+
+<h2 id="tracking-parameters">Tracking Parameters</h2>
+
+<ul>
+  <li data-marker="*">Where cookies are hidden “under the hood” of your browser, <em>tracking parameters</em> are visible in the links you access.</li>
+  <li data-marker="*">
+    <p>Consider the following URL:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>https://example.com/ad_engagement?click_id=YmVhODI1MmZmNGU4&amp;campaign_id=23
+</code></pre></div>    </div>
+    <p>Notice that the value for <code class="language-plaintext highlighter-rouge">click_id</code>, <code class="language-plaintext highlighter-rouge">YmVhODI1MmZmNGU4</code>, tracks you specifically.</p>
+  </li>
+  <li data-marker="*">While cookies are tracked in the background, you can see how links you visit (based on the URL) can track you.</li>
+  <li data-marker="*">
+    <p>More and more, browsers are tending toward sanitizing tracking parameters. Consider the following URL:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>https://example.com/ad_engagement?campaign_id=23
+</code></pre></div>    </div>
+    <p>Notice that this link <em>only</em> tracks the campaign to which you are responding. There is no longer a value for <code class="language-plaintext highlighter-rouge">click_id</code>.</p>
+  </li>
+</ul>
+
+<h2 id="third-party-cookies">Third-Party Cookies</h2>
+
+<ul>
+  <li data-marker="*">Another type of cookie is a <em>third-party cookie</em>.</li>
+  <li data-marker="*">
+    <p>Third parties (i.e., other servers or companies) want to understand how you travel between websites. Consider the following HTTP request:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET /ad.gif HTTP/3
+Host: example.com
+Referer: https://harvard.edu/
+</code></pre></div>    </div>
+    <p>Notice that this request specifically asks to <code class="language-plaintext highlighter-rouge">GET</code> a file called <code class="language-plaintext highlighter-rouge">ad.gif</code> from <code class="language-plaintext highlighter-rouge">example.com</code>.</p>
+  </li>
+  <li data-marker="*">
+    <p>Automatically, the server responds with the following headers:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HTTP/3 200
+Set-Cookie: id=1234abcd; max-age=31536000
+</code></pre></div>    </div>
+    <p>The <code class="language-plaintext highlighter-rouge">Set-Cookie</code> response header sets a cookie called <code class="language-plaintext highlighter-rouge">id</code> that lasts three years.</p>
+  </li>
+  <li data-marker="*">
+    <p>If you browse to another website that utilizes the same ad, <code class="language-plaintext highlighter-rouge">example.com</code> now knows you are browsing both <code class="language-plaintext highlighter-rouge">harvard.edu</code> and <code class="language-plaintext highlighter-rouge">yale.edu</code>. Say you later make the following HTTP request:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET /ad.gif HTTP/3
+Cookie: id=1234abcd
+Host: example.com
+Referer: https://yale.edu/
+</code></pre></div>    </div>
+    <p>Notice that the third-party cookie from earlier, <code class="language-plaintext highlighter-rouge">id=1234abcd</code>, is now being shown to <code class="language-plaintext highlighter-rouge">example.com</code> again, thus revealing that you’ve later visited <code class="language-plaintext highlighter-rouge">yale.edu</code>.</p>
+  </li>
+  <li data-marker="*">Third-party cookies can be used to track us and monetize information about us.</li>
+</ul>
+
+<h2 id="private-browsing">Private Browsing</h2>
+
+<ul>
+  <li data-marker="*">One method by which to help protect your activity is <em>private browsing</em>.</li>
+  <li data-marker="*">In a private browsing window or tab, past cookies are eliminated.</li>
+  <li data-marker="*">Still, the web still works as the web does! New cookies can still be formed in the ecosystem of a private browsing window.</li>
+  <li data-marker="*">Even more poignant, servers can still track your activity within your single browsing session.</li>
+</ul>
+
+<h2 id="supercookies">Supercookies</h2>
+
+<ul>
+  <li data-marker="*">Whoever provides your internet service can always inject their own cookies into your HTTP headers without your knowledge.</li>
+  <li data-marker="*">You may be able to opt out of supercookies with your internet provider.</li>
+</ul>
+
+<h2 id="dns">DNS</h2>
+
+<ul>
+  <li data-marker="*">The <em>Domain name system</em> or <em>DNS</em> is a service by which website names, like <code class="language-plaintext highlighter-rouge">harvard.edu</code>, are resolved to specific IP addresses.</li>
+  <li data-marker="*">By convention, traffic to DNS is entirely unencrypted. Hence, you are announcing to the world what website you are attempting to visit.</li>
+  <li data-marker="*">Your internet service provider and DNS services know exactly where you are attempting to visit.</li>
+  <li data-marker="*">An alternative called <em>DNS over HTTPS</em> or <em>DoH</em>, as well as <em>DNS over TLS</em> or <em>DoT</em>, are services by which you can encrypt your DNS requests.</li>
+</ul>
+
+<h2 id="virtual-private-network-vpn">Virtual Private Network (VPN)</h2>
+
+<ul>
+  <li data-marker="*">VPNs, recall, are a way to connect the internet in such a way that it appears you are doing so from a different device.</li>
+  <li data-marker="*">VPNs establish an encrypted connection between your own computer (<code class="language-plaintext highlighter-rouge">A</code>) and a trusted server (<code class="language-plaintext highlighter-rouge">B</code>). Server <code class="language-plaintext highlighter-rouge">B</code> then sends your request to the internet, so it appears as if your traffic is coming from <code class="language-plaintext highlighter-rouge">B</code> and not <code class="language-plaintext highlighter-rouge">A</code>.</li>
+  <li data-marker="*">VPNs do not protect you if your computer is infected with malware.</li>
+  <li data-marker="*">VPNs will make it appears as though your traffic is coming from the VPN’s IP address instead of your own computer’s.</li>
+</ul>
+
+<h2 id="tor">Tor</h2>
+
+<ul>
+  <li data-marker="*"><em>Tor</em> is a piece of software that redirects your traffic to a node of Tor servers.</li>
+  <li data-marker="*">Traffic is directed through many encrypted nodes.</li>
+  <li data-marker="*">By design, the software does not remember much of your activity.</li>
+  <li data-marker="*">Utilizing such a service provides a high likelihood that little can be identified about you.</li>
+  <li data-marker="*">However, do note that if you are the only person utilizing Tor on a local network at your place of work or school, it is quite possible through other means to identify who you are.</li>
+  <li data-marker="*">No technology provides you with absolute protection.</li>
+</ul>
+
+<h2 id="permissions">Permissions</h2>
+
+<ul>
+  <li data-marker="*">Operating systems are, by growing convention, asking to utilize certain permissions on your device.</li>
+  <li data-marker="*"><em>Location-based services</em>, by default, provide your geographic location. Best to be mindful that Apple Maps and Google Maps are very much aware of where you are at any given time if you provide them with such permissions.</li>
+</ul>
+
+<h2 id="summing-up">Summing Up</h2>
+
+<p>In this course, we discussed…</p>
+<ul>
+  <li data-marker="*">Many lessons that have, hopefully, raised your awareness about what information is provided to third parties;</li>
+  <li data-marker="*">How vulnerabilities arise in computers, servers, software, and your overall privacy;</li>
+  <li data-marker="*">How you can mitigate these vulnerabilities with your increased awareness; and</li>
+  <li data-marker="*">How you can better manage your privacy and those of others you serve.</li>
+</ul>
+
+<p>This was CS50’s Introduction to Cybersecurity.</p>
+
+
+                    
+</body>
+</html>
