@@ -1,754 +1,1056 @@
 - en: Lecture 5
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 第五课
 - en: 原文：[https://cs50.harvard.edu/sql/notes/5/](https://cs50.harvard.edu/sql/notes/5/)
+  id: totrans-1
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 原文：[https://cs50.harvard.edu/sql/notes/5/](https://cs50.harvard.edu/sql/notes/5/)
 - en: '[Introduction](#introduction)'
+  id: totrans-2
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[简介](#introduction)'
 - en: '[Index](#index)'
+  id: totrans-3
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[索引](#index)'
 - en: '[Questions](#questions)'
+  id: totrans-4
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[问题](#questions)'
 - en: '[Index across Multiple Tables](#index-across-multiple-tables)'
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[跨多表索引](#index-across-multiple-tables)'
 - en: '[Space Trade-off](#space-trade-off)'
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[空间权衡](#space-trade-off)'
 - en: '[Time Trade-off](#time-trade-off)'
+  id: totrans-7
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[时间权衡](#time-trade-off)'
 - en: '[Partial Index](#partial-index)'
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[部分索引](#partial-index)'
 - en: '[Questions](#questions-1)'
+  id: totrans-9
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[问题](#questions-1)'
 - en: '[Vacuum](#vacuum)'
+  id: totrans-10
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[真空](#vacuum)'
 - en: '[Questions](#questions-2)'
+  id: totrans-11
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[问题](#questions-2)'
 - en: '[Concurrency](#concurrency)'
+  id: totrans-12
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[并发](#concurrency)'
 - en: '[Transactions](#transactions)'
+  id: totrans-13
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[事务](#transactions)'
 - en: '[Race Conditions](#race-conditions)'
+  id: totrans-14
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[竞争条件](#race-conditions)'
 - en: '[Questions](#questions-3)'
+  id: totrans-15
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[问题](#questions-3)'
 - en: '[Fin](#fin)'
+  id: totrans-16
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[结束](#fin)'
 - en: Introduction
+  id: totrans-17
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 简介
 - en: This week, we will learn how to optimize our SQL queries, both for time and
     space. We will also learn how to run queries concurrently.
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这周，我们将学习如何优化我们的 SQL 查询，无论是时间还是空间。我们还将学习如何并发地运行查询。
 - en: We will do all of this in the context of a new database — the Internet Movies
     Database, or IMDb as it is more popularly known. Our SQLite database is compiled
     from the large online database of movies you may have seen before at [imdb.com](imdb.com).
+  id: totrans-19
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们将在一个新的数据库的背景下做所有这些，即互联网电影数据库，或更广为人知的 IMDb。我们的 SQLite 数据库是从您可能之前在 [imdb.com](imdb.com)
+    看过的庞大在线电影数据库编译而成的。
 - en: Take a look at these statistics to get a sense of how big this database is!
     It has much more data than any of the other databases we have worked with so far.
+  id: totrans-20
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 查看这些统计数据，以了解这个数据库有多大！它拥有的数据比我们迄今为止所使用的任何其他数据库都要多！
 - en: '!["Statistics about the IMDb database"](../Images/2811d80304197c75e6c69bdda83c37eb.png)'
+  id: totrans-21
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![IMDb数据库统计数据](../Images/2811d80304197c75e6c69bdda83c37eb.png)'
 - en: Here is the ER Diagram detailing the entities and their relationships.
+  id: totrans-22
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这里是详细说明实体及其关系的 ER 图。
 - en: '!["IMDb ER Diagram — people, movies, and ratings entities"](../Images/66be213591789cad4852d87ac70a236c.png)'
+  id: totrans-23
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![IMDb ER 图 — 人物、电影和评分实体](../Images/66be213591789cad4852d87ac70a236c.png)'
 - en: Index
+  id: totrans-24
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 索引
 - en: Let us open up this database called `movies.db` in SQLite.
+  id: totrans-25
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们打开这个名为 `movies.db` 的数据库在 SQLite 中。
 - en: '`.schema` shows us the tables created in this database. To implement the many-to-many
     relationship between the entities Person and Movie from the ER Diagram, we have
     a joint table here called `stars` that references the ID columns of both `people`
     and `movies` as foreign key columns!'
+  id: totrans-26
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`.schema` 显示了在这个数据库中创建的表。为了实现实体 Person 和 Movie 之间的多对多关系，我们在 ER 图中有一个联合表，称为
+    `stars`，它将 `people` 和 `movies` 的 ID 列作为外键列引用！'
 - en: To peek into the `movies` table, we can select from the table and limit results.
+  id: totrans-27
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要查看 `movies` 表，我们可以从表中选择并限制结果。
 - en: '[PRE0]'
+  id: totrans-28
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: To find the information pertaining to the movie Cars, we would run the following
     query.
+  id: totrans-29
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要查找与电影 Cars 相关的信息，我们会运行以下查询。
 - en: '[PRE1]'
+  id: totrans-30
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: Say we want to find how long it took for this query to run. SQLite has a command
     `.timer on` that enables us to time our queries.
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设我们想找出这个查询运行了多长时间。SQLite 有一个命令 `.timer on`，它使我们能够计时我们的查询。
 - en: On running the above query to find Cars again, we can see three different time
     measurements displayed along with the results.
+  id: totrans-32
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在运行上述查询以再次查找 Cars 时，我们可以看到三个不同的时间测量值与结果一起显示。
 - en: “real” time indicates the stopwatch time, or the time between executing the
     query and obtaining the results. This is the measure of time we will focus on.
     The time taken to execute this query during lecture was roughly a tenth of a second!
+  id: totrans-33
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “实际”时间表示计时器时间，或执行查询并获得结果之间的时间。这是我们关注的衡量时间。在讲座中执行此查询所花费的时间大约是0.1秒！
 - en: Under the hood, when the query to find Cars was run, we triggered a **scan**
     of the table `movies` — that is, the table `movies` was scanned top to bottom,
     one row at a time, to find all the rows with the title Cars.
+  id: totrans-34
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在底层，当运行查找 Cars 的查询时，我们触发了对表 `movies` 的 **扫描**——也就是说，表 `movies` 是逐行从上到下扫描，以找到所有标题为
+    Cars 的行。
 - en: We can optimize this query to be more efficient than a scan. In the same way
     that textbooks often have an index, databases tables can have an index as well.
     An index, in database terminology, is a structure used to speed up the retrieval
     of rows from a table.
+  id: totrans-35
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以优化这个查询，使其比扫描更高效。就像教科书通常有索引一样，数据库表也可以有索引。在数据库术语中，索引是一种用于加速从表中检索行的结构。
 - en: We can use the following command to create an index for the `"title"` column
     in the `movies` table.
+  id: totrans-36
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以使用以下命令为 `movies` 表中的 `"title"` 列创建索引。
 - en: '[PRE2]'
+  id: totrans-37
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: After creating this index, we run the query to find the movie titled Cars again.
     On this run, the time taken is significantly shorter (during lecture,almost eight
     times faster than the first run)!
+  id: totrans-38
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在创建这个索引后，我们再次运行查询以查找名为《汽车总动员》的电影。在这次运行中，所需时间显著缩短（在讲座中，几乎比第一次快八倍）！
 - en: In the previous example, once the index was created, we just assumed that SQL
     would use it to find a movie. However, we can also explicitly see this by using
     a SQLite command `EXPLAIN QUERY PLAN` before any query.
+  id: totrans-39
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在上一个例子中，一旦创建了索引，我们就假设SQL会使用它来查找电影。然而，我们也可以通过在查询之前使用SQLite命令`EXPLAIN QUERY PLAN`来明确地看到这一点。
 - en: 'To remove the index we just created, run:'
+  id: totrans-40
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要删除我们刚刚创建的索引，请运行：
 - en: '[PRE3]'
+  id: totrans-41
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: After dropping the index, running `EXPLAIN QUERY PLAN` again with the `SELECT`
     query will demonstrate that the plan would revert to scanning the entire database.
+  id: totrans-42
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在删除索引后，再次使用`EXPLAIN QUERY PLAN`与`SELECT`查询一起运行将表明计划将回退到扫描整个数据库。
 - en: Questions
+  id: totrans-43
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 问题
 - en: Do databases not have implicit algorithms to optimize searching?
+  id: totrans-44
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 数据库没有隐式算法来优化搜索吗？
 - en: They do, for some columns. In SQLite and most other database management systems,
     if we specify that a column is a primary key, an index will automatically be created
     via which we can search for the primary key. However, for regular columns like
     `"title"`, there would be no automatic optimization.
+  id: totrans-45
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于某些列来说，它们确实有。在SQLite和大多数其他数据库管理系统中，如果我们指定一个列是主键，则会自动创建一个索引，通过该索引我们可以搜索主键。然而，对于像`"title"`这样的常规列，则不会有自动优化。
 - en: Would it be advisable to create a different index for every column in case we
     need it?
+  id: totrans-46
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 是否建议为每个可能需要的列创建不同的索引？
 - en: While that seems useful, there are trade-offs with space and the time it takes
     to later insert data into tables with an index. We will see more on this shortly!
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 虽然这似乎很有用，但在空间和时间上存在权衡，因为之后将数据插入带有索引的表中需要花费时间。我们很快就会看到更多关于这方面的内容！
 - en: Index across Multiple Tables
+  id: totrans-48
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 跨多表索引
 - en: We would run the following query to find all the movies Tom Hanks starred in.
+  id: totrans-49
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们将运行以下查询来找到汤姆·汉克斯主演的所有电影。
 - en: '[PRE4]'
+  id: totrans-50
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: To understand what kind of index could help speed this query up, we can run
     `EXPLAIN QUERY PLAN` ahead of this query again. This shows us that the query requires
     two scans — of `people` and `stars`. The table `movies` is not scanned because
     we are searching `movies` by its ID, for which an index is automatically created
     by SQLite!
+  id: totrans-51
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了了解哪种索引可以帮助加快这个查询的速度，我们可以在查询之前再次运行`EXPLAIN QUERY PLAN`。这显示查询需要两次扫描——`people`和`stars`。由于我们是通过ID搜索`movies`，SQLite会自动为这个ID创建索引，所以不需要扫描`movies`表！
 - en: Let us create the two indexes to speed this query up.
+  id: totrans-52
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们创建两个索引来加快这个查询的速度。
 - en: '[PRE5]'
+  id: totrans-53
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: Now, we run `EXPLAIN QUERY PLAN` with the same nested query. We can observe
     that
+  id: totrans-54
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在，我们使用相同的嵌套查询运行`EXPLAIN QUERY PLAN`。我们可以观察到
 - en: all the scans are now searches using indexes, which is great!
+  id: totrans-55
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在所有的扫描都变成了使用索引的搜索，这很好！
 - en: the search on the table `people` uses something called a `COVERING INDEX`
+  id: totrans-56
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在`people`表上的搜索使用了一种称为`COVERING INDEX`的东西
 - en: 'A covering index means that all the information needed for the query can be
     found within the index itself. Instead of two steps:'
+  id: totrans-57
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 覆盖索引意味着查询所需的所有信息都可以在索引本身中找到。而不是两步：
 - en: looking up relevant information in the index,
+  id: totrans-58
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在索引中查找相关信息，
 - en: using the index to then search the table, a covering index means that we do
     our search in one step (just the first one).
+  id: totrans-59
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 使用索引来搜索表，覆盖索引意味着我们只需一步（只是第一步）进行搜索。
 - en: To have our search on the table `stars` also use a covering index, we can add
     `"movie_id"` to the index we created for `stars`. This will ensure that the information
     being looked up (movie ID) *and* the value being searched on (person ID) are both
     be in the index.
+  id: totrans-60
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要让`stars`表上的搜索也使用覆盖索引，我们可以在为`stars`创建的索引中添加`"movie_id"`。这将确保要查找的信息（电影ID）和要搜索的值（人物ID）都包含在索引中。
 - en: First, let us drop the existing implementation of our index on the `stars` table.
+  id: totrans-61
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 首先，让我们删除`stars`表上现有的索引实现。
 - en: '[PRE6]'
+  id: totrans-62
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: Next, we create the new index.
+  id: totrans-63
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 接下来，我们创建新的索引。
 - en: '[PRE7]'
+  id: totrans-64
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: Running the following will demonstrate that we now have two covering indexes,
     which should result in a much faster search!
+  id: totrans-65
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 运行以下命令将证明我们现在有两个覆盖索引，这应该会导致搜索速度大大加快！
 - en: '[PRE8]'
+  id: totrans-66
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: Making sure that we have run `.timer on` let us execute the above query to find
     all the movies Tom Hanks has starred in, and observe the time it takes to run.
     The query now runs a *lot* faster than it did without indexes (in lecture, an
     order of magnitude faster)!
+  id: totrans-67
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 确保我们已运行`.timer on`，然后我们可以执行上述查询以找到汤姆·汉克斯主演的所有电影，并观察其运行时间。现在查询的运行速度比没有索引时快得多（在讲座中，速度快了一个数量级）！
 - en: Space Trade-off
+  id: totrans-68
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 空间权衡
 - en: Indexes seem incredibly helpful, but there are trade-offs associated — they
     occupy additional space in the database, so while we gain query speed, we do lose
     space.
+  id: totrans-69
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 索引看起来非常有帮助，但它们也有权衡——它们在数据库中占用额外的空间，因此虽然我们获得了查询速度的提升，但我们确实失去了空间。
 - en: 'An index is stored in a database as a data structure called a B-Tree, or balanced
     tree. A tree data structure looks something like:'
+  id: totrans-70
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 索引以称为B树或平衡树的数据结构存储在数据库中。树数据结构看起来像这样：
 - en: '!["Tree data structure"](../Images/013c41e6395b2e1f4864248d1183c072.png)'
+  id: totrans-71
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![树数据结构](../Images/013c41e6395b2e1f4864248d1183c072.png)'
 - en: Notice that the tree has many **nodes**, each connected to a few others by arrows.
     The root node, or the node from which the tree originates, has three **children**.
     Some nodes at the edge of the tree do not point to any other nodes. These are
     called **leaf** nodes.
+  id: totrans-72
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 注意到树中有许多**节点**，每个节点通过箭头与其他几个节点相连。根节点，或树起源的节点，有三个**子节点**。树边缘的一些节点不指向任何其他节点。这些被称为**叶节点**。
 - en: Let us consider how an index is created for the `"title"` column of the table
     `movies`. If the movie titles were sorted alphabetically, it would be a lot easier
     to find a particular movie by using [binary search](https://en.wikipedia.org/wiki/Binary_search_algorithm).
+  id: totrans-73
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们考虑如何为“movies”表的“title”列创建索引。如果电影标题按字母顺序排序，那么使用[二分搜索](https://en.wikipedia.org/wiki/Binary_search_algorithm)查找特定电影会容易得多。
 - en: In this case, a copy is made of the `"titles"` column. This copy is sorted and
     then linked back to the original rows within the `movies` table by pointing to
     the movie IDs. This is visualized below.
+  id: totrans-74
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在这种情况下，会复制“titles”列。这个副本会被排序，然后通过指向电影ID将它们链接回“movies”表中的原始行。这在下图中进行了可视化。
 - en: '!["Index: Sorted copy of titles pointing to original movie IDs"](../Images/22e180e91d89658e7b799617b266c1fa.png)'
+  id: totrans-75
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![索引：指向原始电影ID的标题排序副本](../Images/22e180e91d89658e7b799617b266c1fa.png)'
 - en: While this helps us visualize the index for this column easily, in reality,
     the index is not a single column but is broken up into many nodes. This is because
     if the database has a lot of data, like our IMDb example, storing one column all
     together in memory might not be feasible.
+  id: totrans-76
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 虽然这有助于我们轻松地可视化此列的索引，但在现实中，索引不是一个单独的列，而是被拆分成许多节点。这是因为如果数据库有大量数据，比如我们的IMDb示例，将一个列全部存储在内存中可能不可行。
 - en: If we have multiple nodes containing sections of the index, however, we also
     need nodes to navigate to the right sections. For example, consider the following
     nodes. The left-hand node directs us to the right section of the index based on
     whether the movie title comes before Frozen, between Frozen and Soul, or after
     Soul alphabetically!
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然而，如果我们有包含索引部分的多个节点，我们还需要节点来导航到正确的部分。例如，考虑以下节点。左侧节点根据电影标题是否在Frozen之前、在Frozen和Soul之间或Soul之后按字母顺序，将我们引导到索引的正确部分！
 - en: '!["Index nodes broken into sections"](../Images/a1b2e44432a54cacf44500335197cbf3.png)'
+  id: totrans-78
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![索引节点拆分为部分](../Images/a1b2e44432a54cacf44500335197cbf3.png)'
 - en: The above representation is a B-tree! This is how indexes are stored in SQLite.
+  id: totrans-79
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 上述表示是一个B树！这是SQLite中索引存储的方式。
 - en: Time Trade-off
+  id: totrans-80
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 时间权衡
 - en: Similar to the space trade-off we discussed earlier, it also takes longer to
     insert data into a column and then add it to an index. Each time a value is added
     to the index, the B-tree needs to be traversed to figure out where the value should
     be added!
+  id: totrans-81
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与我们之前讨论的空间权衡类似，它也会使将数据插入列并添加到索引中花费更长的时间。每次向索引添加一个值时，B树都需要遍历以确定该值应该添加的位置！
 - en: Partial Index
+  id: totrans-82
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 部分索引
 - en: This is an index that includes only a subset of rows from a table, allowing
     us to save some space that a full index would occupy.
+  id: totrans-83
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这是一个只包含表的一部分行的索引，允许我们节省一个完整索引所占用的空间。
 - en: This is especially useful when we know that users query only a subset of rows
     from the table. In the case of IMDb, it may be that the users are more likely
     to query a movie that was just released as opposed to a movie that is 15 years
     old. Let’s try to create a partial index that stores the titles of movies released
     in 2023.
+  id: totrans-84
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这在我们知道用户只查询表的一小部分行时特别有用。在IMDb的情况下，可能用户更有可能查询一部新发布的电影，而不是一部15年前的电影。让我们尝试创建一个部分索引，该索引存储2023年发布的电影标题。
 - en: '[PRE9]'
+  id: totrans-85
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: We can check that searching for movies released in 2023 uses the new index.
+  id: totrans-86
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以检查搜索2023年发布的电影是否使用了新的索引。
 - en: '[PRE10]'
+  id: totrans-87
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: This shows us that the `movies` table is scanned using the partial index.
+  id: totrans-88
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 这表明`movies`表是使用部分索引进行扫描的。
 - en: Questions
+  id: totrans-89
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 问题
 - en: Are indexes saved in the schema?
+  id: totrans-90
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 索引是否保存在模式中？
 - en: Yes, in SQLite, they are! We can confirm this by running `.schema` and we will
     see the indexes created listed in the database schema.
+  id: totrans-91
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是的，在SQLite中，它们是这样的！我们可以通过运行`.schema`来确认，我们将在数据库模式中看到创建的索引列表。
 - en: Vacuum
+  id: totrans-92
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 真空
 - en: There are ways to delete unused space in our database. SQLite allows us to “vacuum”
     data — this cleans up previously deleted data (that is actually not deleted, but
     just marked as space being available for the next `INSERT`).
+  id: totrans-93
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 有方法可以删除我们数据库中的未使用空间。SQLite允许我们“真空”数据——这清理了之前已删除的数据（实际上并没有删除，只是标记为可用空间以供下一个`INSERT`使用）。
 - en: To find the size of `movies.db` on the terminal, we can use a Unix command
+  id: totrans-94
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要在终端上查找`movies.db`的大小，我们可以使用Unix命令
 - en: '[PRE11]'
+  id: totrans-95
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: In lecture, this command showed us that the size of the database is something
     like 158 million bytes, or 158 megabytes.
+  id: totrans-96
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在讲座中，这个命令向我们展示了数据库的大小大约是158百万字节，或者说158兆字节。
 - en: We can now connect to our database and drop an index we previously created.
+  id: totrans-97
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们现在可以连接到我们的数据库并删除我们之前创建的索引。
 - en: '[PRE12]'
+  id: totrans-98
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: Now, if we run the Unix command again, we see that the size of the database
     has not decreased! To actually clean up the deleted space, we need to vacuum it.
     We can run the following command in SQLite.
+  id: totrans-99
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在，如果我们再次运行Unix命令，我们会看到数据库的大小没有减少！要真正清理已删除的空间，我们需要对它进行真空。我们可以在SQLite中运行以下命令。
 - en: '[PRE13]'
+  id: totrans-100
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: This might take a second or two to run. On running the Unix command to check
     the size of the database again, we can should see a smaller size. Once we drop
     all the indexes and vacuum again, the database will be considerably smaller than
     158 MB (in lecture, around 100 MB).
+  id: totrans-101
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 这可能需要一秒钟或两秒钟的时间来运行。在再次运行Unix命令检查数据库大小时，我们应该看到更小的尺寸。一旦我们删除所有索引并再次真空，数据库的大小将比158
+    MB小得多（在讲座中大约是100 MB）。
 - en: Questions
+  id: totrans-102
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 问题
 - en: Is it possible to vacuum faster?
+  id: totrans-103
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 是否有可能使真空过程更快？
 - en: Each vacuum can take a different amount of time, depending on the amount of
     space we are trying to vacuum and how easy it is to find the bits and bytes that
     need to be freed up!
+  id: totrans-104
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个真空过程所需的时间可能不同，这取决于我们试图真空的空间量以及找到需要释放的位和字节有多容易！
 - en: If a query to delete some rows doesn’t actually delete them, but only marks
     them as deleted, could we still retrieve these rows?
+  id: totrans-105
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 如果一个删除某些行的查询实际上并没有删除它们，而只是将它们标记为已删除，我们是否还能检索这些行？
 - en: People trained in forensics are able to find data we think is deleted but is
     actually still on our computers. In the case of SQLite, after performing a vacuum,
     it would not be possible to find deleted rows again.
+  id: totrans-106
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在法医学方面受过训练的人能够找到我们认为已删除但实际上仍然在我们的电脑上的数据。在SQLite的情况下，在执行真空操作后，将无法再次找到已删除的行。
 - en: Concurrency
+  id: totrans-107
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 并发
 - en: Thus far, we have seen how to optimize single queries. Now, we will look at
     how to allow not just one query, but multiple at a time.
+  id: totrans-108
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 到目前为止，我们已经看到了如何优化单个查询。现在，我们将探讨如何允许一次不仅仅是一个查询，而是多个查询同时进行。
 - en: Concurrency is the simultaneous handling of multiple queries or interactions
     by the database. Imagine a database for a website, or a financial service, that
     gets a lot of traffic at the same time. Concurrency is particularly important
     in these cases.
+  id: totrans-109
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 并发是数据库同时处理多个查询或交互的方式。想象一下，一个网站或金融服务数据库在同时承受大量流量。在这些情况下，并发尤为重要。
 - en: Some database transactions can be multi-part. For example, consider a bank’s
     database. The following is a view of the table `accounts` that stores account
     balances.
+  id: totrans-110
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些数据库事务可以是多部分的。例如，考虑一个银行的数据库。以下是一个存储账户余额的`accounts`表的视图。
 - en: '!["Accounts table in a bank''s database. Alice sends $10 to Bob."](../Images/bb31b5c75facd37e6222fc7937101a9a.png)'
+  id: totrans-111
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![银行数据库中的账户表。爱丽丝向鲍勃发送10美元。](../Images/bb31b5c75facd37e6222fc7937101a9a.png)'
 - en: One transaction could be sending money from one account to the other. For example,
     Alice is trying to send $10 to Bob.
+  id: totrans-112
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一个事务可能是从一个账户向另一个账户转账。例如，爱丽丝试图向鲍勃发送10美元。
 - en: To complete this transaction, we would need to add $10 to Bob’s account and
     also subtract $10 from Alice’s account. If someone sees the status of the `accounts`
     database after the first update to Bob’s account but before the second update
     to Alice’s account, they could get an incorrect understanding of the total amount
     of money held by the bank.
+  id: totrans-113
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要完成这个事务，我们需要向鲍勃的账户中添加10美元，并从爱丽丝的账户中减去10美元。如果有人看到在第一次更新鲍勃的账户之后但在第二次更新爱丽丝的账户之前的`accounts`数据库的状态，他们可能会对银行持有的总金额有一个错误的理解。
 - en: Transactions
+  id: totrans-114
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 事务
 - en: To an outside observer, it should seem like the different parts of a transaction
     happen all at once. In database terminology, a transaction is an individual unit
     of work — something that cannot be broken down into smaller pieces.
+  id: totrans-115
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 对于外部观察者来说，它应该看起来像事务的不同部分是同时发生的。在数据库术语中，事务是一个单独的工作单元——不能分解成更小的部分。
 - en: 'Transactions have some properties, which can be remembered using the acronym
     ACID:'
+  id: totrans-116
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 事务具有一些属性，可以使用ACID首字母缩写词来记住：
 - en: '**atomicity**: can’t be broken down into smaller pieces,'
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**原子性**：不能分解成更小的部分，'
 - en: '**consistency**: should not violate a database constraint,'
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**一致性**：不应违反数据库约束，'
 - en: '**isolation**: if multiple users access a database, their transactions cannot
     interfere with each other,'
+  id: totrans-119
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**隔离性**：如果多个用户访问数据库，他们的事务不能相互干扰，'
 - en: '**durability**: in case of any failure within the database, all data changed
     by transactions will remain.'
+  id: totrans-120
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**持久性**：在数据库内部发生任何故障的情况下，所有由事务更改的数据都将保持不变。'
 - en: Let’s open up `bank.db` in our terminal so we can implement a transaction for
     transferring money from Alice to Bob!
+  id: totrans-121
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们在终端中打开`bank.db`，这样我们就可以实现从爱丽丝到鲍勃转账的事务了！
 - en: First, we want to see the data already in the `accounts` table.
+  id: totrans-122
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 首先，我们想查看`accounts`表中已经存在的数据。
 - en: '[PRE14]'
+  id: totrans-123
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE14]'
 - en: We note here that Bob’s ID is 2 and Alice’s ID is 1, which will be useful for
     our query.
+  id: totrans-124
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 我们在此处记录鲍勃的ID是2，爱丽丝的ID是1，这对我们的查询将很有用。
 - en: To move $10 from Alice’s account to Bob’s, we can write the following transaction.
+  id: totrans-125
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要将10美元从爱丽丝的账户转移到鲍勃的账户，我们可以编写以下事务。
 - en: '[PRE15]'
+  id: totrans-126
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE15]'
 - en: Notice the `UPDATE` statements are written in between the commands to begin
     the transaction and to commit it. If we execute the query after writing the `UPDATE`
     statements, but without committing, neither of the two `UPDATE` statements will
     be run! This helps keep the transaction **atomic**. By updating our table in this
     way, we are unable to see the intermediate steps.
+  id: totrans-127
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 注意，`UPDATE`语句写在开始事务和提交事务的命令之间。如果我们执行查询是在写入`UPDATE`语句之后，但没有提交，那么两个`UPDATE`语句都不会执行！这有助于保持事务的**原子性**。通过以这种方式更新我们的表，我们无法看到中间步骤。
 - en: If we tried to run the above transaction again — Alice tries to pay Bob another
     $10 — it should fail to run because Alice’s account balance is at 0\. (The `"balance"`
     column in `accounts` has a check constraint to ensure that it has a non-negative
     value. We can run `.schema` to check this.)
+  id: totrans-128
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们再次尝试运行上述事务——爱丽丝试图再给鲍勃支付10美元——它应该无法运行，因为爱丽丝的账户余额为0。（`accounts`表中的`"balance"`列有一个检查约束，以确保它具有非负值。我们可以运行`.schema`来检查这一点。）
 - en: The way we implement reverting the transaction is using `ROLLBACK`. Once we
     begin a transaction and write some SQL statements, if any of them fail, we can
     end it with a `ROLLBACK` to revert all values to their pre-transaction state.
     This helps keep transactions **consistent**.
+  id: totrans-129
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们实现事务回滚的方式是使用`ROLLBACK`。一旦我们开始一个事务并写入一些SQL语句，如果其中任何一个失败，我们可以使用`ROLLBACK`来结束它，将所有值回滚到事务前的状态。这有助于保持事务的**一致性**。
 - en: '[PRE16]'
+  id: totrans-130
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE16]'
 - en: Race Conditions
+  id: totrans-131
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 竞争条件
 - en: Transactions can help guard against race conditions.
+  id: totrans-132
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 事务可以帮助防止竞争条件。
 - en: A race condition occurs when multiple entities simultaneously access and make
     decisions based on a shared value, potentially causing inconsistencies in the
     database. Unresolved race conditions can be exploited by hackers to manipulate
     the database.
+  id: totrans-133
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当多个实体同时访问并基于共享值做出决策时，会发生竞争条件，这可能导致数据库中的不一致性。未解决的竞争条件可以被黑客利用来操纵数据库。
 - en: In the lecture, an example of a race condition is discussed wherein two users
     working together can exploit momentary inconsistencies in the database to rob
     the bank.
+  id: totrans-134
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在讲座中，讨论了一个竞争条件的例子，其中两个用户合作可以利用数据库中的暂时不一致性来抢劫银行。
 - en: However, transactions are processed in **isolation** to avoid the inconsistencies
     in the first place. Each transaction dealing with similar data from our database
     will be processed sequentially. This helps prevent the inconsistencies that an
     adversarial attack can exploit.
+  id: totrans-135
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 然而，事务是**隔离**处理的，以避免首先出现不一致。处理我们数据库中类似数据的每个事务都将按顺序处理。这有助于防止敌对攻击可以利用的不一致性。
 - en: 'To make transactions sequential, SQLite and other database management systems
     use **locks** on databases. A table in a database could be in a few different
     states:'
+  id: totrans-136
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了使事务按顺序进行，SQLite和其他数据库管理系统使用数据库上的**锁**。数据库中的表可能处于几种不同的状态：
 - en: '**UNLOCKED**: this is the default state when no user is accessing the database,'
+  id: totrans-137
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**未锁定（UNLOCKED）**：这是没有用户访问数据库时的默认状态，'
 - en: '**SHARED**: when a transaction is reading data from the database, it obtains
     shared lock that allows other transactions to read simultaneously from the database,'
+  id: totrans-138
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**共享（SHARED）**：当事务从数据库读取数据时，它获得共享锁，允许其他事务同时从数据库中读取，'
 - en: '**EXCLUSIVE**: if a transaction needs to write or update data, it obtains an
     exclusive lock on the database that does not allow other transactions to occur
     at the same time (not even a read)'
+  id: totrans-139
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**排他（EXCLUSIVE）**：如果一个事务需要写入或更新数据，它将获得对数据库的排他锁，不允许其他事务同时发生（甚至不允许读取）'
 - en: Questions
+  id: totrans-140
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 问题
 - en: How do we decide when a transaction can get an exclusive lock? How do we prioritize
     different kinds of transactions?
+  id: totrans-141
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 我们如何决定何时一个事务可以获得排他锁？我们如何优先处理不同类型的交易？
 - en: Different algorithms could be used to make these decisions. For example, we
     could always choose the transaction that came first. If an exclusive transaction
     is needed, no other transaction can run at the same time, which is a necessary
     downside to ensure consistency of the table.
+  id: totrans-142
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以使用不同的算法来做出这些决定。例如，我们总是可以选择最先发生的交易。如果需要排他性交易，则没有其他交易可以同时运行，这是确保表的一致性所必需的缺点。
 - en: What is the granularity of locking? Do we lock a database, a table or a row
     of a table?
+  id: totrans-143
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 锁定的粒度是什么？我们是锁定数据库、表还是表的行？
 - en: 'This depends on the DBMS. In SQLite, we can actually do this by running an
     exclusive transaction as below:'
+  id: totrans-144
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这取决于数据库管理系统（DBMS）。在SQLite中，我们可以通过运行以下排他性事务来实现这一点：
 - en: '[PRE17]'
+  id: totrans-145
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE17]'
 - en: If we do not complete this transaction now, and try to connect to the database
     through a different terminal to read from the table, we will get an error that
     the database is locked! This, of course, is a very coarse way of locking because
     it locks the entire database. Because SQLite is coarse in this manner, it has
     a module for prioritizing transactions and making sure an exclusive lock is obtained
     only for the shortest necessary duration.
+  id: totrans-146
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 如果我们现在不完成这笔交易，而是尝试通过不同的终端连接到数据库以读取表，我们将得到一个错误，表明数据库已被锁定！当然，这是一种非常粗略的锁定方式，因为它锁定了整个数据库。由于SQLite在这方面比较粗略，因此它有一个模块用于优先处理事务并确保只获得最短必要的排他锁。
 - en: Fin
+  id: totrans-147
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 完成
 - en: This brings us to the conclusion of Lecture 5 about Optimizing in SQL!
+  id: totrans-148
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这将我们带到了关于SQL优化的第5讲结论！

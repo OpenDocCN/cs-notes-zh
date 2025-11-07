@@ -1,674 +1,948 @@
 - en: Lecture 4
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 第四讲
 - en: 原文：[https://cs50.harvard.edu/sql/notes/4/](https://cs50.harvard.edu/sql/notes/4/)
+  id: totrans-1
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 原文：[https://cs50.harvard.edu/sql/notes/4/](https://cs50.harvard.edu/sql/notes/4/)
 - en: '[Introduction](#introduction)'
+  id: totrans-2
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[介绍](#introduction)'
 - en: '[Views](#views)'
+  id: totrans-3
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[视图](#views)'
 - en: '[Simplifying](#simplifying)'
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[简化](#simplifying)'
 - en: '[Questions](#questions)'
+  id: totrans-5
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[问题](#questions)'
 - en: '[Aggregating](#aggregating)'
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[聚合](#aggregating)'
 - en: '[Questions](#questions-1)'
+  id: totrans-7
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[问题](#questions-1)'
 - en: '[Common Table Expression (CTE)](#common-table-expression-cte)'
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[公用表表达式（CTE）](#common-table-expression-cte)'
 - en: '[Partitioning](#partitioning)'
+  id: totrans-9
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[分区](#partitioning)'
 - en: '[Questions](#questions-2)'
+  id: totrans-10
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[问题](#questions-2)'
 - en: '[Securing](#securing)'
+  id: totrans-11
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[安全](#securing)'
 - en: '[Soft Deletions](#soft-deletions)'
+  id: totrans-12
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[软删除](#soft-deletions)'
 - en: '[Fin](#fin)'
+  id: totrans-13
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[结束](#fin)'
 - en: Introduction
+  id: totrans-14
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 介绍
 - en: Thus far, we have learned about concepts that allow us to design complex databases
     and write data into them. Now, we will explore ways in which to obtain views from
     these databases.
+  id: totrans-15
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 到目前为止，我们已经学习了允许我们设计复杂数据库并将数据写入其中的概念。现在，我们将探讨从这些数据库中获取视图的方法。
 - en: Let’s go back to the database containing books longlisted for the International
     Booker Prize. Here is a snapshot of tables from this database.
+  id: totrans-16
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们回到包含国际布克奖长名单书籍的数据库。以下是该数据库中表的快照。
 - en: '!["Tables containing books and authors with a many-to-many relationship"](../Images/37d0c83cc60cc470702cc3f30070fccc.png)'
+  id: totrans-17
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![包含书籍和作者的多对多关系的表](../Images/37d0c83cc60cc470702cc3f30070fccc.png)'
 - en: To find a book written by the author Han Kang, we would need to go each of through
     the three table above — first finding the author’s ID, then the corresponding
     book IDs and then the book titles. Instead, is there a way to put together related
     information from the three tables in a single view?
+  id: totrans-18
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要找到韩江（Han Kang）所著的书籍，我们需要遍历上述三个表中的每一个——首先找到作者的ID，然后相应的书籍ID，最后是书籍标题。相反，有没有一种方法可以将三个表中的相关信息组合成一个视图？
 - en: Yes, we can use the `JOIN` command in SQL to combine rows from two or more tables
     based on a related column between them. Here is a visual representation of how
     these tables could be joined in order to line up authors and their books.
+  id: totrans-19
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是的，我们可以使用SQL中的`JOIN`命令根据它们之间的相关列将两个或多个表中的行组合起来。以下是这些表如何连接以对齐作者及其书籍的视觉表示。
 - en: '!["Table joining books, authored and authors"](../Images/bd990bcb27da2bf534fd0af8eb8dcbf7.png)'
+  id: totrans-20
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![连接书籍、所著和作者的表](../Images/bd990bcb27da2bf534fd0af8eb8dcbf7.png)'
 - en: This makes it simple to observe that Han Kang authored The White Book.
+  id: totrans-21
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 这使得观察出韩江（Han Kang）是《白书》的作者变得简单。
 - en: One can also imagine removing the ID columns here, such that our view looks
     like the following.
+  id: totrans-22
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 也可以想象在这里删除ID列，这样我们的视图看起来就像下面这样。
 - en: '!["Table joining books, authored and authors with the ID columns removed"](../Images/1f84dc8f7a24746024223d38fba5816f.png)'
+  id: totrans-23
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![表连接书籍、作者及其ID列已删除](../Images/1f84dc8f7a24746024223d38fba5816f.png)'
 - en: Views
+  id: totrans-24
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 视图
 - en: A view is a virtual table defined by a query.
+  id: totrans-25
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 视图是由查询定义的虚拟表。
 - en: Say we wrote a query to join three tables, as in the previous example, and then
     select the relevant columns. The new table created by this query can be saved
     as a view, to be further queried later on.
+  id: totrans-26
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设我们编写了一个查询来连接三个表，就像之前的例子一样，然后选择相关列。由这个查询创建的新表可以保存为视图，以便稍后进一步查询。
 - en: 'Views are useful for:'
+  id: totrans-27
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 视图对于以下用途很有用：
 - en: '**simplifying**: putting together data from different tables to be queried
     more simply,'
+  id: totrans-28
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**简化**：将来自不同表的数据组合起来以便更简单地查询，'
 - en: '**aggregating**: running aggregate functions, like finding the sum, and storing
     the results,'
+  id: totrans-29
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**聚合**：运行聚合函数，如求和，并存储结果，'
 - en: '**partitioning**: dividing data into logical pieces,'
+  id: totrans-30
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**分区**：将数据划分为逻辑部分，'
 - en: '**securing**: hiding columns that should be kept secure. While there are other
     ways in which views can be useful, in this lecture we will focus on the above
     four.'
+  id: totrans-31
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '**安全**：隐藏应保持安全的列。虽然视图还有其他有用的方式，但在本讲中，我们将关注上述四个方面。'
 - en: Simplifying
+  id: totrans-32
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 简化
 - en: 'Let us open up `longlist.db` on SQLite and run the `.schema` command to verify
     that the three tables we saw in the previous example are created: `authors`, `authored`
     and `books`.'
+  id: totrans-33
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们在SQLite中打开`longlist.db`并运行`.schema`命令来验证我们之前示例中看到的三个表是否已创建：`authors`、`authored`和`books`。
 - en: To select the books written by Fernanda Melchor, we would write this nested
     query.
+  id: totrans-34
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要选择Fernanda Melchor所著的书籍，我们会编写这个嵌套查询。
 - en: '[PRE0]'
+  id: totrans-35
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: The above query is complex — there are three `SELECT` queries in the nested
     query. To simplify this, let us first use `JOIN` to create a view containing authors
     and their books.
+  id: totrans-36
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 上述查询很复杂——嵌套查询中有三个`SELECT`查询。为了简化，让我们首先使用`JOIN`创建包含作者及其书籍的视图。
 - en: In a new terminal, let us connect to `longlist.db` again, and run the following
     query.
+  id: totrans-37
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在新的终端中，让我们再次连接到`longlist.db`，并运行以下查询。
 - en: '[PRE1]'
+  id: totrans-38
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: Observe that it is important to specify how two tables are joined, or the columns
     they are joined *on*.
+  id: totrans-39
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 注意，指定如何连接两个表，或者它们连接的列是很重要的。
 - en: 'Tip: The primary key column of one table is usually joined to the corresponding
     foreign key column of the other table!'
+  id: totrans-40
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 小贴士：一个表的主键列通常与另一个表的对应外键列相连接！
 - en: Running this will pull up a table containing all the author names next to the
     titles of the books they have authored.
+  id: totrans-41
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 运行此命令将显示一个包含所有作者姓名及其所写书籍标题的表格。
 - en: To save the virtual table created in the previous step as a view, we need to
     change the query.
+  id: totrans-42
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要将之前步骤中创建的虚拟表保存为视图，我们需要更改查询。
 - en: '[PRE2]'
+  id: totrans-43
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: The view created here is called `longlist`. This view can now be used exactly
     as we would use a table in SQL.
+  id: totrans-44
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 这里创建的视图称为`longlist`。现在我们可以像使用SQL中的表一样使用这个视图。
 - en: Let us write a query to see all the data within this view.
+  id: totrans-45
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们编写一个查询来查看这个视图中的所有数据。
 - en: '[PRE3]'
+  id: totrans-46
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: Using this view, we can considerably **simplify** the query needed to find the
     books written by Fernanda Melchor.
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用这个视图，我们可以大大**简化**查找Fernanda Melchor所写书籍所需的查询。
 - en: '[PRE4]'
+  id: totrans-48
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: A view, being a virtual table, does not consume much more disk space to create.
     The data within a view is still stored in the underlying tables, but still accessible
     through this simplfied view.
+  id: totrans-49
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 视图作为一个虚拟表，创建时不会消耗更多的磁盘空间。视图中的数据仍然存储在底层表中，但仍然可以通过这个简化的视图访问。
 - en: Questions
+  id: totrans-50
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 问题
 - en: Can we manipulate views to be ordered, or displayed differently?
+  id: totrans-51
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 我们能否操纵视图以使其有序，或者以不同的方式显示？
 - en: Yes, we can order books in a view in much the same way as we can in a table.
+  id: totrans-52
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是的，我们可以像在表中一样在视图中对书籍进行排序。
 - en: As an example, let us display the data within the `longlist` view, ordered by
     the book titles.
+  id: totrans-53
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，让我们按书籍标题的顺序显示`longlist`视图中的数据。
 - en: '[PRE5]'
+  id: totrans-54
   prefs:
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: We could also have the view itself be ordered. We can do this by including an
     `ORDER BY` clause in the query used to create the view.
+  id: totrans-55
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们也可以让视图本身有序。我们可以通过在创建视图所用的查询中包含一个`ORDER BY`子句来实现这一点。
 - en: Aggregating
+  id: totrans-56
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 聚合
 - en: In `longlist.db` we have a table containing individual ratings given to each
     book. In previous weeks, we saw how to find the average rating of every book,
     rounded to 2 decimal places.
+  id: totrans-57
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在`longlist.db`中，我们有一个包含每本书单独评分的表。在之前的几周中，我们看到了如何找到每本书的平均评分，并四舍五入到两位小数。
 - en: '[PRE6]'
+  id: totrans-58
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: The results of the above query can be made more useful by displaying the title
     of every book, and perhaps the year in which each book was longlisted. This information
     is present in the `books` table.
+  id: totrans-59
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过显示每本书的标题，以及每本书被列入长名单的年份，可以使上述查询的结果更有用。这些信息存在于`books`表中。
 - en: '[PRE7]'
+  id: totrans-60
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: Here, we use a `JOIN` to combine information from the `ratings` and `books`
     tables, joining on the book ID column.
+  id: totrans-61
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在这里，我们使用`JOIN`将`ratings`和`books`表中的信息结合起来，通过书籍ID列进行连接。
 - en: Notice the order of operations in this query — in particular, the placement
     of the `GROUP BY` operation at the end of the query after the two tables are joined.
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 注意这个查询的操作顺序——特别是将`GROUP BY`操作放在查询末尾，在两个表连接之后。
 - en: This **aggregated** data can be stored in a view.
+  id: totrans-63
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这**聚合**的数据可以存储在视图中。
 - en: '[PRE8]'
+  id: totrans-64
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: Now, let us see the data in this view.
+  id: totrans-65
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在，让我们查看这个视图中的数据。
 - en: '[PRE9]'
+  id: totrans-66
   prefs:
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: On adding more data to the `ratings` table, to obtain an up-to-date aggregate,
     we need to simply requery the view using a `SELECT` command like the above!
+  id: totrans-67
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在向`ratings`表添加更多数据以获取最新的聚合数据时，我们只需简单地使用上述类似的`SELECT`命令重新查询视图即可！
 - en: Each time a view is created, it gets added to the schema. We can verify this
     by running `.schema` to observe that `longlist` and `average_book_ratings` are
     now part of this database’s schema.
+  id: totrans-68
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每次创建视图时，它都会被添加到模式中。我们可以通过运行`.schema`来验证这一点，观察`longlist`和`average_book_ratings`现在已经成为这个数据库模式的一部分。
 - en: To create temporary views that are not stored in the database schema, we can
     use `CREATE TEMPORARY VIEW`. This command creates a view that exists only for
     the duration of our connection with the database.
+  id: totrans-69
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要创建不存储在数据库模式中的临时视图，我们可以使用`CREATE TEMPORARY VIEW`。此命令创建一个仅在数据库连接期间存在的视图。
 - en: To find the average rating of books *per year*, we can use the view we already
     created.
+  id: totrans-70
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要找到每本书的**年度**平均评分，我们可以使用我们已创建的视图。
 - en: '[PRE10]'
+  id: totrans-71
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: Notice that we select the `rating` column from `average_book_ratings`, which
     already contains the average ratings per book. Next, we group these by year and
     calculate the average ratings again, which gives us the average rating per year!
+  id: totrans-72
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 注意，我们从 `average_book_ratings` 中选择了 `rating` 列，该列已经包含了每本书的平均评分。接下来，我们按年份对这些评分进行分组，并再次计算平均评分，这样就得到了每年的平均评分！
 - en: We can store the results in a temporary view.
+  id: totrans-73
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以将结果存储在一个临时视图中。
 - en: '[PRE11]'
+  id: totrans-74
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: Questions
+  id: totrans-75
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 问题
 - en: Can temporary views be used to test whether a query works or not?
+  id: totrans-76
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 可以使用临时视图来测试查询是否有效吗？
 - en: Yes, this is a great use case for temporary views! To generalize a little, temporary
     views are used when we want to organize data in some way without actually storing
     that organization long-term.
+  id: totrans-77
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是的，这是一个临时视图的绝佳用例！为了稍微概括一下，当我们想要以某种方式组织数据而不需要长期存储这种组织时，我们会使用临时视图。
 - en: Common Table Expression (CTE)
+  id: totrans-78
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 公用表表达式（CTE）
 - en: A regular view exists forever in our database schema. A temporary view exists
     for the duration of our connection with the database. A CTE is a view that exists
     for a single query alone.
+  id: totrans-79
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 正规视图在我们数据库模式中永久存在。临时视图在我们与数据库的连接期间存在。CTE是仅对单个查询存在的视图。
 - en: Let us recreate the view containing average book ratings per year using a CTE
     instead of a temporary view. First, we need to drop the existing temporary view
     so that we can reuse the name `average_book_ratings`.
+  id: totrans-80
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们使用公用表表达式（CTE）而不是临时视图来重新创建包含每年平均书籍评分的视图。首先，我们需要删除现有的临时视图，这样我们就可以重用名称 `average_book_ratings`。
 - en: '[PRE12]'
+  id: totrans-81
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: Next, we create a CTE containing the average ratings *per book*. We then use
     the average ratings per book to calculate the average ratings *per year*, in much
     the same way as we did before.
+  id: totrans-82
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 接下来，我们创建一个包含每本书平均评分的CTE。然后，我们使用每本书的平均评分来计算每年的平均评分，这与我们之前的方法非常相似。
 - en: '[PRE13]'
+  id: totrans-83
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: Partitioning
+  id: totrans-84
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 分区
 - en: Views can be used to partition data, or to break it into smaller pieces that
     will be useful to us or an application. For example, the website for the International
     Booker Prize has a page of longlisted books for each year the prize was awarded.
     However, our database stores all the longlisted books in a single table. For the
     sake of creating the website, or a different purpose, it might be useful to have
     a different table (or view) of books for each year.
+  id: totrans-85
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 视图可以用来分区数据，或者将其分解成对我们或应用程序有用的更小的部分。例如，国际布克奖的网站为每次获奖的年份都有一个入选书籍的页面。然而，我们的数据库将所有入选的书籍存储在一个单独的表中。为了创建网站或其他目的，可能需要为每年的书籍创建不同的表（或视图）。
 - en: Let us create a view to store books longlisted in 2022.
+  id: totrans-86
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 让我们创建一个视图来存储2022年入选的书籍。
 - en: '[PRE14]'
+  id: totrans-87
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE14]'
 - en: We can also see the data in this view.
+  id: totrans-88
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们也可以在这个视图中查看数据。
 - en: '[PRE15]'
+  id: totrans-89
   prefs:
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE15]'
 - en: Questions
+  id: totrans-90
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 问题
 - en: Can views be updated?
+  id: totrans-91
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: 视图可以更新吗？
 - en: No, because views do not have any data in the way that tables do. Views actually
     pull data from the underlying tables each time they are queried. This means that
     when an underlying table is updated, the next time the view is queried, it will
     display updated data from the table!
+  id: totrans-92
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 不可以，因为视图不像表那样包含任何数据。视图实际上在每次查询时都会从底层表中提取数据。这意味着当底层表被更新时，下一次查询视图时，它将显示来自表的新数据！
 - en: Securing
+  id: totrans-93
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 安全
 - en: Views can be used to enhance database security by limiting access to certain
     data.
+  id: totrans-94
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 视图可以通过限制对某些数据的访问来增强数据库的安全性。
 - en: Consider a rideshare company’s database with a table `rides` that looks like
     the following.
+  id: totrans-95
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 考虑一个共享出行公司的数据库，其中有一个名为 `rides` 的表，其结构如下。
 - en: '!["Rides table containing destination, origin and riders"](../Images/ceb3b27f1a3a1b8e16b6e2471df11958.png)'
+  id: totrans-96
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![包含目的地、起点和乘客的骑行表](../Images/ceb3b27f1a3a1b8e16b6e2471df11958.png)'
 - en: If we were to give this data to an analyst, whose job is to find the most popular
     ride routes, it would be irrelevant and indeed, not secure to give them the names
     of individual riders. Rider names are likely categorized as Personally Identifiable
     Information (PII) which companies are not allowed to share indiscriminately.
+  id: totrans-97
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果我们将这些数据提供给分析师，他们的工作是找出最受欢迎的骑行路线，那么提供个别乘客的姓名将是不相关的，实际上也是不安全的。乘客姓名可能被归类为个人信息（PII），公司不允许无差别地共享这些信息。
 - en: Views can be handy in this situation — we can share with the analyst a view
     containing the origin and destination of rides, but not the rider names.
+  id: totrans-98
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在这种情况下，视图可以派上用场——我们可以与分析师分享一个包含骑行起点和目的地的视图，但不包含乘客姓名。
 - en: To try this out, let us open `rideshare.db` in our terminal. Running `.schema`
     should reveal one table called `rides` in this database.
+  id: totrans-99
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为了尝试这个，让我们在我们的终端中打开 `rideshare.db`。运行 `.schema` 应该会揭示这个数据库中的一个名为 `rides` 的表。
 - en: We can create a view with the relevant columns, while omitting the `rider` column
     altogether. But we will go one step further here, and create a `rider` column
     to display an anonymous rider for each row in the table. This will indicate to
     the analyst that while we have rider names in the database, the names have been
     anonymized for security.
+  id: totrans-100
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以创建一个包含相关列的视图，同时完全省略`rider`列。但在这里，我们将更进一步，创建一个`rider`列来显示表中每行的匿名骑手。这将向分析师表明，尽管我们在数据库中有骑手姓名，但这些姓名为了安全起见已被匿名化。
 - en: '[PRE16]'
+  id: totrans-101
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE16]'
 - en: We can query this view to ensure that it is secure.
+  id: totrans-102
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以查询这个视图来确保它是安全的。
 - en: '[PRE17]'
+  id: totrans-103
   prefs:
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE17]'
 - en: Although we can create a view that anonymizes data, SQLite does not allow access
     control. This means that our analyst could simply query the original `rides` table
     and see all the rider names we went to great lengths to omit in the `analysis`
     view.
+  id: totrans-104
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 尽管我们可以创建一个匿名化数据的视图，但SQLite不允许访问控制。这意味着我们的分析师可以简单地查询原始的`rides`表，并看到我们在`analysis`视图中费尽心思省略的所有骑手姓名。
 - en: Soft Deletions
+  id: totrans-105
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 软删除
 - en: As we saw in previous weeks, a soft deletion involves marking a row as deleted
     instead of removing it from the table.
+  id: totrans-106
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 正如我们在前几周看到的，软删除涉及将行标记为已删除，而不是从表中删除它。
 - en: For example, a piece of art called “Farmers working at dawn” is marked as deleted
     from the `collections` table by changing the value in the `deleted` column from
     0 to 1.
+  id: totrans-107
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 例如，名为“黎明时分劳作的农民”的艺术品通过将`collections`表中的`deleted`列的值从0更改为1被标记为已删除。
 - en: '!["Soft deletion of a row by changing the "deleted" value from 0 to 1"](../Images/3ce85ea046490ed360444ef231a1684e.png)'
+  id: totrans-108
   prefs:
   - PREF_IND
   type: TYPE_IMG
+  zh: '![通过将"deleted"值从0更改为1来软删除行](../Images/3ce85ea046490ed360444ef231a1684e.png)'
 - en: We can imagine creating a view to display only the art that is not deleted.
+  id: totrans-109
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以想象创建一个视图来仅显示未删除的艺术品。
 - en: To try this, let us open `mfa.db` in our terminal. The `collections` table does
     not have a `deleted` column yet, so we need to add it. The default value here
     will be 0, to indicate that the row is not deleted.
+  id: totrans-110
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 要尝试这个，让我们在我们的终端中打开`mfa.db`。`collections`表还没有`deleted`列，所以我们需要添加它。这里的默认值将是0，以表示该行未被删除。
 - en: '[PRE18]'
+  id: totrans-111
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE18]'
 - en: Now, let us perform a soft delete on the artwork “Farmers working at dawn”,
     by updating it to have 1 in the `deleted` column.
+  id: totrans-112
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在，让我们对艺术品“黎明时分劳作的农民”执行软删除，通过将其`deleted`列更新为1。
 - en: '[PRE19]'
+  id: totrans-113
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE19]'
 - en: We can create a view to display information about the rows that are not deleted.
+  id: totrans-114
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以创建一个视图来显示未删除行的信息。
 - en: '[PRE20]'
+  id: totrans-115
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE20]'
 - en: We can display the data in this view to verify that “Farmers working at dawn”
     is not present.
+  id: totrans-116
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们可以显示这个视图中的数据来验证“黎明时分劳作的农民”不存在。
 - en: '[PRE21]'
+  id: totrans-117
   prefs:
   - PREF_IND
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE21]'
 - en: On soft deletion of a row from the underlying table `collections`, it will be
     removed from the `current_collections` view on any further querying.
+  id: totrans-118
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在从底层表`collections`中软删除行后，它将在任何进一步的查询中从`current_collections`视图中被移除。
 - en: We already know that it is not possible to insert data into or delete data from
     a view. However, we can set up a trigger that inserts into or deletes from the
     underlying table! The `INSTEAD OF` trigger allows us to do this.
+  id: totrans-119
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们已经知道无法向视图中插入数据或从视图中删除数据。然而，我们可以设置一个触发器来向底层表插入或删除数据！`INSTEAD OF`触发器允许我们这样做。
 - en: '[PRE22]'
+  id: totrans-120
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE22]'
 - en: Every time we try to delete rows from the view, this trigger will instead update
     the `deleted` column of the row in the underlying table `collections`, thus completing
     the soft deletion.
+  id: totrans-121
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每次我们尝试从视图中删除行时，这个触发器将更新底层表`collections`中行的`deleted`列，从而完成软删除。
 - en: We use the keyword `OLD` within our update clause to indicate that the ID of
     the row updated in `collections` should be the same as the ID of the row we are
     trying to delete from `current_collections`.
+  id: totrans-122
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们在更新子句中使用关键字`OLD`来表示在`collections`中更新的行的ID应该与我们要从`current_collections`中删除的行的ID相同。
 - en: Now, we can delete a row from the `current_collections` view.
+  id: totrans-123
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 现在，我们可以从`current_collections`视图中删除一行。
 - en: '[PRE23]'
+  id: totrans-124
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE23]'
 - en: We can verify that this worked by querying the view.
+  id: totrans-125
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 我们可以通过查询视图来验证这是否有效。
 - en: '[PRE24]'
+  id: totrans-126
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE24]'
 - en: Similarly, we can create a trigger that inserts data into the underlying table
     when we try to insert it into a view.
+  id: totrans-127
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 类似地，我们可以创建一个触发器，在我们尝试将数据插入视图时将其插入到底层表中。
 - en: There are two situations to consider here. We could be trying to insert into
     a view a row that already exists in the underlying table, but was soft deleted.
     We can write the following trigger to handle this situation.
+  id: totrans-128
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这里有两个需要考虑的情况。我们可能试图将已存在于底层表中的、但已被软删除的行插入到视图中。我们可以编写以下触发器来处理这种情况。
 - en: '[PRE25]'
+  id: totrans-129
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE25]'
 - en: The `WHEN` keyword is used to check if the accession number of the artwork already
     exists in the `collections` table. This works because an accession number, as
     we know from previous weeks, uniquely identifies every piece of art in this table.
+  id: totrans-130
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '`WHEN`关键字用于检查艺术品的登记号是否已存在于`collections`表中。这是因为，正如我们从上周所知，登记号唯一地标识了表中每一件艺术品。'
 - en: If the artwork does exist in the underlying table, we set its `deleted` value
     to 0, indicating a reversal of the soft deletion.
+  id: totrans-131
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果艺术品确实存在于底层表中，我们将它的`deleted`值设置为0，表示软删除的撤销。
 - en: The second situation occurs when we are trying to insert a row that does not
     exist in the underlying table. The following trigger handles this situation.
+  id: totrans-132
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 第二种情况发生在我们尝试插入一个在底层表中不存在的行时。以下触发器处理这种情况。
 - en: '[PRE26]'
+  id: totrans-133
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE26]'
 - en: When the accession number of the inserted data is not already present within
     `collections`, it inserts the row into the table.
+  id: totrans-134
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当插入数据的登记号不在`collections`中时，它将行插入到表中。
 - en: Fin
+  id: totrans-135
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Fin
 - en: This brings us to the conclusion of Lecture 4 about Viewing in SQL!
+  id: totrans-136
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 这就带我们来到了关于SQL中查看的第四讲的内容总结！
