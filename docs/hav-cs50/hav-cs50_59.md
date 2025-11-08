@@ -1,4 +1,4 @@
-# 第 2 讲
+# 第二讲
 
 > 原文：[`cs50.harvard.edu/sql/notes/2/`](https://cs50.harvard.edu/sql/notes/2/)
 
@@ -470,4 +470,4 @@
 
 ## Fin
 
-+   这就带我们来到了关于 SQL 设计的第 2 讲的内容总结！关于 CharlieCard 名称起源的一个有趣故事，请阅读来自 Celebrate Boston 的[这篇文章](http://www.celebrateboston.com/mbta/charlie-card-origin.htm)。
++   这就带我们来到了关于 SQL 设计的第二讲的内容总结！关于 CharlieCard 名称起源的一个有趣故事，请阅读来自 Celebrate Boston 的[这篇文章](http://www.celebrateboston.com/mbta/charlie-card-origin.htm)。

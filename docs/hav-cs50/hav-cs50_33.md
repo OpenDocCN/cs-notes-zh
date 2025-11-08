@@ -1,4 +1,4 @@
-# 第 5 讲
+# 第五讲
 
 > 原文：[`cs50.harvard.edu/python/notes/5/`](https://cs50.harvard.edu/python/notes/5/)
 

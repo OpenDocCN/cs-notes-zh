@@ -1,4 +1,4 @@
-# 讲座 0
+# 第零讲
 
 > [`cs50.harvard.edu/web/notes/0/`](https://cs50.harvard.edu/web/notes/0/)
 

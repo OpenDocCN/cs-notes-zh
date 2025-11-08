@@ -1,4 +1,4 @@
-# 讲座 1
+# 第一讲
 
 > 原文：[`cs50.harvard.edu/ai/notes/1/`](https://cs50.harvard.edu/ai/notes/1/)
 

@@ -1,4 +1,4 @@
-# 第 8 讲
+# 第八讲
 
 > 原文：[`cs50.harvard.edu/python/notes/8/`](https://cs50.harvard.edu/python/notes/8/)
 

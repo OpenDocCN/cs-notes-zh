@@ -1,4 +1,4 @@
-# 讲座 2
+# 第二讲
 
 > 原文：[`cs50.harvard.edu/x/notes/2/`](https://cs50.harvard.edu/x/notes/2/)
 

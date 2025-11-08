@@ -1,4 +1,4 @@
-# 第 7 讲
+# 第七讲
 
 > 原文：[`cs50.harvard.edu/web/notes/7/`](https://cs50.harvard.edu/web/notes/7/)
 

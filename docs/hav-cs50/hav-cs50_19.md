@@ -1,4 +1,4 @@
-# 讲座 5
+# 第五讲
 
 > 原文：[`cs50.harvard.edu/ai/notes/5/`](https://cs50.harvard.edu/ai/notes/5/)
 

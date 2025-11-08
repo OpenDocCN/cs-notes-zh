@@ -1,4 +1,4 @@
-# 讲座 0
+# 第零讲
 
 > 原文：[`cs50.harvard.edu/cybersecurity/notes/0/`](https://cs50.harvard.edu/cybersecurity/notes/0/)
 

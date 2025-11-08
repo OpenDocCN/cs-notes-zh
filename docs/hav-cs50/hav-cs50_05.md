@@ -1,4 +1,4 @@
-# 讲座 3
+# 第三讲
 
 > 原文：[`cs50.harvard.edu/x/notes/3/`](https://cs50.harvard.edu/x/notes/3/)
 

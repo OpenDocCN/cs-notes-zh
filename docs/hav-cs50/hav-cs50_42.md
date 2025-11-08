@@ -1,4 +1,4 @@
-# 第 4 讲
+# 第四讲
 
 > 原文：[`cs50.harvard.edu/r/notes/4/`](https://cs50.harvard.edu/r/notes/4/)
 

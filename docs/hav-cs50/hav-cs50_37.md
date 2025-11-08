@@ -1,4 +1,4 @@
-# 讲座 9
+# 第九讲
 
 > 原文：[`cs50.harvard.edu/python/notes/9/`](https://cs50.harvard.edu/python/notes/9/)
 

@@ -1,4 +1,4 @@
-# 第 6 讲
+# 第六讲
 
 > 原文：[`cs50.harvard.edu/x/notes/6/`](https://cs50.harvard.edu/x/notes/6/)
 

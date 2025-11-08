@@ -1,4 +1,4 @@
-# 讲座 0
+# 第六讲
 
 > 原文：[`cs50.harvard.edu/sql/notes/0/`](https://cs50.harvard.edu/sql/notes/0/)
 

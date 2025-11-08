@@ -1,4 +1,4 @@
-# 第 3 讲
+# 第三讲
 
 > 原文：[`cs50.harvard.edu/web/notes/3/`](https://cs50.harvard.edu/web/notes/3/)
 
