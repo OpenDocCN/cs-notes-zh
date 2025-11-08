@@ -50,7 +50,11 @@
 
 +   服务器日志可能如下所示：
 
-    [PRE0]
+    ```
+    log_format combined '$remote_addr - $remote_user [$time_local] '
+                      '"$request" $status $body_bytes_sent '
+                      '"$http_referer" "$http_user_agent"'; 
+    ```
 
     注意这包括你的 IP 地址、你的本地时间以及其他细节，这些都在计算机之间共享的数字信封中。
 
@@ -62,7 +66,9 @@
 
 +   考虑以下可能通过以下 HTML 文件中的链接访问的 URL。
 
-    [PRE1]
+    ```
+    <a href="https://example.com">cats</a> 
+    ```
 
     这个 HTML 展示了一个名为 cats 的链接，将用户导向`example.com`。
 
@@ -70,25 +76,33 @@
 
 +   当你点击一个链接时，浏览器会与网站分享是什么网站将你带过去的。因此，以下头部信息是从浏览器发送到服务器的：
 
-    [PRE2]
+    ```
+    Referer: https://www.google.com/search?q=cats 
+    ```
 
     注意这个头部信息分享了你在搜索什么。
 
 +   如果能够抑制共享的内容不是很好吗？考虑以下：
 
-    [PRE3]
+    ```
+    Referer: https://www.google.com/ 
+    ```
 
     注意以下只共享来源：不是你正在进行的特定搜索。
 
 +   以下元标签可以添加到你的网站中，以限制只共享流量来源。
 
-    [PRE4]
+    ```
+    <meta name="referrer" content="origin"> 
+    ```
 
     注意`content`属性被设置为`origin`。
 
 +   可以通过在你的网站中添加以下内容来进一步限制，以提供无引用信息。
 
-    [PRE5]
+    ```
+    <meta name="referrer" content="none"> 
+    ```
 
     注意`content`属性被设置为`none`。
 
@@ -102,7 +116,11 @@
 
 +   其中一条信息是 *User-Agent* 请求头，它如下描述你的设备：
 
-    [PRE6]
+    ```
+    Mozilla/5.0 (Linux; {Android Version}; {Build Tag etc.}) 
+    AppleWebKit/{WebKit Rev} (KHTML, like Gecko)
+    Chrome/{Chrome Rev} Mobile Safari/{WebKit Rev} 
+    ```
 
     注意到你的浏览器、操作系统版本和设备被识别。
 
@@ -120,7 +138,10 @@
 
 +   一个会话 cookie 可能如下所示：
 
-    [PRE7]
+    ```
+    HTTP/3 200
+    Set-Cookie: session=1234abcd 
+    ```
 
     注意到这个 cookie 告诉服务器你的会话是 `1234abcd`。
 
@@ -134,7 +155,9 @@
 
 +   第三方使用此类 cookies 来跟踪你在网站上的行为。考虑以下情况：
 
-    [PRE8]
+    ```
+    Set-Cookie: _ga=GA1.2.0123456789.0; max-age=63072000 
+    ```
 
     注意到这个 Google Analytics cookie 持续两年，并通过向每个你访问的新网站展示自己来跟踪你的活动。
 
@@ -144,7 +167,9 @@
 
 +   考虑以下 URL：
 
-    [PRE9]
+    ```
+    https://example.com/ad_engagement?click_id=YmVhODI1MmZmNGU4&campaign_id=23 
+    ```
 
     注意到 `click_id` 的值 `YmVhODI1MmZmNGU4` 专门跟踪你。
 
@@ -152,7 +177,9 @@
 
 +   越来越多，浏览器倾向于清理跟踪参数。考虑以下 URL：
 
-    [PRE10]
+    ```
+    https://example.com/ad_engagement?campaign_id=23 
+    ```
 
     注意到这个链接 *仅* 跟踪你响应的活动。`click_id` 的值不再存在。
 
@@ -162,19 +189,31 @@
 
 +   第三方（即其他服务器或公司）希望了解你如何在网站之间旅行。考虑以下 HTTP 请求：
 
-    [PRE11]
+    ```
+    GET /ad.gif HTTP/3
+    Host: example.com
+    Referer: https://harvard.edu/ 
+    ```
 
     注意到这个请求明确要求从 `example.com` 获取一个名为 `ad.gif` 的文件。
 
 +   自动地，服务器会响应以下头信息：
 
-    [PRE12]
+    ```
+    HTTP/3 200
+    Set-Cookie: id=1234abcd; max-age=31536000 
+    ```
 
     `Set-Cookie` 响应头设置了一个名为 `id` 的 cookie，其持续时间为三年。
 
 +   如果你浏览了使用相同广告的另一个网站，`example.com` 现在知道你正在浏览 `harvard.edu` 和 `yale.edu`。假设你后来发出了以下 HTTP 请求：
 
-    [PRE13]
+    ```
+    GET /ad.gif HTTP/3
+    Cookie: id=1234abcd
+    Host: example.com
+    Referer: https://yale.edu/ 
+    ```
 
     注意到之前提到的第三方 cookie `id=1234abcd` 现在再次显示给 `example.com`，从而揭示你后来访问了 `yale.edu`。
 

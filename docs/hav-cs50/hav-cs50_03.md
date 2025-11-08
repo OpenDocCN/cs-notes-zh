@@ -92,13 +92,27 @@
 
 +   我们将使用三个命令来编写、编译和运行我们的第一个程序：
 
-    [PRE0]
+    ```
+    code hello.c
+
+    make hello
+
+    ./hello 
+    ```
 
     第一个命令`code hello.c`创建了一个文件，并允许我们为这个程序输入指令。第二个命令`make hello`将我们的 C 语言指令*编译*成名为`hello`的可执行文件。最后一个命令`./hello`运行名为`hello`的程序。
 
 +   我们可以通过在终端窗口中输入`code hello.c`来构建你的第一个 C 程序。注意我们故意将整个文件名转换为小写，并包含了`.c`扩展名。然后，在出现的文本编辑器中，编写如下代码：
 
-    [PRE1]
+    ```
+    // A program that says hello to the world
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        printf("hello, world\n");
+    } 
+    ```
 
     注意，上面的每一个字符都有其作用。如果你输入错误，程序将无法运行。`printf`是一个可以输出文本行的函数。注意引号和分号的位置。此外，注意`\n`在`hello, world`之后创建了一个新行。
 
@@ -114,13 +128,23 @@
 
 +   注意我们的代码已经调用了这个函数：
 
-    [PRE2]
+    ```
+    printf("hello, world\n"); 
+    ```
 
     注意到调用了`printf`函数。传递给`printf`的参数是`hello, world\n`。代码的语句以一个`;`结束。
 
 +   代码中的错误很常见。按照以下方式修改你的代码：
 
-    [PRE3]
+    ```
+    // \n is missing
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        printf("hello, world");
+    } 
+    ```
 
     注意到`\n`现在消失了。
 
@@ -128,11 +152,25 @@
 
 +   你还可以使用其他转义字符：
 
-    [PRE4]
+    ```
+    \n  create a new line
+    \r  return to the start of a line
+    \"  print a double quote
+    \'  print a single quote
+    \\  print a backslash 
+    ```
 
 +   将你的程序恢复到以下内容：
 
-    [PRE5]
+    ```
+    // A program that says hello to the world
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        printf("hello, world\n");
+    } 
+    ```
 
     注意分号和 `\n` 已经恢复。
 
@@ -146,7 +184,14 @@
 
 +   结果表明，CS50 有自己的库，名为 `cs50.h`。其中包含了许多函数，这些函数在你开始学习 C 时提供了 *辅助轮*：
 
-    [PRE6]
+    ```
+    get_char
+    get_double
+    get_float
+    get_int
+    get_long
+    get_string 
+    ```
 
 +   让我们在你的程序中使用这个库。
 
@@ -156,7 +201,16 @@
 
 +   在 C 中，我们可以做同样的事情。按照以下方式修改你的代码：
 
-    [PRE7]
+    ```
+    // get_string and printf with incorrect placeholder
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        string answer = get_string("What's your name? ");
+        printf("hello, answer\n");
+    } 
+    ```
 
     `get_string` 函数用于从用户那里获取一个字符串。然后，将变量 `answer` 传递给 `printf` 函数。
 
@@ -164,7 +218,16 @@
 
 +   通过查看错误，我们发现 `string` 和 `get_string` 没有被编译器识别。我们必须通过添加一个名为 `cs50.h` 的库来教编译器这些特性。同时，我们注意到 `answer` 没有按照预期提供。按照以下方式修改你的代码：
 
-    [PRE8]
+    ```
+    // get_string and printf with %s
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string answer = get_string("What's your name? ");
+        printf("hello, %s\n", answer);
+    } 
+    ```
 
     `get_string` 函数用于从用户那里获取一个字符串。然后，变量 `answer` 被传递给 `printf` 函数。`%s` 告诉 `printf` 函数准备接收一个 `string`。
 
@@ -178,13 +241,27 @@
 
 +   `printf` 允许使用许多格式代码。以下是一个不全面的列表，你可以在本课程中使用：
 
-    [PRE9]
+    ```
+    %c
+    %f
+    %i
+    %li
+    %s 
+    ```
 
     `%s` 用于 `string` 变量。`%i` 用于 `int` 或整数变量。你可以在 [手册页](https://manual.cs50.io) 中了解更多信息。
 
 +   这些格式代码对应于 C 中可用的许多数据类型：
 
-    [PRE10]
+    ```
+    bool
+    char
+    float
+    int
+    long
+    string
+    ... 
+    ```
 
 +   在本课程中，我们将使用许多 C 的可用数据类型。
 
@@ -196,19 +273,60 @@
 
 +   在 C 语言中，你可以这样比较两个值：
 
-    [PRE11]
+    ```
+    // Conditionals that are mutually exclusive
+
+    if (x < y)
+    {
+        printf("x is less than y\n");
+    }
+    else
+    {
+        printf("x is not less than y\n");
+    } 
+    ```
 
     注意如果`x < y`，会发生一个结果。如果`x`不小于`y`，则发生另一个结果。
 
 +   类似地，我们可以为三种可能的结果进行规划：
 
-    [PRE12]
+    ```
+    // Conditional that isn't necessary
+
+    if (x < y)
+    {
+        printf("x is less than y\n");
+    }
+    else if (x > y)
+    {
+        printf("x is greater than y\n");
+    }
+    else if (x == y)
+    {
+        printf("x is equal to y\n");
+    } 
+    ```
 
     注意，并非所有这些代码行都是必需的。我们如何消除上述不必要的计算呢？
 
 +   你可能已经猜到我们可以这样改进这段代码：
 
-    [PRE13]
+    ```
+    // Compare integers
+
+    if (x < y)
+    {
+        printf("x is less than y\n");
+    }
+    else if (x > y)
+    {
+        printf("x is greater than y\n");
+    }
+    else
+    {
+        printf("x is equal to y\n");
+    } 
+    ```
 
     注意最后一条语句被替换为`else`。
 
@@ -232,29 +350,39 @@
 
 +   在 C 语言中，你可以按照以下方式为一个`int`或整数赋值：
 
-    [PRE14]
+    ```
+    int counter = 0; 
+    ```
 
     注意一个名为`counter`的`int`类型变量被赋值为`0`。
 
 +   C 语言也可以按照以下方式将`1`加到`counter`上：
 
-    [PRE15]
+    ```
+    counter = counter + 1; 
+    ```
 
     注意`1`是如何加到`counter`的值上的。
 
 +   这也可以表示为：
 
-    [PRE16]
+    ```
+    counter += 1; 
+    ```
 
 +   这可以进一步简化为：
 
-    [PRE17]
+    ```
+    counter++; 
+    ```
 
     注意`++`是如何用来加 1 的。
 
 +   你也可以按照以下方式从`counter`中减去一个值：
 
-    [PRE18]
+    ```
+    counter--; 
+    ```
 
     注意`1`是如何从`counter`的值中减去的。
 
@@ -264,7 +392,23 @@
 
 +   在终端窗口中，输入`code compare.c`并编写以下代码：
 
-    [PRE19]
+    ```
+    // Conditional, Boolean expression, relational operator
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user for integers
+        int x = get_int("What's x? ");
+        int y = get_int("What's y? ");
+
+        // Compare integers
+        if (x < y)
+        {
+            printf("x is less than y\n");
+        }
+    } 
+    ```
 
     注意我们创建了两个变量，一个名为`x`的`int`或整数，另一个名为`y`。这些值是通过`get_int`函数填充的。
 
@@ -276,7 +420,31 @@
 
 +   我们可以通过以下方式改进你的程序：
 
-    [PRE20]
+    ```
+    // Conditionals
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user for integers
+        int x = get_int("What's x? ");
+        int y = get_int("What's y? ");
+
+        // Compare integers
+        if (x < y)
+        {
+            printf("x is less than y\n");
+        }
+        else if (x > y)
+        {
+            printf("x is greater than y\n");
+        }
+        else
+        {
+            printf("x is equal to y\n");
+        }
+    } 
+    ```
 
     注意现在已经考虑了所有潜在的结果。
 
@@ -292,7 +460,26 @@
 
 +   在文本编辑器中，编写以下代码：
 
-    [PRE21]
+    ```
+    // Comparing against lowercase char
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user to agree
+        char c = get_char("Do you agree? ");
+
+        // Check whether agreed
+        if (c == 'y')
+        {
+            printf("Agreed.\n");
+        }
+        else if (c == 'n')
+        {
+            printf("Not agreed.\n");
+        }
+    } 
+    ```
 
     注意单引号用于单个字符。此外，注意`==`确保某物*等于*另一物，而在 C 语言中，单个等号会有非常不同的功能。
 
@@ -300,13 +487,59 @@
 
 +   我们还可以允许输入大写和小写字符：
 
-    [PRE22]
+    ```
+    // Comparing against lowercase and uppercase char
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user to agree
+        char c = get_char("Do you agree? ");
+
+        // Check whether agreed
+        if (c == 'y')
+        {
+            printf("Agreed.\n");
+        }
+        else if (c == 'Y')
+        {
+            printf("Agreed.\n");
+        }
+        else if (c == 'n')
+        {
+            printf("Not agreed.\n");
+        }
+        else if (c == 'N')
+        {
+            printf("Not agreed.\n");
+        }
+    } 
+    ```
 
     注意到提供了额外的选项。然而，这不是高效的代码。
 
 +   我们可以按如下方式改进此代码：
 
-    [PRE23]
+    ```
+    // Logical operators
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user to agree
+        char c = get_char("Do you agree? ");
+
+        // Check whether agreed
+        if (c == 'Y' || c == 'y')
+        {
+            printf("Agreed.\n");
+        }
+        else if (c == 'N' || c == 'n')
+        {
+            printf("Not agreed.\n");
+        }
+    } 
+    ```
 
     注意到`||`实际上意味着*或*。
 
@@ -316,25 +549,74 @@
 
 +   在您的终端窗口中，键入`code meow.c`并编写如下代码：
 
-    [PRE24]
+    ```
+    // Opportunity for better design
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        printf("meow\n");
+        printf("meow\n");
+        printf("meow\n");
+    } 
+    ```
 
     注意这确实按预期工作，但有一个更好的设计机会。代码被一次又一次地重复。
 
 +   我们可以通过修改您的代码来改进我们的程序如下：
 
-    [PRE25]
+    ```
+    // Better design
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int i = 3;
+        while (i > 0)
+        {
+            printf("meow\n");
+            i--;
+        }
+    } 
+    ```
 
     注意到我们创建了一个名为`i`的`int`并将其赋值为`3`。然后，我们创建了一个`while`循环，只要`i > 0`就会运行。然后，循环运行。每次使用`i--`语句从`i`中减去`1`。
 
 +   同样，我们可以通过修改我们的代码来实现一种计数增加：
 
-    [PRE26]
+    ```
+    // Print values of i
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int i = 1;
+        while (i <= 3)
+        {
+            printf("meow\n");
+            i++;
+        }
+    } 
+    ```
 
     注意到我们的计数器`i`从`1`开始。每次循环运行时，它将计数器增加`1`。一旦计数器大于`3`，循环将停止。
 
 +   通常，在计算机科学中，我们从零开始计数。最好将您的代码修改如下：
 
-    [PRE27]
+    ```
+    // Better design
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int i = 0;
+        while (i < 3)
+        {
+            printf("meow\n");
+            i++;
+        }
+    } 
+    ```
 
     注意我们现在从零开始计数。
 
@@ -342,13 +624,35 @@
 
 +   您还可以使用`for`循环进一步改进我们的`meow.c`程序的设计。修改您的代码如下：
 
-    [PRE28]
+    ```
+    // Better design
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            printf("meow\n");
+        }
+    } 
+    ```
 
     注意到`for`循环包含三个参数。第一个参数`int i = 0`将计数器从零开始。第二个参数`i < 3`是正在检查的条件。最后，参数`i++`告诉循环每次循环运行时增加一。
 
 +   我们甚至可以使用以下代码无限循环：
 
-    [PRE29]
+    ```
+    // Infinite loop
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        while (true)
+        {
+            printf("meow\n");
+        }
+    } 
+    ```
 
     注意到`true`始终为真。因此，代码将始终运行。运行此代码将导致您失去对终端窗口的控制。您可以通过按键盘上的`control-C`来从无限循环中退出。
 
@@ -356,31 +660,132 @@
 
 +   虽然我们将在稍后提供更多指导，但您可以在 C 中创建自己的函数如下：
 
-    [PRE30]
+    ```
+    void meow(void)
+    {
+        printf("meow\n");
+    } 
+    ```
 
     初始的`void`表示该函数不返回任何值。`(void)`表示没有值被提供给函数。
 
 +   此函数可以在主函数中使用如下：
 
-    [PRE31]
+    ```
+    // Abstraction
+
+    #include <stdio.h>  
+    void meow(void);
+
+    int main(void)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            meow();
+        }
+    }
+
+    // Meow once
+    void meow(void)
+    {
+        printf("meow\n");
+    } 
+    ```
 
     注意到`meow`函数是如何通过`meow()`指令被调用的。这是因为`meow`函数定义在代码底部，而函数的*原型*在代码顶部提供，作为`void meow(void)`。
 
 +   您的`meow`函数可以进一步修改以接受输入：
 
-    [PRE32]
+    ```
+    // Abstraction with parameterization
+
+    #include <stdio.h>  
+    void meow(int n);
+
+    int main(void)
+    {
+        meow(3);
+    }
+
+    // Meow some number of times
+    void meow(int n)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            printf("meow\n");
+        }
+    } 
+    ```
 
     注意到原型已更改为`void meow(int n)`，以显示`meow`接受一个`int`作为其输入。
 
 +   此外，我们还可以获取用户输入：
 
-    [PRE33]
+    ```
+    // User input
+
+    #include <cs50.h> #include <stdio.h>  
+    void meow(int n);
+
+    int main(void)
+    {
+        int n;
+        do
+        {
+            n = get_int("Number: ");
+        }
+        while (n < 1);
+        meow(n);
+    }
+
+    // Meow some number of times
+    void meow(int n)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            printf("meow\n");
+        }
+    } 
+    ```
 
     注意到`get_int`用于从用户那里获取一个数字。`n`被传递给`meow`。
 
 +   我们甚至可以测试以确保我们获取的用户提供的输入是正确的：
 
-    [PRE34]
+    ```
+    // Return value
+
+    #include <cs50.h> #include <stdio.h>  
+    int get_positive_int(void);
+    void meow(int n);
+
+    int main(void)
+    {
+        int n = get_positive_int();
+        meow(n);
+    }
+
+    // Get number of meows
+    int get_positive_int(void)
+    {
+        int n;
+        do
+        {
+            n = get_int("Number: ");
+        }
+        while (n < 1);
+        return n;
+    }
+
+    // Meow some number of times
+    void meow(int n)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            printf("meow\n");
+        }
+    } 
+    ```
 
     注意有一个名为`get_positive_int`的新函数在`n < 1`时要求用户输入一个整数。在获取一个正整数后，此函数将`return n`回`main`函数。
 
@@ -406,7 +811,19 @@
 
 +   在终端窗口中，键入`code mario.c`并按照以下方式编写代码：
 
-    [PRE35]
+    ```
+    // Prints a row of 4 question marks with a loop
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            printf("?");
+        }
+        printf("\n");
+    } 
+    ```
 
     注意这里是如何使用循环打印四个问号的。
 
@@ -416,7 +833,18 @@
 
 +   为了实现这一点，按照以下方式修改你的代码：
 
-    [PRE36]
+    ```
+    // Prints a column of 3 bricks with a loop
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            printf("#\n");
+        }
+    } 
+    ```
 
     注意使用循环打印了三个垂直砖块。
 
@@ -426,19 +854,73 @@
 
 +   我们可以遵循上述逻辑，结合相同的思想。按照以下方式修改你的代码：
 
-    [PRE37]
+    ```
+    // Prints a 3-by-3 grid of bricks with nested loops
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                printf("#");
+            }
+            printf("\n");
+        }
+    } 
+    ```
 
     注意一个循环嵌套在另一个循环中。第一个循环定义了正在打印的垂直行。对于每一行，打印三列。每打印完一行后，打印一个新行。
 
 +   如果我们想要确保块的数量是*恒定的*，也就是说，不可改变的，请按照以下方式修改你的代码：
 
-    [PRE38]
+    ```
+    // Prints a 3-by-3 grid of bricks with nested loops using a constant
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        const int n = 3;
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                printf("#");
+            }
+            printf("\n");
+        }
+    } 
+    ```
 
     注意现在`n`是一个常量。它永远不能改变。
 
 +   如本讲座中前面所展示的，我们可以将功能*抽象化*到函数中。考虑以下代码：
 
-    [PRE39]
+    ```
+    // Helper function
+
+    #include <stdio.h>  
+    void print_row(int width);
+
+    int main(void)
+    {
+        const int n = 3;
+        for (int i = 0; i < n; i++)
+        {
+            print_row(n);
+        }
+    }
+
+    void print_row(int width)
+    {
+        for (int i = 0; i < width; i++)
+        {
+            printf("#");
+        }
+        printf("\n");
+    } 
+    ```
 
     注意打印一行是通过一个新函数完成的。
 
@@ -452,7 +934,32 @@
 
 +   注释涉及在代码中插入`//`，然后跟上一个注释。按照以下方式修改你的代码以集成注释：
 
-    [PRE40]
+    ```
+    // Helper function
+
+    #include <stdio.h>  
+    void print_row(int width);
+
+    int main(void)
+    {
+        const int n = 3;
+
+        // Print n rows
+        for (int i = 0; i < n; i++)
+        {
+            print_row(n);
+        }
+    }
+
+    void print_row(int width)
+    {
+        for (int i = 0; i < width; i++)
+        {
+            printf("#");
+        }
+        printf("\n");
+    } 
+    ```
 
     注意每个注释都是以 `//` 开头的。
 
@@ -460,13 +967,52 @@
 
 +   你可以用 C 语言实现一个计算器。在你的终端中，输入 `code calculator.c` 并编写如下代码：
 
-    [PRE41]
+    ```
+    // Addition with int
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user for x
+        int x = get_int("x: ");
+
+        // Prompt user for y
+        int y = get_int("y: ");
+
+        // Add numbers
+        int z = x + y;
+
+        // Perform addition
+        printf("%i\n", z);
+    } 
+    ```
 
     注意 `get_int` 函数是如何被用来从用户那里获取两个整数的。一个整数存储在名为 `x` 的 `int` 变量中。另一个存储在名为 `y` 的 `int` 变量中。总和存储在 `z` 中。然后，`printf` 函数通过 `%i` 符号打印 `z` 的值。
 
 +   我们还可以将一个数字加倍：
 
-    [PRE42]
+    ```
+    // int
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        int dollars = 1;
+        while (true)
+        {
+            char c = get_char("Here's $%i. Double it and give to next person? ", dollars);
+            if (c == 'y')
+            {
+                dollars *= 2;
+            }
+            else
+            {
+                break;
+            }
+        }
+        printf("Here's $%i.\n", dollars);
+    } 
+    ```
 
     运行这个程序，`dollars` 中出现了一些看似错误的信息。为什么会出现这种情况？
 
@@ -482,7 +1028,28 @@
 
 +   我们可以通过使用名为 `long` 的数据类型来纠正这一点。
 
-    [PRE43]
+    ```
+    // long
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        long dollars = 1;
+        while (true)
+        {
+            char c = get_char("Here's $%li. Double it and give to next person? ", dollars);
+            if (c == 'y')
+            {
+                dollars *= 2;
+            }
+            else
+            {
+                break;
+            }
+        }
+        printf("Here's $%li.\n", dollars);
+    } 
+    ```
 
     注意运行这段代码将允许出现非常高的金额。
 
@@ -506,13 +1073,43 @@
 
 +   使用数据类型时可能出现的另一个问题是截断。
 
-    [PRE44]
+    ```
+    // Division with ints, demonstrating truncation
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user for x
+        int x = get_int("x: ");
+
+        // Prompt user for y
+        int y = get_int("y: ");
+
+        // Divide x by y
+        printf("%i\n", x / y);
+    } 
+    ```
 
     在 C 语言中，整数除以整数总是得到整数。因此，上面的代码通常会丢弃小数点后的任何数字。
 
 +   这可以通过使用 `float` 来解决：
 
-    [PRE45]
+    ```
+    // Floats
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt user for x
+        float x = get_float("x: ");
+
+        // Prompt user for y
+        float y = get_float("y: ");
+
+        // Divide x by y
+        printf("%.50f\n", x / y);
+    } 
+    ```
 
     注意这解决了我们的一些问题。然而，我们可能会注意到程序提供的答案中的不精确性。
 

@@ -62,7 +62,9 @@
 
 +   考虑一下，如果你的密码（无论是用于手机还是其他用途）仅由四位数字组成，你将有多少种可能的数字组合。这里有 10,000 种可能的数字。通常，我们可以这样考虑可能性：
 
-    [PRE0]
+    ```
+    10 x 10 x 10 x 10 
+    ```
 
     注意，在最坏的情况下，恶意行为者需要尝试 10,000 种可能的密码。
 
@@ -70,7 +72,15 @@
 
 +   考虑以下代码表示的上述问题：
 
-    [PRE1]
+    ```
+    from string import digits
+
+    for i in digits:
+        for j in digits:
+            for k in digits:
+                for l in digits:
+                    print(i, j, k, l) 
+    ```
 
     注意，这段代码是用 Python 编写的，它遍历每个可能的数字组合
 
@@ -80,13 +90,23 @@
 
 +   如果我们允许 26 个字母的大小写版本，我们可以用数学方式表示为：
 
-    [PRE2]
+    ```
+    52 x 52 x 52 x 52 
+    ```
 
     注意，我们有超过 7,000,000 种可能性。
 
 +   我们可以按照以下方式修改我们的代码：
 
-    [PRE3]
+    ```
+    from string import ascii_letters
+
+    for i in ascii_letters:
+        for j in ascii_letters:
+            for k in ascii_letters:
+                for l in ascii_letters:
+                    print(i, j, k, l) 
+    ```
 
     注意，我们调用了`ascii_letters`，它包括每个字母的大小写版本。类似于我们之前的程序，这个程序遍历所有可能的组合。
 
@@ -96,7 +116,15 @@
 
 +   我们可以按照以下方式修改我们的代码：
 
-    [PRE4]
+    ```
+    from string import ascii_letters, digits, punctuation
+
+    for i in ascii_letters + digits + punctuation:
+        for j in ascii_letters + digits + punctuation:
+            for k in ascii_letters + digits + punctuation:
+                for l in ascii_letters + digits + punctuation:
+                    print(i, j, k, l) 
+    ```
 
 +   执行此代码时，我们注意到在最坏的情况下，发现所有可能的密码需要的时间明显更长。
 

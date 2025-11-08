@@ -111,27 +111,63 @@
 
 就像在 Python 中经常发生的那样，多个库已经实现了使用反向传播算法的神经网络，TensorFlow 就是这样的库之一。您可以在这个 [web 应用程序](http://playground.tensorflow.org/) 中尝试 TensorFlow 神经网络，它允许您定义网络的不同属性并运行它，可视化输出。现在，我们将转向一个例子，说明我们如何使用 TensorFlow 来执行上次讲座中讨论的任务：区分假币和真币。
 
-[PRE0]
+```
+import csv
+import tensorflow as tf
+from sklearn.model_selection import train_test_split 
+```
 
 我们导入 TensorFlow 并将其命名为 tf（以缩短代码）。
 
-[PRE1]
+```
+# Read data in from file with open("banknotes.csv") as f:
+    reader = csv.reader(f)
+    next(reader)
+
+    data = []
+    for row in reader:
+        data.append({
+            "evidence": [float(cell) for cell in row[:4]],
+            "label": 1 if row[4] == "0" else 0
+        })
+
+# Separate data into training and testing groups evidence = [row["evidence"] for row in data]
+labels = [row["label"] for row in data]
+X_training, X_testing, y_training, y_testing = train_test_split(
+    evidence, labels, test_size=0.4
+) 
+```
 
 我们将 CSV 数据提供给模型。我们的工作通常需要使数据符合库所需的格式。实际上编码模型的困难部分已经为我们实现了。
 
-[PRE2]
+```
+# Create a neural network model = tf.keras.models.Sequential() 
+```
 
 Keras 是一个 API，不同的机器学习算法可以通过它访问。一个顺序模型是指层依次排列（就像我们之前看到的那样）。
 
-[PRE3]
+```
+# Add a hidden layer with 8 units, with ReLU activation model.add(tf.keras.layers.Dense(8, input_shape=(4,), activation="relu")) 
+```
 
 密集层是指当前层中的每个节点都连接到前一层的所有节点。在生成我们的隐藏层时，我们创建了 8 个密集层，每个层有 4 个输入神经元，使用上面提到的 ReLU 激活函数。
 
-[PRE4]
+```
+# Add output layer with 1 unit, with sigmoid activation model.add(tf.keras.layers.Dense(1, activation="sigmoid")) 
+```
 
 在我们的输出层，我们希望创建一个使用 sigmoid 激活函数的密集层，这种激活函数的输出值介于 0 和 1 之间。
 
-[PRE5]
+```
+# Train neural network model.compile(
+    optimizer="adam",
+    loss="binary_crossentropy",
+    metrics=["accuracy"]
+)
+model.fit(X_training, y_training, epochs=20)
+
+# Evaluate how well model performs model.evaluate(X_testing, y_testing, verbose=2) 
+```
 
 最后，我们编译模型，指定哪个算法应该优化它，我们使用哪种类型的损失函数，以及我们如何衡量其成功（在我们的情况下，我们关注输出的准确性）。最后，我们使用 20 次重复（周期）将模型拟合到训练数据，然后在测试数据上评估它。
 
@@ -161,7 +197,25 @@ Keras 是一个 API，不同的机器学习算法可以通过它访问。一个�
 
 让我们考虑图像卷积的一个实现。我们使用的是 PIL 库（代表 Python Imaging Library），它可以为我们完成大部分繁重的工作。
 
-[PRE6]
+```
+import math
+import sys
+
+from PIL import Image, ImageFilter
+
+# Ensure correct usage if len(sys.argv) != 2:
+    sys.exit("Usage: python filter.py filename")
+
+# Open image image = Image.open(sys.argv[1]).convert("RGB")
+
+# Filter image according to edge detection kernel filtered = image.filter(ImageFilter.Kernel(
+    size=(3, 3),
+    kernel=[-1, -1, -1, -1, 8, -1, -1, -1, -1],
+    scale=1
+))
+
+# Show resulting image filtered.show() 
+```
 
 尽管如此，由于作为神经网络输入的像素数量众多，处理图像在神经网络中是计算密集型的。另一种方法是**池化**，通过从输入区域中采样来减少输入的尺寸。相邻的像素属于图像中的同一区域，这意味着它们很可能是相似的。因此，我们可以用一个像素来代表整个区域。一种实现方式是**最大池化**，其中选定的像素是该区域内所有其他像素中值最高的一个。例如，如果我们把下面的左方形（下方）分成四个 2X2 的小方形，通过从这个输入进行最大池化，我们得到右边的那个小方形。
 
@@ -177,11 +231,62 @@ Keras 是一个 API，不同的机器学习算法可以通过它访问。一个�
 
 在代码中，卷积神经网络与传统神经网络差别不大。TensorFlow 提供了测试我们模型的数据库。我们将使用 MNIST，它包含黑白手写数字的图片。我们将训练我们的卷积神经网络来识别数字。
 
-[PRE7]
+```
+import sys
+import tensorflow as tf
+
+# Use MNIST handwriting dataset mnist = tf.keras.datasets.mnist
+
+# Prepare data for training (x_train, y_train), (x_test, y_test) = mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
+y_train = tf.keras.utils.to_categorical(y_train)
+y_test = tf.keras.utils.to_categorical(y_test)
+x_train = x_train.reshape(
+    x_train.shape[0], x_train.shape[1], x_train.shape[2], 1
+)
+x_test = x_test.reshape(
+    x_test.shape[0], x_test.shape[1], x_test.shape[2], 1
+)
+
+# Create a convolutional neural network model = tf.keras.models.Sequential([
+
+    # Convolutional layer. Learn 32 filters using a 3x3 kernel
+    tf.keras.layers.Conv2D(
+        32, (3, 3), activation="relu", input_shape=(28, 28, 1)
+    ),
+
+    # Max-pooling layer, using 2x2 pool size
+    tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+    # Flatten units
+    tf.keras.layers.Flatten(),
+
+    # Add a hidden layer with dropout
+    tf.keras.layers.Dense(128, activation="relu"),
+    tf.keras.layers.Dropout(0.5),
+
+    # Add an output layer with output units for all 10 digits
+    tf.keras.layers.Dense(10, activation="softmax")
+])
+
+# Train neural network model.compile(
+    optimizer="adam",
+    loss="categorical_crossentropy",
+    metrics=["accuracy"]
+)
+model.fit(x_train, y_train, epochs=10)
+
+# Evaluate neural network performance model.evaluate(x_test,  y_test, verbose=2) 
+```
 
 由于模型需要时间来训练，我们可以保存已经训练好的模型以供以后使用。
 
-[PRE8]
+```
+# Save model to file if len(sys.argv) == 2:
+    filename = sys.argv[1]
+    model.save(filename)
+    print(f"Model saved to {filename}.") 
+```
 
 现在，如果我们运行一个接收手绘数字作为输入的程序，它将能够使用该模型对数字进行分类并输出结果。有关此类程序的实现，请参阅本讲座源代码中的 recognition.py。
 

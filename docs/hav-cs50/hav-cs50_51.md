@@ -12,11 +12,16 @@
 
 +   我们将从告诉我们的猫在按下空格键时播放声音的脚本开始[喵喵](https://scratch.mit.edu/projects/507453025/)：
 
-    [PRE0]
+    ```
+     when [space v] key pressed
+      play sound (Meow v) until done 
+    ```
 
 +   在积木的“控制”部分，有一个名为“如果”的积木，我们可以使用它，其中有一个六边形区域，还有一个地方可以嵌套额外的积木：
 
-    [PRE1]
+    ```
+     if <> then 
+    ```
 
 +   六边形代表我们想要提出的问题，这个问题可以用“是”或“否”来回答，或者等价地，用“真”或“假”来回答。
 
@@ -24,7 +29,11 @@
 
 +   我们将把“触碰鼠标指针？”布尔表达式积木拖入“如果”积木的六边形中：
 
-    [PRE2]
+    ```
+     when [space v] key pressed
+      if <touching (mouse pointer v)?> then
+      play sound (Meow v) until done 
+    ```
 
     +   我们还将放置我们的“播放声音”积木。
 
@@ -32,7 +41,11 @@
 
 +   我们还可以检查我们的精灵是否在[猫和气球](https://scratch.mit.edu/projects/507454098/)中触碰到另一个精灵。我们将添加一个气球精灵，并在“触碰鼠标指针？”积木的下拉菜单中，我们现在可以将值更改为：
 
-    [PRE3]
+    ```
+     when [space v] key pressed
+      if <touching (Ballon1 v)?> then
+      play sound (Meow v) until done 
+    ```
 
     +   现在，我们的猫只有在我们将气球拖到舞台上的它那里时才会播放声音。
 
@@ -42,7 +55,12 @@
 
 +   我们将保留我们的猫，并使用“冬季”背景。我们将在名为[猫和树](https://scratch.mit.edu/projects/507454297/)的程序中创建这个脚本：
 
-    [PRE4]
+    ```
+     when [right arrow v] key pressed
+      change x by (10)
+      if <touching color [#165e0f] ?> then
+      say (I found a tree!) for (2) seconds 
+    ```
 
 +   我们将拖入这些积木中的每一个，对于“触碰颜色？”积木，我们可以点击颜色来使用不同的滑块选择颜色：
 
@@ -58,11 +76,18 @@
 
 +   我们将设置舞台为普通背景，并恢复气球。我们将使用这个脚本使气球在[气球](https://scratch.mit.edu/projects/507454552/)中生长：
 
-    [PRE5]
+    ```
+     when [space v] key pressed
+      change size by (10) 
+    ```
 
 +   但我们想让我们的气球最终爆裂，实际上我们可以使用“=”运算符来比较两个数字。我们将使用一个“if”块，并在其中拖入这些块：
 
-    [PRE6]
+    ```
+     when [space v] key pressed
+      change size by (10)
+      if <(size) = (200)> then 
+    ```
 
     +   注意，“=”运算符的形状像一个六边形，所以它也是一个我们可以使用的布尔表达式，答案为“是”或“否”。
 
@@ -70,7 +95,13 @@
 
 +   如果大小是 200，我们可以让我们的气球精灵隐藏，并播放爆裂声音：
 
-    [PRE7]
+    ```
+     when [space v] key pressed
+      change size by (10)
+      if <(size) = (200)> then
+      hide
+      play sound (Pop v) until done 
+    ```
 
     +   现在，当我们的气球达到 200 大小时，它会消失并播放声音，就像它爆裂了一样。
 
@@ -80,13 +111,25 @@
 
 +   我们将在[数字](https://scratch.mit.edu/projects/507454942/)中使用鸭子精灵，并且我们首先会要求输入一个数字：
 
-    [PRE8]
+    ```
+     when green flag clicked
+      ask [Number:] and wait
+      if <(answer) > (0)> then
+      say [Positive] for (2) seconds 
+    ```
 
     +   然后，我们可以检查那个问题的答案是否大于 0。如果是这样，那么这个数字将是一个正数，我们可以告诉用户它是正数。
 
 +   现在，我们能够在问题的答案是“是”时运行一些代码。但如果答案是“否”，我们可能还想做其他事情。实际上，在控制部分还有一个名为“if then else”的块：
 
-    [PRE9]
+    ```
+     when green flag clicked
+      ask [Number:] and wait
+      if <(answer) > (0)> then
+      say [Positive] for (2) seconds
+      else
+      say [Negative] for (2) seconds 
+    ```
 
     +   底部的新部分，称为“else”，将包括另一个用于当问题的答案是“否”时运行的块堆。所以无论问题的答案是什么，我们都会运行两个块堆中的一个。
 
@@ -94,7 +137,17 @@
 
 +   但现在我们的程序中有一个错误，当 0 出现时，我们的鸭子会说“负数”，因为 0 不大于 0。我们可以在“else”部分添加另一个“if then else”块：
 
-    [PRE10]
+    ```
+     when green flag clicked
+      ask [Number:] and wait
+      if <(answer) > (0)> then
+      say [Positive] for (2) seconds
+      else
+      if <(answer) < (0)> then
+      say [Negative] for (2) seconds
+      else
+      say [Zero] for (2) seconds 
+    ```
 
     +   所以现在，如果数字不是大于零，我们会问另一个问题，如果它是小于零。如果是这样，我们可以说“负数”。否则，数字必须是 0。
 
@@ -104,15 +157,26 @@
 
 +   我们将从一组块开始，这些块将我们的刺猬带到舞台的左侧：
 
-    [PRE11]
+    ```
+     when green flag clicked
+      go to x: (-150) y: (-25) 
+    ```
 
 +   当按下右箭头键时，我们还想让我们的刺猬移动 10 步：
 
-    [PRE12]
+    ```
+     when [right arrow v] key pressed
+      move (10) steps 
+    ```
 
 +   当我们的刺猬到达舞台的边缘时，我们想让它说出计时器的值，或者自我们开始程序以来已经过去了多少秒。
 
-    [PRE13]
+    ```
+     when [right arrow v] key pressed
+      move (10) steps
+      if <touching (edge v)?> then
+      say (round (timer)) for (2) seconds 
+    ```
 
     +   每次按下右箭头键时，我们的刺猬将移动 10 步，但也会检查它是否触碰到舞台的边缘。
 
@@ -120,7 +184,15 @@
 
 +   我们还可以在[Hedgehog Race 2](https://scratch.mit.edu/projects/507455734/)中添加更多问题：
 
-    [PRE14]
+    ```
+     when [right arrow v] key pressed
+      move (10) steps
+      if <touching (edge v)?> then
+      if <(timer) < (5)> then
+      say [Fast!] for (2) seconds
+      else
+      say [Slow!] for (2) seconds 
+    ```
 
     +   现在，我们有一个询问“计时器”值是否小于 5 的块，如果答案是肯定的，我们将说“快！”。否则，我们将说“慢！”。
 
@@ -136,23 +208,46 @@
 
 +   现在，我们将我们的刺猬大小改为 40，并添加块使其在按下右箭头键时向右移动：
 
-    [PRE15]
+    ```
+     when [right arrow v] key pressed
+      change x by (5) 
+    ```
 
 +   我们还希望检查刺猬是否触碰到迷宫中的墙壁。因此，我们将使用“触碰颜色？”块：
 
-    [PRE16]
+    ```
+     when [right arrow v] key pressed
+      change x by (5)
+      if <touching color [#ff0000] ?> then
+      go to (random position v) 
+    ```
 
     +   现在，每次我们的刺猬移动时，它都会检查是否接触到红色。如果答案是“是”，我们将让它移动到舞台上的一个随机位置。
 
 +   我们将右键单击或控制单击这个块堆，并选择“复制”选项，为左箭头键创建一个类似的堆：
 
-    [PRE17]
+    ```
+     when [left arrow v] key pressed
+      change x by (-5)
+      if <touching color [#ff0000] ?> then
+      go to (random position v) 
+    ```
 
     +   注意，我们通过改变 x 值减去 5 来向左移动。
 
 +   我们将重复此操作，使用“改变 y”块来上下移动：
 
-    [PRE18]
+    ```
+     when [up arrow v] key pressed
+      change y by (5)
+      if <touching color [#ff0000] ?> then
+      go to (random position v)
+
+      when [down arrow v] key pressed
+      change y by (-5)
+      if <touching color [#ff0000] ?> then
+      go to (random position v) 
+    ```
 
 +   现在，我们可以通过按箭头键来测试这个功能，每次我们的刺猬触碰到墙壁时，它都会消失然后重新出现。
 

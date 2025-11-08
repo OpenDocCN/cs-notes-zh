@@ -80,41 +80,67 @@
 
 +   作为一种启发式方法，我们可以想象以下值代表我们*二进制位*中的每个可能位置：
 
-    [PRE0]
+    ```
+    4 2 1 
+    ```
 
 +   使用三个灯泡，以下可以表示零：
 
-    [PRE1]
+    ```
+    4 2 1
+    0 0 0 
+    ```
 
 +   同样，以下表示一个：
 
-    [PRE2]
+    ```
+    4 2 1
+    0 0 1 
+    ```
 
 +   按照这个逻辑，我们可以提出以下等于二：
 
-    [PRE3]
+    ```
+    4 2 1
+    0 1 0 
+    ```
 
 +   进一步扩展这个逻辑，以下表示三个：
 
-    [PRE4]
+    ```
+    4 2 1
+    0 1 1 
+    ```
 
 +   四将表示为：
 
-    [PRE5]
+    ```
+    4 2 1
+    1 0 0 
+    ```
 
 +   实际上，我们只使用三个灯泡就可以计数到七！
 
-    [PRE6]
+    ```
+    4 2 1
+    1 1 1 
+    ```
 
 +   计算机使用二进制计数。这可以表示如下：
 
-    [PRE7]
+    ```
+    2^2  2^1  2^0
+    4    2    1 
+    ```
 
 +   因此，可以说要表示高达七的数字，需要三个比特（四位、二位和一位）。
 
 +   同样，为了计数高达八的数字，值将表示如下：
 
-    [PRE8]
+    ```
+    8 4 2 1
+    1 0 0 0 
+    ```
 
 +   计算机通常使用八个比特（也称为一个*字节*）来表示一个数字。例如，`00000101`是二进制中的数字 5。`11111111`代表数字 255。你可以想象零如下：
 
@@ -136,7 +162,10 @@
 
 +   如果你收到一条短信，那条短信下的二进制可能代表数字 72、73 和 33。将这些映射到 ASCII，你的信息如下所示：
 
-    [PRE9]
+    ```
+    H   I   !
+    72  73  33 
+    ```
 
 +   感谢像 ASCII 这样的标准，它使我们能够就这些值达成一致！
 
@@ -232,7 +261,21 @@
 
 +   伪代码是你代码的人类可读版本。例如，考虑上面的第三个算法，我们可以编写如下伪代码：
 
-    [PRE10]
+    ```
+    1  Pick up phone book
+    2  Open to middle of phone book
+    3  Look at page
+    4  If person is on page
+    5      Call person
+    6  Else if person is earlier in book
+    7      Open to middle of left half of book
+    8      Go back to line 3
+    9  Else if person is later in book
+    10     Open to middle of right half of book
+    11     Go back to line 3
+    12 Else
+    13     Quit 
+    ```
 
 +   伪代码是一种非常重要的技能，至少有两个原因。首先，在你创建正式代码之前进行伪代码，这让你能够提前思考问题的逻辑。其次，当你进行伪代码时，你可以后来向寻求理解你的编码决策和代码工作方式的人提供这些信息。
 
@@ -252,7 +295,16 @@
 
 +   考虑如何利用上述构建块来开始创建我们自己的人工智能。看看以下伪代码：
 
-    [PRE11]
+    ```
+    If student says hello
+        Say hello
+    Else if student says goodbye
+        Say goodbye 
+    Else if student asks how you are
+        Say well
+    Else if student asks why 111 in binary is 7 in decimal
+    ... 
+    ```
 
     注意，仅仅为了编程少量交互，就需要许多行代码。要编程成千上万或数万种可能的交互，需要多少行代码？
 
@@ -272,7 +324,13 @@
 
 +   然后，在未来的几周里，您将学习 C 语言。它看起来可能如下：
 
-    [PRE12]
+    ```
+    #include <stdio.h>  
+    int main(void)
+    {
+      printf("hello, world\n");
+    } 
+    ```
 
 +   通过学习 C 语言，您将为未来在其他编程语言（如*Python*）中的学习做好准备。
 
@@ -304,7 +362,10 @@
 
 +   首先，将“当绿色旗帜点击”积木拖动到编程区域。然后，将`say`积木拖动到编程区域，并将其连接到前面的积木。
 
-    [PRE13]
+    ```
+    when green flag clicked
+    say [hello, world] 
+    ```
 
     注意，现在当你点击舞台上的绿色旗帜时，猫会说，“你好，世界。”
 
@@ -318,7 +379,11 @@
 
 +   我们可以通过让猫对特定的人说“你好”来使你的程序更具交互性。按如下方式修改你的程序：
 
-    [PRE14]
+    ```
+    when green flag clicked
+    ask [What's your name?] and wait
+    say (join [hello,] (answer)) 
+    ```
 
     注意，当点击绿色旗帜时，会运行函数`ask`。程序会提示你，用户，`你叫什么名字？`然后程序将这个名字存储在名为`answer`的*变量*中。然后程序将`answer`传递给一个特殊函数`join`，该函数将两个文本字符串`hello`和提供的任何名字结合起来。实际上，`answer`返回一个值给`join`。这些共同传递给`say`函数。猫说`Hello,`和一个名字。你的程序现在具有交互性。
 
@@ -330,7 +395,11 @@
 
 +   类似地，我们可以按如下方式修改我们的程序：
 
-    [PRE15]
+    ```
+    when green flag clicked
+    ask [What's your name?] and wait
+    speak (join [hello,] (answer)) 
+    ```
 
     注意，当点击绿色旗帜时，这个程序将相同的变量，与`hello`连接，传递给一个名为`speak`的函数。
 
@@ -344,25 +413,50 @@
 
 +   在编程中，甚至在 Scratch 中，我们都可以看到抽象的作用。在你的编程区域中，编写如下程序：
 
-    [PRE16]
+    ```
+    when green flag clicked
+    play sound (Meow v) until done
+    wait (1) seconds
+    play sound (Meow v) until done
+    wait (1) seconds
+    play sound (Meow v) until done 
+    ```
 
     注意到你在反复做同样的事情。确实，如果你发现自己反复编写相同的语句，那么你很可能能够更巧妙地编程——通过抽象移除重复的代码。
 
 +   你可以按如下方式修改你的代码：
 
-    [PRE17]
+    ```
+    when green flag clicked
+    repeat (3)
+    play sound (Meow v) until done
+    wait (1) seconds 
+    ```
 
     注意，循环确实与上一个程序做了同样的事情。然而，问题通过将重复抽象到一个为我们重复代码的块中而简化了。
 
 +   我们甚至可以通过使用 `define` 积木来进一步改进，在那里您可以创建自己的积木（自己的函数）！按照以下方式编写代码：
 
-    [PRE18]
+    ```
+    define meow
+    play sound (Meow v) until done
+    wait (1) seconds
+
+    when green flag clicked
+    repeat (3)
+    meow 
+    ```
 
     注意，我们正在定义一个名为 `meow` 的自定义积木。该函数播放声音 `meow`，然后等待一秒钟。下面，您可以看到当点击绿色标志时，我们的 `meow` 函数会重复三次。
 
 +   我们甚至可以提供一个方法，使函数可以接受输入 `n` 并重复多次：
 
-    [PRE19]
+    ```
+    define meow n times
+    repeat (n)
+     play sound [meow v] until done
+     wait (1) seconds 
+    ```
 
     注意 `n` 是从 “meow n times” 中获取的。`n` 通过 `define` 积木传递给 `meow` 函数。
 
@@ -374,13 +468,21 @@
 
 +   为了说明条件语句，编写以下代码：
 
-    [PRE20]
+    ```
+    when green flag clicked
+    forever
+    if <touching (mouse-pointer v)?> then
+    play sound (Meow v) until done 
+    ```
 
     注意，`forever` 积木被用来触发 `if` 积木，使其可以不断地检查猫是否触摸到鼠标指针。
 
 +   我们可以按照以下方式修改我们的程序，以集成视频感应：
 
-    [PRE21]
+    ```
+    when video motion > (10)
+    play sound (Meow v) until done 
+    ```
 
 +   记住，编程通常是一个试错的过程。如果你感到沮丧，花时间通过谈话来解决问题。你现在正在解决的具体问题是什么？什么在起作用？什么不起作用？
 
@@ -394,25 +496,50 @@
 
 +   然后，编写以下代码：
 
-    [PRE22]
+    ```
+    when green flag clicked
+    switch costume to (oscar1 v)
+    forever
+    if <touching (mouse-pointer v)?> then
+    switch costume to (oscar2 v)
+    else
+    switch costume to (oscar1 v) 
+    ```
 
     注意，将鼠标移到奥斯卡身上会改变他的服装。您可以通过[探索这些代码积木](https://scratch.mit.edu/projects/565100517)了解更多信息。
 
 +   然后，按照以下方式修改您的代码，以创建一个下落的垃圾块：
 
-    [PRE23]
+    ```
+    when green flag clicked
+    go to x: (pick random (-240) to (240)) y: (180)
+    forever
+    if <(distance to (floor v)) > (0)> then
+    change y by (-3) 
+    ```
 
     注意，垃圾在 y 轴上的位置始终从 180° 开始。x 位置是随机的。当垃圾在地板上方时，它会每次下落 3 像素。您可以通过[探索这些代码积木](https://scratch.mit.edu/projects/565117390)了解更多信息。
 
 +   接下来，按照以下方式修改您的代码，以便允许拖动垃圾。
 
-    [PRE24]
+    ```
+    when green flag clicked
+    forever
+    if <<mouse down?> and <touching (mouse-pointer v) ?>> then
+    go to (mouse-pointer v) 
+    ```
 
     您可以通过[探索这些代码积木](https://scratch.mit.edu/projects/565119737)了解更多信息。
 
 +   接下来，我们可以按照以下方式实现得分变量：
 
-    [PRE25]
+    ```
+    when green flag clicked
+    forever
+    if <touching (Oscar v) ?> then
+    change (score) by (1)
+    go to x: (pick random (-240) to (240)) y: (180) 
+    ```
 
     您可以通过[探索这些代码积木](https://scratch.mit.edu/projects/565472267)了解更多信息。
 
@@ -426,19 +553,47 @@
 
 +   首先，编写如下代码：
 
-    [PRE26]
+    ```
+    when green flag clicked
+    go to x: (0) y: (0)
+    forever
+    listen for keyboard
+    feel for walls 
+    ```
 
     注意到当点击绿色标志时，我们的精灵会移动到舞台中心坐标（0,0），然后监听键盘并检查墙壁，永远如此。
 
 +   其次，添加这组代码块：
 
-    [PRE27]
+    ```
+    define listen for keyboard
+    if <key (up arrow v) pressed?> then
+    change y by (1)
+    end
+    if <key (down arrow v) pressed?> then
+    change y by (-1)
+    end
+    if <key (right arrow v) pressed?> then
+    change x by (1)
+    end
+    if <key (left arrow v) pressed?> then
+    change x by (-1)
+    end 
+    ```
 
     注意到我们创建了一个自定义的`监听键盘`脚本。对于键盘上的每个箭头键，它都会将精灵在屏幕上移动。
 
 +   最后，添加这组代码块：
 
-    [PRE28]
+    ```
+    define feel for walls
+    if <touching (left wall v) ?> then
+    change x by (1)
+    end
+    if <touching (right wall v) ?> then
+    change x by (-1)
+    end 
+    ```
 
     注意到我们还有一个自定义的`感觉墙壁`脚本。当精灵碰到墙壁时，它会将其移回安全位置——防止它走出屏幕。
 
@@ -448,13 +603,29 @@
 
 +   添加另一个精灵，将以下代码块添加到你的程序中：
 
-    [PRE29]
+    ```
+    when green flag clicked
+    go to x: (0) y: (0)
+    point in direction (90)
+    forever
+    if <<touching (left wall v)?> or <touching (right wall v)?>> then
+    turn right (180) degrees
+    end
+    move (1) steps
+    end 
+    ```
 
     注意到耶鲁精灵似乎通过来回移动阻碍了哈佛精灵。当它碰到墙壁时，它会转身直到再次碰到墙壁。你可以通过[探索这些代码块](https://scratch.mit.edu/projects/565127193)了解更多信息。
 
 +   你甚至可以让一个精灵跟随另一个精灵。添加另一个精灵，将以下代码块添加到你的程序中：
 
-    [PRE30]
+    ```
+    when green flag clicked
+    go to (random position v)
+    forever
+    point towards (Harvard v)
+    move (1) steps 
+    ```
 
     注意到麻省理工学院的标志现在似乎围绕着哈佛学院的标志。你可以通过[探索这些代码块](https://scratch.mit.edu/projects/565479840)了解更多信息。
 

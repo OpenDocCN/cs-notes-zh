@@ -96,7 +96,14 @@
 
 现在，为了真正开始使用 SQL 与数据库交互，让我们首先创建一个新表。创建新表的 [命令](https://www.w3schools.com/sql/sql_create_table.asp) 大概是这样的：
 
-[PRE0]
+```
+CREATE TABLE flights(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    origin TEXT NOT NULL,
+    destination TEXT NOT NULL,
+    duration INTEGER NOT NULL
+); 
+```
 
 在上述命令中，我们创建了一个新表，我们决定将其命名为 `flights`，并且我们向这个表添加了四个列：
 
@@ -124,7 +131,11 @@
 
 现在我们已经看到了如何创建表，让我们看看我们如何可以向其中添加行。在 SQL 中，我们使用 `INSERT` 命令来完成这个操作：
 
-[PRE1]
+```
+INSERT INTO flights
+    (origin, destination, duration)
+    VALUES ("New York", "London", 415); 
+```
 
 在上述命令中，我们指定了我们要插入的表名，然后提供了一列列名列表，我们将提供有关这些列的信息，然后指定我们想要填充表中该行的 `VALUES`，确保 `VALUES` 的顺序与我们的列名列表相对应。请注意，我们不需要为 `id` 提供值，因为它会自动递增。
 
@@ -132,7 +143,9 @@
 
 一旦表格被填充了一些行，我们可能希望有一种方法来访问该表中的数据。我们通过使用 SQL 的[SELECT](https://www.w3schools.com/sql/sql_select.asp)查询来实现这一点。最简单的`SELECT`查询到我们的航班表可能看起来像这样：
 
-[PRE2]
+```
+SELECT * FROM flights; 
+```
 
 上述命令（*）检索了我们航班表中的所有数据
 
@@ -140,19 +153,25 @@
 
 然而，可能我们并不真的需要数据库中的所有列，只需要起点和目的地。为了只访问这些列，我们可以用我们想要访问的列名替换`*`。以下查询返回所有起点和目的地。
 
-[PRE3]
+```
+SELECT origin, destination FROM flights; 
+```
 
 ![Just two cols](img/ae882208febb4fb7fe987d5e321caee1.png)
 
 随着我们的表格越来越大，我们可能还想缩小查询返回的行数。我们通过添加一个[WHERE](https://www.w3schools.com/sql/sql_where.asp)并跟上一个条件来实现这一点。例如，以下命令只选择`id`为`3`的行：
 
-[PRE4]
+```
+SELECT * FROM flights WHERE id = 3; 
+```
 
 ![only one row](img/ea58dc1cd934e2acd0a3932e5e322b58.png)
 
 我们可以按任何列过滤，而不仅仅是`id`！
 
-[PRE5]
+```
+SELECT * FROM flights WHERE origin = "New York"; 
+```
 
 ![Origin is New York](img/350e97a53a7439a3d55afba84da56dad.png)
 
@@ -162,33 +181,110 @@
 
 我们可以通过手动创建一个新文件或在终端中运行`touch flights.sql`来为我们的数据库创建一个文件。现在，如果我们通过终端运行`sqlite3 flights.sql`，我们将进入一个 SQLite 提示符，在那里我们可以运行 SQL 命令：
 
-[PRE6]
+```
+ # Entering into the SQLite Prompt
+(base) % sqlite3 flights.sql
+SQLite version 3.26.0 2018-12-01 12:34:55
+Enter ".help" for usage hints.
+
+# Creating a new Table
+sqlite> CREATE TABLE flights(
+   ...>     id INTEGER PRIMARY KEY AUTOINCREMENT,
+   ...>     origin TEXT NOT NULL,
+   ...>     destination TEXT NOT NULL,
+   ...>     duration INTEGER NOT NULL
+   ...> );
+
+# Listing all current tables (Just flights for now)
+sqlite> .tables
+flights
+
+# Querying for everything within flights (Which is now empty)
+sqlite> SELECT * FROM flights;
+
+# Adding one flight
+sqlite> INSERT INTO flights
+   ...>     (origin, destination, duration)
+   ...>     VALUES ("New York", "London", 415);
+
+# Checking for new information, which we can now see
+sqlite> SELECT * FROM flights;
+1|New York|London|415
+
+# Adding some more flights
+sqlite> INSERT INTO flights (origin, destination, duration) VALUES ("Shanghai", "Paris", 760);
+sqlite> INSERT INTO flights (origin, destination, duration) VALUES ("Istanbul", "Tokyo", 700);
+sqlite> INSERT INTO flights (origin, destination, duration) VALUES ("New York", "Paris", 435);
+sqlite> INSERT INTO flights (origin, destination, duration) VALUES ("Moscow", "Paris", 245);
+sqlite> INSERT INTO flights (origin, destination, duration) VALUES ("Lima", "New York", 455);
+
+# Querying this new information
+sqlite> SELECT * FROM flights;
+1|New York|London|415
+2|Shanghai|Paris|760
+3|Istanbul|Tokyo|700
+4|New York|Paris|435
+5|Moscow|Paris|245
+6|Lima|New York|455
+
+# Changing the settings to make output more readable
+sqlite> .mode columns
+sqlite> .headers yes
+
+# Querying all information again
+sqlite> SELECT * FROM flights;
+id origin      destination  duration
+----------  ----------  -----------  ----------
+1           New York    London       415
+2           Shanghai    Paris        760
+3           Istanbul    Tokyo        700
+4           New York    Paris        435
+5           Moscow      Paris        245
+6           Lima        New York     455
+
+# Searching for just those flights originating in New York
+sqlite> SELECT * FROM flights WHERE origin = "New York";
+id origin      destination  duration
+----------  ----------  -----------  ----------
+1           New York    London       415
+4           New York    Paris        435 
+```
 
 我们还可以使用不仅仅是等于来过滤我们的航班。对于整数和实数值，我们可以使用大于或小于：
 
-[PRE7]
+```
+SELECT * FROM flights WHERE duration > 500; 
+```
 
 ![> 500](img/e11da8a28a30662d0a2f93a6e7598c26.png)
 
 我们还可以使用其他逻辑（[AND, OR](https://www.w3schools.com/sql/sql_and_or.asp)）如 Python 中的逻辑：
 
-[PRE8]
+```
+SELECT * FROM flights WHERE duration > 500 AND destination = "Paris"; 
+```
 
 ![> 500 and paris](img/4deda8ff62715d9b4a92761f42a019e9.png)
 
-[PRE9]
+```
+SELECT * FROM flights WHERE duration > 500 OR destination = "Paris"; 
+```
 
 ![> 500 or paris](img/aa4fe1c1c2358daa429a3396dab9465f.png)
 
 我们还可以使用关键字[IN](https://www.w3schools.com/sql/sql_in.asp)来查看数据是否是几个选项之一：
 
-[PRE10]
+```
+SELECT * FROM flights WHERE origin IN ("New York", "Lima"); 
+```
 
 ![in](img/4c8527f627a0b599af2ca9376ac66eb3.png)
 
 我们甚至可以使用正则表达式通过使用[LIKE](https://www.w3schools.com/sql/sql_like.asp)关键字更广泛地搜索单词。以下查询通过使用`%`作为通配符字符，找到所有在起点中有`a`的结果。
 
-[PRE11]
+```
+SELECT * FROM flights WHERE origin LIKE "%a%"; 
+```
 
 ![Origin has an 'a'](img/17ec4465ad5ecf0649393ad2fe2af2be.png)
 
@@ -212,13 +308,20 @@
 
 我们现在已经看到了如何添加和搜索表，但我们可能还希望能够更新已存在的表的行。我们可以使用[UPDATE](https://www.w3schools.com/sql/sql_update.asp)命令来完成这个操作，如下所示。正如你可能通过大声读出来所猜到的，该命令找到所有从纽约飞往伦敦的航班，并将它们的持续时间设置为 430。
 
-[PRE12]
+```
+UPDATE flights
+    SET duration = 430
+    WHERE origin = "New York"
+    AND destination = "London"; 
+```
 
 ### DELETE
 
 我们还可能想要有从我们的数据库中删除行的能力，我们可以使用[DELETE](https://www.w3schools.com/sql/sql_delete.asp)命令来完成这个操作。以下代码将删除所有飞往东京的航班：
 
-[PRE13]
+```
+DELETE FROM flights WHERE destination = "Tokyo"; 
+```
 
 ### 其他子句
 
@@ -262,11 +365,18 @@
 
 例如，假设我们想找到乘客正在乘坐的每次旅行的出发地、目的地和姓名。为了简化这个表，我们将使用包含航班 ID、名和姓的非优化`passengers`表。这个查询的第一部分看起来相当熟悉：
 
-[PRE14]
+```
+SELECT first, origin, destination
+FROM ... 
+```
 
 但在这里我们遇到了一个问题，因为`first`存储在`passengers`表中，而`origin`和`destination`存储在`flights`表中。我们通过使用`passengers`表中的`flight_id`与`flights`表中的`id`相对应的事实来连接这两个表：
 
-[PRE15]
+```
+SELECT first, origin, destination
+FROM flights JOIN passengers
+ON passengers.flight_id = flights.id; 
+```
 
 ![连接模糊](img/91b9b7b4abfd1b8d2e76f7a6a52e58ad.png)
 
@@ -276,7 +386,9 @@
 
 当处理大型表时，我们可以通过创建一个类似于教科书背面的索引来使我们的查询更高效。例如，如果我们知道我们经常通过姓氏查找乘客，我们可以使用以下命令创建一个从姓氏到 ID 的索引：
 
-[PRE16]
+```
+CREATE INDEX name_index ON passengers (last); 
+```
 
 ### SQL 漏洞
 
@@ -284,15 +396,24 @@
 
 SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，以绕过网站的安全措施。例如，假设我们有一个存储用户名和密码的表，然后在页面的主页上有一个登录表单。我们可能使用以下查询来搜索用户：
 
-[PRE17]
+```
+SELECT * FROM users
+WHERE username = username AND password = password; 
+```
 
 一个名为 Harry 的用户可能会访问这个网站，并输入`harry`作为用户名，`12345`作为密码，在这种情况下，查询看起来会是这样：
 
-[PRE18]
+```
+SELECT * FROM users
+WHERE username = "harry" AND password = "12345"; 
+```
 
 另一方面，一个黑客可能会输入`harry" --`作为用户名，密码为空。结果是`--`在 SQL 中表示注释，这意味着查询看起来会是这样：
 
-[PRE19]
+```
+SELECT * FROM users
+WHERE username = "harry"--" AND password = "12345"; 
+```
 
 因为在这个查询中，密码检查已经被注释掉了，黑客可以在不知道密码的情况下登录 Harry 的账户。为了解决这个问题，我们可以使用：
 
@@ -310,7 +431,11 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 让我们开始使用模型，为我们的航空公司创建一个 Django 项目，并在该项目中创建一个应用程序。
 
-[PRE20]
+```
+django-admin startproject airline
+cd airline
+python manage.py startapp flights 
+```
 
 现在我们将像通常添加应用程序一样进行添加应用程序的过程：
 
@@ -318,13 +443,20 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 1.  在`urls.py`中添加`flights`的路由：
 
-    [PRE21]
+    ```
+     path("flights/", include("flights.urls")), 
+    ```
 
 1.  在`flights`应用程序中创建一个`urls.py`文件。并填充标准的`urls.py`导入和列表。
 
 现在，我们不再创建实际的路径，而是从`views.py`开始，我们将在`models.py`文件中创建一些模型。在这个文件中，我们将概述我们希望在应用程序中存储的数据。然后，Django 将确定存储我们每个模型所需的信息的 SQL 语法。让我们看看单个航班模型的例子：
 
-[PRE22]
+```
+class Flight(models.Model):
+    origin = models.CharField(max_length=64)
+    destination = models.CharField(max_length=64)
+    duration = models.IntegerField() 
+```
 
 让我们看看这个模型定义中发生了什么：
 
@@ -338,7 +470,9 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 现在，尽管我们已经创建了一个模型，但我们还没有数据库来存储这些信息。要从我们的模型创建数据库，我们导航到项目的根目录并运行以下命令。
 
-[PRE23]
+```
+python manage.py makemigrations 
+```
 
 此命令创建了一些 Python 文件，这些文件将创建或编辑我们的数据库，以便能够存储我们在模型中的内容。你应该得到一个类似于下面的输出，如果你导航到你的`migrations`目录，你会注意到为我们创建了一个新文件
 
@@ -346,7 +480,9 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 接下来，要应用这些迁移到我们的数据库，我们运行以下命令
 
-[PRE24]
+```
+python manage.py migrate 
+```
 
 现在，你会看到一些默认迁移已经应用，并且你也会注意到我们现在在项目的目录中有一个名为`db.sqlite3`的文件
 
@@ -356,21 +492,80 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 现在，为了开始向数据库添加信息并对其进行操作，我们可以进入 Django 的 shell，在那里我们可以在项目中运行 Python 命令。
 
-[PRE25]
+```
+python manage.py shell
+Python 3.7.2 (default, Dec 29 2018, 00:00:04)
+Type 'copyright', 'credits' or 'license' for more information
+IPython 6.5.0 -- An enhanced Interactive Python. Type '?' for help. 
+```
 
-[PRE26]
+```
+# Import our flight model In [1]: from flights.models import Flight
+
+# Create a new flight In [2]: f = Flight(origin="New York", destination="London", duration=415)
+
+# Instert that flight into our database In [3]: f.save()
+
+# Query for all flights stored in the database In [4]: Flight.objects.all()
+Out[4]: <QuerySet [<Flight: Flight object (1)>]> 
+```
 
 当我们查询数据库时，我们看到我们只得到一个名为`Flight object (1)`的航班。这个名字不是很 informative，但我们可以修复它。在`models.py`中，我们将定义一个`__str__`函数，该函数提供将 Flight 对象转换为字符串的指令：
 
-[PRE27]
+```
+class Flight(models.Model):
+    origin = models.CharField(max_length=64)
+    destination = models.CharField(max_length=64)
+    duration = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.id}: {self.origin} to {self.destination}" 
+```
 
 现在，当我们回到 shell 时，我们的输出更易于阅读：
 
-[PRE28]
+```
+# Create a variable called flights to store the results of a query In [7]: flights = Flight.objects.all()
+
+# Displaying all flights In [8]: flights
+Out[8]: <QuerySet [<Flight: 1: New York to London>]>
+
+# Isolating just the first flight In [9]: flight = flights.first()
+
+# Printing flight information In [10]: flight
+Out[10]: <Flight: 1: New York to London>
+
+# Display flight id In [11]: flight.id
+Out[11]: 1
+
+# Display flight origin In [12]: flight.origin
+Out[12]: 'New York'
+
+# Display flight destination In [13]: flight.destination
+Out[13]: 'London'
+
+# Display flight duration In [14]: flight.duration
+Out[14]: 415 
+```
 
 这是一个好的开始，但回想一下之前，我们不想为每个航班存储城市名称作为起点和终点，所以我们可能需要一个与航班模型相关联的机场模型：
 
-[PRE29]
+```
+class Airport(models.Model):
+    code = models.CharField(max_length=3)
+    city = models.CharField(max_length=64)
+
+    def __str__(self):
+        return f"{self.city} ({self.code})"
+
+class Flight(models.Model):
+    origin = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="departures")
+    destination = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="arrivals")
+    duration = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.id}: {self.origin} to {self.destination}" 
+```
 
 我们在新的`Airport`类中已经看到了所有内容，但`Flight`类中`origin`和`destination`字段的变化对我们来说是新的：
 
@@ -384,29 +579,93 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 每次我们在 `models.py` 中进行更改时，我们必须进行迁移然后迁移。请注意，您可能需要删除现有的从纽约到伦敦的航班，因为它不符合新的数据库结构。
 
-[PRE30]
+```
+# Create New Migrations
+python manage.py makemigrations
+
+# Migrate
+python manage.py migrate 
+```
 
 现在，让我们在 Django 命令行中尝试这些新的模型：
 
-[PRE31]
+```
+# Import all models In [1]: from flights.models import *
+
+# Create some new airports In [2]: jfk = Airport(code="JFK", city="New York")
+In [4]: lhr = Airport(code="LHR", city="London")
+In [6]: cdg = Airport(code="CDG", city="Paris")
+In [9]: nrt = Airport(code="NRT", city="Tokyo")
+
+# Save the airports to the database In [3]: jfk.save()
+In [5]: lhr.save()
+In [8]: cdg.save()
+In [10]: nrt.save()
+
+# Add a flight and save it to the database f = Flight(origin=jfk, destination=lhr, duration=414)
+f.save()
+
+# Display some info about the flight In [14]: f
+Out[14]: <Flight: 1: New York (JFK) to London (LHR)>
+In [15]: f.origin
+Out[15]: <Airport: New York (JFK)>
+
+# Using the related name to query by airport of arrival: In [17]: lhr.arrivals.all()
+Out[17]: <QuerySet [<Flight: 1: New York (JFK) to London (LHR)>]> 
+```
 
 ### 启动我们的应用程序
 
 我们现在可以开始构建一个应用程序，该应用程序围绕使用模型与数据库交互的过程。让我们首先为我们的航空公司创建一个索引路由。在 `urls.py` 中：
 
-[PRE32]
+```
+urlpatterns = [
+    path('', views.index, name="index"),
+] 
+```
 
 在 `views.py` 文件中：
 
-[PRE33]
+```
+from django.shortcuts import render
+from .models import Flight, Airport
+
+# Create your views here. 
+def index(request):
+    return render(request, "flights/index.html", {
+        "flights": Flight.objects.all()
+    }) 
+```
 
 在我们的新 `layout.html` 文件中：
 
-[PRE34]
+```
+ <!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Flights</title>
+    </head>
+    <body>
+        {% block body %}
+        {% endblock %}
+    </body>
+</html> 
+```
 
 在新的 `index.html` 文件中：
 
-[PRE35]
+```
+ {% extends "flights/layout.html" %}
+
+{% block body %}
+    <h1>Flights:</h1>
+    <ul>
+        {% for flight in flights %}
+            <li>Flight {{ flight.id }}: {{ flight.origin }} to {{ flight.destination }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %} 
+```
 
 我们在这里所做的是创建了一个默认页面，其中列出了我们迄今为止创建的所有航班。当我们现在打开这个页面时，它看起来像这样
 
@@ -414,7 +673,19 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 现在，让我们通过返回 Django 命令行来为我们的应用程序添加更多航班：
 
-[PRE36]
+```
+# Using the filter command to find all airports based in New York In [3]: Airport.objects.filter(city="New York")
+Out[3]: <QuerySet [<Airport: New York (JFK)>]>
+
+# Using the get command to get only one airport in New York In [5]: Airport.objects.get(city="New York")
+Out[5]: <Airport: New York (JFK)>
+
+# Assigning some airports to variable names: In [6]: jfk = Airport.objects.get(city="New York")
+In [7]: cdg = Airport.objects.get(city="Paris")
+
+# Creating and saving a new flight: In [8]: f = Flight(origin=jfk, destination=cdg, duration=435)
+In [9]: f.save() 
+```
 
 现在，当我们再次访问我们的网站时
 
@@ -424,11 +695,24 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 由于开发者经常需要创建新对象，就像我们在 shell 中所做的那样，Django 提供了一个 [默认管理界面](https://docs.djangoproject.com/en/4.0/ref/contrib/admin/)，这使得我们可以更容易地完成这项工作。要开始使用这个工具，我们必须首先创建一个管理用户：
 
-[PRE37]
+```
+(base) cleggett@Connors-MacBook-Pro airline % python manage.py createsuperuser
+Username: user_a
+Email address: a@a.com
+Password:
+Password (again):
+Superuser created successfully. 
+```
 
 现在，我们必须通过在我们的应用中进入 `admin.py` 文件，并导入和注册我们的模型，将我们的模型添加到管理应用程序中。这告诉 Django 我们希望在管理应用程序中访问哪些模型。
 
-[PRE38]
+```
+from django.contrib import admin
+from .models import Flight, Airport
+
+# Register your models here. admin.site.register(Flight)
+admin.site.register(Airport) 
+```
 
 现在，当我们访问我们的网站并将 `/admin` 添加到 URL 中时，我们可以登录到一个看起来像这样的页面
 
@@ -440,19 +724,50 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 现在，让我们为我们的网站添加更多页面。我们将首先添加点击航班以获取更多航班信息的功能。为此，让我们创建一个包含航班 `id` 的 URL 路径：
 
-[PRE39]
+```
+path("<int:flight_id>", views.flight, name="flight") 
+```
 
 然后，在 `views.py` 中，我们将创建一个 `flight` 函数，它接受一个航班 ID 并渲染一个新的 HTML 页面：
 
-[PRE40]
+```
+def flight(request, flight_id):
+    flight = Flight.objects.get(id=flight_id)
+    return render(request, "flights/flight.html", {
+        "flight": flight
+    }) 
+```
 
 现在，我们将创建一个模板来显示这些航班信息，并包含一个链接回到主页
 
-[PRE41]
+```
+ {% extends "flights/layout.html" %}
+
+{% block body %}
+    <h1>Flight {{ flight.id }}</h1>
+    <ul>
+        <li>Origin: {{ flight.origin }}</li>
+        <li>Destination: {{ flight.destination }}</li>
+        <li>Duration: {{ flight.duration }} minutes</li>
+    </ul>
+    <a href="{% url 'index' %}">All Flights</a>
+{% endblock %} 
+```
 
 最后，我们需要添加从一页链接到另一页的能力，因此我们将修改我们的索引页面以包含链接：
 
-[PRE42]
+```
+ {% extends "flights/layout.html" %}
+
+{% block body %}
+    <h1>Flights:</h1>
+    <ul>
+        {% for flight in flights %}
+            <li><a href="{% url 'flight' flight.id %}">Flight {{ flight.id }}</a>: {{ flight.origin }} to {{ flight.destination }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %} 
+```
 
 现在主页看起来是这样的
 
@@ -466,7 +781,15 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 现在，让我们将乘客集成到我们的模型中。我们将首先创建一个乘客模型：
 
-[PRE43]
+```
+class Passenger(models.Model):
+    first = models.CharField(max_length=64)
+    last = models.CharField(max_length=64)
+    flights = models.ManyToManyField(Flight, blank=True, related_name="passengers")
+
+    def __str__(self):
+        return f"{self.first}  {self.last}" 
+```
 
 +   正如我们讨论的那样，乘客与航班有 **多对多** 的关系，我们在 Django 中使用 ManyToManyField 来描述这种关系。
 
@@ -480,11 +803,28 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 现在我们已经添加了一些乘客，让我们更新我们的航班页面，以便它显示航班上的所有乘客。我们首先访问 `views.py` 并更新我们的航班视图，以提供乘客列表作为上下文。我们使用之前定义的相关名称来访问列表。
 
-[PRE44]
+```
+def flight(request, flight_id):
+    flight = Flight.objects.get(id=flight_id)
+    passengers = flight.passengers.all()
+    return render(request, "flights/flight.html", {
+        "flight": flight,
+        "passengers": passengers
+    }) 
+```
 
 现在，将乘客列表添加到 `flight.html`：
 
-[PRE45]
+```
+ <h2>Passengers:</h2>
+<ul>
+    {% for passenger in passengers %}
+        <li>{{ passenger }}</li>
+    {% empty %}
+        <li>No Passengers.</li>
+    {% endfor %}
+</ul> 
+```
 
 在这一点上，当我们点击航班 5 时，我们看到
 
@@ -492,19 +832,61 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 现在，让我们来为网站访客提供预订航班的能力。我们将通过在 `urls.py` 中添加一个预订路由来实现这一点：
 
-[PRE46]
+```
+path("<int:flight_id>/book", views.book, name="book") 
+```
 
 现在，我们将在 `views.py` 中添加一个名为 `book` 的函数，该函数将乘客添加到航班中：
 
-[PRE47]
+```
+def book(request, flight_id):
+
+    # For a post request, add a new flight
+    if request.method == "POST":
+
+        # Accessing the flight
+        flight = Flight.objects.get(pk=flight_id)
+
+        # Finding the passenger id from the submitted form data
+        passenger_id = int(request.POST["passenger"])
+
+        # Finding the passenger based on the id
+        passenger = Passenger.objects.get(pk=passenger_id)
+
+        # Add passenger to the flight
+        passenger.flights.add(flight)
+
+        # Redirect user to flight page
+        return HttpResponseRedirect(reverse("flight", args=(flight.id,))) 
+```
 
 接下来，我们将向我们的航班模板添加一些上下文，以便页面可以通过 Django 的能力从查询中排除某些对象来访问当前不是航班乘客的每个人：
 
-[PRE48]
+```
+def flight(request, flight_id):
+    flight = Flight.objects.get(id=flight_id)
+    passengers = flight.passengers.all()
+    non_passengers = Passenger.objects.exclude(flights=flight).all()
+    return render(request, "flights/flight.html", {
+        "flight": flight,
+        "passengers": passengers,
+        "non_passengers": non_passengers
+    }) 
+```
 
 现在，我们将向我们的航班页面 HTML 添加一个表单，使用选择输入字段：
 
-[PRE49]
+```
+ <form action="{% url 'book' flight.id %}" method="post">
+    {% csrf_token %}
+    <select name="passenger" id="">
+        {% for passenger in non_passengers %}
+            <option value="{{ passenger.id }}">{{ passenger }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit">
+</form> 
+```
 
 现在，让我们看看我访问航班页面并添加乘客后网站看起来像什么
 
@@ -514,7 +896,12 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 使用 Django 管理应用的一个优点是它可以自定义。例如，如果我们希望在管理界面中看到航班的各个方面，我们可以在 `admin.py` 中创建一个新的类，并在注册 `Flight` 模型时将其作为参数添加：
 
-[PRE50]
+```
+class FlightAdmin(admin.ModelAdmin):
+    list_display = ("id", "origin", "destination", "duration")
+
+# Register your models here. admin.site.register(Flight, FlightAdmin) 
+```
 
 现在，当我们访问航班的管理页面时，我们还可以看到 `id`
 
@@ -526,27 +913,101 @@ SQL 注入攻击是指恶意用户在网站上输入 SQL 代码作为输入，�
 
 今天讲座的最后我们将讨论认证的概念，即允许用户登录和退出网站。幸运的是，Django 为我们简化了这一过程，让我们通过一个示例来看看我们如何实现。我们首先创建一个名为`users`的新应用。在这里，我们将完成创建新应用的所有常规步骤，但在我们的新`urls.py`文件中，我们将添加一些额外的路由：
 
-[PRE51]
+```
+urlpatterns = [
+    path('', views.index, name="index"),
+    path("login", views.login_view, name="login"),
+    path("logout", views.logout_view, name="logout")
+] 
+```
 
 让我们从创建一个用户可以登录的表单开始。我们将像往常一样创建一个`layout.html`文件，然后创建一个`login.html`文件，该文件包含一个表单，并在存在消息时显示该消息。
 
-[PRE52]
+```
+ {% extends "users/layout.html" %}
+
+{% block body %}
+    {% if message -%}
+        <div>{{ message }}</div>
+    {%- endif %}
+
+    <form action="{% url 'login' %}" method="post">
+        {% csrf_token %}
+        <input type="text", name="username", placeholder="Username">
+        <input type="password", name="password", placeholder="Password">
+        <input type="submit", value="Login">
+    </form>
+{% endblock %} 
+```
 
 现在，在`views.py`中，我们将添加三个函数：
 
-[PRE53]
+```
+def index(request):
+    # If no user is signed in, return to login page:
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+    return render(request, "users/user.html")
+
+def login_view(request):
+    return render(request, "users/login.html")
+
+def logout_view(request):
+    # Pass is a simple way to tell python to do nothing.
+    pass 
+```
 
 接下来，我们可以前往管理站点并添加一些用户。完成之后，我们将回到`views.py`并更新我们的`login_view`函数以处理带有用户名和密码的`POST`请求：
 
-[PRE54]
+```
+# Additional imports we'll need: from django.contrib.auth import authenticate, login, logout
+
+def login_view(request):
+    if request.method == "POST":
+        # Accessing username and password from form data
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        # Check if username and password are correct, returning User object if so
+        user = authenticate(request, username=username, password=password)
+
+        # If user object is returned, log in and route to index page:
+        if user:
+            login(request, user)
+            return HttpResponseRedirect(reverse("index"))
+        # Otherwise, return login page again with new context
+        else:
+            return render(request, "users/login.html", {
+                "message": "Invalid Credentials"
+            })
+    return render(request, "users/login.html") 
+```
 
 现在，我们将创建一个`user.html`文件，当用户认证时，`index`函数将渲染此文件：
 
-[PRE55]
+```
+ {% extends "users/layout.html" %}
+
+{% block body %}
+    <h1>Welcome, {{ request.user.first_name }}</h1>
+    <ul>
+        <li>Username: {{ request.user.username }}</li>
+        <li>Email: {{ request.user.email }}</li>
+    </ul>
+
+    <a href="{% url 'logout' %}">Log Out</a>
+{% endblock %} 
+```
 
 最后，为了允许用户登出，我们将更新`logout_view`函数，使其使用 Django 的内置`logout`函数：
 
-[PRE56]
+```
+def logout_view(request):
+    logout(request)
+    return render(request, "users/login.html", {
+                "message": "Logged Out"
+            }) 
+```
 
 现在我们已经完成，这是一个网站的演示
 

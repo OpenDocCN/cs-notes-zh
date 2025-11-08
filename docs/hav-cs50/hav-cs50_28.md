@@ -78,7 +78,10 @@
 
 +   在我们的 `hello.py` 文本编辑器中，我们可以添加另一个函数。`input` 是一个接受提示作为参数的函数。我们可以编辑我们的代码如下：
 
-    [PRE0]
+    ```
+    input("What's your name? ")
+    print("hello, world") 
+    ```
 
 +   然而，仅此修改并不能让程序输出用户输入的内容。为此，我们需要向您介绍变量
 
@@ -88,23 +91,37 @@
 
 +   在你的程序中，你可以通过编辑它来引入你自己的变量，如下所示：
 
-    [PRE1]
+    ```
+    name = input("What's your name? ")
+    print("hello, world") 
+    ```
 
     注意到在 `name = input("What's your name? ")` 中间的这个等号 `=` 在编程中有一个特殊的作用。这个等号实际上是将右侧的内容赋值给左侧。因此，`input("What's your name? ")` 返回的值被赋值给 `name`。
 
 +   如果你按照如下方式编辑你的代码，你会注意到一个意外的结果：
 
-    [PRE2]
+    ```
+    name = input("What's your name? ")
+    print("hello, name") 
+    ```
 
 +   无论用户输入什么，程序都会在终端窗口返回 `hello, name`。
 
 +   进一步编辑我们的代码，你可以输入
 
-    [PRE3]
+    ```
+    name = input("What's your name? ")
+    print("hello,")
+    print(name) 
+    ```
 
 +   在终端窗口的结果将是
 
-    [PRE4]
+    ```
+    What's your name? David
+    hello
+    David 
+    ```
 
 +   我们正在接近我们可能期望的结果！
 
@@ -116,7 +133,11 @@
 
 +   你可以在你的程序中添加注释，以便能够看到程序正在做什么。你可能编辑你的代码如下：
 
-    [PRE5]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+    print("hello,")
+    print(name) 
+    ```
 
 +   注释也可以作为你的待办事项列表。
 
@@ -124,19 +145,33 @@
 
 +   模拟代码是一种重要的注释类型，它成为了一种特殊类型的待办事项列表，尤其是在你不理解如何完成编码任务时。例如，在你的代码中，你可能编辑你的代码如下：
 
-    [PRE6]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+
+    # Print hello print("hello,")
+
+    # Print the name inputted print(name) 
+    ```
 
 ## 进一步改进您的第一个 Python 程序
 
 +   我们可以进一步编辑我们的代码如下：
 
-    [PRE7]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+
+    # Print hello and the inputted name print("hello, " + name) 
+    ```
 
 +   结果表明，一些函数接受许多参数。
 
 +   我们可以通过如下编辑我们的代码来使用逗号 `,` 传递多个参数：
 
-    [PRE8]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+
+    # Print hello and the inputted name print("hello,", name) 
+    ```
 
     如果我们在终端输入“David”，输出将是 `hello, David`。成功。
 
@@ -146,7 +181,11 @@
 
 +   在我们的代码中回滚一点，回到以下内容，结果出现在多行上有一个视觉上的副作用：
 
-    [PRE9]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+    print("hello,")
+    print(name) 
+    ```
 
 +   函数通过参数影响其行为。如果我们查看 `print` 函数的文档（[`print`](https://docs.python.org/3/library/functions.html#print)），你会注意到我们可以了解很多关于 `print` 函数所接受的参数。
 
@@ -156,7 +195,11 @@
 
 +   我们可以如下修改我们的代码：
 
-    [PRE10]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+    print("hello,", end="")
+    print(name) 
+    ```
 
     通过提供 `end=""`，我们正在覆盖 `end` 的默认值，这样它就不会在第一个打印语句之后创建新行。提供名字“David”，终端窗口中的输出将是 `hello, David`。
 
@@ -178,7 +221,10 @@
 
 +   使用字符串最优雅的方式可能是以下这样：
 
-    [PRE11]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+    print(f"hello, {name}") 
+    ```
 
     注意 `print(f"hello, {name}")` 中的 `f`。这个 `f` 是 Python 特殊处理字符串的指示符，与我们在这次讲座中展示的先前方法不同。预期你将在本课程中频繁使用这种字符串风格。
 
@@ -190,23 +236,47 @@
 
 +   通过在 `name` 上使用 `strip` 方法（例如，`name = name.strip()`），你将移除用户输入的左右两侧的所有空白字符。你可以修改你的代码如下：
 
-    [PRE12]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+
+    # Remove whitespace from the str name = name.strip()
+
+    # Print the output print(f"hello, {name}") 
+    ```
 
     重新运行这个程序，无论你在名字前后输入多少空格，它都会移除所有空白字符。
 
 +   使用 `title` 方法，它会将用户的名字转换为大写首字母：
 
-    [PRE13]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+
+    # Remove whitespace from the str name = name.strip()
+
+    # Capitalize the first letter of each word name = name.title()
+
+    # Print the output print(f"hello, {name}") 
+    ```
 
 +   到目前为止，你可能已经厌倦了在终端窗口中反复输入 `python`。你可以使用键盘上的上箭头键来回忆你最近输入的终端命令。
 
 +   注意你可以修改你的代码使其更高效：
 
-    [PRE14]
+    ```
+    # Ask the user for their name name = input("What's your name? ")
+
+    # Remove whitespace from the str and capitalize the first letter of each word name = name.strip().title()
+
+    # Print the output print(f"hello, {name}") 
+    ```
 
 +   我们甚至可以更进一步！
 
-    [PRE15]
+    ```
+    # Ask the user for their name, remove whitespace from the str and capitalize the first letter of each word name = input("What's your name? ").strip().title()
+
+    # Print the output print(f"hello, {name}") 
+    ```
 
 +   你可以在 Python 的文档中了解更多关于字符串的信息[这里](https://docs.python.org/3/library/stdtypes.html#str)
 
@@ -222,23 +292,49 @@
 
 +   首先，我们可以声明一些变量。
 
-    [PRE16]
+    ```
+    x = 1
+    y = 2
+
+    z = x + y
+
+    print(z) 
+    ```
 
     自然地，当我们运行`python calculator.py`时，我们在终端窗口中得到的答案是`3`。我们可以使用`input`函数使其更具交互性。
 
-    [PRE17]
+    ```
+    x = input("What's x? ")
+    y = input("What's y? ")
+
+    z = x + y
+
+    print(z) 
+    ```
 
 +   运行这个程序，我们发现输出是不正确的，为`12`。这可能是为什么？
 
 +   在此之前，我们已经看到了如何使用`+`符号连接两个字符串。因为你的计算机键盘输入在解释器中作为文本传入，所以它被视为一个字符串。因此，我们需要将这个输入从字符串转换为整数。我们可以这样做：
 
-    [PRE18]
+    ```
+    x = input("What's x? ")
+    y = input("What's y? ")
+
+    z = int(x) + int(y)
+
+    print(z) 
+    ```
 
     现在的结果是正确的。使用`int(x)`被称为“类型转换”，其中值从一种类型的变量（在这种情况下，是一个字符串）临时转换为另一种类型（在这里，是一个整数）。
 
 +   我们可以进一步改进我们的程序如下：
 
-    [PRE19]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    print(x + y) 
+    ```
 
     这说明你可以对函数运行函数。内部函数首先运行，然后是外部函数。首先运行`input`函数，然后是`int`函数。
 
@@ -256,19 +352,38 @@
 
 +   你可以修改你的代码以支持浮点数如下：
 
-    [PRE20]
+    ```
+    x = float(input("What's x? "))
+    y = float(input("What's y? "))
+
+    print(x + y) 
+    ```
 
     这个更改允许用户输入`1.2`和`3.4`以显示总数`4.6`。
 
 +   然而，让我们假设你想要将总数四舍五入到最接近的整数。查看 Python 文档中`round`函数，你会看到可用的参数是`round(number[, ndigits])`。那些方括号表示程序员可以指定某些可选内容。因此，你可以这样做`round(n)`来将数字四舍五入到最近的整数。或者，你可以按照以下方式编写代码：
 
-    [PRE21]
+    ```
+    # Get the user's input x = float(input("What's x? "))
+    y = float(input("What's y? "))
+
+    # Create a rounded result z = round(x + y)
+
+    # Print the result print(z) 
+    ```
 
     输出将被四舍五入到最接近的整数。
 
 +   如果我们想要格式化长数字的输出呢？例如，而不是看到`1000`，你可能希望看到`1,000`。你可以按照以下方式修改你的代码：
 
-    [PRE22]
+    ```
+    # Get the user's input x = float(input("What's x? "))
+    y = float(input("What's y? "))
+
+    # Create a rounded result z = round(x + y)
+
+    # Print the formatted result print(f"{z:,}") 
+    ```
 
     虽然相当晦涩，但`print(f"{z:,}")`创建了一个场景，其中输出的`z`将在可能看起来像`1,000`或`2,500`的地方包含逗号。
 
@@ -276,19 +391,40 @@
 
 +   我们如何四舍五入浮点数？首先，修改你的代码如下：
 
-    [PRE23]
+    ```
+    # Get the user's input x = float(input("What's x? "))
+    y = float(input("What's y? "))
+
+    # Calculate the result z = x / y
+
+    # Print the result print(z) 
+    ```
 
     当输入`2`作为 x 和`3`作为 y 时，结果 z 是`0.6666666666`，看起来像我们预期的那样无限期地继续下去。
 
 +   让我们假设我们想要向下取整。我们可以修改我们的代码如下：
 
-    [PRE24]
+    ```
+    # Get the user's input x = float(input("What's x? "))
+    y = float(input("What's y? "))
+
+    # Calculate the result and round z = round(x / y, 2)
+
+    # Print the result print(z) 
+    ```
 
     如我们所预期的那样，这将把结果四舍五入到最接近的两个小数位。
 
 +   我们也可以使用 `f-string` 格式化输出，如下所示：
 
-    [PRE25]
+    ```
+    # Get the user's input x = float(input("What's x? "))
+    y = float(input("What's y? "))
+
+    # Calculate the result z = x / y
+
+    # Print the result print(f"{z:.2f}") 
+    ```
 
     这个神秘的 `f-string` 代码显示的结果与我们的先前的四舍五入策略相同。
 
@@ -300,43 +436,98 @@
 
 +   让我们在终端窗口中通过输入 `code hello.py` 来恢复 `hello.py` 的最终代码。你的起始代码应该如下所示：
 
-    [PRE26]
+    ```
+    # Ask the user for their name, remove whitespace from the str and capitalize the first letter of each word name = input("What's your name? ").strip().title()
+
+    # Print the output print(f"hello, {name}") 
+    ```
 
     我们可以改进我们的代码，创建一个为我们说“hello”的专用函数！
 
 +   在我们的文本编辑器中删除所有代码，让我们从头开始：
 
-    [PRE27]
+    ```
+    name = input("What's your name? ")
+    hello()
+    print(name) 
+    ```
 
     尝试运行此代码，你的解释器将抛出一个错误。毕竟，没有为 `hello` 定义函数。
 
 +   我们可以创建一个名为 `hello` 的函数，如下所示：
 
-    [PRE28]
+    ```
+    def hello():
+        print("hello")
+
+    name = input("What's your name? ")
+    hello()
+    print(name) 
+    ```
 
     注意，`def hello()` 下的所有内容都需要缩进。Python 是一种缩进语言。它使用缩进来理解哪些内容属于上述函数的一部分。因此，`hello` 函数中的所有内容都必须缩进。如果某项内容没有缩进，它会被视为不在 `hello` 函数内部。在终端窗口中运行 `python hello.py`，你会看到你的输出并不完全如你所愿。
 
 +   我们可以进一步改进我们的代码：
 
-    [PRE29]
+    ```
+    # Create our own function def hello(to):
+        print("hello,", to)
+
+    # Output using our own function name = input("What's your name? ")
+    hello(name) 
+    ```
 
     在这里，在第一行，你正在创建你的 `hello` 函数。然而，这次你正在告诉解释器这个函数接受一个参数：一个名为 `to` 的变量。因此，当你调用 `hello(name)` 时，计算机将 `name` 作为 `to` 传递给 `hello` 函数。这就是我们将值传递给函数的方式。非常有用！在终端窗口中运行 `python hello.py`，你会看到输出更接近我们在这堂课中早些时候提出的理想输出。
 
 +   我们可以修改我们的代码，给 `hello` 添加一个默认值：
 
-    [PRE30]
+    ```
+    # Create our own function def hello(to="world"):
+        print("hello,", to)
+
+    # Output using our own function name = input("What's your name? ")
+    hello(name)
+
+    # Output without passing the expected arguments hello() 
+    ```
 
     自己测试一下你的代码。注意第一个 `hello` 的行为可能正如你所预期，而第二个 `hello`，由于没有传递值，将默认输出 `hello, world`。
 
 +   我们不必在程序的开头就有我们的函数。我们可以将其向下移动，但我们需要告诉解释器我们有一个 `main` 函数和一个单独的 `hello` 函数。
 
-    [PRE31]
+    ```
+    def main():
+
+        # Output using our own function
+        name = input("What's your name? ")
+        hello(name)
+
+        # Output without passing the expected arguments
+        hello()
+
+    # Create our own function def hello(to="world"):
+        print("hello,", to) 
+    ```
 
     然而，这单独的步骤将创建某种错误。如果我们运行 `python hello.py`，什么都不会发生！原因在于，这段代码中没有任何内容实际调用 `main` 函数并使我们的程序活跃起来。
 
 +   以下非常小的修改将调用 `main` 函数并使我们的程序恢复正常：
 
-    [PRE32]
+    ```
+    def main():
+
+        # Output using our own function
+        name = input("What's your name? ")
+        hello(name)
+
+        # Output without passing the expected arguments
+        hello()
+
+    # Create our own function def hello(to="world"):
+        print("hello,", to)
+
+    main() 
+    ```
 
 ## 返回值
 
@@ -344,7 +535,16 @@
 
 +   通过输入 `code calculator.py` 返回到我们的 `calculator.py` 代码。删除那里的所有代码。按照以下方式重新编写代码：
 
-    [PRE33]
+    ```
+    def main():
+        x = int(input("What's x? "))
+        print("x squared is", square(x))
+
+    def square(n):
+        return n * n
+
+    main() 
+    ```
 
     实际上，`x` 被传递给 `square`。然后，`x * x` 的计算结果被返回到主函数。
 

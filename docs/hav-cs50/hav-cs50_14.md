@@ -116,7 +116,10 @@
 
     否则，
 
-    [PRE0]
+    ```
+    * Expand the node (find all the new nodes that could be reached from this node), and add resulting nodes to the frontier.
+    * Add the current node to the explored set. 
+    ```
 
 #### 深度优先搜索
 
@@ -140,7 +143,19 @@
 
 代码示例：
 
-[PRE1]
+```
+ # Define the function that removes a node from the frontier and returns it.
+    def remove(self):
+    	  # Terminate the search if the frontier is empty, because this means that there is no solution.
+        if self.empty():
+            raise Exception("empty frontier")
+        else:
+        	  # Save the last item in the list (which is the newest node added)
+            node = self.frontier[-1]
+            # Save all the items on the list besides the last node (i.e. removing the last node)
+            self.frontier = self.frontier[:-1]
+            return node 
+```
 
 #### 广度优先搜索
 
@@ -162,7 +177,19 @@
 
 代码示例：
 
-[PRE2]
+```
+ # Define the function that removes a node from the frontier and returns it.
+    def remove(self):
+    	  # Terminate the search if the frontier is empty, because this means that there is no solution.
+        if self.empty():
+            raise Exception("empty frontier")
+        else:
+            # Save the oldest item on the list (which was the first one to be added)
+            node = self.frontier[0]
+            # Save all the items on the list besides the first one (i.e. removing the first node)
+            self.frontier = self.frontier[1:]
+            return node 
+```
 
 #### 贪婪最佳优先搜索
 

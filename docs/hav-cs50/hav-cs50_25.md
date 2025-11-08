@@ -58,7 +58,9 @@
 
 +   例如，在网站的源代码中，在 HTML 语言中，你可能看到如下代码：
 
-    [PRE0]
+    ```
+    <p>...</p> 
+    ```
 
     注意，上面的代码中，一个段落开始并结束。它以一个开标签和一个闭标签开始。
 
@@ -66,7 +68,9 @@
 
 +   这样的代码看起来是这样的：
 
-    [PRE1]
+    ```
+    <a href="https://harvard.edu">Harvard</a> 
+    ```
 
     注意，此代码是一个锚点标签，允许用户点击“哈佛”一词并访问 `harvard.edu`。
 
@@ -76,7 +80,9 @@
 
 +   例如，攻击者可能提供如下代码：
 
-    [PRE2]
+    ```
+    <a href="https://yale.edu">https://harvard.edu</a> 
+    ```
 
     注意，此代码是一个锚点标签，它欺骗用户点击 `https://harvard.edu`，而实际上它浏览到的是 `yale.edu`。虽然用户会认为他们点击的是哈佛的链接，但实际上他们正在浏览耶鲁。
 
@@ -94,7 +100,9 @@
 
 +   例如，考虑以下可能被插入搜索字段的代码：
 
-    [PRE3]
+    ```
+    <script>alert('attack')</script> 
+    ```
 
     注意，此脚本显示了一个通知，说“攻击。”虽然由于安全原因，Google 网站不会显示此类通知，但这代表了对手可能尝试的事情。
 
@@ -106,7 +114,9 @@
 
 +   想象一下，一个用户可能会被欺骗点击一个结构如下链接：
 
-    [PRE4]
+    ```
+    <a href="https://www.google.com/search?q=%3Cscript%3Ealert%28%27attack%27%29%3C%2Fscript%3E">cats</a> 
+    ```
 
     注意，此链接包含上面展示的精确脚本，该脚本旨在在用户的屏幕上创建攻击警报。
 
@@ -124,11 +134,15 @@
 
 +   例如，以下代码...
 
-    [PRE5]
+    ```
+    <p>About 6,420,000,000 <script>alert('attack')</script></p> 
+    ```
 
     将由安全软件输出...
 
-    [PRE6]
+    ```
+    <p>About 6,420,000,000 &lt;script&gt;alert('attack')&lt;/script&gt;</p> 
+    ```
 
     虽然有点晦涩，但请注意 `&lt;` 用于转义可能对软件构成威胁的潜在字符。上述输出的结果变成了恶意代码的纯文本表示。
 
@@ -150,13 +164,17 @@
 
 +   考虑以下头部：
 
-    [PRE7]
+    ```
+    Content-Security-Policy: script-src https://example.com/ 
+    ```
 
     注意，上述网站头部的安全策略仅允许通过单独的文件加载 JavaScript，通常以 `.js` 结尾。因此，当此安全策略生效时，HTML 中的 `<script>` 标签不会被浏览器运行。
 
 +   同样，以下头部将只允许从 `.css` 文件加载 CSS：
 
-    [PRE8]
+    ```
+    Content-Security-Policy: style-src https://example.com/ 
+    ```
 
     注意 `style-src` 指示仅允许从 `.css` 文件加载的 CSS。
 
@@ -168,7 +186,10 @@
 
 +   考虑以下 SQL 代码：
 
-    [PRE9]
+    ```
+    SELECT * FROM users
+    WHERE username = '{username}' 
+    ```
 
     注意，这里插入的用户输入的用户名被插入到 SQL 代码中。
 
@@ -178,35 +199,53 @@
 
 +   假设攻击者将以下代码插入到用户名字段中：
 
-    [PRE10]
+    ```
+    malan'; DELETE FROM users; –- 
+    ```
 
     注意，除了用户名外，还插入了恶意代码。
 
 +   由于上述输入，结果是以下内容：
 
-    [PRE11]
+    ```
+    SELECT * FROM users
+    WHERE username = 'malan'; DELETE FROM users; --' 
+    ```
 
     注意，攻击者的恶意输入向查询中添加了额外的代码。结果是系统中的所有用户都被删除。系统上的每个账户都被删除。
 
 +   假设用户被要求如下输入用户名和密码：
 
-    [PRE12]
+    ```
+    SELECT * FROM users
+    WHERE username = '{username}' AND password = '{password}' 
+    ```
 
     注意用户被要求输入用户名和密码。
 
 +   攻击者可能会将以下内容插入到密码字段中：
 
-    [PRE13]
+    ```
+    ' OR '1'='1 
+    ```
 
 +   然后，以下 SQL 代码将执行：
 
-    [PRE14]
+    ```
+    SELECT * FROM users
+    WHERE username = 'malan' AND password = ''
+    OR '1'='1' 
+    ```
 
     注意语法上，这会导致向数据库中的所有用户提供。
 
 +   为了更清楚地看到这一点，注意下面添加了额外的括号：
 
-    [PRE15]
+    ```
+    SELECT * FROM users
+    WHERE (username = 'malan' AND password = '')
+    OR '1'='1' 
+    ```
 
     注意，此代码将显示所有用户名和密码组合为真的用户 `OR` 所有用户。
 
@@ -220,15 +259,24 @@
 
 +   预处理语句将采用以下代码…
 
-    [PRE16]
+    ```
+    SELECT * FROM users
+    WHERE username = '{username}' 
+    ```
 
     并将其替换为…
 
-    [PRE17]
+    ```
+    SELECT * FROM users
+    WHERE username = ? 
+    ```
 
 +   预处理语句将查找任何 `'` 字符并将其替换为 `''`。因此，我们上面显示的先前攻击将通过预处理语句呈现：
 
-    [PRE18]
+    ```
+    SELECT * FROM users
+    WHERE username = 'malan''; DELETE FROM users; --' 
+    ```
 
     注意，在“malan”的末尾的 `'` 被替换为 `''`，使恶意代码无法运行。
 
@@ -254,7 +302,9 @@
 
 +   考虑我们可以使用开发者工具做什么。以下是文本框的代码：
 
-    [PRE19]
+    ```
+    <input disabled type="checkbox"> 
+    ```
 
     注意这创建了一种称为复选框的输入类型。此外，注意这个文本框已被禁用，无法通过`disabled`属性使用。
 
@@ -262,7 +312,9 @@
 
 +   拥有通过开发者工具访问自己电脑上 HTML 的用户可以更改 HTML。
 
-    [PRE20]
+    ```
+    <input type="checkbox"> 
+    ```
 
     注意这里 HTML 的本地副本已移除`disabled`属性。
 
@@ -270,13 +322,17 @@
 
 +   类似地，考虑以下 HTML：
 
-    [PRE21]
+    ```
+    <input required type="text"> 
+    ```
 
     注意这个文本输入是`required`。
 
 +   可以访问开发者工具的人可以取消此输入的要求，如下所示：
 
-    [PRE22]
+    ```
+    <input type="text"> 
+    ```
 
     注意，已移除`required`属性。
 
@@ -298,7 +354,9 @@
 
 +   你可能会考虑亚马逊如何使用`GET`方法来处理以下 HTML：
 
-    [PRE23]
+    ```
+    <a href="https://www.amazon.com/dp/B07XLQ2FSK">Buy Now</a> 
+    ```
 
     注意单击一下就可以购买这个产品。
 
@@ -306,7 +364,9 @@
 
 +   一个人可以提供一个自动尝试购买产品的图片：
 
-    [PRE24]
+    ```
+    <img src="https://www.amazon.com/dp/B07XLQ2FSK"> 
+    ```
 
     注意这里没有提供图片。相反，浏览器将尝试使用这个网页执行`GET`方法，可能进行未经授权或不需要的购买。
 
@@ -314,7 +374,12 @@
 
 +   考虑以下“立即购买”按钮的 HTML 代码：
 
-    [PRE25]
+    ```
+    <form action="https://www.amazon.com/" method="post">
+    <input name="dp" type="hidden" value="B07XLQ2FSK">
+    <button type="submit">Buy Now</button>
+    </form> 
+    ```
 
     注意一个网页表单，如上所述实现，可能会让人天真地认为自己是安全的，免受未经授权的购买。因为这个表单包含一个亚马逊用于验证的`hidden`值，从理论上讲，它可能会让程序员认为用户是安全的。
 
@@ -322,7 +387,15 @@
 
 +   事实上，只需添加几行代码就可以颠覆上述情况。想象一下，一个对手在自己的网站上（不是亚马逊的）有以下代码：
 
-    [PRE26]
+    ```
+    <form action="https://www.amazon.com/" method="post">
+    <input name="dp" type="hidden" value="B07XLQ2FSK">
+    <button type="submit">Buy Now</button>
+    </form>
+    <script>
+    document.forms[0].submit();
+    </script> 
+    ```
 
     注意一个对手网站上的几行代码可以定位到一个表单并自动提交它。
 

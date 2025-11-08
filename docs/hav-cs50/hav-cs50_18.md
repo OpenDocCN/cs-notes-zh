@@ -154,11 +154,61 @@ Lambda (λ) 是一个常数，我们可以用它来调节我们在成本函数�
 
 四个左侧列是我们可以用来预测纸币是真还是假的数据，这是由人类提供的外部数据，编码为 0 和 1。现在我们可以在这个数据集上训练我们的模型，看看我们能否预测新纸币是否为真。
 
-[PRE0]
+```
+import csv
+import random
+
+from sklearn import svm
+from sklearn.linear_model import Perceptron
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+
+# model = KNeighborsClassifier(n_neighbors=1)
+# model = svm.SVC() model = Perceptron() 
+```
 
 注意，在导入库之后，我们可以选择使用哪个模型。其余的代码将保持不变。SVC 代表支持向量分类器（我们称之为支持向量机）。KNeighborsClassifier 使用 k-邻居策略，并需要输入它应该考虑的邻居数量。
 
-[PRE1]
+```
+# Read data in from file with open("banknotes.csv") as f:
+    reader = csv.reader(f)
+    next(reader)
+
+    data = []
+    for row in reader:
+        data.append({
+            "evidence": [float(cell) for cell in row[:4]],
+            "label": "Authentic" if row[4] == "0" else "Counterfeit"
+        })
+
+# Separate data into training and testing groups holdout = int(0.40 * len(data))
+random.shuffle(data)
+testing = data[:holdout]
+training = data[holdout:]
+
+# Train model on training set X_training = [row["evidence"] for row in training]
+y_training = [row["label"] for row in training]
+model.fit(X_training, y_training)
+
+# Make predictions on the testing set X_testing = [row["evidence"] for row in testing]
+y_testing = [row["label"] for row in testing]
+predictions = model.predict(X_testing)
+
+# Compute how well we performed correct = 0
+incorrect = 0
+total = 0
+for actual, predicted in zip(y_testing, predictions):
+    total += 1
+    if actual == predicted:
+        correct += 1
+    else:
+        incorrect += 1
+
+# Print results print(f"Results for model {type(model).__name__}")
+print(f"Correct: {correct}")
+print(f"Incorrect: {incorrect}")
+print(f"Accuracy: {100 * correct / total:.2f}%") 
+```
 
 此算法的手动版本可以在本讲座的源代码中的 banknotes0.py 文件中找到。由于算法经常以类似的方式使用，scikit-learn 包含了额外的函数，使代码更加简洁且易于使用，这个版本可以在 banknotes1.py 文件中找到。
 

@@ -48,25 +48,37 @@
 
 +   我们可以在 R 控制台中输入以下命令来做到这一点：
 
-    [PRE0]
+    ```
+    dir.create("ducksay")  setwd("ducksay") 
+    ```
 
     注意这些命令创建了一个名为 `ducksay` 的目录，然后将工作目录设置为 `ducksay`。
 
 +   包通常在主文件夹中有以下结构：
 
-    [PRE1]
+    ```
+    DESCRIPTION
+    NAMESPACE
+    man/
+    R/
+    tests/ 
+    ```
 
     `DESCRIPTION` 文件将包括对包的描述，包括谁编写了它。`NAMESPACE` 文件将包括我们希望向我们的包用户提供的函数列表。`man` 是一个包含包手册（文档）的文件夹。`R` 包含包的 R 代码。最后，`tests` 包含我们想要运行的所有测试，以确保我们的包按预期行为。
 
 +   我们可以在 R 控制台中输入 `file.create("DESCRIPTION")` 来创建一个 `DESCRIPTION` 文件。现在我们可以打开这个文件并按照以下方式编码：
 
-    [PRE2]
+    ```
+    # Demonstrates required components of a DESCRIPTION file  Package:  ducksay  Title:  Duck  Say  Description:  Say  hello  with  a  duck.  Version:  1.0  Authors@R:  person("Carter",  "Zenke",  email  =  "carter@cs50.harvard.edu",  role  =  c("aut",  "cre",  "cph"))  License:  MIT  +  file  LICENSE 
+    ```
 
     注意包的命名和标题。然后，提供描述。包括作者。最后，提供提供此包的许可证。你可以在 `DESCRIPTION` 文件的 [文档](https://cran.r-project.org/doc/manuals/R-exts.html#The-DESCRIPTION-file) 中了解更多关于这些字段的信息。
 
 +   如上 `DESCRIPTION` 文件所示，我们还需要一个 `LICENSE` 文件。我们可以按照以下方式编码：
 
-    [PRE3]
+    ```
+    # Demonstrates adding on to a license template  YEAR:  ...  COPYRIGHT  HOLDER:  ducksay  authors 
+    ```
 
     用当前年份填充 `...`。注意许可证和版权所有者的年份是如何命名的。
 
@@ -84,13 +96,17 @@
 
 +   然后，我们可以输入 `use_testthat()` 来调用使用 testthat 的能力。我们的 `DESCRIPTION` 文件将自动修改如下：
 
-    [PRE4]
+    ```
+    # Demonstrates suggesting a dependency, for testing's sake  Package:  ducksay  Title:  Duck  Say  Description:  Say  hello  with  a  duck.  Version:  1.0  Authors@R:  person("Carter",  "Zenke",  email  =  "carter@cs50.harvard.edu",  role  =  c("aut",  "cre",  "cph"))  License:  MIT  +  file  LICENSE  Suggests:  testthat  (>=  3.0.0)  Config/testthat/edition:  3 
+    ```
 
     注意包会建议应该安装 testthat 版本 3.0.0 或更高版本。这可能会根据您安装的 testthat 版本而有所不同。
 
 +   在由 `use_testthat` 创建的 `tests/testthat` 文件夹内，我们可以创建我们的第一个测试，`test-ducksay.R`，如下所示：
 
-    [PRE5]
+    ```
+    # Demonstrates describing behavior of `ducksay`  describe("ducksay()",  {  it("can print to the console with `cat`",  {  expect_output(cat(ducksay()))  })  it("can say hello to the world",  {  expect_match(ducksay(),  "hello, world")  })  }) 
+    ```
 
     注意 `expect_match` 在 `ducksay` 的输出中寻找字符串 `hello, world`。
 
@@ -104,7 +120,9 @@
 
 +   按照以下方式编写 `ducksay.R` 的代码：
 
-    [PRE6]
+    ```
+    # Demonstrates defining a function for a package  ducksay  <-  function()  {  paste(  "hello, world",  ">(. )__",  " (____/",  sep  =  "\n"  )  } 
+    ```
 
 ## `NAMESPACE`
 
@@ -112,7 +130,9 @@
 
 +   要这样做，您可以在控制台中输入 `file.create("NAMESPACE")`。然后，按照以下方式编辑此文件：
 
-    [PRE7]
+    ```
+    # Demonstrates declaring `ducksay` accessible to package end users  export(ducksay) 
+    ```
 
     此文件仅使 `ducksay` 函数对包的最终用户可用。
 
@@ -126,7 +146,9 @@
 
 +   更新我们的测试，让我们测试一下 `ducksay` 中是否出现了鸭子：
 
-    [PRE8]
+    ```
+    # Demonstrates checking for duck in output  describe("ducksay()",  {  it("can print to the console with `cat`",  {  expect_output(cat(ducksay()))  })  it("can say hello to the world",  {  expect_match(ducksay(),  "hello, world")  })  it("can say hello with a duck",  {  duck  <-  paste(  ">(. )__",  " (____/",  sep  =  "\n"  )  expect_match(ducksay(),  duck,  fixed  =  TRUE)  })  }) 
+    ```
 
     注意这个测试看起来是否表示了鸭子。此外，注意 `fixed = TRUE`，正如讲座中所述，它防止测试错误地解释鸭子中的一些字符作为称为正则表达式的东西的一部分。现在就足够了，正则表达式不是我们想要的！
 
@@ -138,13 +160,17 @@
 
 +   您可以通过以下方式编写文档：
 
-    [PRE9]
+    ```
+    dir.create("man")  file.create("man/ducksay.Rd") 
+    ```
 
     第一个命令创建一个名为 `man` 的文件夹。第二个创建我们的文档文件。
 
 +   按照以下方式修改您的文档文件：
 
-    [PRE10]
+    ```
+    # Demonstrates required markup for R documentation files  \name{ducksay}  \alias{ducksay}  \title{Duck  Say}  \description{A  duck  that  says  hello.}  \usage{  ducksay()  }  \value{  A  string  representation  of  a  duck  saying  hello  to  the  world.  }  \examples{  cat(ducksay())  } 
+    ```
 
     注意 `name`、`title`、`description`、`usage` 以及其他部分是如何提供的。您可以通过阅读有关 R 文档文件的[文档](https://cran.r-project.org/doc/manuals/R-exts.html#Writing-R-documentation-files)来了解更多关于这些元素的信息。
 
@@ -154,7 +180,10 @@
 
 +   一旦一个包的内容准备好打包和分发，可以使用两个命令中的任何一个来启动 *构建*：
 
-    [PRE11]
+    ```
+    build
+    R CMD build 
+    ```
 
     注意到 `build` 是一个 devtools 函数，可以直接在 R 控制台中运行。`R CMD build` 可以在 R 的计算机终端外运行。
 
@@ -164,19 +193,25 @@
 
 +   要更新我们的代码，我们可以打开我们的测试文件并更新测试如下：
 
-    [PRE12]
+    ```
+    # Demonstrates ensuring duck repeats given phrase  describe("ducksay()",  {  it("can print to the console with `cat`",  {  expect_output(cat(ducksay()))  })  it("can say hello to the world",  {  expect_match(ducksay(),  "hello, world")  })  it("can say hello with a duck",  {  duck  <-  paste(  ">(. )__",  " (____/",  sep  =  "\n"  )  expect_match(ducksay(),  duck,  fixed  =  TRUE)  })  it("can say any given phrase",  {  expect_match(ducksay("quack!"),  "quack!")  })  }) 
+    ```
 
     注意到添加了一个新的测试，用于查找“quack！”
 
 +   考虑到这个测试，我们现在可以更新我们的源代码，以便输入任何短语，然后鸭子会相应地表达出来：
 
-    [PRE13]
+    ```
+    # Demonstrates taking an argument to print  ducksay  <-  function(phrase  =  "hello, world")  {  paste(  phrase,  ">(. )__",  " (____/",  sep  =  "\n"  )  } 
+    ```
 
     注意到提供了一个默认的 `phrase`，“hello, world”。如果提供了另一个 `phrase`，它将说出那个 `phrase`。
 
 +   同样，我们可以更新我们的文档文件如下：
 
-    [PRE14]
+    ```
+    # Demonstrates updated markup, including specifying arguments  \name{ducksay}  \alias{ducksay}  \title{Duck  Say}  \description{A  duck  that  says  hello.}  \usage{  ducksay(phrase  =  "hello, world")  }  \arguments{  \item{phrase}{The  phrase  for  the  duck  to  say.}  }  \value{  A  string  representation  of  a  duck  saying  the  given  phrase.  }  \examples{  cat(ducksay())  cat(ducksay("quack!"))  } 
+    ```
 
     注意到 `value` 已更新。此外，`arguments` 也已更新。另一个例子在 `examples` 中提供。
 
@@ -192,13 +227,18 @@
 
 +   接下来，我们可以输入 `file.create("greet.R")` 来创建一个新文件。按照以下方式修改此文件：
 
-    [PRE15]
+    ```
+    # Demonstrates using custom package  library(ducksay)  name  <-  readline("What's your name? ")  greeting  <-  ducksay(paste("hello,",  name))  cat(greeting) 
+    ```
 
     注意到这个程序加载了 `ducksay`。然后，代码使用这个新的库。
 
 +   虽然这个包在我们的计算机上可以工作，因为我们是在本地开发的这个包，但其他人需要安装这个包。为此，可以使用以下命令之一：
 
-    [PRE16]
+    ```
+    install.packages
+    R CMD INSTALL 
+    ```
 
     如前几节课所讨论的，顶级命令可以直接在 RStudio 中运行，并且是 R 本身构建的。另一个命令可以在计算机的终端中运行。它也是 R 中构建的。
 

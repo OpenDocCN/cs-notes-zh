@@ -230,19 +230,84 @@ Python 中存在多个库来简化概率推理的过程。我们将查看*pomegr
 
 首先，我们创建节点并为每个节点提供一个概率分布。
 
-[PRE0]
+```
+from pomegranate import *
+
+# Rain node has no parents rain = Node(DiscreteDistribution({
+    "none": 0.7,
+    "light": 0.2,
+    "heavy": 0.1
+}), name="rain")
+
+# Track maintenance node is conditional on rain maintenance = Node(ConditionalProbabilityTable([
+    ["none", "yes", 0.4],
+    ["none", "no", 0.6],
+    ["light", "yes", 0.2],
+    ["light", "no", 0.8],
+    ["heavy", "yes", 0.1],
+    ["heavy", "no", 0.9]
+], [rain.distribution]), name="maintenance")
+
+# Train node is conditional on rain and maintenance train = Node(ConditionalProbabilityTable([
+    ["none", "yes", "on time", 0.8],
+    ["none", "yes", "delayed", 0.2],
+    ["none", "no", "on time", 0.9],
+    ["none", "no", "delayed", 0.1],
+    ["light", "yes", "on time", 0.6],
+    ["light", "yes", "delayed", 0.4],
+    ["light", "no", "on time", 0.7],
+    ["light", "no", "delayed", 0.3],
+    ["heavy", "yes", "on time", 0.4],
+    ["heavy", "yes", "delayed", 0.6],
+    ["heavy", "no", "on time", 0.5],
+    ["heavy", "no", "delayed", 0.5],
+], [rain.distribution, maintenance.distribution]), name="train")
+
+# Appointment node is conditional on train appointment = Node(ConditionalProbabilityTable([
+    ["on time", "attend", 0.9],
+    ["on time", "miss", 0.1],
+    ["delayed", "attend", 0.6],
+    ["delayed", "miss", 0.4]
+], [train.distribution]), name="appointment") 
+```
 
 其次，我们通过添加节点并描述它们之间通过添加边连接的节点（回想一下，贝叶斯网络是一个有向图，由带有箭头的节点组成）来创建模型。
 
-[PRE1]
+```
+# Create a Bayesian Network and add states model = BayesianNetwork()
+model.add_states(rain, maintenance, train, appointment)
+
+# Add edges connecting nodes model.add_edge(rain, maintenance)
+model.add_edge(rain, train)
+model.add_edge(maintenance, train)
+model.add_edge(train, appointment)
+
+# Finalize model model.bake() 
+```
 
 现在，要询问某个事件的概率，我们使用感兴趣的值运行模型。在这个例子中，我们想知道没有雨、没有轨道维护、火车准时到达，并且我们参加会议的概率。
 
-[PRE2]
+```
+# Calculate probability for a given observation probability = model.probability([["none", "no", "on time", "attend"]])
+
+print(probability) 
+```
 
 否则，我们可以使用程序为所有变量提供给定一些观察证据的概率分布。在以下情况下，我们知道火车延误了。根据这个信息，我们计算并打印变量 Rain、Maintenance 和 Appointment 的概率分布。
 
-[PRE3]
+```
+# Calculate predictions based on the evidence that the train was delayed predictions = model.predict_proba({
+    "train": "delayed"
+})
+
+# Print predictions for each node for node, prediction in zip(model.states, predictions):
+    if isinstance(prediction, str):
+        print(f"{node.name}: {prediction}")
+    else:
+        print(f"{node.name}")
+        for value, probability in prediction.parameters[0].items():
+            print(f"  {value}: {probability:.4f}") 
+```
 
 上面的代码使用了枚举推理。然而，这种计算概率的方法效率低下，尤其是在模型中有许多变量时。另一种方法可能是放弃**精确推理**而采用**近似推理**。这样做，我们在生成的概率中会失去一些精度，但通常这种不精确是可以忽略不计的。相反，我们获得了一种可扩展的概率计算方法。
 
@@ -258,11 +323,57 @@ Python 中存在多个库来简化概率推理的过程。我们将查看*pomegr
 
 在代码中，一个采样函数可以看起来像 `generate_sample`：
 
-[PRE4]
+```
+import pomegranate
+
+from collections import Counter
+
+from model import model
+
+def generate_sample():
+
+    # Mapping of random variable name to sample generated
+    sample = {}
+
+    # Mapping of distribution to sample generated
+    parents = {}
+
+    # Loop over all states, assuming topological order
+    for state in model.states:
+
+        # If we have a non-root node, sample conditional on parents
+        if isinstance(state.distribution, pomegranate.ConditionalProbabilityTable):
+            sample[state.name] = state.distribution.sample(parent_values=parents)
+
+        # Otherwise, just sample from the distribution alone
+        else:
+            sample[state.name] = state.distribution.sample()
+
+        # Keep track of the sampled value in the parents mapping
+        parents[state.distribution] = sample[state.name]
+
+    # Return generated sample
+    return sample 
+```
 
 现在，为了计算 P(*Appointment | Train = delayed*)，即火车延误时 Appointment 变量的概率分布，我们做以下操作：
 
-[PRE5]
+```
+# Rejection sampling
+# Compute distribution of Appointment given that train is delayed N = 10000
+data = []
+
+# Repeat sampling 10,000 times for i in range(N):
+
+    # Generate a sample based on the function that we defined earlier
+    sample = generate_sample()
+
+    # If, in this sample, the variable of Train has the value delayed, save the sample. Since we are interested interested in the probability distribution of Appointment given that the train is delayed, we discard the sampled where the train was on time.
+    if sample["train"] == "delayed":
+        data.append(sample["appointment"])
+
+# Count how many times each value of the variable appeared. We can later normalize by dividing the results by the total number of saved samples to get the approximate probabilities of the variable that add up to 1. print(Counter(data)) 
+```
 
 **似然加权**
 
@@ -298,7 +409,25 @@ Python 中存在多个库来简化概率推理的过程。我们将查看*pomegr
 
 给定这个马尔可夫链，我们现在可以回答诸如“连续四天降雨的概率是多少？”等问题。以下是一个如何在代码中实现马尔可夫链的示例：
 
-[PRE6]
+```
+from pomegranate import *
+
+# Define starting probabilities start = DiscreteDistribution({
+    "sun": 0.5,
+    "rain": 0.5
+})
+
+# Define transition model transitions = ConditionalProbabilityTable([
+    ["sun", "sun", 0.8],
+    ["sun", "rain", 0.2],
+    ["rain", "sun", 0.3],
+    ["rain", "rain", 0.7]
+], [start])
+
+# Create Markov chain model = MarkovChain([start, transitions])
+
+# Sample 50 states from chain print(model.sample(50)) 
+```
 
 ## 隐藏马尔可夫模型
 
@@ -336,10 +465,54 @@ Python 中存在多个库来简化概率推理的过程。我们将查看*pomegr
 
 最可能的解释任务可以用于语音识别等过程，其中，基于多个波形，AI 推断出最可能导致这些波形的单词或音节的序列。下面是一个用于最可能解释任务的隐马尔可夫模型的 Python 实现：
 
-[PRE7]
+```
+from pomegranate import *
+
+# Observation model for each state sun = DiscreteDistribution({
+    "umbrella": 0.2,
+    "no umbrella": 0.8
+})
+
+rain = DiscreteDistribution({
+    "umbrella": 0.9,
+    "no umbrella": 0.1
+})
+
+states = [sun, rain]
+
+# Transition model transitions = numpy.array(
+    [[0.8, 0.2], # Tomorrow's predictions if today = sun
+     [0.3, 0.7]] # Tomorrow's predictions if today = rain )
+
+# Starting probabilities starts = numpy.array([0.5, 0.5])
+
+# Create the model model = HiddenMarkovModel.from_matrix(
+    transitions, states, starts,
+    state_names=["sun", "rain"]
+)
+model.bake() 
+```
 
 注意，我们的模型既有传感器模型也有转换模型。对于隐马尔可夫模型，我们需要这两个模型。在下面的代码片段中，我们看到一系列观察结果，即人们是否带伞进入大楼，基于这个序列，我们将运行模型，该模型将生成并打印最可能的解释（即最可能导致这种观察模式的天气序列）：
 
-[PRE8]
+```
+from model import model
+
+# Observed data observations = [
+    "umbrella",
+    "umbrella",
+    "no umbrella",
+    "umbrella",
+    "umbrella",
+    "umbrella",
+    "umbrella",
+    "no umbrella",
+    "no umbrella"
+]
+
+# Predict underlying states predictions = model.predict(observations)
+for prediction in predictions:
+    print(model.states[prediction].name) 
+```
 
 在这种情况下，程序的输出将是雨，雨，晴，雨，雨，雨，雨，晴，晴。这个输出代表了根据我们对人们是否带伞进入大楼的观察，最可能的天气模式。

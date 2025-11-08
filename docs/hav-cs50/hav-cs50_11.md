@@ -54,7 +54,9 @@
 
 +   此外，上周，你看到了以下这样的 URL：
 
-    [PRE0]
+    ```
+    https://www.example.com/folder/file.html 
+    ```
 
     注意到 `file.html` 是位于 `example.com` 的 `folder` 文件夹中的一个 HTML 文件。
 
@@ -70,37 +72,87 @@
 
 +   这里是 `requirements.txt` 的一个示例：
 
-    [PRE1]
+    ```
+    Flask 
+    ```
 
     注意到在这个文件中只有 `Flask` 出现。这是因为 Flask 是运行 Flask 应用程序所必需的。
 
 +   这里是一个非常简单的 `app.py` Flask 应用程序：
 
-    [PRE2]
+    ```
+    # Says hello to world by returning a string of text 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        return "hello, world" 
+    ```
 
     注意到 `/` 路由简单地返回文本 `hello, world`。
 
 +   我们还可以创建实现 HTML 的代码：
 
-    [PRE3]
+    ```
+    # Says hello to world by returning a string of HTML 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        return '<!DOCTYPE html><html lang="en"><head><title>hello</title></head><body>hello, world</body></html>' 
+    ```
 
     注意到它不是返回简单的文本，而是提供了 HTML。
 
 +   改进我们的应用程序，我们还可以通过创建一个名为 `templates` 的文件夹并创建一个包含以下代码的 `index.html` 文件来根据模板提供 HTML：
 
-    [PRE4]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>hello</title>
+        </head>
+
+        <body>
+            hello, {{ name }}
+        </body>
+
+    </html> 
+    ```
 
     注意双大括号 `{{ name }}`，它是为我们 Flask 服务器稍后提供的某个内容的占位符。
 
 +   然后，在 `templates` 文件夹所在的同一文件夹中，创建一个名为 `app.py` 的文件，并添加以下代码：
 
-    [PRE5]
+    ```
+    # Uses request.args.get 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        name = request.args.get("name", "world")
+        return render_template("index.html", name=name) 
+    ```
 
     注意，这段代码将 `app` 定义为 Flask 应用程序。然后，它定义了 `app` 的 `/` 路由，返回包含 `name` 参数的 `index.html` 内容。默认情况下，`request.args.get` 函数将查找用户提供的 `name`。如果没有提供名称，它将默认为 `world`。"@app.route" 通常被称为装饰器。
 
 +   您可以通过在终端窗口中输入 `flask run` 来运行这个网络应用程序。如果 Flask 没有运行，请确保上述每个文件中的语法都正确。此外，如果 Flask 无法运行，请确保您的文件组织如下：
 
-    [PRE6]
+    ```
+    /templates
+        index.html
+    app.py
+    requirements.txt 
+    ```
 
 +   一旦运行起来，您将被提示点击一个链接。一旦您导航到该网页，请尝试在浏览器 URL 栏的基本 URL 中添加 `?name=[Your Name]`。
 
@@ -108,19 +160,65 @@
 
 +   在改进我们的程序时，我们知道大多数用户不会在地址栏中输入参数。相反，程序员依赖于用户在网页上填写表单。因此，我们可以按如下方式修改 `index.html`：
 
-    [PRE7]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>hello</title>
+        </head>
+
+        <body>
+            <form action="/greet" method="get">
+                <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+                <button type="submit">Greet</button>
+            </form>
+        </body>
+
+    </html> 
+    ```
 
     注意现在创建了一个表单，它接受用户的姓名，并将其传递给名为 `/greet` 的路由。"autocomplete" 已关闭。此外，包含文本 `name` 的 `placeholder` 也被包含在内。此外，注意 `meta` 标签是如何被用来使网页响应式的。
 
 +   此外，我们还可以按如下方式修改 `app.py`：
 
-    [PRE8]
+    ```
+    # Adds a form, second route 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+
+    @app.route("/greet")
+    def greet():
+        return render_template("greet.html", name=request.args.get("name", "world")) 
+    ```
 
     注意默认路径将显示一个表单，让用户输入他们的姓名。`/greet` 路由将 `name` 传递到该网页。
 
 +   为了完成这个实现，您需要在 `templates` 文件夹中创建一个名为 `greet.html` 的模板，如下所示：
 
-    [PRE9]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>hello</title>
+        </head>
+
+        <body>
+            hello, {{ name }}
+        </body>
+
+    </html> 
+    ```
 
     注意，现在这个路由将向用户显示问候语，然后是他们的名字。
 
@@ -130,19 +228,51 @@
 
 +   首先，创建一个新的模板 `layout.html` 并编写如下代码：
 
-    [PRE10]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>hello</title>
+        </head>
+
+        <body>
+            {% block body %}{% endblock %}
+        </body>
+
+    </html> 
+    ```
 
     注意到 `{% block body %}{% endblock %}` 允许从其他 HTML 文件中插入其他代码。
 
 +   然后，按如下方式修改您的 `index.html`：
 
-    [PRE11]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+
+        <form action="/greet" method="get">
+            <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+            <button type="submit">Greet</button>
+        </form>
+
+    {% endblock %} 
+    ```
 
     注意到 `{% extends "layout.html" %}` 这行代码告诉服务器从哪里获取此页面的布局。然后，`{% block body %}{% endblock %}` 告诉要插入 `layout.html` 的代码。
 
 +   最后，按如下方式修改 `greet.html`：
 
-    [PRE12]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        hello, {{ name }}
+    {% endblock %} 
+    ```
 
     注意这段代码更短、更紧凑。
 
@@ -152,7 +282,20 @@
 
 +   我们可以通过修改`app.py`来利用`post`方法帮助解决这个问题：
 
-    [PRE13]
+    ```
+    # Switches to POST 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+
+    @app.route("/greet", methods=["POST"])
+    def greet():
+        return render_template("greet.html", name=request.form.get("name", "world")) 
+    ```
 
     注意到在`/greet`路由中添加了`POST`，并且我们使用`request.form.get`而不是`request.args.get`。
 
@@ -160,25 +303,71 @@
 
 +   尽管如此，我们可以通过使用单个路由来同时处理`get`和`post`来进一步改进此代码。为此，修改`app.py`如下：
 
-    [PRE14]
+    ```
+    # Uses a single route 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    @app.route("/", methods=["GET", "POST"])
+    def index():
+        if request.method == "POST":
+            return render_template("greet.html", name=request.form.get("name", "world"))
+        return render_template("index.html") 
+    ```
 
     注意到`get`和`post`都是在单个路由中完成的。然而，`request.method`被用来根据用户请求的路由类型正确路由。
 
 +   因此，你可以按照以下方式修改你的`index.html`：
 
-    [PRE15]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+
+        <form action="/" method="post">
+            <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+            <button type="submit">Greet</button>
+        </form>
+
+    {% endblock %} 
+    ```
 
     注意到表单的`action`已被更改。
 
 +   尽管如此，此代码中仍然存在一个错误。根据我们的新实现，当有人在没有输入名称的情况下填写表单时，会显示没有名称的`Hello,`。我们可以通过以下方式编辑`app.py`来改进我们的代码：
 
-    [PRE16]
+    ```
+    # Moves default value to template 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    @app.route("/", methods=["GET", "POST"])
+    def index():
+        if request.method == "POST":
+            return render_template("greet.html", name=request.form.get("name"))
+        return render_template("index.html") 
+    ```
 
     注意到`name=request.form.get("name"))`已被更改。
 
 +   最后，按照以下方式修改`greet.html`：
 
-    [PRE17]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+
+        hello,
+        {% if name -%}
+            {{ name }}
+        {%- else -%}
+            world
+        {%- endif %}
+
+    {% endblock %} 
+    ```
 
     注意到`hello, {{ name }}`是如何改变以允许在没有识别到名称时输出默认值。
 
@@ -192,37 +381,120 @@
 
 +   接下来，在`froshims`文件夹中，输入`code requirements.txt`并编写如下代码：
 
-    [PRE18]
+    ```
+    Flask 
+    ```
 
     如前所述，运行 Flask 应用程序需要 Flask。
 
 +   最后，输入`code app.py`并编写如下代码：
 
-    [PRE19]
+    ```
+    # Implements a registration form using a select menu, validating sport server-side 
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    SPORTS = [
+        "Basketball",
+        "Soccer",
+        "Ultimate Frisbee"
+    ]
+
+    @app.route("/")
+    def index():
+        return render_template("index.html", sports=SPORTS)
+
+    @app.route("/register", methods=["POST"])
+    def register():
+
+        # Validate submission
+        if not request.form.get("name") or request.form.get("sport") not in SPORTS:
+            return render_template("failure.html")
+
+        # Confirm registration
+        return render_template("success.html") 
+    ```
 
     注意到提供了一个`failure`选项，如果`name`或`sport`字段填写不正确，将向用户显示错误信息。
 
 +   接下来，通过输入`code templates/index.html`在`templates`文件夹中创建一个名为`index.html`的文件，并编写如下代码：
 
-    [PRE20]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        <h1>Register</h1>
+        <form action="/register" method="post">
+            <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+            <select name="sport">
+                <option disabled selected value="">Sport</option>
+                {% for sport in sports %}
+                    <option value="{{ sport }}">{{ sport }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Register</button>
+        </form>
+    {% endblock %} 
+    ```
 
 +   接下来，通过输入`code templates/layout.html`创建一个名为`layout.html`的文件，并编写如下代码：
 
-    [PRE21]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>froshims</title>
+        </head>
+
+        <body>
+            {% block body %}{% endblock %}
+        </body>
+
+    </html> 
+    ```
 
 +   第四，在`templates`目录下创建一个名为`success.html`的文件，如下所示：
 
-    [PRE22]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        You are registered!
+    {% endblock %} 
+    ```
 
 +   最后，在`templates`目录下创建一个名为`failure.html`的文件，如下所示：
 
-    [PRE23]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        You are not registered!
+    {% endblock %} 
+    ```
 
 +   执行`flask run`并检查此阶段的程序。
 
 +   你可以想象我们如何使用单选按钮查看各种注册选项。我们可以通过以下方式改进`index.html`：
 
-    [PRE24]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        <h1>Register</h1>
+        <form action="/register" method="post">
+            <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+            {% for sport in sports %}
+                <input name="sport" type="radio" value="{{ sport }}"> {{ sport }}
+            {% endfor %}
+            <button type="submit">Register</button>
+        </form>
+    {% endblock %} 
+    ```
 
     注意到`type`已被更改为`radio`。
 
@@ -230,17 +502,89 @@
 
 +   你可以想象我们如何接受许多不同注册者的注册。我们可以通过以下方式改进`app.py`：
 
-    [PRE25]
+    ```
+    # Implements a registration form, storing registrants in a dictionary, with error messages 
+    from flask import Flask, redirect, render_template, request
+
+    app = Flask(__name__)
+
+    REGISTRANTS = {}
+
+    SPORTS = [
+        "Basketball",
+        "Soccer",
+        "Ultimate Frisbee"
+    ]
+
+    @app.route("/")
+    def index():
+        return render_template("index.html", sports=SPORTS)
+
+    @app.route("/register", methods=["POST"])
+    def register():
+
+        # Validate name
+        name = request.form.get("name")
+        if not name:
+            return render_template("error.html", message="Missing name")
+
+        # Validate sport
+        sport = request.form.get("sport")
+        if not sport:
+            return render_template("error.html", message="Missing sport")
+        if sport not in SPORTS:
+            return render_template("error.html", message="Invalid sport")
+
+        # Remember registrant
+        REGISTRANTS[name] = sport
+
+        # Confirm registration
+        return redirect("/registrants")
+
+    @app.route("/registrants")
+    def registrants():
+        return render_template("registrants.html", registrants=REGISTRANTS) 
+    ```
 
     注意到使用了一个名为 `REGISTRANTS` 的字典来记录 `REGISTRANTS[name]` 选定的 `sport`。同时，注意 `registrants=REGISTRANTS` 将字典传递给此模板。
 
 +   此外，我们可以实现 `error.html`：
 
-    [PRE26]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        <h1>Error</h1>
+        <p>{{ message }}</p>
+        <img alt="Grumpy Cat" src="/static/cat.jpg">
+    {% endblock %} 
+    ```
 
 +   此外，创建一个新的模板，名为 `registrants.html`，如下所示：
 
-    [PRE27]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        <h1>Registrants</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Sport</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for name in registrants %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>{{ registrants[name] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endblock %} 
+    ```
 
     注意到 `{% for name in registrants %}...{% endfor %}` 会遍历每个注册者。能够在动态网页上迭代是非常强大的功能！
 
@@ -262,29 +606,152 @@
 
 +   接下来，按如下方式修改 `requirements.txt`：
 
-    [PRE28]
+    ```
+    cs50
+    Flask 
+    ```
 
 +   按如下方式修改 `index.html`：
 
-    [PRE29]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        <h1>Register</h1>
+        <form action="/register" method="post">
+            <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+            {% for sport in sports %}
+                <input name="sport" type="checkbox" value="{{ sport }}"> {{ sport }}
+            {% endfor %}
+            <button type="submit">Register</button>
+        </form>
+    {% endblock %} 
+    ```
 
 +   按如下方式修改 `layout.html`：
 
-    [PRE30]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>froshims</title>
+        </head>
+
+        <body>
+            {% block body %}{% endblock %}
+        </body>
+
+    </html> 
+    ```
 
 +   确保 `error.html` 显示如下：
 
-    [PRE31]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        <h1>Error</h1>
+        <p>{{ message }}</p>
+        <img alt="Grumpy Cat" src="/static/cat.jpg">
+    {% endblock %} 
+    ```
 
 +   修改 `registrants.html` 以如下所示：
 
-    [PRE32]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+        <h1>Registrants</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Sport</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registrant in registrants %}
+                    <tr>
+                        <td>{{ registrant.name }}</td>
+                        <td>{{ registrant.sport }}</td>
+                        <td>
+                            <form action="/deregister" method="post">
+                                <input name="id" type="hidden" value="{{ registrant.id }}">
+                                <button type="submit">Deregister</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endblock %} 
+    ```
 
     注意到包含了一个隐藏值 `registrant.id`，这样就可以在 `app.py` 中稍后使用这个 `id`。
 
 +   最后，按如下方式修改 `app.py`：
 
-    [PRE33]
+    ```
+    # Implements a registration form, storing registrants in a SQLite database, with support for deregistration 
+    from cs50 import SQL
+    from flask import Flask, redirect, render_template, request
+
+    app = Flask(__name__)
+
+    db = SQL("sqlite:///froshims.db")
+
+    SPORTS = [
+        "Basketball",
+        "Soccer",
+        "Ultimate Frisbee"
+    ]
+
+    @app.route("/")
+    def index():
+        return render_template("index.html", sports=SPORTS)
+
+    @app.route("/deregister", methods=["POST"])
+    def deregister():
+
+        # Forget registrant
+        id = request.form.get("id")
+        if id:
+            db.execute("DELETE FROM registrants WHERE id = ?", id)
+        return redirect("/registrants")
+
+    @app.route("/register", methods=["POST"])
+    def register():
+
+        # Validate name
+        name = request.form.get("name")
+        if not name:
+            return render_template("error.html", message="Missing name")
+
+        # Validate sports
+        sports = request.form.getlist("sport")
+        if not sports:
+            return render_template("error.html", message="Missing sport")
+        for sport in sports:
+            if sport not in SPORTS:
+                return render_template("error.html", message="Invalid sport")
+
+        # Remember registrant
+        for sport in sports:
+            db.execute("INSERT INTO registrants (name, sport) VALUES(?, ?)", name, sport)
+
+        # Confirm registration
+        return redirect("/registrants")
+
+    @app.route("/registrants")
+    def registrants():
+        registrants = db.execute("SELECT * FROM registrants")
+        return render_template("registrants.html", registrants=registrants) 
+    ```
 
     注意到使用了 `cs50` 库。包含了一个用于 `register` 的 `post` 方法的路由。这个路由将获取注册表单中的姓名和运动项目，并执行一个 SQL 查询将 `name` 和 `sport` 添加到 `registrants` 表中。`deregister` 路由将执行一个 SQL 查询，获取用户的 `id` 并利用这些信息注销该个人。
 
@@ -308,7 +775,11 @@
 
 +   Cookies 可以按照以下方式存储：
 
-    [PRE34]
+    ```
+    GET / HTTP/2
+    Host: accounts.google.com
+    Cookie: session=value 
+    ```
 
     在这里，一个 `session` id 被存储，并带有特定的 `value`，表示该会话。
 
@@ -316,31 +787,97 @@
 
 +   首先，创建一个名为 `requirements.txt` 的文件，其内容如下：
 
-    [PRE35]
+    ```
+    Flask
+    Flask-Session 
+    ```
 
     注意，除了`Flask`，我们还包含了`Flask-Session`，这是支持登录会话所必需的。
 
 +   第二，在 `templates` 文件夹中创建一个名为 `layout.html` 的文件，其内容如下：
 
-    [PRE36]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>login</title>
+        </head>
+
+        <body>
+            {% block body %}{% endblock %}
+        </body>
+
+    </html> 
+    ```
 
     注意这提供了一个非常简单的布局，包括标题和正文。
 
 +   第三，在`templates`文件夹中创建一个名为`index.html`的文件，其内容如下：
 
-    [PRE37]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+
+        {% if name -%}
+            You are logged in as {{ name }}. <a href="/logout">Log out</a>.
+        {%- else -%}
+            You are not logged in. <a href="/login">Log in</a>.
+        {%- endif %}
+
+    {% endblock %} 
+    ```
 
     注意这个文件会检查 `session["name"]` 是否存在（在下面的 `app.py` 中进一步阐述）。如果存在，它将显示欢迎信息。如果不存在，它将建议您浏览到登录页面。
 
 +   第四，创建一个名为 `login.html` 的文件，并添加以下代码：
 
-    [PRE38]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+
+        <form action="/login" method="post">
+            <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+            <button type="submit">Log In</button>
+        </form>
+
+    {% endblock %} 
+    ```
 
     注意这是基本登录页面的布局。
 
 +   最后，创建一个名为 `app.py` 的文件，并编写以下代码：
 
-    [PRE39]
+    ```
+    from flask import Flask, redirect, render_template, request, session
+    from flask_session import Session
+
+    # Configure app app = Flask(__name__)
+
+    # Configure session app.config["SESSION_PERMANENT"] = False
+    app.config["SESSION_TYPE"] = "filesystem"
+    Session(app)
+
+    @app.route("/")
+    def index():
+        return render_template("index.html", name=session.get("name"))
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if request.method == "POST":
+            session["name"] = request.form.get("name")
+            return redirect("/")
+        return render_template("login.html")
+
+    @app.route("/logout")
+    def logout():
+        session.clear()
+        return redirect("/") 
+    ```
 
     注意文件顶部的修改后的 *导入*，包括 `session`，这将允许您支持会话。最重要的是，注意 `session["name"]` 在 `login` 和 `logout` 路由中的使用。`login` 路由会将提供的登录名分配给 `session["name"]`。然而，在 `logout` 路由中，注销是通过清除 `session` 的值来实现的。
 
@@ -356,13 +893,63 @@
 
 +   我们检查了 `app.py` 中的 `store` 代码。以下代码被展示：
 
-    [PRE40]
+    ```
+    from cs50 import SQL
+    from flask import Flask, redirect, render_template, request, session
+    from flask_session import Session
+
+    # Configure app app = Flask(__name__)
+
+    # Connect to database db = SQL("sqlite:///store.db")
+
+    # Configure session app.config["SESSION_PERMANENT"] = False
+    app.config["SESSION_TYPE"] = "filesystem"
+    Session(app)
+
+    @app.route("/")
+    def index():
+        books = db.execute("SELECT * FROM books")
+        return render_template("books.html", books=books)
+
+    @app.route("/cart", methods=["GET", "POST"])
+    def cart():
+
+        # Ensure cart exists
+        if "cart" not in session:
+            session["cart"] = []
+
+        # POST
+        if request.method == "POST":
+            book_id = request.form.get("id")
+            if book_id:
+                session["cart"].append(book_id)
+            return redirect("/cart")
+
+        # GET
+        books = db.execute("SELECT * FROM books WHERE id IN (?)", session["cart"])
+        return render_template("cart.html", books=books) 
+    ```
 
     注意到`cart`是通过列表实现的。可以使用`books.html`中的`Add to Cart`按钮向此列表添加项目。点击此类按钮时，将调用`post`方法，其中将项目`id`附加到`cart`上。在查看购物车时，调用`get`方法，执行 SQL 以显示购物车中的书籍列表。
 
 +   我们还看到了`books.html`的内容：
 
-    [PRE41]
+    ```
+    {% extends "layout.html" %}
+
+    {% block body %}
+
+        <h1>Books</h1>
+        {% for book in books %}
+            <h2>{{ book["title"] }}</h2>
+            <form action="/cart" method="post">
+                <input name="id" type="hidden" value="{{ book['id'] }}">
+                <button type="submit">Add to Cart</button>
+            </form>
+        {% endfor %}
+
+    {% endblock %} 
+    ```
 
     注意到这是如何通过`for book in books`为每本书创建`Add to Cart`功能的。
 
@@ -372,13 +959,63 @@
 
 +   我们在`app.py`中查看了一个名为`shows`的预设计程序：
 
-    [PRE42]
+    ```
+    # Searches for shows using LIKE 
+    from cs50 import SQL
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    db = SQL("sqlite:///shows.db")
+
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+
+    @app.route("/search")
+    def search():
+        shows = db.execute("SELECT * FROM shows WHERE title LIKE ?", "%" + request.args.get("q") + "%")
+        return render_template("search.html", shows=shows) 
+    ```
 
     注意到`search`路由允许通过一种方式来搜索`show`。此搜索查找与用户提供的标题`LIKE`匹配的标题。
 
 +   我们还检查了`index.html`：
 
-    [PRE43]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>shows</title>
+        </head>
+
+        <body>
+
+            <input autocomplete="off" autofocus placeholder="Query" type="text">
+
+            <ul></ul>
+
+            <script>
+                let input = document.querySelector('input');
+                input.addEventListener('input', async function() {
+                    let response = await fetch('/search?q=' + input.value);
+                    let shows = await response.json();
+                    let html = '';
+                    for (let id in shows) {
+                        let title = shows[id].title.replace('<', '&lt;').replace('&', '&amp;');
+                        html += '<li>' + title + '</li>';
+                    }
+                    document.querySelector('ul').innerHTML = html;
+                });
+            </script>
+
+        </body>
+
+    </html> 
+    ```
 
     注意到 JavaScript `script`创建了一个自动完成的实现，其中匹配`input`的标题会被显示出来。
 
@@ -390,19 +1027,72 @@
 
 +   在对`shows`进行改进的同时，查看`app.py`的改进，我们看到了以下内容：
 
-    [PRE44]
+    ```
+    # Searches for shows using Ajax 
+    from cs50 import SQL
+    from flask import Flask, render_template, request
+
+    app = Flask(__name__)
+
+    db = SQL("sqlite:///shows.db")
+
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+
+    @app.route("/search")
+    def search():
+        q = request.args.get("q")
+        if q:
+            shows = db.execute("SELECT * FROM shows WHERE title LIKE ? LIMIT 50", "%" + q + "%")
+        else:
+            shows = []
+        return render_template("search.html", shows=shows) 
+    ```
 
     注意到`search`路由执行了一个 SQL 查询。
 
 +   查看`search.html`，你会注意到它非常简单：
 
-    [PRE45]
+    ```
+    {% for show in shows %}
+        <li>{{ show["title"] }}</li>
+    {% endfor %} 
+    ```
 
     注意到它提供了一个项目符号列表。
 
 +   最后，查看`index.html`，注意到*AJAX*代码被用来驱动搜索：
 
-    [PRE46]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>shows</title>
+        </head>
+
+        <body>
+
+            <input autocomplete="off" autofocus placeholder="Query" type="search">
+
+            <ul></ul>
+
+            <script>
+                let input = document.querySelector('input');
+                input.addEventListener('input', async function() {
+                    let response = await fetch('/search?q=' + input.value);
+                    let shows = await response.text();
+                    document.querySelector('ul').innerHTML = shows;
+                });
+            </script>
+
+        </body>
+
+    </html> 
+    ```
 
     注意到使用事件监听器动态查询服务器以提供与提供的标题匹配的列表。这将定位 HTML 中的`ul`标签并相应地修改网页以包含匹配的列表。
 
@@ -416,13 +1106,67 @@
 
 +   你可以在我们共同检查的`index.html`中看到这一操作：
 
-    [PRE47]
+    ```
+    <!DOCTYPE html>
+
+    <html lang="en">
+
+        <head>
+            <meta name="viewport" content="initial-scale=1, width=device-width">
+            <title>shows</title>
+        </head>
+
+        <body>
+
+            <input autocomplete="off" autofocus placeholder="Query" type="text">
+
+            <ul></ul>
+
+            <script>
+                let input = document.querySelector('input');
+                input.addEventListener('input', async function() {
+                    let response = await fetch('/search?q=' + input.value);
+                    let shows = await response.json();
+                    let html = '';
+                    for (let id in shows) {
+                        let title = shows[id].title.replace('<', '&lt;').replace('&', '&amp;');
+                        html += '<li>' + title + '</li>';
+                    }
+                    document.querySelector('ul').innerHTML = html;
+                });
+            </script>
+
+        </body>
+
+    </html> 
+    ```
 
     虽然上述内容可能有些晦涩，但它为你提供了一个起点，让你可以自己研究 JSON，看看它如何在你的网络应用程序中实现。
 
 +   此外，我们还检查了`app.py`以了解如何获取 JSON 响应：
 
-    [PRE48]
+    ```
+    # Searches for shows using Ajax with JSON 
+    from cs50 import SQL
+    from flask import Flask, jsonify, render_template, request
+
+    app = Flask(__name__)
+
+    db = SQL("sqlite:///shows.db")
+
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+
+    @app.route("/search")
+    def search():
+        q = request.args.get("q")
+        if q:
+            shows = db.execute("SELECT * FROM shows WHERE title LIKE ? LIMIT 50", "%" + q + "%")
+        else:
+            shows = []
+        return jsonify(shows) 
+    ```
 
     注意到`jsonify`是如何被用来将结果转换为当代网络应用可接受的易读格式的。
 

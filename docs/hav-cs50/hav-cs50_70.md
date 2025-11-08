@@ -46,11 +46,25 @@
 
 为了在我们的页面上添加一些 JavaScript，我们可以在 HTML 页面的某个位置添加一对 `<script>` 标签。我们使用 `<script>` 标签来通知浏览器，在两个标签之间写入的任何内容都是我们希望在用户访问我们的网站时执行的 JavaScript 代码。我们的第一个程序可能看起来像这样：
 
-[PRE0]
+```
+alert('Hello, world!'); 
+```
 
 JavaScript 中的 `alert` 函数向用户显示一条消息，然后他们可以将其关闭。为了展示这在实际 HTML 文档中的位置，这里有一个包含一些 JavaScript 的简单页面的示例：
 
-[PRE1]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+        <script>
+            alert('Hello, world!');
+        </script>
+    </head>
+    <body>
+        <h1>Hello!</h1>
+    </body> </html> 
+```
 
 ![alert](img/f83560b2e5f394ad5d755e8fd38a663f.png)
 
@@ -64,11 +78,17 @@ JavaScript 的一个特性是它支持 [事件驱动编程](https://medium.com/@
 
 让我们从将上面的 JavaScript 转换为名为`hello`的[函数](https://www.w3schools.com/js/js_functions.asp)开始：
 
-[PRE2]
+```
+function hello() {
+    alert('Hello, world!')
+} 
+```
 
 现在，让我们工作在每次点击按钮时运行这个函数。为此，我们将在页面上创建一个带有`onclick`属性的 HTML 按钮，该属性为浏览器提供了当按钮被点击时应执行的操作的指令：
 
-[PRE3]
+```
+<button onclick="hello()">Click Here</button> 
+```
 
 这些更改允许我们在某些事件发生之前等待运行 JavaScript 代码的某些部分。
 
@@ -78,19 +98,43 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 +   `var`：用于在全局范围内定义变量
 
-[PRE4]
+```
+var age = 20; 
+```
 
 +   `let`：用于在当前块（如函数或循环）中定义作用域有限的变量
 
-[PRE5]
+```
+let counter = 1; 
+```
 
 +   `const`：用于定义不会改变的值
 
-[PRE6]
+```
+const PI = 3.14; 
+```
 
 为了说明我们可以如何使用变量，让我们看看一个跟踪计数器的页面：
 
-[PRE7]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Count</title>
+        <script>
+            let counter = 0;
+            function count() {
+                counter++;
+                alert(counter);
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Hello!</h1>
+        <button onclick="count()">Count</button>
+    </body>
+</html> 
+```
 
 ![计数](img/64c89549e99ab509393cc39590247e3a.png)
 
@@ -98,15 +142,41 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 除了允许我们通过弹窗显示消息外，JavaScript 还允许我们更改页面上的元素。为了做到这一点，我们首先需要介绍一个名为`document.querySelector`的函数。这个函数会搜索并返回 DOM 中的元素。例如，我们会使用：
 
-[PRE8]
+```
+let heading = document.querySelector('h1'); 
+```
 
 以提取一个标题。然后，为了操作我们最近找到的元素，我们可以更改其`innerHTML`属性：
 
-[PRE9]
+```
+heading.innerHTML = `Goodbye!`; 
+```
 
 就像在 Python 中一样，我们也可以在 JavaScript 中利用[条件](https://www.w3schools.com/js/js_if_else.asp)。例如，让我们说，如果我们不想总是将标题更改为`Goodbye!`，我们希望在不同之间切换`Hello!`和`Goodbye!`。我们的页面可能看起来像下面这样。注意，在 JavaScript 中，我们使用`===`作为两个项目之间更强的比较，它还会检查对象是否属于同一类型。我们通常尽可能使用`===`。
 
-[PRE10]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Count</title>
+        <script>
+            function hello() {
+                const header = document.querySelector('h1');
+                if (header.innerHTML === 'Hello!') {
+                    header.innerHTML = 'Goodbye!';
+                }
+                else {
+                    header.innerHTML = 'Hello!';
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Hello!</h1>
+        <button onclick="hello()">Click Here</button>
+    </body>
+</html> 
+```
 
 ![切换](img/1f80703b4c1f4f47fe7d56b5056d7841.png)
 
@@ -114,19 +184,48 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 让我们利用 DOM 操作这个想法来改进我们的计数页面：
 
-[PRE11]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Count</title>
+        <script>
+            let counter = 0;
+            function count() {
+                counter++;
+                document.querySelector('h1').innerHTML = counter;
+            }
+        </script>
+    </head>
+    <body>
+        <h1>0</h1>
+        <button onclick="count()">Count</button>
+    </body>
+</html> 
+```
 
 ![计数 2](img/b883cc3aa7c8004a0d0c15bd31e845ca.png)
 
 我们可以通过在计数器达到十的倍数时显示一个弹窗来使这个页面更有趣。在这个弹窗中，我们想要格式化一个字符串以自定义消息，在 JavaScript 中我们可以使用[模板字符串](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)来完成。模板字符串要求整个表达式周围有反引号（`` ` ``），任何替换项周围有美元符号和花括号。例如，让我们改变我们的计数函数
 
-[PRE12]
+```
+function count() {
+    counter++;
+    document.querySelector('h1').innerHTML = counter;
+
+    if (counter % 10 === 0) {
+        alert(`Count is now ${counter}`)
+    }
+} 
+```
 
 ![使用弹窗计数](img/f051e5b21b8a21bbf95271536b6898dd.png)
 
 现在，让我们看看我们可以如何改进这个页面的设计。首先，就像我们试图避免使用 CSS 的内联样式一样，我们希望尽可能避免内联 JavaScript。在我们的计数器示例中，我们可以通过添加一行脚本，改变页面按钮的 `onclick` 属性，并从 `button` 标签内部移除 `onclick` 属性来实现这一点。
 
-[PRE13]
+```
+document.querySelector('button').onclick = count; 
+```
 
 关于我们刚刚所做的一件事需要注意的一点是，我们不是通过在后面添加括号来调用 `count` 函数，而是仅仅命名这个函数。这指定了我们只希望在按钮被点击时调用这个函数。这之所以可行，是因为，像 Python 一样，JavaScript 支持函数式编程，因此函数可以被当作值本身来处理。
 
@@ -142,11 +241,30 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 我们可以使用这个函数来确保代码只在所有内容加载完毕后运行：
 
-[PRE14]
+```
+document.addEventListener('DOMContentLoaded', function() {
+    // Some code here
+}); 
+```
 
 在上面的例子中，我们使用了一个 [匿名函数](https://www.w3schools.com/js/js_function_definition.asp)，这是一个从未被赋予名称的函数。将这些放在一起，我们的 JavaScript 现在看起来是这样的：
 
-[PRE15]
+```
+let counter = 0;
+
+function count() {
+    counter++;
+    document.querySelector('h1').innerHTML = counter;
+
+    if (counter % 10 === 0) {
+        alert(`Count is now ${counter}`)
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('button').onclick = count;
+}); 
+```
 
 我们可以通过将 JavaScript 移入一个单独的文件来改进我们的设计。我们这样做的方式与我们为样式将 CSS 放入单独文件的方式非常相似：
 
@@ -156,11 +274,38 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 对于我们的计数器页面，我们可以有一个名为 `counter.html` 的文件，其内容如下：
 
-[PRE16]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Count</title>
+        <script src="counter.js"></script>
+    </head>
+    <body>
+        <h1>0</h1>
+        <button>Count</button>
+    </body>
+</html> 
+```
 
 以及一个名为 `counter.js` 的文件，其内容如下：
 
-[PRE17]
+```
+let counter = 0;
+
+function count() {
+    counter++;
+    document.querySelector('h1').innerHTML = counter;
+
+    if (counter % 10 === 0) {
+        alert(`Count is now ${counter}`)
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('button').onclick = count;
+}); 
+```
 
 将 JavaScript 放在单独的文件中有几个原因：
 
@@ -174,7 +319,28 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 让我们开始另一个示例页面，这个页面可以更加互动。下面，我们将创建一个页面，用户可以在其中输入他们的名字以获取自定义问候。
 
-[PRE18]
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Hello</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('form').onsubmit = function() {
+                const name = document.querySelector('#name').value;
+                alert(`Hello, ${name}`);
+            };
+        });
+    </script>
+</head>
+<body>
+    <form>
+        <input autofocus id="name" placeholder="Name" type="text">
+        <input type="submit">
+    </form>
+</body>
+</html> 
+```
 
 ![问候演示](img/316970e040165bb487974a5de366224f.png)
 
@@ -188,7 +354,29 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 我们可以使用 JavaScript 不仅向页面添加 HTML，还可以更改页面的样式！在下面的页面中，我们使用按钮来更改标题的颜色。
 
-[PRE19]
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <title>Colors</title>
+     <script>
+         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('button').forEach(function(button) {
+                button.onclick = function() {
+                    document.querySelector("#hello").style.color = button.dataset.color;
+                }
+            });
+         });
+     </script>
+</head>
+<body>
+    <h1 id="hello">Hello</h1>
+    <button data-color="red">Red</button>
+    <button data-color="blue">Blue</button>
+    <button data-color="green">Green</button>
+</body>
+</html> 
+```
 
 ![颜色演示](img/3368f98280e11a747899692f41c8cefd.png)
 
@@ -206,7 +394,9 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 控制台是一个有用的工具，可以用来测试小块代码和调试。你可以在控制台中编写和运行 JavaScript 代码，这可以通过在网页浏览器中检查元素然后点击`console`来实现。（具体过程可能因浏览器而异。）调试的一个有用工具是向控制台打印，你可以使用`console.log`函数来完成。例如，在上面的`colors.html`页面中，我可以添加以下行：
 
-[PRE20]
+```
+console.log(document.querySelectorAll('button')); 
+```
 
 这在控制台给出了以下结果：
 
@@ -216,15 +406,56 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 除了我们之前已经看到的传统函数表示法之外，JavaScript 现在还允许我们使用[箭头函数](https://www.w3schools.com/js/js_arrow_function.asp)，其中有一个输入（或当没有输入时括号）后跟`=>`，然后是执行一些代码。例如，我们可以修改上面的脚本以使用匿名箭头函数：
 
-[PRE21]
+```
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('button').forEach(button => {
+        button.onclick = () => {
+            document.querySelector("#hello").style.color = button.dataset.color;
+        }
+    });
+}); 
+```
 
 我们也可以有命名函数，使用箭头，就像对`count`函数的这种重写：
 
-[PRE22]
+```
+count = () => {
+    counter++;
+    document.querySelector('h1').innerHTML = counter;
+
+    if (counter % 10 === 0) {
+        alert(`Count is now ${counter}`)
+    }
+} 
+```
 
 要了解我们可以使用的一些其他事件，让我们看看如何使用下拉菜单而不是三个单独的按钮来实现我们的颜色切换器。我们可以使用`onchange`属性检测`select`元素的变化。在 JavaScript 中，[this](https://www.w3schools.com/js/js_this.asp)是一个根据其使用上下文而变化的关键字。在事件处理程序的情况下，`this`指的是触发事件的那个对象。
 
-[PRE23]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Colors</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelector('select').onchange = function() {
+                    document.querySelector('#hello').style.color = this.value;
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <h1 id="hello">Hello</h1>
+        <select>
+            <option value="black">Black</option>
+            <option value="red">Red</option>
+            <option value="blue">Blue</option>
+            <option value="green">Green</option>
+        </select>
+
+    </body>
+</html> 
+```
 
 ![带有下拉菜单的颜色](img/acdd16791003b6d1627a480cc2207f19.png)
 
@@ -248,7 +479,23 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 为了将本节课学到的几个知识点结合起来，让我们尝试使用 JavaScript 制作一个完全基于 JavaScript 的 TODO 列表。我们将从编写页面的 HTML 布局开始。注意以下内容，我们为无序列表留出了空间，但我们还没有添加任何内容。同时注意，我们在`tasks.js`中添加了一个链接，我们将在这里编写 JavaScript。
 
-[PRE24]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasks</title>
+        <script src="tasks.js"></script>
+    </head>
+    <body>
+        <h1>Tasks</h1>
+        <ul id="tasks"></ul>
+        <form>
+            <input id="task" placeholder = "New Task" type="text">
+            <input id="submit" type="submit">
+        </form>
+    </body>
+</html> 
+```
 
 现在，这是我们的代码，我们可以将其保存在`tasks.js`中。以下是一些关于您将看到的内容的说明：
 
@@ -262,7 +509,51 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 +   在 JavaScript 中，我们可以使用[createElement](https://www.w3schools.com/jsref/met_document_createelement.asp)函数创建 HTML 元素。然后我们可以使用`append`函数将这些元素添加到 DOM 中。
 
-[PRE25]
+```
+// Wait for page to load
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Select the submit button and input to be used later
+    const submit = document.querySelector('#submit');
+    const newTask = document.querySelector('#task');
+
+    // Disable submit button by default:
+    submit.disabled = true;
+
+    // Listen for input to be typed into the input field
+    newTask.onkeyup = () => {
+        if (newTask.value.length > 0) {
+            submit.disabled = false;
+        }
+        else {
+            submit.disabled = true;
+        }
+    }
+
+    // Listen for submission of form
+    document.querySelector('form').onsubmit = () => {
+
+        // Find the task the user just submitted
+        const task = newTask.value;
+
+        // Create a list item for the new task and add the task to it
+        const li = document.createElement('li');
+        li.innerHTML = task;
+
+        // Add new element to our unordered list:
+        document.querySelector('#tasks').append(li);
+
+        // Clear out input field:
+        newTask.value = '';
+
+        // Disable the submit button again:
+        submit.disabled = true;
+
+        // Stop form from submitting
+        return false;
+    }
+}); 
+```
 
 ![任务演示](img/a7ba00bebbca3a19e44fba9d0f0d97a7.png)
 
@@ -270,7 +561,20 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 除了指定在事件触发时运行函数外，我们还可以设置函数在设定的时间后运行。例如，让我们回到我们的计数器页面的脚本，并添加一个间隔，即使用户没有点击任何东西，计数器也会每秒增加。为此，我们使用[setInterval](https://www.w3schools.com/jsref/met_win_setinterval.asp)函数，该函数接受一个要运行的函数和一个函数运行之间的时间（以毫秒为单位）作为参数。
 
-[PRE26]
+```
+let counter = 0;
+
+function count() {
+    counter++;
+    document.querySelector('h1').innerHTML = counter;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('button').onclick = count;
+
+    setInterval(count, 1000);
+}); 
+```
 
 ![计数自动](img/560f72f327289d8143f6c3add6f3fc89.png)
 
@@ -286,7 +590,32 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 让我们看看如何使用这些新功能来更新我们的计数器！在下面的代码中，
 
-[PRE27]
+```
+// Check if there is already a value in local storage
+if (!localStorage.getItem('counter')) {
+
+    // If not, set the counter to 0 in local storage
+    localStorage.setItem('counter', 0);
+}
+
+function count() {
+    // Retrieve counter value from local storage
+    let counter = localStorage.getItem('counter');
+
+    // update counter
+    counter++;
+    document.querySelector('h1').innerHTML = counter;
+
+    // Store counter in local storage
+    localStorage.setItem('counter', counter);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set heading to the current value inside local storage
+    document.querySelector('h1').innerHTML = localStorage.getItem('counter');
+    document.querySelector('button').onclick = count;
+}); 
+```
 
 ## APIs
 
@@ -294,7 +623,12 @@ JavaScript 是一种编程语言，就像 Python、C 或你之前工作过的任
 
 一个[JavaScript 对象](https://www.w3schools.com/js/js_objects.asp)与 Python 字典非常相似，因为它允许我们存储键值对。例如，我可以创建一个代表哈利·波特的 JavaScript 对象：
 
-[PRE28]
+```
+let person = {
+    first: 'Harry',
+    last: 'Potter'
+}; 
+```
 
 我可以使用括号或点符号来访问或更改该对象的部分：
 
@@ -306,11 +640,15 @@ API，或应用程序编程接口，是两个不同应用程序之间结构化�
 
 例如，我们可能希望我们的应用程序从谷歌地图、亚马逊或某些天气预报服务中获取信息。我们可以通过调用服务的 API 来实现这一点，它将返回结构化数据给我们，通常以[JSON](https://www.w3schools.com/js/js_json_intro.asp)（JavaScript 对象表示法）的形式。例如，一个航班在 JSON 形式中可能看起来像这样：
 
-[PRE29]
+```
+{  "origin":  "New York",  "destination":  "London",  "duration":  415  } 
+```
 
 JSON 中的值不必仅仅是字符串和数字，如上面的例子所示。我们还可以存储列表，甚至其他 JavaScript 对象：
 
-[PRE30]
+```
+{  "origin":  {  "city":  "New York",  "code":  "JFK"  },  "destination":  {  "city":  "London",  "code":  "LHR"  },  "duration":  415  } 
+```
 
 ### 货币兑换
 
@@ -318,11 +656,31 @@ JSON 中的值不必仅仅是字符串和数字，如上面的例子所示。我
 
 让我们通过创建一个名为`currency.html`的新 HTML 文件并将其链接到一个 JavaScript 文件来实现将此 API 集成到应用程序中，但保持主体为空：
 
-[PRE31]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Currency Exchange</title>
+        <script src="currency.js"></script>
+    </head>
+    <body></body>
+</html> 
+```
 
 现在，我们将使用一种叫做 [AJAX](https://www.w3schools.com/js/js_ajax_intro.asp) 的东西，或者称为异步 JavaScript 和 XML，它允许我们在页面加载后访问外部页面的信息。为了做到这一点，我们将使用 [fetch](https://javascript.info/fetch) 函数，这将允许我们发送 HTTP 请求。`fetch` 函数返回一个 [promise](https://web.dev/promises/)。我们在这里不会详细讨论 promise 的细节，但我们可以将其视为某个时刻会传递过来的值，但不一定是立即。我们通过给它们一个 `.then` 属性来处理 promise，该属性描述了在接收到 `response` 时应该执行的操作。下面的代码片段将把我们的响应记录到控制台。
 
-[PRE32]
+```
+document.addEventListener('DOMContentLoaded', function() {
+    // Send a GET request to the URL
+    fetch('https://api.exchangeratesapi.io/latest?base=USD')
+    // Put response into json form
+    .then(response => response.json())
+    .then(data => {
+        // Log data to the console
+        console.log(data);
+    });
+}); 
+```
 
 ![货币日志](img/733e835aba06b480344e37f69c518b83.png)
 
@@ -330,17 +688,80 @@ JSON 中的值不必仅仅是字符串和数字，如上面的例子所示。我
 
 而不是简单地记录这些数据，我们可以使用 JavaScript 在屏幕上显示一条消息，如下面的代码所示：
 
-[PRE33]
+```
+document.addEventListener('DOMContentLoaded', function() {
+    // Send a GET request to the URL
+    fetch('https://api.exchangeratesapi.io/latest?base=USD')
+    // Put response into json form
+    .then(response => response.json())
+    .then(data => {
+
+        // Get rate from data
+        const rate = data.rates.EUR;
+
+        // Display message on the screen
+        document.querySelector('body').innerHTML = `1 USD is equal to ${rate.toFixed(3)} EUR.`;
+    });
+}); 
+```
 
 ![货币](img/c9ed775f515cc4eb75bd1f440920675a.png)
 
 现在，让我们通过允许用户选择他们想看到的货币来使网站更加互动。我们将首先修改我们的 HTML，以便用户可以输入货币：
 
-[PRE34]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Currency Exchange</title>
+        <script src="currency.js"></script>
+    </head>
+    <body>
+        <form>
+            <input id="currency" placeholder="Currency" type="text">
+            <input type="submit" value="Convert">
+        </form>
+        <div id="result"></div>
+    </body>
+</html> 
+```
 
 现在，我们将对 JavaScript 进行一些修改，使其仅在表单提交时才改变，并考虑到用户的输入。我们还将在这里添加一些错误检查：
 
-[PRE35]
+```
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('form').onsubmit = function() {
+
+        // Send a GET request to the URL
+        fetch('https://api.exchangeratesapi.io/latest?base=USD')
+        // Put response into json form
+        .then(response => response.json())
+        .then(data => {
+            // Get currency from user input and convert to upper case
+            const currency = document.querySelector('#currency').value.toUpperCase();
+
+            // Get rate from data
+            const rate = data.rates[currency];
+
+            // Check if currency is valid:
+            if (rate !== undefined) {
+                // Display exchange on the screen
+                document.querySelector('#result').innerHTML = `1 USD is equal to ${rate.toFixed(3)}  ${currency}.`;
+            }
+            else {
+                // Display error on the screen
+                document.querySelector('#result').innerHTML = 'Invalid Currency.';
+            }
+        })
+        // Catch any errors and log them to the console
+        .catch(error => {
+            console.log('Error:', error);
+        });
+        // Prevent default submission
+        return false;
+    }
+}); 
+```
 
 ![交换演示](img/9223b772edfce8d2718b51846db36e1a.png)
 

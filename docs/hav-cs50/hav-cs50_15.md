@@ -193,7 +193,17 @@ P: 今天是星期二。Q: 正在下雨。R: 哈里会去跑步。KB: (P ∧ ¬Q
 
 接下来，让我们看看知识和逻辑如何被表示为代码。
 
-[PRE0]
+```
+from logic import *
+
+# Create new classes, each having a name, or a symbol, representing each proposition. rain = Symbol("rain")  # It is raining. hagrid = Symbol("hagrid")  # Harry visited Hagrid dumbledore = Symbol("dumbledore")  # Harry visited Dumbledore 
+# Save sentences into the KB knowledge = And(  # Starting from the "And" logical connective, becasue each proposition represents knowledge that we know to be true. 
+    Implication(Not(rain), hagrid),  # ¬(It is raining) → (Harry visited Hagrid) 
+    Or(hagrid, dumbledore),  # (Harry visited Hagrid) ∨ (Harry visited Dumbledore). 
+    Not(And(hagrid, dumbledore)),  # ¬(Harry visited Hagrid ∧ Harry visited Dumbledore) i.e. Harry did not visit both Hagrid and Dumbledore. 
+    dumbledore  # Harry visited Dumbledore. Note that while previous propositions contained multiple symbols with connectors, this is a proposition consisting of one symbol. This means that we take as a fact that, in this KB, Harry visited Dumbledore.
+    ) 
+```
 
 运行模型检查算法需要以下信息：
 
@@ -207,7 +217,34 @@ P: 今天是星期二。Q: 正在下雨。R: 哈里会去跑步。KB: (P ∧ ¬Q
 
 模型检查算法如下所示：
 
-[PRE1]
+```
+def check_all(knowledge, query, symbols, model):
+
+    # If model has an assignment for each symbol
+    # (The logic below might be a little confusing: we start with a list of symbols. The function is recursive, and every time it calls itself it pops one symbol from the symbols list and generates models from it. Thus, when the symbols list is empty, we know that we finished generating models with every possible truth assignment of symbols.)
+    if not symbols:
+
+        # If knowledge base is true in model, then query must also be true
+        if knowledge.evaluate(model):
+            return query.evaluate(model)
+        return True
+    else:
+
+        # Choose one of the remaining unused symbols
+        remaining = symbols.copy()
+        p = remaining.pop()
+
+        # Create a model where the symbol is true
+        model_true = model.copy()
+        model_true[p] = True
+
+        # Create a model where the symbol is false
+        model_false = model.copy()
+        model_false[p] = False
+
+        # Ensure entailment holds in both models
+        return(check_all(knowledge, query, remaining, model_true) and check_all(knowledge, query, remaining, model_false)) 
+```
 
 注意，我们只对 KB 为真的模型感兴趣。如果 KB 为假，那么我们知道为真的条件在这些模型中不会发生，使它们对我们案例无关紧要。
 
@@ -261,7 +298,27 @@ P: 今天是星期二。Q: 正在下雨。R: 哈里会去跑步。KB: (P ∧ ¬Q
 
 这里是如何将信息添加到 Python 中的知识库中的：
 
-[PRE2]
+```
+# Add the clues to the KB knowledge = And(
+
+    # Start with the game conditions: one item in each of the three categories has to be true.
+    Or(mustard, plum, scarlet),
+    Or(ballroom, kitchen, library),
+    Or(knife, revolver, wrench),
+
+    # Add the information from the three initial cards we saw
+    Not(mustard),
+    Not(kitchen),
+    Not(revolver),
+
+    # Add the guess someone made that it is Scarlet, who used a wrench in the library
+    Or(Not(scarlet), Not(library), Not(wrench)),
+
+    # Add the cards that we were exposed to
+    Not(plum),
+    Not(ballroom)
+) 
+```
 
 我们还可以看看其他的逻辑谜题。考虑以下例子：有四个不同的人，Gilderoy、Pomona、Minerva 和 Horace，被分配到四个不同的学院，Gryffindor、Hufflepuff、Ravenclaw 和 Slytherin。每个学院恰好有一个人。用命题逻辑表示这个谜题的条件相当繁琐。首先，每个可能的分配都将本身成为一个命题：MinervaGryffindor、MinervaHufflepuff、MinervaRavenclaw、MinervaSlytherin、PomonaGryffindor……其次，为了表示每个人属于一个学院，需要一个表示所有可能学院分配的 Or 语句
 

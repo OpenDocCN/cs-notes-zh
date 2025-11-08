@@ -12,7 +12,9 @@
 
 +   回想一下，我们的一些函数可以接受一个或多个输入，或者某种类型的信息，这些信息进入椭圆形：
 
-    [PRE0]
+    ```
+     move (10) steps 
+    ```
 
     +   例如，这个“移动”块有一个值为 10 的椭圆形，告诉我们的精灵移动 10 步。
 
@@ -22,7 +24,11 @@
 
 +   结果表明，Scratch 有一些自身就是值的块，我们可以使用。在“运动”类别块的底部，我们看到一些椭圆形的块：
 
-    [PRE1]
+    ```
+     x position
+      y position
+      direction 
+    ```
 
     +   由于它们不是矩形的，所以我们不能像我们迄今为止使用的矩形块那样堆叠它们。
 
@@ -32,13 +38,20 @@
 
 +   我们将告诉我们的精灵说它的 x 位置，或者它相对于舞台的左右距离，持续两秒钟：
 
-    [PRE2]
+    ```
+     when green flag clicked
+      say (x position) for (2) seconds 
+    ```
 
     +   现在，当我们点击标志时，我们的猫会说出它的当前 x 位置。如果我们移动我们的猫在舞台上，当我们再次点击标志时，我们可以看到它说了一个不同的数字。
 
 +   我们将添加另一个块，这样我们就可以看到我们的猫的 x 位置和 y 位置：
 
-    [PRE3]
+    ```
+     when green flag clicked
+      say (x position) for (2) seconds
+      say (y position) for (2) seconds 
+    ```
 
 ## 操作符
 
@@ -46,19 +59,27 @@
 
 +   例如，一个操作符是“+”块：
 
-    [PRE4]
+    ```
+     () + () 
+    ```
 
     +   这个操作符将取两个值，比如 1 和 2，并将它们相加。
 
 +   我们可以通过以下方式看到这一点：
 
-    [PRE5]
+    ```
+     when green flag clicked
+      say ((1) + (2)) for (2) seconds 
+    ```
 
     +   注意，我们的绿色“+”操作符块将根据其自己的输入（3）计算一个值，然后这个值将用作我们猫的“说”块的值。
 
 +   我们可以使用另一个“连接”块，将两个单词或字符放在一起：
 
-    [PRE6]
+    ```
+     when green flag clicked
+      say (join (x position) (y position)) for (2) seconds 
+    ```
 
     +   现在，我们可以在同一个“说”块中同时说出 x 位置和 y 位置，因为“连接”块会帮我们把它们放在一起。
 
@@ -68,13 +89,19 @@
 
 +   我们需要另一个“连接”块，将 x 位置与用逗号和空格连接的 y 位置连接起来：
 
-    [PRE7]
+    ```
+     when green flag clicked
+      say (join (x position) (join [, ] (y position))) for (2) seconds 
+    ```
 
     +   因此，所有这些块将 x 位置与逗号、空格结合，然后是 y 位置。
 
 +   我们可以添加另一个“连接”块来形成一个完整的句子：
 
-    [PRE8]
+    ```
+     when green flag clicked
+      say (join [I am at] (join (x position) (join [, ] (y position)))) for (2) seconds 
+    ```
 
 +   现在，我们已经创建了[位置](https://scratch.mit.edu/projects/507449365/)示例。
 
@@ -88,19 +115,28 @@
 
 +   让我们以刺猬作为我们的精灵，我们将使用块使它在每次按下右箭头键时移动 10 步，在[Walking Hedgehog](https://scratch.mit.edu/projects/507450683/)中：
 
-    [PRE9]
+    ```
+     when [right arrow v] key pressed
+      move (10) steps 
+    ```
 
 +   但如果我们改变刺猬的大小，我们希望它每次移动时更多或更少，这取决于它的大小。
 
 +   我们将把“大小”块拖进来作为值：
 
-    [PRE10]
+    ```
+     when [right arrow v] key pressed
+      move (size) steps 
+    ```
 
     +   但由于我们的刺猬从 100%大小开始，它每次移动 100 步。
 
 +   我们可以使用运算符类别中的“/”块，它执行除法操作。所以我们将它拖进来，并将我们的“大小”块也拖进去：
 
-    [PRE11]
+    ```
+     when [right arrow v] key pressed
+      move ((size) / (10)) steps 
+    ```
 
     +   我们将大小除以 10，所以在 100%大小的情况下，我们的刺猬将移动 10 步，但在 50%大小的情况下，它将只移动 5 步。
 
@@ -110,7 +146,10 @@
 
 +   我们将通过告诉我们的刺猬每次点击标志时指向一个随机方向来尝试它，在[Rotating Hedgehog](https://scratch.mit.edu/projects/507451010/)中：
 
-    [PRE12]
+    ```
+     when green flag clicked
+      point in direction (pick random (0) to (90)) 
+    ```
 
     +   现在，每次我们按下绿色标志，我们的刺猬会做一些令人惊讶的事情，它不一定会每次都做同样的事情。
 
@@ -118,7 +157,10 @@
 
 +   在块中，感知类别中我们看到另一个值，称为“计时器”。计时器的值将是我们开始项目以来的秒数，所以我们将让刺猬每次点击时说出它，在[Timing Hedgehog](https://scratch.mit.edu/projects/507451281/)中：
 
-    [PRE13]
+    ```
+     when this sprite clicked
+      say (timer) for (2) seconds 
+    ```
 
     +   现在，点击绿色标志后，我们可以点击刺猬来查看秒数，比如 4.45 或 9.90。
 
@@ -126,7 +168,10 @@
 
 +   因此，我们可以将我们的“计时器”块拖入一个“取整”块中，现在我们的刺猬将说出整数的秒数：
 
-    [PRE14]
+    ```
+     when this sprite clicked
+      say (round (timer)) for (2) seconds 
+    ```
 
 ## 感知
 
@@ -140,7 +185,11 @@
 
 +   让我们通过构建一个名为[Hello](https://scratch.mit.edu/projects/507451522/)的程序来看看：
 
-    [PRE15]
+    ```
+     when green flag clicked
+      ask [What's your name?] and wait
+      say (answer) for (2) seconds 
+    ```
 
     +   现在，当我们运行我们的程序时，我们的猫会提出问题，并等待我们输入响应后继续：
 
@@ -148,17 +197,31 @@
 
 +   我们可以用“加入”模块让我们的猫变得更有亲和力：
 
-    [PRE16]
+    ```
+     when green flag clicked
+      ask [What's your name?] and wait
+      say (join [Hello,] (answer)) for (2) seconds 
+    ```
 
 +   让我们把问题改为“[走了多少步？](https://scratch.mit.edu/projects/507451753/)”：
 
-    [PRE17]
+    ```
+     when green flag clicked
+      ask [How many steps?] and wait
+      move (answer) steps 
+    ```
 
     +   我们还将使用一个“移动”模块，并在其中使用“答案”模块作为输入。因此，我们的猫将移动我们作为问题的答案输入的步数。
 
 +   我们也可以通过询问[去哪里？](https://scratch.mit.edu/projects/507451963/)中的 x 值和 y 值来告诉我们的猫去一个特定的位置：
 
-    [PRE18]
+    ```
+     when green flag clicked
+      ask [Pick x] and wait
+      set x to (answer)
+      ask [Pick y] and wait
+      set y to (answer) 
+    ```
 
     +   注意，我们可以提出多个问题，而“答案”模块将具有我们为最近一个问题输入的任何值。
 
@@ -172,7 +235,11 @@
 
 +   现在，我们可以构建一个程序，[有多少条腿？](https://scratch.mit.edu/projects/507452267/)，来询问我们使用哪个服装：
 
-    [PRE19]
+    ```
+     when green flag clicked
+      ask [How many legs?] and wait
+      switch costume to (answer) 
+    ```
 
     +   结果表明，“切换服装”模块也可以接受一个椭圆形模块作为输入，因此现在我们的答案将被用作我们熊将切换到的服装名称的值。
 
@@ -186,7 +253,11 @@
 
 +   在[什么时间？](https://scratch.mit.edu/projects/507452523/)，我们将创建熊的脚本：
 
-    [PRE20]
+    ```
+     when green flag clicked
+      ask [What time?] and wait
+      switch backdrop to (answer) 
+    ```
 
     +   现在，当我们回答“白天”或“夜晚”时，背景图将改变。
 

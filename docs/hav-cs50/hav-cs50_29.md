@@ -48,7 +48,13 @@
 
 +   在文本编辑器窗口中，开始如下：
 
-    [PRE0]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    if x < y:
+        print("x is less than y") 
+    ```
 
     注意你的程序如何接受用户对 x 和 y 的输入，将它们作为整数转换并保存到各自的 x 和 y 变量中。然后，`if` 语句比较 x 和 y。如果满足 `x < y` 的条件，则执行 `print` 语句。
 
@@ -58,59 +64,154 @@
 
 +   进一步修改你的代码如下：
 
-    [PRE1]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    if x < y:
+        print("x is less than y")
+    if x > y:
+        print("x is greater than y")
+    if x == y:
+        print("x is equal to y") 
+    ```
 
     注意你提供了一系列 `if` 语句。首先，评估第一个 `if` 语句。然后，执行第二个 `if` 语句的评估。最后，执行最后一个 `if` 语句的评估。这种决策流程称为“控制流”。
 
 +   我们的代码可以表示如下：
 
-    [PRE2]
+    ```
+    flowchart TD
+      A([start]) --> B{x < y}
+      B -- True --> C["#quot;x is less than y#quot;"]
+      C --> D{x > y}
+      D -- True --> E["#quot;x is greater than y#quot;"]
+      E --> F{x == y}
+      F -- True --> G["#quot;x is equal to y#quot;"]
+      G --> H([stop])
+      B -- False --> D
+      D -- False --> F
+      F -- False --> H 
+    ```
 
 +   这个程序可以通过不连续问三个问题来改进。毕竟，不是所有三个问题都能得到 `true` 的结果！按照以下方式修改你的程序：
 
-    [PRE3]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    if x < y:
+        print("x is less than y")
+    elif x > y:
+        print("x is greater than y")
+    elif x == y:
+        print("x is equal to y") 
+    ```
 
     注意 `elif` 的使用如何使程序做出更少的决策。首先，评估 `if` 语句。如果这个语句被评估为真，则不会运行所有的 `elif` 语句。然而，如果 `if` 语句被评估并发现为假，则第一个 `elif` 将被评估。如果是真的，它将不会运行最终的评估。
 
 +   我们的代码可以表示如下：
 
-    [PRE4]
+    ```
+    flowchart TD
+      A([start]) --> B{x < y}
+      B -- True --> C["#quot;x is less than y#quot;"]
+      B -- False --> D{x > y}
+      D -- True --> E["#quot;x is greater than y#quot;"]
+      D -- False --> F{x == y}
+      F -- True --> G["#quot;x is equal to y#quot;"]
+      G --> H([stop])
+      F -- False --> H
+      C --> H
+      E --> H 
+    ```
 
 +   虽然你的电脑可能在速度上没有注意到我们的第一个程序和这个修订程序之间的差异，但考虑一下，一个每天运行数十亿或数万亿此类计算的在线服务器，这样的小代码决策肯定会有影响。
 
 +   我们可以对我们的程序进行最后一次改进。注意 `elif x == y` 在逻辑上不是必须的评估。毕竟，如果逻辑上 x 不小于 y 且 x 不大于 y，那么 x 一定等于 y。因此，我们不需要运行 `elif x == y`。我们可以使用 `else` 语句创建一个“通配符”，默认结果。我们可以这样修改：
 
-    [PRE5]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    if x < y:
+        print("x is less than y")
+    elif x > y:
+        print("x is greater than y")
+    else:
+        print("x is equal to y") 
+    ```
 
     注意到通过我们的修订，这个程序的相对复杂性已经降低。
 
 +   我们的代码可以表示如下：
 
-    [PRE6]
+    ```
+    flowchart TD
+      A([start]) --> B{x < y}
+      B -- True --> C["#quot;x is less than y#quot;"]
+      B -- False --> D{x > y}
+      D -- True --> E["#quot;x is greater than y#quot;"]
+      D -- False --> F["#quot;x is equal to y#quot;"]
+      F --> G([stop])
+      C --> G
+      E --> G 
+    ```
 
 ## 或
 
 +   `or` 允许程序在一种或多种选择之间做出决定。例如，我们可以进一步编辑我们的程序如下：
 
-    [PRE7]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    if x < y or x > y:
+        print("x is not equal to y")
+    else:
+        print("x is equal to y") 
+    ```
 
     注意到我们的程序结果相同，但复杂性降低。代码的效率提高了。
 
 +   到目前为止，我们的代码相当不错。然而，设计是否可以进一步改进？我们可以进一步编辑我们的代码如下：
 
-    [PRE8]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    if x != y:
+        print("x is not equal to y")
+    else:
+        print("x is equal to y") 
+    ```
 
     注意到我们完全移除了 `or`，只是简单地问，“x 是否不等于 y？”我们只问一个问题。非常高效！
 
 +   为了说明，我们也可以将代码修改如下：
 
-    [PRE9]
+    ```
+    x = int(input("What's x? "))
+    y = int(input("What's y? "))
+
+    if x == y:
+        print("x is equal to y")
+    else:
+        print("x is not equal to y") 
+    ```
 
     注意到 `==` 操作符用于判断左边的值和右边的值是否相等。使用双等号非常重要。如果你只使用一个等号，解释器可能会抛出一个错误。
 
 +   我们可以将代码表示如下：
 
-    [PRE10]
+    ```
+    flowchart TD
+      A([start]) --> B{x == y}
+      B -- True --> C["#quot;x is equal to y#quot;"]
+      B -- False --> E["#quot;x is not equal to y#quot;"]
+      C --> F([stop])
+      E --> F 
+    ```
 
 ## 和
 
@@ -118,19 +219,58 @@
 
 +   在终端窗口中执行 `code grade.py`。启动你的新程序如下：
 
-    [PRE11]
+    ```
+    score = int(input("Score: "))
+
+    if score >= 90 and score <= 100:
+        print("Grade: A")
+    elif score >=80 and score < 90:
+        print("Grade: B")
+    elif score >=70 and score < 80:
+        print("Grade: C")
+    elif score >=60 and score < 70:
+        print("Grade: D")
+    else:
+        print("Grade: F") 
+    ```
 
     注意到通过执行 `python grade.py`，你将能够输入一个分数并得到一个等级。然而，请注意这里存在潜在的错误。
 
 +   通常，我们不想让用户输入正确信息。我们可以这样改进我们的代码：
 
-    [PRE12]
+    ```
+     score = int(input("Score: "))
+
+      if 90 <= score <= 100:
+          print("Grade: A")
+      elif 80 <= score < 90:
+          print("Grade: B")
+      elif 70 <= score < 80:
+          print("Grade: C")
+      elif 60 <= score < 70:
+          print("Grade: D")
+      else:
+          print("Grade: F") 
+    ```
 
     注意到 Python 允许你以其他编程语言中相当不常见的方式链接着操作符和条件。
 
 +   尽管如此，我们还可以进一步改进我们的程序：
 
-    [PRE13]
+    ```
+    score = int(input("Score: "))
+
+    if score >= 90:
+        print("Grade: A")
+    elif score >= 80:
+        print("Grade: B")
+    elif score >= 70:
+        print("Grade: C")
+    elif score >= 60:
+        print("Grade: D")
+    else:
+        print("Grade: F") 
+    ```
 
     注意到通过减少问题数量，程序得到了改进。这使得我们的程序更容易阅读，并且在未来的维护中更加高效。
 
@@ -146,7 +286,14 @@
 
 +   在终端窗口中，通过输入 `code parity.py` 创建一个新的程序。在文本编辑器窗口中，输入以下代码：
 
-    [PRE14]
+    ```
+    x = int(input("What's x? "))
+
+    if x % 2 == 0:
+        print("Even")
+    else:
+        print("Odd") 
+    ```
 
     注意我们的用户可以输入任何大于等于 1 的数字来查看它是否为偶数或奇数。
 
@@ -156,7 +303,22 @@
 
 +   我们可以创建自己的函数来检查一个数字是否为偶数或奇数。按照以下方式调整你的代码：
 
-    [PRE15]
+    ```
+    def main():
+        x = int(input("What's x? "))
+        if is_even(x):
+            print("Even")
+        else:
+            print("Odd")
+
+    def is_even(n):
+        if n % 2 == 0:
+            return True
+        else:
+            return False
+
+    main() 
+    ```
 
     注意到我们的`if`语句`is_even(x)`即使没有操作符也能正常工作。这是因为我们的函数返回一个`bool`（布尔值），`True`或`False`，并将其返回给主函数。`if`语句只是简单地评估`x`的`is_even`是否为真或假。
 
@@ -164,13 +326,37 @@
 
 +   在编程世界中，有一些编程类型被称为“Pythonic”的编程。也就是说，有一些编程方式只在 Python 编程中看到。考虑以下程序的修订版：
 
-    [PRE16]
+    ```
+    def main():
+        x = int(input("What's x? "))
+        if is_even(x):
+            print("Even")
+        else:
+            print("Odd")
+
+    def is_even(n):
+        return True if n % 2 == 0 else False
+
+    main() 
+    ```
 
     注意到我们代码中的这个返回语句几乎就像一个英文句子。这是仅在 Python 中才能看到的独特编码方式。
 
 +   我们可以进一步修改代码，使其更加易读：
 
-    [PRE17]
+    ```
+    def main():
+        x = int(input("What's x? "))
+        if is_even(x):
+            print("Even")
+        else:
+            print("Odd")
+
+    def is_even(n):
+        return n % 2 == 0
+
+    main() 
+    ```
 
     注意程序将评估`n % 2 == 0`的结果，将其视为`True`或`False`，并将其简单地返回给主函数。
 
@@ -180,19 +366,55 @@
 
 +   考虑以下程序：
 
-    [PRE18]
+    ```
+     name = input("What's your name? ")
+
+      if name == "Harry":
+          print("Gryffindor")
+      elif name == "Hermione":
+          print("Gryffindor")
+      elif name == "Ron": 
+          print("Gryffindor")
+      elif name == "Draco":
+          print("Slytherin")
+      else:
+          print("Who?") 
+    ```
 
     注意前三个条件语句打印了相同的响应。
 
 +   我们可以使用`or`关键字稍微改进这段代码：
 
-    [PRE19]
+    ```
+     name = input("What's your name? ")
+
+      if name == "Harry" or name == "Hermione" or name == "Ron": 
+          print("Gryffindor")
+      elif name == "Draco":
+          print("Slytherin")
+      else:
+          print("Who?") 
+    ```
 
     注意`elif`语句的数量减少了，这提高了代码的可读性。
 
 +   或者，我们可以使用`match`语句将名称映射到房屋。考虑以下代码：
 
-    [PRE20]
+    ```
+     name = input("What's your name? ")
+
+      match name: 
+          case "Harry":
+              print("Gryffindor")
+          case "Hermione":
+              print("Gryffindor")
+          case "Ron": 
+              print("Gryffindor")
+          case "Draco":
+              print("Slytherin")
+          case  _:
+              print("Who?") 
+    ```
 
     注意到最后一个情况中使用了`_`符号。这将与任何输入匹配，产生类似于`else`语句的行为。
 
@@ -200,7 +422,17 @@
 
 +   我们可以改进代码：
 
-    [PRE21]
+    ```
+     name = input("What's your name? ")
+
+      match name: 
+          case "Harry" | "Hermione" | "Ron":
+              print("Gryffindor")
+          case "Draco":
+              print("Slytherin")
+          case  _:
+              print("Who?") 
+    ```
 
     注意，使用了单个竖线`|`。与`or`关键字类似，这允许我们在同一个`case`语句中检查多个值。
 

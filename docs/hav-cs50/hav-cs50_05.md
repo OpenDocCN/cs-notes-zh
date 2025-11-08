@@ -60,13 +60,23 @@
 
 +   我们可以想象我们可能提供给算法的各种指令以执行此任务，如下所示：
 
-    [PRE0]
+    ```
+    For each door from left to right
+        If 50 is behind door
+            Return true
+    Return false 
+    ```
 
     注意，上述指令被称为*伪代码*：我们可以提供给计算机的指令的人类可读版本。
 
 +   计算机科学家可以将伪代码翻译如下：
 
-    [PRE1]
+    ```
+    For i from 0 to n-1
+        If 50 is behind doors[i]
+            Return true
+    Return false 
+    ```
 
     注意，上面的内容仍然不是代码，但它是对最终代码可能的样子一个非常接近的近似。
 
@@ -76,11 +86,29 @@
 
 +   假设锁内的值已经从小到大排列，二分搜索的伪代码如下所示：
 
-    [PRE2]
+    ```
+    If no doors left
+        Return false
+    If 50 is behind middle door
+        Return true
+    Else if 50 < middle door
+        Search left half
+    Else if 50 > middle door
+        Search right half 
+    ```
 
 +   使用代码的命名法，我们可以进一步修改我们的算法如下：
 
-    [PRE3]
+    ```
+    If no doors left
+        Return false
+    If 50 is behind doors[middle]
+        Return true
+    Else if 50 < doors[middle]
+        Search doors[0] through doors[middle - 1]
+    Else if 50 > doors[middle]
+        Search doors[middle + 1] through doors[n - 1] 
+    ```
 
     注意，通过查看这个代码的近似，你几乎可以想象出这在实际代码中可能的样子。
 
@@ -128,7 +156,29 @@
 
 +   你可以通过在终端窗口中输入`code search.c`并编写如下代码来实现线性搜索：
 
-    [PRE4]
+    ```
+    // Implements linear search for integers
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // An array of integers
+        int numbers[] = {20, 500, 10, 5, 100, 1, 50};
+
+        // Search for number
+        int n = get_int("Number: ");
+        for (int i = 0; i < 7; i++)
+        {
+            if (numbers[i] == n)
+            {
+                printf("Found\n");
+                return 0;
+            }
+        }
+        printf("Not found\n");
+        return 1;
+    } 
+    ```
 
     注意，以`int numbers[]`开头的行允许我们在创建数组时定义每个元素的值。然后，在`for`循环中，我们有线性搜索的实现。`return 0`用于指示成功并退出程序。`return 1`用于带错误（失败）退出程序。
 
@@ -136,7 +186,29 @@
 
 +   如果我们想在数组中搜索一个字符串呢？修改你的代码如下：
 
-    [PRE5]
+    ```
+    // Implements linear search for strings
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // An array of strings
+        string strings[] = {"battleship", "boot", "cannon", "iron", "thimble", "top hat"};
+
+        // Search for string
+        string s = get_string("String: ");
+        for (int i = 0; i < 6; i++)
+        {
+            if (strcmp(strings[i], s) == 0)
+            {
+                printf("Found\n");
+                return 0;
+            }
+        }
+        printf("Not found\n");
+        return 1;
+    } 
+    ```
 
     注意，我们无法像之前这个程序的迭代版本中那样使用`==`。相反，我们使用`strcmp`，它来自`string.h`库。如果字符串相同，`strcmp`将返回`0`。另外，请注意，字符串长度`6`是硬编码的，这不是好的编程实践。
 
@@ -148,7 +220,30 @@
 
 +   我们可以将数字和字符串的这些想法结合到一个程序中。在终端窗口中输入`code phonebook.c`并编写如下代码：
 
-    [PRE6]
+    ```
+    // Implements a phone book without structs
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // Arrays of strings
+        string names[] = {"Yuliia", "David", "John"};
+        string numbers[] = {"+1-617-495-1000", "+1-617-495-1000", "+1-949-468-2750"};
+
+        // Search for name
+        string name = get_string("Name: ");
+        for (int i = 0; i < 3; i++)
+        {
+            if (strcmp(names[i], name) == 0)
+            {
+                printf("Found %s\n", numbers[i]);
+                return 0;
+            }
+        }
+        printf("Not found\n");
+        return 1;
+    } 
+    ```
 
     注意，Yuliia 的电话号码以`+1-617`开头，David 的电话号码以`+1-617`开头，John 的电话号码以`+1-949`开头。因此，`names[0]`是 Yuliia，`numbers[0]`是 Yuliia 的电话号码。这段代码将允许我们在电话簿中搜索特定号码的人。
 
@@ -160,13 +255,55 @@
 
 +   创建一个包含`name`和`number`的名为`person`的自定义数据类型不是很有用吗？考虑以下内容：
 
-    [PRE7]
+    ```
+    typedef struct
+    {
+        string name;
+        string number;
+    } person; 
+    ```
 
     注意，这代表了我们自己的数据类型`person`，它有一个名为`name`的字符串和一个名为`number`的字符串。
 
 +   我们可以通过修改我们的电话簿程序来改进我们之前的代码：
 
-    [PRE8]
+    ```
+    // Implements a phone book with structs
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    typedef struct
+    {
+        string name;
+        string number;
+    } person;
+
+    int main(void)
+    {
+        person people[3];
+
+        people[0].name = "Yuliia";
+        people[0].number = "+1-617-495-1000";
+
+        people[1].name = "David";
+        people[1].number = "+1-617-495-1000";
+
+        people[2].name = "John";
+        people[2].number = "+1-949-468-2750";
+
+        // Search for name
+        string name = get_string("Name: ");
+        for (int i = 0; i < 3; i++)
+        {
+            if (strcmp(people[i].name, name) == 0)
+            {
+                printf("Found %s\n", people[i].number);
+                return 0;
+            }
+        }
+        printf("Not found\n");
+        return 1;
+    } 
+    ```
 
     注意，代码以`typedef struct`开始，其中定义了一个新的数据类型`person`。在`person`内部有一个名为`name`的字符串和一个名为`number`的字符串。在`main`函数中，首先创建一个名为`people`的数组，其类型为`person`，大小为 3。然后，我们更新`people`数组中两个人的姓名和电话号码。最重要的是，注意如何使用*点表示法*，例如`people[0].name`，允许我们访问第 0 个位置的`person`并为其分配一个姓名。
 
@@ -186,11 +323,17 @@
 
 +   选择排序的伪代码如下：
 
-    [PRE9]
+    ```
+    For i from 0 to n–1
+        Find smallest number between numbers[i] and numbers[n-1]
+        Swap smallest number with numbers[i] 
+    ```
 
 +   总结这些步骤，第一次遍历列表需要 `n - 1` 步。第二次，它需要 `n - 2` 步。继续这个逻辑，所需的步骤可以表示如下：
 
-    [PRE10]
+    ```
+    (n - 1) + (n - 2) + (n - 3) + ... + 1 
+    ```
 
 +   这可以简化为 n(n-1)/2 或更简单地说，\(O(n²)\)。在最坏情况或上界，选择排序的顺序为 \(O(n²)\)。在最好情况或下界，选择排序的顺序为 \(\Omega(n²)\)。
 
@@ -200,13 +343,24 @@
 
 +   冒泡排序的伪代码如下：
 
-    [PRE11]
+    ```
+    Repeat n-1 times
+        For i from 0 to n–2
+            If numbers[i] and numbers[i+1] out of order
+                Swap them
+        If no swaps
+            Quit 
+    ```
 
 +   随着我们进一步排序数组，我们知道越来越多的部分变得有序，所以我们只需要查看尚未排序的数字对。
 
 +   冒泡排序可以分析如下：
 
-    [PRE12]
+    ```
+     (n – 1) × (n – 1)
+      n2 – 1n – 1n + 1
+      n2 – 2n + 1 
+    ```
 
     或者，更简单地说 \(O(n²)\)。
 
@@ -220,31 +374,131 @@
 
 +   *递归* 是编程中的一个概念，其中函数调用自身。我们之前在看到……时看到了这一点。
 
-    [PRE13]
+    ```
+    If no doors left
+        Return false
+    If number behind middle door
+        Return true
+    Else if number < middle door
+        Search left half
+    Else if number > middle door
+        Search right half 
+    ```
 
     注意，我们正在对这个问题越来越小的迭代调用 `search`。
 
 +   类似地，在我们的第 0 周伪代码中，您可以看到递归是如何实现的：
 
-    [PRE14]
+    ```
+    1  Pick up phone book
+    2  Open to middle of phone book
+    3  Look at page
+    4  If person is on page
+    5      Call person
+    6  Else if person is earlier in book
+    7      Open to middle of left half of book
+    8      Go back to line 3
+    9  Else if person is later in book
+    10     Open to middle of right half of book
+    11     Go back to line 3
+    12 Else
+    13     Quit 
+    ```
 
 +   此代码可以简化以突出其递归特性，如下所示：
 
-    [PRE15]
+    ```
+    1  Pick up phone book
+    2  Open to middle of phone book
+    3  Look at page
+    4  If person is on page
+    5      Call person
+    6  Else if person is earlier in book
+    7      Search left half of book
+    9  Else if person is later in book
+    10     Search right half of book
+    12 Else
+    13     Quit 
+    ```
 
 +   考虑一下在第一周我们想要创建以下这样的金字塔结构：
 
-    [PRE16]
+    ```
+     #
+      ##
+      ###
+      #### 
+    ```
 
 +   在您的终端窗口中输入 `code iteration.c` 并编写如下代码：
 
-    [PRE17]
+    ```
+    // Draws a pyramid using iteration
+
+    #include <cs50.h> #include <stdio.h>  
+    void draw(int n);
+
+    int main(void)
+    {
+        // Get height of pyramid
+        int height = get_int("Height: ");
+
+        // Draw pyramid
+        draw(height);
+    }
+
+    void draw(int n)
+    {
+        // Draw pyramid of height n
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < i + 1; j++)
+            {
+                printf("#");
+            }
+            printf("\n");
+        }
+    } 
+    ```
 
     注意，此代码通过循环构建金字塔。
 
 +   要使用递归实现此功能，请在您的终端窗口中输入 `code iteration.c` 并编写如下代码：
 
-    [PRE18]
+    ```
+    // Draws a pyramid using recursion
+
+    #include <cs50.h> #include <stdio.h>  
+    void draw(int n);
+
+    int main(void)
+    {
+        // Get height of pyramid
+        int height = get_int("Height: ");
+
+        // Draw pyramid
+        draw(height);
+    }
+
+    void draw(int n)
+    {
+        // If nothing to draw
+        if (n <= 0)
+        {
+            return;
+        }
+
+        // Draw pyramid of height n - 1
+        draw(n - 1);
+
+        // Draw one more row of width n
+        for (int i = 0; i < n; i++)
+        {
+            printf("#");
+        }
+        printf("\n");
+    } 
+    ```
 
     注意到 *基准情况* 将确保代码不会无限运行。当 `if (n <= 0)` 时终止递归，因为问题已经解决。每次 `draw` 函数调用自身时，它都会通过 `n-1` 来调用自身。在某一点上，`n-1` 将等于 `0`，导致 `draw` 函数返回，程序结束。
 
@@ -254,39 +508,62 @@
 
 +   归并排序的伪代码相当简短：
 
-    [PRE19]
+    ```
+    If only one number
+        Quit
+    Else
+        Sort left half of number
+        Sort right half of number
+        Merge sorted halves 
+    ```
 
 +   考虑以下数字列表：
 
-    [PRE20]
+    ```
+     6341 
+    ```
 
 +   首先，归并排序会问，“这是一个数字吗？”答案是“不是”，所以算法继续。
 
-    [PRE21]
+    ```
+     6341 
+    ```
 
 +   第二，归并排序现在将数字从中间分开（或者尽可能接近中间）并排序数字的左半部分。
 
-    [PRE22]
+    ```
+     63|41 
+    ```
 
 +   第三，归并排序将查看左边的这些数字并询问，“这是一个数字吗？”由于答案是“不是”，然后它会将左边的数字从中间分开。
 
-    [PRE23]
+    ```
+     6|3 
+    ```
 
 +   第四，归并排序将再次询问，“这是一个数字吗？”这次答案是肯定的！因此，它将退出这个任务，并返回到此时正在运行的最后任务：
 
-    [PRE24]
+    ```
+     63|41 
+    ```
 
 +   第五，归并排序将排序左边的数字。
 
-    [PRE25]
+    ```
+     36|41 
+    ```
 
 +   现在，我们回到伪代码中我们之前中断的地方，因为左边的数字已经排序了。步骤 3-5 的类似过程将发生在右边的数字上。这将导致：
 
-    [PRE26]
+    ```
+     36|14 
+    ```
 
 +   两个半部分现在都已排序。最后，算法将合并两边。它会查看左边的第一个数字和右边的第一个数字。它会将较小的数字放在前面，然后是第二小的数字。算法将对所有数字重复此操作，结果如下：
 
-    [PRE27]
+    ```
+     1346 
+    ```
 
 +   归并排序已完成，程序退出。
 

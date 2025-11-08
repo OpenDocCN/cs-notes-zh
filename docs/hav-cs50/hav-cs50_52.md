@@ -14,11 +14,18 @@
 
 +   我们将以一个[行走猫](https://scratch.mit.edu/projects/507456678/)的例子开始，当点击绿色标志时，我们的猫将移动 10 步：
 
-    [PRE0]
+    ```
+     when green flag clicked
+      move (10) steps 
+    ```
 
 +   我们将在块的“控制”部分使用“永远”块，使我们的猫反复移动：
 
-    [PRE1]
+    ```
+     when green flag clicked
+      forever
+      move (10) steps 
+    ```
 
     +   现在，我们的猫将移动，直到它到达边缘，在那里它不能再移动。它仍然会尝试移动。
 
@@ -26,7 +33,12 @@
 
 +   我们将添加另一个块，告诉我们的猫在到达边缘时跳跃或转身：
 
-    [PRE2]
+    ```
+     when green flag clicked
+      forever
+      move (10) steps
+      if on edge, bounce 
+    ```
 
     +   现在，我们的猫在边缘转身时是倒置的，但我们可以通过在精灵面板中的方向旋钮上点击并选择第二个选项来更改旋转样式：
 
@@ -36,11 +48,24 @@
 
 +   结果表明，我们的猫有两种服装，它的腿处于略微不同的位置。因此，我们可以使用“下一个服装”块在两者之间交替：
 
-    [PRE3]
+    ```
+     when green flag clicked
+      forever
+      move (10) steps
+      if on edge, bounce
+      next costume 
+    ```
 
 +   我们的猫看起来移动得有点快，所以我们将减慢它的移动速度：
 
-    [PRE4]
+    ```
+     when green flag clicked
+      forever
+      move (10) steps
+      if on edge, bounce
+      next costume
+      wait (0.1) seconds 
+    ```
 
     +   现在，我们的猫将移动，如果它在边缘，则弹跳，切换到下一个服装，然后等待一秒钟的短暂时间。然后它会反复执行所有这些块，直到我们按下停止标志。
 
@@ -48,17 +73,30 @@
 
 +   我们将在[游泳鱼](https://scratch.mit.edu/projects/507457166/)中使用“水下 1”背景，并让鱼指向鼠标光标：
 
-    [PRE5]
+    ```
+     when green flag clicked
+      forever
+      point towards (mouse-pointer v) 
+    ```
 
     +   通过使用“永远”块，在点击绿色标志后，鱼将始终指向鼠标，反复进行。
 
 +   我们也可以让鱼每次移动 5 步：
 
-    [PRE6]
+    ```
+     when green flag clicked
+      forever
+      point towards (mouse-pointer v)
+      move (5) steps 
+    ```
 
 +   我们也可以用这个作为背景。我们可以在舞台面板中点击背景，并拖入这些块：
 
-    [PRE7]
+    ```
+     when green flag clicked
+      forever
+      play sound (Ocean Wave v) until done 
+    ```
 
     +   最初，“播放声音”块只有“砰”的声音，所以我们将使用“声音”选项卡将“海洋波浪”声音添加到我们的背景中。然后，我们可以使用“播放声音”块中的下拉菜单选择“海洋波浪”。
 
@@ -74,7 +112,11 @@
 
 +   现在，让我们告诉我们的猫，当鼠标太靠近时，它要发出“喵喵”声：
 
-    [PRE8]
+    ```
+     when green flag clicked
+      if <(distance to (mouse-pointer v)) < (100)> then
+      play sound (Meow v) until done 
+    ```
 
     +   我们可以添加一个条件来检查鼠标指针的距离。如果它小于 100 的值，我们的猫就会发出声音。
 
@@ -84,7 +126,12 @@
 
 +   通过添加“永远”积木并将我们的条件放在其中，我们可以不断地提出这个问题，并且每次我们的鼠标指针太靠近时都会播放声音：
 
-    [PRE9]
+    ```
+     when green flag clicked
+      forever
+      if <(distance to (mouse-pointer v)) < (100)> then
+      play sound (Meow v) until done 
+    ```
 
 +   一个“永远”循环，它会在程序结束时重复运行，也被称为无限循环。
 
@@ -92,29 +139,50 @@
 
 +   我们还可以使用“重复”积木来运行一些代码块特定次数：
 
-    [PRE10]
+    ```
+     repeat (10) 
+    ```
 
     +   注意，在这个积木的右下角有一个小箭头，表示里面的代码将会被重复执行。
 
 +   例如，如果我们想让我们的猫叫三次，我们可以使用：
 
-    [PRE11]
+    ```
+     when green flag clicked
+      play sound (Meow v) until done
+      play sound (Meow v) until done
+      play sound (Meow v) until done 
+    ```
 
 +   但我们可以通过使用“重复”积木来改进我们程序的布局，[喵喵](https://scratch.mit.edu/projects/507457982/)，而不是反复使用相同的“播放声音”积木：
 
-    [PRE12]
+    ```
+     when green flag clicked
+      repeat (3)
+      play sound (Meow v) until done 
+    ```
 
     +   这更好，因为我们现在只使用两个积木，而不是像以前那样使用三个。如果我们想重复 30 次，我们只需要改变椭圆形中的数字，而不是拖出 27 个额外的“播放声音”积木。
 
 +   我们还可以在“重复”积木的椭圆形中使用其他值。例如，我们可以提出一个问题，并使用答案作为输入：
 
-    [PRE13]
+    ```
+     when green flag clicked
+      ask [Number:] and wait
+      repeat (answer)
+      play sound (Meow v) until done 
+    ```
 
     +   现在，我们的程序用户可以控制我们的猫叫多少次。
 
 +   我们可以在另一个例子中尝试让我们的猫在圆形中移动，[圆形](https://scratch.mit.edu/projects/507458172/)：
 
-    [PRE14]
+    ```
+     when green flag clicked
+      repeat (24)
+      move (30) steps
+      turn right (15) degrees 
+    ```
 
     +   我们的猫将移动 30 步，轻微转向，然后重复 24 次，在圆形中移动自己。
 
@@ -124,13 +192,31 @@
 
 +   我们将在[Balloon 1](https://scratch.mit.edu/projects/507458351/)中使用循环让气球自己膨胀：
 
-    [PRE15]
+    ```
+     when green flag clicked
+      repeat (10)
+      change size by (10)
+      wait (0.2) seconds
+      end
+      hide
+      play sound (Pop v) until done 
+    ```
 
     +   现在，当我们点击绿色标志时，我们的气球将增加 10 个单位的大小，暂停一秒钟。它会这样做 10 次，直到它变得越来越大，然后消失并播放噼啪声。
 
 +   但当我们再次点击绿色标志时，什么也没有发生。气球仍然隐藏着，所以我们需要添加一些积木来再次显示它：
 
-    [PRE16]
+    ```
+     when green flag clicked
+      show
+      set size to (100) %
+      repeat (10)
+      change size by (10)
+      wait (0.2) seconds
+      end
+      hide
+      play sound (Pop v) until done 
+    ```
 
     +   我们还将使用“设置大小”积木将气球恢复到原始大小。现在，每次我们点击绿色标志，它都会重新出现。
 
@@ -138,7 +224,17 @@
 
 +   结果我们发现可以在“控制”部分的另一个块中使用“重复直到”，这样我们就可以避免自己进行那个计算，在[Balloon 2](https://scratch.mit.edu/projects/507458714/)中：
 
-    [PRE17]
+    ```
+     when green flag clicked
+      show
+      set size to (100) %
+      repeat until <(size) = (200)>
+      change size by (10)
+      wait (0.2) seconds
+      end
+      hide
+      play sound (Pop v) until done 
+    ```
 
     +   “重复直到”块是循环和条件的组合。它将反复运行，直到某个问题被回答为“是”，或者变为真。
 

@@ -60,7 +60,9 @@
 
 +   让我们定位数据集中最强的风暴。首先，让我们删除我们不需要的列。考虑以下程序：
 
-    [PRE0]
+    ```
+    # Remove selected columns  dplyr::select(  storms,  !c(lat,  long,  pressure,  tropicalstorm_force_diameter,  hurricane_force_diameter)  ) 
+    ```
 
     注意到 dplyr 中的 `select` 函数允许你确定哪些列将包含在数据框或 tibble 中。`select` 的第一个参数是要操作的（数据框或 tibble）：`storms`。`select` 的第二个参数是要选择的列的向量。然而，在这种情况下，使用了 `!`：一个 `!` 表示后面的列名将被排除。或者，`-` 也有相同的功能。运行此代码将通过删除上述列来简化 tibble。
 
@@ -68,7 +70,9 @@
 
 +   像这样的辅助函数 `contains`、`starts_with` 或 `ends_with` 可以帮助完成这项工作。考虑以下代码：
 
-    [PRE1]
+    ```
+    # Introduce ends_with  select(  storms,  !c(lat,  long,  pressure,  ends_with("diameter"))  ) 
+    ```
 
     注意到 `ends_with` 被用来排除所有以 *diameter* 结尾的列。使用的代码更少，但结果与之前相同。
 
@@ -78,7 +82,9 @@
 
 +   考虑以下代码：
 
-    [PRE2]
+    ```
+    # Find only rows about hurricanes  filter(  select(  storms,  !c(lat,  long,  pressure,  ends_with("diameter"))  ),  status  ==  "hurricane"  ) 
+    ```
 
     注意，只有包含 `status` 列中 `hurricane` 的行被包含在内。
 
@@ -88,7 +94,9 @@
 
 +   在 R 中，*管道操作符* 用 `|>` 表示，允许将数据“管道”到特定的函数中。例如，考虑以下代码：
 
-    [PRE3]
+    ```
+    # Introduce pipe operator  storms  |>  select(!c(lat,  long,  pressure,  ends_with("diameter")))  |>  filter(status  ==  "hurricane") 
+    ```
 
     注意 `storms` 是如何被管道到 `select` 的，隐式地成为 `select` 的第一个参数。然后，注意 `select` 的返回值是如何被管道到 `filter` 的，隐式地成为 `filter` 的第一个参数。当你使用管道操作符时，你可以避免嵌套函数调用，并按顺序编写代码。
 
@@ -96,7 +104,9 @@
 
 +   现在我们使用 `arrange` 函数来排序我们的行：
 
-    [PRE4]
+    ```
+    # Find only rows about hurricanes, and arrange highest wind speed to least  storms  |>  select(!c(lat,  long,  pressure,  ends_with("force_diameter")))  |>  filter(status  ==  "hurricane")  |>  arrange(desc(wind)) 
+    ```
 
     注意 `select` 函数的返回值是如何被管道到 `filter` 的，然后 `filter` 的返回值又被管道到 `arrange`。结果数据框中的行按 `wind` 列的值降序排列。
 
@@ -112,7 +122,9 @@
 
 +   然而，你可以告诉 `distinct` 在确定行是否重复时考虑哪些值。考虑以下利用这一功能的代码：
 
-    [PRE5]
+    ```
+    # Keep only first observation about each hurricane  storms  |>  select(!c(lat,  long,  pressure,  ends_with("force_diameter")))  |>  filter(status  ==  "hurricane")  |>  arrange(desc(wind),  name)  |>  distinct(name,  year,  .keep_all  =  TRUE) 
+    ```
 
     注意 `distinct` 被告知只查看每个风暴的 `name` 和 `year` 以确定它是否是独特项目。`.keep_all = TRUE` 告诉 `distinct` 仍然返回每行的所有列。
 
@@ -122,7 +134,9 @@
 
 +   考虑以下代码：
 
-    [PRE6]
+    ```
+    # Write subset of columns to a CSV  hurricanes  <-  storms  |>  select(!c(lat,  long,  pressure,  ends_with("force_diameter")))  |>  filter(status  ==  "hurricane")  |>  arrange(desc(wind),  name)  |>  distinct(name,  year,  .keep_all  =  TRUE)  hurricanes  |>  select(c(year,  name,  wind))  |>  write.csv("hurricanes.csv",  row.names  =  FALSE) 
+    ```
 
     注意第一个代码块的结果被存储为 `hurricanes`。要将 `hurricanes` 保存为 CSV 文件，`select` 首先选择 3 个特定的列（`year`、`name` 和 `wind`），并将它们写入名为 `hurricanes.csv` 的文件中。
 
@@ -132,13 +146,17 @@
 
 +   考虑以下代码：
 
-    [PRE7]
+    ```
+    # Find most powerful hurricane for each year  hurricanes  <-  read.csv("hurricanes.csv")  hurricanes  |>  group_by(year)  |>  arrange(desc(wind))  |>  slice_head() 
+    ```
 
     注意如何将 `hurricanes.csv` 读取到 `hurricanes` 中。然后，使用 `group_by` 函数将每年所有的飓风分组在一起。对于每个组，使用 `arrange(desc(wind))` 按照风速降序排列。最后，使用 `slice_head` 输出每个组的顶部行。因此，展示了每年最强的风暴。
 
 +   `slice_max` 在变量中选择最大值。考虑一下我们如何在代码中应用这一点：
 
-    [PRE8]
+    ```
+    # Introduce slice_max  hurricanes  <-  read.csv("hurricanes.csv")  hurricanes  |>  group_by(year)  |>  slice_max(order_by  =  wind) 
+    ```
 
     注意到`hurricanes`是按`year`分组的。然后，使用`slice_max`展示了`wind`的最高值。这样做消除了对`arrange(desc(wind))`的需求。
 
@@ -146,7 +164,9 @@
 
 +   如果我们想知道每年有多少次飓风？考虑以下代码：
 
-    [PRE9]
+    ```
+    # Find number of hurricanes per year  hurricanes  <-  read.csv("hurricanes.csv")  hurricanes  |>  group_by(year)  |>  summarize(hurricanes  =  n()) 
+    ```
 
     注意到函数`summarize`使用`n`来计算每个组中的行数。
 
@@ -154,7 +174,9 @@
 
 +   查看我们的`hurricanes`数据框，你会注意到存在分组。实际上，这些分组是根据`year`进行的。在未来的活动中，你可能会希望取消数据中的分组。因此，考虑以下内容：
 
-    [PRE10]
+    ```
+    # Show ungroup  hurricanes  <-  read.csv("hurricanes.csv")  hurricanes  |>  group_by(year)  |>  slice_max(order_by  =  wind)  |>  ungroup() 
+    ```
 
     注意到`ungroup`命令被用来移除 tibble 的分组。
 
@@ -170,7 +192,11 @@
 
 +   根据 tidyverse 的哲学，有三个原则指导我们所说的*整洁数据*。
 
-    [PRE11]
+    ```
+    1\. Each observation is a row; each row is an observation.
+    2\. Each variable is a column; each column is a variable.
+    3\. Each value is a cell; each cell is a single value. 
+    ```
 
 +   在评估数据时，最好查看上述三个原则，看看它们是否被观察到。
 
@@ -182,7 +208,9 @@
 
 +   从课程文件中下载`students.csv`文件并将其放置在你的工作目录中。创建以下新代码：
 
-    [PRE12]
+    ```
+    # Read CSV  students  <-  read.csv("students.csv")  View(students) 
+    ```
 
     注意到这段代码加载了一个名为`students.csv`的 CSV 文件，并将这些值存储在`students`中。
 
@@ -204,7 +232,9 @@
 
 +   但如何操作呢？考虑以下用法：
 
-    [PRE13]
+    ```
+    # Demonstrates pivot_wider  students  <-  read.csv("students.csv")  students  <-  pivot_wider(  students,  id_cols  =  student,  names_from  =  attribute,  values_from  =  value  ) 
+    ```
 
     注意到`pivot_wider`有几个参数，这里进行解释：
 
@@ -220,7 +250,9 @@
 
 +   考虑以下：
 
-    [PRE14]
+    ```
+    # Demonstrates calculating average GPA by major  students  <-  read.csv("students.csv")  students  <-  pivot_wider(  students,  id_cols  =  student,  names_from  =  attribute,  values_from  =  value  )  students$GPA  <-  as.numeric(students$GPA)  students  |>  group_by(major)  |>  summarize(GPA  =  mean(GPA)) 
+    ```
 
     注意这个程序是如何利用`pivot_wider`和 tidyr 来发现学生的平均 GPA。`students`中的`GPA`被转换为数值。然后，使用管道语法来找到 GPA 的平均值。
 
@@ -230,25 +262,33 @@
 
 +   `stringr`为我们提供了一种整理字符串的方法。从课程文件中下载`shows.csv`并将其放置在你的工作目录中。考虑以下程序：
 
-    [PRE15]
+    ```
+    # Tally votes for favorite shows  shows  <-  read.csv("shows.csv")  shows  |>  group_by(show)  |>  summarize(votes  =  n())  |>  ungroup()  |>  arrange(desc(votes)) 
+    ```
 
     注意到节目是如何按`show`分组。然后，计算`votes`的数量。最后，按降序排列`votes`。
 
 +   观察这个程序的结果，你可以看到有多个版本的*《阿凡达：最后的气宗》*。我们可能首先应该解决空白问题。
 
-    [PRE16]
+    ```
+    # Clean up inner whitespace  shows  <-  read.csv("shows.csv")  shows$show  <-  shows$show  |>  str_trim()  |>  str_squish()  shows  |>  group_by(show)  |>  summarize(votes  =  n())  |>  ungroup()  |>  arrange(desc(votes)) 
+    ```
 
     注意`str_trim`是如何用来移除每条记录的前后空白。然后，`str_squish`用来移除字符之间的额外空白。
 
 +   虽然这一切都非常好，但在大写方面仍然存在一些不一致。我们可以这样解决：
 
-    [PRE17]
+    ```
+    # Clean up capitalization  shows  <-  read.csv("shows.csv")  shows$show  <-  shows$show  |>  str_trim()  |>  str_squish()  |>  str_to_title()  shows  |>  group_by(show)  |>  summarize(votes  =  n())  |>  ungroup()  |>  arrange(desc(votes)) 
+    ```
 
     注意`str_to_title`是如何用来强制每个字符串使用标题大小写的。
 
 +   最后，我们可以解决*《阿凡达：最后的气宗》*的拼写变体问题：
 
-    [PRE18]
+    ```
+    # Clean up spelling  shows  <-  read.csv("shows.csv")  shows$show  <-  shows$show  |>  str_trim()  |>  str_squish()  |>  str_to_title()  shows$show[str_detect(shows$show,  "Avatar")]  <-  "Avatar: The Last Airbender"  shows  |>  group_by(show)  |>  summarize(votes  =  n())  |>  ungroup()  |>  arrange(desc(votes)) 
+    ```
 
     注意`str_detect`是如何用来定位`Avatar`实例。每个这些都被转换为`Avatar: The Last Airbender`。
 

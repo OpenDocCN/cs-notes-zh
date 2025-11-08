@@ -48,13 +48,21 @@
 
 +   加密的文本片段可能看起来像以下这样：
 
-    [PRE0]
+    ```
+    U  I  J  T   J  T   D  T  5  0 
+    ```
 
 +   回想一下，上周您学习了 *编译器*，这是一种专门计算机程序，它将 *源代码* 转换为计算机可以理解的 *机器代码*。
 
 +   例如，您可能有一个看起来像这样的计算机程序：
 
-    [PRE1]
+    ```
+    #include <stdio.h>  
+    int main(void)
+    {
+        printf("hello, world\n");
+    } 
+    ```
 
 +   编译器将上述代码转换为以下机器代码：
 
@@ -70,7 +78,14 @@
 
 +   考虑以下上周的代码：
 
-    [PRE2]
+    ```
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string name = get_string("What's your name? ");
+        printf("hello, %s\n", name);
+    } 
+    ```
 
 +   要编译此代码，您可以输入 `clang -o hello hello.c -lcs50`。
 
@@ -84,15 +99,77 @@
 
 +   首先，*预处理*是将你的代码中的头文件（由`#`指定，例如`#include <cs50.h>`）有效地复制并粘贴到你的文件中。在这一步中，`cs50.h`中的代码被复制到你的程序中。同样，就像你的代码包含`#include <stdio.h>`一样，计算机上某个地方的`stdio.h`中的代码也被复制到你的程序中。这一步可以可视化如下：
 
-    [PRE3]
+    ```
+     string get_string(string prompt);
+      int printf(string format, ...);
+
+      int main(void)
+      {
+          string name = get_string("What's your name? ");
+          printf("hello, %s\n", name);
+      } 
+    ```
 
 +   第二，*编译*是将你的程序转换为汇编代码。这一步可以可视化如下：
 
-    [PRE4]
+    ```
+    ...
+    main:
+        .cfi_startproc
+    # BB#0:
+        pushq    %rbp
+    .Ltmp0:
+        .cfi_def_cfa_offset 16
+    .Ltmp1:
+        .cfi_offset %rbp, -16
+        movq    %rsp, %rbp
+    .Ltmp2:
+        .cfi_def_cfa_register %rbp
+        subq    $16, %rsp
+        xorl    %eax, %eax
+        movl    %eax, %edi
+        movabsq    $.L.str, %rsi
+        movb    $0, %al
+        callq    get_string
+        movabsq    $.L.str.1, %rdi
+        movq    %rax, -8(%rbp)
+        movq    -8(%rbp), %rsi
+        movb    $0, %al
+        callq    printf
+        ... 
+    ```
 
 +   第三，*汇编*涉及编译器将你的汇编代码转换为机器代码。这一步可以可视化如下：
 
-    [PRE5]
+    ```
+    01111111010001010100110001000110
+    00000010000000010000000100000000
+    00000000000000000000000000000000
+    00000000000000000000000000000000
+    00000001000000000011111000000000
+    00000001000000000000000000000000
+    00000000000000000000000000000000
+    00000000000000000000000000000000
+    00000000000000000000000000000000
+    00000000000000000000000000000000
+    10100000000000100000000000000000
+    00000000000000000000000000000000
+    00000000000000000000000000000000
+    01000000000000000000000000000000
+    00000000000000000100000000000000
+    00001010000000000000000100000000
+    01010101010010001000100111100101
+    01001000100000111110110000010000
+    00110001110000001000100111000111
+    01001000101111100000000000000000
+    00000000000000000000000000000000
+    00000000000000001011000000000000
+    11101000000000000000000000000000
+    00000000010010001011111100000000
+    00000000000000000000000000000000
+    00000000000000000000000001001000
+    ... 
+    ```
 
 +   最后，在*链接*步骤中，你的包含库中的代码也被转换为机器代码，并与你的代码结合。然后输出最终的可执行文件。
 
@@ -114,7 +191,18 @@
 
 +   考虑以下故意在其内部插入错误的代码：
 
-    [PRE6]
+    ```
+    // Buggy example for printf
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        for (int i = 0; i <= 3; i++)
+        {
+            printf("#\n");
+        }
+    } 
+    ```
 
     注意，这段代码打印了四个方块而不是三个。
 
@@ -124,19 +212,59 @@
 
 +   `printf`是一种非常有用的调试代码的方法。你可以按照以下方式修改你的代码：
 
-    [PRE7]
+    ```
+    // Buggy example for printf
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        for (int i = 0; i <= 3; i++)
+        {
+            printf("i is %i\n", i);
+            printf("#\n");
+        }
+    } 
+    ```
 
     注意，这段代码在循环的每次迭代中都输出了`i`的值，这样我们就可以调试我们的代码。
 
 +   运行这段代码，你会看到许多语句，包括`i is 0`、`i is 1`、`i is 2`和`i is 3`。看到这些，你可能会意识到需要进一步修正以下代码：
 
-    [PRE8]
+    ```
+    #include <stdio.h>  
+    int main(void)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            printf("#\n");
+        }
+    } 
+    ```
 
     注意`<=`已被替换为`<`。
 
 +   这段代码可以进一步改进如下：
 
-    [PRE9]
+    ```
+    // Buggy example for debug50
+
+    #include <cs50.h> #include <stdio.h>  
+    void print_column(int height);
+
+    int main(void)
+    {
+        int h = get_int("Height: ");
+        print_column(h);
+    }
+
+    void print_column(int height)
+    {
+        for (int i = 0; i <= height; i++)
+        {
+            printf("#\n");
+        }
+    } 
+    ```
 
     注意，编译和运行这段代码仍然会导致错误。
 
@@ -188,7 +316,21 @@
 
 +   我们可以创建一个探索这些概念的程序。在你的终端中，输入`code scores.c`并编写以下代码：
 
-    [PRE10]
+    ```
+    // Averages three (hardcoded) numbers
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        // Scores
+        int score1 = 72;
+        int score2 = 73;
+        int score3 = 33;
+
+        // Print average
+        printf("Average: %f\n", (score1 + score2 + score3) / 3.0);
+    } 
+    ```
 
     注意右边的数字是一个`3.0`的浮点值，所以计算最终呈现为浮点值。
 
@@ -202,19 +344,83 @@
 
 +   `int scores[3]`是告诉编译器为你提供三个连续的内存位置，大小为`int`，以存储三个`scores`。考虑到我们的程序，你可以按照以下方式修改你的代码：
 
-    [PRE11]
+    ```
+    // Averages three (hardcoded) numbers using an array
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Scores
+        int scores[3];
+        scores[0] = 72;
+        scores[1] = 73;
+        scores[2] = 33;
+
+        // Print average
+        printf("Average: %f\n", (scores[0] + scores[1] + scores[2]) / 3.0);
+    } 
+    ```
 
     注意`score[0]`通过`indexing into`名为`scores`的数组在位置`0`的内存位置来检查这个位置的值，以查看存储了什么值。
 
 +   你可以看到，虽然上面的代码可以工作，但仍然有机会改进我们的代码。按照以下方式修改你的代码：
 
-    [PRE12]
+    ```
+    // Averages three numbers using an array and a loop
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Get scores
+        int scores[3];
+        for (int i = 0; i < 3; i++)
+        {
+            scores[i] = get_int("Score: ");
+        }
+
+        // Print average
+        printf("Average: %f\n", (scores[0] + scores[1] + scores[2]) / 3.0);
+    } 
+    ```
 
     注意我们如何通过使用 `scores[i]` 来索引 `scores`，其中 `i` 由 `for` 循环提供。
 
 +   我们可以简化或抽象出平均值的计算。按照以下方式修改你的代码：
 
-    [PRE13]
+    ```
+    // Averages three numbers using an array, a constant, and a helper function
+
+    #include <cs50.h> #include <stdio.h>  
+    // Constant
+    const int N = 3;
+
+    // Prototype
+    float average(int length, int array[]);
+
+    int main(void)
+    {
+        // Get scores
+        int scores[N];
+        for (int i = 0; i < N; i++)
+        {
+            scores[i] = get_int("Score: ");
+        }
+
+        // Print average
+        printf("Average: %f\n", average(N, scores));
+    }
+
+    float average(int length, int array[])
+    {
+        // Calculate average
+        int sum = 0;
+        for (int i = 0; i < length; i++)
+        {
+            sum += array[i];
+        }
+        return sum / (float) length;
+    } 
+    ```
 
     注意声明了一个新函数 `average`。此外，注意声明了一个 `const` 或常量值 `N`。最重要的是，注意 `average` 函数接受 `int array[]`，这意味着编译器将数组传递给这个函数。
 
@@ -226,13 +432,35 @@
 
 +   要探索 `char` 和 `string`，在终端窗口中输入 `code hi.c` 并按照以下方式编写代码：
 
-    [PRE14]
+    ```
+    // Prints chars
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        char c1 = 'H';
+        char c2 = 'I';
+        char c3 = '!';
+
+        printf("%c%c%c\n", c1, c2, c3);
+    } 
+    ```
 
     注意这将输出一个字符字符串。
 
 +   同样，对你的代码进行以下修改：
 
-    [PRE15]
+    ```
+    #include <stdio.h>  
+    int main(void)
+    {
+        char c1 = 'H';
+        char c2 = 'I';
+        char c3 = '!';
+
+        printf("%i %i %i\n", c1, c2, c3);
+    } 
+    ```
 
     注意通过将 `%c` 替换为 `%i` 来打印 ASCII 码。
 
@@ -246,19 +474,49 @@
 
 +   为了进一步理解 `string` 的工作方式，按照以下方式修改你的代码：
 
-    [PRE16]
+    ```
+    // Treats string as array
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string s = "HI!";
+        printf("%c%c%c\n", s[0], s[1], s[2]);
+    } 
+    ```
 
     注意 `printf` 语句如何从我们的数组 `s` 中呈现三个值。
 
 +   如前所述，我们可以将 `%c` 替换为 `%i`，如下所示：
 
-    [PRE17]
+    ```
+    // Prints string's ASCII codes, including NUL
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string s = "HI!";
+        printf("%i %i %i %i\n", s[0], s[1], s[2], s[3]);
+    } 
+    ```
 
     注意这会打印出字符串的 ASCII 码，包括 NUL。
 
 +   让我们想象我们想要说 `HI!` 和 `BYE!`。按照以下方式修改你的代码：
 
-    [PRE18]
+    ```
+    // Multiple strings
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string s = "HI!";
+        string t = "BYE!";
+
+        printf("%s\n", s);
+        printf("%s\n", t);
+    } 
+    ```
 
     注意在这个例子中声明并使用了两个字符串。
 
@@ -268,13 +526,39 @@
 
 +   我们可以进一步改进这段代码。按照以下方式修改你的代码：
 
-    [PRE19]
+    ```
+    // Array of strings
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string words[2];
+
+        words[0] = "HI!";
+        words[1] = "BYE!";
+
+        printf("%s\n", words[0]);
+        printf("%s\n", words[1]);
+    } 
+    ```
 
     注意到这两个字符串都存储在单个类型为 `string` 的数组中。
 
 +   我们可以将两个字符串合并到一个字符串数组中。
 
-    [PRE20]
+    ```
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string words[2];
+
+        words[0] = "HI!";
+        words[1] = "BYE!";
+
+        printf("%c%c%c\n", words[0][0], words[0][1], words[0][2]);
+        printf("%c%c%c%c\n", words[1][0], words[1][1], words[1][2], words[1][3]);
+    } 
+    ```
 
     注意创建了一个 `words` 的数组。它是一个字符串数组。每个单词都存储在 `words` 中。
 
@@ -282,19 +566,71 @@
 
 +   编程中一个常见的问题，也许在 C 语言中更为具体，是发现数组的长度。我们如何在代码中实现这一点？在终端窗口中输入 `code length.c` 并按照以下方式编写代码：
 
-    [PRE21]
+    ```
+    // Determines the length of a string
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Prompt for user's name
+        string name = get_string("Name: ");
+
+        // Count number of characters up until '\0' (aka NUL)
+        int n = 0;
+        while (name[n] != '\0')
+        {
+            n++;
+        }
+        printf("%i\n", n);
+    } 
+    ```
 
     注意到这段代码会一直循环，直到找到 NUL 字符。
 
 +   我们可以通过将计数抽象到函数中来改进这段代码，如下所示：
 
-    [PRE22]
+    ```
+    // Determines the length of a string using a function
+
+    #include <cs50.h> #include <stdio.h>  
+    int string_length(string s);
+
+    int main(void)
+    {
+        // Prompt for user's name
+        string name = get_string("Name: ");
+        int length = string_length(name);
+        printf("%i\n", length);
+    }
+
+    int string_length(string s)
+    {
+        // Count number of characters up until '\0' (aka NUL)
+        int n = 0;
+        while (s[n] != '\0')
+        {
+            n++;
+        }
+        return n;
+    } 
+    ```
 
     注意到有一个新函数 `string_length` 被调用，它计算字符直到找到 NUL。
 
 +   由于这是编程中一个如此常见的问题，其他程序员已经在 `string.h` 库中创建了代码来查找字符串的长度。你可以通过修改以下方式来查找字符串的长度：
 
-    [PRE23]
+    ```
+    // Determines the length of a string using a function
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // Prompt for user's name
+        string name = get_string("Name: ");
+        int length = strlen(name);
+        printf("%i\n", length);
+    } 
+    ```
 
     注意，这段代码使用了在文件顶部声明的`string.h`库。此外，它使用该库中的一个函数`strlen`，该函数计算传递给它的字符串的长度。
 
@@ -302,7 +638,28 @@
 
 +   `ctype.h`是另一个非常有用的库。想象一下，如果我们想要创建一个将所有小写字母转换为大写字母的程序。在终端窗口中，输入`code uppercase.c`并编写以下代码：
 
-    [PRE24]
+    ```
+    // Uppercases a string
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        string s = get_string("Before: ");
+        printf("After:  ");
+        for (int i = 0, n = strlen(s); i < n; i++)
+        {
+            if (s[i] >= 'a' && s[i] <= 'z')
+            {
+                printf("%c", s[i] - 32);
+            }
+            else
+            {
+                printf("%c", s[i]);
+            }
+        }
+        printf("\n");
+    } 
+    ```
 
     注意，这段代码会*遍历*字符串中的每个值。程序会查看每个字符。如果字符是小写的，它会从该字符中减去`32`的值以将其转换为大写。
 
@@ -330,13 +687,48 @@
 
 +   虽然程序完成了我们想要的功能，但使用`ctype.h`库有一个更简单的方法。按照以下方式修改你的程序：
 
-    [PRE25]
+    ```
+    // Uppercases string using ctype library (and an unnecessary condition)
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        string s = get_string("Before: ");
+        printf("After:  ");
+        for (int i = 0, n = strlen(s); i < n; i++)
+        {
+            if (islower(s[i]))
+            {
+                printf("%c", toupper(s[i]));
+            }
+            else
+            {
+                printf("%c", s[i]);
+            }
+        }
+        printf("\n");
+    } 
+    ```
 
     注意，程序会遍历字符串中的每个字符。`toupper`函数传递了`s[i]`。每个字符（如果为小写）都会被转换为大写。
 
 +   值得注意的是，`toupper`函数会自动识别并只将小写字母转换为大写。因此，你可以将代码简化如下：
 
-    [PRE26]
+    ```
+    // Uppercases string using ctype library
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        string s = get_string("Before: ");
+        printf("After:  ");
+        for (int i = 0, n = strlen(s); i < n; i++)
+        {
+            printf("%c", toupper(s[i]));
+        }
+        printf("\n");
+    } 
+    ```
 
     注意，这段代码使用`ctype`库将字符串转换为大写。
 
@@ -348,13 +740,37 @@
 
 +   在你的终端窗口中，输入 `code greet.c` 并编写如下代码：
 
-    [PRE27]
+    ```
+    // Uses get_string
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string answer = get_string("What's your name? ");
+        printf("hello, %s\n", answer);
+    } 
+    ```
 
     注意，这个程序对用户说`hello`。
 
 +   尽管如此，如果在程序运行之前就能接受参数不是很好吗？按照以下方式修改你的代码：
 
-    [PRE28]
+    ```
+    // Prints a command-line argument
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(int argc, string argv[])
+    {
+        if (argc == 2)
+        {
+            printf("hello, %s\n", argv[1]);
+        }
+        else
+        {
+            printf("hello, world\n");
+        }
+    } 
+    ```
 
     注意，这个程序知道 `argc`，即命令行参数的数量，以及 `argv`，它是一个包含在命令行中传递的字符的数组。
 
@@ -362,7 +778,18 @@
 
 +   你可以使用以下方式打印每个命令行参数：
 
-    [PRE29]
+    ```
+    // Prints command-line arguments
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(int argc, string argv[])
+    {
+        for (int i = 0; i < argc; i++)
+        {
+            printf("%s\n", argv[i]);
+        }
+    } 
+    ```
 
 ## 退出状态
 
@@ -372,7 +799,21 @@
 
 +   你可以编写一个程序如下，通过输入 `code status.c` 并编写如下代码来展示这一点：
 
-    [PRE30]
+    ```
+    // Returns explicit value from main
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(int argc, string argv[])
+    {
+        if (argc != 2)
+        {
+            printf("Missing command-line argument\n");
+            return 1;
+        }
+        printf("hello, %s\n", argv[1]);
+        return 0;
+    } 
+    ```
 
     注意，如果你没有提供 `./status David`，你将得到退出状态 `1`。然而，如果你确实提供了 `./status David`，你将得到退出状态 `0`。
 

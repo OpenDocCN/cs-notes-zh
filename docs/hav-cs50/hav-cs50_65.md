@@ -56,7 +56,17 @@
 
 +   让我们从编写一个简单的 HTML 文件开始吧！
 
-[PRE0]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello!</title>
+    </head>
+    <body>
+        Hello, world!
+    </body>
+<html> 
+```
 
 +   当我们在浏览器中打开这个文件时，我们得到：
 
@@ -90,7 +100,69 @@
 
 +   另一点需要注意的是：`<!-- -->`在 HTML 中提供了注释，因此我们将在下面使用它来解释一些元素。
 
-[PRE1]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>HTML Elements</title>
+    </head>
+    <body>
+        <!-- We can create headings using h1 through h6 as tags. -->
+        <h1>A Large Heading</h1>
+        <h2>A Smaller Heading</h2>
+        <h6>The Smallest Heading</h6>
+
+        <!-- The strong and i tags give us bold and italics respectively. -->
+        A <strong>bold</strong> word and an <i>italicized</i> word!
+
+        <!-- We can link to another page (such as cs50's page) using a. -->
+        View the <a href="https://cs50.harvard.edu/">CS50 Website</a>!
+
+        <!-- We used ul for an unordered list and ol for an ordered one. both ordered and unordered lists contain li, or list items. -->
+        An unordered list:
+        <ul>
+            <li>foo</li>
+            <li>bar</li>
+            <li>baz</li>
+        </ul>
+        An ordered list:
+        <ol>
+            <li>foo</li>
+            <li>bar</li>
+            <li>baz</li>
+        </ol>
+
+        <!-- Images require a src attribute, which can be either the path to a file on your computer or the link to an image online. It also includes an alt attribute, which gives a description in case the image can't be loaded. -->
+        An image:
+        <img src="../../images/duck.jpeg" alt="Rubber Duck Picture">
+        <!-- We can also see above that for some elements that don't contain other ones, closing tags are not necessary. -->
+
+        <!-- Here, we use a br tag to add white space to the page. -->
+        <br/> <br/>
+
+        <!-- A few different tags are necessary to create a table. -->
+        <table>
+            <thead>
+                <th>Ocean</th>
+                <th>Average Depth</th>
+                <th>Maximum Depth</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pacific</td>
+                    <td>4280 m</td>
+                    <td>10911 m</td>
+                </tr>
+                <tr>
+                    <td>Atlantic</td>
+                    <td>3646 m</td>
+                    <td>8486 m</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+<html> 
+```
 
 当这个页面渲染时，看起来就像这样：
 
@@ -104,7 +176,29 @@
 
 +   正如其他 HTML 元素一样，您不需要记住这些，W3 Schools 是学习这些元素的一个很好的资源！
 
-[PRE2]
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Forms</title>
+</head>
+<body>
+    <form>
+        <input type="text" placeholder="First Name" name="first">
+        <input type="password" placeholder="Password" name="password">
+        <div>
+            Favorite Color:
+            <input name="color" type="radio" value="blue"> Blue
+            <input name="color" type="radio" value="green"> Green
+            <input name="color" type="radio" value="yellow"> Yellow
+            <input name="color" type="radio" value="red"> Red
+
+        </div>
+        <input type="submit">
+    </form>
+</body>
+</html> 
+```
 
 ![表单](img/62e6ba18928bb850401b71a7febc8275.png)
 
@@ -118,13 +212,35 @@
 
 +   在下面的示例中，我们对我们的第一个文件进行了一些微小的修改，以使其标题更加多彩：
 
-[PRE3]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello!</title>
+    </head>
+    <body>
+        <h1 style="color: blue; text-align: center;">A Colorful Heading!</h1>
+        Hello, world!
+    </body>
+<html> 
+```
 
 ![blue heading](img/56667aebeadf8059f378b868b963d396.png)
 
 +   如果我们为一个外部元素进行样式设置，所有内部元素将自动采用该样式。如果我们把刚才应用在标题标签上的样式移动到`body`标签上，我们就可以看到这一点：
 
-[PRE4]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello!</title>
+    </head>
+    <body style="color: blue; text-align: center;">
+        <h1 >A Colorful Heading!</h1>
+        Hello, world!
+    </body>
+<html> 
+```
 
 ![blue everywhere](img/96d114c3e6b9c0203e1dba27a05a5b88.png)
 
@@ -132,15 +248,49 @@
 
     +   一种方法是在`head`中的`<style>`标签之间添加你的样式。在这些标签内部，我们写上我们想要样式的元素类型以及我们希望应用给它们的样式。例如：
 
-    [PRE5]
+    ```
+     <html lang="en">
+      <!DOCTYPE html>
+      <head>
+          <title>Hello!</title>
+          <style>
+              h1 {
+                  color: blue;
+                  text-align: center;
+              }
+          </style>
+      </head>
+      <body>
+          <h1 >A Colorful Heading!</h1>
+          Hello, world!
+      </body>
+      </html> 
+    ```
 
     +   另一种方法是在`head`中包含一个指向包含一些样式的`styles.css`文件的`<link>`元素。这意味着 HTML 文件将看起来像这样：
 
-    [PRE6]
+    ```
+     <html lang="en">
+      <!DOCTYPE html>
+      <head>
+          <title>Hello!</title>
+          <link rel="stylesheet" href="styles.css">
+      </head>
+      <body>
+          <h1 >A Colorful Heading!</h1>
+          Hello, world!
+      </body>
+      </html> 
+    ```
 
     我们名为`styles.css`的文件将看起来像这样：
 
-    [PRE7]
+    ```
+     h1 {
+          color: blue;
+          text-align: center;
+      } 
+    ```
 
 +   这里的 CSS 属性太多，无法一一介绍，但就像 HTML 元素一样，通常很容易在 Google 上搜索类似“将字体改为蓝色 CSS”的内容来获取结果。其中一些最常见的是：
 
@@ -166,13 +316,56 @@
 
 +   让我们利用我们刚刚学到的知识来改进上面的海洋表格。以下是一些 HTML 代码作为起点：
 
-[PRE8]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Nicer Table</title>
+    </head>
+    <body>
+        <table>
+            <thead>
+                <th>Ocean</th>
+                <th>Average Depth</th>
+                <th>Maximum Depth</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pacific</td>
+                    <td>4280 m</td>
+                    <td>10911 m</td>
+                </tr>
+                <tr>
+                    <td>Atlantic</td>
+                    <td>3646 m</td>
+                    <td>8486 m</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+<html> 
+```
 
 ![table bad](img/8f36e4b6cde496dcfa37821c87ef9b2a.png)
 
 +   上面看起来和之前我们有的很相似，但现在，通过在头部元素中包含一个`style`标签或一个指向样式表的`link`，我们添加以下 CSS：
 
-[PRE9]
+```
+table {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+td {
+    border: 1px solid black;
+    padding: 2px;
+}
+
+th {
+    border: 1px solid black;
+    padding: 2px;
+} 
+```
 
 这使我们得到了这个看起来更漂亮的表格：
 
@@ -180,7 +373,17 @@
 
 +   你可能已经想到了，我们当前的 CSS 中存在一些不必要的重复，因为`td`和`th`具有相同的样式。我们可以（并且应该）将其压缩为以下代码，使用逗号来表示样式应应用于多个元素类型。
 
-[PRE10]
+```
+table {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 2px;
+} 
+```
 
 +   这是对所谓的[CSS 选择器](https://www.w3schools.com/cssref/css_selectors.asp)的良好介绍。有许多方法可以确定你正在样式的 HTML 元素，其中一些我们将在下面提到：
 
@@ -206,13 +409,59 @@
 
 **后代选择器**: 在这里，我们使用后代选择器来仅对位于无序列表中的列表项应用样式：
 
-[PRE11]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Using Selectors</title>
+        <style>
+            ul li {
+                color: blue;
+            }
+        </style>
+    </head>
+    <body>
+        <ol>
+            <li>foo</li>
+            <li> bar
+                <ul>
+                    <li>hello</li>
+                    <li>goodbye</li>
+                    <li>hello</li>
+                </ul>
+            </li>
+            <li>baz</li>
+        </ol>
+
+    </body>
+<html> 
+```
 
 ![列表选择器](img/7a520ef1f495d1a071df8dc9dcc33b17.png)
 
 **属性作为选择器**: 我们还可以根据分配给 HTML 元素的属性来缩小我们的选择范围，使用方括号。例如，在以下链接列表中，我们选择仅使指向亚马逊的链接变红：
 
-[PRE12]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Using Selectors</title>
+        <style>
+            a[href="https://www.amazon.com/"] {
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <ol>
+            <li><a href="https://www.google.com/">Google</a></li>
+            <li><a href="https://www.amazon.com/">Amazon</a> </li>
+            <li><a href="https://www.facebook.com/">Facebook</a></li>
+        </ol>
+
+    </body>
+<html> 
+```
 
 ![链接选择器](img/68e67fb119da8390a0804bb617fc28ef.png)
 
@@ -220,7 +469,32 @@
 
 +   在按钮的情况下，我们会在按钮选择器中添加 `:hover` 以指定仅在悬停时的设计：
 
-[PRE13]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Pseudoclasses</title>
+        <style>
+            button {
+                background-color: red;
+                width: 200px;
+                height: 50px;
+                font-size: 24px;
+            }
+
+            button:hover {
+                background-color: green;
+            }
+        </style>
+    </head>
+    <body>
+        <button>Button 1</button>
+        <button>Button 2</button>
+        <button>Button 3</button>
+
+    </body>
+<html> 
+```
 
 ![按钮](img/bac0c5c1b8f24a9449298ca13618ca65.png)
 
@@ -232,25 +506,128 @@
 
 +   在移动设备上改善网站外观的一个简单方法是在我们 HTML 文件的头部添加以下行。这一行告诉移动设备使用一个与您使用的设备相同宽度的视口，而不是一个更大的视口。
 
-[PRE14]
+```
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+```
 
 +   另一种处理不同设备的方法是通过[媒体查询](https://www.w3schools.com/cssref/css3_pr_mediaquery.asp)。媒体查询是一种根据页面如何被查看来改变页面样式的方法。
 
 +   以下是一个媒体查询的例子，让我们尝试在屏幕缩小到一定大小时简单地改变屏幕颜色。我们通过输入`@media`后跟括号中的查询类型来表示媒体查询：
 
-[PRE15]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Screen Size</title>
+        <style>
+            @media (min-width: 600px) {
+                body {
+                    background-color: red;
+                }
+            }
+
+            @media (max-width: 599px) {
+                body {
+                    background-color: blue;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to the page!</h1>
+    </body>
+</html> 
+```
 
 ![screen size](img/2ffd2f3972ac64eaba4a55e1f6c517de.png)
 
 +   处理不同屏幕尺寸的另一种方法是使用一个新的 CSS 属性，称为[flexbox](https://www.w3schools.com/css/css3_flexbox.asp)。这允许我们在元素水平方向上不适应时轻松地将它们包裹到下一行。我们通过将所有元素放入一个我们称之为容器的`div`中来实现这一点。然后我们添加一些样式到这个`div`中，指定我们想要在其中的元素上使用 flexbox 显示。我们还添加了一些额外的样式到内部`div`中，以更好地说明这里发生的包裹。
 
-[PRE16]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Screen Size</title>
+        <style>
+            #container {
+                display: flex;
+                flex-wrap: wrap;
+            }
+
+            #container > div {
+                background-color: green;
+                font-size: 20px;
+                margin: 20px;
+                padding: 20px;
+                width: 200px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div>Some text 1!</div>
+            <div>Some text 2!</div>
+            <div>Some text 3!</div>
+            <div>Some text 4!</div>
+            <div>Some text 5!</div>
+            <div>Some text 6!</div>
+            <div>Some text 7!</div>
+            <div>Some text 8!</div>
+            <div>Some text 9!</div>
+            <div>Some text 10!</div>
+            <div>Some text 11!</div>
+            <div>Some text 12!</div>
+        </div>
+    </body>
+</html> 
+```
 
 ![flexbox](img/b7e1046bed98fcbbafc0010fd17c7a25.png)
 
 +   另一种流行的页面样式方法是使用 HTML [网格](https://www.w3schools.com/css/css_grid.asp)。在这个网格中，我们可以指定样式属性，如列宽和列与行之间的间隙，如下所示。注意，当我们指定列宽时，我们说第三个是`auto`，这意味着它应该填充页面的剩余部分。
 
-[PRE17]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>My Web Page!</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            .grid {
+                background-color: green;
+                display: grid;
+                padding: 20px;
+                grid-column-gap: 20px;
+                grid-row-gap: 10px;
+                grid-template-columns: 200px 200px auto;
+            }
+
+            .grid-item {
+                background-color: white;
+                font-size: 20px;
+                padding: 20px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="grid">
+            <div class="grid-item">1</div>
+            <div class="grid-item">2</div>
+            <div class="grid-item">3</div>
+            <div class="grid-item">4</div>
+            <div class="grid-item">5</div>
+            <div class="grid-item">6</div>
+            <div class="grid-item">7</div>
+            <div class="grid-item">8</div>
+            <div class="grid-item">9</div>
+            <div class="grid-item">10</div>
+            <div class="grid-item">11</div>
+            <div class="grid-item">12</div>
+        </div>
+    </body>
+</html> 
+```
 
 ![grid](img/40e776af7a13f8d48626986bb98c9e43.png)
 
@@ -260,19 +637,98 @@
 
 +   我们可以通过在 HTML 文件的头部添加一行来将 Bootstrap 包含到我们的代码中：
 
-[PRE18]
+```
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous"> 
+```
 
 +   接下来，我们可以通过导航到他们网站的[文档](https://getbootstrap.com/docs/4.5/components/)部分来查看一些 Bootstrap 的特性。在这个页面上，你会找到许多可以添加到元素上的类，这些类允许使用 Bootstrap 进行样式化。
 
 +   Bootstrap 的一个流行特性是它们的[网格系统](https://getbootstrap.com/docs/4.0/layout/grid/)。Bootstrap 自动将页面分成 12 列，我们可以通过添加类`col-x`（其中`x`是 1 到 12 之间的数字）来决定一个元素占用多少列。例如，在以下页面中，我们有一行等宽的列，然后是一行中间的列更宽：
 
-[PRE19]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>My Web Page!</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <style>
+            .row > div {
+                padding: 20px;
+                background-color: teal;
+                border: 2px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-4">
+                    This is a section.
+                </div>
+                <div class="col-4">
+                    This is another section.
+                </div>
+                <div class="col-4">
+                    This is a third section.
+                </div>
+            </div>
+        </div>
+        <br/>
+        <div class="container">
+            <div class="row">
+                <div class="col-3">
+                    This is a section.
+                </div>
+                <div class="col-6">
+                    This is another section.
+                </div>
+                <div class="col-3">
+                    This is a third section.
+                </div>
+            </div>
+        </div>
+    </body>
+</html> 
+```
 
 ![columns](img/a0a8fe9df009fa73964dab54182dabcc.png)
 
 +   为了提高移动端的响应性，Bootstrap 还允许我们根据屏幕大小指定不同的列宽。在下面的示例中，我们使用 `col-lg-3` 来表示在大型屏幕上元素应占用 3 列，而 `col-sm-6` 表示在屏幕较小时元素应占用 6 列：
 
-[PRE20]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>My Web Page!</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <style>
+            .row > div {
+                padding: 20px;
+                background-color: teal;
+                border: 2px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-sm-6">
+                    This is a section.
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    This is another section.
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    This is a third section.
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    This is a fourth section.
+                </div>
+            </div>
+        </div>
+    </body>
+</html> 
+```
 
 ![wrap columns](img/b83e7008b9309e3d6021b63af79f0c8c.png)
 
@@ -284,7 +740,19 @@
 
 +   当使用 Sass 编写代码时，我们创建一个扩展名为 `filename.scss` 的新文件。在这个文件中，我们可以通过在名称前添加一个 `$` 符号，然后是一个冒号，再然后是一个值来创建一个新的变量。例如，我们可以写 `$color: red` 来设置变量 `color` 的值为红色。然后我们使用 `$color` 来访问这个变量。以下是我们 `variables.scss` 文件的一个示例：
 
-[PRE21]
+```
+$color: red;
+
+ul {
+    font-size: 14px;
+    color: $color;
+}
+
+ol {
+    font-size: 18px;
+    color: $color;
+} 
+```
 
 +   现在，为了将这种样式链接到我们的 HTML 文件，我们不能只是链接到 `.scss` 文件，因为大多数网络浏览器只识别 `.css` 文件。为了解决这个问题，我们必须在我们的计算机上下载一个名为 Sass 的程序。[下载 Sass](https://sass-lang.com/install)。然后，在我们的终端中，我们输入 `sass variables.scss:variables.css` 命令。这个命令会将名为 `variables.scss` 的 .scss 文件编译成名为 `variables.css` 的 .css 文件，你可以在你的 HTML 页面中添加对该文件的链接。
 
@@ -292,15 +760,63 @@
 
 +   在使用 Sass 的同时，我们还可以物理地嵌套我们的样式，而不是使用我们之前提到的 CSS 选择器。例如，如果我们只想将一些样式应用于 div 中的段落和无序列表，我们可以编写以下代码：
 
-[PRE22]
+```
+div {
+    font-size: 18px;
+
+    p {
+        color: blue;
+    }
+
+    ul {
+        color: green;
+    }
+} 
+```
 
 一旦编译成 CSS，我们就会得到一个看起来像这样的文件：
 
-[PRE23]
+```
+div {
+    font-size: 18px;
+}
+
+div p {
+    color: blue;
+}
+
+div ul {
+    color: green;
+} 
+```
 
 +   Sass 给我们的另一个特性被称为 [继承](https://sass-lang.com/guide)。这允许我们创建一组基本的样式，可以被多个不同的元素共享。我们通过在类名前添加一个 `%` 符号，添加一些样式，然后在某些样式的开头添加一行 `@extend %classname` 来实现这一点。例如，以下代码将 `message` 类内的样式应用于下面的每个不同类，从而生成一个看起来像下面的网页。
 
-[PRE24]
+```
+%message {
+    font-family: sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    border: 1px solid black;
+    padding: 20px;
+    margin: 20px;
+}
+
+.success {
+    @extend %message;
+    background-color: green;
+}
+
+.warning {
+    @extend %message;
+    background-color: orange;
+}
+
+.error {
+    @extend %message;
+    background-color: red;
+} 
+```
 
 ![inheritance](img/cd6696602e2ac58389f3930f2844af41.png)
 

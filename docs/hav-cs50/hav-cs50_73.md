@@ -136,7 +136,9 @@
 
 缓存的一种实现方式是将数据存储在用户的网络浏览器中，这样当用户加载某些页面时，甚至不需要向服务器发送请求。实现这一点的办法之一是在 HTTP 响应的头部包含以下这一行：
 
-[PRE0]
+```
+Cache-Control: max-age=86400 
+```
 
 这将告诉浏览器，当访问页面时，只要我在过去 86400 毫秒内访问过该页面，就不需要向服务器发送请求。这种方法通常用于浏览器，特别是对于不太可能在短时间内更改的文件，如 CSS 文件。为了更多地控制这个过程，我们还可以在 HTTP 响应头中添加一个`ETag`，它是一串唯一的字符序列，代表文档的特定版本。这很有用，因为未来的请求可以包含这个标签，并将其与服务器上最新文档的标签进行比较，只有当两者不同时才返回整个文档。
 
@@ -166,7 +168,17 @@ Git 和 GitHub 最大的优势之一是它们使共享和贡献**开源软件**�
 
 使用 HTML 会引发许多漏洞。其中一种常见的弱点被称为**钓鱼攻击**，当用户认为他们将要访问一个页面时，实际上却被带到了另一个页面。这些并不是我们在设计网站时可以预见的，但我们在自己与网络互动时应该肯定要考虑到它们。例如，一个恶意用户可能会编写以下 HTML 代码：
 
-[PRE1]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Link</title>
+    </head>
+    <body>
+        <a href="https://cs50.harvard.edu/">https://www.google.com/</a>
+    </body>
+</html> 
+```
 
 它的作用如下：
 
@@ -236,11 +248,18 @@ HTML 实际上作为请求的一部分发送给用户，这增加了更多的漏
 
 恶意用户可能会尝试使用 JavaScript 进行几种类型的攻击。一个例子是**跨站脚本攻击**，即用户在自己的网站上编写并运行自己的 JavaScript 代码。例如，让我们想象我们有一个 Django 应用程序，它有一个单一的 URL：
 
-[PRE2]
+```
+urlpatterns = [
+    path("<path:path>", views.index, name="index")
+] 
+```
 
 以及一个单一视图：
 
-[PRE3]
+```
+def index(request, path):
+    return HttpResponse(f"Requested Path: {path}") 
+```
 
 该网站本质上告诉用户他们导航到的 URL 是什么：
 
@@ -256,15 +275,30 @@ HTML 实际上作为请求的一部分发送给用户，这增加了更多的漏
 
 我们已经讨论了如何使用 Django 来防止 CSRF 攻击，但让我们看看没有这种保护会发生什么。作为一个例子，想象一家银行有一个你可以访问的 URL，可以从你的账户中转账。一个人可以轻松地创建一个链接来执行这种转账：
 
-[PRE4]
+```
+<a href="http://yourbank.com/transfer?to=brian&amt=2800">
+    Click Here!
+</a> 
+```
 
 这种攻击甚至可能比链接更微妙。如果 URL 被放在图片中，那么它将在浏览器尝试加载图片时被访问：
 
-[PRE5]
+```
+ <img src="http://yourbank.com/transfer?to=brian&amt=2800"> 
+```
 
 由于这个原因，每次你构建一个可以接受某些状态变化的应用程序时，都应该使用 POST 请求。即使银行要求 POST 请求，隐藏表单字段仍然可以诱使用户意外提交请求。以下表单甚至不需要用户点击；它会自动提交！
 
-[PRE6]
+```
+ <body onload="document.forms[0].submit()">
+    <form action="https://yourbank.com/transfer"
+    method="post">
+        <input type="hidden" name="to" value="brian">
+        <input type="hidden" name="amt" value="2800">
+        <input type="submit" value="Click Here!">
+    </form>
+</body> 
+```
 
 上述示例展示了**跨站请求伪造**可能的样子。我们可以通过在加载网页时创建 CSRF 令牌来阻止此类攻击，并且只接受带有有效令牌的表单。
 

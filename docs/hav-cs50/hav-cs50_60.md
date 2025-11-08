@@ -60,7 +60,9 @@
 
 +   为了确认表已创建，我们可以从表中选择。
 
-    [PRE0]
+    ```
+    SELECT * FROM "collections"; 
+    ```
 
     这应该会得到一个空的结果，因为表还没有任何数据。
 
@@ -68,21 +70,31 @@
 
 +   `INSERT INTO` SQL 语句用于将一行数据插入到指定的表中。
 
-    [PRE1]
+    ```
+    INSERT INTO "collections" ("id", "title", "accession_number", "acquired")
+    VALUES (1, 'Profusion of flowers', '56.257', '1956-04-12'); 
+    ```
 
     我们可以看到，这个命令需要指定将接收新数据的表中的列列表以及要添加到每个列中的值，顺序相同。
 
 +   运行`INSERT INTO`命令不会返回任何内容，但我们可以运行一个查询来确认该行现在已存在于`collections`表中。
 
-    [PRE2]
+    ```
+    SELECT * FROM "collections"; 
+    ```
 
 +   我们可以通过多次插入来向数据库添加更多行。然而，手动输入主键值（如 1、2、3 等）可能会导致错误。幸运的是，SQLite 可以自动填充主键值。为了使用此功能，在插入行时我们可以完全省略 ID 列。
 
-    [PRE3]
+    ```
+    INSERT INTO "collections" ("title", "accession_number", "acquired")
+    VALUES ('Farmers working at dawn', '11.6152', '1911-08-03'); 
+    ```
 
     我们可以通过运行以下命令来检查这一行是否已插入，其`id`为 2：
 
-    [PRE4]
+    ```
+    SELECT * FROM "collections"; 
+    ```
 
     注意 SQLite 填充主键值的方式是通过递增前一个主键值——在这种情况下，是 1。
 
@@ -96,7 +108,15 @@
 
 +   打开文件`schema.sql`将显示数据库的模式。
 
-    [PRE5]
+    ```
+    CREATE TABLE "collections" (
+        "id" INTEGER,
+        "title" TEXT NOT NULL,
+        "accession_number" TEXT NOT NULL UNIQUE,
+        "acquired" NUMERIC,
+        PRIMARY KEY("id")
+    ); 
+    ```
 
 +   规定访问编号必须是唯一的。如果我们尝试插入一个具有重复访问编号的行，将会触发一个看起来像`Runtime error: UNIQUE constraint failed: collections.accession_number (19)`的错误。
 
@@ -104,7 +124,10 @@
 
 +   同样，我们可以尝试添加一个具有`NULL`标题的行，违反了`NOT NULL`约束。
 
-    [PRE6]
+    ```
+    INSERT INTO "collections" ("title", "accession_number", "acquired")
+    VALUES(NULL, NULL, '1900-01-10'); 
+    ```
 
     运行此命令后，我们又将看到类似`Runtime error: NOT NULL constraint failed: collections.title (19)`的错误。
 
@@ -120,13 +143,20 @@
 
 +   现在我们将两幅新的画作插入到`collections`表中。
 
-    [PRE7]
+    ```
+    INSERT INTO "collections" ("title", "accession_number", "acquired") 
+    VALUES 
+    ('Imaginative landscape', '56.496', NULL),
+    ('Peonies and butterfly', '06.1899', '1906-01-01'); 
+    ```
 
     博物馆可能并不总是确切知道一幅画是在何时获得的，因此`acquired`值可能是`NULL`，正如我们刚刚插入的第一幅画的情况。
 
 +   要查看更新的表，我们可以像往常一样选择表中的所有行。
 
-    [PRE8]
+    ```
+    SELECT * FROM "collections"; 
+    ```
 
 +   我们的数据也可以以[逗号分隔值](https://en.wikipedia.org/wiki/Comma-separated_values)格式或 CSV 存储。观察以下示例，可以看到每行的值是通过逗号分隔的。
 
@@ -140,7 +170,9 @@
 
 +   接下来，我们可以通过运行 SQLite 命令来导入 CSV 文件。
 
-    [PRE9]
+    ```
+    .import --csv --skip 1 mfa.csv collections 
+    ```
 
     第一个参数 `--csv` 告诉 SQLite 我们正在导入一个 CSV 文件。这将帮助 SQLite 正确解析文件。第二个参数表示 CSV 文件的第一个行（标题行）需要被跳过，或者不插入到表中。
 
@@ -150,33 +182,51 @@
 
 +   为了尝试这个方法，让我们在我们的代码空间中打开 `mfa.csv` 并删除标题行中的 `id` 列，以及每个列中的值。编辑完成后，`mfa.csv` 应该看起来像这样：
 
-    [PRE10]
+    ```
+    title,accession_number,acquired
+    Profusion of flowers,56.257,1956-04-12
+    Farmers working at dawn,11.6152,1911-08-03
+    Spring outing,14.76,1914-01-08
+    Imaginative landscape,56.496,
+    Peonies and butterfly,06.1899,1906-01-01 
+    ```
 
 +   我们还将删除 `collections` 表中已经存在的所有行。
 
-    [PRE11]
+    ```
+    DELETE FROM "collections"; 
+    ```
 
 +   现在，我们想要将这个 CSV 文件导入到一个表中。然而，根据我们的模式，`collections` 表的每一行都必须有四个列。这个新的 CSV 文件中的每一行只有三个列。因此，我们无法像以前那样继续导入。
 
 +   要成功导入没有 ID 值的 CSV 文件，我们将需要使用一个临时表：
 
-    [PRE12]
+    ```
+    .import --csv mfa.csv temp 
+    ```
 
     注意我们在这个命令中没有使用 `--skip 1` 参数。这是因为 SQLite 能够识别 CSV 数据的第一行作为标题行，并将其转换为新 `temp` 表的列名。
 
 +   我们可以通过查询 `temp` 表来查看其中的数据。
 
-    [PRE13]
+    ```
+    SELECT * FROM "temp"; 
+    ```
 
 +   接下来，我们将从 `temp` 表中选择数据（不包含主键）并将其移动到 `collections` 表中，这正是我们的目标！我们可以使用以下命令来实现这一点。
 
-    [PRE14]
+    ```
+    INSERT INTO "collections" ("title", "accession_number", "acquired") 
+    SELECT "title", "accession_number", "acquired" FROM "temp"; 
+    ```
 
     在此过程中，SQLite 将自动在 `id` 列中添加主键值。
 
 +   为了清理我们的数据库，我们也可以在移动数据后删除 `temp` 表。
 
-    [PRE15]
+    ```
+    DROP TABLE "temp"; 
+    ```
 
 ### 问题
 
@@ -196,25 +246,38 @@
 
 +   我们之前看到运行以下命令从`collections`表中删除了所有行。（我们现在实际上不想运行这个命令，否则我们会丢失表中的所有数据！）
 
-    [PRE16]
+    ```
+    DELETE FROM "collections"; 
+    ```
 
 +   我们也可以删除符合特定条件的行。例如，要从我们的`collections`表中删除“春游”画作，我们可以执行以下命令：
 
-    [PRE17]
+    ```
+    DELETE FROM "collections"
+    WHERE "title" = 'Spring outing'; 
+    ```
 
 +   要删除任何获得日期为`NULL`的画作，我们可以执行以下命令：
 
-    [PRE18]
+    ```
+    DELETE FROM "collections"
+    WHERE "acquired" IS NULL; 
+    ```
 
 +   和我们通常做的那样，我们将通过从表中选择所有数据来确保删除操作按预期工作。
 
-    [PRE19]
+    ```
+    SELECT * FROM "collections"; 
+    ```
 
     我们看到“春游”和“想象风景”画作不再在表中。
 
 +   要删除 1909 年之前的画作相关行，我们可以执行以下命令：
 
-    [PRE20]
+    ```
+    DELETE FROM "collections"
+    WHERE "acquired" < '1909-01-01'; 
+    ```
 
     使用`<`运算符，我们正在查找 1909 年 1 月 1 日之前获得的画作。这些是在运行查询时将被删除的画作。
 
@@ -236,17 +299,30 @@
 
 +   现在，我们可以尝试从`artists`表中删除数据。
 
-    [PRE21]
+    ```
+    DELETE FROM "artists"
+    WHERE "name" = 'Unidentified artist'; 
+    ```
 
     在运行此命令时，我们得到一个与我们在本课程中之前看到的非常相似的错误：`运行时错误：外键约束失败（19）`。这个错误通知我们，删除这些数据将违反在`created`表中设置的外键约束。
 
 +   我们如何确保约束不被违反？一种可能性是在从`artists`表删除之前，先从`created`表中删除相应的行。
 
-    [PRE22]
+    ```
+    DELETE FROM "created"
+    WHERE "artist_id" = (
+        SELECT "id"
+        FROM "artists"
+        WHERE "name" = 'Unidentified artist'
+    ); 
+    ```
 
     这个查询有效地删除了艺术家与其作品之间的*关联*。一旦关联不再存在，我们就可以在不违反外键约束的情况下删除艺术家的数据。为此，我们可以运行
 
-    [PRE23]
+    ```
+    DELETE FROM "artists"
+    WHERE "name" = 'Unidentified artist'; 
+    ```
 
 +   在另一种可能性中，我们可以指定当通过外键引用的 ID 被删除时采取的操作。为此，我们使用关键字`ON DELETE`后跟要执行的操作。
 
@@ -262,15 +338,23 @@
 
 +   最新版本的架构文件实现了上述方法。外键约束现在看起来像
 
-    [PRE24]
+    ```
+    FOREIGN KEY("artist_id") REFERENCES "artists"("id") ON DELETE CASCADE
+    FOREIGN KEY("collection_id") REFERENCES "collections"("id") ON DELETE CASCADE 
+    ```
 
     现在运行以下`DELETE`语句不会导致错误，并将级联删除从`artists`表传播到`created`表：
 
-    [PRE25]
+    ```
+    DELETE FROM "artists"
+    WHERE "name" = 'Unidentified artist'; 
+    ```
 
     要检查级联删除是否工作，我们可以查询`created`表：
 
-    [PRE26]
+    ```
+    SELECT * FROM "created"; 
+    ```
 
     我们观察到没有行具有 ID 3（从`artists`表中删除的艺术家 ID）。
 
@@ -290,7 +374,19 @@
 
 +   让我们使用上述语法在`created`表中更改“黎明时分劳作的农民”的关联。
 
-    [PRE27]
+    ```
+    UPDATE "created"
+    SET "artist_id" = (
+        SELECT "id"
+        FROM "artists"
+        WHERE "name" = 'Li Yin'
+    )
+    WHERE "collection_id" = (
+        SELECT "id"
+        FROM "collections"
+        WHERE "title" = 'Farmers working at dawn'
+    ); 
+    ```
 
     查询的第一部分指定了要更新的表。下一部分检索李因的 ID 以设置为新的 ID。最后一部分选择 `created` 中的行（多行），这些行将更新为李因的 ID，即画作“黎明时分劳作的农民”！
 
@@ -304,11 +400,25 @@
 
 +   考虑包含一个 `collections` 表和一个新的 `transactions` 表的 MFA 数据库。
 
-    [PRE28]
+    ```
+    CREATE TABLE "transactions" (
+        "id" INTEGER,
+        "title" TEXT,
+        "action" TEXT,
+        PRIMARY KEY("id")
+    ); 
+    ```
 
 +   当艺术品被出售（从 `collections` 中删除）时，我们希望它自动在 `transactions` 中记录为“销售”动作。
 
-    [PRE29]
+    ```
+    CREATE TRIGGER "sell" 
+    BEFORE DELETE ON "collections"
+    BEGIN
+        INSERT INTO "transactions" ("title", "action")
+        VALUES (OLD."title", 'sold');
+    END; 
+    ```
 
 +   这个触发器在从 `collections` 中删除行之前运行。
 
@@ -322,7 +432,14 @@
 
 +   当艺术品被购买（插入到 `collections`）时，我们希望它在 `transactions` 中记录为“购买”动作。
 
-    [PRE30]
+    ```
+    CREATE TRIGGER "buy" 
+    AFTER INSERT ON "collections"
+    BEGIN
+        INSERT INTO "transactions" ("title", "action")
+        VALUES (NEW."title", 'bought');
+    END; 
+    ```
 
 +   这个触发器在 `collections` 中插入新行之后运行。
 
@@ -342,15 +459,25 @@
 
 +   例如，我们可以在 `collections` 表中添加一个 `deleted` 列，默认值为 0：
 
-    [PRE31]
+    ```
+    ALTER TABLE "collections"
+    ADD COLUMN "deleted" INTEGER DEFAULT 0; 
+    ```
 
 +   要“删除”一行，我们会更新 `deleted` 列为 1：
 
-    [PRE32]
+    ```
+    UPDATE "collections"
+    SET "deleted" = 1
+    WHERE "title" = 'Farmers working at dawn'; 
+    ```
 
 +   然后，为了查询仅非删除行：
 
-    [PRE33]
+    ```
+    SELECT * FROM "collections"
+    WHERE "deleted" != 1; 
+    ```
 
 +   这样，如果需要的话，数据可以被恢复，并且保持完整的历史记录。
 

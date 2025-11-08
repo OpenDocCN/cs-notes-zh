@@ -24,7 +24,9 @@
 
 +   在我们的文本编辑器中，输入 `code hello.py` 以创建一个新文件。按照以下方式输入（包括故意包含的错误）：
 
-    [PRE0]
+    ```
+    print("hello, world) 
+    ```
 
     注意，我们故意省略了一个引号。
 
@@ -38,7 +40,10 @@
 
 +   在你的终端窗口中，运行 `code number.py`。在你的文本编辑器中按照以下方式编写代码：
 
-    [PRE1]
+    ```
+    x = int(input("What's x? "))
+    print(f"x is {x}") 
+    ```
 
     注意，通过包含 `f`，我们告诉 Python 将花括号中的内容作为 `x` 的值进行插值。此外，测试你的代码时，你可以想象如果有人输入一个字符串或字符而不是数字会发生什么。即使如此，用户也可能什么也不输入——只是简单地按回车键。
 
@@ -54,13 +59,26 @@
 
 +   在 Python 中，`try` 和 `except` 是在出现错误之前测试用户输入的方法。按照以下方式修改你的代码：
 
-    [PRE2]
+    ```
+    try:
+        x = int(input("What's x?"))
+        print(f"x is {x}")
+    except ValueError:
+        print("x is not an integer") 
+    ```
 
     注意，运行这段代码时，输入 `50` 将被接受。然而，输入 `cat` 将产生一个用户可见的错误，并指导他们为什么他们的输入不被接受。
 
 +   这仍然不是实现此代码的最佳方式。注意，我们试图执行两行代码。为了最佳实践，我们应该只尝试尽可能少的可能失败的代码行。按照以下方式调整你的代码：
 
-    [PRE3]
+    ```
+    try:
+        x = int(input("What's x?"))
+    except ValueError:
+        print("x is not an integer")
+
+    print(f"x is {x}") 
+    ```
 
     注意，虽然这实现了尽可能少尝试的目标，但我们现在面临一个新的错误！我们遇到了一个 `NameError`，其中 `x` 未定义。看看这段代码，考虑一下：为什么在某些情况下 `x` 未定义？
 
@@ -72,13 +90,30 @@
 
 +   按照以下方式调整你的代码：
 
-    [PRE4]
+    ```
+    try:
+        x = int(input("What's x?"))
+    except ValueError:
+        print("x is not an integer")
+    else:
+        print(f"x is {x}") 
+    ```
 
     注意，如果没有发生异常，它将运行`else`块中的代码。运行`python number.py`并输入`50`，你会注意到结果将被打印出来。再次尝试，这次输入`cat`，你会注意到程序现在捕获了错误。
 
 +   考虑改进我们的代码，注意我们对待用户有点无礼。如果用户不合作，我们目前只是简单地结束程序。考虑一下我们如何使用循环来提示用户输入`x`，如果他们不再次提示的话！
 
-    [PRE5]
+    ```
+    while True:
+        try:
+            x = int(input("What's x?"))
+        except ValueError:
+            print("x is not an integer")
+        else:
+            break
+
+    print(f"x is {x}") 
+    ```
 
     注意，`while True`将无限循环。如果用户成功提供了正确的输入，我们可以跳出循环并打印输出。现在，一个输入错误的用户将被要求再次输入。
 
@@ -86,19 +121,63 @@
 
 +   当然，有很多时候我们希望从用户那里获取一个整数。按照以下方式修改你的代码：
 
-    [PRE6]
+    ```
+    def main():
+        x = get_int()
+        print(f"x is {x}")
+
+    def get_int():
+        while True:
+            try:
+                x = int(input("What's x?"))
+            except ValueError:
+                print("x is not an integer")
+            else:
+                break
+        return x
+
+    main() 
+    ```
 
     注意，我们正在展示许多优秀的特性。首先，我们抽象出了获取整数的能力。现在，整个程序归结为程序的前三条语句。
 
 +   即使如此，我们仍然可以改进这个程序。考虑一下你还能做什么来改进这个程序。按照以下方式修改你的代码：
 
-    [PRE7]
+    ```
+    def main():
+        x = get_int()
+        print(f"x is {x}")
+
+    def get_int():
+        while True:
+            try:
+                x = int(input("What's x?"))
+            except ValueError:
+                print("x is not an integer")
+            else:
+                return x
+
+    main() 
+    ```
 
     注意，`return`不仅会跳出循环，还会返回一个值。
 
 +   有些人可能会争论你可以这样做：
 
-    [PRE8]
+    ```
+    def main():
+        x = get_int()
+        print(f"x is {x}")
+
+    def get_int():
+        while True:
+            try:
+                return int(input("What's x?"))
+            except ValueError:
+                print("x is not an integer")
+
+    main() 
+    ```
 
     注意，这与我们代码的前一个版本做的是同样的事情，只是行数更少。
 
@@ -106,13 +185,39 @@
 
 +   我们可以修改代码，使得我们的代码不会警告用户，而是简单地通过修改代码来再次询问他们的提示问题：
 
-    [PRE9]
+    ```
+    def main():
+        x = get_int()
+        print(f"x is {x}")
+
+    def get_int():
+        while True:
+            try:
+                return int(input("What's x?"))
+            except ValueError:
+                pass
+
+    main() 
+    ```
 
     注意，我们的代码仍然可以工作，但不会反复通知用户他们的错误。在某些情况下，你可能希望非常清楚地告诉用户产生了什么错误。在其他时候，你可能会决定你只是想再次要求他们输入。
 
 +   对`get_int`函数的实现进行最后一次改进。目前，注意我们依赖于`x`在`main`和`get_int`函数中都是通过荣誉系统来传递的。我们可能想传递一个当用户被要求输入时看到的提示。按照以下方式修改你的代码。
 
-    [PRE10]
+    ```
+    def main():
+        x = get_int("What's x? ")
+        print(f"x is {x}")
+
+    def get_int(prompt):
+        while True:
+            try:
+                return int(input(prompt))
+            except ValueError:
+                pass
+
+    main() 
+    ```
 
 +   你可以在 Python 的文档中了解更多关于[`pass`](https://docs.python.org/3/tutorial/controlflow.html#pass-statements)的信息。
 

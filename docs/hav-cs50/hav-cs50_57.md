@@ -154,17 +154,26 @@
 
 +   在 SQLite 环境中，运行
 
-    [PRE0]
+    ```
+    SELECT * 
+    FROM "longlist"; 
+    ```
 
     这将选择名为 `longlist` 的表中的所有行。
 
 +   我们得到的结果包含表中所有行的所有列，这有很多数据。我们可以通过选择表中的特定列来简化它，比如标题。让我们试试
 
-    [PRE1]
+    ```
+    SELECT "title" 
+    FROM "longlist"; 
+    ```
 
 +   现在，我们看到这个表中标题的列表。但如果我们想在搜索结果中看到标题和作者怎么办？为此，我们运行
 
-    [PRE2]
+    ```
+    SELECT "title", "author" 
+    FROM longlist; 
+    ```
 
 ### 问题
 
@@ -188,7 +197,10 @@
 
 +   SQLite 不区分大小写。然而，我们确实遵循一些样式约定。观察这个查询：
 
-    [PRE3]
+    ```
+    SELECT *
+    FROM "longlist"; 
+    ```
 
     SQL 关键字用大写字母书写。这在提高较长的查询的可读性方面特别有用。表和列名用小写字母。
 
@@ -196,7 +208,11 @@
 
 +   如果一个数据库有数百万行，选择所有行可能没有意义。相反，我们可能只想浏览它包含的数据。我们使用 SQL 关键字 `LIMIT` 来指定查询输出中的行数。
 
-+   [PRE4]
++   ```
+    SELECT "title" 
+    FROM "longlist" 
+    LIMIT 10; 
+    ```
 
     这个查询给我们数据库中的前 10 个标题。这些标题在查询输出中的顺序与数据库中的顺序相同。
 
@@ -204,7 +220,11 @@
 
 +   关键字 `WHERE` 用于根据条件选择行；它将输出满足指定条件的行。
 
-+   [PRE5]
++   ```
+    SELECT "title", "author" 
+    FROM "longlist" 
+    WHERE "year" = 2023; 
+    ```
 
     这给我们提供了 2023 年长名单书籍的标题和作者。请注意，`2023` 没有引号，因为它是一个整数，而不是字符串或标识符。
 
@@ -212,27 +232,47 @@
 
 +   要选择非精装书的书籍，我们可以运行以下查询
 
-    [PRE6]
+    ```
+    SELECT "title", "format" 
+    FROM "longlist" 
+    WHERE "format" != 'hardcover'; 
+    ```
 
     +   注意，`hardcover` 用单引号，因为它是一个 SQL 字符串，而不是标识符。
 
 +   `!=` 可以用运算符 `<>` 替换以获得相同的结果。修改后的查询将是
 
-    [PRE7]
+    ```
+    SELECT "title", "format" 
+    FROM "longlist" 
+    WHERE "format" <> 'hardcover'; 
+    ```
 
 +   获取相同结果的另一种方法是使用 SQL 关键字 `NOT`。修改后的查询将是
 
-    [PRE8]
+    ```
+    SELECT "title", "format" 
+    FROM "longlist" 
+    WHERE NOT "format" = 'hardcover'; 
+    ```
 
 +   要组合条件，我们可以使用 SQL 关键字 `AND` 和 `OR`。我们还可以使用括号来指示如何在复合条件语句中组合条件。
 
 +   要选择 2022 年或 2023 年入选的书籍的标题和作者
 
-    [PRE9]
+    ```
+    SELECT "title", "author" 
+    FROM "longlist" 
+    WHERE "year" = 2022 OR "year" = 2023; 
+    ```
 
 +   要选择 2022 年或 2023 年入选的**非精装**书籍
 
-    [PRE10]
+    ```
+    SELECT "title", "format" 
+    FROM "longlist" 
+    WHERE ("year" = 2022 OR "year" = 2023) AND "format" != 'hardcover'; 
+    ```
 
     这里，括号表示应该先评估 `OR` 子句，然后再评估 `AND` 子句。
 
@@ -246,11 +286,19 @@
 
 +   要选择没有翻译者的书籍，我们可以运行
 
-    [PRE11]
+    ```
+    SELECT "title", "translator" 
+    FROM "longlist"
+     WHERE "translator" IS NULL; 
+    ```
 
 +   让我们尝试反过来：选择那些有翻译者的书籍。
 
-    [PRE12]
+    ```
+    SELECT "title", "translator" 
+    FROM "longlist"
+    WHERE "translator" IS NOT NULL; 
+    ```
 
 ## `LIKE`
 
@@ -260,21 +308,37 @@
 
 +   要选择标题中包含“love”一词的书籍，我们可以运行
 
-    [PRE13]
+    ```
+    SELECT "title"
+    FROM "longlist"
+    WHERE "title" LIKE '%love%'; 
+    ```
 
     `%` 匹配 0 或多个字符，因此此查询将匹配包含“love”前后有 0 或多个字符的书籍标题——即包含“love”的标题。
 
 +   要选择标题以“The”开头的书籍，我们可以运行
 
-    [PRE14]
+    ```
+    SELECT "title" 
+    FROM "longlist" 
+    WHERE "title" LIKE 'The%'; 
+    ```
 
 +   上述查询也可能返回标题以“Their”或“They”开头的书籍。要仅选择标题以“**The**”开头的书籍，我们可以添加一个空格。
 
-    [PRE15]
+    ```
+    SELECT "title" 
+    FROM "longlist" 
+    WHERE "title" LIKE 'The %'; 
+    ```
 
 +   假设表中有一本书的名称是“Pyre”或“Pire”，我们可以通过运行以下命令来选择它
 
-    [PRE16]
+    ```
+    SELECT "title" 
+    FROM "longlist" 
+    WHERE "title" LIKE 'P_re'; 
+    ```
 
     如果我们的数据库中存在像“Pore”或“Pure”这样的书籍标题，此查询也可能返回，因为 `_` 匹配任何单个字符。
 
@@ -284,13 +348,21 @@
 
 +   是的，我们可以！示例 1：如果我们想选择标题以“The”开头并在中间某处有“love”的书籍，我们可以运行
 
-    [PRE17]
+    ```
+    SELECT "title" 
+    FROM "longlist" 
+    WHERE "title" LIKE 'The%love%'; 
+    ```
 
 +   注意：我们当前数据库中没有书籍与这个模式匹配，所以此查询返回空结果。
 
 +   示例 2：如果我们知道表中有一本书的标题以“T”开头并且有四个字母，我们可以尝试通过运行以下命令来找到它
 
-    [PRE18]
+    ```
+    SELECT "title" 
+    FROM "longlist" 
+    WHERE "title" LIKE 'T____'; 
+    ```
 
 > 在 SQL 中字符串比较是否大小写敏感？
 
@@ -300,23 +372,43 @@
 
 +   我们也可以在条件中使用运算符 `<`、`>`、`<=` 和 `>=` 来匹配值范围。例如，要选择 2019 年至 2022 年（包括）之间入选的所有书籍，我们可以运行
 
-    [PRE19]
+    ```
+    SELECT "title", "author" 
+    FROM "longlist" 
+    WHERE "year" >= 2019 AND "year" <= 2022; 
+    ```
 
 +   另一种获取相同结果的方法是使用关键字 `BETWEEN` 和 `AND` 来指定包含范围。我们可以运行
 
-    [PRE20]
+    ```
+    SELECT "title", "author" 
+    FROM "longlist" 
+    WHERE "year" BETWEEN 2019 AND 2022; 
+    ```
 
 +   要选择评分在 4.0 或更高的书籍，我们可以运行
 
-    [PRE21]
+    ```
+    SELECT "title", "rating" 
+    FROM "longlist" 
+    WHERE "rating" > 4.0; 
+    ```
 
 +   要进一步通过投票数限制所选书籍，并且只包含至少有 10,000 票的书籍，我们可以运行
 
-    [PRE22]
+    ```
+    SELECT "title", "rating", "votes" 
+    FROM "longlist" 
+    WHERE "rating" > 4.0 AND "votes" > 10000; 
+    ```
 
 +   要选择页数少于 300 页的书籍，我们可以运行
 
-    [PRE23]
+    ```
+    SELECT "title", "pages" 
+    FROM "longlist" 
+    WHERE "pages" < 300; 
+    ```
 
 ### 问题
 
@@ -330,19 +422,32 @@
 
 +   以下查询按评分从低到高选择我们数据库中的前 10 本书。
 
-    [PRE24]
+    ```
+    SELECT "title", "rating" 
+    FROM "longlist" 
+    ORDER BY "rating" LIMIT 10; 
+    ```
 
 +   注意我们得到的是底部的 10 本书，因为 `ORDER BY` 默认选择升序。
 
 +   相反，要选择前 10 本书
 
-    [PRE25]
+    ```
+    SELECT "title", "rating" 
+    FROM "longlist" 
+    ORDER BY "rating" DESC LIMIT 10; 
+    ```
 
     注意使用 SQL 关键字 `DESC` 来指定降序。`ASC` 可以用来显式指定升序。
 
 +   要选择评分最高的前 10 本书，并且将投票数作为平局时的决定因素，我们可以运行
 
-    [PRE26]
+    ```
+    SELECT "title", "rating", "votes" 
+    FROM "longlist"
+    ORDER BY "rating" DESC, "votes" DESC 
+    LIMIT 10; 
+    ```
 
     注意到在 `ORDER BY` 子句中的每一列，我们指定了升序或降序。
 
@@ -352,7 +457,11 @@
 
 +   是的，我们可以。查询会是
 
-    [PRE27]
+    ```
+    SELECT "title" 
+    FROM "longlist" 
+    ORDER BY "title"; 
+    ```
 
 ## 聚合函数
 
@@ -360,49 +469,79 @@
 
 +   查找数据库中所有书籍的平均评分
 
-    [PRE28]
+    ```
+    SELECT AVG("rating") 
+    FROM "longlist"; 
+    ```
 
 +   将平均评分四舍五入到两位小数
 
-    [PRE29]
+    ```
+    SELECT ROUND(AVG("rating"), 2) 
+    FROM "longlist"; 
+    ```
 
 +   重命名显示结果的列
 
-    [PRE30]
+    ```
+    SELECT ROUND(AVG("rating"), 2) AS "average rating" 
+    FROM "longlist"; 
+    ```
 
     注意使用 SQL 关键字 `AS` 来重命名列。
 
 +   要选择数据库中的最高评分
 
-    [PRE31]
+    ```
+    SELECT MAX("rating") 
+    FROM "longlist"; 
+    ```
 
 +   要选择数据库中的最低评分
 
-    [PRE32]
+    ```
+    SELECT MIN("rating") 
+    FROM "longlist"; 
+    ```
 
 +   要统计数据库中总票数
 
-    [PRE33]
+    ```
+    SELECT SUM("votes") 
+    FROM "longlist"; 
+    ```
 
 +   统计我们数据库中书籍的数量
 
-    [PRE34]
+    ```
+     SELECT COUNT(*) 
+     FROM "longlist"; 
+    ```
 
     +   记住我们使用了 `*` 来选择数据库中的每一行和每一列。在这种情况下，我们正在尝试统计数据库中的每一行，因此我们使用 `*`。
 
 +   统计翻译者的数量
 
-    [PRE35]
+    ```
+    SELECT COUNT("translator") 
+    FROM "longlist"; 
+    ```
 
     +   我们观察到翻译者的数量少于数据库中的行数。这是因为 `COUNT` 函数不会计算 `NULL` 值。
 
 +   要统计数据库中出版者的数量
 
-    [PRE36]
+    ```
+    SELECT COUNT("publisher") 
+    FROM "longlist"; 
+    ```
 
 +   与翻译者一样，此查询将统计非 `NULL` 的出版者值的数量。然而，这可能会包括重复值。另一个 SQL 关键字 `DISTINCT` 可以用来确保只计算不同的值。
 
-    [PRE37]
+    ```
+    SELECT COUNT(DISTINCT "publisher") 
+    FROM "longlist"; 
+    ```
 
 ### 问题
 

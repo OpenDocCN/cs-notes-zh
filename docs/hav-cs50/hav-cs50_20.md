@@ -54,11 +54,30 @@
 
 在 Python 中，通常会有多个库被编写来实现上述想法。nltk（自然语言工具包）就是这样一个库。为了分析上述句子，我们将为语法提供算法规则：
 
-[PRE0]
+```
+import nltk
+
+grammar = nltk.CFG.fromstring(""" S -> NP VP
+
+    NP -> D N | N
+    VP -> V | V NP
+
+    D -> "the" | "a" N -> "she" | "city" | "car" V -> "saw" | "walked"  """)
+
+parser = nltk.ChartParser(grammar) 
+```
 
 与我们上面所做的一样，我们定义了可能包含在其他中的可能组件。一个句子可以包含一个名词短语和一个动词短语，而短语本身可以由其他短语、名词、动词等组成，最终，每个词性在语言中跨越一些单词。
 
-[PRE1]
+```
+sentence = input("Sentence: ").split()
+try:
+    for tree in parser.parse(sentence):
+        tree.pretty_print()
+        tree.draw()
+except ValueError:
+    print("No parse tree possible.") 
+```
 
 在向算法提供一个输入句子并将其拆分为单词列表后，函数将打印出结果语法树（pretty_print）并生成图形表示（draw）。
 

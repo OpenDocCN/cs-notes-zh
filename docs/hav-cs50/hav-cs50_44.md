@@ -38,7 +38,9 @@
 
 +   考虑以下计算平均值的程序：
 
-    [PRE0]
+    ```
+    # Define function to calculate average value in a vector  average  <-  function(x)  {  sum(x)  /  length(x)  } 
+    ```
 
     注意这个程序尝试将其输入作为一个数字向量，并输出平均值。
 
@@ -46,7 +48,9 @@
 
 +   这些错误被称为*异常*。有没有可能检查潜在的这种异常呢？考虑以下对`average`的更新：
 
-    [PRE1]
+    ```
+    # Handle non-numeric input  average  <-  function(x)  {  if  (!is.numeric(x))  {  return(NA)  }  sum(x)  /  length(x)  } 
+    ```
 
     注意一个条件语句，一个`if`语句，是如何检查向量`x`是否不全是数字。在 R 世界的惯例中，在这种情况下返回一个值`NA`是合适的。
 
@@ -54,7 +58,9 @@
 
 +   虽然这允许我们的程序无声运行，但我们可能希望让用户知道发生了异常。一种通知用户的方式是通过`message`函数：
 
-    [PRE2]
+    ```
+    # Message about returning NA  average  <-  function(x)  {  if  (!is.numeric(x))  {  message("`x` must be a numeric vector. Returning NA instead.")  return(NA)  }  sum(x)  /  length(x)  } 
+    ```
 
     注意程序返回`NA`的原因是通过`message`发送给用户的。
 
@@ -64,7 +70,9 @@
 
 +   我们可以将我们的`message`的重要性提升到`warning`，如下所示：
 
-    [PRE3]
+    ```
+    # Warn about returning NA  average  <-  function(x)  {  if  (!is.numeric(x))  {  warning("`x` must be a numeric vector. Returning NA instead.")  return(NA)  }  sum(x)  /  length(x)  } 
+    ```
 
     注意现在输出的是一个警告信息。
 
@@ -74,13 +82,17 @@
 
 +   你可以想象一些情况，你并不只是想警告用户；你可能想完全停止函数。考虑以下：
 
-    [PRE4]
+    ```
+    # Stop instead of warn  average  <-  function(x)  {  if  (!is.numeric(x))  {  stop("`x` must be a numeric vector.")  }  sum(x)  /  length(x)  } 
+    ```
 
     注意`stop`告诉用户，由于他们提供的输入，我们无法继续。
 
 +   也可以将两种可能性结合起来。例如，以下代码检查了`x`包含非数字元素的情况。同样，此代码也适应了存在`NA`值的情况：
 
-    [PRE5]
+    ```
+    # Handle NA values  average  <-  function(x)  {  if  (!is.numeric(x))  {  stop("`x` must be a numeric vector.")  }  if  (any(is.na(x)))  {  warning("`x` contains one or more NA values.")  return(NA)  }  sum(x)  /  length(x)  } 
+    ```
 
     注意提供了两个`if`语句。
 
@@ -90,13 +102,17 @@
 
 +   考虑以下在单独文件中对`average`进行的测试函数：
 
-    [PRE6]
+    ```
+    # Write test function  source("average6.R")  test_average  <-  function()  {  if  (average(c(1,  2,  3))  ==  2)  {  cat("`average` passed test :)\n")  }  else  {  cat("`average` failed test :(\n")  }  }  test_average() 
+    ```
 
     注意到这个函数提供了一个测试案例，其中将数字 `1`、`2` 和 `3` 传递给 `average` 函数。然后，提供了一些反馈。注意在第一行，`source` 确保这个测试文件可以访问 `average` 函数。
 
 +   测试负数也是明智之举：
 
-    [PRE7]
+    ```
+    # Add test cases  source("average6.R")  test_average  <-  function()  {  if  (average(c(1,  2,  3))  ==  2)  {  cat("`average` passed test :)\n")  }  else  {  cat("`average` failed test :(\n")  }  if  (average(c(-1,  -2,  -3))  ==  -2)  {  cat("`average` passed test :)\n")  }  else  {  cat("`average` failed test :(\n")  }  if  (average(c(-1,  0,  1))  ==  0)  {  cat("`average` passed test :)\n")  }  else  {  cat("`average` failed test :(\n")  }  }  test_average() 
+    ```
 
     注意到为正数、负数和零提供了额外的测试。
 
@@ -108,19 +124,25 @@
 
 +   testthat 包含一个名为 `test_that` 的函数，可以用来测试我们的函数：
 
-    [PRE8]
+    ```
+    # Test warning about NA values  source("average6.R")  test_that("`average` calculates mean",  {  expect_equal(average(c(1,  2,  3)),  2)  expect_equal(average(c(-1,  -2,  -3)),  -2)  expect_equal(average(c(-1,  0,  1)),  0)  expect_equal(average(c(-2,  -1,  1,  2)),  0)  })  test_that("`average` warns about NAs in input",  {  expect_warning(average(c(1,  NA,  3)))  expect_warning(average(c(NA,  NA,  NA)))  }) 
+    ```
 
     注意到 `test_that` 函数可以指示期望各种数字的平均值等于某个特定值，这要归功于 `expect_equal`。同样，我们也可以向 `test_that` 函数提供指令以 `expect_warning`，当平均计算包含 `NA` 值时。此外，注意测试被分为不同的部分。一个部分测试平均值的计算，而另一个部分测试警告。
 
 +   运行上述测试，我们发现我们的`average`函数中`if`语句的顺序可能是不正确的：
 
-    [PRE9]
+    ```
+    # Fix ordering of error handling  average  <-  function(x)  {  if  (any(is.na(x)))  {  warning("`x` contains one or more NA values.")  return(NA)  }  if  (!is.numeric(x))  {  stop("`x` must be a numeric vector.")  }  sum(x)  /  length(x)  } 
+    ```
 
     注意到条件语句的顺序被改变了。
 
 +   我们应该测试`average`在输入为`NA`值时返回`NA`，而不仅仅是`average`会引发警告！
 
-    [PRE10]
+    ```
+    # Test NA return values  source("average7.R")  test_that("`average` calculates mean",  {  expect_equal(average(c(1,  2,  3)),  2)  expect_equal(average(c(-1,  -2,  -3)),  -2)  expect_equal(average(c(-1,  0,  1)),  0)  expect_equal(average(c(-2,  -1,  1,  2)),  0)  })  test_that("`average` returns NA with NAs in input",  {  expect_equal(suppressWarnings(average(c(1,  NA,  3))),  NA)  expect_equal(suppressWarnings(average(c(NA,  NA,  NA))),  NA)  })  test_that("`average` warns about NAs in input",  {  expect_warning(average(c(1,  NA,  3)))  expect_warning(average(c(NA,  NA,  NA)))  }) 
+    ```
 
     注意到我们有两个独立的测试，将 `NA` 值作为输入传递给 `average`。一个测试正确的返回值，而另一个测试会引发一个 `warning`。
 
@@ -128,7 +150,9 @@
 
 +   使用 `expect_error` 我们可以修改我们的代码如下：
 
-    [PRE11]
+    ```
+    # Test stop if argument is non-numeric  source("average7.R")  test_that("`average` calculates mean",  {  expect_equal(average(c(1,  2,  3)),  2)  expect_equal(average(c(-1,  -2,  -3)),  -2)  expect_equal(average(c(-1,  0,  1)),  0)  expect_equal(average(c(-2,  -1,  1,  2)),  0)  })  test_that("`average` returns NA with NAs in input",  {  expect_equal(suppressWarnings(average(c(1,  NA,  3))),  NA)  expect_equal(suppressWarnings(average(c(NA,  NA,  NA))),  NA)  })  test_that("`average` warns about NAs in input",  {  expect_warning(average(c(1,  NA,  3)))  expect_warning(average(c(NA,  NA,  NA)))  })  test_that("`average` stops if `x` is non-numeric",  {  expect_error(average(c("quack!")))  expect_error(average(c("1",  "2",  "3")))  }) 
+    ```
 
     注意到当输入是“quack！”或提供字符而不是数字时，代码期望出现错误。
 
@@ -136,7 +160,9 @@
 
 +   我们可能希望将浮点值（即十进制值）作为输入传递给 `average`：
 
-    [PRE12]
+    ```
+     # Test doubles  source("average7.R")  test_that("`average` calculates mean",  {  expect_equal(average(c(1,  2,  3)),  2)  expect_equal(average(c(-1,  -2,  -3)),  -2)  expect_equal(average(c(-1,  0,  1)),  0)  expect_equal(average(c(-2,  -1,  1,  2)),  0)  expect_equal(average(c(0.1,  0.5)),  0.3)  })  test_that("`average` returns NA with NAs in input",  {  expect_equal(suppressWarnings(average(c(1,  NA,  3))),  NA)  expect_equal(suppressWarnings(average(c(NA,  NA,  NA))),  NA)  })  test_that("`average` warns about NAs in input",  {  expect_warning(average(c(1,  NA,  3)))  expect_warning(average(c(NA,  NA,  NA)))  })  test_that("`average` stops if `x` is non-numeric",  {  expect_error(average(c("quack!")))  expect_error(average(c("1",  "2",  "3")))  }) 
+    ```
 
     注意到在第一组测试的末尾添加了一个浮点值的测试。
 
@@ -146,7 +172,9 @@
 
 +   让我们通过例子来理解浮点数的不精确性：
 
-    [PRE13]
+    ```
+    # Demonstrates floating-point imprecision  print(0.3)  print(0.3,  digits  =  17) 
+    ```
 
     注意到在 R 中，0.3 并不是精确地表示为 0.3。这是编程语言中常见的现象，因为存在无限多的浮点值和有限的位数来表示它们。
 
@@ -160,13 +188,17 @@
 
 +   一种开发哲学被称为 *测试驱动开发*。在这种思维模式下，人们认为在编写将被测试的源代码之前先创建一个测试是最好的。考虑以下测试：
 
-    [PRE14]
+    ```
+    # Test greet  source("greet1.R")  test_that("`greet` says hello to a user",  {  expect_equal(greet("Carter"),  "hello, Carter")  }) 
+    ```
 
     注意你可以想象一个 `greet` 函数应该能够问候作为输入的用户。
 
 +   观察这个测试，我们可以编写响应测试的代码：
 
-[PRE15]
+```
+ # Greets a user  greet  <-  function(to)  {  return(paste("hello,",  to))  } 
+```
 
 注意这段代码是如何通过用户名向用户打招呼的。
 
@@ -178,7 +210,9 @@
 
 +   testthat 包含两个函数来实现行为驱动开发，`describe` 和 `it`：
 
-    [PRE16]
+    ```
+    # Describe greet  source("greet2.R")  describe("greet()",  {  it("can say hello to a user",  {  name  <-  "Carter"  expect_equal(greet(name),  "hello, Carter")  })  it("can say hello to the world",  {  expect_equal(greet(),  "hello, world")  })  }) 
+    ```
 
     注意 `describe` 包含了几个基于代码的描述，说明了 `it`（该函数！）应该能够做什么。
 

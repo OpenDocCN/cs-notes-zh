@@ -44,7 +44,9 @@
 
 +   我们可以使用以下 SQLite 命令查看我们数据库中的所有表：
 
-    [PRE0]
+    ```
+    .tables 
+    ```
 
     此命令返回`longlist.db`中的表名——总共 7 个。
 
@@ -90,7 +92,13 @@
 
 +   这里是`longlist.db`中表的 ER 图。
 
-    [PRE1]
+    ```
+    erDiagram
+      "Author" }|--|{ "Book" : "wrote"
+      "Publisher" ||--|{ "Book" : "published"
+      "Translator" }o--|{ "Book" : "translated"
+      "Book" ||--o{ "Rating" : "has" 
+    ```
 
 +   每个表都是我们数据库中的一个实体。表与表之间，或实体之间的关系，由标记实体之间线条的动词表示。
 
@@ -120,7 +128,13 @@
 
 +   让我们重新审视我们数据库的 ER 图。
 
-    [PRE2]
+    ```
+    erDiagram
+      "Author" }|--|{ "Book" : "wrote"
+      "Publisher" ||--|{ "Book" : "published"
+      "Translator" }o--|{ "Book" : "translated"
+      "Book" ||--o{ "Rating" : "has" 
+    ```
 
 +   观察连接书籍和翻译者实体的线条，我们可以说书籍不需要有翻译者。它们可以有零到多个翻译者。然而，数据库中的翻译者至少翻译一本书，可能还翻译多本书。
 
@@ -184,7 +198,15 @@
 
 +   考虑这个用于一对多关系的示例。在`books`表中，我们有一个 ID 来表示出版社，这是从`publishers`表中取的外键。要找出 Fitzcarraldo Editions 出版的书籍，我们需要两个查询——一个是从`publishers`表中找出 Fitzcarraldo Editions 的`publisher_id`，第二个是使用这个`publisher_id`来找出 Fitzcarraldo Editions 出版的所有书籍。这两个查询可以通过子查询的概念合并成一个。
 
-    [PRE3]
+    ```
+    SELECT "title"
+    FROM "books"
+    WHERE "publisher_id" = (
+        SELECT "id"
+        FROM "publishers"
+        WHERE "publisher" = 'Fitzcarraldo Editions'
+    ); 
+    ```
 
     注意：
 
@@ -194,15 +216,43 @@
 
 +   要找出《记忆的纪念》的所有评分
 
-    [PRE4]
+    ```
+    SELECT "rating"
+    FROM "ratings"
+    WHERE "book_id" = (
+        SELECT "id"
+        FROM "books"
+        WHERE "title" = 'In Memory of Memory'
+    ); 
+    ```
 
 +   要选择这本书的平均评分
 
-    [PRE5]
+    ```
+    SELECT AVG("rating")
+    FROM "ratings"
+    WHERE "book_id" = (
+        SELECT "id"
+        FROM "books"
+        WHERE "title" = 'In Memory of Memory'
+    ); 
+    ```
 
 +   下一个示例是用于多对多关系。要找出写了《航班》的作者（们），需要查询三个表：`books`、`authors`和`authored`。
 
-    [PRE6]
+    ```
+    SELECT "name"
+    FROM "authors"
+    WHERE "id" = (
+        SELECT "author_id"
+        FROM "authored"
+        WHERE "book_id" = (
+          SELECT "id"
+          FROM "books"
+          WHERE "title" = 'Flights'
+        )
+    ); 
+    ```
 
     首先运行的查询是最深层的查询——找到《航班》的 ID。然后，找到写了《航班》的作者（们）的 ID。最后，使用这个 ID 检索作者名称。
 
@@ -212,7 +262,19 @@
 
 +   作者和书籍之间的关系是多对多的。这意味着一个特定的作者可能写过多本书。要找出数据库中 Fernanda Melchor 所写的所有书籍的名称，我们可以使用以下`IN`关键字。
 
-    [PRE7]
+    ```
+    SELECT "title"
+    FROM "books"
+    WHERE "id" IN (
+        SELECT "book_id"
+        FROM "authored"
+        WHERE "author_id" = (
+            SELECT "id"
+            FROM "authors"
+            WHERE "name" = 'Fernanda Melchor'
+        )
+    ); 
+    ```
 
     注意，最内层的查询使用`=`而不是`IN`运算符。这是因为我们期望找到名为 Fernanda Melchor 的唯一作者。
 
@@ -246,7 +308,11 @@
 
 +   要连接表
 
-    [PRE8]
+    ```
+    SELECT *
+    FROM "sea_lions"
+    JOIN "migrations" ON "migrations"."id" = "sea_lions"."id"; 
+    ```
 
     注意：
 
@@ -258,7 +324,11 @@
 
 +   `LEFT JOIN` 优先考虑左表（或第一张表）中的数据。
 
-    [PRE9]
+    ```
+    SELECT *
+    FROM "sea_lions"
+    LEFT JOIN "migrations" ON "migrations"."id" = "sea_lions"."id"; 
+    ```
 
     此查询将保留 `sea_lions` 表中的所有海狮数据——左表。连接表中的某些行可能部分为空。如果右表没有特定 ID 的数据，就会发生这种情况。
 
@@ -268,7 +338,11 @@
 
 +   海狮数据库中的两张表都有 `id` 列。由于我们连接表时使用的值在两张表中都有相同的列名，因此实际上在连接时我们可以省略查询的 `ON` 部分。
 
-    [PRE10]
+    ```
+    SELECT *
+    FROM "sea_lions"
+    NATURAL JOIN "migrations"; 
+    ```
 
     注意，在这种情况下结果中没有重复的 `id` 列。此外，这种连接与 `INNER JOIN` 的工作方式类似。
 
@@ -300,25 +374,43 @@
 
     ![作者和翻译者的交集集合](img/185f6a12c8577b77276b7f862db6f7ea.png)
 
-    [PRE11]
+    ```
+    SELECT "name" FROM "translators"
+    INTERSECT
+    SELECT "name" FROM "authors"; 
+    ```
 
 +   如果一个人是作者或翻译者，或者两者都是，那么他们属于两个集合的并集。换句话说，这个集合是通过合并作者和翻译者集合形成的。
 
     ![作者和翻译者的并集集合](img/ef4d181575995715654ee7725381dd1e.png)
 
-    [PRE12]
+    ```
+    SELECT "name" FROM "translators"
+    UNION
+    SELECT "name" FROM "authors"; 
+    ```
 
     注意，每个作者和每个翻译者都包含在这个结果集中，但只出现一次！
 
 +   对上一个查询进行轻微调整，我们可以根据一个人是作者还是翻译者，在结果集中得到他们的职业。
 
-    [PRE13]
+    ```
+    SELECT 'author' AS "profession", "name" 
+    FROM "authors"
+    UNION
+    SELECT 'translator' AS "profession", "name" 
+    FROM "translators"; 
+    ```
 
 +   以下集合包括了所有既是作者又是**仅**是作者的人。`EXCEPT`关键字可以用来找到这样的集合。换句话说，从作者集合中减去翻译者集合，形成这个集合。
 
     ![只包括作者的`EXCEPT`集合](img/e7968694b86d0d8aa69073fa11996dc0.png)
 
-    [PRE14]
+    ```
+    SELECT "name" FROM "authors"
+    EXCEPT
+    SELECT "name" FROM "translators"; 
+    ```
 
     我们可以验证，交集集中的任何作者-翻译者都没有出现在这个结果集中。
 
@@ -330,7 +422,19 @@
 
 +   这些运算符可以用来回答许多不同的问题。例如，我们可以找到 Sophie Hughes 和 Margaret Jull Costa 共同翻译的书籍。
 
-    [PRE15]
+    ```
+    SELECT "book_id" FROM "translated"
+    WHERE "translator_id" = (
+        SELECT "id" from "translators"
+        WHERE "name" = 'Sophie Hughes'
+    )
+    INTERSECT
+    SELECT "book_id" FROM "translated"
+    WHERE "translator_id" = (
+        SELECT "id" from "translators"
+        WHERE "name" = 'Margaret Jull Costa'
+    ); 
+    ```
 
     这里嵌套的每个查询都找到了一个翻译者的书籍 ID。使用 `INTERSECT` 关键字来交集结果集，并给出他们合作过的书籍。
 
@@ -344,13 +448,22 @@
 
 +   考虑到 `ratings` 表。对于每本书，我们想要找到这本书的平均评分。为此，我们首先需要按书籍将评分分组，然后对每个书籍（每个组）的评分进行平均。
 
-    [PRE16]
+    ```
+    SELECT "book_id", AVG("rating") AS "average rating"
+    FROM "ratings"
+    GROUP BY "book_id"; 
+    ```
 
     在这个查询中，使用了 `GROUP BY` 关键字为每本书创建组，然后将组的评分合并成一个平均评分！
 
 +   现在，我们只想看到那些评分很高的书籍，平均评分超过 4 分。
 
-    [PRE17]
+    ```
+    SELECT "book_id", ROUND(AVG("rating"), 2) AS "average rating"
+    FROM "ratings"
+    GROUP BY "book_id"
+    HAVING "average rating" > 4.0; 
+    ```
 
     注意，这里使用 `HAVING` 关键字来指定组条件，而不是 `WHERE`（只能用于指定单个行的条件）。
 
@@ -360,13 +473,23 @@
 
 +   是的，这需要使用 `COUNT` 关键字进行轻微的修改。
 
-    [PRE18]
+    ```
+    SELECT "book_id", COUNT("rating")
+    FROM "ratings"
+    GROUP BY "book_id"; 
+    ```
 
 > 是否也可以对这里获得的数据进行排序？
 
 +   是的，可以。比如说，我们想要找到每个评分很高的书籍的平均评分，并按降序排列。
 
-    [PRE19]
+    ```
+    SELECT "book_id", ROUND(AVG("rating"), 2) AS "average rating"
+    FROM "ratings"
+    GROUP BY "book_id"
+    HAVING "average rating" > 4.0
+    ORDER BY "average rating" DESC; 
+    ```
 
 ## 结束
 

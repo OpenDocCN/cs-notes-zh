@@ -22,7 +22,11 @@
 
 +   我们可以为我们的猫添加计数点击次数的代码块：
 
-    [PRE0]
+    ```
+     when this sprite clicked
+      change [count v] by (1)
+      say (count) for (1) seconds 
+    ```
 
     +   “改变”代码块会将“count”变量的值增加 1。
 
@@ -34,7 +38,10 @@
 
 +   我们将为重置按钮添加这些代码块：
 
-    [PRE1]
+    ```
+     when this sprite clicked
+      set [count v] to (0) 
+    ```
 
     +   现在，当这个按钮被按下时，0 的值将被放入“count”变量中，替换掉之前的内容。
 
@@ -46,11 +53,22 @@
 
 +   我们将添加我们的刺猬，并告诉它指向并移动到鼠标指针的方向：
 
-    [PRE2]
+    ```
+     when green flag clicked
+      forever
+      point towards (mouse-pointer v)
+      move (5) steps 
+    ```
 
 +   我们将添加另一个精灵，星星，每次刺猬触摸它时，它都会增加我们的分数。我们还会让它在被触摸后移动到随机位置：
 
-    [PRE3]
+    ```
+     when green flag clicked
+      forever
+      if <touching (Hedgehog v) ?> then
+      change [score v] by (1)
+      go to (random position v) 
+    ```
 
     +   首先，我们需要创建一个新的变量，我们将称之为“score”。
 
@@ -62,7 +80,13 @@
 
 +   当程序开始运行时，我们可能希望将分数重置为 0。我们将使用刺猬来实现这一点：
 
-    [PRE4]
+    ```
+     when green flag clicked
+      set [score v] to (0)
+      forever
+      point towards (mouse-pointer v)
+      move (5) steps 
+    ```
 
     +   注意，我们想要将“设置”块放在“无限循环”之外。这样，它只会被设置为 0 一次，之后由星星改变。
 
@@ -76,11 +100,28 @@
 
 +   现在，我们想要确保背景从纯白色背景“backdrop1”开始，所以我们将它添加到我们的刺猬上：
 
-    [PRE5]
+    ```
+     when green flag clicked
+      set [score v] to (0)
+      switch backdrop to (backdrop1 v)
+      forever
+      point towards (mouse-pointer v)
+      move (5) steps 
+    ```
 
 +   然后，在我们的星星代码块中，我们希望在达到 10 分时改变背景并停止我们的程序：
 
-    [PRE6]
+    ```
+     when green flag clicked
+      forever
+      if <touching (Hedgehog v) ?> then
+      change [score v] by (1)
+      if <(score) = (10)> then
+      switch backdrop to (Win v)
+      stop [all v]
+      end
+      go to (random position v) 
+    ```
 
     +   在我们改变分数后，我们想要添加一个检查“分数”值的条件。如果它等于 10，那么我们将切换背景。我们还会在控制部分使用“停止”块，这将停止我们程序中的所有内容。
 
@@ -92,7 +133,13 @@
 
 +   我们将添加球精灵，并告诉它开始下落，或者向下移动，直到它到达地面：
 
-    [PRE7]
+    ```
+     when green flag clicked
+      forever
+      change y by (-5)
+      if <touching color [#663600] ?> then
+      stop [all v] 
+    ```
 
     +   我们将 y 位置减去 5，这使得球向下移动。
 
@@ -108,7 +155,15 @@
 
 +   对于球的代码，我们将在它下落时增加“速度”变量的值：
 
-    [PRE8]
+    ```
+     when green flag clicked
+      set [speed v] to (0)
+      forever
+      change y by (speed)
+      change [speed v] by (-1)
+      if <touching color [#663600] ?> then
+      stop [all v] 
+    ```
 
     +   首先，我们将“速度”设置为 0。然后，我们将改变球的位置 y 值，这个值最初将是 0。
 
@@ -118,7 +173,15 @@
 
 +   我们可以让球在接触地面后向上移动，也可以：
 
-    [PRE9]
+    ```
+     when green flag clicked
+      set [speed v] to (0)
+      forever
+      change y by (speed)
+      change [speed v] by (-1)
+      if <touching color [#663600] ?> then
+      set [speed v] to ((speed) * (-1)) 
+    ```
 
     +   我们可以通过乘以-1 来将我们的“速度”变量的值从负数变为正数。然后，球将开始在舞台上向上移动，但“速度”变量会再次每次减少 1。
 
@@ -126,7 +189,10 @@
 
 +   我们还可以让球每次弹跳时稍微失去一点速度：
 
-    [PRE10]
+    ```
+     if <touching color [#663600] ?> then
+      set [speed v] to (((speed) * (-1)) - (2)) 
+    ```
 
     +   当速度从负数变为正数时，我们也可以从它减去 2，这样新的速度总是比之前略小。
 
@@ -148,7 +214,11 @@
 
 +   我们将在气球精灵中添加代码块，告诉它改变其大小：
 
-    [PRE11]
+    ```
+     when green flag clicked
+      forever
+      set size to (air) % 
+    ```
 
     +   现在，点击绿色标志后，气球将不断将其大小设置为“空气”变量的值，即使我们在舞台上改变滑块的值。
 
@@ -160,19 +230,48 @@
 
 +   我们会让猫沿着圆形移动：
 
-    [PRE12]
+    ```
+     when green flag clicked
+      go to x: (0) y: (0)
+      point in direction (90)
+      forever
+      move (10) steps
+      turn right (15) degrees 
+    ```
 
     +   我们将从屏幕中心面向右开始移动和转向，以获得圆形移动的效果。
 
 +   我们将通过使用界面左下角的蓝色按钮来添加笔扩展。然后我们将擦除一切，放下笔开始绘制：
 
-    [PRE13]
+    ```
+     when green flag clicked
+      go to x: (0) y: (0)
+      point in direction (90)
+      erase all
+      pen down
+      forever
+      move (10) steps
+      turn right (15) degrees
+      wait (0.05) seconds 
+    ```
 
     +   我们还会让猫在每一步之间等待一小段时间，这样我们就可以看到它是如何画圆的。
 
 +   现在，让我们创建一个新的变量叫做“步骤”。我们首先将其设置为 0，并告诉猫按照变量的值移动：
 
-    [PRE14]
+    ```
+     when green flag clicked
+      go to x: (0) y: (0)
+      point in direction (90)
+      erase all
+      pen down
+      set [steps v] to (0)
+      forever
+      move (steps) steps
+      change [steps v] by (0.5)
+      turn right (15) degrees
+      wait (0.05) seconds 
+    ```
 
     +   注意，我们还在每次移动时稍微增加“步骤”变量的值，每次增加 0.5。因此，每次移动时，我们都会移动得更远。结果看起来像螺旋。
 

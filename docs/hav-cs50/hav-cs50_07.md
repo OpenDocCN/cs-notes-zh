@@ -58,7 +58,16 @@
 
 +   在代码中，你可以这样想象一个队列：
 
-    [PRE0]
+    ```
+    const int CAPACITY = 50;
+
+    typedef struct
+    {
+        person people[CAPACITY];
+        int size;
+    }
+    queue; 
+    ```
 
     注意，名为 `people` 的数组是 `person` 类型。`CAPACITY` 表示栈可能达到的高度。整数 `size` 表示队列实际填充的程度，无论它可以容纳多少。
 
@@ -70,7 +79,16 @@
 
 +   在代码中，你可能可以这样想象一个栈：
 
-    [PRE1]
+    ```
+    const int CAPACITY = 50;
+
+    typedef struct
+    {
+        person people[CAPACITY];
+        int size;
+    }
+    stack; 
+    ```
 
     注意，名为 `people` 的数组是 `person` 类型。`CAPACITY` 表示栈可能达到的高度。整数 `size` 表示栈实际填充的程度，无论它可以容纳多少。注意，这段代码与队列中的代码相同。
 
@@ -116,13 +134,84 @@
 
 +   在您的终端中，键入`code list.c`并编写以下代码：
 
-    [PRE2]
+    ```
+    // Implements a list of numbers with an array of fixed size
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        // List of size 3
+        int list[3];
+
+        // Initialize list with numbers
+        list[0] = 1;
+        list[1] = 2;
+        list[2] = 3;
+
+        // Print list
+        for (int i = 0; i < 3; i++)
+        {
+            printf("%i\n", list[i]);
+        }
+    } 
+    ```
 
     注意，上面的代码与我们在本课程中早期学到的非常相似。内存为三个项目预先分配。
 
 +   建立在最近获得的知识基础上，我们可以利用我们对指针的理解来改进这段代码的设计。按照以下方式修改您的代码：
 
-    [PRE3]
+    ```
+    // Implements a list of numbers with an array of dynamic size
+
+    #include <stdio.h> #include <stdlib.h>  
+    int main(void)
+    {
+        // List of size 3
+        int *list = malloc(3 * sizeof(int));
+        if (list == NULL)
+        {
+            return 1;
+        }
+
+        // Initialize list of size 3 with numbers
+        list[0] = 1;
+        list[1] = 2;
+        list[2] = 3;
+
+        // List of size 4
+        int *tmp = malloc(4 * sizeof(int));
+        if (tmp == NULL)
+        {
+            free(list);
+            return 1;
+        }
+
+        // Copy list of size 3 into list of size 4
+        for (int i = 0; i < 3; i++)
+        {
+            tmp[i] = list[i];
+        }
+
+        // Add number to list of size 4
+        tmp[3] = 4;
+
+        // Free list of size 3
+        free(list);
+
+        // Remember list of size 4
+        list = tmp;
+
+        // Print list
+        for (int i = 0; i < 4; i++)
+        {
+            printf("%i\n", list[i]);
+        }
+
+        // Free list
+        free(list);
+        return 0;
+    } 
+    ```
 
     注意，创建了一个包含三个整数的列表。然后，可以将三个内存地址分配给值 `1`、`2` 和 `3`。接着，创建了一个大小为四的列表。接下来，列表从第一个复制到第二个。将值 `4` 添加到 `tmp` 列表中。由于 `list` 指向的内存块不再使用，使用命令 `free(list)` 释放它。最后，编译器被指示将 `list` 指针现在指向 `tmp` 指向的内存块。打印 `list` 的内容，然后释放。此外，请注意包含了 `stdlib.h`。
 
@@ -130,7 +219,47 @@
 
 +   一种不使用 for 循环复制数组的方法是使用 `realloc`：
 
-    [PRE4]
+    ```
+    // Implements a list of numbers with an array of dynamic size using realloc
+
+    #include <stdio.h> #include <stdlib.h>  
+    int main(void)
+    {
+        // List of size 3
+        int *list = malloc(3 * sizeof(int));
+        if (list == NULL)
+        {
+            return 1;
+        }
+
+        // Initialize list of size 3 with numbers
+        list[0] = 1;
+        list[1] = 2;
+        list[2] = 3;
+
+        // Resize list to be of size 4
+        int *tmp = realloc(list, 4 * sizeof(int));
+        if (tmp == NULL)
+        {
+            free(list);
+            return 1;
+        }
+        list = tmp;
+
+        // Add number to list
+        list[3] = 4;
+
+        // Print list
+        for (int i = 0; i < 4; i++)
+        {
+            printf("%i\n", list[i]);
+        }
+
+        // Free list
+        free(list);
+        return 0;
+    } 
+    ```
 
     注意，列表通过 `realloc` 调整大小到新的数组。
 
@@ -170,13 +299,53 @@
 
 +   这些盒子被称为*节点*。一个*节点*包含一个*项*和一个称为*next*的指针。在代码中，你可以想象一个节点如下：
 
-    [PRE5]
+    ```
+    typedef struct node
+    {
+        int number;
+        struct node *next;
+    }
+    node; 
+    ```
 
     注意，这个节点包含的项是一个名为`number`的整数。其次，包含一个指向节点`next`的指针，它将指向内存中的另一个节点。
 
 +   我们可以重新创建`list.c`以利用链表：
 
-    [PRE6]
+    ```
+    // Start to build a linked list by prepending nodes
+
+    #include <cs50.h> #include <stdio.h> #include <stdlib.h>  
+    typedef struct node
+    {
+        int number;
+        struct node *next;
+    } node;
+
+    int main(void)
+    {
+        // Memory for numbers
+        node *list = NULL;
+
+        // Build list
+        for (int i = 0; i < 3; i++)
+        {
+            // Allocate node for number
+            node *n = malloc(sizeof(node));
+            if (n == NULL)
+            {
+                return 1;
+            }
+            n->number = get_int("Number: ");
+            n->next = NULL;
+
+            // Prepend node to list
+            n->next = list;
+            list = n;
+        }
+        return 0;
+    } 
+    ```
 
     首先，将`node`定义为`struct`。对于列表的每个元素，通过`malloc`为节点分配内存，大小为一个节点的大小。将`n->number`（或`n`的数字字段）赋值为一个整数。将`n->next`（或`n`的`next`字段）赋值为`null`。然后，将节点放置在列表的起始位置，内存位置为`list`。
 
@@ -224,7 +393,48 @@
 
 +   我们可以按正确顺序打印列表如下：
 
-    [PRE7]
+    ```
+    // Print nodes in a linked list with a while loop
+
+    #include <cs50.h> #include <stdio.h> #include <stdlib.h>  
+    typedef struct node
+    {
+        int number;
+        struct node *next;
+    } node;
+
+    int main(void)
+    {
+        // Memory for numbers
+        node *list = NULL;
+
+        // Build list
+        for (int i = 0; i < 3; i++)
+        {
+            // Allocate node for number
+            node *n = malloc(sizeof(node));
+            if (n == NULL)
+            {
+                return 1;
+            }
+            n->number = get_int("Number: ");
+            n->next = NULL;
+
+            // Prepend node to list
+            n->next = list;
+            list = n;
+        }
+
+        // Print numbers
+        node *ptr = list;
+        while (ptr != NULL)
+        {
+            printf("%i\n", ptr->number);
+            ptr = ptr->next;
+        }
+        return 0;
+    } 
+    ```
 
     注意，`node *ptr = list`创建了一个临时变量，它指向与`list`指向的相同位置。`while`循环打印`ptr`指向的节点内容，然后更新`ptr`以指向列表中的下一个节点。
 
@@ -236,13 +446,161 @@
 
 +   此外，你可以在列表的末尾放置数字，如图中所示代码：
 
-    [PRE8]
+    ```
+    // Appends numbers to a linked list
+
+    #include <cs50.h> #include <stdio.h> #include <stdlib.h>  
+    typedef struct node
+    {
+        int number;
+        struct node *next;
+    } node;
+
+    int main(void)
+    {
+        // Memory for numbers
+        node *list = NULL;
+
+        // Build list
+        for (int i = 0; i < 3; i++)
+        {
+            // Allocate node for number
+            node *n = malloc(sizeof(node));
+            if (n == NULL)
+            {
+                return 1;
+            }
+            n->number = get_int("Number: ");
+            n->next = NULL;
+
+            // If list is empty
+            if (list == NULL)
+            {
+                // This node is the whole list
+                list = n;
+            }
+
+            // If list has numbers already
+            else
+            {
+                // Iterate over nodes in list
+                for (node *ptr = list; ptr != NULL; ptr = ptr->next)
+                {
+                    // If at end of list
+                    if (ptr->next == NULL)
+                    {
+                        // Append node
+                        ptr->next = n;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Print numbers
+        for (node *ptr = list; ptr != NULL; ptr = ptr->next)
+        {
+            printf("%i\n", ptr->number);
+        }
+
+        // Free memory
+        node *ptr = list;
+        while (ptr != NULL)
+        {
+            node *next = ptr->next;
+            free(ptr);
+            ptr = next;
+        }
+        return 0;
+    } 
+    ```
 
     注意代码是如何 *遍历* 这个列表来找到末尾的。当追加一个元素（添加到列表的末尾）时，我们的代码将以 \(O(n)\) 的时间复杂度运行，因为我们必须遍历整个列表才能添加最后一个元素。此外，注意使用了一个名为 `next` 的临时变量来跟踪 `ptr->next`。
 
 +   此外，你可以在添加项目时对列表进行排序：
 
-    [PRE9]
+    ```
+    // Implements a sorted linked list of numbers
+
+    #include <cs50.h> #include <stdio.h> #include <stdlib.h>  
+    typedef struct node
+    {
+        int number;
+        struct node *next;
+    } node;
+
+    int main(void)
+    {
+        // Memory for numbers
+        node *list = NULL;
+
+        // Build list
+        for (int i = 0; i < 3; i++)
+        {
+            // Allocate node for number
+            node *n = malloc(sizeof(node));
+            if (n == NULL)
+            {
+                return 1;
+            }
+            n->number = get_int("Number: ");
+            n->next = NULL;
+
+            // If list is empty
+            if (list == NULL)
+            {
+                list = n;
+            }
+
+            // If number belongs at beginning of list
+            else if (n->number < list->number)
+            {
+                n->next = list;
+                list = n; 
+            }
+
+            // If number belongs later in list
+            else
+            {
+                // Iterate over nodes in list
+                for (node *ptr = list; ptr != NULL; ptr = ptr->next)
+                {
+                    // If at end of list
+                    if (ptr->next == NULL)
+                    {
+                        // Append node
+                        ptr->next = n;
+                        break;
+                    }
+
+                    // If in middle of list
+                    if (n->number < ptr->next->number)
+                    {
+                        n->next = ptr->next;
+                        ptr->next = n;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Print numbers
+        for (node *ptr = list; ptr != NULL; ptr = ptr->next)
+        {
+            printf("%i\n", ptr->number);
+        }
+
+        // Free memory
+        node *ptr = list;
+        while (ptr != NULL)
+        {
+            node *next = ptr->next;
+            free(ptr);
+            ptr = next;
+        }
+        return 0;
+    } 
+    ```
 
     注意这个列表是如何在构建过程中排序的。为了以这种特定顺序插入元素，我们的代码在每次插入时仍将以 \(O(n)\) 的时间复杂度运行，因为在最坏的情况下，我们可能需要查看所有当前元素。
 
@@ -270,7 +628,92 @@
 
 +   在代码中，可以这样实现。
 
-    [PRE10]
+    ```
+    // Implements a list of numbers as a binary search tree
+
+    #include <stdio.h> #include <stdlib.h>  
+    // Represents a node
+    typedef struct node
+    {
+        int number;
+        struct node *left;
+        struct node *right;
+    }
+    node;
+
+    void free_tree(node *root);
+    void print_tree(node *root);
+
+    int main(void)
+    {
+        // Tree of size 0
+        node *tree = NULL;
+
+        // Add number to list
+        node *n = malloc(sizeof(node));
+        if (n == NULL)
+        {
+            return 1;
+        }
+        n->number = 2;
+        n->left = NULL;
+        n->right = NULL;
+        tree = n;
+
+        // Add number to list
+        n = malloc(sizeof(node));
+        if (n == NULL)
+        {
+            free_tree(tree);
+            return 1;
+        }
+        n->number = 1;
+        n->left = NULL;
+        n->right = NULL;
+        tree->left = n;
+
+        // Add number to list
+        n = malloc(sizeof(node));
+        if (n == NULL)
+        {
+            free_tree(tree);
+            return 1;
+        }
+        n->number = 3;
+        n->left = NULL;
+        n->right = NULL;
+        tree->right = n;
+
+        // Print tree
+        print_tree(tree);
+
+        // Free tree
+        free_tree(tree);
+        return 0;
+    }
+
+    void free_tree(node *root)
+    {
+        if (root == NULL)
+        {
+            return;
+        }
+        free_tree(root->left);
+        free_tree(root->right);
+        free(root);
+    }
+
+    void print_tree(node *root)
+    {
+        if (root == NULL)
+        {
+            return;
+        }
+        print_tree(root->left);
+        printf("%i\n", root->number);
+        print_tree(root->right);
+    } 
+    ```
 
     注意这个搜索功能首先会去 `tree` 的位置。然后，它使用递归来搜索 `number`。`free_tree` 函数递归地释放树。`print_tree` 函数递归地打印树。
 
@@ -322,7 +765,13 @@
 
 +   这可以在代码中如下实现：
 
-    [PRE11]
+    ```
+    #include <ctype.h>  
+    unsigned int hash(const char *word)
+    {
+        return toupper(word[0]) - 'A';
+    } 
+    ```
 
     注意哈希函数返回`toupper(word[0]) - 'A'`的值。
 

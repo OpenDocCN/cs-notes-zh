@@ -58,13 +58,44 @@
 
 +   在你的终端窗口中，输入`code favorites.py`并编写以下代码：
 
-    [PRE0]
+    ```
+    # Prints all favorites in CSV using csv.reader 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create reader
+        reader = csv.reader(file)
+
+        # Skip header row
+        next(reader)
+
+        # Iterate over CSV file, printing each favorite
+        for row in reader:
+            print(row[1]) 
+    ```
 
     注意到已经导入了`csv`库。此外，我们创建了一个`reader`，它将保存`csv.reader(file)`的结果。`csv.reader`函数从文件中读取每一行，在我们的代码中，我们将结果存储在`reader`中。因此，`print(row[1])`将打印出`favorites.csv`文件中的语言。
 
 +   你可以按照以下方式改进你的代码：
 
-    [PRE1]
+    ```
+    # Stores favorite in a variable 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create reader
+        reader = csv.reader(file)
+
+        # Skip header row
+        next(reader)
+
+        # Iterate over CSV file, printing each favorite
+        for row in reader:
+            favorite = row[1]
+            print(favorite) 
+    ```
 
     注意`favorite`被存储并打印出来。此外，注意我们使用`next`函数跳到读者下一行。
 
@@ -72,41 +103,178 @@
 
 +   我们可以修复这个潜在的问题。Python 还允许你通过列表的键进行索引。按照以下方式修改你的代码：
 
-    [PRE2]
+    ```
+    # Prints all favorites in CSV using csv.DictReader 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create DictReader
+        reader = csv.DictReader(file)
+
+        # Iterate over CSV file, printing each favorite
+        for row in reader:
+            favorite = row["language"]
+            print(favorite) 
+    ```
 
     注意到这个例子直接在打印语句中使用了`language`键。`favorite`索引到`row["language"]`的`reader`字典。
 
 +   这可以进一步简化为：
 
-    [PRE3]
+    ```
+    # Prints all favorites in CSV using csv.DictReader 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create DictReader
+        reader = csv.DictReader(file)
+
+        # Iterate over CSV file, printing each favorite
+        for row in reader:
+            print(row["language"]) 
+    ```
 
 +   要统计在`csv`文件中表达的首选语言的数目，我们可以这样做：
 
-    [PRE4]
+    ```
+    # Counts favorites using variables 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create DictReader
+        reader = csv.DictReader(file)
+
+        # Counts
+        scratch, c, python = 0, 0, 0
+
+        # Iterate over CSV file, counting favorites
+        for row in reader:
+            favorite = row["language"]
+            if favorite == "Scratch":
+                scratch += 1
+            elif favorite == "C":
+                c += 1
+            elif favorite == "Python":
+                python += 1
+
+    # Print counts print(f"Scratch: {scratch}")
+    print(f"C: {c}")
+    print(f"Python: {python}") 
+    ```
 
     注意到每种语言都是通过`if`语句进行统计的。此外，注意那些`if`语句中的双等号`==`。
 
 +   Python 允许我们使用字典来统计每种语言的`counts`。考虑以下对我们代码的改进：
 
-    [PRE5]
+    ```
+    # Counts favorites using dictionary 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create DictReader
+        reader = csv.DictReader(file)
+
+        # Counts
+        counts = {}
+
+        # Iterate over CSV file, counting favorites
+        for row in reader:
+            favorite = row["language"]
+            if favorite in counts:
+                counts[favorite] += 1
+            else:
+                counts[favorite] = 1
+
+    # Print counts for favorite in counts:
+        print(f"{favorite}: {counts[favorite]}") 
+    ```
 
     注意到当`counts`中存在`favorite`键时，其值会增加。如果它不存在，我们定义`counts[favorite]`并将其设置为 1。此外，格式化字符串已经得到改进，以展示`counts[favorite]`。
 
 +   Python 也允许对`counts`进行排序。按照以下方式改进你的代码：
 
-    [PRE6]
+    ```
+    # Sorts favorites by key 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create DictReader
+        reader = csv.DictReader(file)
+
+        # Counts
+        counts = {}
+
+        # Iterate over CSV file, counting favorites
+        for row in reader:
+            favorite = row["language"]
+            if favorite in counts:
+                counts[favorite] += 1
+            else:
+                counts[favorite] = 1
+
+    # Print counts for favorite in sorted(counts):
+        print(f"{favorite}: {counts[favorite]}") 
+    ```
 
     注意代码底部的`sorted(counts)`。
 
 +   如果你查看 Python 文档中`sorted`函数的参数，你会发现它有许多内置参数。你可以利用一些这些内置参数，如下所示：
 
-    [PRE7]
+    ```
+    # Sorts favorites by value using .get 
+    import csv
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create DictReader
+        reader = csv.DictReader(file)
+
+        # Counts
+        counts = {}
+
+        # Iterate over CSV file, counting favorites
+        for row in reader:
+            favorite = row["language"]
+            if favorite in counts:
+                counts[favorite] += 1
+            else:
+                counts[favorite] = 1
+
+    # Print counts for favorite in sorted(counts, key=counts.get, reverse=True):
+        print(f"{favorite}: {counts[favorite]}") 
+    ```
 
     注意传递给`sorted`的参数。`key`参数允许你告诉 Python 你希望用于排序项的方法。在这种情况下，使用`counts.get`按值排序。`reverse=True`告诉`sorted`从大到小排序。
 
 +   Python 有许多库，我们可以在代码中利用这些库。其中之一是`collections`，我们可以从中导入`Counter`。`Counter`将允许你访问每种语言的计数，而无需像我们之前的代码中看到的那样处理所有`if`语句。你可以按照以下方式实现：
 
-    [PRE8]
+    ```
+    # Sorts favorites by value using .get 
+    import csv
+
+    from collections import Counter
+
+    # Open CSV file with open("favorites.csv", "r") as file:
+
+        # Create DictReader
+        reader = csv.DictReader(file)
+
+        # Counts
+        counts = Counter()
+
+        # Iterate over CSV file, counting favorites
+        for row in reader:
+            favorite = row["language"]
+            counts[favorite] += 1
+
+    # Print counts for favorite, count in counts.most_common():
+        print(f"{favorite}: {count}") 
+    ```
 
     注意到`counts = Counter()`如何启用从`collections`导入的`Counter`类。
 
@@ -120,7 +288,12 @@
 
 +   SQL 允许四种类型的命令：
 
-    [PRE9]
+    ```
+     Create
+      Read
+      Update
+      Delete 
+    ```
 
 +   这四个操作被亲切地称为 *CRUD*。
 
@@ -144,13 +317,27 @@
 
 +   SQL 支持许多用于访问数据的命令，包括：
 
-    [PRE10]
+    ```
+     AVG
+      COUNT
+      DISTINCT
+      LOWER
+      MAX
+      MIN
+      UPPER 
+    ```
 
 +   例如，您可以输入`SELECT COUNT(*) FROM favorites;`。此外，您可以输入`SELECT DISTINCT language FROM favorites;`以获取数据库中个别语言的列表。您甚至可以输入`SELECT COUNT(DISTINCT language) FROM favorites;`以获取这些语言的计数。
 
 +   SQL 还提供了我们可以在查询中使用的附加命令：
 
-    [PRE11]
+    ```
+     WHERE       -- adding a Boolean expression to filter our data
+      LIKE        -- filtering responses more loosely
+      ORDER BY    -- ordering responses
+      LIMIT       -- limiting the number of responses
+      GROUP BY    -- grouping responses together 
+    ```
 
     注意我们在 SQL 中使用`--`来写注释。
 
@@ -226,11 +413,20 @@
 
 +   在 *sqlite* 中，我们有五种数据类型，包括：
 
-    [PRE12]
+    ```
+     BLOB       -- binary large objects that are groups of ones and zeros
+      INTEGER    -- an integer
+      NUMERIC    -- for numbers that are formatted specially like dates
+      REAL       -- like a float
+      TEXT       -- for strings and the like 
+    ```
 
 +   此外，可以将列设置为添加特殊约束：
 
-    [PRE13]
+    ```
+     NOT NULL
+      UNIQUE 
+    ```
 
 +   我们可以进一步利用这些数据来理解这些关系。执行`SELECT * FROM ratings;`。这里有很多评分！
 
@@ -240,7 +436,16 @@
 
 +   通过执行以下命令，我们可以使查询更高效：
 
-    [PRE14]
+    ```
+    SELECT title
+    FROM shows
+    WHERE id IN (
+        SELECT show_id
+        FROM ratings
+        WHERE rating >= 6.0
+        LIMIT 10
+    ) 
+    ```
 
     注意，这个查询嵌套了两个查询。内部查询被外部查询使用。
 
@@ -252,13 +457,21 @@
 
 +   执行以下命令：
 
-    [PRE15]
+    ```
+    SELECT * FROM shows
+      JOIN ratings on shows.id = ratings.show_id
+      WHERE rating >= 6.0
+      LIMIT 10; 
+    ```
 
     注意，这会产生一个比我们之前看到的更宽的表。
 
 +   在之前的查询中已经展示了这些键之间的*一对一*关系，让我们来检查一些*一对多*关系。关注`genres`表，执行以下命令：
 
-    [PRE16]
+    ```
+    SELECT * FROM genres
+    LIMIT 10; 
+    ```
 
     注意，这为我们提供了对原始数据的感觉。你可能注意到一个节目有三个值。这是一个一对多关系。
 
@@ -266,13 +479,25 @@
 
 +   执行以下命令来了解更多关于数据库中各种喜剧的信息：
 
-    [PRE17]
+    ```
+    SELECT title FROM shows
+    WHERE id IN (
+      SELECT show_id FROM genres
+      WHERE genre = 'Comedy'
+      LIMIT 10
+    ); 
+    ```
 
     注意，这产生了一个包括*猫怪*在内的喜剧列表。
 
 +   要了解更多关于 Catweazle 的信息，可以通过连接各种表来实现：
 
-    [PRE18]
+    ```
+    SELECT * FROM shows
+    JOIN genres
+    ON shows.id = genres.show_id
+    WHERE id = 63881; 
+    ```
 
     注意，这会产生一个临时表。拥有一个重复的表是可以的。
 
@@ -280,19 +505,32 @@
 
 +   通过执行以下命令，我们可以了解更多关于节目*办公室*及其演员的信息：
 
-    [PRE19]
+    ```
+    SELECT name FROM people WHERE id IN 
+        (SELECT person_id FROM stars WHERE show_id = 
+            (SELECT id FROM shows WHERE title = 'The Office' AND year = 2005)); 
+    ```
 
     注意，这会产生一个包含通过嵌套查询的各种明星名字的表。
 
 +   我们找到史蒂夫·卡瑞尔主演的所有节目：
 
-    [PRE20]
+    ```
+    SELECT title FROM shows WHERE id IN 
+        (SELECT show_id FROM stars WHERE person_id = 
+            (SELECT id FROM people WHERE name = 'Steve Carell')); 
+    ```
 
     这会产生一个史蒂夫·卡瑞尔主演的节目标题列表。
 
 +   这也可以用这种方式表达：
 
-    [PRE21]
+    ```
+    SELECT title FROM shows, stars, people 
+    WHERE shows.id = stars.show_id
+    AND people.id = stars.person_id
+    AND name = 'Steve Carell'; 
+    ```
 
 +   可以使用通配符`%`运算符来查找所有名字以`Steve C`开头的人，可以使用以下语法：`SELECT * FROM people WHERE name LIKE 'Steve C%';`。
 
@@ -314,11 +552,18 @@
 
 +   此外，我们可以创建索引如下：
 
-    [PRE22]
+    ```
+    CREATE INDEX name_index ON people (name);
+    CREATE INDEX person_index ON stars (person_id); 
+    ```
 
 +   运行查询后，你会注意到查询运行得更快！
 
-    [PRE23]
+    ```
+    SELECT title FROM shows WHERE id IN 
+        (SELECT show_id FROM stars WHERE person_id = 
+            (SELECT id FROM people WHERE name = 'Steve Carell')); 
+    ```
 
 +   不幸的是，索引所有列将导致使用更多的存储空间。因此，在提高速度和存储空间之间有一个权衡。
 
@@ -326,7 +571,9 @@
 
 +   为了帮助在这个课程中处理 SQL，可以在你的代码中使用 CS50 库如下：
 
-    [PRE24]
+    ```
+    from cs50 import SQL 
+    ```
 
 +   与之前对 CS50 库的使用类似，这个库将帮助你在 Python 代码中利用 SQL 的复杂步骤。
 
@@ -336,7 +583,20 @@
 
 +   按照以下方式修改你的`favorites.py`代码：
 
-    [PRE25]
+    ```
+    # Searches database popularity of a problem 
+    from cs50 import SQL
+
+    # Open database db = SQL("sqlite:///favorites.db")
+
+    # Prompt user for favorite favorite = input("Favorite: ")
+
+    # Search for title rows = db.execute("SELECT COUNT(*) AS n FROM favorites WHERE language = ?", favorite)
+
+    # Get first (and only) row row = rows[0]
+
+    # Print popularity print(row["n"]) 
+    ```
 
     注意，`db = SQL("sqlite:///favorites.db")`为 Python 提供了数据库文件的位置。然后，以`rows`开头的行执行使用`db.execute`的 SQL 命令。确实，这个命令将引号内的语法传递给`db.execute`函数。我们可以使用这种语法发出任何 SQL 命令。此外，注意`rows`作为字典列表返回。在这种情况下，只有一个结果，一行，作为字典返回到`rows`列表中。
 
@@ -360,7 +620,9 @@
 
 +   如果在我们的代码中没有适当的安全措施，恶意行为者可以运行恶意代码。考虑以下：
 
-    [PRE26]
+    ```
+    rows = db.execute("SELECT COUNT(*) FROM users WHERE username = ? AND password = ?", username, password) 
+    ```
 
     注意，因为`?`符号的位置，在查询盲目接受之前，可以在`favorite`上运行验证。
 

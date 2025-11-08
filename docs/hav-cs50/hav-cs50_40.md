@@ -38,7 +38,9 @@
 
 +   要加载数据，我们可以编写如下代码：
 
-    [PRE0]
+    ```
+    # Demonstrates loading data from an .RData file  load("temps.RData")  mean(temps) 
+    ```
 
     注意`load`函数如何加载名为`temps.RData`的数据文件。接下来，`mean`将计算这些数据的平均值。
 
@@ -50,13 +52,17 @@
 
 +   回想第 1 周我们如何在向量中*索引*数据。按照以下方式修改你的代码：
 
-    [PRE1]
+    ```
+    # Demonstrates identifying outliers by index  load("temps.RData")  temps[2]  temps[4]  temps[7]  temps[c(2,  4,  7)] 
+    ```
 
     注意`temps[2]`将直接访问一个异常温度。最后一行代码从`temps`向量中取一个*子集*，只包括第 2、4 和第 7 个索引的元素。
 
 +   作为下一步，我们可以移除异常值数据：
 
-    [PRE2]
+    ```
+    # Demonstrates removing outliers by index  load("temps.RData")  no_outliers  <-  temps[-c(2,  4,  7)]  mean(no_outliers)  mean(temps) 
+    ```
 
     注意数据已加载。然后，`no_outliers`是一个只包含非异常温度的新向量。名为`temps`的向量*仍然*包含异常值数据。
 
@@ -66,7 +72,9 @@
 
 +   在 R 中，你可以使用许多逻辑运算符，包括：
 
-    [PRE3]
+    ```
+    ==  !=  >  >=  <  <= 
+    ```
 
 +   例如，你可以在 R 控制台中输入`1 == 2`来询问 1 是否等于 2。结果应该是`FALSE`（或“不！”）。然而，`1 < 2`应该是`TRUE`（或“是！”）。
 
@@ -74,37 +82,49 @@
 
 +   在你的代码中使用逻辑运算符，你可以按照以下方式修改你的代码：
 
-    [PRE4]
+    ```
+    # Demonstrates identifying outliers with logical expressions  load("temps.RData")  temps[1]  <  0  temps[2]  <  0  temps[3]  <  0 
+    ```
 
     注意运行此代码将在 R 控制台中产生以`TRUE`和`FALSE`表示的结果。
 
 +   以下代码可以进一步改进如下：
 
-    [PRE5]
+    ```
+    # Demonstrates comparison operators are vectorized  load("temps.RData")  temps  <  0 
+    ```
 
     注意到运行此代码将创建一个 *逻辑向量*（即逻辑值的向量）。逻辑向量中的每个值都回答其对应值是否小于 0。
 
 +   要识别某些逻辑表达式为真的索引，你可以按照以下方式修改你的代码：
 
-    [PRE6]
+    ```
+    # Demonstrates `which` to return indices for which a logical expression is TRUE  load("temps.RData")  which(temps  <  0) 
+    ```
 
     注意现在温度向量中小于 0 的 *索引* 将输出到 R 控制台。函数 `which` 接受一个逻辑向量作为输入，并返回值为 `TRUE` 的值的索引。
 
 +   当处理异常值时，一个常见的愿望是显示低于或高于阈值的数值。你可以在代码中按以下方式实现：
 
-    [PRE7]
+    ```
+    # Demonstrates identifying outliers with compound logical expressions  load("temps.RData")  temps  <  0  |  temps  >  60 
+    ```
 
     注意到字符 `|` 符号在表达式中表示 *或*。这个逻辑表达式对于 `temps` 中任何小于 `0` 或大于 `60` 的值都将返回 `TRUE`。
 
 +   除了我们之前讨论的逻辑运算符之外，我们现在添加了两个新的运算符到我们的词汇表中：
 
-    [PRE8]
+    ```
+    |  & 
+    ```
 
     注意到表达 `or` 和 `and` 的能力是如何被提供的。
 
 +   你可以进一步改进你的代码如下：
 
-    [PRE9]
+    ```
+    # Demonstrates `any` and `all` to test for outliers  load("temps.RData")  any(temps  <  0  |  temps  >  60)  all(temps  <  0  |  temps  >  60) 
+    ```
 
     注意到 `any` 和 `all` 函数接受逻辑向量作为输入。`any` 回答的问题是，“这些逻辑值中是否有任何一个是真的？”`all` 回答的问题是，“所有这些温度值是否都是真的？”。
 
@@ -112,19 +132,25 @@
 
 +   如前所述，我们可以创建一个新的向量，如下删除异常值：
 
-    [PRE10]
+    ```
+    # Demonstrates subsetting a vector with a logical vector  load("temps.RData")  filter  <-  temps  <  0  |  temps  >  60  temps[filter] 
+    ```
 
     注意到如何根据逻辑表达式创建了一个新的子集向量 `filter`。因此，现在可以将 `filter` 提供给 `temps`，以请求 `temps` 中那些在逻辑表达式中评估为 `TRUE` 的项。
 
 +   同样，代码可以被修改以仅过滤那些不是异常值的项：
 
-    [PRE11]
+    ```
+    # Demonstrates negating a logical expression with !  load("temps.RData")  filter  <-  !(temps  <  0  |  temps  >  60)  temps[filter] 
+    ```
 
     注意到 `!` 的添加意味着 *不等于* 或简单地 *不是*。
 
 +   这种否定可以用来完全从数据中删除异常值：
 
-    [PRE12]
+    ```
+    # Demonstrates removing outliers  load("temps.RData")  no_outliers  <-  temps[!(temps  <  0  |  temps  >  60)]  save(no_outliers,  file  =  "no_outliers.RData")  outliers  <-  temps[temps  <  0  |  temps  >  60]  save(outliers,  file  =  "outliers.RData") 
+    ```
 
     注意现在有两个文件被保存。一个排除了异常值，另一个包含了异常值。这些文件保存在工作目录中。
 
@@ -136,37 +162,49 @@
 
 +   在 RStudio 中关闭之前的文件，让我们在 R 控制台中创建一个新的文件，通过输入 `file.create("chicks.R")`。确保你有 `chicks.csv` 在工作目录中，然后选择 `chicks.R` 并按照以下方式编写你的代码：
 
-    [PRE13]
+    ```
+    # Reads a CSV of data  chicks  <-  read.csv("chicks.csv")  View(chicks) 
+    ```
 
     注意到 `read.csv` 将 CSV 文件读取到名为 `chicks` 的数据框中。然后，查看 `chicks`。
 
 +   查看上述输出的结果，注意其中有很多 `NA` 值，代表不可用数据。考虑这可能会如何影响平均鸡重量的计算。按照以下方式修改你的代码：
 
-    [PRE14]
+    ```
+    # Demonstrates `mean` calculation with NA values  chicks  <-  read.csv("chicks.csv")  average_weight  <-  mean(chicks$weight)  average_weight 
+    ```
 
     注意到运行此代码将导致错误，因为某些值不可用于数学评估。
 
 +   缺失数据在统计学中是一个预期的问题。作为程序员，您需要决定如何处理缺失数据。您可以在移除 `NA` 值的情况下计算平均小鸡体重，如下所示：
 
-    [PRE15]
+    ```
+    # Demonstrates na.rm to remove NA values from mean calculation  chicks  <-  read.csv("chicks.csv")  average_weight  <-  mean(chicks$weight,  na.rm  =  TRUE)  average_weight 
+    ```
 
     注意，`na.rm = TRUE` 将在计算平均值时移除所有 `NA` 值。根据文档，`na.rm` 可以设置为 `TRUE` 或 `FALSE`。
 
 +   现在，让我们找出每只小鸡吃的食物如何影响它们的体重：
 
-    [PRE16]
+    ```
+    # Demonstrates computing casein average with explicit indexes  chicks  <-  read.csv("chicks.csv")  casein_chicks  <-  chicks[c(1,  2,  3),  ]  mean(casein_chicks$weight) 
+    ```
 
     注意，通过明确指定适当的索引，创建了一个 `chicks` 数据框的子集。
 
 +   这不是一种高效的编程方式，因为我们不应该期望我们的数据永远不会改变。我们如何修改代码使其更加灵活？我们可以使用逻辑表达式来动态地子集化数据框。
 
-    [PRE17]
+    ```
+    # Demonstrates logical expression to identify rows with casein feed  chicks  <-  read.csv("chicks.csv")  chicks$feed  ==  "casein" 
+    ```
 
     注意，逻辑表达式识别饲料列中的每个值是否等于“casein”。
 
 +   我们可以在代码中利用这个逻辑表达式如下：
 
-    [PRE18]
+    ```
+    # Demonstrates subsetting data frame with logical vector  chicks  <-  read.csv("chicks.csv")  filter  <-  chicks$feed  ==  "casein"  casein_chicks  <-  chicks[filter,  ]  mean(casein_chicks$weight) 
+    ```
 
     如讲座中先前所示，注意如何创建一个名为 `filter` 的逻辑向量。然后，只有 `filter` 中为 `TRUE` 的行被带入数据框 `casein_chicks`。
 
@@ -174,19 +212,25 @@
 
 +   您可以使用 `subset` 函数达到相同的结果：
 
-    [PRE19]
+    ```
+    # Demonstrates subsetting with `subset`  chicks  <-  read.csv("chicks.csv")  casein_chicks  <-  subset(chicks,  feed  ==  "casein")  mean(casein_chicks$weight,  na.rm  =  TRUE) 
+    ```
 
     这个数据框，称为 `casein_chicks`，是通过 `subset` 函数创建的。
 
 +   现在，有人可能希望在开始时过滤掉所有 `NA` 值。考虑以下代码：
 
-    [PRE20]
+    ```
+    # Demonstrates identifying NA values with `is.na`  chicks  <-  read.csv("chicks.csv")  is.na(chicks$weight)  !is.na(chicks$weight)  chicks$chick[is.na(chicks$weight)] 
+    ```
 
     注意，这段代码将使用 `is.na` 来查找 `NA` 值。
 
 +   可以通过使用 `is.na` 来完全删除记录，如下所示：
 
-    [PRE21]
+    ```
+    # Demonstrates removing NA values and resetting row names  chicks  <-  read.csv("chicks.csv")  chicks  <-  subset(chicks,  !is.na(weight))  rownames(chicks)  rownames(chicks)  <-  NULL  rownames(chicks) 
+    ```
 
     注意，这段代码创建了一个 `chicks` 的子集，其中 `is.na(weight)` 等于 `FALSE`。也就是说，`chicks` 只包括 `weight` 列中没有 `NA` 的行。如果您关心数据框的行名，请注意，当您移除某些行时，您也移除了那些行的 `rownames`。您可以通过运行 `rownames(chicks) <- NULL` 来确保您的行名仍然按顺序递增，这将重置所有行的名称。
 
@@ -196,7 +240,9 @@
 
 +   考虑以下代码：
 
-    [PRE22]
+    ```
+    # Demonstrates interactive program to view data by feed type  # Read and clean data  chicks  <-  read.csv("chicks.csv")  chicks  <-  subset(chicks,  !is.na(weight))  # Determine feed options  feed_options  <-  unique(chicks$feed)  # Prompt user with options  cat("1.",  feed_options[1])  cat("2.",  feed_options[2])  cat("3.",  feed_options[3])  cat("4.",  feed_options[4])  cat("5.",  feed_options[5])  cat("6.",  feed_options[6])  feed_choice  <-  as.integer(readline("Feed type: ")) 
+    ```
 
     注意，这段代码使用 `unique` 来发现独特的饲料选项。然后，使用 `cat` 输出每个饲料选项。
 
@@ -210,19 +256,25 @@
 
 +   利用转义字符，我们可以修改代码如下：
 
-    [PRE23]
+    ```
+    # Demonstrates \n  # Read and clean data  chicks  <-  read.csv("chicks.csv")  chicks  <-  subset(chicks,  !is.na(weight))  # Determine feed options  feed_options  <-  unique(chicks$feed)  # Prompt user with options  cat("1.",  feed_options[1],  "\n")  cat("2.",  feed_options[2],  "\n")  cat("3.",  feed_options[3],  "\n")  cat("4.",  feed_options[4],  "\n")  cat("5.",  feed_options[5],  "\n")  cat("6.",  feed_options[6],  "\n")  feed_choice  <-  as.integer(readline("Feed type: ")) 
+    ```
 
     注意，这段代码输出了所有饲料选项，每个选项都在单独的一行上。
 
 +   当我们有正确的菜单显示时，我们仍然可以从设计角度改进我们的代码。例如，为什么我们应该重复所有这些`cat`行？如下简化你的代码：
 
-    [PRE24]
+    ```
+    # Demonstrates interactive program to view data by feed type  # Read and clean data  chicks  <-  read.csv("chicks.csv")  chicks  <-  subset(chicks,  !is.na(weight))  # Determine feed options  feed_options  <-  unique(chicks$feed)  # Format feed options  formatted_options  <-  paste0(1:length(feed_options),  ". ",  feed_options)  # Prompt user with options  cat(formatted_options,  sep  =  "\n")  feed_choice  <-  as.integer(readline("Feed type: ")) 
+    ```
 
     注意到`formatted_options`包括所有单个饲料选项。`formatted_options`向量的每个元素都通过`cat(formatted_options, sep = "\n")`打印出来，并且每个元素之间用换行符分隔。
 
 +   现在我们已经指出，我们的意图是创建一个交互式程序。因此，我们现在可以提示用户选择：
 
-    [PRE25]
+    ```
+    # Demonstrates interactive program to view data by feed type  # Read and clean data  chicks  <-  read.csv("chicks.csv")  chicks  <-  subset(chicks,  !is.na(weight))  # Determine feed options  feed_options  <-  unique(chicks$feed)  # Format feed options  formatted_options  <-  paste0(1:length(feed_options),  ". ",  feed_options)  # Prompt user with options  cat(formatted_options,  sep  =  "\n")  feed_choice  <-  as.integer(readline("Feed type: "))  # Print selected option  selected_feed  <-  feed_options[feed_choice]  print(subset(chicks,  feed  ==  selected_feed)) 
+    ```
 
     注意到用户被提示输入`Feed type:`，其中数字可以转换为基于文本的饲料选项表示。然后，用户选择的`feed_choice`被分配给`selected_feed`。最后，与`selected_feed`对应的子集被输出给用户。
 
@@ -234,13 +286,17 @@
 
 +   考虑以下代码：
 
-    [PRE26]
+    ```
+    # Demonstrates interactive program to view data by feed type  # Read and clean data  chicks  <-  read.csv("chicks.csv")  chicks  <-  subset(chicks,  !is.na(weight))  # Determine feed options  feed_options  <-  unique(chicks$feed)  # Format feed options  formatted_options  <-  paste0(1:length(feed_options),  ". ",  feed_options)  # Prompt user with options  cat(formatted_options,  sep  =  "\n")  feed_choice  <-  as.integer(readline("Feed type: "))  # Invalid choice?  if  (feed_choice  <  1  ||  feed_choice  >  length(feed_options))  {  cat("Invalid choice.")  }  selected_feed  <-  feed_options[feed_choice]  print(subset(chicks,  feed  ==  selected_feed)) 
+    ```
 
     注意到`if (feed_choice < 1 || feed_choice > length(feed_options))`是如何确定用户的输入是否超出值范围的。如果是这样，程序将显示“无效选择。”然而，仍然存在问题：即使有无效选择，程序也会继续运行。
 
 +   可以如下利用`if`和`else`来仅当用户输入有效选择时才运行最终计算：
 
-    [PRE27]
+    ```
+    # Demonstrates interactive program to view data by feed type  # Read and clean data  chicks  <-  read.csv("chicks.csv")  chicks  <-  subset(chicks,  !is.na(weight))  # Determine feed options  feed_options  <-  unique(chicks$feed)  # Format feed options  formatted_options  <-  paste0(1:length(feed_options),  ". ",  feed_options)  # Prompt user with options  cat(formatted_options,  sep  =  "\n")  feed_choice  <-  as.integer(readline("Feed type: "))  # Invalid choice?  if  (feed_choice  <  1  ||  feed_choice  >  length(feed_options))  {  cat("Invalid choice.")  }  else  {  selected_feed  <-  feed_options[feed_choice]  print(subset(chicks,  feed  ==  selected_feed))  } 
+    ```
 
     注意，被`if`包裹的代码仅在存在无效选择时运行。被`else`包裹的代码仅在`if`中的先前条件未满足时运行。
 
@@ -254,13 +310,17 @@
 
 +   考虑以下名为`sales.R`的代码：
 
-    [PRE28]
+    ```
+    # Reads 4 separate CSVs  Q1  <-  read.csv("Q1.csv")  Q2  <-  read.csv("Q2.csv")  Q3  <-  read.csv("Q3.csv")  Q4  <-  read.csv("Q4.csv") 
+    ```
 
     注意到每个财务数据季度，例如`Q1`和`Q2`，都被读入它们自己的数据框中。
 
 +   现在，让我们将这四个数据框中的数据结合起来：
 
-    [PRE29]
+    ```
+    # Combines data frames with `rbind`  Q1  <-  read.csv("Q1.csv")  Q2  <-  read.csv("Q2.csv")  Q3  <-  read.csv("Q3.csv")  Q4  <-  read.csv("Q4.csv")  sales  <-  rbind(Q1,  Q2,  Q3,  Q4) 
+    ```
 
     注意到`rbind`被用来收集来自每个这些数据框的数据。
 
@@ -270,13 +330,17 @@
 
 +   我们的代码可以改进，为每条记录创建一个财务季度的列，如下所示：
 
-    [PRE30]
+    ```
+    # Adds quarter column to data frames  Q1  <-  read.csv("Q1.csv")  Q1$quarter  <-  "Q1"  Q2  <-  read.csv("Q2.csv")  Q2$quarter  <-  "Q2"  Q3  <-  read.csv("Q3.csv")  Q3$quarter  <-  "Q3"  Q4  <-  read.csv("Q4.csv")  Q4$quarter  <-  "Q4"  sales  <-  rbind(Q1,  Q2,  Q3,  Q4) 
+    ```
 
     注意每个季度是如何添加到特定的`季度`列中的。因此，当`rbind`将数据框组合到按`季度`列组织的`sales`中时。
 
 +   作为最后的点缀，让我们添加一个`value`列，其中记录高回报和常规回报：
 
-    [PRE31]
+    ```
+    # Demonstrates flagging sales as high value  Q1  <-  read.csv("Q1.csv")  Q1$quarter  <-  "Q1"  Q2  <-  read.csv("Q2.csv")  Q2$quarter  <-  "Q2"  Q3  <-  read.csv("Q3.csv")  Q3$quarter  <-  "Q3"  Q4  <-  read.csv("Q4.csv")  Q4$quarter  <-  "Q4"  sales  <-  rbind(Q1,  Q2,  Q3,  Q4)  sales$value  <-  ifelse(sales$sale_amount  >  100,  "High Value",  "Regular") 
+    ```
 
     注意最后一行代码在`sale_amount`大于`100`时分配“高价值”。否则，交易被分配为“常规”。
 

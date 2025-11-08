@@ -12,7 +12,9 @@
 
 +   我们将从一个带有猫的新程序开始，并从一个我们之前见过的块开始：
 
-    [PRE0]
+    ```
+     say [Hello!] for (2) seconds 
+    ```
 
     +   现在，我们可以让我们的猫每次点击块时都这样做。
 
@@ -32,7 +34,10 @@
 
 +   因此，我们将拖出一个名为“当标志被点击时”的事件块，并将我们的“说你好”块附加到它上面：
 
-    [PRE1]
+    ```
+     when green flag clicked
+      say [Hello!] for (2) seconds 
+    ```
 
     +   现在，我们的代码已附加到标志被点击的事件。当我们点击绿色标志时，我们的恐龙说你好。
 
@@ -48,7 +53,10 @@
 
 +   现在，我们将使用一个名为“当这个精灵被点击时”的块，当我们的精灵被点击时，下面的代码将运行：
 
-    [PRE2]
+    ```
+     when this sprite clicked
+      go to (random position v) 
+    ```
 
     +   现在，当我们点击舞台上的鸭子时，它会移动到随机位置。我们也可以用“滑动”块替换“前往”块，使它移动得更平滑。
 
@@ -66,7 +74,10 @@
 
 +   现在，我们将回到代码选项卡，并将事件和外观类别中的积木组合起来：
 
-    [PRE3]
+    ```
+     when this sprite clicked
+      switch backdrop to (Arctic v) 
+    ```
 
     +   然后，当我们点击这个按钮时，背景将会改变。
 
@@ -74,11 +85,17 @@
 
 +   注意，代码编辑器的右上角将有一个当前精灵的略透明版本，这样我们就可以知道我们在更改哪个脚本。我们将更改代码以将此按钮的背景切换到“丛林”：
 
-    [PRE4]
+    ```
+     when this sprite clicked
+      switch backdrop to (Jungle v) 
+    ```
 
 +   我们将“丛林按钮”拖到左侧，在“北极按钮”下方，并为名为“水下按钮”的按钮重复此过程。该按钮的积木将是：
 
-    [PRE5]
+    ```
+     when this sprite clicked
+      switch backdrop to (Underwater 1 v) 
+    ```
 
 +   我们将按钮像这样堆叠在舞台上：
 
@@ -94,7 +111,10 @@
 
 +   对于它们中的每一个，我们将在事件类别中添加“当这个精灵被点击”积木，并在声音类别中添加一个“播放声音”积木：
 
-    [PRE6]
+    ```
+     when this sprite clicked
+      play sound (tap snare v) until done 
+    ```
 
     +   我们将对每个乐器都这样做，每个乐器都有与之匹配的不同声音。
 
@@ -106,7 +126,10 @@
 
 +   我们将移除鼓，并添加一条鱼。我们将使用“当按键按下”积木为它在[游泳的鱼](https://scratch.mit.edu/projects/507447918/)中启动一个新的脚本：
 
-    [PRE7]
+    ```
+     when [space v] key pressed
+      play sound (bubbles v) until done 
+    ```
 
     +   现在，当我们按下键盘上的空格键时，我们的鱼将会播放声音。
 
@@ -114,33 +137,53 @@
 
 +   我们将其改为：
 
-    [PRE8]
+    ```
+     when [right arrow v] key pressed
+      change x by (10) 
+    ```
 
     +   我们将使用“移动”积木，当按下右箭头键时，将我们的精灵位置的 x 值移动 10 步。
 
 +   我们将右键点击，或者控制点击这个脚本，并选择“复制”选项来复制这两个积木。我们将点击将其放置在鱼精灵的代码编辑器中，并将新的脚本改为响应左箭头：
 
-    [PRE9]
+    ```
+     when [left arrow v] key pressed
+      change x by (-10) 
+    ```
 
 +   但是我们的鱼是向后移动的，所以我们将首先添加积木来确保当按下右箭头键时它面向右边：
 
-    [PRE10]
+    ```
+     when [right arrow v] key pressed
+      point in direction (90)
+      change x by (10) 
+    ```
 
     +   回想一下，我们可以使用精灵面板中的旋钮来检查用于方向值的数字是多少。
 
 +   接下来，我们确保当按下左箭头键时它面向左边：
 
-    [PRE11]
+    ```
+     when [left arrow v] key pressed
+      point in direction (-90)
+      change x by (-10) 
+    ```
 
     +   我们一开始的鱼是倒置的，所以我们需要在精灵面板中将旋转样式设置为“左右”。我们也可以使用一个“设置旋转样式”的积木来帮我们完成这个操作。
 
 +   我们将重复这个操作，以便我们的鱼可以向上移动……
 
-    [PRE12]
+    ```
+     when [up arrow v] key pressed
+      change y by (10) 
+    ```
 
 +   …以及向下：
 
-    [PRE13]
+    ```
+     when [down arrow v] key pressed
+      change y by (-10) 
+    ```
 
 +   现在，我们有了编程精灵在舞台上移动的能力，以响应按键。
 
@@ -148,7 +191,16 @@
 
 +   我们将添加几个额外的脚本，当按下数字时改变鱼的大小：
 
-    [PRE14]
+    ```
+     when [1 v] key pressed
+      set size to (50) %
+
+      when [2 v] key pressed
+      set size to (100) %
+
+      when [3 v] key pressed
+      set size to (200) % 
+    ```
 
     +   使用这些积木，我们可以像之前一样移动我们的鱼在舞台周围，通过按 1、2 或 3 键来改变它的大小或小。
 
@@ -160,7 +212,10 @@
 
 +   我们将拖出这个积木，并添加一个积木来改变气球的大小，当 Scratch 听到的响度大于 30 时：
 
-    [PRE15]
+    ```
+     when [loudness v] > (30)
+      change size by (10) 
+    ```
 
     +   响度值为 0 就像静音一样，100 将会非常非常响，所以我们可以尝试不同的数字来设置 Scratch 要监听的响度级别。
 
@@ -170,7 +225,9 @@
 
 +   我们也可以更改积木下拉菜单中的值，从“响度”改为“计时器”：
 
-    [PRE16]
+    ```
+     when [timer v] > (30) 
+    ```
 
     +   结果表明，当我们通过点击标志开始我们的项目时，有一个计时器在跟踪已经过去的时间。
 
@@ -178,11 +235,17 @@
 
 +   我们将把我们的猫和恐龙放回[Timer](https://scratch.mit.edu/projects/507449066/)，并且对于我们的猫，我们将使用之前的相同脚本：
 
-    [PRE17]
+    ```
+     when green flag clicked
+      say [Hello!] for (2) seconds 
+    ```
 
 +   至于我们的恐龙，我们将让它点击标志后等待两秒钟：
 
-    [PRE18]
+    ```
+     when [timer v] > (2)
+      say [Hello!] for (2) seconds 
+    ```
 
 +   现在，当我们点击绿色标志时，我们的猫会先说你好，然后我们的恐龙会等待后再说你好。
 
@@ -192,7 +255,9 @@
 
 +   还有其他的事件，比如这个积木：
 
-    [PRE19]
+    ```
+     when backdrop switches to ( v) 
+    ```
 
     +   现在，如果背景切换，我们可以让一个精灵执行一些动作。
 

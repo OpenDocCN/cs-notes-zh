@@ -12,13 +12,30 @@
 
 +   我们将添加块，以便在按下箭头键时它可以移动：
 
-    [PRE0]
+    ```
+     when [up arrow v] key pressed
+      change y by (10)
+
+      when [down arrow v] key pressed
+      change y by (-10)
+
+      when [right arrow v] key pressed
+      change x by (10)
+
+      when [left arrow v] key pressed
+      change x by (-10) 
+    ```
 
 +   我们将添加另一个精灵，星星，并且当我们的恐龙触摸星星时，我们可以说我们赢得了游戏。
 
 +   让我们的恐龙在向上移动后检查它是否接触到了星星：
 
-    [PRE1]
+    ```
+     when [up arrow v] key pressed
+      change y by (10)
+      if <touching (Star v) ?> then
+      say (timer) for (2) seconds 
+    ```
 
     +   回想一下，“if”块位于块的“控制”部分，而“接触？”块位于“感应”部分。
 
@@ -28,11 +45,34 @@
 
 +   我们希望我们的恐龙能够检查无论我们使用哪个键，我们是否已经到达了星星，因此我们需要在“if”块上右键单击或控制单击，并选择“复制”为每个键创建一个副本：
 
-    [PRE2]
+    ```
+     when [up arrow v] key pressed
+      change y by (10)
+      if <touching (Star v) ?> then
+      say (timer) for (2) seconds
+
+      when [down arrow v] key pressed
+      change y by (-10)
+      if <touching (Star v) ?> then
+      say (timer) for (2) seconds
+
+      when [right arrow v] key pressed
+      change x by (10)
+      if <touching (Star v) ?> then
+      say (timer) for (2) seconds
+
+      when [left arrow v] key pressed
+      change x by (-10)
+      if <touching (Star v) ?> then
+      say (timer) for (2) seconds 
+    ```
 
 +   我们还会在我们的星星上添加一些代码，以便每次程序启动时它都会移动到随机位置：
 
-    [PRE3]
+    ```
+     when green flag clicked
+      go to (random position v) 
+    ```
 
 +   现在，我们可以使用箭头键将我们的恐龙移动到星星，并且每次它都会告诉我们我们花了多长时间。
 
@@ -46,23 +86,49 @@
 
 +   我们将在“我的块”部分中查找，并点击“创建块”来创建一个新的块。我们将将其命名为“检查是否胜利”，因为我们正在尝试做的事情。然后，我们会看到这个块出现：
 
-    [PRE4]
+    ```
+     define check if won 
+    ```
 
     +   现在，我们可以在下面添加一些块，每次我们使用“检查是否胜利”块时，它都会运行。
 
 +   因此，我们将条件块和“说”块移动到它那里：
 
-    [PRE5]
+    ```
+     define check if won
+      if <touching (Star v) ?> then
+      say (timer) for (2) seconds 
+    ```
 
 +   对于我们的其他脚本，我们将拖出我们自己的“检查是否胜利”块：
 
-    [PRE6]
+    ```
+     when [up arrow v] key pressed
+      change y by (10)
+      check if won
+
+      when [down arrow v] key pressed
+      change y by (-10)
+      check if won
+
+      when [right arrow v] key pressed
+      change x by (10)
+      check if won
+
+      when [left arrow v] key pressed
+      change x by (-10)
+      check if won 
+    ```
 
     +   现在，我们使用更少的块来实现相同的效果。
 
 +   如果我们想要四舍五入计时器的值，我们现在只需更改一个位置，而不是四个：
 
-    [PRE7]
+    ```
+     define check if won
+      if <touching (Star v) ?> then
+      say (round(timer)) for (2) seconds 
+    ```
 
 +   创建我们自己的块的能力将使我们能够改进项目的整体设计和可读性。
 
@@ -70,7 +136,17 @@
 
 +   让我们为[Balloon 1](https://scratch.mit.edu/projects/507463302/)添加一个气球精灵，并添加使其充气和放气的块：
 
-    [PRE8]
+    ```
+     when green flag clicked
+      set size to (50) %
+      repeat (10)
+      change size by (10)
+      end
+      wait (1) seconds
+      repeat (10)
+      change size by (-10)
+      end 
+    ```
 
     +   我们的风筝将从一个 50%的大小开始，增加其大小 10 次，等待一秒钟，然后减小其大小 10 次（通过负 10 改变）。
 
@@ -78,15 +154,31 @@
 
 +   我们可以创建一个新的名为“inflate”的块，该块将使我们的风筝大小增加 10 次：
 
-    [PRE9]
+    ```
+     define inflate
+      repeat (10)
+      change size by (10)
+      end 
+    ```
 
 +   我们还将创建另一个名为“deflate”的块，它将减小风筝的大小：
 
-    [PRE10]
+    ```
+     define deflate
+      repeat (10)
+      change size by (-10)
+      end 
+    ```
 
 +   对于主脚本，我们将使用我们新的块：
 
-    [PRE11]
+    ```
+     when green flag clicked
+      set size to (50) %
+      inflate
+      wait (1) seconds
+      deflate 
+    ```
 
     +   注意，我们的程序仍然执行完全相同的事情，但“when flag clicked”下的脚本更容易阅读。
 
@@ -106,13 +198,23 @@
 
 +   注意，我们的“inflate”的“define”块将显示一个椭圆形的“n”，我们可以在下面的块中使用它，所以我们将将其拖入“repeat”块中：
 
-    [PRE12]
+    ```
+     define inflate (n) times
+      repeat (n)
+      change size by (10) 
+    ```
 
     +   现在，“inflate”将根据“n”的次数增加风筝的大小 10 次。
 
 +   我们将以相同的方式对“deflate”进行操作。然后，在我们的“when flag clicked”脚本中，我们需要在每个自定义块中输入一个数字：
 
-    [PRE13]
+    ```
+     when green flag clicked
+      set size to (50) %
+      inflate () times
+      wait (1) seconds
+      deflate () times 
+    ```
 
     +   我们可以输入 10，这样风筝就会膨胀 10 次，或者我们可以将其更改为 20，或者任何其他值。
 
@@ -132,13 +234,22 @@
 
 +   我们希望这个块执行的操作是让我们的熊在“n”只脚上走“m”步，所以我们将定义为：
 
-    [PRE14]
+    ```
+     define walk (m) steps on (n) feet
+      switch costume to (n)
+      repeat (m)
+      move (1) steps 
+    ```
 
     +   我们首先将我们的服装切换到“n”，然后移动 1 步“m”次。
 
 +   现在，在我们的主脚本中，我们可以告诉我们的熊走任意数量的步数，用两只或四只脚：
 
-    [PRE15]
+    ```
+     when green flag clicked
+      walk (30) steps on (4) feet
+      walk (30) steps on (2) feet 
+    ```
 
     +   注意，当点击标志时，更容易理解我们的熊会做什么。而且我们也避免了反复重复多个代码块。
 

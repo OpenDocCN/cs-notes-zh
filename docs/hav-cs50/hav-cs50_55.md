@@ -10,11 +10,18 @@
 
 +   现在，我们将让猫向恐龙问候：
 
-    [PRE0]
+    ```
+     when green flag clicked
+      say [Hello, Dinosaur!] for (2) seconds 
+    ```
 
 +   我们还将让恐龙回话，但它应该等待两秒钟：
 
-    [PRE1]
+    ```
+     when green flag clicked
+      wait (2) seconds
+      say [Hello, Cat!] for (2) seconds 
+    ```
 
 +   但是现在，如果我们想让猫只问候一秒钟，我们必须记得改变恐龙等待的时间。随着我们交互的增多，或者舞台上精灵的增多，这将会变得更加复杂。
 
@@ -22,15 +29,24 @@
 
 +   在积木的“事件”类别中，我们将使用“广播”积木。我们将使用下拉菜单选择“新消息”，并将其命名为“greet”：
 
-    [PRE2]
+    ```
+     broadcast (greet v) 
+    ```
 
 +   我们将更改猫的脚本以使用该积木在完成时发送消息：
 
-    [PRE3]
+    ```
+     when green flag clicked
+      say [Hello, Dinosaur!] for (2) seconds
+      broadcast (greet v) 
+    ```
 
 +   对于我们的恐龙，我们可以使用“当我收到”积木：
 
-    [PRE4]
+    ```
+     when I receive [greet v]
+      say [Hello, Cat!] for (2) seconds 
+    ```
 
     +   现在，当我们的猫完成问候后，我们的恐龙总是会做出回应。
 
@@ -44,15 +60,27 @@
 
 +   对于指向上方的箭头，我们将告诉它在点击时广播一个“up”的消息：
 
-    [PRE5]
+    ```
+     when this sprite clicked
+      broadcast (up v) 
+    ```
 
 +   对于指向下方的箭头，我们将广播另一个消息，“down”：
 
-    [PRE6]
+    ```
+     when this sprite clicked
+      broadcast (down v) 
+    ```
 
 +   对于我们的鸭子，我们将告诉它根据接收到的消息上下移动：
 
-    [PRE7]
+    ```
+     when I receive [up v]
+      change y by (10)
+
+      when I receive [down v]
+      change y by (-10) 
+    ```
 
 +   现在，每个箭头精灵在点击时都会广播一个消息，而鸭子在接收到消息时会移动。
 
@@ -64,13 +92,20 @@
 
 +   现在，我们可以点击右下角的背景，并在代码选项卡中，在事件部分添加“当舞台点击”积木：
 
-    [PRE8]
+    ```
+     when stage clicked
+      broadcast (visit v) 
+    ```
 
     +   然后，我们将广播一个新的消息，我们将其命名为“visit”。
 
 +   当我们的鱼接收到“visit”消息时，我们将告诉它去我们的鼠标指针：
 
-    [PRE9]
+    ```
+     when I receive [visit v]
+      point towards (mouse-pointer v)
+      glide (1) secs to (mouse-pointer v) 
+    ```
 
     +   现在，点击旗帜后，我们可以在舞台上的任何地方点击，我们的鱼就会移动到那里。
 
@@ -80,7 +115,13 @@
 
 +   使用我们朴素的白色背景和星星精灵，我们将添加以下积木：
 
-    [PRE10]
+    ```
+     when this sprite clicked
+      create clone of (myself v)
+
+      when I start as a clone
+      glide (1) secs to (random position v) 
+    ```
 
     +   “创建克隆”和“当我作为克隆体开始”积木位于积木的“控制”部分。
 
@@ -94,11 +135,22 @@
 
 +   首先，我们将添加用于猫左右移动的箭头键的方块：
 
-    [PRE11]
+    ```
+     when [left arrow v] key pressed
+      change x by (-10)
+
+      when [right arrow v] key pressed
+      change x by (10) 
+    ```
 
 +   然后，我们希望我们的猫在点击绿色旗帜时从舞台中央开始：
 
-    [PRE12]
+    ```
+     when green flag clicked
+      go to x: (0) y: (-125)
+      say (Catch the crystals without letting them hit the ground!) for (4) seconds
+      broadcast (begin v) 
+    ```
 
     +   我们还会为我们的用户提供一些说明。
 
@@ -106,11 +158,23 @@
 
 +   现在，我们可以让我们的水晶在游戏开始时隐藏自己，并创建自己的克隆：
 
-    [PRE13]
+    ```
+     when green flag clicked
+      hide
+
+      when I receive [begin v]
+      create clone of (myself v) 
+    ```
 
 +   然后，当水晶作为一个克隆体开始时，它应该显示自己：
 
-    [PRE14]
+    ```
+     when I start as a clone
+      show
+      go to x: (0) y: (160)
+      forever
+      change y by (-2) 
+    ```
 
     +   在我们的水晶出现后，它将从舞台顶部中央开始，并不断向下移动，形成一个永无止境的循环。
 
@@ -118,15 +182,38 @@
 
 +   接下来，我们的水晶需要检查它是否接触到了猫：
 
-    [PRE15]
+    ```
+     when I start as a clone
+      show
+      go to x: (0) y: (160)
+      forever
+      change y by (-2)
+      if <touching (Cat v) ?> then 
+    ```
 
 +   我们将创建一个新的变量“catches”来表示得分，并在猫的脚本中重置它，因为我们也在那里进行其他重置：
 
-    [PRE16]
+    ```
+     when green flag clicked
+      go to x: (0) y: (-125)
+      set [catches v] to (0)
+      say (Catch the crystals without letting them hit the ground!) for (4) seconds
+      broadcast (begin v) 
+    ```
 
 +   现在，我们可以回到我们的水晶脚本，并添加当它接触到我们的猫时需要执行的方块：
 
-    [PRE17]
+    ```
+     when I start as a clone
+      show
+      go to x: (0) y: (160)
+      forever
+      change y by (-2)
+      if <touching (Cat v) ?> then
+      change [catches v] by (1)
+      create clone of (myself v)
+      delete this clone 
+    ```
 
     +   我们需要将“catches”变量增加 1，以跟踪我们的得分。
 
@@ -136,7 +223,11 @@
 
 +   让我们改变水晶位置的 x 值到一个随机的值，这样我们的游戏就有了一些不可预测性。舞台的左右两侧将是很大的数字，所以我们将使用-200 和 200：
 
-    [PRE18]
+    ```
+     when I start as a clone
+      show
+      go to x: (pick random (-200) to (200)) y: (160) 
+    ```
 
     +   现在，我们的水晶每次都会出现在不同的位置。
 
@@ -144,33 +235,78 @@
 
 +   我们将创建一个新的变量“misses”，它将跟踪我们的猫没有捕捉到水晶的次数。每次游戏开始时，我们将将其重置为 0：
 
-    [PRE19]
+    ```
+     when green flag clicked
+      go to x: (0) y: (-125)
+      set [catches v] to (0)
+      set [misses v] to (0)
+      say (Catch the crystals without letting them hit the ground!) for (4) seconds
+      broadcast (begin v) 
+    ```
 
 +   现在，我们可以让我们的水晶检查它是否接触到了地面（或边缘）：
 
-    [PRE20]
+    ```
+     when I start as a clone
+      show
+      go to x: (0) y: (160)
+      forever
+      change y by (-2)
+      if <touching (Cat v) ?> then
+      change [catches v] by (1)
+      create clone of (myself v)
+      delete this clone
+      end
+      if <touching (edge v) ?> then
+      change [misses v] by (1)
+      create clone of (myself v)
+      delete this clone
+      end 
+    ```
 
     +   如果我们的水晶到达边缘，我们将增加“misses”的值，然后创建一个新的克隆体，并删除这个克隆体。
 
 +   我们可能想要限制可以有的失误次数，因此我们可以有一个条件来检查这一点：
 
-    [PRE21]
+    ```
+     if <touching (edge v) ?> then
+      change [misses v] by (1)
+      if <(misses) = (3)> then
+      broadcast (game over v)
+      delete this clone
+      end
+      create clone of (myself v)
+      delete this clone
+      end 
+    ```
 
     +   在我们错过之后，我们将检查数字是否为三。如果是，我们将为我们的猫广播一条消息，然后删除这个克隆体。
 
 +   最后，在我们的猫的脚本中，我们可以说出我们收到消息时的得分：
 
-    [PRE22]
+    ```
+     when I receive [game over v]
+      say (join (Your score is) (catches)) for (5) seconds 
+    ```
 
 +   我们可以尝试这样做，并看到我们的程序按预期工作。我们可以通过让水晶不断克隆自己来一次创建多个水晶：
 
-    [PRE23]
+    ```
+     when I receive [begin v]
+      forever
+      create clone of (myself v)
+      wait (15) seconds 
+    ```
 
     +   现在，每 15 秒就会创建一个新的水晶。
 
 +   但是我们注意到，当游戏结束时，新的水晶仍然会继续创建。所以，我们需要让我们的猫在我们的程序中停止一切：
 
-    [PRE24]
+    ```
+     when I receive [game over v]
+      say (join (Your score is) (catches)) for (5) seconds
+      stop [all v] 
+    ```
 
 +   通过这些示例，希望你能看到所有这些组件、工具和概念如何被用来在 Scratch 中构建有趣和令人兴奋的项目。
 

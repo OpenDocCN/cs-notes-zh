@@ -28,7 +28,9 @@
 
 +   回想一下我们在上次讲座中创建的名为 `count.R` 的程序。
 
-    [PRE0]
+    ```
+    # Demonstrates counting votes for 3 different candidates  mario  <-  as.integer(readline("Mario: "))  peach  <-  as.integer(readline("Peach: "))  bowser  <-  as.integer(readline("Bowser: "))  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到如何重复行以从用户那里获取输入。
 
@@ -40,7 +42,9 @@
 
 +   考虑以下我们程序的改进版本：
 
-    [PRE1]
+    ```
+    # Demonstrates defining a function  get_votes  <-  function()  {  votes  <-  as.integer(readline("Enter votes: "))  return(votes)  }  mario  <-  get_votes()  peach  <-  get_votes()  bowser  <-  get_votes()  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到创建了一个名为 `get_votes` 的新函数。函数的 *主体* 由开闭花括号 (`{` 和 `}`) 表示。注意，在主体内部有 2 行代码，每次调用此函数时都会执行。首先，从用户那里收集 `votes`。其次，返回 `votes`。在调用 `get_votes` 之后，`mario`、`peach` 和 `bowser` 分别接收返回值。最后，提供值的总和并显示给用户。
 
@@ -48,19 +52,25 @@
 
 +   然而，运行这个函数，我们发现该函数丢失了一些我们之前的功能。我们能否以某种方式向函数提供一个 *参数*，以便我们可以更准确地提示用户？确实可以！考虑以下：
 
-    [PRE2]
+    ```
+    # Demonstrates defining a parameter  get_votes  <-  function(prompt)  {  votes  <-  as.integer(readline(prompt))  }  mario  <-  get_votes("Mario: ")  peach  <-  get_votes("Peach: ")  bowser  <-  get_votes("Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到向 `get_votes` 函数提供了一个 `prompt`。因此，用户会被提示他们要投票的人的名字。此外，注意已经移除了 `return(votes)` 语句。在 R 中，函数会自动返回最后计算出的值。
 
 +   具有参数的函数可能已分配了默认值。考虑以下我们程序的以下更新：
 
-    [PRE3]
+    ```
+    # Demonstrates defining a parameter with a default value  get_votes  <-  function(prompt  =  "Enter votes: ")  {  votes  <-  as.integer(readline(prompt))  }  mario  <-  get_votes()  peach  <-  get_votes()  bowser  <-  get_votes()  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到在代码的第一行提供了一个默认值。
 
 +   我们仍然可以像这样覆盖默认提示：
 
-    [PRE4]
+    ```
+    # Demonstrates exact argument matching  get_votes  <-  function(prompt  =  "Enter votes: ")  {  votes  <-  as.integer(readline(prompt))  }  mario  <-  get_votes(prompt  =  "Mario: ")  peach  <-  get_votes(prompt  =  "Peach: ")  bowser  <-  get_votes(prompt  =  "Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到对于每次函数调用，给定的参数会覆盖默认参数。
 
@@ -86,19 +96,25 @@
 
 +   我们可以将程序改进以捕获输入的错误值：
 
-    [PRE5]
+    ```
+    # Demonstrates anticipating invalid input  get_votes  <-  function(prompt  =  "Enter votes: ")  {  votes  <-  as.integer(readline(prompt))  if  (is.na(votes))  {  return(0)  }  else  {  return(votes)  }  }  mario  <-  get_votes("Mario: ")  peach  <-  get_votes("Peach: ")  bowser  <-  get_votes("Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到如果`votes`的值是`NA`，`get_votes`将返回`0`。否则，`get_votes`将返回用户提供的值。
 
 +   虽然这个程序可以工作，但它仍然会提供警告，我们可能不希望用户看到。我们可以如下抑制警告：
 
-    [PRE6]
+    ```
+    # Demonstrates anticipating invalid input  get_votes  <-  function(prompt  =  "Enter votes: ")  {  votes  <-  suppressWarnings(as.integer(readline(prompt)))  if  (is.na(votes))  {  return(0)  }  else  {  return(votes)  }  }  mario  <-  get_votes("Mario: ")  peach  <-  get_votes("Peach: ")  bowser  <-  get_votes("Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到当运行此代码时，警告现在被抑制了。
 
 +   通过使用`ifelse`，我们可以进一步改进这个程序。考虑以下：
 
-    [PRE7]
+    ```
+    # Demonstrates ifelse as last evaluated expression  get_votes  <-  function(prompt  =  "Enter votes: ")  {  votes  <-  as.integer(readline(prompt))  ifelse(is.na(votes),  0,  votes)  }  mario  <-  get_votes("Mario: ")  peach  <-  get_votes("Peach: ")  bowser  <-  get_votes("Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到`ifelse`的第一个值是一个要测试的逻辑表达式。第二个值`0`是当第一个值`is.na(votes)`评估为`TRUE`时将返回的值。最后，第三个值`votes`是在第一个值评估为`FALSE`时提供的。
 
@@ -106,7 +122,9 @@
 
 +   如同之前，我们可以抑制警告：
 
-    [PRE8]
+    ```
+    # Demonstrates suppressWarnings  get_votes  <-  function(prompt  =  "Enter votes: ")  {  votes  <-  suppressWarnings(as.integer(readline(prompt)))  ifelse(is.na(votes),  0,  votes)  }  mario  <-  get_votes("Mario: ")  peach  <-  get_votes("Peach: ")  bowser  <-  get_votes("Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意到警告被抑制了。
 
@@ -118,43 +136,57 @@
 
 +   考虑以下代码：
 
-    [PRE9]
+    ```
+    # Demonstrates a duck quacking 3 times  cat("quack!\n")  cat("quack!\n")  cat("quack!\n") 
+    ```
 
     注意到这段代码将输出“quack”三次。然而，它相当低效！我们重复了相同的代码行三次。
 
 +   我们可以尝试使用以下形式的**重复循环**来改进此代码：
 
-    [PRE10]
+    ```
+    # Demonstrates duck quacking in an infinite loop  repeat  {  cat("quack!\n")  } 
+    ```
 
     注意到我们的鸭子“quack”多次，但永远如此。鸭子会非常累的！
 
 +   我们实现循环的一种方法是通过利用`break`和`next`。这样的循环将通过计数器重复一定次数。
 
-    [PRE11]
+    ```
+    # Demonstrates quacking 3 times with repeat  i  <-  3  repeat  {  cat("quack!\n")  i  <-  i  -  1  if  (i  ==  0)  {  break  }  else  {  next  }  } 
+    ```
 
     注意到`i`的值被设置为`3`。然后每次发生`quack!`时，`i`的值减少 1。当达到`0`时，循环将`break`。否则（或`else`），这个循环将使用`next`继续。
 
 +   最后，`next`是不必要的。循环将自动继续，无需`next`语句。我们可以如下移除此语句：
 
-    [PRE12]
+    ```
+    # Demonstrates removing extraneous next keyword  i  <-  3  repeat  {  cat("quack!\n")  i  <-  i  -  1  if  (i  ==  0)  {  break  }  } 
+    ```
 
     注意当`i`等于`0`时，循环将中断。然而，已经移除了`next`。循环仍然可以工作。
 
 +   我们可用的另一种循环类型称为*while 循环*。这种循环将在满足特定条件之前继续。考虑以下代码：
 
-    [PRE13]
+    ```
+    # Demonstrates a while loop, counting down  i  <-  3  while  (i  !=  0)  {  cat("quack!\n")  i  <-  i  -  1  } 
+    ```
 
     注意这个循环将一直运行，直到`i != 0`的值为真。
 
 +   另一种类型的循环称为*for 循环*，它允许我们根据列表或值向量重复操作：
 
-    [PRE14]
+    ```
+    # Demonstrates a for loop  for  (i  in  c(1,  2,  3))  {  cat("quack!\n")  } 
+    ```
 
     注意`for`循环从`i`的值为`1`开始，运行其内部的代码。然后，它将`i`的值设置为`2`并运行。最后，它将`i`设置为`3`并运行。因此，循环内的代码运行了三次。
 
 +   我们可以通过使用范围`1:3`（一至三）来简化我们的代码，以计算`1`、`2`和`3`。
 
-    [PRE15]
+    ```
+    # Demonstrates a for loop with syntactic sugar  for  (i  in  1:3)  {  cat("quack!\n")  } 
+    ```
 
     注意代码`i in 1:3`如何完成与先前示例中相同的任务。
 
@@ -162,25 +194,33 @@
 
 +   我们可以在对马里奥和他的朋友们计票时使用我们新学的循环能力。考虑以下使用重复循环的代码：
 
-    [PRE16]
+    ```
+    # Demonstrates reprompting the user for valid input  get_votes  <-  function(prompt  =  "Enter votes: ")  {  repeat  {  votes  <-  suppressWarnings(as.integer(readline(prompt)))  if  (!is.na(votes))  {  break  }  }  return(votes)  }  mario  <-  get_votes("Mario: ")  peach  <-  get_votes("Peach: ")  bowser  <-  get_votes("Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意用户将一直被提示，直到提供的值不是`NA`。
 
 +   我们可以进一步改进我们的代码如下：
 
-    [PRE17]
+    ```
+    # Demonstrates tightening return  get_votes  <-  function(prompt  =  "Enter votes: ")  {  repeat  {  votes  <-  suppressWarnings(as.integer(readline(prompt)))  if  (!is.na(votes))  {  return(votes)  }  }  }  mario  <-  get_votes("Mario: ")  peach  <-  get_votes("Peach: ")  bowser  <-  get_votes("Bowser: ")  total  <-  sum(mario,  peach,  bowser)  cat("Total votes:",  total) 
+    ```
 
     注意`return(votes)`子句是如何替换`break`的。这个函数的功能保持不变，但代码更简洁。
 
 +   现在，利用我们对`for`循环的知识，我们可以改进对马里奥和他的朋友们重复的代码：
 
-    [PRE18]
+    ```
+    # Demonstrates prompting for input in a loop  get_votes  <-  function(prompt  =  "Enter votes: ")  {  repeat  {  votes  <-  suppressWarnings(as.integer(readline(prompt)))  if  (!is.na(votes))  {  return(votes)  }  }  }  for  (name  in  c("Mario",  "Peach",  "Bowser"))  {  votes  <-  get_votes(paste0(name,  ": "))  } 
+    ```
 
     注意，与为每个候选人分别提示选票的三条单独的行不同，`for`循环将运行“马里奥”、“桃子”和“霸王龙”的范围以获取选票。`paste0`语句将冒号字符添加到每个提示中。
 
 +   作为最后的点缀，我们可以使用循环来边走边计票：
 
-    [PRE19]
+    ```
+    # Demonstrates prompting for input, tallying votes in a loop  get_votes  <-  function(prompt  =  "Enter votes: ")  {  repeat  {  votes  <-  suppressWarnings(as.integer(readline(prompt)))  if  (!is.na(votes))  {  return(votes)  }  }  }  total  <-  0  for  (name  in  c("Mario",  "Peach",  "Bowser"))  {  votes  <-  get_votes(paste0(name,  ": "))  total  <-  total  +  votes  }  cat("Total votes:",  total) 
+    ```
 
     注意在`for`循环的每次迭代中，`total`选票数是如何更新的。
 
@@ -196,13 +236,17 @@
 
 +   也许我们的第一个目标应该是统计选票。考虑以下代码：
 
-    [PRE20]
+    ```
+    # Demonstrates summing votes for each candidate procedurally  votes  <-  read.csv("votes.csv")  total_votes  <-  c()  for  (candidate  in  rownames(votes))  {  total_votes[candidate]  <-  sum(votes[candidate,  ])  }  total_votes 
+    ```
 
     注意这个`for`循环将遍历`votes`数据框中呈现的每个`candidate`。然后，`candidate`的`votes`总和将被存储在`total_votes`向量中。`total_votes <- c()`代表一个空向量，稍后将被数据填充。`total_votes[candidate]`在向量`total_votes`中创建一个新的元素，每次循环迭代中每个候选人都有一个。
 
 +   第二个目标可能是按每个候选人收到的选票方式汇总。
 
-    [PRE21]
+    ```
+    # Demonstrates summing votes for each voting method procedurally  votes  <-  read.csv("votes.csv")  total_votes  <-  c()  for  (method  in  colnames(votes))  {  total_votes[method]  <-  sum(votes[,  method])  }  total_votes 
+    ```
 
     注意这个`for`循环如何遍历`colnames`（或列名）中的每个`method`。
 
@@ -214,13 +258,17 @@
 
 +   在投票表的例子中，我们可以使用`apply`函数如下来获取所有行的`sum`：
 
-    [PRE22]
+    ```
+    # Demonstrates summing votes for each candidate with apply  votes  <-  read.csv("votes.csv")  total_votes  <-  apply(votes,  MARGIN  =  1,  FUN  =  sum)  total_votes 
+    ```
 
     注意`sum`函数是如何使用`MARGIN = 1`应用于所有行的。如果我们把`MARGIN`设置为`2`，`sum`函数就会应用于所有列。
 
 +   我们可以这样对每一列求和：
 
-    [PRE23]
+    ```
+    # Demonstrates summing votes for each voting method with apply  votes  <-  read.csv("votes.csv")  total_votes  <-  apply(votes,  MARGIN  =  2,  FUN  =  sum)  total_votes 
+    ```
 
     注意`MARGIN = 2`。
 

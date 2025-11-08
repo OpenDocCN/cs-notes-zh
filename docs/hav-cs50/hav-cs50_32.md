@@ -40,25 +40,47 @@
 
 +   在你的终端窗口中输入 `code generate.py`。在你的文本编辑器中，按照以下方式编写代码：
 
-    [PRE0]
+    ```
+    import random
+
+    coin = random.choice(["heads", "tails"])
+    print(coin) 
+    ```
 
     注意，`choice` 函数内的列表有方括号、引号和逗号。由于你传入了两个项目，Python 会进行数学计算，并给出正面和反面的 50% 概率。运行你的代码，你会注意到这段代码确实运行得很好！
 
 +   我们可以改进我们的代码。`from` 允许我们非常具体地指定我们想要导入的内容。之前，我们的 `import` 代码行是导入 `random` 中所有函数的内容。然而，如果我们只想加载模块的一部分，应该如何修改代码呢？
 
-    [PRE1]
+    ```
+    from random import choice
+
+    coin = choice(["heads", "tails"])
+    print(coin) 
+    ```
 
     注意，我们现在可以只导入 `random` 的 `choice` 函数。从那时起，我们不再需要编写 `random.choice`。现在我们只需编写 `choice` 即可。`choice` 已经明确加载到我们的程序中。这节省了系统资源，并且可能使我们的代码运行得更快！
 
 +   接下来，考虑 `random.randint(a, b)` 函数。此函数将在 `a` 和 `b` 之间生成一个随机数。按照以下方式修改你的代码：
 
-    [PRE2]
+    ```
+    import random
+
+    number = random.randint(1, 10)
+    print(number) 
+    ```
 
     注意，我们的代码将随机生成一个介于 `1` 和 `10` 之间的数字。
 
 +   我们可以介绍 `random.shuffle(x)` 函数，该函数可以将列表打乱成随机顺序。
 
-    [PRE3]
+    ```
+    import random
+
+    cards = ["jack", "queen", "king"]
+    random.shuffle(cards)
+    for card in cards:
+        print(card) 
+    ```
 
     注意，`random.shuffle` 将就地打乱牌的顺序。与其他函数不同，它不会返回一个值。相反，它将 `cards` 列表作为参数，并在该列表内部打乱牌的顺序。运行你的代码几次，以查看代码的功能。
 
@@ -72,7 +94,11 @@
 
 +   `mean` 是这个库中的一个非常有用的函数。在你的终端窗口中，输入 `code average.py`。在文本编辑器窗口中，按照以下方式修改你的代码：
 
-    [PRE4]
+    ```
+    import statistics
+
+    print(statistics.mean([100, 90])) 
+    ```
 
     注意，我们导入了一个名为 `statistics` 的不同库。`mean` 函数接受一个值列表。这将打印这些值的平均值。在你的终端窗口中，输入 `python average.py`。
 
@@ -90,25 +116,54 @@
 
 +   注意，你将在下面的代码中看到 `sys.argv` 的使用。在终端窗口中，输入 `code name.py`。在文本编辑器中，按照以下方式编写代码：
 
-    [PRE5]
+    ```
+    import sys
+
+    print("hello, my name is", sys.argv[1]) 
+    ```
 
     注意，程序将查看用户在命令行中输入的内容。目前，如果你在终端窗口中输入 `python name.py David`，你会看到 `hello, my name is David`。注意，`sys.argv[1]` 是存储 `David` 的位置。为什么是这样呢？好吧，在之前的课程中，你可能记得列表是从 `0` 个元素开始的。你认为当前 `sys.argv[0]` 中存储了什么？如果你猜到是 `name.py`，你就对了！
 
 +   我们现有的程序有一个小问题。如果用户没有在命令行中输入名字会怎样？自己试一试。在终端窗口中输入 `python name.py`。解释器会显示一个错误 `list index out of range`。原因是在 `sys.argv[1]` 中没有内容，因为没有输入任何东西！以下是我们可以保护我们的程序免受此类错误的方法：
 
-    [PRE6]
+    ```
+    import sys
+
+    try:
+        print("hello, my name is", sys.argv[1])
+    except IndexError:
+        print("Too few arguments") 
+    ```
 
     注意，如果用户忘记输入名字，程序会提示一个有用的提示，告诉他们如何使程序工作。然而，我们能否更加谨慎以确保用户输入正确的值？
 
 +   我们可以按照以下方式改进我们的程序：
 
-    [PRE7]
+    ```
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Too few arguments")
+    elif len(sys.argv) > 2:
+        print("Too many arguments")
+    else:
+        print("hello, my name is", sys.argv[1]) 
+    ```
 
     注意，如果你测试你的代码，你会看到这些异常是如何被处理的，为用户提供更详细的建议。即使用户输入了过多的或过少的参数，用户也会得到关于如何修复问题的明确指示。
 
 +   目前，我们的代码在逻辑上是正确的。然而，将错误检查与代码的其余部分分开是非常好的。我们如何分离出错误处理？按照以下方式修改你的代码：
 
-    [PRE8]
+    ```
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit("Too few arguments")
+    elif len(sys.argv) > 2:
+        sys.exit("Too many arguments")
+
+    print("hello, my name is", sys.argv[1]) 
+    ```
 
     注意我们如何使用 `sys` 的内置函数 `exit`，它允许我们在用户引入错误时退出程序。现在我们可以确信程序将永远不会执行最后一行代码并触发错误。因此，`sys.argv` 提供了一种方式，用户可以通过命令行引入信息。`sys.exit` 提供了一种方式，程序可以在出现错误时退出。
 
@@ -118,13 +173,29 @@
 
 +   `slice` 是一个命令，它允许我们取一个 `list` 并告诉解释器我们希望解释器将 `list` 的哪个位置视为开始和结束。例如，按照以下方式修改你的代码：
 
-    [PRE9]
+    ```
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit("Too few arguments")
+
+    for arg in sys.argv:
+        print("hello, my name is", arg) 
+    ```
 
     注意，如果你在终端窗口中输入 `python name.py David Carter Rongxin`，解释器将输出不仅仅是预期的名字输出，还会输出 `hello, my name is name.py`。那么我们如何确保解释器忽略列表中当前存储的 `name.py` 的第一个元素呢？
 
 +   `slice` 可以在我们的代码中用来从不同的位置开始列表！按照以下方式修改你的代码：
 
-    [PRE10]
+    ```
+    import sys
+
+    if len(sys.argv) < 2:
+        sys.exit("Too few arguments")
+
+    for arg in sys.argv[1:]:
+        print("hello, my name is", arg) 
+    ```
 
     注意，我们不是从 `0` 开始列表，而是使用方括号告诉解释器从 `1` 开始，使用 `1:` 参数到末尾。运行这段代码，你会注意到我们可以使用相对简单的语法来改进我们的代码。
 
@@ -142,13 +213,25 @@
 
 +   在你的终端窗口中输入 `code say.py`。在文本编辑器中，按照以下方式编写代码：
 
-    [PRE11]
+    ```
+    import cowsay
+    import sys
+
+    if len(sys.argv) == 2:
+        cowsay.cow("hello, " + sys.argv[1]) 
+    ```
 
     注意，程序首先检查用户是否在命令行中至少输入了两个参数。然后，牛应该对用户说话。输入 `python say.py David`，你会看到一头牛对 David 说“hello”。
 
 +   进一步修改你的代码：
 
-    [PRE12]
+    ```
+    import cowsay
+    import sys
+
+    if len(sys.argv) == 2:
+        cowsay.trex("hello, " + sys.argv[1]) 
+    ```
 
     注意，现在一个 t-rex 正在说“hello”。
 
@@ -172,19 +255,51 @@
 
 +   在终端窗口中，输入 `code itunes.py`。编写如下代码：
 
-    [PRE13]
+    ```
+    import requests
+    import sys
+
+    if len(sys.argv) != 2:
+        sys.exit()
+
+    response = requests.get("https://itunes.apple.com/search?entity=song&limit=1&term=" + sys.argv[1])
+    print(response.json()) 
+    ```
 
     注意 `requests.get` 返回的值将被存储在 `response` 中。大卫阅读了关于此 API 的 Apple 文档后知道返回的是 JSON 文件。运行 `python itunes.py weezer`，你会看到 Apple 返回的 JSON 文件。然而，JSON 响应被 Python 转换成了字典。查看输出，可能会让人头晕。
 
 +   结果表明，Python 有一个内置的 JSON 库可以帮助我们解释接收到的数据。修改你的代码如下：
 
-    [PRE14]
+    ```
+    import json
+    import requests
+    import sys
+
+    if len(sys.argv) != 2:
+        sys.exit()
+
+    response = requests.get("https://itunes.apple.com/search?entity=song&limit=1&term=" + sys.argv[1])
+    print(json.dumps(response.json(), indent=2)) 
+    ```
 
     注意 `json.dumps` 是如何实现的，它利用 `indent` 使输出更易读。运行 `python itunes.py weezer`，你会看到相同的 JSON 文件。然而，这次它要容易阅读得多。现在注意，你会在输出中看到一个名为 `results` 的字典。在这个名为 `results` 的字典中，有多个键存在。查看输出中的 `trackName` 值。你在结果中看到了什么曲目名称？
 
 +   我们如何简单地输出那个特定曲目的名称？修改你的代码如下：
 
-    [PRE15]
+    ```
+    import json
+    import requests
+    import sys
+
+    if len(sys.argv) != 2:
+        sys.exit()
+
+    response = requests.get("https://itunes.apple.com/search?entity=song&limit=50&term=" + sys.argv[1])
+
+    o = response.json()
+    for result in o["results"]:
+        print(result["trackName"]) 
+    ```
 
     注意我们是如何将 `response.json()` 的结果存储在 `o` 中（就像小写字母 o）。然后，我们遍历 `o` 中的 `results` 并打印每个 `trackName`。同时注意我们如何将结果数量限制增加到 `50`。运行你的程序。查看结果。
 
@@ -200,13 +315,26 @@
 
 +   在本课程中，我们编写了很多代码来表示“hello”。让我们创建一个包，以便我们可以表示“hello”和“goodbye”。在你的终端窗口中，输入 `code sayings.py`。在文本编辑器中，编写如下代码：
 
-    [PRE16]
+    ```
+    def hello(name):
+        print(f"hello, {name}")
+
+    def goodbye(name):
+        print(f"goodbye, {name}") 
+    ```
 
     注意，这段代码本身对用户没有任何作用。然而，如果程序员将这个包导入到他们自己的程序中，上述函数创建的能力就可以在他们的代码中实现。
 
 +   让我们看看我们如何实现利用我们创建的这个包的代码。在终端窗口中，输入`code say.py`。在你文本编辑器中的这个新文件中，输入以下内容：
 
-    [PRE17]
+    ```
+    import sys
+
+    from sayings import goodbye
+
+    if len(sys.argv) == 2:
+        goodbye(sys.argv[1]) 
+    ```
 
     注意，这段代码导入了`sayings`包中`goodbye`的能力。如果用户在命令行中至少输入了两个参数，它将输出`goodbye`以及命令行中输入的字符串。
 

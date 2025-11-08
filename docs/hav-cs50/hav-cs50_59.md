@@ -44,13 +44,19 @@
 
 +   首先，让我们在我们的终端上打开第 0 周的数据库 `longlist.db`。作为提醒，这个数据库只包含一个名为 `longlist` 的表。要查看表的快照，我们可以运行
 
-    [PRE0]
+    ```
+    SELECT "author", "title"
+    FROM "longlist"
+    LIMIT 5; 
+    ```
 
     这为我们提供了来自表 `longlist` 的前 5 行的作者和标题。
 
 +   这里是一个 SQLite 命令（不是一个 SQL 关键字），它可以进一步说明这个数据库是如何创建的。
 
-    [PRE1]
+    ```
+    .schema 
+    ```
 
     运行此命令后，我们看到用于创建表 `longlist` 的 SQL 语句。这显示了 `longlist` 内部的列以及每个列可以存储的数据类型。
 
@@ -58,7 +64,9 @@
 
 +   再次运行 `.schema` 后，我们看到许多命令——每个数据库中的表都有一个。有一种方法可以查看指定表的模式：
 
-    [PRE2]
+    ```
+    .schema books 
+    ```
 
     现在我们看到用于创建 `books` 表的语句。我们还能看到每个列的列名和数据类型。例如，`"title"` 列存储文本，而 `"publisher_id"` 列是整数。
 
@@ -116,13 +124,24 @@
 
 +   在这个数据库中，我们运行以下命令来创建第一个乘客表：
 
-    [PRE3]
+    ```
+    CREATE TABLE riders (
+        "id",
+        "name"
+    ); 
+    ```
 
     运行此命令后，终端上不会显示任何结果。但如果我们再次运行 `.schema`，现在我们将看到我们定义的 `riders` 表的架构！
 
 +   同样，让我们也创建一个车站的表。
 
-    [PRE4]
+    ```
+    CREATE TABLE stations (
+        "id",
+        "name",
+        "line"
+    ); 
+    ```
 
     在这里，我们添加了一个名为 `"line"` 的列来存储车站所属的列车线路。
 
@@ -130,7 +149,12 @@
 
 +   接下来，我们将创建一个表格来关联这两个实体。这些表格通常被称为连接表、关联实体或连接表！
 
-    [PRE5]
+    ```
+    CREATE TABLE visits (
+        "rider_id",
+        "station_id"
+    ); 
+    ```
 
     表的每一行都告诉我们特定骑手访问过的站点。
 
@@ -188,11 +212,17 @@
 
 +   让我们尝试以下命令
 
-    [PRE6]
+    ```
+    DROP TABLE "riders"; 
+    ```
 
-    [PRE7]
+    ```
+    DROP TABLE "stations"; 
+    ```
 
-    [PRE8]
+    ```
+    DROP TABLE "visits"; 
+    ```
 
     运行这些语句没有输出，但 `.schema` 显示表已经被删除。
 
@@ -202,7 +232,23 @@
 
 +   在文件中，让我们再次输入架构，但这次是带有亲和类型。
 
-    [PRE9]
+    ```
+    CREATE TABLE riders (
+        "id" INTEGER,
+        "name" TEXT
+    );
+
+    CREATE TABLE stations (
+        "id" INTEGER,
+        "name" TEXT,
+        "line" TEXT
+    );
+
+    CREATE TABLE visits (
+        "rider_id" INTEGER,
+        "station_id" INTEGER
+    ); 
+    ```
 
 +   现在，我们在数据库中读取此文件以实际创建表。这是一个包含数据类型的更新后的 ER 图。
 
@@ -228,7 +274,27 @@
 
 +   让我们在`schema.sql`文件中添加主键和外键约束。
 
-    [PRE10]
+    ```
+    CREATE TABLE riders (
+        "id" INTEGER,
+        "name" TEXT,
+        PRIMARY KEY("id")
+    );
+
+    CREATE TABLE stations (
+        "id" INTEGER,
+        "name" TEXT,
+        "line" TEXT,
+        PRIMARY KEY("id")
+    );
+
+    CREATE TABLE visits (
+        "rider_id" INTEGER,
+        "station_id" INTEGER,
+        FOREIGN KEY("rider_id") REFERENCES "riders"("id"),
+        FOREIGN KEY("station_id") REFERENCES "stations"("id")
+    ); 
+    ```
 
     注意，我们创建了两个主键列，即`riders`和`stations`的 ID，然后在`visits`表中将这些主键作为外键引用。
 
@@ -236,7 +302,13 @@
 
 +   也可以创建由两列组成的复合主键。例如，如果我们想给`visits`表创建一个由骑手和站点 ID 组成的复合主键，我们可以使用这种语法。
 
-    [PRE11]
+    ```
+    CREATE TABLE visits (
+        "rider_id" INTEGER,
+        "station_id" INTEGER,
+        PRIMARY KEY("rider_id", "station_id")
+    ); 
+    ```
 
     在这种情况下，我们可能希望允许骑手访问站点多次，所以我们不会采用这种方法。
 
@@ -262,7 +334,27 @@
 
 +   包含这些约束的更新模式如下所示：
 
-    [PRE12]
+    ```
+    CREATE TABLE riders (
+        "id" INTEGER,
+        "name" TEXT,
+        PRIMARY KEY("id")
+    );
+
+    CREATE TABLE stations (
+        "id" INTEGER,
+        "name" TEXT NOT NULL UNIQUE,
+        "line" TEXT NOT NULL,
+        PRIMARY KEY("id")
+    );
+
+    CREATE TABLE visits (
+        "rider_id" INTEGER,
+        "station_id" INTEGER,
+        FOREIGN KEY("rider_id") REFERENCES "riders"("id"),
+        FOREIGN KEY("station_id") REFERENCES "stations"("id")
+    ); 
+    ```
 
     `NOT NULL` 约束确保指定了车站名称和线路。另一方面，乘客不需要共享他们的名字，因为没有对乘客名字应用约束。同样，每个车站必须有一个唯一的名称，这是由 `UNIQUE` 约束规定的。
 
@@ -282,33 +374,71 @@
 
 +   现在，为了在我们的数据库中实施这些更改，我们首先需要删除 `riders` 表。
 
-    [PRE13]
+    ```
+    DROP TABLE "riders"; 
+    ```
 
 +   运行 `.schema` 命令会显示更新后的模式，其中不包括 `riders` 表。
 
 +   接下来，我们需要一个 `swipes` 表来表示更新后的 ER 图中的“Swipe”实体。我们可以按以下方式修改 `visits` 表。
 
-    [PRE14]
+    ```
+    ALTER TABLE "visits"
+    RENAME TO "swipes"; 
+    ```
 
 +   再次运行 `.schema` 命令，我们可以看到表 `visits` 已被重命名为 `swipes`。然而，这并不是唯一需要的更改。我们还需要添加一些列，例如滑动类型。
 
-    [PRE15]
+    ```
+    ALTER TABLE "swipes"
+    ADD COLUMN "swipetype" TEXT; 
+    ```
 
     注意，在添加此列时也提到了类型亲和力 `TEXT`。
 
 +   我们还可以在 `ALTER TABLE` 命令中重命名一个列。如果我们想将列 `"swipetype"` 重命名为更简洁的名称，可以尝试以下操作。
 
-    [PRE16]
+    ```
+    ALTER TABLE "swipes"
+    RENAME COLUMN "swipetype" TO "type"; 
+    ```
 
 +   最后，我们有能力删除（或移除）一个列。
 
-    [PRE17]
+    ```
+    ALTER TABLE "swipes"
+    DROP COLUMN "type"; 
+    ```
 
     再次运行 `.schema` 命令，我们可以确认表中的列 `"type"` 已被删除。
 
 +   也可以回到最初我们拥有的模式文件 `schema.sql`，并在那里直接进行这些更改，而不是修改表。以下是一个更新的 `schema.sql`。
 
-    [PRE18]
+    ```
+    CREATE TABLE "cards" (
+        "id" INTEGER,
+        PRIMARY KEY("id")
+    );
+
+    CREATE TABLE "stations" (
+        "id" INTEGER,
+        "name" TEXT NOT NULL UNIQUE,
+        "line" TEXT NOT NULL,
+        PRIMARY KEY("id")
+    );
+
+    CREATE TABLE "swipes" (
+        "id" INTEGER,
+        "card_id" INTEGER,
+        "station_id" INTEGER,
+        "type" TEXT NOT NULL CHECK("type" IN ('enter', 'exit', 'deposit')),
+        "datetime" NUMERIC NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "amount" NUMERIC NOT NULL CHECK("amount" != 0),
+        PRIMARY KEY("id"),
+        FOREIGN KEY("station_id") REFERENCES "stations"("id"),
+        FOREIGN KEY("card_id") REFERENCES "cards"("id")
+    ); 
+    ```
 
 +   让我们花几分钟时间阅读更新后的模式，并记录下看起来有所变化的地方！
 

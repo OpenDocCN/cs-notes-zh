@@ -68,13 +68,26 @@
 
 +   要选择 Fernanda Melchor 所著的书籍，我们会编写这个嵌套查询。
 
-    [PRE0]
+    ```
+    SELECT "title" FROM "books"
+    WHERE "id" IN (
+        SELECT "book_id" FROM "authored"
+        WHERE "author_id" = (
+            SELECT "id" FROM "authors"
+            WHERE "name" = 'Fernanda Melchor'
+        )
+    ); 
+    ```
 
 +   上述查询很复杂——嵌套查询中有三个`SELECT`查询。为了简化，让我们首先使用`JOIN`创建包含作者及其书籍的视图。
 
 +   在新的终端中，让我们再次连接到`longlist.db`，并运行以下查询。
 
-    [PRE1]
+    ```
+    SELECT "name", "title" FROM "authors"
+    JOIN "authored" ON "authors"."id" = "authored"."author_id"
+    JOIN "books" ON "books"."id" = "authored"."book_id"; 
+    ```
 
     +   注意，指定如何连接两个表，或者它们连接的列是很重要的。
 
@@ -84,17 +97,26 @@
 
 +   要将之前步骤中创建的虚拟表保存为视图，我们需要更改查询。
 
-    [PRE2]
+    ```
+    CREATE VIEW "longlist" AS
+    SELECT "name", "title" FROM "authors"
+    JOIN "authored" ON "authors"."id" = "authored"."author_id"
+    JOIN "books" ON "books"."id" = "authored"."book_id"; 
+    ```
 
     这里创建的视图称为`longlist`。现在我们可以像使用 SQL 中的表一样使用这个视图。
 
 +   让我们编写一个查询来查看这个视图中的所有数据。
 
-    [PRE3]
+    ```
+    SELECT * FROM "longlist"; 
+    ```
 
 +   使用这个视图，我们可以大大**简化**查找 Fernanda Melchor 所写书籍所需的查询。
 
-    [PRE4]
+    ```
+    SELECT "title" FROM "longlist" WHERE "name" = 'Fernanda Melchor'; 
+    ```
 
 +   视图作为一个虚拟表，创建时不会消耗更多的磁盘空间。视图中的数据仍然存储在底层表中，但仍然可以通过这个简化的视图访问。
 
@@ -106,7 +128,11 @@
 
     +   例如，让我们按书籍标题的顺序显示`longlist`视图中的数据。
 
-        [PRE5]
+        ```
+        SELECT "name", "title"
+        FROM  "longlist"
+        ORDER BY "title"; 
+        ```
 
     +   我们也可以让视图本身有序。我们可以通过在创建视图所用的查询中包含一个`ORDER BY`子句来实现这一点。
 
@@ -114,11 +140,20 @@
 
 +   在`longlist.db`中，我们有一个包含每本书单独评分的表。在之前的几周中，我们看到了如何找到每本书的平均评分，并四舍五入到两位小数。
 
-    [PRE6]
+    ```
+    SELECT "book_id", ROUND(AVG("rating"), 2) AS "rating" 
+    FROM "ratings"
+    GROUP BY "book_id"; 
+    ```
 
 +   通过显示每本书的标题，以及每本书被列入长名单的年份，可以使上述查询的结果更有用。这些信息存在于`books`表中。
 
-    [PRE7]
+    ```
+    SELECT "book_id", "title", "year", ROUND(AVG("rating"), 2) AS "rating" 
+    FROM "ratings"
+    JOIN "books" ON "ratings"."book_id" = "books"."id"
+    GROUP BY "book_id"; 
+    ```
 
     +   在这里，我们使用`JOIN`将`ratings`和`books`表中的信息结合起来，通过书籍 ID 列进行连接。
 
@@ -126,11 +161,19 @@
 
 +   这**聚合**的数据可以存储在视图中。
 
-    [PRE8]
+    ```
+    CREATE VIEW "average_book_ratings" AS
+    SELECT "book_id" AS "id", "title", "year", ROUND(AVG("rating"), 2) AS "rating" 
+    FROM "ratings"
+    JOIN "books" ON "ratings"."book_id" = "books"."id"
+    GROUP BY "book_id"; 
+    ```
 
     +   现在，让我们查看这个视图中的数据。
 
-        [PRE9]
+        ```
+        SELECT * FROM "average_book_ratings"; 
+        ```
 
 +   在向`ratings`表添加更多数据以获取最新的聚合数据时，我们只需简单地使用上述类似的`SELECT`命令重新查询视图即可！
 
@@ -140,13 +183,21 @@
 
 +   要找到每本书的**年度**平均评分，我们可以使用我们已创建的视图。
 
-    [PRE10]
+    ```
+    SELECT "year", ROUND(AVG("rating"), 2) AS "rating" 
+    FROM "average_book_ratings" 
+    GROUP BY "year"; 
+    ```
 
     注意，我们从 `average_book_ratings` 中选择了 `rating` 列，该列已经包含了每本书的平均评分。接下来，我们按年份对这些评分进行分组，并再次计算平均评分，这样就得到了每年的平均评分！
 
 +   我们可以将结果存储在一个临时视图中。
 
-    [PRE11]
+    ```
+    CREATE TEMPORARY VIEW "average_ratings_by_year" AS
+    SELECT "year", ROUND(AVG("rating"), 2) AS "rating" FROM "average_book_ratings" 
+    GROUP BY "year"; 
+    ```
 
 ### 问题
 
@@ -160,11 +211,21 @@
 
 +   让我们使用公用表表达式（CTE）而不是临时视图来重新创建包含每年平均书籍评分的视图。首先，我们需要删除现有的临时视图，这样我们就可以重用名称 `average_book_ratings`。
 
-    [PRE12]
+    ```
+    DROP VIEW "average_book_ratings"; 
+    ```
 
 +   接下来，我们创建一个包含每本书平均评分的 CTE。然后，我们使用每本书的平均评分来计算每年的平均评分，这与我们之前的方法非常相似。
 
-    [PRE13]
+    ```
+    WITH "average_book_ratings" AS (
+        SELECT "book_id", "title", "year", ROUND(AVG("rating"), 2) AS "rating" FROM "ratings"
+        JOIN "books" ON "ratings"."book_id" = "books"."id"
+        GROUP BY "book_id"
+    )
+    SELECT "year" ROUND(AVG("rating"), 2) AS "rating" FROM "average_book_ratings"
+    GROUP BY "year"; 
+    ```
 
 ## 分区
 
@@ -172,11 +233,17 @@
 
 +   让我们创建一个视图来存储 2022 年入选的书籍。
 
-    [PRE14]
+    ```
+    CREATE VIEW "2022" AS
+    SELECT "id", "title" FROM "books"
+    WHERE "year" = 2022; 
+    ```
 
     +   我们也可以在这个视图中查看数据。
 
-        [PRE15]
+        ```
+        SELECT * FROM "2022"; 
+        ```
 
 ### 问题
 
@@ -200,11 +267,17 @@
 
 +   我们可以创建一个包含相关列的视图，同时完全省略`rider`列。但在这里，我们将更进一步，创建一个`rider`列来显示表中每行的匿名骑手。这将向分析师表明，尽管我们在数据库中有骑手姓名，但这些姓名为了安全起见已被匿名化。
 
-    [PRE16]
+    ```
+    CREATE VIEW "analysis" AS
+    SELECT "id", "origin", "destination", 'Anonymous' AS "rider" 
+    FROM "rides"; 
+    ```
 
     +   我们可以查询这个视图来确保它是安全的。
 
-        [PRE17]
+        ```
+        SELECT * FROM "analysis"; 
+        ```
 
 +   尽管我们可以创建一个匿名化数据的视图，但 SQLite 不允许访问控制。这意味着我们的分析师可以简单地查询原始的`rides`表，并看到我们在`analysis`视图中费尽心思省略的所有骑手姓名。
 
@@ -220,25 +293,47 @@
 
 +   要尝试这个，让我们在我们的终端中打开`mfa.db`。`collections`表还没有`deleted`列，所以我们需要添加它。这里的默认值将是 0，以表示该行未被删除。
 
-    [PRE18]
+    ```
+    ALTER TABLE "collections" 
+    ADD COLUMN "deleted" INTEGER DEFAULT 0; 
+    ```
 
 +   现在，让我们对艺术品“黎明时分劳作的农民”执行软删除，通过将其`deleted`列更新为 1。
 
-    [PRE19]
+    ```
+    UPDATE "collections" 
+    SET "deleted" = 1 
+    WHERE "title" = 'Farmers working at dawn'; 
+    ```
 
 +   我们可以创建一个视图来显示未删除行的信息。
 
-    [PRE20]
+    ```
+    CREATE VIEW "current_collections" AS
+    SELECT "id", "title", "accession_number", "acquired" 
+    FROM "collections" 
+    WHERE "deleted" = 0; 
+    ```
 
     +   我们可以显示这个视图中的数据来验证“黎明时分劳作的农民”不存在。
 
-        [PRE21]
+        ```
+        SELECT * FROM "current_collections"; 
+        ```
 
     +   在从底层表`collections`中软删除行后，它将在任何进一步的查询中从`current_collections`视图中被移除。
 
 +   我们已经知道无法向视图中插入数据或从视图中删除数据。然而，我们可以设置一个触发器来向底层表插入或删除数据！`INSTEAD OF`触发器允许我们这样做。
 
-    [PRE22]
+    ```
+    CREATE TRIGGER "delete"
+    INSTEAD OF DELETE ON "current_collections"
+    FOR EACH ROW
+    BEGIN
+        UPDATE "collections" SET "deleted" = 1 
+        WHERE "id" = OLD."id";
+    END; 
+    ```
 
     +   每次我们尝试从视图中删除行时，这个触发器将更新底层表`collections`中行的`deleted`列，从而完成软删除。
 
@@ -246,17 +341,34 @@
 
 +   现在，我们可以从`current_collections`视图中删除一行。
 
-    [PRE23]
+    ```
+    DELETE FROM "current_collections" 
+    WHERE "title" = 'Imaginative landscape'; 
+    ```
 
     我们可以通过查询视图来验证这是否有效。
 
-    [PRE24]
+    ```
+    SELECT * FROM "current_collections"; 
+    ```
 
 +   类似地，我们可以创建一个触发器，在我们尝试将数据插入视图时将其插入到底层表中。
 
 +   这里有两个需要考虑的情况。我们可能试图将已存在于底层表中的、但已被软删除的行插入到视图中。我们可以编写以下触发器来处理这种情况。
 
-    [PRE25]
+    ```
+    CREATE TRIGGER "insert_when_exists"
+    INSTEAD OF INSERT ON "current_collections"
+    FOR EACH ROW 
+    WHEN NEW."accession_number" IN (
+        SELECT "accession_number" FROM "collections"
+    )
+    BEGIN
+        UPDATE "collections" 
+        SET "deleted" = 0 
+        WHERE "accession_number" = NEW."accession_number";
+    END; 
+    ```
 
     +   `WHEN`关键字用于检查艺术品的登记号是否已存在于`collections`表中。这是因为，正如我们从上周所知，登记号唯一地标识了表中每一件艺术品。
 
@@ -264,7 +376,18 @@
 
 +   第二种情况发生在我们尝试插入一个在底层表中不存在的行时。以下触发器处理这种情况。
 
-    [PRE26]
+    ```
+    CREATE TRIGGER "insert_when_new"
+    INSTEAD OF INSERT ON "current_collections"
+    FOR EACH ROW
+    WHEN NEW."accession_number" NOT IN (
+        SELECT "accession_number" FROM "collections"
+    )
+    BEGIN
+        INSERT INTO "collections" ("title", "accession_number", "acquired")
+        VALUES (NEW."title", NEW."accession_number", NEW."acquired");
+    END; 
+    ```
 
     +   当插入数据的登记号不在`collections`中时，它将行插入到表中。
 

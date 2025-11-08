@@ -68,7 +68,9 @@
 
 +   在文件编辑器中，按照以下方式输入您的第一个程序：
 
-    [PRE0]
+    ```
+    print("hello, world") 
+    ```
 
     注意这里出现的所有文本和字符。它们都是必要的。
 
@@ -94,7 +96,9 @@
 
 +   按照以下方式修改您的代码：
 
-    [PRE1]
+    ```
+    # Demonstrates a bug  prin("hello, world") 
+    ```
 
     注意 `prin` 中缺少的 `t`。
 
@@ -108,7 +112,9 @@
 
 +   按照以下方式修改你的代码：
 
-    [PRE2]
+    ```
+    readline("What's your name? ")  print("Hello, Carter") 
+    ```
 
     注意如果我们运行此代码，`Carter`将始终出现。
 
@@ -118,7 +124,9 @@
 
 +   按照以下方式修改你的代码：
 
-    [PRE3]
+    ```
+    name  <-  readline("What's your name? ")  print("Hello, name") 
+    ```
 
     注意名为`name`的变量存储了`readline`的返回值。箭头`<-`表示返回值是从`readline`流向`name`的。这个箭头被称为*赋值运算符*。
 
@@ -130,7 +138,9 @@
 
 +   我们可以按照以下方式纠正这个错误：
 
-    [PRE4]
+    ```
+    name  <-  readline("What's your name? ")  greeting  <-  paste("Hello, ",  name)  print(greeting) 
+    ```
 
     注意代码的第一行保持不变。注意我们创建了一个名为`greeting`的新变量，并将“Hello, ”和`name`的字符串连接赋值给`greeting`。*字符串*是一组字符。两个单独的字符串通过`paste`函数合并成一个。使用`print`函数打印出结果变量`greeting`。
 
@@ -146,7 +156,9 @@
 
 +   按照以下方式修改你的代码：
 
-    [PRE5]
+    ```
+    name  <-  readline("What's your name? ")  greeting  <-  paste("Hello, ",  name,  sep  =  "")  print(greeting) 
+    ```
 
     注意代码中添加了`sep = ""`。
 
@@ -154,13 +166,17 @@
 
 +   恰好程序员经常需要通过将`sep`设置为`""`来省略这些额外的空格。因此，他们发明了`paste0`，它可以不使用任何分隔字符连接字符串。`paste0`可以使用如下：
 
-    [PRE6]
+    ```
+    name  <-  readline("What's your name? ")  greeting  <-  paste0("Hello, ",  name)  print(greeting) 
+    ```
 
     注意`paste`变成了`paste0`。
 
 +   你的程序可以进一步简化如下：
 
-    [PRE7]
+    ```
+    # Ask user for name  name  <-  readline("What's your name? ")  # Say hello to user  print(paste("Hello,",  name)) 
+    ```
 
     注意`greeting`是通过直接将`paste`的返回值作为`print`的输入值来消除的。
 
@@ -178,7 +194,9 @@
 
 +   按照以下方式创建你的代码：
 
-    [PRE8]
+    ```
+    mario  <-  readline("Enter votes for Mario: ")  peach  <-  readline("Enter votes for Peach: ")  bowser  <-  readline("Enter votes for Bowser: ")  total  <-  mario  +  peach  +  bowser  print(paste("Total votes:",  total)) 
+    ```
 
     注意到`readline`的返回值被存储在三个变量中，分别命名为`mario`、`peach`和`bowser`。变量`total`被分配了`mario`、`peach`和`bowser`的总和值。然后，打印出这个总和。
 
@@ -192,7 +210,9 @@
 
 +   我们可以按照以下方式将这些变量转换为所需的存储模式：
 
-    [PRE9]
+    ```
+    mario  <-  readline("Enter votes for Mario: ")  peach  <-  readline("Enter votes for Peach: ")  bowser  <-  readline("Enter votes for Bowser: ")  mario  <-  as.integer(mario)  peach  <-  as.integer(peach)  bowser  <-  as.integer(bowser)  total  <-  mario  +  peach  +  bowser  print(paste("Total votes:",  total)) 
+    ```
 
     注意到如何通过`as.integer`使用*强制转换*将`mario`和其他值转换为整数。
 
@@ -200,7 +220,9 @@
 
 +   这个程序可以进一步简化如下：
 
-    [PRE10]
+    ```
+    mario  <-  as.integer(readline("Enter votes for Mario: "))  peach  <-  as.integer(readline("Enter votes for Peach: "))  bowser  <-  as.integer(readline("Enter votes for Bowser: "))  total  <-  sum(mario,  peach,  bowser)  print(paste("Total votes:",  total)) 
+    ```
 
     注意到`sum`函数是如何被用来对三个变量的值进行求和的。
 
@@ -222,7 +244,9 @@
 
 +   按照以下方式创建你的代码：
 
-    [PRE11]
+    ```
+    votes  <-  read.table("votes.csv")  View(votes) 
+    ```
 
     注意代码的第一行是如何从 `votes.csv` 读取表格到 `votes` 变量的。然后，`View` 允许你查看 `votes` 中存储的内容。
 
@@ -230,7 +254,9 @@
 
 +   按照以下方式修改你的代码：
 
-    [PRE12]
+    ```
+    votes  <-  read.table(  "votes.csv",  sep  =  ","  )  View(votes) 
+    ```
 
     注意 `sep` 是如何用于告诉 `read.table` 每个列将根据哪个字符进行分隔的。
 
@@ -238,7 +264,9 @@
 
 +   按照以下方式修改你的代码：
 
-    [PRE13]
+    ```
+    votes  <-  read.table(  "votes.csv",  sep  =  ",",  header  =  TRUE  )  View(votes) 
+    ```
 
     注意 `header = TRUE` 参数允许 `read.table` 识别存在标题。
 
@@ -246,13 +274,17 @@
 
 +   程序员创建了一个快捷方式，以便能够更简单地完成此操作。按照以下方式修改你的代码：
 
-    [PRE14]
+    ```
+    votes  <-  read.csv("votes.csv")  View(votes) 
+    ```
 
     注意 `read.csv` 如何以前所未有的简单性完成之前代码所做的工作！
 
 +   现在我们已经加载数据，我们如何访问它？按照以下方式修改你的代码：
 
-    [PRE15]
+    ```
+    votes  <-  read.csv("votes.csv")  votes[,  1]  votes[,  2]  votes[,  3] 
+    ```
 
     注意如何使用 *方括号表示法* 以 `votes[row, column]` 格式访问值。因此，`votes[, 2]` 将显示 `poll` 列中的数字。
 
@@ -264,7 +296,9 @@
 
 +   我们可以通过调用每个列的精确名称来简化此程序。
 
-    [PRE16]
+    ```
+    votes  <-  read.csv("votes.csv")  colnames(votes)  votes$candidate  votes$poll  votes$mail 
+    ```
 
     注意 `votes$poll` 返回一个包含 `poll` 列中所有值的向量。现在我们可以通过这个新向量访问 `poll` 列的值。
 
@@ -272,19 +306,25 @@
 
 +   转到我们关于如何求和这些值的原始问题，按照以下方式修改你的代码：
 
-    [PRE17]
+    ```
+    votes  <-  read.csv("votes.csv")  sum(votes$poll[1],  votes$poll[2],  votes$poll[3]) 
+    ```
 
     注意 `sum` 函数是如何用于对 `poll` 表格的前三行中的值进行求和的。
 
 +   然而，此代码不是动态的。它相当不灵活。如果有超过三个候选人怎么办？因此，我们可以简化我们的代码如下，使其更具动态性：
 
-    [PRE18]
+    ```
+    votes  <-  read.csv("votes.csv")  sum(votes$poll)  sum(votes$mail) 
+    ```
 
     注意在向量 `votes$poll` 和 `votes$mail` 中找到的值是如何被求和的。
 
 +   如上图所示，使用方括号表示法，我们也可以尝试对 `poll` 和 `mail` 列中的每一行的值进行求和。按照以下方式修改你的代码：
 
-    [PRE19]
+    ```
+    votes  <-  read.csv("votes.csv")  votes$poll[1]  +  votes$mail[1]  votes$poll[2]  +  votes$mail[2]  votes$poll[3]  +  votes$mail[3] 
+    ```
 
     注意 `poll` 和 `mail` 的每一行是如何被加在一起的。
 
@@ -296,7 +336,9 @@
 
 +   在使我们的代码更加动态的同一种精神下，我们可以进一步修改我们的代码如下：
 
-    [PRE20]
+    ```
+    votes  <-  read.csv("votes.csv")  votes$poll  +  votes$mail 
+    ```
 
     注意向量是如何逐元素相加的。也就是说，第一个向量的第一行加到第二个向量的第一行上，第一个向量的第二行加到第二个向量的第二行上，依此类推。这导致了一个与`poll`和`mail`向量具有相同行数的最终向量。
 
@@ -304,13 +346,17 @@
 
 +   自然地，我们可能想要存储我们算术的结果。我们可以通过以下方式修改我们的代码来做到这一点：
 
-    [PRE21]
+    ```
+    votes  <-  read.csv("votes.csv")  votes$total  <-  votes$poll  +  votes$mail  write.csv(votes,  "totals.csv") 
+    ```
 
     注意最终的总数被存储在一个名为`votes$total`的新向量中，实际上它是`votes`数据框的新`total`列。然后我们将结果`votes`数据框写入一个名为`totals.csv`的文件。
 
 +   当你查看`csv`文件时，会出现一个问题。注意默认情况下，“行名”是包含在内的。这些可以通过修改以下代码来排除：
 
-    [PRE22]
+    ```
+    votes  <-  read.csv("votes.csv")  votes$total  <-  votes$poll  +  votes$mail  write.csv(votes,  "totals.csv",  row.names  =  FALSE) 
+    ```
 
     注意`row.names`被设置为`FALSE`。
 
@@ -322,13 +368,17 @@
 
 +   你可以如下访问在线数据源：
 
-    [PRE23]
+    ```
+    # Demonstrates reading data from a URL  url  <-  "https://github.com/fivethirtyeight/data/raw/master/non-voters/nonvoters_data.csv"  voters  <-  read.csv(url) 
+    ```
 
     注意`read.csv`是如何从定义的 URL 中提取数据的。
 
 +   看这个数据框，你可以运行`nrow`来获取行数。你可以运行`ncol`来获取列数。
 
-    [PRE24]
+    ```
+    # Demonstrates finding number of rows and columns in a large data set  url  <-  "https://github.com/fivethirtyeight/data/raw/master/non-voters/nonvoters_data.csv"  voters  <-  read.csv(url)  nrow(voters)  ncol(voters) 
+    ```
 
     注意`nrow`和`ncol`是如何用来确定这个数据中有多少行和列的。
 
@@ -336,7 +386,9 @@
 
 +   你可能想了解在这个列中参与者可能选择的各个选项。这可以通过`unique`函数来完成。
 
-    [PRE25]
+    ```
+    # Demonstrates finding unique values in a vector  url  <-  "https://github.com/fivethirtyeight/data/raw/master/non-voters/nonvoters_data.csv"  voters  <-  read.csv(url)  unique(voters$voter_category) 
+    ```
 
     注意`unique`是如何用来确定参与者可能选择的选项的。
 
@@ -348,7 +400,9 @@
 
 +   要查看`Q22`的这些可能值，我们可以运行以下代码：
 
-    [PRE26]
+    ```
+    # Demonstrates NA  url  <-  "https://github.com/fivethirtyeight/data/raw/master/non-voters/nonvoters_data.csv"  voters  <-  read.csv(url)  voters$Q22  unique(voters$Q22) 
+    ```
 
     注意到`unique`再次被用来发现`Q22`的可能值。
 
@@ -358,13 +412,17 @@
 
 +   在 R 语言中，我们可以使用 `factor` 函数将数字值转换为特定的文本答案。例如，我们可以使用 `factor` 函数将数字 `1` 转换为对应的文本“是”。我们可以通过以下方式修改我们的代码来完成这个操作：
 
-    [PRE27]
+    ```
+    # Demonstrates converting a vector to a factor  url  <-  "https://github.com/fivethirtyeight/data/raw/master/non-voters/nonvoters_data.csv"  voters  <-  read.csv(url)  voters$Q21  factor(  voters$Q21  )  factor(  voters$Q21,  labels  =  c("?",  "Yes",  "No",  "Unsure/Undecided")  ) 
+    ```
 
     注意 `factor(voters$Q21)` 将会显示 `Q21` 的具体级别（类别）数据。在代码中出现的后续 `factor` 中，标签被应用于每个级别。例如，`1` 与“是”相关联。
 
 +   在许多情况下，我们可能希望排除某些值。在 `Q21` 中，我们可能希望排除 `-1`，因为这个值代表的含义并不明确。我们可以按照以下方式操作：
 
-    [PRE28]
+    ```
+    # Demonstrates excluding values from the levels of a factor  url  <-  "https://github.com/fivethirtyeight/data/raw/master/non-voters/nonvoters_data.csv"  voters  <-  read.csv(url)  voters$Q21  <-  factor(  voters$Q21,  labels  =  c("Yes",  "No",  "Unsure/Undecided"),  exclude  =  c(-1)  ) 
+    ```
 
     注意 `-1` 是如何被排除的。
 

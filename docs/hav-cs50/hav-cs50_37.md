@@ -50,7 +50,23 @@
 
 +   在文本编辑器窗口中，按照以下方式编写代码：
 
-    [PRE0]
+    ```
+    students = [
+        {"name": "Hermione", "house": "Gryffindor"},
+        {"name": "Harry", "house": "Gryffindor"},
+        {"name": "Ron", "house": "Gryffindor"},
+        {"name": "Draco", "house": "Slytherin"},
+        {"name": "Padma", "house": "Ravenclaw"},
+    ]
+
+    houses = []
+    for student in students:
+        if student["house"] not in houses:
+            houses.append(student["house"])
+
+    for house in sorted(houses):
+        print(house) 
+    ```
 
     注意到我们有一个字典列表，每个字典代表一个学生。创建了一个名为 `houses` 的空列表。我们遍历 `students` 中的每个 `student`。如果一个学生的 `house` 不在 `houses` 中，我们就将其添加到我们的 `houses` 列表中。
 
@@ -58,7 +74,22 @@
 
 +   在文本编辑器窗口中，按照以下方式编写代码：
 
-    [PRE1]
+    ```
+    students = [
+        {"name": "Hermione", "house": "Gryffindor"},
+        {"name": "Harry", "house": "Gryffindor"},
+        {"name": "Ron", "house": "Gryffindor"},
+        {"name": "Draco", "house": "Slytherin"},
+        {"name": "Padma", "house": "Ravenclaw"},
+    ]
+
+    houses = set()
+    for student in students:
+        houses.add(student["house"])
+
+    for house in sorted(houses):
+        print(house) 
+    ```
 
     注意到我们不需要包含任何检查来确保没有重复项。`set` 对象会自动为我们处理这个问题。
 
@@ -70,25 +101,93 @@
 
 +   我们可以利用 Python 中的这一功能。在文本编辑器窗口中，按照以下方式编写代码：
 
-    [PRE2]
+    ```
+    balance = 0
+
+    def main():
+        print("Balance:", balance)
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意到我们如何在任何函数之外创建一个名为 `balance` 的全局变量。
 
 +   由于执行上述代码没有出现错误，你可能会认为一切正常。然而，事实并非如此！在文本编辑器窗口中，按照以下方式编写代码：
 
-    [PRE3]
+    ```
+    balance = 0
+
+    def main():
+        print("Balance:", balance)
+        deposit(100)
+        withdraw(50)
+        print("Balance:", balance)
+
+    def deposit(n):
+        balance += n
+
+    def withdraw(n):
+        balance -= n
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意我们现在添加了向 `balance` 添加和提取资金的功能。然而，执行此代码时，我们遇到了一个错误！我们看到一个名为 `UnboundLocalError` 的错误。你可能能够猜到，至少在我们当前编写的 `balance` 和 `deposit` 以及 `withdraw` 函数的方式中，我们无法在函数内部重新分配它的新值。
 
 +   要在函数内部与全局变量交互，解决方案是使用 `global` 关键字。在文本编辑器窗口中，按照以下方式编写代码：
 
-    [PRE4]
+    ```
+    balance = 0
+
+    def main():
+        print("Balance:", balance)
+        deposit(100)
+        withdraw(50)
+        print("Balance:", balance)
+
+    def deposit(n):
+        global balance
+        balance += n
+
+    def withdraw(n):
+        global balance
+        balance -= n
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意到 `global` 关键字告诉每个函数，`balance` 并不指向一个局部变量：相反，它指向我们在代码顶部最初放置的全局变量。现在，我们的代码可以正常工作了！
 
 +   利用我们从面向对象编程中获得的经验，我们可以修改我们的代码，使用类而不是全局变量。在文本编辑器窗口中，编写以下代码：
 
-    [PRE5]
+    ```
+    class Account:
+        def __init__(self):
+            self._balance = 0
+
+        @property
+        def balance(self):
+            return self._balance
+
+        def deposit(self, n):
+            self._balance += n
+
+        def withdraw(self, n):
+            self._balance -= n
+
+    def main():
+        account = Account()
+        print("Balance:", account.balance)
+        account.deposit(100)
+        account.withdraw(50)
+        print("Balance:", account.balance)
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意，我们如何使用 `account = Account()` 来创建一个账户。类允许我们更干净地解决需要全局变量的这个问题，因为这些实例变量可以通过 `self` 访问本类的所有方法。
 
@@ -100,13 +199,28 @@
 
 +   在文本编辑器窗口中，编写以下代码：
 
-    [PRE6]
+    ```
+     MEOWS = 3
+
+    for _ in range(MEOWS):
+        print("meow") 
+    ```
 
     注意，在这个例子中，`MEOWS` 是我们的常量。常量通常用大写变量名表示，并放置在代码的顶部。尽管这 *看起来* 像一个常量，但实际上，Python 实际上没有机制来阻止我们在代码中更改该值！相反，您需要遵守诚信原则：如果变量名全部大写，就请不要更改它！
 
 +   您可以创建一个名为“常量”的类，现在我们用引号括起来，因为我们知道 Python 并不完全支持“常量”。在文本编辑器窗口中，编写以下代码：
 
-    [PRE7]
+    ```
+    class Cat:
+        MEOWS = 3
+
+        def meow(self):
+            for _ in range(Cat.MEOWS):
+                print("meow")
+
+    cat = Cat()
+    cat.meow() 
+    ```
 
     因为 `MEOWS` 是在任何一个特定类方法之外定义的，所以所有这些方法都可以通过 `Cat.MEOWS` 访问该值。
 
@@ -124,13 +238,27 @@
 
 在文本编辑器窗口中，编写以下代码：
 
-[PRE8]
+```
+ def meow(n):
+      for _ in range(n):
+          print("meow")
+
+  number = input("Number: ")
+  meow(number) 
+```
 
 您可能已经看到，`number = input("Number: )"` 返回了一个 `string`，而不是 `int`。但 `meow` 很可能需要一个 `int`！
 
 +   可以添加类型提示来给 Python 提示 `meow` 应该期望的变量类型。在文本编辑器窗口中，编写以下代码：
 
-    [PRE9]
+    ```
+    def meow(n: int):
+        for _ in range(n):
+            print("meow")
+
+    number = input("Number: ")
+    meow(number) 
+    ```
 
     注意，尽管如此，我们的程序仍然会抛出错误。
 
@@ -138,7 +266,14 @@
 
 +   您可以对所有变量进行注释。在文本编辑器窗口中，编写以下代码：
 
-    [PRE10]
+    ```
+    def meow(n: int):
+        for _ in range(n):
+            print("meow")
+
+    number: int = input("Number: ")
+    meow(number) 
+    ```
 
     注意，现在 `number` 被提供了一个类型提示。
 
@@ -146,25 +281,55 @@
 
 +   我们可以通过以下方式修复我们的最终错误：
 
-    [PRE11]
+    ```
+    def meow(n: int):
+        for _ in range(n):
+            print("meow")
+
+    number: int = int(input("Number: "))
+    meow(number) 
+    ```
 
     注意，现在运行 `mypy` 没有错误，因为我们已经将输入转换为整数。
 
 +   让我们通过假设 `meow` 将返回一个字符串，或 `str`，来引入一个新的错误。在文本编辑器窗口中，编写以下代码：
 
-    [PRE12]
+    ```
+    def meow(n: int):
+        for _ in range(n):
+            print("meow")
+
+    number: int = int(input("Number: "))
+    meows: str = meow(number)
+    print(meows) 
+    ```
 
     注意`meow`函数只有一个副作用。因为我们只尝试打印`meow`，而不是返回一个值，所以当我们尝试将`meow`的返回值存储在`meows`中时，会抛出一个错误。
 
 +   我们还可以进一步使用类型提示来检查错误，这次注释函数的返回值。在文本编辑器窗口中，代码如下：
 
-    [PRE13]
+    ```
+    def meow(n: int) -> None:
+        for _ in range(n):
+            print("meow")
+
+    number: int = int(input("Number: "))
+    meows: str = meow(number)
+    print(meows) 
+    ```
 
     注意到`-> None`的表示法告诉`mypy`没有返回值。
 
 +   如果我们希望返回一个字符串，我们可以修改我们的代码：
 
-    [PRE14]
+    ```
+    def meow(n: int) -> str:
+        return "meow\n" * n
+
+    number: int = int(input("Number: "))
+    meows: str = meow(number)
+    print(meows, end="") 
+    ```
 
     注意我们如何在`meows`中存储多个`str`。运行`mypy`不会产生错误。
 
@@ -176,13 +341,35 @@
 
 +   使用 docstring 来注释函数的目的是一种标准做法。在文本编辑器窗口中，代码如下：
 
-    [PRE15]
+    ```
+    def meow(n):
+        """Meow n times."""
+        return "meow\n" * n
+
+    number = int(input("Number: "))
+    meows = meow(number)
+    print(meows, end="") 
+    ```
 
     注意三个双引号指定了函数的功能。
 
 +   你可以使用 docstrings 来标准化你如何记录函数的特性。在文本编辑器窗口中，代码如下：
 
-    [PRE16]
+    ```
+    def meow(n):
+        """ Meow n times.
+
+        :param n: Number of times to meow
+        :type n: int
+        :raise TypeError: If n is not an int
+        :return: A string of n meows, one per line
+        :rtype: str """
+        return "meow\n" * n
+
+    number = int(input("Number: "))
+    meows = meow(number)
+    print(meows, end="") 
+    ```
 
     注意到包含了多个 docstring 参数。例如，它描述了函数接受的参数以及函数返回的内容。
 
@@ -194,7 +381,18 @@
 
 +   假设我们想在程序中使用命令行参数。在文本编辑器窗口中，代码如下：
 
-    [PRE17]
+    ```
+    import sys
+
+    if len(sys.argv) == 1:
+        print("meow")
+    elif len(sys.argv) == 3 and sys.argv[1] == "-n":
+        n = int(sys.argv[2])
+        for _ in range(n):
+            print("meow")
+    else:
+        print("usage: meows.py [-n NUMBER]") 
+    ```
 
     注意`sys`是如何被导入的，通过它我们可以访问到`sys.argv`，这是一个数组，包含了运行程序时提供给我们的命令行参数。我们可以使用多个`if`语句来检查用户是否正确地运行了我们的程序。
 
@@ -202,19 +400,46 @@
 
 +   幸运的是，`argparse`是一个处理复杂命令行参数字符串解析的库。在文本编辑器窗口中，代码如下：
 
-    [PRE18]
+    ```
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-n")
+    args = parser.parse_args()
+
+    for _ in range(int(args.n)):
+        print("meow") 
+    ```
 
     注意我们是如何导入`argparse`而不是`sys`的。从`ArgumentParser`类创建了一个名为`parser`的对象。该类的`add_argument`方法用于告诉`argparse`，当用户运行我们的程序时，我们应该期望从用户那里得到哪些参数。最后，运行解析器的`parse_args`方法确保用户已经正确地包括了所有参数。
 
 +   我们还可以编写更干净的代码，这样当用户未能正确使用程序时，他们可以获取一些关于我们代码正确使用方法的信息。在文本编辑器窗口中，代码如下：
 
-    [PRE19]
+    ```
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Meow like a cat")
+    parser.add_argument("-n", help="number of times to meow")
+    args = parser.parse_args()
+
+    for _ in range(int(args.n)):
+        print("meow") 
+    ```
 
     注意到用户提供了一些文档。具体来说，提供了一个`help`参数。现在，如果用户执行`python meows.py --help`或`-h`，用户将看到一些关于如何使用此程序的提示。
 
 +   我们可以进一步改进这个程序。在文本编辑器窗口中，代码如下：
 
-    [PRE20]
+    ```
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Meow like a cat")
+    parser.add_argument("-n", default=1, help="number of times to meow", type=int)
+    args = parser.parse_args()
+
+    for _ in range(args.n):
+        print("meow") 
+    ```
 
     注意到不仅包含了帮助文档，而且当用户没有提供任何参数时，你还可以提供一个`默认`值。
 
@@ -224,19 +449,34 @@
 
 +   不想能够将一个变量分割成两个变量不是很好吗？在文本编辑器窗口中，代码如下：
 
-    [PRE21]
+    ```
+    first, _ = input("What's your name? ").split("  ")
+    print(f"hello, {first}") 
+    ```
 
     注意到这个程序尝试通过简单地在一个空格上进行分割来获取用户的名字。
 
 +   结果表明，还有其他方法可以解包变量。通过理解如何以看似更高级的方式解包变量，你可以编写更强大、更优雅的代码。在文本编辑器窗口中，代码如下：
 
-    [PRE22]
+    ```
+    def total(galleons, sickles, knuts):
+        return (galleons * 17 + sickles) * 29 + knuts
+
+    print(total(100, 50, 25), "Knuts") 
+    ```
 
     注意到这返回了 Knuts 的总价值。
 
 +   如果我们想要将硬币存储在一个列表中？在文本编辑器窗口中，代码如下：
 
-    [PRE23]
+    ```
+    def total(galleons, sickles, knuts):
+        return (galleons * 17 + sickles) * 29 + knuts
+
+    coins = [100, 50, 25]
+
+    print(total(coins[0], coins[1], coins[2]), "Knuts") 
+    ```
 
     注意到创建了一个名为`coins`的列表。我们可以通过索引使用`0`、`1`等来传递每个值。
 
@@ -244,25 +484,51 @@
 
 +   为了使传递整个列表成为可能，我们可以使用解包。在文本编辑器窗口中，代码如下：
 
-    [PRE24]
+    ```
+    def total(galleons, sickles, knuts):
+        return (galleons * 17 + sickles) * 29 + knuts
+
+    coins = [100, 50, 25]
+
+    print(total(*coins), "Knuts") 
+    ```
 
     注意到`*`如何解包列表的序列，并将每个单独的元素传递给`total`。
 
 +   假设我们可以以任何顺序传递货币的名称？在文本编辑器窗口中，代码如下：
 
-    [PRE25]
+    ```
+    def total(galleons, sickles, knuts):
+        return (galleons * 17 + sickles) * 29 + knuts
+
+    print(total(galleons=100, sickles=50, knuts=25), "Knuts") 
+    ```
 
     注意到这仍然计算正确。
 
 +   当你开始谈论“名称”和“值”时，字典可能会浮现在你的脑海中！你可以将其实现为一个字典。在文本编辑器窗口中，代码如下：
 
-    [PRE26]
+    ```
+    def total(galleons, sickles, knuts):
+        return (galleons * 17 + sickles) * 29 + knuts
+
+    coins = {"galleons": 100, "sickles": 50, "knuts": 25}
+
+    print(total(coins["galleons"], coins["sickles"], coins["knuts"]), "Knuts") 
+    ```
 
     注意到提供了一个名为`coins`的字典。我们可以使用键，如“galleons”或“sickles”来索引它。
 
 +   由于`total`函数期望三个参数，我们不能传递一个字典。我们可以使用解包来帮助解决这个问题。在文本编辑器窗口中，代码如下：
 
-    [PRE27]
+    ```
+    def total(galleons, sickles, knuts):
+        return (galleons * 17 + sickles) * 29 + knuts
+
+    coins = {"galleons": 100, "sickles": 50, "knuts": 25}
+
+    print(total(**coins), "Knuts") 
+    ```
 
     注意到`**`允许你解包一个字典。在解包字典时，它提供了键和值。
 
@@ -270,7 +536,9 @@
 
 +   回想一下我们在这门课程中之前看到的`print`文档：
 
-    [PRE28]
+    ```
+    print(*objects, sep=' ', end='\n', file=sys.stdout, flush=False) 
+    ```
 
 +   `args`是位置参数，例如我们提供给`print`的`print("Hello", "World")`。
 
@@ -278,13 +546,23 @@
 
 +   正如我们在上面`print`函数的原型中看到的，我们可以告诉我们的函数期望一个目前未知数量的位置参数。我们也可以告诉它期望一个目前未知数量的关键字参数。在文本编辑器窗口中，代码如下：
 
-    [PRE29]
+    ```
+    def f(*args, **kwargs):
+        print("Positional:", args)
+
+    f(100, 50, 25) 
+    ```
 
     注意到执行此代码将打印为位置参数。
 
 +   我们甚至可以传递命名参数。在文本编辑器窗口中，编写如下代码：
 
-    [PRE30]
+    ```
+    def f(*args, **kwargs):
+        print("Named:", kwargs)
+
+    f(galleons=100, sickles=50, knuts=25) 
+    ```
 
     注意命名值是以字典的形式提供的。
 
@@ -300,25 +578,68 @@
 
 +   我们看到了函数式编程的暗示，其中函数有副作用但没有返回值。我们可以在文本编辑器窗口中演示，输入 `code yell.py` 并编写如下代码：
 
-    [PRE31]
+    ```
+    def main():
+        yell("This is CS50")
+
+    def yell(word):
+        print(word.upper())
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意 `yell` 函数是如何简单地被喊出来的。
 
 +   不想喊一个无限单词的列表吗？修改你的代码如下：
 
-    [PRE32]
+    ```
+    def main():
+        yell(["This", "is", "CS50"])
+
+    def yell(words):
+        uppercased = []
+        for word in words:
+            uppercased.append(word.upper())
+        print(*uppercased)
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意我们是如何累积大写单词的，通过迭代每个单词并对它们进行“大写化”。使用 `*` 解包，我们打印出大写列表。
 
 +   移除括号后，我们可以将单词作为参数传递。在文本编辑器窗口中，编写如下代码：
 
-    [PRE33]
+    ```
+    def main():
+        yell("This", "is", "CS50")
+
+    def yell(*words):
+        uppercased = []
+        for word in words:
+            uppercased.append(word.upper())
+        print(*uppercased)
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意 `*words` 如何允许函数接受多个参数。
 
 +   `map` 允许你将函数映射到一系列值。在实践中，我们可以这样编写代码：
 
-    [PRE34]
+    ```
+    def main():
+        yell("This", "is", "CS50")
+
+    def yell(*words):
+        uppercased = map(str.upper, words)
+        print(*uppercased)
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意 `map` 接收两个参数。首先，它接收一个我们想要应用到列表中每个元素的函数。其次，它接收那个列表本身，我们将应用上述函数。因此，`words` 中的所有单词都将传递给 `str.upper` 函数，并返回到 `uppercased`。
 
@@ -330,7 +651,17 @@
 
 +   我们可以在我们的代码中如下实现：
 
-    [PRE35]
+    ```
+    def main():
+        yell("This", "is", "CS50")
+
+    def yell(*words):
+        uppercased = [arg.upper() for arg in words]
+        print(*uppercased)
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意我们如何没有使用 `map`，而是在方括号内编写 Python 表达式。对于每个参数，`.upper` 都会被应用到它上面。
 
@@ -338,13 +669,42 @@
 
 +   在文本编辑器窗口中，输入 `code gryffindors.py` 并编写如下代码：
 
-    [PRE36]
+    ```
+    students = [
+        {"name": "Hermione", "house": "Gryffindor"},
+        {"name": "Harry", "house": "Gryffindor"},
+        {"name": "Ron", "house": "Gryffindor"},
+        {"name": "Draco", "house": "Slytherin"},
+    ]
+
+    gryffindors = []
+    for student in students:
+        if student["house"] == "Gryffindor":
+            gryffindors.append(student["name"])
+
+    for gryffindor in sorted(gryffindors):
+        print(gryffindor) 
+    ```
 
     注意我们在创建列表时有一个条件。*如果*学生的房子是格兰芬多，我们就将学生添加到名字列表中。最后，我们打印出所有的名字。
 
 +   更优雅地，我们可以用列表推导式简化这段代码，如下所示：
 
-    [PRE37]
+    ```
+    students = [
+        {"name": "Hermione", "house": "Gryffindor"},
+        {"name": "Harry", "house": "Gryffindor"},
+        {"name": "Ron", "house": "Gryffindor"},
+        {"name": "Draco", "house": "Slytherin"},
+    ]
+
+    gryffindors = [
+        student["name"] for student in students if student["house"] == "Gryffindor"
+    ]
+
+    for gryffindor in sorted(gryffindors):
+        print(gryffindor) 
+    ```
 
     注意列表推导式是如何放在一行上的！
 
@@ -354,13 +714,40 @@
 
 +   在文本编辑器窗口中，编写如下代码：
 
-    [PRE38]
+    ```
+    students = [
+        {"name": "Hermione", "house": "Gryffindor"},
+        {"name": "Harry", "house": "Gryffindor"},
+        {"name": "Ron", "house": "Gryffindor"},
+        {"name": "Draco", "house": "Slytherin"},
+    ]
+
+    def is_gryffindor(s):
+        return s["house"] == "Gryffindor"
+
+    gryffindors = filter(is_gryffindor, students)
+
+    for gryffindor in sorted(gryffindors, key=lambda s: s["name"]):
+        print(gryffindor["name"]) 
+    ```
 
     注意如何创建一个名为`is_gryffindor`的函数。这是我们用于筛选学生的函数，它将根据学生的学院是否为格兰芬多返回`True`或`False`。你可以看到新的`filter`函数接受两个参数。首先，它接受应用于序列中每个元素的函数——在这个例子中是`is_gryffindor`。其次，它接受要应用筛选函数的序列——在这个例子中是`students`。在`gryffindors`中，我们应该只看到那些在格兰芬多的学生。
 
 +   `filter`也可以使用 lambda 函数如下：
 
-    [PRE39]
+    ```
+    students = [
+        {"name": "Hermione", "house": "Gryffindor"},
+        {"name": "Harry", "house": "Gryffindor"},
+        {"name": "Ron", "house": "Gryffindor"},
+        {"name": "Draco", "house": "Slytherin"},
+    ]
+
+    gryffindors = filter(lambda s: s["house"] == "Gryffindor", students)
+
+    for gryffindor in sorted(gryffindors, key=lambda s: s["name"]):
+        print(gryffindor["name"]) 
+    ```
 
     注意提供了相同的学生的列表。
 
@@ -370,19 +757,40 @@
 
 +   我们可以将列表推导式的相同理念应用到字典中。在文本编辑器窗口中，编写如下代码：
 
-    [PRE40]
+    ```
+    students = ["Hermione", "Harry", "Ron"]
+
+    gryffindors = []
+
+    for student in students:
+        gryffindors.append({"name": student, "house": "Gryffindor"})
+
+    print(gryffindors) 
+    ```
 
     注意此代码（目前！）没有使用任何推导式。相反，它遵循我们之前看到的相同范例。
 
 +   我们现在可以通过修改我们的代码来应用字典推导式：
 
-    [PRE41]
+    ```
+    students = ["Hermione", "Harry", "Ron"]
+
+    gryffindors = [{"name": student, "house": "Gryffindor"} for student in students]
+
+    print(gryffindors) 
+    ```
 
     注意所有之前的代码是如何简化成一行，其中为`students`中的每个`student`提供了字典的结构。
 
 +   我们甚至可以进一步简化如下：
 
-    [PRE42]
+    ```
+    students = ["Hermione", "Harry", "Ron"]
+
+    gryffindors = {student: "Gryffindor" for student in students}
+
+    print(gryffindors) 
+    ```
 
     注意字典将使用键值对构建。
 
@@ -390,13 +798,23 @@
 
 +   我们可能希望为每个学生提供一些排名。在文本编辑器窗口中，编写如下代码：
 
-    [PRE43]
+    ```
+    students = ["Hermione", "Harry", "Ron"]
+
+    for i in range(len(students)):
+        print(i + 1, students[i]) 
+    ```
 
     注意运行此代码时每个学生是如何被列举的。
 
 +   利用枚举，我们可以做到相同：
 
-    [PRE44]
+    ```
+    students = ["Hermione", "Harry", "Ron"]
+
+    for i, student in enumerate(students):
+        print(i + 1, student) 
+    ```
 
     注意`enumerate`如何展示每个`student`的索引和值。
 
@@ -410,13 +828,25 @@
 
 +   在文本编辑器窗口中，输入`code sleep.py`并编写如下代码：
 
-    [PRE45]
+    ```
+    n = int(input("What's n? "))
+    for i in range(n):
+        print("🐑" * i) 
+    ```
 
     注意这个程序将如何计数你要求其数绵羊的数量。
 
 +   我们可以通过添加一个`main`函数来使我们的程序更加复杂，如下所示：
 
-    [PRE46]
+    ```
+    def main():
+        n = int(input("What's n? "))
+        for i in range(n):
+            print("🐑" * i)
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意提供了一个`main`函数。
 
@@ -424,13 +854,38 @@
 
 +   我们可以通过修改我们的代码来调用绵羊函数：
 
-    [PRE47]
+    ```
+    def main():
+        n = int(input("What's n? "))
+        for i in range(n):
+            print(sheep(i))
+
+    def sheep(n):
+        return "🐑" * n
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意`main`函数是如何进行迭代的。
 
 +   我们可以给`sheep`函数提供更多功能。在文本编辑器窗口中，编写如下代码：
 
-    [PRE48]
+    ```
+    def main():
+        n = int(input("What's n? "))
+        for s in sheep(n):
+            print(s)
+
+    def sheep(n):
+        flock = []
+        for i in range(n):
+            flock.append("🐑" * i)
+        return flock
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意我们如何创建一群绵羊并返回`flock`。
 
@@ -438,7 +893,19 @@
 
 +   `yield`生成器可以通过一次返回一小部分结果来解决这个问题。在文本编辑器窗口中，编写如下代码：
 
-    [PRE49]
+    ```
+    def main():
+        n = int(input("What's n? "))
+        for s in sheep(n):
+            print(s)
+
+    def sheep(n):
+        for i in range(n):
+            yield "🐑" * i
+
+    if __name__ == "__main__":
+        main() 
+    ```
 
     注意到`yield`一次只提供单个值，而`for`循环则持续工作。
 
@@ -474,7 +941,16 @@
 
 +   一起创建一个最终程序，在你的终端窗口中输入`code say.py`，并编写如下代码：
 
-    [PRE50]
+    ```
+    import cowsay
+    import pyttsx3
+
+    engine = pyttsx3.init()
+    this = input("What's this? ")
+    cowsay.cow(this)
+    engine.say(this)
+    engine.runAndWait() 
+    ```
 
     注意到运行这个程序为你提供了一个充满活力的告别。
 

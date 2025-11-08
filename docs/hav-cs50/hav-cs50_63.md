@@ -64,7 +64,9 @@
 
 +   我们想要使用这个模式在 MySQL 中创建一个数据库！在终端上，让我们连接到一个 MySQL 服务器。
 
-    [PRE0]
+    ```
+    mysql -u root -h 127.0.0.1 -P 3306 -p 
+    ```
 
     +   在这个终端命令中，`-u` 表示用户。我们提供我们想要连接到数据库的用户——`root`（在这种情况下与数据库管理员同义）。
 
@@ -76,7 +78,9 @@
 
 +   由于这是一个完整的数据库服务器，其中可能包含许多数据库。要显示所有现有的数据库，我们使用以下 MySQL 命令。
 
-    [PRE1]
+    ```
+    SHOW DATABASES; 
+    ```
 
     这返回了一些服务器中已经存在的默认数据库。
 
@@ -84,13 +88,17 @@
 
     +   创建新数据库：
 
-        [PRE2]
+        ```
+        CREATE DATABASE `mbta`; 
+        ```
 
         我们使用反引号而不是引号来标识 SQL 语句中的表名和其他变量。
 
     +   要将当前数据库更改为`mbta`：
 
-        [PRE3]
+        ```
+        USE `mbta`; 
+        ```
 
 ## 创建`cards`表
 
@@ -102,7 +110,12 @@
 
 +   现在我们将使用`INT`数据类型为 ID 列创建表`cards`。由于`INT`可以存储高达 40 亿的数字，它应该足够大，可以满足我们的使用案例！
 
-    [PRE4]
+    ```
+    CREATE TABLE `cards` (
+        `id` INT AUTO_INCREMENT,
+        PRIMARY KEY(`id`)
+    ); 
+    ```
 
     注意，我们使用关键字`AUTO_INCREMENT`与 ID 一起使用，这样 MySQL 会自动插入下一个数字作为新行的 ID。
 
@@ -116,11 +129,15 @@
 
 +   创建表后，我们可以通过运行以下命令来查看现有表的列表：
 
-    [PRE5]
+    ```
+    SHOW TABLES; 
+    ```
 
 +   要获取关于表的更多详细信息，我们可以使用`DESCRIBE`命令。
 
-    [PRE6]
+    ```
+    DESCRIBE `cards`; 
+    ```
 
 +   为了处理文本，MySQL 提供了许多类型。两种常用的类型是`CHAR`——一个固定宽度的字符串，和`VARCHAR`——一个可变长度的字符串。MySQL 还有一个`TEXT`类型，但与 SQLite 不同，这种类型用于更长的文本块，如段落、书籍的页面等。根据文本的长度，它可以是`TINYTEXT`、`TEXT`、`MEDIUMTEXT`和`LONGTEXT`之一。此外，我们还有`BLOB`类型来存储二进制字符串。
 
@@ -128,7 +145,14 @@
 
 +   现在，让我们在 MySQL 中创建`stations`表。
 
-    [PRE7]
+    ```
+    CREATE TABLE `stations` (
+        `id` INT AUTO_INCREMENT,
+        `name` VARCHAR(32) NOT NULL UNIQUE,
+        `line` ENUM('blue', 'green', 'orange', 'red') NOT NULL,
+        PRIMARY KEY(`id`)
+    ); 
+    ```
 
     +   我们选择`VARCHAR`作为站名，因为名字可能长度不一。然而，一个站点所在的线路是波士顿现有的地铁线路之一。由于我们知道这些值可能是什么，我们可以使用`ENUM`类型。
 
@@ -162,7 +186,19 @@
 
 +   让我们现在创建`swipes`表。
 
-    [PRE8]
+    ```
+    CREATE TABLE `swipes` (
+        `id` INT AUTO_INCREMENT,
+        `card_id` INT,
+        `station_id` INT,
+        `type` ENUM('enter', 'exit', 'deposit') NOT NULL,
+        `datetime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `amount` DECIMAL(5,2) NOT NULL CHECK(`amount` != 0),
+        PRIMARY KEY(`id`),
+        FOREIGN KEY(`station_id`) REFERENCES `stations`(`id`),
+        FOREIGN KEY(`card_id`) REFERENCES `cards`(`id`)
+    ); 
+    ```
 
     +   注意到使用`DEFAULT CURRENT_TIMESTAMP`来指示如果未提供值，则应自动填充时间戳以存储当前时间。
 
@@ -188,7 +224,10 @@
 
 +   如果我们想要向一个站点可能所在的线路中添加一条银色线路，我们可以这样做。
 
-    [PRE9]
+    ```
+    ALTER TABLE `stations` 
+    MODIFY `line` ENUM('blue', 'green', 'orange', 'red', 'silver') NOT NULL; 
+    ```
 
     +   这允许我们修改 `line` 列并更改其类型，使得 `ENUM` 现在包括银色作为选项。
 
@@ -204,35 +243,57 @@
 
 +   让我们导航到已经在我们的 MySQL 服务器上创建的 MFA 数据库。
 
-    [PRE10]
+    ```
+    USE `mfa`; 
+    ```
 
 +   在描述 `collections` 表时，我们看到 `deleted` 列不存在，需要添加到表中。
 
-    [PRE11]
+    ```
+    ALTER TABLE `collections` 
+    ADD COLUMN `deleted` TINYINT DEFAULT 0; 
+    ```
 
     由于 `deleted` 列只有 0 或 1 的值，使用 `TINYINT` 是安全的。我们还将其默认值设置为 0，因为我们希望保留表中已有的所有集合。
 
 +   在我们创建存储过程之前，我们需要将分隔符从 `;` 改为其他东西。与 SQLite 不同，在 `BEGIN` 和 `END`（这里需要一个存储过程）之间我们可以输入多个语句，并以 `;` 结尾，而 MySQL 在遇到 `;` 时会提前结束语句。
 
-    [PRE12]
+    ```
+    delimiter // 
+    ```
 
 +   现在，我们编写存储过程。
 
-    [PRE13]
+    ```
+    CREATE PROCEDURE `current_collection`()
+    BEGIN
+        SELECT `title`, `accession_number`, `acquired` 
+        FROM `collections` 
+        WHERE `deleted` = 0;
+    END// 
+    ```
 
     注意我们如何在存储过程名称旁边使用空括号，这可能会让人联想到其他编程语言中的函数。与函数类似，我们也可以调用存储过程来运行它们。
 
 +   创建此过程后，我们必须将分隔符重置为 `;`。
 
-    [PRE14]
+    ```
+    delimiter ; 
+    ```
 
 +   让我们尝试调用这个过程来看看当前的集合。在这个时候，查询应该输出 `collections` 表中的所有行，因为我们还没有进行软删除。
 
-    [PRE15]
+    ```
+    CALL current_collection(); 
+    ```
 
 +   如果我们软删除“黎明时分工作的农民”并再次调用该过程，我们会发现已删除的行不包括在输出中。
 
-    [PRE16]
+    ```
+    UPDATE `collections` 
+    SET `deleted` = 1 
+    WHERE `title` = 'Farmers working at dawn'; 
+    ```
 
 ### 问题
 
@@ -252,17 +313,36 @@
 
 +   在我们之前与 MFA 数据库合作时，我们有一个名为`transactions`的表来记录购买的或出售的艺术品，我们也可以在这里创建它。
 
-    [PRE17]
+    ```
+    CREATE TABLE `transactions` (
+        `id` INT AUTO_INCREMENT,
+        `title` VARCHAR(64) NOT NULL,
+        `action` ENUM('bought', 'sold') NOT NULL,
+        PRIMARY KEY(`id`)
+    ); 
+    ```
 
 +   现在，如果一件艺术品因为出售而从`collections`中被删除，我们也希望更新`transactions`表中的这一信息。通常，这将是两个不同的查询，但通过存储过程，我们可以给这个序列一个名称。
 
-    [PRE18]
+    ```
+    delimiter //
+    CREATE PROCEDURE `sell`(IN `sold_id` INT)
+    BEGIN
+        UPDATE `collections` SET `deleted` = 1 
+        WHERE `id` = `sold_id`;
+        INSERT INTO `transactions` (`title`, `action`)
+        VALUES ((SELECT `title` FROM `collections` WHERE `id` = `sold_id`), 'sold');
+    END//
+    delimiter ; 
+    ```
 
     这个过程参数的选择是绘画或艺术品的 ID，因为它是一个唯一的标识符。
 
 +   我们现在可以调用这个过程来出售特定的物品。假设我们想要出售“想象中的风景”。
 
-    [PRE19]
+    ```
+    CALL `sell`(2); 
+    ```
 
     我们可以显示`collections`和`transactions`表中的数据，以验证所做的更改。
 
@@ -290,7 +370,9 @@
 
 +   让我们通过打开 PSQL（PostgreSQL 的命令行界面）来连接到数据库服务器。
 
-    [PRE20]
+    ```
+    psql postgresql://postgres@127.0.0.1:5432/postgres 
+    ```
 
     我们可以以默认的 Postgres 用户或管理员身份登录。
 
@@ -298,7 +380,9 @@
 
 +   要创建 MBTA 数据库，我们可以运行：
 
-    [PRE21]
+    ```
+    CREATE DATABASE "mbta"; 
+    ```
 
 +   要连接到这个特定的数据库，我们可以运行`\c "mbta"`。
 
@@ -306,7 +390,12 @@
 
 +   最后，我们可以按照提议创建`cards`表，我们为 ID 列使用`SERIAL`数据类型。
 
-    [PRE22]
+    ```
+    CREATE TABLE "cards" (
+        "id" SERIAL,
+        PRIMARY KEY("id")
+    ); 
+    ```
 
 +   要在 PostgreSQL 中描述一个表，我们可以使用像 `\d "cards"` 这样的命令。运行此命令后，我们会看到有关此表的一些信息，但格式与 MySQL 略有不同。
 
@@ -320,13 +409,22 @@
 
 +   `stations` 表以类似 MySQL 的方式创建。
 
-    [PRE23]
+    ```
+    CREATE TABLE "stations" (
+        "id" SERIAL,
+        "name" VARCHAR(32) NOT NULL UNIQUE,
+        "line" VARCHAR(32) NOT NULL,
+        PRIMARY KEY("id")
+    ); 
+    ```
 
     我们可以在 PostgreSQL 中像在 MySQL 中一样使用 `VARCHAR`。为了使事情简单，我们可以说 `"line"` 列也是 `VARCHAR` 类型。
 
 +   我们接下来想要创建 `swipes` 表。回想一下，滑动类型可以标记卡的进入、退出或资金存入。类似于 MySQL，我们可以使用 `ENUM` 来捕获这些选项，但不要将其包含在列定义中。相反，我们创建自己的类型。
 
-    [PRE24]
+    ```
+    CREATE TYPE "swipe_type" AS ENUM('enter', 'exit', 'deposit'); 
+    ```
 
 +   PostgreSQL 有 `TIMESTAMP`、`DATE`、`TIME` 和 `INTERVAL` 类型来表示日期和时间值。`INTERVAL` 用于捕获某物持续了多长时间，或时间之间的距离。类似于 MySQL，我们可以使用这些类型指定精度。
 
@@ -334,7 +432,19 @@
 
 +   我们现在可以继续创建 `swipes` 表，如下所示。
 
-    [PRE25]
+    ```
+    CREATE TABLE "swipes" (
+        "id" SERIAL,
+        "card_id" INT,
+        "station_id" INT,
+        "type" "swipe_type" NOT NULL,
+        "datetime" TIMESTAMP NOT NULL DEFAULT now(),
+        "amount" NUMERIC(5,2) NOT NULL CHECK("amount" != 0),
+        PRIMARY KEY("id"),
+        FOREIGN KEY("station_id") REFERENCES "stations"("id"),
+        FOREIGN KEY("card_id") REFERENCES "cards"("id")
+    ); 
+    ```
 
     对于默认的时间戳，我们使用 PostgreSQL 提供的函数 `now()`，它给我们当前的时戳！
 
@@ -366,13 +476,17 @@
 
 +   让我们创建一个名为 Carter 的新用户（在这里你可以尝试使用你自己的名字）！
 
-    [PRE26]
+    ```
+    CREATE USER 'carter' IDENTIFIED BY 'password'; 
+    ```
 
 +   我们现在可以使用新用户和密码登录 MySQL，就像之前使用 root 用户一样。
 
 +   当我们创建这个新用户时，默认情况下它只有很少的权限。尝试以下查询。
 
-    [PRE27]
+    ```
+    SHOW DATABASES; 
+    ```
 
     这只显示了服务器中的一些默认数据库。
 
@@ -382,11 +496,15 @@
 
 +   如果我们想与刚刚创建的用户共享`analysis`视图，我们可以在以 root 用户登录时执行以下操作。
 
-    [PRE28]
+    ```
+    GRANT SELECT ON `rideshare`.`analysis` TO 'carter'; 
+    ```
 
 +   现在，让我们以新用户身份登录并验证我们是否可以访问视图。我们现在能够运行
 
-    [PRE29]
+    ```
+    USE `rideshare`; 
+    ```
 
 +   然而，这个用户可以访问的数据库部分只有`analysis`视图。我们现在可以看到这个视图中的数据，但不能从原始的`rides`表中看到！我们刚刚展示了 MySQL 访问控制的好处：我们可以让多个用户访问数据库，但只允许一些用户访问机密数据。
 
@@ -398,33 +516,52 @@
 
 +   例如，一个要求用户使用用户名和密码登录的网站可能在数据库上运行如下查询。
 
-    [PRE30]
+    ```
+    SELECT `id` FROM `users`
+    WHERE `user` = 'Carter' AND `password` = 'password'; 
+    ```
 
 +   在上面的例子中，用户 Carter 像往常一样输入了他们的用户名和密码。然而，一个恶意用户可能会输入不同的内容，比如字符串“password’ OR ‘1’ = 1”作为他们的密码。在这种情况下，他们试图获取用户和密码的整个数据库的访问权限。
 
-    [PRE31]
+    ```
+    SELECT `id` FROM `users`
+    WHERE `user` = 'Carter' AND `password` = 'password' OR '1' = '1'; 
+    ```
 
 +   在 MySQL 中，我们可以使用预编译语句来防止 SQL 注入攻击。让我们用之前创建的用户连接到 MySQL 并切换到`bank`数据库。
 
 +   一个可以运行的 SQL 注入攻击示例，可以用来显示`accounts`表中的所有用户账户。
 
-    [PRE32]
+    ```
+    SELECT * FROM `accounts`
+    WHERE `id` = 1 UNION SELECT * FROM `accounts`; 
+    ```
 
 +   预编译语句是 SQL 中的一个语句，我们可以在稍后插入值。对于上面的查询，我们可以编写一个预编译语句。
 
-    [PRE33]
+    ```
+    PREPARE `balance_check`
+    FROM 'SELECT * FROM `accounts`
+    WHERE `id` = ?'; 
+    ```
 
     预编译语句中的问号充当防止意外执行 SQL 代码的安全措施。
 
 +   要实际运行这个语句并检查某人的余额，我们接受用户输入作为变量，然后将其插入到预编译语句中。
 
-    [PRE34]
+    ```
+    SET @id = 1;
+    EXECUTE `balance_check` USING @id; 
+    ```
 
     在上面的代码中，想象一下`SET`语句是通过应用程序获取用户的 ID！`@`是 MySQL 中变量的约定。
 
 +   预编译语句清理输入以确保没有恶意 SQL 代码被注入。让我们尝试运行上面相同的语句，但使用一个恶意的 ID。
 
-    [PRE35]
+    ```
+    SET @id = '1 UNION SELECT * FROM `accounts`';
+    EXECUTE `balance_check` USING @id; 
+    ```
 
     这也给出了与之前代码相同的结果——它显示了 ID 为 1 的用户的余额，没有其他内容！因此，我们已经防止了可能的 SQL 注入攻击。
 

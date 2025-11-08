@@ -66,7 +66,9 @@
 
 +   *十六进制* 是一个有 16 个计数值的计数系统。它们如下：
 
-    [PRE0]
+    ```
+     0 1 2 3 4 5 6 7 8 9 A B C D E F 
+    ```
 
     注意 `F` 代表 `15`。
 
@@ -102,7 +104,16 @@
 
 +   在你的终端窗口中，键入 `code addresses.c` 并按照以下方式编写你的代码：
 
-    [PRE1]
+    ```
+    // Prints an integer
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int n = 50;
+        printf("%i\n", n);
+    } 
+    ```
 
     注意到 `n` 在内存中以值 `50` 存储的方式。
 
@@ -114,11 +125,23 @@
 
 +   C 语言有两个与内存相关的强大运算符：
 
-    [PRE2]
+    ```
+     & Provides the address of something stored in memory.
+      * Instructs the compiler to go to a location in memory. 
+    ```
 
 +   我们可以通过以下方式修改我们的代码来利用这一知识：
 
-    [PRE3]
+    ```
+    // Prints an integer's address
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int n = 50;
+        printf("%p\n", &n);
+    } 
+    ```
 
     注意到 `%p`，它允许我们查看内存位置的地址。`&n` 可以直译为“`n` 的地址。”执行此代码将返回以 `0x` 开头的内存地址。
 
@@ -126,19 +149,42 @@
 
 +   考虑以下代码：
 
-    [PRE4]
+    ```
+    int n = 50;
+    int *p = &n; 
+    ```
 
     注意到 `p` 是一个指针，它包含一个整数 `n` 的地址。
 
 +   按照以下方式修改你的代码：
 
-    [PRE5]
+    ```
+    // Stores and prints an integer's address
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int n = 50;
+        int *p = &n;
+        printf("%p\n", p);
+    } 
+    ```
 
     注意到这段代码与我们的前一段代码具有相同的效果。我们只是利用了我们对 `&` 和 `*` 运算符的新知识。
 
 +   为了说明 `*` 运算符的使用，考虑以下：
 
-    [PRE6]
+    ```
+    // Stores and prints an integer via its address
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int n = 50;
+        int *p = &n;
+        printf("%i\n", *p);
+    } 
+    ```
 
     注意到 `printf` 行打印了 `p` 位置的整数。`int *p` 创建了一个指针，其任务是存储一个整数的内存地址。
 
@@ -158,7 +204,16 @@
 
 +   按照以下方式修改你的代码：
 
-    [PRE7]
+    ```
+    // Prints a string
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string s = "HI!";
+        printf("%s\n", s);
+    } 
+    ```
 
     注意到打印了一个字符串 `s`。
 
@@ -174,19 +229,50 @@
 
 +   按如下方式修改你的代码：
 
-    [PRE8]
+    ```
+    // Prints a string's address as well the addresses of its chars
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string s = "HI!";
+        printf("%p\n", s);
+        printf("%p\n", &s[0]);
+        printf("%p\n", &s[1]);
+        printf("%p\n", &s[2]);
+        printf("%p\n", &s[3]);
+    } 
+    ```
 
     注意到上面的代码打印了字符串`s`中每个字符的内存位置。`&`符号用于显示字符串中每个元素的地址。当运行此代码时，注意元素`0`、`1`、`2`和`3`在内存中是相邻的。
 
 +   同样，你可以按如下方式修改你的代码：
 
-    [PRE9]
+    ```
+    // Declares a string with CS50 Library
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        string s = "HI!";
+        printf("%s\n", s);
+    } 
+    ```
 
     注意到这段代码将展示从`s`位置开始的字符串。这段代码实际上移除了`cs50.h`提供的`string`数据类型的训练轮。这是原始的 C 代码，没有 cs50 库的框架。
 
 +   取下训练轮，你可以再次修改你的代码：
 
-    [PRE10]
+    ```
+    // Declares a string without CS50 Library
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        char *s = "HI!";
+        printf("%s\n", s);
+    } 
+    ```
 
     注意到`cs50.h`已被移除。字符串被实现为`char *`。
 
@@ -204,19 +290,52 @@
 
 +   你可以修改你的代码以打印字符串中的每个内存位置，如下所示：
 
-    [PRE11]
+    ```
+    // Prints a string's chars
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        char *s = "HI!";
+        printf("%c\n", s[0]);
+        printf("%c\n", s[1]);
+        printf("%c\n", s[2]);
+    } 
+    ```
 
     注意到我们正在打印`s`位置处的每个字符。
 
 +   此外，你可以按如下方式修改你的代码：
 
-    [PRE12]
+    ```
+    // Prints a string's chars via pointer arithmetic
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        char *s = "HI!";
+        printf("%c\n", *s);
+        printf("%c\n", *(s + 1));
+        printf("%c\n", *(s + 2));
+    } 
+    ```
 
     注意到`s`位置处的第一个字符被打印出来。然后，打印`s + 1`位置处的字符，以此类推。
 
 +   同样，考虑以下内容：
 
-    [PRE13]
+    ```
+    // Prints substrings via pointer arithmetic
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        char *s = "HI!";
+        printf("%s\n", s);
+        printf("%s\n", s + 1);
+        printf("%s\n", s + 2);
+    } 
+    ```
 
     注意到这段代码从`s`开始打印存储在各个内存位置上的值。
 
@@ -226,7 +345,27 @@
 
 +   在课程早期，我们考虑了整数的比较。我们可以在终端窗口中通过输入`code compare.c`来在代码中表示这一点，如下所示：
 
-    [PRE14]
+    ```
+    // Compares two integers
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Get two integers
+        int i = get_int("i: ");
+        int j = get_int("j: ");
+
+        // Compare integers
+        if (i == j)
+        {
+            printf("Same\n");
+        }
+        else
+        {
+            printf("Different\n");
+        }
+    } 
+    ```
 
     注意到这段代码从用户那里获取两个整数并比较它们。
 
@@ -236,7 +375,27 @@
 
 +   为了说明这一点，按如下方式修改你的代码：
 
-    [PRE15]
+    ```
+    // Compares two strings' addresses
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Get two strings
+        char *s = get_string("s: ");
+        char *t = get_string("t: ");
+
+        // Compare strings' addresses
+        if (s == t)
+        {
+            printf("Same\n");
+        }
+        else
+        {
+            printf("Different\n");
+        }
+    } 
+    ```
 
     注意到，对于两个字符串都输入`HI!`，仍然会输出`Different`。
 
@@ -248,19 +407,67 @@
 
 +   使用`strcmp`，我们可以修正我们的代码：
 
-    [PRE16]
+    ```
+    // Compares two strings using strcmp
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // Get two strings
+        char *s = get_string("s: ");
+        char *t = get_string("t: ");
+
+        // Compare strings
+        if (strcmp(s, t) == 0)
+        {
+            printf("Same\n");
+        }
+        else
+        {
+            printf("Different\n");
+        }
+    } 
+    ```
 
     注意到`strcmp`可以在字符串相同的情况下返回`0`。
 
 +   为了进一步说明这两个字符串是如何生活在两个位置上的，按如下方式修改你的代码：
 
-    [PRE17]
+    ```
+    // Prints two strings
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Get two strings
+        char *s = get_string("s: ");
+        char *t = get_string("t: ");
+
+        // Print strings
+        printf("%s\n", s);
+        printf("%s\n", t);
+    } 
+    ```
 
     注意我们现在有两个独立的字符串被存储，可能位于两个不同的位置。
 
 +   你可以通过以下小修改看到这两个存储的字符串的位置：
 
-    [PRE18]
+    ```
+    // Prints two strings' addresses
+
+    #include <cs50.h> #include <stdio.h>  
+    int main(void)
+    {
+        // Get two strings
+        char *s = get_string("s: ");
+        char *t = get_string("t: ");
+
+        // Print strings' addresses
+        printf("%p\n", s);
+        printf("%p\n", t);
+    } 
+    ```
 
     注意在打印语句中 `%s` 已经被改为 `%p`。
 
@@ -270,7 +477,26 @@
 
 +   在你的终端窗口中，键入 `code copy.c` 并编写以下代码：
 
-    [PRE19]
+    ```
+    // Capitalizes a string
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // Get a string
+        string s = get_string("s: ");
+
+        // Copy string's address
+        string t = s;
+
+        // Capitalize first letter in string
+        t[0] = toupper(t[0]);
+
+        // Print string twice
+        printf("s: %s\n", s);
+        printf("t: %s\n", t);
+    } 
+    ```
 
     注意，`string t = s` 将 `s` 的地址复制到 `t` 中。这并没有完成我们想要做的事情。字符串没有被复制——只有地址被复制了。此外，请注意 `ctype.h` 的包含。
 
@@ -282,7 +508,29 @@
 
 +   在我们解决这个挑战之前，确保我们的代码不会因为尝试将 `string s` 复制到不存在的 `string t` 而导致 *段错误* 是很重要的。我们可以使用 `strlen` 函数如下来帮助实现这一点：
 
-    [PRE20]
+    ```
+    // Capitalizes a string, checking length first
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // Get a string
+        string s = get_string("s: ");
+
+        // Copy string's address
+        string t = s;
+
+        // Capitalize first letter in string
+        if (strlen(t) > 0)
+        {
+            t[0] = toupper(t[0]);
+        }
+
+        // Print string twice
+        printf("s: %s\n", s);
+        printf("t: %s\n", t);
+    } 
+    ```
 
     注意 `strlen` 用于确保 `string t` 存在。如果它不存在，则不会复制任何内容。
 
@@ -290,25 +538,134 @@
 
 +   我们可以修改我们的代码来创建我们字符串的真正副本如下：
 
-    [PRE21]
+    ```
+    // Capitalizes a copy of a string
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <stdlib.h> #include <string.h>  
+    int main(void)
+    {
+        // Get a string
+        char *s = get_string("s: ");
+
+        // Allocate memory for another string
+        char *t = malloc(strlen(s) + 1);
+
+        // Copy string into memory, including '\0'
+        for (int i = 0; i <= strlen(s); i++)
+        {
+            t[i] = s[i];
+        }
+
+        // Capitalize copy
+        t[0] = toupper(t[0]);
+
+        // Print strings
+        printf("s: %s\n", s);
+        printf("t: %s\n", t);
+    } 
+    ```
 
     注意 `malloc(strlen(s) + 1)` 创建了一个长度为字符串 `s` 加一的内存块。这允许在最终的复制字符串中包含 *空* `\0` 字符。然后，`for` 循环遍历字符串 `s` 并将每个值赋给字符串 `t` 的相同位置。
 
 +   结果表明，我们的代码效率不高。按照以下方式修改你的代码：
 
-    [PRE22]
+    ```
+    // Capitalizes a copy of a string, defining n in loop too
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <stdlib.h> #include <string.h>  
+    int main(void)
+    {
+        // Get a string
+        char *s = get_string("s: ");
+
+        // Allocate memory for another string
+        char *t = malloc(strlen(s) + 1);
+
+        // Copy string into memory, including '\0'
+        for (int i = 0, n = strlen(s); i <= n; i++)
+        {
+            t[i] = s[i];
+        }
+
+        // Capitalize copy
+        t[0] = toupper(t[0]);
+
+        // Print strings
+        printf("s: %s\n", s);
+        printf("t: %s\n", t);
+    } 
+    ```
 
     注意现在 `n = strlen(s)` 在 `for` 循环的左侧被定义。在 `for` 循环的中间条件中最好不调用不必要的函数，因为它会反复运行。当将 `n = strlen(s)` 移到左侧时，函数 `strlen` 只运行一次。
 
 +   `C` 语言有一个内置的函数用于复制字符串，称为 `strcpy`。它可以如下实现：
 
-    [PRE23]
+    ```
+    // Capitalizes a copy of a string using strcpy
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <stdlib.h> #include <string.h>  
+    int main(void)
+    {
+        // Get a string
+        char *s = get_string("s: ");
+
+        // Allocate memory for another string
+        char *t = malloc(strlen(s) + 1);
+
+        // Copy string into memory
+        strcpy(t, s);
+
+        // Capitalize copy
+        t[0] = toupper(t[0]);
+
+        // Print strings
+        printf("s: %s\n", s);
+        printf("t: %s\n", t);
+    } 
+    ```
 
     注意 `strcpy` 做了之前我们的 `for` 循环所做的工作。
 
 +   在出现错误的情况下，`get_string` 和 `malloc` 都会返回 `NULL`，这是内存中的一个特殊值。你可以编写代码来检查这个 `NULL` 条件，如下所示：
 
-    [PRE24]
+    ```
+    // Capitalizes a copy of a string without memory errors
+
+    #include <cs50.h> #include <ctype.h> #include <stdio.h> #include <stdlib.h> #include <string.h>  
+    int main(void)
+    {
+        // Get a string
+        char *s = get_string("s: ");
+        if (s == NULL)
+        {
+            return 1;
+        }
+
+        // Allocate memory for another string
+        char *t = malloc(strlen(s) + 1);
+        if (t == NULL)
+        {
+            return 1;
+        }
+
+        // Copy string into memory
+        strcpy(t, s);
+
+        // Capitalize copy
+        if (strlen(t) > 0)
+        {
+            t[0] = toupper(t[0]);
+        }
+
+        // Print strings
+        printf("s: %s\n", s);
+        printf("t: %s\n", t);
+
+        // Free memory
+        free(t);
+        return 0;
+    } 
+    ```
 
     注意如果获取的字符串长度为 `0` 或 `malloc` 失败，则返回 `NULL`。此外，注意 `free` 让计算机知道你已完成通过 `malloc` 创建的这块内存。
 
@@ -318,7 +675,18 @@
 
 +   考虑以下 `memory.c` 代码：
 
-    [PRE25]
+    ```
+    // Demonstrates memory errors via valgrind
+
+    #include <stdio.h> #include <stdlib.h>  
+    int main(void)
+    {
+        int *x = malloc(3 * sizeof(int));
+        x[1] = 72;
+        x[2] = 73;
+        x[3] = 33;
+    } 
+    ```
 
     注意，运行此程序不会导致任何错误。虽然 `malloc` 用于分配足够内存的数组，但代码未能释放分配的内存。
 
@@ -326,7 +694,19 @@
 
 +   你可以修改你的代码来释放 `x` 的内存，如下所示：
 
-    [PRE26]
+    ```
+    // Demonstrates memory errors via valgrind
+
+    #include <stdio.h> #include <stdlib.h>  
+    int main(void)
+    {
+        int *x = malloc(3 * sizeof(int));
+        x[1] = 72;
+        x[2] = 73;
+        x[3] = 33;
+        free(x);
+    } 
+    ```
 
     注意，现在再次运行 valgrind 不会出现内存泄漏。
 
@@ -336,7 +716,17 @@
 
 +   很可能你分配的内存之前已被计算机使用。因此，你可能会看到 *垃圾* 或 *垃圾值*。这是由于你获得了一块内存但没有初始化它。例如，考虑以下 `garbage.c` 代码：
 
-    [PRE27]
+    ```
+    #include <stdio.h> #include <stdlib.h>  
+    int main(void)
+    {
+        int scores[1024];
+        for (int i = 0; i < 1024; i++)
+        {
+            printf("%i\n", scores[i]);
+        }
+    } 
+    ```
 
     注意，运行此代码将在内存中为你的数组分配 `1024` 个位置，但 `for` 循环可能会显示其中并非所有值都是 `0`。始终注意，当你没有将内存块初始化为零或其他值时，垃圾值的可能性。
 
@@ -348,7 +738,29 @@
 
 +   在现实世界中，编程中一个常见的需要是交换两个值。自然地，没有临时存储空间交换两个变量是困难的。在实践中，你可以输入 `code swap.c` 并编写如下代码来观察这一行为：
 
-    [PRE28]
+    ```
+    // Fails to swap two integers
+
+    #include <stdio.h>  
+    void swap(int a, int b);
+
+    int main(void)
+    {
+        int x = 1;
+        int y = 2;
+
+        printf("x is %i, y is %i\n", x, y);
+        swap(x, y);
+        printf("x is %i, y is %i\n", x, y);
+    }
+
+    void swap(int a, int b)
+    {
+        int tmp = a;
+        a = b;
+        b = tmp;
+    } 
+    ```
 
     注意，尽管这段代码正在运行，但它不起作用。值，甚至在发送到 `swap` 函数之后，都没有交换。为什么？
 
@@ -368,7 +780,29 @@
 
 +   按如下修改你的代码：
 
-    [PRE29]
+    ```
+    // Swaps two integers using pointers
+
+    #include <stdio.h>  
+    void swap(int *a, int *b);
+
+    int main(void)
+    {
+        int x = 1;
+        int y = 2;
+
+        printf("x is %i, y is %i\n", x, y);
+        swap(&x, &y);
+        printf("x is %i, y is %i\n", x, y);
+    }
+
+    void swap(int *a, int *b)
+    {
+        int tmp = *a;
+        *a = *b;
+        *b = tmp;
+    } 
+    ```
 
     注意，变量不是通过*值*传递，而是通过*引用*传递。也就是说，`a` 和 `b` 的地址被提供给函数。因此，`swap` 函数可以知道从主函数中如何对实际的 `a` 和 `b` 进行更改。
 
@@ -392,25 +826,73 @@
 
 +   我们可以使用 `scanf` 很容易地重新实现 `get_int`，如下所示：
 
-    [PRE30]
+    ```
+    // Gets an int from user using scanf
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        int n;
+        printf("n: ");
+        scanf("%i", &n);
+        printf("n: %i\n", n);
+    } 
+    ```
 
     注意，`n` 的值存储在 `scanf("%i", &n)` 这一行中 `n` 的位置。
 
 +   然而，尝试重新实现 `get_string` 并不容易。考虑以下：
 
-    [PRE31]
+    ```
+    // Dangerously gets a string from user using scanf with array
+
+    #include <stdio.h>  
+    int main(void)
+    {
+        char s[4];
+        printf("s: ");
+        scanf("%s", s);
+        printf("s: %s\n", s);
+    } 
+    ```
 
     注意，由于字符串是特殊的，不需要使用 `&`。然而，这个程序并不总是在每次运行时都能正确运行。在这个程序中，我们没有为我们的字符串分配所需的内存量。实际上，我们不知道用户可能输入多长的字符串！进一步地，我们也不知道内存位置可能存在的垃圾值。
 
 +   此外，你的代码可以修改如下。但是，我们必须为字符串预分配一定量的内存：
 
-    [PRE32]
+    ```
+    // Using malloc
+
+    #include <stdio.h> #include <stdlib.h>  
+    int main(void)
+    {
+        char *s = malloc(4);
+        if (s == NULL)
+        {
+            return 1;
+        }
+        printf("s: ");
+        scanf("%s", s);
+        printf("s: %s\n", s);
+        free(s);
+        return 0;
+    } 
+    ```
 
     注意，如果提供了一个四字节的字符串，你*可能*会得到一个错误。
 
 +   如下简化我们的代码，我们可以进一步理解这个预分配的基本问题：
 
-    [PRE33]
+    ```
+    #include <stdio.h>  
+    int main(void)
+    {
+        char s[4];
+        printf("s: ");
+        scanf("%s", s);
+        printf("s: %s\n", s);
+    } 
+    ```
 
     注意，如果我们预先分配一个大小为 `4` 的数组，我们可以输入 `cat` 并使程序运行。然而，大于这个大小的字符串*可能*会创建一个错误。
 
@@ -420,7 +902,26 @@
 
 +   你可以读取和操作文件。虽然这个主题将在未来的某个星期进一步讨论，但考虑以下 `phonebook.c` 的代码：
 
-    [PRE34]
+    ```
+    // Saves names and numbers to a CSV file
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // Open CSV file
+        FILE *file = fopen("phonebook.csv", "a");
+
+        // Get name and number
+        char *name = get_string("Name: ");
+        char *number = get_string("Number: ");
+
+        // Print to file
+        fprintf(file, "%s,%s\n", name, number);
+
+        // Close file
+        fclose(file);
+    } 
+    ```
 
     注意，这段代码使用指针来访问文件。
 
@@ -428,13 +929,57 @@
 
 +   如果我们想在运行程序之前确保`phonebook.csv`文件存在，我们可以按照以下方式修改我们的代码：
 
-    [PRE35]
+    ```
+    // Saves names and numbers to a CSV file
+
+    #include <cs50.h> #include <stdio.h> #include <string.h>  
+    int main(void)
+    {
+        // Open CSV file
+        FILE *file = fopen("phonebook.csv", "a");
+        if (!file)
+        {
+            return 1;
+        }
+
+        // Get name and number
+        char *name = get_string("Name: ");
+        char *number = get_string("Number: ");
+
+        // Print to file
+        fprintf(file, "%s,%s\n", name, number);
+
+        // Close file
+        fclose(file);
+    } 
+    ```
 
     注意，这个程序通过调用`return 1`来防止`NULL`指针。
 
 +   我们可以通过输入`code cp.c`并编写如下代码来实现自己的复制程序：
 
-    [PRE36]
+    ```
+    // Copies a file
+
+    #include <stdio.h> #include <stdint.h>  
+    typedef uint8_t BYTE;
+
+    int main(int argc, char *argv[])
+    {
+        FILE *src = fopen(argv[1], "rb");
+        FILE *dst = fopen(argv[2], "wb");
+
+        BYTE b;
+
+        while (fread(&b, sizeof(b), 1, src) != 0)
+        {
+            fwrite(&b, sizeof(b), 1, dst);
+        }
+
+        fclose(dst);
+        fclose(src);
+    } 
+    ```
 
     注意，这个文件创建了我们自己的数据类型，称为 BYTE，它的大小与 uint8_t 相同。然后，文件读取一个`BYTE`并将其写入文件。
 

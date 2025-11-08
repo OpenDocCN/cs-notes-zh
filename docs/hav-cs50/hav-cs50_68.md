@@ -80,7 +80,14 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 1.  接下来，我们将导航到 `views.py`。这个文件将包含多个不同的视图，我们可以将视图现在视为用户可能希望看到的一页。为了创建我们的第一个视图，我们将编写一个接受 `request` 的函数。现在，我们将简单地返回一个 `HttpResponse`（一个非常简单的响应，包括一个 200 的响应代码和一个可以在网页浏览器中显示的文本字符串）。为了做到这一点，我们包含了 `from django.http import HttpResponse`。我们的文件现在看起来像：
 
-    [PRE0]
+    ```
+     from django.shortcuts import render
+     from django.http import HttpResponse
+
+     # Create your views here. 
+     def index(request):
+         return HttpResponse("Hello, world!") 
+    ```
 
 1.  现在，我们需要以某种方式将我们刚刚创建的视图与一个特定的 URL 关联起来。为此，我们将在与 `views.py` 相同的目录中创建另一个名为 `urls.py` 的文件。我们已经有了一个整个项目的 `urls.py` 文件，但最好为每个单独的应用程序都保留一个。
 
@@ -92,11 +99,26 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
     1.  对于每个期望的 URL，向 `urlpatterns` 列表中添加一个项目，该项目包含对 `path` 函数的调用，该函数有两个或三个参数：一个表示 URL 路径的字符串，一个在访问该 URL 时希望调用的 `views.py` 中的函数，以及（可选的）该路径的名称，格式为 `name="something"`。例如，这就是我们简单的应用程序现在看起来像：
 
-    [PRE1]
+    ```
+     from django.urls import path
+     from . import views
+
+     urlpatterns = [
+         path("", views.index, name="index")
+     ] 
+    ```
 
 1.  现在，我们已经为这个特定应用程序创建了一个 `urls.py` 文件，并且是时候编辑为我们整个项目创建的 `urls.py` 文件了。当你打开这个文件时，你应该会看到已经有一个名为 `admin` 的路径，我们将在后面的课程中讲解。我们想要为我们的新应用程序添加另一个路径，所以我们将向 `urlpatterns` 列表中添加一个项目。这遵循了我们之前路径相同的模式，除了我们不想将 `views.py` 中的函数作为第二个参数添加，而是希望能够包含我们应用程序中 `urls.py` 文件内的所有路径。为此，我们写下：`include("APP_NAME.urls")`，其中 `include` 是我们通过从 `django.urls` 中也导入 `include` 获得的函数，如下面的 `urls.py` 所示：
 
-    [PRE2]
+    ```
+    from django.contrib import admin
+    from django.urls import path, include
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('hello/', include("hello.urls"))
+    ] 
+    ```
 
 1.  通过这样做，我们指定了当用户访问我们的网站，然后在搜索栏中添加 `/hello` 到 URL 时，他们将被重定向到我们新应用程序中的路径。
 
@@ -118,11 +140,33 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 在`views.py`内部：
 
-[PRE3]
+```
+from django.shortcuts import render
+from django.http import HttpResponse
+
+# Create your views here. 
+def index(request):
+    return HttpResponse("Hello, world!")
+
+def brian(request):
+    return HttpResponse("Hello, Brian!")
+
+def david(request):
+    return HttpResponse("Hello, David!") 
+```
 
 在`urls.py`（在我们的应用程序内部）
 
-[PRE4]
+```
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.index, name="index"),
+    path("brian", views.brian, name="brian"),
+    path("david", views.david, name="david")
+] 
+```
 
 现在，当我们访问`localhost:8000/hello`时，我们的网站保持不变，但当我们向 URL 中添加`brian`或`david`时，我们会得到不同的页面：![布莱恩](img/8c2f62370f5794a6ccf3352d2da2e04c.png) ![大卫](img/7c1d3e87fda9ac18616143fd790b12bf.png)
 
@@ -130,17 +174,25 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 在考虑如何实现这一点时，似乎不可能 GitHub 和 Twitter 这样的网站为每个用户都有一个单独的 URL 路径，因此让我们看看我们如何创建一个更灵活的路径。我们将从向`views.py`添加一个更通用的函数`greet`开始：
 
-[PRE5]
+```
+def greet(request, name):
+    return HttpResponse(f"Hello, {name}!") 
+```
 
 这个函数不仅接受一个请求，还接受一个额外的参数，即用户的名称，然后根据该名称返回一个自定义的 HTTP 响应。接下来，我们必须在 `urls.py` 中创建一个更灵活的路径，这可能看起来像这样：
 
-[PRE6]
+```
+path("<str:name>", views.greet, name="greet") 
+```
 
 这是一种新的语法，但本质上这里发生的事情是我们不再寻找 URL 中的特定单词或名称，而是任何用户可能输入的字符串。现在，我们可以尝试使用几个其他的 URL 来测试网站：![harry](img/be345d96c0985885731cb3f8bbc84728.png) ![connor](img/4e2552b9979befe16394a7f556ba3c7d.png)
 
 我甚至可以通过增强 `greet` 函数来利用 Python 的 `capitalize` 函数，使其字符串首字母大写，使这些看起来更美观一些：
 
-[PRE7]
+```
+def greet(request, name):
+    return HttpResponse(f"Hello, {name.capitalize()}!") 
+```
 
 ![Harry](img/230bb6c995eabb6e956f019e097f9e09.png) ![Connor](img/84f2fcc10a3f7ef4016ea3486816f240.png)
 
@@ -150,7 +202,10 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 到目前为止，我们的 HTTP 响应只是文本，但我们可以包含我们想要的任何 HTML 元素！例如，我可以在 `index` 函数中决定返回一个蓝色标题而不是纯文本：
 
-[PRE8]
+```
+def index(request):
+    return HttpResponse("<h1 style=\"color:blue\">Hello, world!</h1>") 
+```
 
 ![蓝色](img/8d011a456b4064ab714962aebc4dbe3b.png)
 
@@ -158,7 +213,10 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 这就是为什么我们现在要介绍 [Django 的模板](https://docs.djangoproject.com/en/4.0/topics/templates/)，它将允许我们在单独的文件中编写 HTML 和 CSS，并使用 Django 渲染这些文件。我们将用于渲染模板的语法看起来是这样的：
 
-[PRE9]
+```
+def index(request):
+    return render(request, "hello/index.html") 
+```
 
 现在，我们需要创建这个模板。为此，我们将在我们的应用中创建一个名为 `templates` 的文件夹，然后在其中创建一个名为 `hello`（或我们应用的名称）的文件夹，最后添加一个名为 `index.html` 的文件。
 
@@ -166,17 +224,42 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 接下来，我们将添加我们想要添加到新文件中的内容：
 
-[PRE10]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        <h1>Hello, World!</h1>
+    </body>
+</html> 
+```
 
 现在，当我们访问我们应用程序的主页时，我们可以看到标题和标题已经更新了：![template0](img/dfd63be27cf7f52380537a62f90ea609.png)
 
 除了编写一些静态的 HTML 页面外，我们还可以使用 [Django 的模板语言](https://docs.djangoproject.com/en/4.0/ref/templates/language/) 来根据访问的 URL 改变我们 HTML 文件的内容。让我们通过更改之前的 `greet` 函数来试一试：
 
-[PRE11]
+```
+def greet(request, name):
+    return render(request, "hello/greet.html", {
+        "name": name.capitalize()
+    }) 
+```
 
 注意，我们在 `render` 函数中传递了第三个参数，这个参数被称为 **上下文**。在这个上下文中，我们可以提供我们希望在 HTML 文件中可用的信息。这个上下文以 Python 字典的形式存在。现在，我们可以创建一个 `greet.html` 文件：
 
-[PRE12]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        <h1>Hello, {{ name }}!</h1>
+    </body>
+</html> 
+```
 
 您会注意到我们使用了一些新的语法：双大括号。这种语法允许我们访问在 `context` 参数中提供的变量。现在，当我们尝试它时：![模板 1](img/8773e9ca9ba5901afc826f036a5ef196.png) ![模板 2](img/ab93e6d151068f37b9261dfc6435d5ce.png)
 
@@ -192,11 +275,20 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 1.  编辑我们项目的 `urls.py` 文件，并包含一个类似于为 `hello` 应用程序创建的路径：
 
-[PRE13]
+```
+path('newyear/', include("newyear.urls")) 
+```
 
 1.  在我们新应用程序的目录中创建另一个 `urls.py` 文件，并更新它以包含类似于 `hello` 中索引路径的路径：
 
-[PRE14]
+```
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.index, name="index"),
+] 
+```
 
 1.  在 `views.py` 中创建一个索引函数。
 
@@ -208,11 +300,31 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 +   现在我们有一个可以用来评估是否是新年第一天的表达式，我们可以更新 `views.py` 中的索引函数：
 
-[PRE15]
+```
+def index(request):
+    now = datetime.datetime.now()
+    return render(request, "newyear/index.html", {
+        "newyear": now.month == 1 and now.day == 1
+    }) 
+```
 
 现在，让我们创建我们的 `index.html` 模板。我们再次需要创建一个名为 `templates` 的新文件夹，该文件夹位于其中，然后是一个名为 `newyear` 的文件夹，以及一个名为 `index.html` 的文件。在该文件中，我们将编写如下内容：
 
-[PRE16]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Is it New Year's?</title>
+    </head>
+    <body>
+        {% if newyear -%}
+            <h1>YES</h1>
+        {%- else -%}
+            <h1>NO</h1>
+        {%- endif %}
+    </body>
+</html> 
+```
 
 在上面的代码中，请注意，当我们希望在 HTML 文件中包含逻辑时，我们使用 `{%` 和 `%}` 作为逻辑语句的开启和关闭标签。此外，请注意 Django 的格式化语言要求你包含一个结束标签，表示我们已完成 `if-else` 块。现在，我们可以打开我们的页面来查看：
 
@@ -224,7 +336,13 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 注意，实际上发送到你的网页浏览器的 HTML 只包括 NO 标题，这意味着 Django 正在使用我们编写的 HTML 模板来创建一个新的 HTML 文件，并将其发送到我们的网页浏览器。如果我们稍微作弊一下，确保我们的条件始终为真，我们会看到相反的情况被填充：
 
-[PRE17]
+```
+def index(request):
+    now = datetime.datetime.now()
+    return render(request, "newyear/index.html", {
+        "newyear": True
+    }) 
+```
 
 ![Yes](img/2f59c05a40f18d88ed1186fb10bdee1d.png) ![Source 0](img/486eddc03172c5bb7ea1e3b51c5cbfcc.png)
 
@@ -232,11 +350,19 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 如果我们想添加一个 CSS 文件，它是一个 *静态* 文件，因为它不会改变，我们首先创建一个名为 `static` 的文件夹，然后在其中创建一个 `newyear` 文件夹，最后在该文件夹中创建一个 `styles.css` 文件。在这个文件中，我们可以添加任何我们想要的样式，就像我们在第一节课中做的那样：
 
-[PRE18]
+```
+h1 {
+    font-family: sans-serif;
+    font-size: 90px;
+    text-align: center;
+} 
+```
 
 现在，为了在 HTML 文件中包含这个样式，我们在 HTML 模板顶部添加一行 `{% load static %}`，这向 Django 信号我们希望访问 `static` 文件夹中的文件。然后，而不是像之前那样硬编码样式表的链接，我们将使用一些 Django 特定的语法：
 
-[PRE19]
+```
+<link rel="stylesheet" href="{% static 'newyear/styles.css' %}"> 
+```
 
 现在，如果我们重新启动服务器，我们可以看到样式更改确实已经应用：![big no](img/952a506dcf65dc9b4e878d7f45fea8e0.png)
 
@@ -250,21 +376,53 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 1.  编辑我们项目的 `urls.py` 文件，并包含一个类似于为 `hello` 应用创建的路径：
 
-    [PRE20]
+    ```
+     path('tasks/', include("tasks.urls")) 
+    ```
 
 1.  在我们新应用的目录中创建另一个 `urls.py` 文件，并将其更新为包含一个类似于 `hello` 中的索引路径：
 
-    [PRE21]
+    ```
+     from django.urls import path
+     from . import views
+
+     urlpatterns = [
+         path("", views.index, name="index"),
+     ] 
+    ```
 
 1.  在 `views.py` 中创建一个索引函数。
 
 现在，让我们先尝试简单地创建一个任务列表，并将其显示在页面上。让我们在 `views.py` 的顶部创建一个 Python 列表，我们将在这里存储我们的任务。然后，我们可以更新我们的 `index` 函数以渲染一个模板，并提供我们新创建的列表作为上下文。
 
-[PRE22]
+```
+from django.shortcuts import render
+
+tasks = ["foo", "bar", "baz"]
+
+# Create your views here. def index(request):
+    return render(request, "tasks/index.html", {
+        "tasks": tasks
+    }) 
+```
 
 现在，让我们着手创建我们的模板 HTML 文件：
 
-[PRE23]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasks</title>
+    </head>
+    <body>
+        <ul>
+            {% for task in tasks %}
+                <li>{{ task }}</li>
+            {% endfor %}
+        </ul>
+    </body>
+</html> 
+```
 
 注意这里，我们能够使用类似于我们之前条件语句的语法，以及类似于第二部分课中 Python 循环的语法来遍历我们的任务。当我们现在访问任务页面时，我们可以看到我们的列表被渲染：![tasks0](img/a5c01778153d09b2e4ae7c27b0e68bcf.png)
 
@@ -272,29 +430,80 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 现在我们可以看到所有当前任务作为一个列表，我们可能想要能够添加一些新任务。为此，我们将开始查看如何使用表单来更新网页。让我们首先向 `views.py` 添加另一个函数，该函数将渲染一个带有添加新任务表单的页面：
 
-[PRE24]
+```
+# Add a new task: def add(request):
+    return render(request, "tasks/add.html") 
+```
 
 接下来，确保向 `urls.py` 添加另一个路径：
 
-[PRE25]
+```
+path("add", views.add, name="add") 
+```
 
 现在，我们将创建我们的 `add.html` 文件，它与 `index.html` 非常相似，只是在主体中我们将包含一个表单而不是列表：
 
-[PRE26]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasks</title>
+    </head>
+    <body>
+        <h1>Add Task:</h1>
+        <form action="">
+            <input type="text" name="task">
+            <input type="submit">
+        </form>
+    </body>
+</html> 
+```
 
 然而，我们刚刚所做的不一定是最佳设计，因为我们已经在两个不同的文件中重复了大部分 HTML。Django 的模板语言为我们提供了一种消除这种糟糕设计的方法：[模板继承](https://tutorial.djangogirls.org/en/template_extending/)。这允许我们创建一个包含我们页面通用结构的 `layout.html` 文件：
 
-[PRE27]
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasks</title>
+    </head>
+    <body>
+        {% block body %}
+        {% endblock %}
+    </body>
+</html> 
+```
 
 注意我们再次使用了 `{%...%}` 来表示某种非 HTML 逻辑，在这种情况下，我们告诉 Django 用来自另一个文件的一些文本填充这个“块”。现在，我们可以修改我们其他两个 HTML 文件，使其看起来像这样：
 
 `index.html`:
 
-[PRE28]
+```
+{% extends "tasks/layout.html" %}
+
+{% block body %}
+    <h1>Tasks:</h1>
+    <ul>
+        {% for task in tasks %}
+            <li>{{ task }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %} 
+```
 
 `add.html`:
 
-[PRE29]
+```
+{% extends "tasks/layout.html" %}
+
+{% block body %}
+    <h1>Add Task:</h1>
+    <form action="">
+        <input type="text" name="task">
+        <input type="submit">
+    </form>
+{% endblock %} 
+```
 
 注意我们现在可以通过 *扩展* 我们的布局文件来删除大部分重复的代码。现在，我们的索引页面保持不变，我们现在还有一个添加页面：
 
@@ -302,23 +511,42 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 接下来，每次我们想要添加一个新任务时，在 URL 中输入“/add”并不是很理想，所以我们可能想要在页面之间添加一些链接。但是，我们不是硬编码链接，现在我们可以使用在 `urls.py` 中为每个路径分配的 `name` 变量，创建一个看起来像这样的链接：
 
-[PRE30]
+```
+<a href="{% url 'add' %}">Add a New Task</a> 
+```
 
 其中 'add' 是该路径的名称。我们可以在 `add.html` 中做类似的事情：
 
-[PRE31]
+```
+<a href="{% url 'index' %}">View Tasks</a> 
+```
 
 这可能会产生问题，因为我们有多个名为 `index` 的路由分布在不同的应用中。我们可以通过进入每个应用的 `urls.py` 文件，并添加一个 `app_name` 变量来解决此问题，这样文件现在看起来就像这样：
 
-[PRE32]
+```
+from django.urls import path
+from . import views
+
+app_name = "tasks"
+urlpatterns = [
+    path("", views.index, name="index"),
+    path("add", views.add, name="add")
+] 
+```
 
 然后，我们可以将链接从简单的 `index` 和 `add` 改为 `tasks:index` 和 `tasks:add`
 
-[PRE33]
+```
+<a href="{% url 'tasks:index' %}">View Tasks</a>
+
+<a href="{% url 'tasks:add' %}">Add a New Task</a> 
+```
 
 现在，让我们确保当用户提交表单时表单实际上会做一些事情。我们可以通过向 `add.html` 中创建的表单添加一个 `action` 来做到这一点：
 
-[PRE34]
+```
+<form action="{% url 'tasks:add' %}" method="post"> 
+```
 
 这意味着一旦表单提交，我们将被路由回 `add` URL。在这里，我们指定我们将使用 *post* 方法而不是 *get* 方法，这通常是我们在表单可能改变该网页状态时使用的方法。
 
@@ -328,7 +556,13 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 要将这项技术整合到我们的代码中，我们必须在`add.html`表单中添加一行代码。
 
-[PRE35]
+```
+<form action="{% url 'tasks:add' %}" method="post">
+    {% csrf_token %}
+    <input type="text" name="task">
+    <input type="submit">
+</form> 
+```
 
 这行代码添加了一个由 Django 提供的 CSRF 令牌的隐藏输入字段，这样当我们重新加载页面时，看起来好像没有变化。然而，如果我们检查元素，我们会注意到添加了一个新的输入字段：![CSRF](img/2a1d56d40c720cc4350ce8cda98f4194.png)
 
@@ -336,11 +570,16 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 尽管我们可以像刚才那样通过编写原始 HTML 来创建表单，但 Django 提供了一个更简单的方法来收集用户信息：[Django 表单](https://docs.djangoproject.com/en/4.0/ref/forms/api/)。为了使用这种方法，我们需要在`views.py`的顶部添加以下内容以导入`forms`模块：
 
-[PRE36]
+```
+from django import forms 
+```
 
 现在，我们可以在`views.py`中创建一个新的表单，通过创建一个名为`NewTaskForm`的 Python 类来实现：
 
-[PRE37]
+```
+class NewTaskForm(forms.Form):
+    task = forms.CharField(label="New Task") 
+```
 
 现在，让我们来看看这个类中发生了什么：
 
@@ -354,11 +593,28 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 现在我们已经创建了`NewTaskForm`类，我们可以在渲染`add`页面时将其包含在上下文中：
 
-[PRE38]
+```
+# Add a new task: def add(request):
+    return render(request, "tasks/add.html", {
+        "form": NewTaskForm()
+    }) 
+```
 
 现在，在`add.html`中，我们可以用我们刚刚创建的表单替换我们的输入字段：
 
-[PRE39]
+```
+{% extends "tasks/layout.html" %}
+
+{% block body %}
+    <h1>Add Task:</h1>
+    <form action="{% url 'tasks:add' %}" method="post">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit">
+    </form>
+    <a href="{% url 'tasks:index' %}">View Tasks</a>
+{% endblock %} 
+```
 
 使用`forms`模块而不是手动编写 HTML 表单有几个优点：
 
@@ -372,11 +628,45 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 现在我们已经设置好了表单，让我们来处理用户点击提交按钮时会发生什么。当用户通过点击链接或输入 URL 导航到添加页面时，他们向服务器发送一个`GET`请求，我们已经在`add`函数中处理了它。但是，当用户提交表单时，他们向服务器发送一个`POST`请求，目前这个请求在`add`函数中没有被处理。我们可以通过在函数接收的`request`参数上添加条件来处理`POST`方法。下面代码中的注释解释了每行的目的：
 
-[PRE40]
+```
+# Add a new task: def add(request):
+
+    # Check if method is POST
+    if request.method == "POST":
+
+        # Take in the data the user submitted and save it as form
+        form = NewTaskForm(request.POST)
+
+        # Check if form data is valid (server-side)
+        if form.is_valid():
+
+            # Isolate the task from the 'cleaned' version of form data
+            task = form.cleaned_data["task"]
+
+            # Add the new task to our list of tasks
+            tasks.append(task)
+
+            # Redirect user to list of tasks
+            return HttpResponseRedirect(reverse("tasks:index"))
+
+        else:
+
+            # If the form is invalid, re-render the page with existing information.
+            return render(request, "tasks/add.html", {
+                "form": form
+            })
+
+    return render(request, "tasks/add.html", {
+        "form": NewTaskForm()
+    }) 
+```
 
 简要说明：为了在成功提交后重定向用户，我们需要导入一些额外的模块：
 
-[PRE41]
+```
+from django.urls import reverse
+from django.http import HttpResponseRedirect 
+```
 
 ## 会话
 
@@ -386,7 +676,47 @@ HTTP，或超文本传输协议，是一种广泛接受的协议，用于在互�
 
 要在我们的应用程序中使用会话，我们首先会删除全局`tasks`变量，然后修改我们的`index`函数，最后确保在之前任何使用变量`tasks`的地方，我们都将其替换为`request.session["tasks"]`。
 
-[PRE42]
+```
+def index(request):
+
+    # Check if there already exists a "tasks" key in our session 
+    if "tasks" not in request.session:
+
+        # If not, create a new list
+        request.session["tasks"] = []
+
+    return render(request, "tasks/index.html", {
+        "tasks": request.session["tasks"]
+    })
+
+# Add a new task: def add(request):
+    if request.method == "POST":
+
+        # Take in the data the user submitted and save it as form
+        form = NewTaskForm(request.POST)
+
+        # Check if form data is valid (server-side)
+        if form.is_valid():
+
+            # Isolate the task from the 'cleaned' version of form data
+            task = form.cleaned_data["task"]
+
+            # Add the new task to our list of tasks
+            request.session["tasks"] += [task]
+
+            # Redirect user to list of tasks
+            return HttpResponseRedirect(reverse("tasks:index"))
+        else:
+
+            # If the form is invalid, re-render the page with existing information.
+            return render(request, "tasks/add.html", {
+                "form": form
+            })
+
+    return render(request, "tasks/add.html", {
+        "form": NewTaskForm()
+    }) 
+```
 
 最后，在 Django 能够存储这些数据之前，我们必须在终端中运行`python manage.py migrate`。下周我们将更详细地讨论迁移是什么，但现阶段只需知道上述命令允许我们存储会话。
 

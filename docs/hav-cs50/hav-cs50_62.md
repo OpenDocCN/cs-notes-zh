@@ -54,11 +54,16 @@
 
 +   要查看 `movies` 表，我们可以从表中选择并限制结果。
 
-    [PRE0]
+    ```
+    SELECT * FROM "movies" LIMIT 5; 
+    ```
 
 +   要查找与电影 Cars 相关的信息，我们会运行以下查询。
 
-    [PRE1]
+    ```
+    SELECT * FROM "movies"
+    WHERE "title" = 'Cars'; 
+    ```
 
     +   假设我们想找出这个查询运行了多长时间。SQLite 有一个命令 `.timer on`，它使我们能够计时我们的查询。
 
@@ -72,7 +77,9 @@
 
 +   我们可以使用以下命令为 `movies` 表中的 `"title"` 列创建索引。
 
-    [PRE2]
+    ```
+    CREATE INDEX "title_index" ON "movies" ("title"); 
+    ```
 
     +   在创建这个索引后，我们再次运行查询以查找名为《汽车总动员》的电影。在这次运行中，所需时间显著缩短（在讲座中，几乎比第一次快八倍）！
 
@@ -80,7 +87,9 @@
 
 +   要删除我们刚刚创建的索引，请运行：
 
-    [PRE3]
+    ```
+    DROP INDEX "title_index"; 
+    ```
 
     +   在删除索引后，再次使用`EXPLAIN QUERY PLAN`与`SELECT`查询一起运行将表明计划将回退到扫描整个数据库。
 
@@ -98,13 +107,25 @@
 
 +   我们将运行以下查询来找到汤姆·汉克斯主演的所有电影。
 
-    [PRE4]
+    ```
+    SELECT "title" FROM "movies"
+    WHERE "id" IN (
+        SELECT "movie_id" FROM "stars"
+        WHERE "person_id" = (
+            SELECT "id" FROM "people"
+            WHERE "name" = 'Tom Hanks'
+        )
+    ); 
+    ```
 
 +   为了了解哪种索引可以帮助加快这个查询的速度，我们可以在查询之前再次运行`EXPLAIN QUERY PLAN`。这显示查询需要两次扫描——`people`和`stars`。由于我们是通过 ID 搜索`movies`，SQLite 会自动为这个 ID 创建索引，所以不需要扫描`movies`表！
 
 +   让我们创建两个索引来加快这个查询的速度。
 
-    [PRE5]
+    ```
+    CREATE INDEX "person_index" ON "stars" ("person_id");
+    CREATE INDEX "name_index" ON "people" ("name"); 
+    ```
 
 +   现在，我们使用相同的嵌套查询运行`EXPLAIN QUERY PLAN`。我们可以观察到
 
@@ -122,15 +143,26 @@
 
 +   首先，让我们删除`stars`表上现有的索引实现。
 
-    [PRE6]
+    ```
+    DROP INDEX "person_index"; 
+    ```
 
 +   接下来，我们创建新的索引。
 
-    [PRE7]
+    ```
+    CREATE INDEX "person_index" ON "stars" ("person_id", "movie_id"); 
+    ```
 
 +   运行以下命令将证明我们现在有两个覆盖索引，这应该会导致搜索速度大大加快！
 
-    [PRE8]
+    ```
+    EXPLAIN QUERY PLAN
+    SELECT "title" FROM "movies" WHERE "id" IN (
+        SELECT "movie_id" FROM "stars" WHERE "person_id" = (
+            SELECT "id" FROM "people" WHERE "name" = 'Tom Hanks'
+        )
+    ); 
+    ```
 
 +   确保我们已运行`.timer on`，然后我们可以执行上述查询以找到汤姆·汉克斯主演的所有电影，并观察其运行时间。现在查询的运行速度比没有索引时快得多（在讲座中，速度快了一个数量级）！
 
@@ -168,11 +200,18 @@
 
 +   这在我们知道用户只查询表的一小部分行时特别有用。在 IMDb 的情况下，可能用户更有可能查询一部新发布的电影，而不是一部 15 年前的电影。让我们尝试创建一个部分索引，该索引存储 2023 年发布的电影标题。
 
-    [PRE9]
+    ```
+    CREATE INDEX "recents" ON "movies" ("titles")
+    WHERE "year" = 2023; 
+    ```
 
 +   我们可以检查搜索 2023 年发布的电影是否使用了新的索引。
 
-    [PRE10]
+    ```
+    EXPLAIN QUERY PLAN
+    SELECT "title" FROM "movies"
+    WHERE "year" = 2023; 
+    ```
 
     这表明`movies`表是使用部分索引进行扫描的。
 
@@ -188,17 +227,23 @@
 
 +   要在终端上查找`movies.db`的大小，我们可以使用 Unix 命令
 
-    [PRE11]
+    ```
+    du -b movies.db 
+    ```
 
 +   在讲座中，这个命令向我们展示了数据库的大小大约是 158 百万字节，或者说 158 兆字节。
 
 +   我们现在可以连接到我们的数据库并删除我们之前创建的索引。
 
-    [PRE12]
+    ```
+    DROP INDEX "person_index"; 
+    ```
 
 +   现在，如果我们再次运行 Unix 命令，我们会看到数据库的大小没有减少！要真正清理已删除的空间，我们需要对它进行真空。我们可以在 SQLite 中运行以下命令。
 
-    [PRE13]
+    ```
+    VACUUM; 
+    ```
 
     这可能需要一秒钟或两秒钟的时间来运行。在再次运行 Unix 命令检查数据库大小时，我们应该看到更小的尺寸。一旦我们删除所有索引并再次真空，数据库的大小将比 158 MB 小得多（在讲座中大约是 100 MB）。
 
@@ -244,13 +289,20 @@
 
 +   首先，我们想查看`accounts`表中已经存在的数据。
 
-    [PRE14]
+    ```
+    SELECT * FROM "accounts"; 
+    ```
 
     我们在此处记录鲍勃的 ID 是 2，爱丽丝的 ID 是 1，这对我们的查询将很有用。
 
 +   要将 10 美元从爱丽丝的账户转移到鲍勃的账户，我们可以编写以下事务。
 
-    [PRE15]
+    ```
+    BEGIN TRANSACTION;
+    UPDATE "accounts" SET "balance" = "balance" + 10 WHERE "id" = 2;
+    UPDATE "accounts" SET "balance" = "balance" - 10 WHERE "id" = 1;
+    COMMIT; 
+    ```
 
     注意，`UPDATE`语句写在开始事务和提交事务的命令之间。如果我们执行查询是在写入`UPDATE`语句之后，但没有提交，那么两个`UPDATE`语句都不会执行！这有助于保持事务的**原子性**。通过以这种方式更新我们的表，我们无法看到中间步骤。
 
@@ -258,7 +310,12 @@
 
 +   我们实现事务回滚的方式是使用`ROLLBACK`。一旦我们开始一个事务并写入一些 SQL 语句，如果其中任何一个失败，我们可以使用`ROLLBACK`来结束它，将所有值回滚到事务前的状态。这有助于保持事务的**一致性**。
 
-    [PRE16]
+    ```
+    BEGIN TRANSACTION;
+    UPDATE "accounts" SET "balance" = "balance" + 10 WHERE "id" = 2;
+    UPDATE "accounts" SET "balance" = "balance" - 10 WHERE "id" = 1; -- Invokes constraint error
+    ROLLBACK; 
+    ```
 
 ### 竞争条件
 
@@ -288,7 +345,9 @@
 
 +   这取决于数据库管理系统（DBMS）。在 SQLite 中，我们可以通过运行以下排他性事务来实现这一点：
 
-    [PRE17]
+    ```
+    BEGIN EXCLUSIVE TRANSACTION; 
+    ```
 
     如果我们现在不完成这笔交易，而是尝试通过不同的终端连接到数据库以读取表，我们将得到一个错误，表明数据库已被锁定！当然，这是一种非常粗略的锁定方式，因为它锁定了整个数据库。由于 SQLite 在这方面比较粗略，因此它有一个模块用于优先处理事务并确保只获得最短必要的排他锁。
 
