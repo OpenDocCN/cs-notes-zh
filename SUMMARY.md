@@ -29,5 +29,6 @@
 +   [UCB CS61AS 使用 Racket 进行 SICP 学习](docs/ucb-cs61as/README.md)
 +   [UCB CS61c 组成原理中文笔记](docs/ucb-cs61c-arch/README.md)
 +   [UIUC CS241：众包系统编程书](docs/uiuc-cs241-notes/README.md)
++   [UIUC CS341 系统编程中文讲义](docs/uiuc-cs341/README.md)
 +   [软件设计与实现讲座笔记（华盛顿大学 CSE331）](docs/wsht-cse331/README.md)
 +   [滑铁卢 CS452 实时编程讲座笔记](docs/wtl-cs452/README.md)
