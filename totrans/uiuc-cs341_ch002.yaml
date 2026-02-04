@@ -1,0 +1,1212 @@
+- en: Background
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: Systems Architecture
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: This section is a short review of System Architecture topics that you’ll need
+    for System Programming.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Assembly
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: What is assembly? Assembly is the lowest that you’ll get to machine language
+    without writing 1’s and 0’s. Each computer has an architecture, and that architecture
+    has an associated assembly language. Each assembly command has a 1:1 mapping to
+    a set of 1’s and 0’s that tell the computer exactly what to do. For example, the
+    following in the widely used x86 Assembly language add one to the memory address
+    20 (Wikibooks [2018](ch018.xhtml#ref-wiki:xxx)) – you can also look in (Guide
+    [2011](ch018.xhtml#ref-guide2011intel)) Section 2A under the add instruction though
+    it is more verbose.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: Why do we mention this? Because it is important that although you are going
+    to be doing most of this class in C, that this is what the code is translated
+    into. Serious implications arise for race conditions and atomic operations.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Atomic Operations
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: An operation is atomic if no other processor should interrupt it. Take for example
+    the above assembly code to add one to a register. In the architecture, it may
+    actually have a few different steps on the circuit. The operation may start by
+    fetching the value of the memory from the stick of ram, then storing it in the
+    cache or a register, and then finally writing back (Schweizer, Besta, and Hoefler
+    [2015](ch018.xhtml#ref-schweizer2015evaluating)) – under the description for *fetch-and-add*
+    though your micro-architecture may vary. Or depending on performance operations,
+    it may keep that value in cache or in a register which is local to that process
+    – try dumping the optimized assembly of incrementing a variable. The problem comes
+    in if two processors try to do it at the same time. The two processors could at
+    the same time copy the value of the memory address, add one, and store the same
+    result back, resulting in the value only being incremented once. That is why we
+    have a special set of instructions on modern systems called atomic operations.
+    If an instruction is atomic, it makes sure that only one processor or thread performs
+    any intermediate step at a time. With x86 this is done by the prefix (Guide [2011](ch018.xhtml#ref-guide2011intel),
+    1120).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: Why don’t we do this for everything? It makes commands slower! If every time
+    a computer does something it has to make sure that the other cores or processors
+    aren’t doing anything, it’ll be much slower. Most of the time we differentiate
+    these with special consideration. Meaning, we will tell you when we use something
+    like this. Most of the time you can assume the instructions are unlocked.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Caching
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Ah yes, Caching. One of computer science’s greatest problems. The caching that
+    we are referring to is processor caching. If a particular address is already in
+    the cache when reading or writing, the processor will perform the operation on
+    the cache, such as adding and update the actual memory, later because updating
+    memory is slow (Intel [2015](ch018.xhtml#ref-intel2015improving) Section 3.4).
+    If it isn’t, the processor requests a chunk of memory from the memory chip and
+    stores it in the cache, kicking out the least recently used page – this depends
+    on caching policy, but Intel’s does use this. This is done because the l3 processor
+    cache is roughly three times faster to reach than the memory in terms of time
+    (Levinthal [2009](ch018.xhtml#ref-levinthal2009performance), 22) though exact
+    speeds will vary based on the clock speed and architecture. Naturally, this leads
+    to problems because there are two different copies of the same value, in the cited
+    paper this refers to an unshared line. This isn’t a class about caching, but you
+    should know how this could impact your code. A short but non-complete list could
+    be
+  prefs: []
+  type: TYPE_NORMAL
+- en: Race Conditions! If a value is stored in two different processor caches, then
+    that value should be accessed by a single thread.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Speed. With a cache, your program may look faster mysteriously. Just assume
+    that reads and writes that either happened recently or are next to each other
+    in memory are fast.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Side effects. Every read or write affects the cache state. While most of the
+    time this doesn’t help or hurt, it is important to know. Check the Intel programmer
+    guide on the lock prefix for more information.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Interrupts
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Interrupts are an important part of system programming. An interrupt is internally
+    an electrical signal that is delivered to the processor when something happens
+    – this is a hardware interrupt (“Chapter 3\. Hardware Interrupts,” [n.d.](ch018.xhtml#ref-redhat_hardware_int)).
+    Then the hardware decides if this is something that it should handle (e.g., handling
+    keyboard or mouse input for older keyboard and mouses) or it should pass to the
+    operating system. The operating system then decides if this is something that
+    it should handle (e.g., paging a memory table from disk) or something the application
+    should handle (e.g., a SEGFAULT). If the operating system decides that this is
+    something that the process or program should take care of, it sends a **software
+    fault** and that software fault is then propagated. The application then decides
+    if it is an error (SEGFAULT) or not (SIGPIPE for example) and reports to the user.
+    Applications can also send signals to the kernel and to the hardware as well.
+    This is an oversimplification because there are certain hardware faults that can’t
+    be ignored or masked away, but this class isn’t about teaching you to build an
+    operating system.
+  prefs: []
+  type: TYPE_NORMAL
+- en: An important application of this is how system calls are served! There is a
+    well-established set of registers that the arguments go in according to the kernel
+    as well as a system call “number” again defined by the kernel. Then the operating
+    system triggers an interrupt which the kernel catches and serves the system call
+    (Garg [2006](ch018.xhtml#ref-garg_2006)).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Operating system developers and instruction set developers alike didn’t like
+    the overhead of causing an interrupt on a system call. Now, systems use and which
+    has a cleaner way of transferring control safely to the kernel and safely back.
+    What safely means is obvious out of the scope for this class, but it persists.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Optional: Hyperthreading'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Hyperthreading is a new technology and is in no way shape or form multithreading.
+    Hyperthreading allows one physical core to appear as many virtual cores to the
+    operating system (Guide [2011](ch018.xhtml#ref-guide2011intel), P.51). The operating
+    system can then schedule processes on these virtual cores and one core will execute
+    them. Each core interleaves processes or threads. While the core is waiting for
+    one memory access to complete, it may perform a few instructions of another process
+    thread. The overall result is more instructions executed in a shorter time. This
+    potentially means that you can divide the number of cores you need to power smaller
+    devices.
+  prefs: []
+  type: TYPE_NORMAL
+- en: There be dragons here, though. With hyperthreading, you must be wary of optimizations.
+    A famous hyperthreading bug caused programs to crash if at least two processes
+    were scheduled on a physical core, using specific registers, in a tight loop.
+    The actual problem is better explained through an architecture lens. But, the
+    actual application was found through systems programmers working on OCaml’s mainline
+    (Leroy [2017](ch018.xhtml#ref-leroy_2017)).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Debugging and Environments
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'I’m going to tell you a secret about this course: it is about working smarter
+    *not* harder. The course can be time-consuming but the reason that so many people
+    see it as such (and why so many students don’t see it as such) is the relative
+    familiarity of people with their tools. Let’s go through some of the common tools
+    that you’ll be working on and need to be familiar with.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: ssh
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: is short for the Secure Shell (“Ssh(1),” [n.d.](ch018.xhtml#ref-openbsd_ssh)).
+    It is a network protocol that allows you to spawn a shell on a remote machine.
+    Most of the times in this class you will need to ssh into your VM like this
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: If you don’t want to type your password out every time, you can generate an
+    ssh key that uniquely identifies your machine. If you already have a key pair,
+    you can skip to the copy id stage.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: If you still think that that is too much typing, you can always alias hosts.
+    You may need to restart your VM or reload sshd for this to take effect. The config
+    file is available on Linux and Mac distros. For Windows, you’ll have to use the
+    Windows Linux Subsystem or configure any aliases in PuTTY
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: git
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: What is ‘git‘? Git is a version control system. What that means is git stores
+    the entire history of a directory. We refer to the directory as a repository.
+    So what do you need to know is a few things. First, create your repository with
+    the repo creator. If you haven’t already signed into enterprise GitHub, make sure
+    to do so otherwise your repository won’t be created for you. After that, your
+    repository is created on the server. Git is a decentralized version control system,
+    meaning that you’ll need to get a repository onto your VM. We can do this with
+    a clone. Whatever you do, **do not go through the README.md tutorial**.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: This will create a local repository. The workflow is you make a change on your
+    local repository, add the changes to a current commit, actually commit, and push
+    the changes to the server.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: Now to explain git well, you need to understand that git for our purposes will
+    look like a linked list. You will always be at the head of master, and you will
+    do the edit-add-commit-push loop. We have a separate branch on Github that we
+    push feedback to under a specific branch which you can view on Github website.
+    The markdown file will have information on the test cases and results (like standard
+    out).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Every so often git can break. Here is a list of commands you probably won’t
+    need to fix your repo
+  prefs: []
+  type: TYPE_NORMAL
+- en: git-cherry-pick
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: git-pack
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: git-gc
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: git-clean
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: git-rebase
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: git-stash/git-apply/git-pop
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: git-branch
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: If you are currently on a branch, and you don’t see either
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs: []
+  type: TYPE_PRE
+- en: or
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs: []
+  type: TYPE_PRE
+- en: And something like
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs: []
+  type: TYPE_PRE
+- en: Don’t panic, but your repository may be in an unworkable state. If you aren’t
+    nearing a deadline, come to office hours or ask your question on Edstem, and we’d
+    be happy to help. In an emergency scenario, delete your repository and re-clone
+    (you’ll have to add the as above). **This will lose any local uncommitted changes.
+    Make sure to copy any files you were working on outside the directory, remove
+    and copy them back in**
+  prefs: []
+  type: TYPE_NORMAL
+- en: If you want to learn more about git, there are all but an endless number of
+    tutorials and resources online that can help you. Here are some links that can
+    help you out
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[https://git-scm.com/docs/gittutorial](https://git-scm.com/docs/gittutorial)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[https://www.atlassian.com/git/tutorials/what-is-version-control](https://www.atlassian.com/git/tutorials/what-is-version-control)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[https://thenewstack.io/tutorial-git-for-absolutely-everyone/](https://thenewstack.io/tutorial-git-for-absolutely-everyone/)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Editors
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Some people take this as an opportunity to learn a new editor, others not so
+    much. The first part is those of you who want to learn a new editor. In the editor
+    war that spans decades, we have come to the battle of vim vs emacs.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Vim is a text editor and a Unix-like utility. You enter vim by typing , which
+    takes you into the editor. There are three most commonly used modes: normal mode,
+    insert mode, and command mode. You start off in normal mode. In this mode, you
+    can move around with many keys with the most common ones being (corresponding
+    to left, down, up, and right, respectively). To run commands in vim, you can first
+    type and then a command after it. For instance, to quit vim, simply type (q stands
+    for quit). If you have any unsaved edits, you must either save them , save and
+    quit , or quit and discard changes . To make edits you can either type to change
+    you into insert mode or to change to insert mode **a**fter the cursor. This is
+    the basics when it comes to vim. In addition to the countless great resources
+    out there on the internet, vim also has its own built-in tutorials set up for
+    beginners. To access the interactive tutorial, enter in the command line (not
+    inside of vim), and you are all set!'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Emacs is more of a way of life, and I don’t mean that figuratively. A lot of
+    people say that emacs is a powerful operating system lacking a decent text editor.
+    This means emacs can house a terminal, gdb session, ssh session, code and a whole
+    lot more. It would not be fitting any other way to introduce you to the gnu-emacs
+    any other way than the gnu-docs [https://www.gnu.org/software/emacs/tour/](https://www.gnu.org/software/emacs/tour/).
+    Just note that emacs is *insanely* powerful. You can do almost anything with it.
+    There are a fair number of students who like the IDE-aspect of other programming
+    languages. Know that you can set up emacs to be an IDE, but you have to learn
+    a bit of Lisp [http://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html](http://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Then there are those of you who like to use your own editors. That is completely
+    fine. For this, we require sshfs which has ports on many different machines.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Windows [https://github.com/billziss-gh/sshfs-win](https://github.com/billziss-gh/sshfs-win)
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Mac [https://github.com/osxfuse/osxfuse/wiki/SSHFS](https://github.com/osxfuse/osxfuse/wiki/SSHFS)
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Linux [https://help.ubuntu.com/community/SSHFS](https://help.ubuntu.com/community/SSHFS)
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: At that point, the files on your VM are synced with the files on your machine
+    and edits can be made and will be synced.
+  prefs: []
+  type: TYPE_NORMAL
+- en: At the time of writing, an author likes to use spacemacs [http://spacemacs.org/](http://spacemacs.org/)
+    which marries both vim and emacs and both of their difficulties. I’ll give my
+    soapbox for why I like it, but be warned that if you are starting from absolutely
+    no vim or emacs experience the learning curve along with this course may be too
+    much.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Extensible. Spacemacs has a clean design written in lisp. There are 100s of
+    packages ready to be installed by editing your spacemacs config and reloading
+    that do everything from syntax checking, automatic static analyzing, etc.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Most of the good parts from vim and emacs. Emacs is good at doing everything
+    by being a fast editor. Vim is good at making fast edits and moving around. Spacemacs
+    is the best of both worlds allowing vim keybindings to all the emacs goodness
+    underneath.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Lots of preconfiguration done. As opposed with a fresh emacs install, a lot
+    of the configurations with language and projects are done for you like neotree,
+    helm, various language layers. All that you have to do is navigate neotree to
+    the base of your project and emacs will turn into an IDE for that programming
+    language.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: But obviously to each his or her own. Many people will argue that editor gurus
+    spend more time editing their editors and actually editing.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Clean Code
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Make your code modular using helper functions. If there is a repeated task (getting
+    the pointers to contiguous blocks in the malloc MP, for example), make them helper
+    functions. And make sure each function does one thing well so that you don’t have
+    to debug twice. Let’s say that we are doing selection sort by finding the minimum
+    element each iteration like so,
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs: []
+  type: TYPE_PRE
+- en: Many can see the bug in the code, but it can help to refactor the above method
+    into
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs: []
+  type: TYPE_PRE
+- en: And the error is specifically in one function. In the end, this class is about
+    writing system programs, not a class about refactoring/debugging your code. In
+    fact, most kernel code is so atrocious that you don’t want to read it – the defense
+    there is that it needs to be. But for the sake of debugging, it may benefit you
+    in the long run to adopt some of these practices.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Asserts
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Use assertions to make sure your code works up to a certain point – and importantly,
+    to make sure you don’t break it later. For example, if your data structure is
+    a doubly-linked list, you can do something like to assert that the next node has
+    a pointer to the current node. You can also check the pointer is pointing to an
+    expected range of memory address, non-null, ->size is reasonable, etc. The macro
+    will disable all assertions, so don’t forget to set that once you finish debugging
+    (“Assert,” [n.d.](ch018.xhtml#ref-cplusplus_assert)).
+  prefs: []
+  type: TYPE_NORMAL
+- en: Here is a quick example with an assert. Let’s say that we are writing code using
+    memcpy. We would want to put an assert before that checks whether my two memory
+    regions overlap. If they do overlap, memcpy runs into undefined behavior, so we
+    want to discover that problem sooner rather than later.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs: []
+  type: TYPE_PRE
+- en: This check can be turned off at compile-time, but will save you **tons** of
+    trouble debugging!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Valgrind
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Valgrind is a suite of tools designed to provide debugging and profiling tools
+    to make your programs more correct and detect some runtime issues (“4\. Memcheck:
+    A Memory Error Detector,” [n.d.](ch018.xhtml#ref-valgrind)). The most used of
+    these tools is Memcheck, which can detect many memory-related errors that are
+    common in C and C++ programs and that can lead to crashes and unpredictable behavior
+    (for example, unfreed memory buffers). To run Valgrind on your program:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Arguments are optional and the default tool that will run is Memcheck. The
+    output will be presented in the form: the number of allocations, frees, and errors.
+    Suppose we have a simple program like this:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs: []
+  type: TYPE_PRE
+- en: This program compiles and runs with no errors. Let’s see what Valgrind will
+    output.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs: []
+  type: TYPE_PRE
+- en: '**Invalid write**: It detected our heap block overrun, writing outside of an
+    allocated block.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Definitely lost**: Memory leak — you probably forgot to free a memory block.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Valgrind is a effective tool to check for errors at runtime. C is special when
+    it comes to such behavior, so after compiling your program you can use Valgrind
+    to fix errors that your compiler may miss and that usually happens when your program
+    is running.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'For more information, you can refer to the manual (“4\. Memcheck: A Memory
+    Error Detector,” [n.d.](ch018.xhtml#ref-valgrind))'
+  prefs: []
+  type: TYPE_NORMAL
+- en: TSAN
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: ThreadSanitizer is a tool from Google, built into clang and gcc, to help you
+    detect race conditions in your code (“ThreadSanitizerCppManual” [2018](ch018.xhtml#ref-threadsanitizercppmanual_2018)).
+    Note, that running with tsan will slow your code down a bit. Consider the following
+    code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs: []
+  type: TYPE_PRE
+- en: We can see that there is a race condition on the variable . Both the main thread
+    and created thread will try to change the value at the same time. But, does ThreadSantizer
+    catch it?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs: []
+  type: TYPE_PRE
+- en: If we compiled with the debug flag, then it would give us the variable name
+    as well.
+  prefs: []
+  type: TYPE_NORMAL
+- en: GDB
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'GDB is short for the GNU Debugger. GDB is a program that helps you track down
+    errors by interactively debugging them (“GDB: The Gnu Project Debugger” [2019](ch018.xhtml#ref-gdb)).
+    It can start and stop your program, look around, and put in ad hoc constraints
+    and checks. Here are a few examples.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Setting breakpoints programmatically
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+- en: A breakpoint is a line of code where you want the execution to stop and give
+    control back to the debugger. A useful trick when debugging complex C programs
+    with GDB is setting breakpoints in the source code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs: []
+  type: TYPE_PRE
+- en: '[PRE19]'
+  prefs: []
+  type: TYPE_PRE
+- en: You can also set breakpoints programmatically. Assume that we have no optimization
+    and the line numbers are as follows
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE20]'
+  prefs: []
+  type: TYPE_PRE
+- en: We can now set the breakpoint before the program starts.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE21]'
+  prefs: []
+  type: TYPE_PRE
+- en: Checking memory content
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+- en: We can also use gdb to check the content of different pieces of memory. For
+    example,
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE22]'
+  prefs: []
+  type: TYPE_PRE
+- en: Compiled we get
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE23]'
+  prefs: []
+  type: TYPE_PRE
+- en: We can now use gdb to look at specific bytes of the string and reason about
+    when the program should’ve stopped running
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE24]'
+  prefs: []
+  type: TYPE_PRE
+- en: Here, by using the command with parameters , we can see that starting at memory
+    address (value of ), would actually see the following sequence of bytes as a string
+    because we provided a malformed string without a null terminator.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Involved gdb example
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Here is how one of your TAs would go through and debug a simple program that
+    is going wrong. First, the source code of the program. If you can see the error
+    immediately, please bear with us.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE25]'
+  prefs: []
+  type: TYPE_PRE
+- en: How can we use gdb to debug? First we ought to load GDB.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE26]'
+  prefs: []
+  type: TYPE_PRE
+- en: Want to take a look at the source?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE27]'
+  prefs: []
+  type: TYPE_PRE
+- en: From running the code, the breakpoint didn’t even trigger, meaning the code
+    never got to that point. That’s because of the comparison! Okay, flip the sign
+    it should work now right?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE28]'
+  prefs: []
+  type: TYPE_PRE
+- en: '[PRE29]'
+  prefs: []
+  type: TYPE_PRE
+- en: That was only the bare minimum, though most of you will get by with that. There
+    are a whole load more resources on the web, here are a few specific ones that
+    can help you get started.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[Introduction to gdb](http://www.cs.cmu.edu/~gilpin/tutorial/)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[GDB Manual](https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_toc.html)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[CppCon 2015: Greg Law “Give me 15 minutes & I’ll change your view of GDB”](https://www.youtube.com/watch?v=PorfLSr3DDI)'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Shell
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: What do you actually use to run your program? A shell! A shell is a programming
+    language that is running inside your terminal. A terminal is merely a window to
+    input commands. Now, on POSIX we usually have one shell called that is linked
+    to a POSIX compliant shell called . Most of the time, you use a shell called that
+    is somewhat POSIX compliant but has some nifty built-in features. If you want
+    to be even more advanced, has some more powerful features like tab complete on
+    programs and fuzzy patterns.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Undefined Behavior Sanitizer
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The undefined behavior sanitizer is a wonderful tool provided by the llvm project.
+    It allows you to compile code with a runtime checker to make sure that you don’t
+    do undefined behavior for various categories. We will try to include it into our
+    projects, but requires support form all the external libraries that we use so
+    we may not get around to all of them. [https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
+  prefs: []
+  type: TYPE_NORMAL
+- en: Undefined behavior - why we can’t solve it in general
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Also please please read Chris Lattner’s 3 Part blog post on undefined behavior.
+    It can shed light on debug builds and the mystery of compiler optimization.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html](http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html)'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Clang Static Build Tools
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Clang provides a great drop-in replacement tools for compiling programs. If
+    you want to see if there is an error that may cause a race condition, casting
+    error, etc, all you need to do is the following.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE30]'
+  prefs: []
+  type: TYPE_PRE
+- en: And in addition to the make output, you will get static build warnings.
+  prefs: []
+  type: TYPE_NORMAL
+- en: strace and ltrace
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'strace and ltrace are two programs that trace the system calls and library
+    calls, respectively, of a running program or command. These may be missing on
+    your system, so to install, run the following:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE31]'
+  prefs: []
+  type: TYPE_PRE
+- en: Debugging with ltrace can be as simple as figuring out what was the return call
+    of the last library call that failed.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE32]'
+  prefs: []
+  type: TYPE_PRE
+- en: '[PRE33]'
+  prefs: []
+  type: TYPE_PRE
+- en: ltrace output can clue you in to weird things your program is doing live. Unfortunately,
+    ltrace can’t be used to inject faults, meaning that ltrace can tell you what is
+    happening, but it can’t tamper with what is already happening.
+  prefs: []
+  type: TYPE_NORMAL
+- en: strace on the other hand could modify your program. Debugging with strace is
+    amazing. The basic usage is running strace with a program, and it’ll get you a
+    complete list of system call parameters.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE34]'
+  prefs: []
+  type: TYPE_PRE
+- en: If the output is too verbose, you can use trace= with a command delimited list
+    of syscalls to filter all but those calls.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE35]'
+  prefs: []
+  type: TYPE_PRE
+- en: You can also trace files or targets.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE36]'
+  prefs: []
+  type: TYPE_PRE
+- en: Newer versions of strace can actually inject faults into your program. This
+    is useful when you want to occasionally make reads and writes fail for example
+    in a networking application, which your program should handle. The problem is
+    as of early 2019, that version is missing from Ubuntu repositories. Meaning that
+    you’ll have to install it from the source.
+  prefs: []
+  type: TYPE_NORMAL
+- en: printfs
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: When all else fails, print! Each of your functions should have an idea of what
+    it is going to do. You want to test that each of your functions is doing what
+    it set out to do and see exactly where your code breaks. In the case with race
+    conditions, tsan may be able to help, but having each thread print out data at
+    certain times could help you identify the race condition.
+  prefs: []
+  type: TYPE_NORMAL
+- en: To make printfs useful, try to have a macro that fills in the context by which
+    the printf was called – a log statement if you will. A simple useful but untested
+    log statement could be as follows. Try to make a test and figure out something
+    that is going wrong, then log the state of your variables.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE37]'
+  prefs: []
+  type: TYPE_PRE
+- en: And then use as appropriately. Check out the compiling and linking section in
+    the appendix if you have any questions on how a C program gets translated to machine
+    code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Homework 0
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: '[PRE38]'
+  prefs: []
+  type: TYPE_PRE
+- en: So you want to master System Programming? And get a better grade than B?
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '[PRE39]'
+  prefs: []
+  type: TYPE_PRE
+- en: Watch the videos and write up your answers to the following questions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '**Important!**'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'The virtual machine-in-your-browser and the videos you need for HW0 are here:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[http://cs-education.github.io/sys/](http://cs-education.github.io/sys/)'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Questions? Comments? Use the current semester’s CS341 Edstem: [https://edstem.org/us/courses/61021/discussion/](https://edstem.org/us/courses/61021/discussion/)'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The in-browser virtual machine runs entirely in JavaScript and is fastest in
+    Chrome. Note the VM and any code you write is reset when you reload the page,
+    **so copy your code to a separate document.** The post-video challenges are not
+    part of homework 0, but you learn the most by doing rather than passively watching.
+    You have some fun with each end-of-video challenge.
+  prefs: []
+  type: TYPE_NORMAL
+- en: HW0 questions are below. Copy your answers into a text document because you’ll
+    need to submit them later in the course.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Chapter 1
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In which our intrepid hero battles standard out, standard error, file descriptors
+    and writing to files
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**Hello, World! (system call style)** Write a program that uses to print out
+    "Hi! My name is <Your Name>".'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Hello, Standard Error Stream!** Write a function to print out a triangle
+    of height to standard error. Your function should have the signature and should
+    use . The triangle should look like this, for n = 3:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE40]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: '**Writing to files** Take your program from "Hello, World!" modify it write
+    to a file called . Make sure to use correct flags and a correct mode for ( is
+    your friend).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Not everything is a system call** Take your program from "Writing to files"
+    and replace with . *Make sure to print to the file instead of standard out!*'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What are some differences between and ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Chapter 2
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Sizing up C types and their limits, and arrays, and incrementing pointers
+  prefs: []
+  type: TYPE_NORMAL
+- en: How many bits are there in a byte?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: How many bytes are there in a ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: How many bytes the following are on your machine? , , , , and
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: On a machine with 8 byte integers, the declaration for the variable is . If
+    the address of data is , then what is the address of ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'What is equivalent to in C? Hint: what does C convert to before dereferencing
+    the address? Remember, the type of a string constant is an array.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Why does this SEGFAULT?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE41]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: What is the value of the variable ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE42]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: What is the value of the variable
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE43]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Give an example of X such that is 3.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Give an example of Y such that might be 4 or 8 depending on the machine.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Chapter 3
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Program arguments, environment variables, and working with character arrays
+    (strings)
+  prefs: []
+  type: TYPE_NORMAL
+- en: What are at least two ways to find the length of ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What does represent?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Where are the pointers to environment variables stored (on the stack, the heap,
+    somewhere else)?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'On a machine where pointers are 8 bytes, and with the following code:'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE44]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: What are the values of and ? Why?
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: What data structure manages the lifetime of automatic variables?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Chapter 4
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Heap and stack memory, and working with structs
+  prefs: []
+  type: TYPE_NORMAL
+- en: If I want to use data after the lifetime of the function it was created in ends,
+    where should I put it? How do I put it there?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What are the differences between heap and stack memory?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Are there other kinds of memory in a process?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Fill in the blank: "In a good C program, for every malloc, there is a ___".'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What is one reason can fail?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What are some differences between and ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What is wrong with this code snippet?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE45]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: What is wrong with this code snippet?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE46]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: How can one avoid the previous two mistakes?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Create a that represents a . Then make a , so that can be replaced with a single
+    word. A person should contain the following information: their name (a string),
+    their age (an integer), and a list of their friends (stored as a pointer to an
+    array of pointers to s).'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Now, make two persons on the heap, "Agent Smith" and "Sonny Moore", who are
+    128 and 256 years old respectively and are friends with each other. Create functions
+    to create and destroy a Person (Person’s and their names should live on the heap).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: should take a name and age. The name should be copied onto the heap. Use malloc
+    to reserve sufficient memory for everyone having up to ten friends. Be sure initialize
+    all fields (why?).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: should free up both the memory of the person struct and all of its attributes
+    that are stored on the heap. Destroying one person keeps other people in tact
+    any other.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Chapter 5
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Text input and output and parsing using , , and .
+  prefs: []
+  type: TYPE_NORMAL
+- en: What functions can be used for getting characters from and writing them to ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Name one issue with .
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write code that parses the string "Hello 5 World" and initializes 3 variables
+    to "Hello", 5, and "World".
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What does one need to define before including ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Write a C program to print out the content of a file line-by-line using .
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: C Development
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: These are general tips for compiling and developing using a compiler and git.
+    Some web searches will be useful here
+  prefs: []
+  type: TYPE_NORMAL
+- en: What compiler flag is used to generate a debug build?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: You fix a problem in the Makefile and type again. Explain why this may be insufficient
+    to generate a new build.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Are tabs or spaces used to indent the commands after the rule in a Makefile?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What does do? What’s a in the context of git?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What does show you?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What does tell you and how would the contents of change its output?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What does do? Why is it insufficient to commit with ?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: What does a non-fast-forward error reject mean? What is the most common way
+    of dealing with this?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'Optional: Just for fun'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Convert a song lyrics into System Programming and C code covered in this wiki
+    book and share on the class forum.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Find, in your opinion, the best and worst C code on the web and post the link
+    to the class forum.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write a short C program with a deliberate subtle C bug and post it on the class
+    forum to see if others can spot your bug.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Do you have any cool/disastrous system programming bugs you’ve heard about?
+    Feel free to share with your peers and the course staff on the class forum.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: University of Illinois Specific Guidelines
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The class forum
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: TAs and student assistants get a ton of questions. Some are well-researched,
+    and some are not. This is a handy guide that’ll help you move away from the latter
+    and towards the former. Oh, and did I mention that this is an easy way to score
+    points with your internship managers? Ask yourself...
+  prefs: []
+  type: TYPE_NORMAL
+- en: Am I running on my Virtual Machine?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Did I check the man pages?**'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Have I searched for similar questions/followups on the class forum?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Have I read the MP/Lab specification completely?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Have I watched all of the videos?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Did I Google the error message and a few permutations thereof if necessary?
+    How about StackOverflow.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Did I try commenting out, printing, and/or stepping through parts of the code
+    bit by bit to find out precisely where the error occurs?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '**Did I commit my code to git in case the TAs need more context?**'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Did I include the console/GDB/Valgrind output **AND** code surrounding the bug
+    in my the class forum post?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Have I fixed other segmentation faults unrelated to the issue I’m having?
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Am I following good programming practice? (i.e. encapsulation, functions to
+    limit repetition, etc)
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: The biggest tip that we can give you when asking a question on the class forum
+    if you want a swift answer is to **ask your question like you were trying to answer
+    it**. Like before you ask a question, try to answer it yourself. If you are thinking
+    about posting
+  prefs: []
+  type: TYPE_NORMAL
+- en: Hi, My code got a 50
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: Sounds good and courteous, but course staff would much much prefer a post resembling
+    the following
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Hi, I recently failed test X, Y, Z which is about half the tests on this current
+    assignment. I noticed that they all have something to do with networking and epoll,
+    but couldn’t figure out what was linking them together, or I may be completely
+    off track. So to test my idea, I tried spawning 1000 clients with various get
+    and put requests and verifying the files matched their originals. I couldn’t get
+    it to fail while running normally, the debug build, or valgrind or tsan. I have
+    no warnings and none of the pre-syntax checks showed me anything. Could you tell
+    me if my understanding of the failure is correct and what I could do to modify
+    my tests to better reflect X, Y, Z? netid: bvenkat2'
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: You don’t need to be as courteous, though we’d appreciate it, this will get
+    a faster response time hand over foot. If you were trying to answer this question,
+    you’d have everything you need in the question body.
+  prefs: []
+  type: TYPE_NORMAL

@@ -1,0 +1,855 @@
+- en: Memory Allocators
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: Introduction
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Memory allocation is important! Allocating and deallocating heap memory is one
+    of the most common operations in any application. The heap at the system level
+    is contiguous series of addresses that the program can expand or contract and
+    use as its accord (“Overview of Malloc” [2018](ch018.xhtml#ref-mallocinternals)).
+    In POSIX, this is called the system break. We use to move the system break. Most
+    programs don’t interact directly with this call, they use a memory allocation
+    system around it to handle chunking up and keeping track of which memory is allocated
+    and which is freed.
+  prefs: []
+  type: TYPE_NORMAL
+- en: We will mainly be looking into simple allocators. Just know that there are other
+    ways of dividing up memory like with or other allocation schemes and methods like
+    .
+  prefs: []
+  type: TYPE_NORMAL
+- en: C Memory Allocation API
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: is a C library call and is used to reserve a contiguous block of memory that
+    may be uninitialized (Jones [2010](ch018.xhtml#ref-jones2010wg14) P. 348). Unlike
+    stack memory, the memory remains allocated until is called with the same pointer.
+    If can either return a pointer to at least that much free space requested or .
+    That means that malloc can return NULL even if there is some space. Robust programs
+    should check the return value. If your code assumes succeeds, and it does not,
+    then your program will likely crash (segfault) when it tries to write to address
+    0\. Also, malloc leaves garbage in memory because of performance – check your
+    code to make sure that a program all program values are initialized.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: allows a program to resize an existing memory allocation that was previously
+    allocated on the heap (via malloc, calloc, or realloc) (Jones [2010](ch018.xhtml#ref-jones2010wg14)
+    P. 349). The most common use of realloc is to resize memory used to hold an array
+    of values. There are two gotchas with realloc. One, a new pointer may be returned.
+    Two, it can fail. A naive but readable version of realloc is suggested below with
+    sample usage.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: The above code is fragile. If fails then the program leaks memory. Robust code
+    checks for the return value and only reassigns the original pointer if not NULL.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'initializes memory contents to zero and also takes two arguments: the number
+    of items and the size in bytes of each item. An advanced discussion of these limitations
+    is [in this article](http://locklessinc.com/articles/calloc/). Programmers often
+    use rather than explicitly calling after , to set the memory contents to zero
+    because certain performance considerations are taken into account. Note is identical
+    to , but you should follow the conventions of the manual. A naive implementation
+    of calloc is below.'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: takes a pointer to the start of a piece of memory and makes it available for
+    use in subsequent calls to the other allocation functions. This is important because
+    we don’t want every process in our address space to take an enormous amount of
+    memory. Once we are done using memory, we stop using it with ‘free‘. A simple
+    usage is below.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: If a program uses a piece of memory after it is freed - that is undefined behavior.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Heaps and sbrk
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The heap is part of the process memory and varies in size. Heap memory allocation
+    is performed by the C library when a program calls (, ) and . By calling the C
+    library can increase the size of the heap as your program demands more heap memory.
+    As the heap and stack need to grow, we put them at opposite ends of the address
+    space. Stacks don’t grow like a heap, new parts of the stack are allocated for
+    new threads. For typical architectures, the heap will grow upwards and the stack
+    grows downwards.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Nowadays, Modern operating system memory allocators no longer need . Instead,
+    they can request independent regions of virtual memory and maintain multiple memory
+    regions. For example, gibibyte requests may be placed in a different memory region
+    than small allocation requests. However, this detail is an unwanted complexity.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Programs don’t need to call or typically, though calling can be interesting
+    because it tells a program where your heap currently ends. Instead programs use
+    , , and which are part of the C library. The internal implementation of these
+    functions may call when additional heap memory is required.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: Note that the memory that was newly obtained by the operating system must be
+    zeroed out. If the operating system left the contents of physical RAM as-is, it
+    might be possible for one process to learn about the memory of another process
+    that had previously used the memory. This would be a security leak. Unfortunately,
+    this means that for requests before any memory has been freed is *often* zero.
+    This is unfortunate because many programmers mistakenly write C programs that
+    assume allocated memory will *always* be zero.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: Intro to Allocating
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Let’s try to write Malloc. Here is our first attempt at it – the naive version.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: Above is the simplest implementation of malloc, there are a few drawbacks though.
+  prefs: []
+  type: TYPE_NORMAL
+- en: System calls are slow compared to library calls. We should reserve a large amount
+    of memory and only occasionally ask for more from the system.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: No reuse of freed memory. Our program never re-uses heap memory - it keeps asking
+    for a bigger heap.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If this allocator was used in a typical program, the process would quickly exhaust
+    all available memory. Instead, we need an allocator that can efficiently use heap
+    space and only ask for more memory when necessary. Some programs use this type
+    of allocator. Consider a video game allocating objects to load the next scene.
+    It is considerably faster to do the above and throw the entire block of memory
+    away than it is to do the following placement strategies.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Placement Strategies
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: During program execution, memory is allocated and deallocated, so there will
+    be a gap in the heap memory that can be re-used for future memory requests. The
+    memory allocator needs to keep track of which parts of the heap are currently
+    allocated and which are parts are available. Suppose our current heap size is
+    64K. Let’s say that our heap looks like the following table.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Empty heap blocks](../media/file6.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Empty heap blocks
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'If a new malloc request for 2KiB is executed (), where should reserve the memory?
+    It could use the last 2KiB hole, which happens to be the perfect size! Or it could
+    split one of the other two free holes. These choices represent different placement
+    strategies. Whichever hole is chosen, the allocator will need to split the hole
+    into two. The newly allocated space, which will be returned to the program and
+    a smaller hole if there is spare space left over. A perfect-fit strategy finds
+    the smallest hole that is of sufficient size (at least 2KiB):'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Best fit finds an exact match](../media/file7.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Best fit finds an exact match
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'A worst-fit strategy finds the largest hole that is of sufficient size so break
+    the 30KiB hole into two:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Worst fit finds the worst match](../media/file8.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Worst fit finds the worst match
+  prefs: []
+  type: TYPE_NORMAL
+- en: A first-fit strategy finds the first available hole that is of sufficient size
+    so break the 16KiB hole into two. We don’t even have to look through the entire
+    heap!
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![First fit finds the first match](../media/file9.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: First fit finds the first match
+  prefs: []
+  type: TYPE_NORMAL
+- en: One thing to keep in mind is those placement strategies don’t need to replace
+    the block. For example, our first fit allocator could’ve returned the original
+    block unbroken. Notice that this would lead to about 14KiB of space to be unused
+    by the user and the allocator. We call this internal fragmentation.
+  prefs: []
+  type: TYPE_NORMAL
+- en: In contrast, external fragmentation is that even though we have enough memory
+    in the heap, it may be divided up in a way so a continuous block of that size
+    is unavailable. In our previous example, of the 64KiB of heap memory, 17KiB is
+    allocated, and 47KiB is free. However, the largest available block is only 30KiB
+    because our available unallocated heap memory is fragmented into smaller pieces.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Placement Strategy Pros and Cons
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The challenges of writing a heap allocator are
+  prefs: []
+  type: TYPE_NORMAL
+- en: Need to minimize fragmentation (i.e. maximize memory utilization)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Need high performance
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Fiddly implementation – lots of pointer manipulation using linked lists and
+    pointer arithmetic.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Both fragmentation and performance depend on the application allocation profile,
+    which can be evaluated but not predicted and in practice, under-specific usage
+    conditions, a special-purpose allocator can often out-perform a general-purpose
+    implementation.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The allocator doesn’t know the program’s memory allocation requests in advance.
+    Even if we did, this is the [Knapsack problem](http://en.wikipedia.org/wiki/Knapsack_problem)
+    which is known to be NP-hard!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Different strategies affect the fragmentation of heap memory in non-obvious
+    ways, which only are discovered by mathematical analysis or careful simulations
+    under real-world conditions (for example simulating the memory allocation requests
+    of a database or webserver).
+  prefs: []
+  type: TYPE_NORMAL
+- en: First, we will have a more mathematical, one-shot approach to each of these
+    algorithms (Garey, Graham, and Ullman [1972](ch018.xhtml#ref-Garey:1972:WAM:800152.804907)).
+    The paper describes a scenario where you have a certain number of bins and a certain
+    number of allocations, and you are trying to fit the allocations in as few bins
+    as possible, hence using as little memory as possible. The paper discusses theoretical
+    implications and puts a nice limit on the ratios in the long run between the ideal
+    memory usage and the actual memory usage. For those who are interested, the paper
+    concludes that actual memory usage over ideal memory usage as the number of bins
+    increases – the bins can have any distribution – is about 1.7 for First-Fit and
+    lower bounded by 1.7 for best fit. The problem with this analysis is that few
+    real-world applications need this type of one-shot allocation. Video game object
+    allocations will typically designate a different subheap for each level and fill
+    up that subheap if they need a quick memory allocation scheme that they can throw
+    away.
+  prefs: []
+  type: TYPE_NORMAL
+- en: In practice, we’ll be using the result from a more rigorous survey conducted
+    in 2005 (Wilson et al. [1995](ch018.xhtml#ref-10.1007/3-540-60368-9_19)). The
+    survey makes sure to note that memory allocation is a moving target. A good allocation
+    scheme to one program may not be a good allocation scheme for another program.
+    Programs don’t uniformly follow the distribution of allocations. The survey talks
+    about all the allocation schemes that we have introduced as well as a few extra
+    ones. Here are some summarized takeaways
+  prefs: []
+  type: TYPE_NORMAL
+- en: Best fit may have problems when a block is chosen that is almost the right size,
+    and the remaining space is split so small that a program probably won’t use it.
+    A way to get around this could be to set a threshold for splitting. This small
+    splitting isn’t observed as frequently under a regular workload. Also, the worst-case
+    behavior of Best-Fit is bad, but it doesn’t usually happen [p. 43].
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: The survey also talks about an important distinction of First-Fit. There are
+    multiple notions of first. First could be ordered in terms of the time of ‘free‘’ing,
+    or it could be ordered through the addresses of the start of the block, or it
+    could be ordered by the time of last free – first being least recently used. The
+    survey didn’t go too in-depth into the performance of each but did make a note
+    that address-ordered and Least Recently Used (LRU) lists ended up with better
+    performance than the most recently used first.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: The survey concludes by first saying that under simulated random (assuming uniform
+    at random) workloads, best fit and first fit do as well. Even in practice, both
+    best and address ordered first fit do about as equally as well with a splitting
+    threshold and coalescing. The reasons why aren’t entirely known.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Some additional notes we make
+  prefs: []
+  type: TYPE_NORMAL
+- en: Best fit may take less time than a full heap scan. When a block of perfect size
+    or perfect size within a threshold is found, that can be returned, depending on
+    what edge-case policy you have.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Worst fit follows this as well. Your heap could be represented with the max-heap
+    data structure and each allocation call could simply pop the top off, re-heapify,
+    and possibly insert a split memory block. Using Fibonacci heaps, however, could
+    be extremely inefficient.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: First-Fit needs to have a block order. Most of the time programmers will default
+    to linked lists which is a fine choice. There aren’t too many improvements you
+    can make with a least recently used and most recently used linked list policy,
+    but with address ordered linked lists you can speed up insertion from O(n) to
+    O(log(n)) by using a randomized skip-list in conjunction with your singly-linked
+    list. An insert would use the skip list as shortcuts to find the right place to
+    insert the block and removal would go through the list as normal.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: There are many placement strategies that we haven’t talked about, one is next-fit
+    which is first fit on the next fit block. This adds deterministic randomness –
+    pardon the oxymoron. You won’t be expected to know this algorithm, know as you
+    are implementing a memory allocator as part of a machine problem, there are more
+    than these.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Memory Allocator Tutorial
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: A memory allocator needs to keep track of which bytes are currently allocated
+    and which are available for use. This section introduces the implementation and
+    conceptual details of building an allocator, or the actual code that implements
+    and .
+  prefs: []
+  type: TYPE_NORMAL
+- en: Conceptually, we are thinking about creating linked lists and lists of blocks!
+    Please enjoy the following ASCII art. bt is short for boundary tag.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![3 Adjacent Memory blocks](../media/file10.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: 3 Adjacent Memory blocks
+  prefs: []
+  type: TYPE_NORMAL
+- en: We will have implicit pointers in our next block, meaning that we can get from
+    one block to another using addition. This is in contrast to an explicit field
+    in our meta block.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Malloc addition](../media/file11.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Malloc addition
+  prefs: []
+  type: TYPE_NORMAL
+- en: One can grab the next block by finding the end of the current one. That is what
+    we mean by “implicit list”.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The actual spacing may be different. The metadata can contain different things.
+    A minimal metadata implementation would simply have the size of the block.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Since we write integers and pointers into memory that we already control, we
+    can later consistently hop from one address to the next. This internal information
+    represents some overhead. Meaning even if we had requested 1024 KiB of contiguous
+    memory from the system, we an allocation of that size will fail.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Our heap memory is a list of blocks where each block is either allocated or
+    unallocated. Thus there is conceptually a list of free blocks, but it is implicit
+    in the form of block size information that we store as part of each block. Let’s
+    think of it in terms of a simple implementation.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs: []
+  type: TYPE_PRE
+- en: We could navigate from one block to the next block by adding the block’s size.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs: []
+  type: TYPE_PRE
+- en: Make sure to get your casting right! Otherwise, the program will move an extreme
+    amount of bytes over.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The calling program never sees these values. They are internal to the implementation
+    of the memory allocator. As an example, suppose your allocator is asked to reserve
+    80 bytes () and requires 8 bytes of internal header data. The allocator would
+    need to find an unallocated space of at least 88 bytes. After updating the heap
+    data it would return a pointer to the block. However, the returned pointer points
+    to the usable space, not the internal data! Instead, we would return the start
+    of the block + 8 bytes. In the implementation, remember that pointer arithmetic
+    depends on type. For example, adds , not necessarily 8 bytes!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Implementing a Memory Allocator
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The simplest implementation uses First-Fit. Start at the first block, assuming
+    it exists, and iterate until a block that represents an unallocated space of sufficient
+    size is found, or we’ve checked all the blocks. If no suitable block is found,
+    it’s time to call again to sufficiently extend the size of the heap. For this
+    class, we will try to serve every memory request until the operating system tells
+    us we are going to run out of heap space. Other applications may limit themselves
+    to a certain heap size and cause requests to intermittently fail. Besides, a fast
+    implementation might extend it a significant amount so that we will not need to
+    request more heap memory soon.
+  prefs: []
+  type: TYPE_NORMAL
+- en: When a free block is found, it may be larger than the space we need. If so,
+    we will create two entries in our implicit list. The first entry is the allocated
+    block, the second entry is the remaining space. There are ways to do this if the
+    program wants to keep the overhead small. We recommend first for going with readability.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs: []
+  type: TYPE_PRE
+- en: If the program wants certain bits to hold different pieces of information, use
+    bit fields!
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs: []
+  type: TYPE_PRE
+- en: The compiler will handle the shifting. After setting up your fields then it
+    becomes simply looping through each of the blocks and checking the appropriate
+    fields
+  prefs: []
+  type: TYPE_NORMAL
+- en: Here is a visual representation of what happens. If we assume that we have a
+    block that looks like this, we want to spit if the allocation is let’s say 16
+    bytes The split we’ll have to do is the following.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Malloc split](../media/file12.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Malloc split
+  prefs: []
+  type: TYPE_NORMAL
+- en: This is before alignment concerns as well.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Alignment and rounding up considerations
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Many architectures expect multibyte primitives to be aligned to some multiple
+    of 2 (4, 16, etc). For example, it’s common to require 4-byte types to be aligned
+    to 4-byte boundaries and 8-byte types on 8-byte boundaries. If multi-byte primitives
+    are stored on an unreasonable boundary, the performance can be significantly impacted
+    because it may require an additional memory read. On some architectures the penalty
+    is even greater - the program will crash with a [bus error](http://en.wikipedia.org/wiki/Bus_error#Unaligned_access).
+    Most of you have experienced this in your architecture classes if there was no
+    memory protection.
+  prefs: []
+  type: TYPE_NORMAL
+- en: As does not know how the user will use the allocated memory, the pointer returned
+    to the program needs to be aligned for the worst case, which is architecture-dependent.
+  prefs: []
+  type: TYPE_NORMAL
+- en: From glibc documentation, the glibc uses the following heuristic (“Virtual Memory
+    Allocation and Paging” [2001](ch018.xhtml#ref-vma_paging))
+  prefs: []
+  type: TYPE_NORMAL
+- en: The block that malloc gives you is guaranteed to be aligned so that it can hold
+    any type of data. On GNU systems, the address is always a multiple of eight on
+    most systems and a multiple of 16 on 64-bit systems." For example, if you need
+    to calculate how many 16 byte units are required, don’t forget to round up.
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: This is what the math would look like in C.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs: []
+  type: TYPE_PRE
+- en: The additional constant ensures incomplete units are rounded up. Note, real
+    code is more likely to symbol sizes e.g. , rather than coding numerical constant
+    15\. [Here’s a great article on memory alignment, if you are further interested](http://www.ibm.com/developerworks/library/pa-dalign/)
+  prefs: []
+  type: TYPE_NORMAL
+- en: Another added effect could be internal fragmentation happens when the given
+    block is larger than their allocation size. Let’s say that we have a free block
+    of size 16B (not including metadata). If they allocate 7 bytes, the allocator
+    may want to round up to 16B and return the entire block. This gets sinister when
+    implementing coalescing and splitting. If the allocator doesn’t implement either,
+    it may end up returning a block of size 64B for a 7B allocation! There is a *lot*
+    of overhead for that allocation which is what we are trying to avoid.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Implementing free
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'When is called we need to re-apply the offset to get back to the ‘real’ start
+    of the block – to where we stored the size information. A naive implementation
+    would simply mark the block as unused. If we are storing the block allocation
+    status in a bitfield, then we need to clear the bit:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs: []
+  type: TYPE_PRE
+- en: However, we have a bit more work to do. If the current block and the next block
+    (if it exists) are both free we need to coalesce these blocks into a single block.
+    Similarly, we also need to check the previous block, too. If that exists and represents
+    an unallocated memory, then we need to coalesce the blocks into a single large
+    block.
+  prefs: []
+  type: TYPE_NORMAL
+- en: To be able to coalesce a free block with a previous free block we will also
+    need to find the previous block, so we store the block’s size at the end of the
+    block, too. These are called “boundary tags” (Knuth [1973](ch018.xhtml#ref-knuth1973art)).
+    These are Knuth’s solution to the coalescing problem both ways. As the blocks
+    are contiguous, the end of one block sits right next to the start of the next
+    block. So the current block (apart from the first one) can look a few bytes further
+    back to look up the size of the previous block. With this information, the allocator
+    can now jump backward!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Take for example a double coalesce. If we wanted to free the middle block we
+    need to turn the surrounding blocks into one big blocks
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Free double coalesce](../media/file13.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Free double coalesce
+  prefs: []
+  type: TYPE_NORMAL
+- en: Performance
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: With the above description, it’s possible to build a memory allocator. Its main
+    advantage is simplicity - at least simple compared to other allocators! Allocating
+    memory is a worst-case linear time operation – search linked lists for a sufficiently
+    large free block. De-allocation is constant time. No more than 3 blocks will need
+    to coalesce into a single block, and using a most recently used block scheme only
+    one linked list entry.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Using this allocator it is possible to experiment with different placement strategies.
+    For example, the allocator could start searching from the last deallocated block.
+    If the allocator stores pointers to blocks, it needs to update the pointers so
+    that they always remain valid.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Explicit Free Lists Allocators
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Better performance can be achieved by implementing an explicit doubly-linked
+    list of free nodes. In that case, we can immediately traverse to the next free
+    block and the previous free block. This can reduce the search time because the
+    linked list only includes unallocated blocks. A second advantage is that we now
+    have some control over the ordering of the linked list. For example, when a block
+    is deallocated, we could choose to insert it into the beginning of the linked
+    list rather than always between its neighbors. We may update our struct to look
+    like this
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs: []
+  type: TYPE_PRE
+- en: Here is what that would look like along with our implicit linked list
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Free list](../media/file14.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Free list
+  prefs: []
+  type: TYPE_NORMAL
+- en: Where do we store the pointers of our linked list? A simple trick is to realize
+    that the block itself is not being used and store the next and previous pointers
+    as part of the block, though you have to ensure that the free blocks are always
+    sufficiently large to hold two pointers. We still need to implement Boundary Tags,
+    so we can correctly free blocks and coalesce them with their two neighbors. Consequently,
+    explicit free lists require more code and complexity. With explicitly linked lists
+    a fast and simple ‘Find-First’ algorithm is used to find the first sufficiently
+    large link. However, since the link order can be modified, this corresponds to
+    different placement strategies. If the links are maintained from largest to smallest,
+    then this produces a ‘Worst-Fit’ placement strategy.
+  prefs: []
+  type: TYPE_NORMAL
+- en: There are edge cases though, consider how to maintain your free list if also
+    double coalescing. We’ve included a figure with a common mistake.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Free list good and bad coalesce](../media/file15.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Free list good and bad coalesce
+  prefs: []
+  type: TYPE_NORMAL
+- en: We recommend when trying to implement malloc that you draw out all the cases
+    conceptually and then write the code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Explicit linked list insertion policy
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: 'The newly deallocated block can be inserted easily into two possible positions:
+    at the beginning or in address order. Inserting at the beginning creates a LIFO
+    (last-in, first-out) policy. The most recently deallocated spaces will be reused.
+    Studies suggest fragmentation is worse than using address order (Wilson et al.
+    [1995](ch018.xhtml#ref-10.1007/3-540-60368-9_19)).'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Inserting in address order (“Address ordered policy”) inserts deallocated blocks
+    so that the blocks are visited in increasing address order. This policy required
+    more time to free a block because the boundary tags (size data) must be used to
+    find the next and previous unallocated blocks. However, there is less fragmentation.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Case Study: Buddy Allocator, an example of a segregated list'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: A segregated allocator is one that divides the heap into different areas that
+    are handled by different sub-allocators dependent on the size of the allocation
+    request. Sizes are grouped into powers of two and each size is handled by a different
+    sub-allocator and each size maintains its free list.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'A well-known allocator of this type is the buddy allocator (Rangan, Raman,
+    and Ramanujam [1999](ch018.xhtml#ref-rangan1999foundations) P. 85). We’ll discuss
+    the binary buddy allocator which splits allocation into blocks of size <semantics><mrow><msup><mn>2</mn><mi>n</mi></msup><mo>;</mo><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>.</mi><mi>.</mi><mi>.</mi></mrow><annotation
+    encoding="application/x-tex">2^n; n = 1, 2, 3, ...</annotation></semantics> times
+    some base unit number of bytes, but others also exist like Fibonacci split where
+    the allocation is rounded up to the next Fibonacci number. The basic concept is
+    simple: If there are no free blocks of size <semantics><msup><mn>2</mn><mi>n</mi></msup><annotation
+    encoding="application/x-tex">2^n</annotation></semantics>, go to the next level
+    and steal that block and split it into two. If two neighboring blocks of the same
+    size become unallocated, they can coalesce together into a single large block
+    of twice the size.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Buddy allocators are fast because the neighboring blocks to coalesce with can
+    be calculated from the deallocated block’s address, rather than traversing the
+    size tags. Ultimate performance often requires a small amount of assembler code
+    to use a specialized CPU instruction to find the lowest non-zero bit.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The main disadvantage of the Buddy allocator is that they suffer from *internal
+    fragmentation* because allocations are rounded up to the nearest block size. For
+    example, a 68-byte allocation will require a 128-byte block.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Case Study: SLUB Allocator, Slab allocation'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The SLUB allocator is a slab allocator that serves different needs for the Linux
+    kernel [SLUB](http://en.wikipedia.org/wiki/SLUB_%28software%29). Imagine you are
+    creating an allocator for the kernel, what are your requirements? Here is a hypothetical
+    shortlist.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'First and foremost is you want a low memory footprint to have the kernel be
+    able to be installed on all types of hardware: embedded, desktop, supercomputer,
+    etc.'
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Then, you want the actual memory to be as contiguous as possible to make use
+    of caching. Every time a system call is performed, the kernel’s pages need to
+    get loaded into memory. This means that if they are all contiguous, the processor
+    will be able to cache them more efficiently
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Lastly, you want your allocations to be fast.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Enter the SLUB allocator . The SLUB allocator is a segregated list allocator
+    with minimal splitting and coalescing. The difference here is that the segregated
+    list focuses on more realistic allocation sizes, instead of powers of two. SLUB
+    also focuses on a low overall memory footprint while keeping pages in the cache.
+    There are blocks of different sizes and the kernel rounds up each allocation request
+    to the lowest block size that satisfies it. One of the big differences between
+    this allocator and the others is that it usually conforms to page sizes. We’ll
+    talk about virtual memory and pages in another chapter, but the kernel will be
+    working with direct memory pages in spans of 4Kib or 4096 Bytes.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Further Reading
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Guiding questions
+  prefs: []
+  type: TYPE_NORMAL
+- en: Is malloc’ed memory initialized? How about calloc’ed or realloc’ed memory?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Does realloc accept, as its argument, the number of elements or space (in bytes)?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why may the allocation functions error?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: See [the man page](http://man7.org/linux/man-pages/man3/malloc.3.html) or the
+    appendix of the book [17.18.1](ch017.xhtml#man_malloc)!
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[Slab Allocation](https://en.wikipedia.org/wiki/Slab_allocation)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Buddy Memory Allocation](http://en.wikipedia.org/wiki/Buddy_memory_allocation)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Topics
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Best Fit
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Worst Fit
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: First Fit
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Buddy Allocator
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Internal Fragmentation
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: External Fragmentation
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: sbrk
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Natural Alignment
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Boundary Tag
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Coalescing
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Splitting
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Slab Allocation/Memory Pool
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Questions/Exercises
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: What is Internal Fragmentation? When does it become an issue?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is External Fragmentation? When does it become an issue?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is a Best Fit placement strategy? How is it with External Fragmentation?
+    Time Complexity?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is a Worst Fit placement strategy? Is it any better with External Fragmentation?
+    Time Complexity?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is the First Fit Placement strategy? It’s a little bit better with Fragmentation,
+    right? Expected Time Complexity?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Let’s say that we are using a buddy allocator with a new slab of 64kb. How does
+    it go about allocating 1.5kb?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When does the 5 line implementation of malloc have a use?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is natural alignment?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is Coalescing/Splitting? How do they increase/decrease fragmentation? When
+    can you coalesce or split?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How do boundary tags work? How can they be used to coalesce or split?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

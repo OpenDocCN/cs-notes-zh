@@ -1,0 +1,671 @@
+- en: Threads
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: A thread is short for ‘thread-of-execution’. It represents the sequence of instructions
+    that the CPU has and will execute. To remember how to return from function calls,
+    and to store the values of automatic variables and parameters a thread uses a
+    stack. Almost weirdly, a thread is a process, meaning that creating a thread is
+    similar to , except there is **no copying** meaning no copy on write. What this
+    allows is for a process to share the same address space, variables, heap, file
+    descriptors and etc. The actual system call to create a thread is similar to .
+    It’s . We won’t go into the specifics, but you can read the [man pages](http://man7.org/linux/man-pages/man2/clone.2.html)
+    keeping in mind that it is outside the direct scope of this course. LWP or Lightweight
+    Processes or threads are preferred to forking for a lot of scenarios because there
+    is a lot less overhead creating them. But in some cases, notably python uses this,
+    multiprocessing is the way to make your code faster.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Processes vs threads
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Creating separate processes is useful when:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: When more security is desired. For example, Chrome browser uses different processes
+    for different tabs.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When running an existing and complete program then a new process is required,
+    for example starting ‘gcc‘.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When you are running into synchronization primitives and each process is operating
+    on something in the system.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When you have too many threads – the kernel tries to schedule all the threads
+    near each other which could cause more harm than good.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When you don’t want to worry about race conditions
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When the amount of communication is minimal enough that simple IPC needs to
+    be used.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'On the other hand, creating threads is more useful when:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: You want to leverage the power of a multi-core system to do one task
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When you can’t deal with the overhead of processes
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When you want communication between the processes simplified
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When you want to threads to be part of the same process
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Thread Internals
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Your main function and other functions has automatic variables. We will store
+    them in memory using a stack and keep track of how large the stack is by using
+    a simple pointer (the “stack pointer”). If the thread calls another function,
+    we move our stack pointer down, so that we have more space for parameters and
+    automatic variables. Once it returns from a function, we can move the stack pointer
+    back up to its previous value. We keep a copy of the old stack pointer value -
+    on the stack! This is why returning from a function is quick. It’s easy to ‘free’
+    the memory used by automatic variables because the program needs to change the
+    stack pointer.
+  prefs: []
+  type: TYPE_NORMAL
+- en: In a multi-threaded program, there are multiple stacks but only one address
+    space. The pthread library allocates some stack space and uses the function call
+    to start the thread at that stack address.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Thread stack visualization](../media/file16.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Thread stack visualization
+  prefs: []
+  type: TYPE_NORMAL
+- en: A program can have more than one thread running inside a process. The programget
+    the first thread for free! It runs the code you write inside ‘main’. If a program
+    need more threads, it can call to create a new thread using the pthread library.
+    You’ll need to pass a pointer to a function so that the thread knows where to
+    start.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The threads all live inside the same virtual memory because they are part of
+    the same process. Thus they can all see the heap, the global variables, and the
+    program code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Threads pointing to the same place in the heap](../media/file17.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Threads pointing to the same place in the heap
+  prefs: []
+  type: TYPE_NORMAL
+- en: Thus, a program can have two (or more) CPUs working on your program at the same
+    time and inside the same process. It’s up to the operating system to assign the
+    threads to CPUs. If a program has more active threads than CPUs, the kernel will
+    assign the thread to a CPU for a short duration or until it runs out of things
+    to do and then will automatically switch the CPU to work on another thread. For
+    example, one CPU might be processing the game AI while another thread is computing
+    the graphics output.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Simple Usage
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'To use pthreads, include and compile and link with or compiler option. This
+    option tells the compiler that your program requires threading support. To create
+    a thread, use the function . This function takes four arguments:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: The first is a pointer to a variable that will hold the id of the newly created
+    thread.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The second is a pointer to attributes that we can use to tweak and tune some
+    of the advanced features of pthreads.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The third is a pointer to a function that we want to run
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Fourth is a pointer that will be given to our function
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The argument is difficult to read! It means a pointer that takes a pointer and
+    returns a pointer. It looks like a function declaration except that the name of
+    the function is wrapped with
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: In the above example, the result will be because the busy function returned
+    . We need to pass the address-of result because will be writing into the contents
+    of our pointer.
+  prefs: []
+  type: TYPE_NORMAL
+- en: In the man pages, it warns that programmers should use as an opaque type and
+    not look at the internals. We do ignore that often, though.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Pthread Functions
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'Here are some common pthread functions:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: creates a new thread. Every thread gets a new stack. If a program calls twice,
+    Your process will contain three stacks - one for each thread. The first thread
+    is created when the process start, the other two after the create. Actually, there
+    can be more stacks than this, but let’s keep it simple. The important idea is
+    that each thread requires a stack because the stack contains automatic variables
+    and the old CPU PC register, so that it can go back to executing the calling function
+    after the function is finished.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: stops a thread. Note the thread may still continue. For example, it can be terminated
+    when the thread makes an operating system call (e.g. ). In practice, is rarely
+    used because a thread won’t clean up open resources like files. An alternative
+    implementation is to use a boolean (int) variable whose value is used to inform
+    other threads that they should finish and clean up.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: stops the calling thread meaning the thread never returns after calling . The
+    pthread library will automatically finish the process if no other threads are
+    running. is equivalent to returning from the thread’s function; both finish the
+    thread and also set the return value (void *pointer) for the thread. Calling in
+    the thread is a common way for simple programs to ensure that all threads finish.
+    For example, in the following program, the threads will probably not have time
+    to get started. On the other hand exits the entire process and sets the process’
+    exit value. This is equivalent to in the main method. All threads inside the process
+    are stopped. Note the version creates thread zombies; however, this is not a long-running
+    process, so we don’t care.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: waits for a thread to finish and records its return value. Finished threads
+    will continue to consume resources. Eventually, if enough threads are created,
+    will fail. In practice, this is only an issue for long-running processes but is
+    not an issue for simple, short-lived processes as all thread resources are automatically
+    freed when the process exits. This is equivalent to turning your children into
+    zombies, so keep this in mind for long-running processes. In the exit example,
+    we could also wait on all the threads.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'There are many ways to exit threads. Here is a non-complete list:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Returning from the thread function
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Calling
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Canceling the thread with
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Terminating the process through a signal.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: calling or
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Returning from
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Executing another program
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Unplugging your computer
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Some undefined behavior can terminate your threads, it is undefined behavior
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Race Conditions
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Race conditions are whenever the outcome of a program is determined by its sequence
+    of events determined by the processor. This means that the execution of the code
+    is non-deterministic. Meaning that the same program can run multiple times and
+    depending on how the kernel schedules the threads could produce inaccurate results.
+    The following is the canonical race condition.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: Breaking down the assembly there are many different accesses of the code. We
+    will assume that data is stored in the register. The code to increment is the
+    following with no optimization (assume int_ptr contains eax).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: Consider this access pattern.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Thread access - not a race condition](../media/file18.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Thread access - not a race condition
+  prefs: []
+  type: TYPE_NORMAL
+- en: This access pattern will cause the variable to be 4\. The problem is when the
+    instructions are executed in parallel.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Thread access - race condition](../media/file19.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Thread access - race condition
+  prefs: []
+  type: TYPE_NORMAL
+- en: This access pattern will cause the variable to be 2\. This is undefined behavior
+    and a race condition. What we want is one thread to access the part of the code
+    at a time.
+  prefs: []
+  type: TYPE_NORMAL
+- en: But when compiled with , assembly output is a single instruction.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: Shouldn’t that fix it? It is a single assembly instruction so no interleaving?
+    It doesn’t fix the problems that the *hardware itself* may experience a race condition
+    because we as programmers didn’t tell the hardware to check for it. The easiest
+    way is to add the *lock* prefix (Guide [2011](ch018.xhtml#ref-guide2011intel),
+    1120).
+  prefs: []
+  type: TYPE_NORMAL
+- en: But we don’t want to be coding in assembly! We need to come up with a software
+    solution to this problem.
+  prefs: []
+  type: TYPE_NORMAL
+- en: A day at the races
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Here is another small race condition. The following code is supposed to start
+    ten threads with the integers 0 through 9 inclusive. However, when run prints
+    out ! Or seldom does it print out what we expect. Can you see why?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs: []
+  type: TYPE_PRE
+- en: The above code suffers from a - the value of i is changing. The new threads
+    start later in the example output the last thread starts after the loop has finished.
+    To overcome this race-condition, we will give each thread a pointer to its own
+    data area. For example, for each thread we may want to store the id, a starting
+    value and an output value. We will instead treat i as a pointer and cast it by
+    value.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs: []
+  type: TYPE_PRE
+- en: Race conditions aren’t in our code. They can be in provided code Some functions
+    like , , , not thread-safe. Let’s look at a simple function that is also not ‘thread-safe’.
+    The result buffer could be stored in global memory. This is good in a single-threaded
+    program. We wouldn’t want to return a pointer to an invalid address on the stack,
+    but there’s only one result buffer in the entire memory. If two threads were to
+    use it at the same time, one would corrupt the other.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs: []
+  type: TYPE_PRE
+- en: There are ways around this like using synchronization locks, but first let’s
+    do this by design. How would you fix the function above? You can change any of
+    the parameters and any return types. Here is one valid solution.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs: []
+  type: TYPE_PRE
+- en: Instead of making the function responsible for the memory, we made the caller
+    responsible! A lot of programs, and hopefully your programs, have minimal communication
+    needed. Often a malloc call is less work than locking a mutex or sending a message
+    to another thread.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Don’t Cross the Streams
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: A program can fork inside a process with multiple threads! However, the child
+    process only has a single thread, which is a clone of the thread that called .
+    We can see this as a simple example, where the background threads never print
+    out a second message in the child process.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs: []
+  type: TYPE_PRE
+- en: '[PRE12]'
+  prefs: []
+  type: TYPE_PRE
+- en: In practice, creating threads before forking can lead to unexpected errors because
+    (as demonstrated above) the other threads are immediately terminated when forking.
+    Another thread might have locked a mutex like by calling malloc and never unlock
+    it again. Advanced users may find useful however we suggest a program avoid creating
+    threads before forking unless you fully understand the limitations and difficulties
+    of this approach.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Embarrassingly Parallel Problems
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The study of parallel algorithms has exploded over the past few years. An embarrassingly
+    parallel problem is any problem that needs little effort to turn parallel. A lot
+    of them have some synchronization concepts with them but not always. You already
+    know a parallelizable algorithm, Merge Sort!
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs: []
+  type: TYPE_PRE
+- en: With your new understanding of threads, all you need to do is create a thread
+    for the left half, and one for the right half. Given that your CPU has multiple
+    real cores, you will see a speedup following [Amdahl’s Law](https://en.wikipedia.org/wiki/Amdahl's_law).
+    The time complexity analysis gets interesting here as well. The parallel algorithm
+    runs in <semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mo>log</mo><mn>3</mn></msup><mo
+    stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo
+    stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log^3(n))</annotation></semantics>
+    running time because we have the analysis assumes that we have a lot of cores.
+  prefs: []
+  type: TYPE_NORMAL
+- en: In practice though, we typically do two changes. One, once the array gets small
+    enough, we ditch the Parallel Merge Sort algorithm and do conventional sort that
+    works fast on small arrays, usually cache coherency rules at this level. The other
+    thing that we know is that CPUs don’t have infinite cores. To get around that,
+    we typically keep a worker pool. You won’t see the speedup right away because
+    of things like cache coherency and scheduling extra threads. Over the bigger pieces
+    of code, though, you will start to see speedups.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Another embarrassingly parallel problem is parallel map. Say we want to apply
+    a function to an entire array, one element at a time.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs: []
+  type: TYPE_PRE
+- en: Since none of the elements depend on any other element, how would you go about
+    parallelizing this? What do you think would be the best way to split up the work
+    between threads.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Check out thread scheduling in the appendix for more ways to schedule.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Other Problems
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: From [Wikipedia](https://en.wikipedia.org/wiki/Embarrassingly_parallel)
+  prefs: []
+  type: TYPE_NORMAL
+- en: Serving static files on a web server to multiple users at once.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The Mandelbrot set, Perlin noise, and similar images, where each point is calculated
+    independently.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Rendering of computer graphics. In computer animation, each frame may be rendered
+    independently (see parallel rendering).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Brute-force searches in cryptography.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Notable real-world examples include distributed.net and proof-of-work systems
+    used in cryptocurrency.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: BLAST searches in bioinformatics for multiple queries (but not for individual
+    large queries)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Large scale facial recognition systems that compare thousands of arbitrary acquired
+    faces (e.g., a security or surveillance video via closed-circuit television) with
+    a similarly large number of previously stored faces (e.g., a rogues gallery or
+    similar watch list).
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Computer simulations comparing many independent scenarios, such as climate models.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Evolutionary computation meta-heuristics such as genetic algorithms.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Ensemble calculations of numerical weather prediction.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Event simulation and reconstruction in particle physics.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The marching squares algorithm
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Sieving step of the quadratic sieve and the number field sieve.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Tree growth step of the random forest machine learning technique.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Discrete Fourier Transform where each harmonic is independently calculated.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Advanced: Lightweight Processes?'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: In the beginning of the chapter, we mentioned that threads are processes. What
+    do we mean by that? You can create a thread like a process. Take a look at the
+    example code below.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs: []
+  type: TYPE_PRE
+- en: It seems pretty simple right? Why not use this functionality? First, there is
+    a decent bit of boilerplate code. In addition, pthreads are part of the POSIX
+    standard and have defined functionality. Pthreads let a program set various attributes
+    – some that resemble the option in clone – to customize your thread. But as we
+    mentioned earlier, with each later of abstraction for portability reasons we lose
+    some functionality. clone can do some neat things like keeping different parts
+    of your heap the same while creating copies of other pages. A program has finer
+    control of scheduling because it is a process with the same mappings.
+  prefs: []
+  type: TYPE_NORMAL
+- en: At no time in this course should you be using clone. But in the future, know
+    that it is a perfectly viable alternative to fork. You have to be careful and
+    research edge cases.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Further Reading
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Guiding questions:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: What is the first argument to pthread create?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is the start routing in pthread create? How about arg?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why might pthread create fail?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are a few things that threads share in a process? What are a few things
+    that threads have different?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How can a thread uniquely identify itself?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What are some examples of non thread safe library functions? Why might they
+    not be thread safe?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How can a program stop a thread?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How can a program get back a thread’s "return value"?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[man page](http://man7.org/linux/man-pages/man3/pthread_create.3.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[pthread reference guide](http://man7.org/linux/man-pages/man7/pthreads.7.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[Concise third party sample code explaining create, join and exit](http://www.thegeekstuff.com/2012/04/terminate-c-thread/)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Topics
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: pthread life-cycle
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each thread has a stack
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Capturing return values from a thread
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Under what conditions will a process exit
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: What happens when a pthread gets created?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Where is each thread’s stack?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How does a program get a return value given a ? What are the ways a thread can
+    set that return value? What happens if a program discards the return value?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why is important (think stack space, registers, return values)?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What does do if it is not the last thread? What other functions are called when
+    after calling pthread_exit?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Give me three conditions under which a multi-threaded process will exit. Are
+    there any more?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is an embarrassingly parallel problem?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL

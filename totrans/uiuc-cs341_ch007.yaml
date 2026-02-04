@@ -1,0 +1,1845 @@
+- en: Synchronization
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+- en: Synchronization coordinates various tasks so that they all finishin the the
+    correct state. In C, we have series of mechanisms to control what threads are
+    allowed to perform at a given state. Most of the time, the threads can progress
+    without having to communicate, but every so often two or more threads may want
+    to access a critical section. A critical section is a section of code that can
+    only be executed by one thread at a time if the program is to function correctly.
+    If two threads (or processes) were to execute code inside the critical section
+    at the same time, it is possible that the program may no longer have the correct
+    behavior.
+  prefs: []
+  type: TYPE_NORMAL
+- en: As we said in the previous chapter, race conditions happen when an operation
+    touches a piece of memory at the same time as another thread. If the memory location
+    is only accessible by one thread, for example the automatic variable below, then
+    there is no possibility of a race condition and no Critical Section associated
+    with . However, the variable is a global variable and accessed by two threads.
+    It is possible that two threads may attempt to increment the variable at the same
+    time.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE0]'
+  prefs: []
+  type: TYPE_PRE
+- en: A typical output of the above code is because there is a race condition. The
+    code allows two threads to read and write at the same time. For example, both
+    threads copy the current value of sum into CPU that runs each thread (let’s pick
+    123). Both threads increment one to their own copy. Both threads write back the
+    value (124). If the threads had accessed the sum at different times then the count
+    would have been 125\. A few of the possible different orderings are below.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Permissible Pattern
+  prefs: []
+  type: TYPE_NORMAL
+- en: Good Thread Access Pattern
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| Thread 1 | Thread 2 |'
+  prefs: []
+  type: TYPE_TB
+- en: '| --- | --- |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Load Addr, Add 1 (i=1 locally) | ... |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Store (i=1 globally) | ... |'
+  prefs: []
+  type: TYPE_TB
+- en: '| ... | Load Addr, Add 1 (i=2 locally) |'
+  prefs: []
+  type: TYPE_TB
+- en: '| ... | Store (i=2 globally) |'
+  prefs: []
+  type: TYPE_TB
+- en: Partial Overlap
+  prefs: []
+  type: TYPE_NORMAL
+- en: Bad Thread Access Pattern
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| Thread 1 | Thread 2 |'
+  prefs: []
+  type: TYPE_TB
+- en: '| --- | --- |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Load Addr, Add 1 (i=1 locally) | ... |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Store (i=1 globally) | Load Addr, Add 1 (i=1 locally) |'
+  prefs: []
+  type: TYPE_TB
+- en: '| ... | Store (i=1 globally) |'
+  prefs: []
+  type: TYPE_TB
+- en: Full Overlap
+  prefs: []
+  type: TYPE_NORMAL
+- en: Horrible Thread Access Pattern
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| Thread 1 | Thread 2 |'
+  prefs: []
+  type: TYPE_TB
+- en: '| --- | --- |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Load Addr, Add 1 (i=1 locally) | Load Addr, Add 1 (i=1 locally) |'
+  prefs: []
+  type: TYPE_TB
+- en: '| Store (i=1 globally) | Store (i=1 globally) |'
+  prefs: []
+  type: TYPE_TB
+- en: We would like the first pattern of the code being mutually exclusive. Which
+    leads us to our first synchronization primitive, a Mutex.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Mutex
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: To ensure that only one thread at a time can access a global variable, use a
+    mutex – short for Mutual Exclusion. If one thread is currently inside a critical
+    section we would like another thread to wait until the first thread is complete.
+    A mutex isn’t a primitive in the truest sense, though it is one of the smallest
+    that has useful threading API. A mutex also isn’t a data structure. It is an abstract
+    data type.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Let’s think about a duck satisfying the mutex api. If someone has the duck then
+    they are allowed to access a shared resource! We call it the mutex duck. Everyone
+    else has to waddle around and wait. Once someone let’s go of the duck, they have
+    to stop interacting with the resource and the next grabber can interact with the
+    shared resource. Now you know the origins of the duck.
+  prefs: []
+  type: TYPE_NORMAL
+- en: There are many ways to implement a mutex, and we’ll give a few in this chapter.
+    For right now let’s use the black box that the pthread library gives us. Here
+    is how we declare a mutex.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE1]'
+  prefs: []
+  type: TYPE_PRE
+- en: Mutex Lifetime
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'For all mutexes, there are two ways of initializing a mutex:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The macro is functionally equivalent to the more general purpose . In other
+    words, will create a mutex with default properties. The in the init version includes
+    options to trade performance for additional error-checking, advanced sharing,
+    and more. While we recommend using the init function inside of a program for a
+    mutex located on the heap, you can use either method.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE2]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Once we are finished with the mutex we should also call too. Note, a program
+    can only destroy an unlocked mutex, destroy on a locked mutex is undefined behavior.
+    Things to keep in mind about initializing and destroying mutexes:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Initializing an already initialized mutex is undefined behavior
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Destroying a locked mutex is undefined behavior
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Keep to the pattern of one and only one thread initializing a mutex.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Copying the bytes of the mutex to a new memory location and then using the copy
+    is *not* supported. To reference a mutex, a program *must* to have a pointer to
+    that memory address.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Global/Static mutexes need not be destroyed.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Mutex Usages
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: How does one use a mutex? Here is a complete example in the spirit of the earlier
+    piece of code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE3]'
+  prefs: []
+  type: TYPE_PRE
+- en: In the code above, the thread gets the lock to the counting house before entering.
+    The critical section is only the so the following version is also correct.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE4]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'This process runs slower because we lock and unlock the mutex a million times,
+    which is expensive - at least compared with incrementing a variable. In this simple
+    example, we didn’t need threads - we could have added up twice! A faster multi-thread
+    example would be to add one million using an automatic (local) variable and only
+    then adding it to a shared total after the calculation loop has finished:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE5]'
+  prefs: []
+  type: TYPE_PRE
+- en: Starting with the gotchas. Firstly, C Mutexes do not lock variables. A mutex
+    is a simple data structure. It works with code, not data. If a mutex is locked,
+    the other threads will continue. It’s only when a thread attempts to lock a mutex
+    that is already locked, will the thread have to wait. As soon as the original
+    thread unlocks the mutex, the second (waiting) thread will acquire the lock and
+    be able to continue. The following code creates a mutex that does effectively
+    nothing.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE6]'
+  prefs: []
+  type: TYPE_PRE
+- en: Here are some other gotchas in no particular order
+  prefs: []
+  type: TYPE_NORMAL
+- en: Don’t cross the streams! If using threads, don’t fork in the middle of your
+    program. This means any time after your mutexes have been initialized.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: The thread that locks a mutex is the only thread that can unlock it.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Each program can have multiple mutex locks. A thread safe design might include
+    a lock with each data structure, one lock per heap, or one lock per set of data
+    structures If a program has only one lock, then there may be significant contention
+    for the lock. If two threads were updating two different counters, it isn’t necessary
+    to use the same lock.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Locks are only tools. They don’t spot critical sections!
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: There will always be a small amount of overhead of calling and . However, this
+    is the price to pay for correctly functioning programs!
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Not unlocking a mutex due to an early return during an error condition
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Resource leak (not calling )
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Using an uninitialized mutex or using a mutex that has already been destroyed
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Locking a mutex twice on a thread without unlocking first
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Deadlock
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Mutex Implementation
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: So we have this cool data structure. How do we implement it? A naive, incorrect
+    implementation is shown below. The function simply unlocks the mutex and returns.
+    The lock function first checks to see if the lock is already locked. If it is
+    currently locked, it will keep checking again until another thread has unlocked
+    the mutex. For the time being, we’ll avoid the condition that other threads are
+    able to unlock a lock they don’t own and focus on the mutual exclusion aspect.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE7]'
+  prefs: []
+  type: TYPE_PRE
+- en: Version 1 uses ‘busy-waiting’ unnecessarily wasting CPU resources. However,
+    there is a more serious problem. We have a race-condition! If two threads both
+    called concurrently, it is possible that both threads would read as zero. Thus
+    both threads would believe they have exclusive access to the lock and both threads
+    will continue.
+  prefs: []
+  type: TYPE_NORMAL
+- en: We might attempt to reduce the CPU overhead a little by calling inside the loop
+    - pthread_yield suggests to the operating system that the thread does not use
+    the CPU for a short while, so the CPU may be assigned to threads that are waiting
+    to run. This still leaves the race-condition. We need a better implementation.
+    We will talk about this later in the critical section part of this chapter. For
+    now, we will talk about semaphores.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Advanced: Implementing a Mutex with hardware'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: We can use C11 Atomics to do that perfectly! A complete solution is detailed
+    here. This is a spinlock mutex, [futex](https://locklessinc.com/articles/mutex_cv_futex/)
+    implementations can be found online.
+  prefs: []
+  type: TYPE_NORMAL
+- en: First the data structure and initialization code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE8]'
+  prefs: []
+  type: TYPE_PRE
+- en: This is the initialization code, nothing fancy here. We set the state of the
+    mutex to unlocked and set the owner to locked.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE9]'
+  prefs: []
+  type: TYPE_PRE
+- en: What does this code do? It initializes a variable that we will keep as the unlocked
+    state. [Atomic Compare and Exchange](https://en.wikipedia.org/wiki/Compare-and-swap)
+    is an instruction supported by most modern architectures (on x86 it’s ). The pseudocode
+    for this operation looks like this
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE10]'
+  prefs: []
+  type: TYPE_PRE
+- en: Except it is all done *atomically* meaning in one uninterruptible operation.
+    What does the *weak* part mean? Atomic instructions are prone to **spurious failures**
+    meaning that there are two versions to these atomic functions a *strong* and a
+    *weak* part, strong guarantees the success or failure while weak may fail even
+    when the operation succeeds. These are the same spurious failures that you’ll
+    see in condition variables below. We are using weak because weak is faster, and
+    we are in a loop! That means we are okay if it fails a little bit more often because
+    we will keep spinning around anyway.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Inside the while loop, we have failed to grab the lock! We reset zero to unlocked
+    and sleep for a little while. When we wake up we try to grab the lock again. Once
+    we successfully swap, we are in the critical section! We set the mutex’s owner
+    to the current thread for the unlock method and return successfully.
+  prefs: []
+  type: TYPE_NORMAL
+- en: How does this guarantee mutual exclusion? When working with atomics we are unsure!
+    But in this simple example, we can because the thread that can successfully expect
+    the lock to be UNLOCKED (0) and swap it to a LOCKED (1) state is considered the
+    winner. How do we implement unlock?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE11]'
+  prefs: []
+  type: TYPE_PRE
+- en: To satisfy the API, a thread can’t unlock the mutex unless the thread is the
+    one who owns it. Then we unassign the mutex owner, because critical section is
+    over after the atomic. We want a strong exchange because we don’t want to block.
+    We expect the mutex to be locked, and we swap it to unlock. If the swap was successful,
+    we unlocked the mutex. If the swap wasn’t, that means that the mutex was UNLOCKED
+    and we tried to switch it from UNLOCKED to UNLOCKED, preserving the behavior of
+    unlock.
+  prefs: []
+  type: TYPE_NORMAL
+- en: What is this memory order business? We were talking about memory fences earlier,
+    here it is! We won’t go into detail because it is outside the scope of this course
+    but in the scope of [this article](https://gcc.gnu.org/wiki/Atomic/GCCMM/AtomicSync).
+    We need consistency to make sure no loads or stores are ordered before or after.
+    A program need to create dependency chains for more efficient ordering.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Semaphore
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: A semaphore is another synchronization primitive. It is initialized to some
+    value. Threads can either or which lowers or increases the value. If the value
+    reaches zero and a wait is called, the thread will be blocked until a post is
+    called.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Using a semaphore is as easy as using a mutex. First, decide if on the initial
+    value, for example the number of remaining spaces in an array. Unlike pthread
+    mutex there are no shortcuts to creating a semaphore - use .
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE12]'
+  prefs: []
+  type: TYPE_PRE
+- en: When using a semaphore, wait and post can be called from different threads!
+    Unlike a mutex, the increment and decrement can be from different threads.
+  prefs: []
+  type: TYPE_NORMAL
+- en: This becomes especially useful if you want to use a semaphore to implement a
+    mutex. A mutex is a semaphore that always before it . Some textbooks will refer
+    to a mutex as a binary semaphore. You do have to be careful to never add more
+    than one to a semaphore or otherwise your mutex abstraction breaks. That is usually
+    why a mutex is used to implement a semaphore and vice versa.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Initialize the semaphore with a count of one.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Replace with
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Replace with
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE13]'
+  prefs: []
+  type: TYPE_PRE
+- en: But be warned, it isn’t the same! A mutex can handle what we call lock inversion
+    well. Meaning the following code breaks with a traditional mutex, but produces
+    a race condition with threads.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE14]'
+  prefs: []
+  type: TYPE_PRE
+- en: If we replace it with mutex lock, it won’t work now.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE15]'
+  prefs: []
+  type: TYPE_PRE
+- en: Also, binary semaphores are different than mutexes because one thread can unlock
+    a mutex from a different thread.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Signal Safety
+  prefs:
+  - PREF_H4
+  type: TYPE_NORMAL
+- en: Also, is one of a handful of functions that can be correctly used inside a signal
+    handler is not. We can release a waiting thread that can now make all of the calls
+    that we disallowed to call inside the signal handler itself e.g. . Here is some
+    code that utilizes this;
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE16]'
+  prefs: []
+  type: TYPE_PRE
+- en: Other uses for semaphores are keeping track of empty spaces in arrays. We will
+    discuss these in the thread-safe data structures section.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Condition Variables
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Condition variables allow a set of threads to sleep until woken up. The API
+    allows either one or all threads to be woken up. If a program only wakes one thread,
+    the operating system will decide which thread to wake up. Threads don’t wake threads
+    other directly like by id. Instead, a thread ‘signal’s the condition variable,
+    which then will wake up one (or all) threads that are sleeping inside the condition
+    variable.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Condition variables are also used with a mutex and with a loop, so when woken
+    up they have to check a condition in a critical section. If a thread needs to
+    be woken up outside of a critical section, there are other ways to do this in
+    POSIX. Threads sleeping inside a condition variable are woken up by calling (wake
+    up all) or (wake up one). Note despite the function name, this has nothing to
+    do with POSIX s!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Occasionally, a waiting thread may appear to wake up for no reason. This is
+    called a *spurious wakeup*. If you read the hardware implementation of a mutex
+    section, this is similar to the atomic failure of the same name.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Why do spurious wakeups happen? For performance. On multi-CPU systems, it is
+    possible that a race condition could cause a wake-up (signal) request to be unnoticed.
+    The kernel may not detect this lost wake-up call but can detect when it might
+    occur. To avoid the potentially lost signal, the thread is woken up so that the
+    program code can test the condition again. If you want to know why, check out
+    the appendix.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Thread-Safe Data Structures
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Naturally, we want our data structures to be thread-safe as well! We can use
+    mutexes and synchronization primitives to make that happen. First a few definitions.
+    Atomicity is when an operation is thread-safe. We have atomic instructions in
+    hardware by providing the lock prefix
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE17]'
+  prefs: []
+  type: TYPE_PRE
+- en: But Atomicity also applies to higher orders of operations. We say a data structure
+    operation is atomic if it happens all at once and successfully or not at all.
+  prefs: []
+  type: TYPE_NORMAL
+- en: As such, we can use synchronization primitives to make our data structures thread-safe.
+    For the most part, we will be using mutexes because they carry more semantic meaning
+    than a binary semaphore. Note, this is an introduction. Writing high-performance
+    thread-safe data structures requires its own book! Take for example the following
+    thread-unsafe stack.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE18]'
+  prefs: []
+  type: TYPE_PRE
+- en: Version 1 of the stack is thread-unsafe because if two threads call push or
+    pop at the same time then the results or the stack can be inconsistent. For example,
+    imagine if two threads call pop at the same time then both threads may read the
+    same value, both may read the original count value.
+  prefs: []
+  type: TYPE_NORMAL
+- en: To turn this into a thread-safe data structure we need to identify the *critical
+    sections* of our code, meaning we need to ask which section(s) of the code must
+    only have one thread at a time. In the above example the , , and functions access
+    the same memory and all critical sections for the stack. While (and ) is executing,
+    the data structure is an inconsistent state, for example the count may not have
+    been written to, so it may still contain the original value. By wrapping these
+    methods with a mutex we can ensure that only one thread at a time can update (or
+    read) the stack. A candidate ‘solution’ is shown below. Is it correct? If not,
+    how will it fail?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE19]'
+  prefs: []
+  type: TYPE_PRE
+- en: Version 2 contains at least one error. Take a moment to see if you can the error(s)
+    and work out the consequence(s).
+  prefs: []
+  type: TYPE_NORMAL
+- en: If three threads called at the same time, the lock ensures that only one thread
+    at time manipulates the stack on push or is_empty – Two threads will need to wait
+    until the first thread completes A similar argument applies to concurrent calls
+    to . However, Version 2 does not prevent push and pop from running at the same
+    time because and use two different mutex locks. The fix is simple in this case
+    - use the same mutex lock for both the push and pop functions.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The code has a second error. returns after the comparison and leaves the mutex
+    unlocked. However, the error would not be spotted immediately. For example, suppose
+    one thread calls and a second thread later calls . This thread would mysteriously
+    stop. Using debugger, you can discover that the thread is stuck at the lock()
+    method inside the method because the lock was never unlocked by the earlier call.
+    Thus an oversight in one thread led to problems much later in time in an arbitrary
+    other thread. Let’s try to rectify these problems
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE20]'
+  prefs: []
+  type: TYPE_PRE
+- en: Version 3 is thread-safe. We have ensured mutual exclusion for all of the critical
+    sections. There are a few things to note.
+  prefs: []
+  type: TYPE_NORMAL
+- en: is thread-safe but its result may already be out-of-date. The stack may no longer
+    be empty by the time the thread gets the result! This is usually why in thread-safe
+    data structures, functions that return sizes are removed or deprecated.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There is no protection against underflow (popping on an empty stack) or overflow
+    (pushing onto an already-full stack)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The last point can be fixed using counting semaphores. The implementation assumes
+    a single stack. A more general-purpose version might include the mutex as part
+    of the memory structure and use to initialize the mutex. For example,
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE21]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Before we fix the problems with semaphores. How would we fix the problems with
+    condition variables? Try it out before you look at the code in the previous section.
+    We need to wait in push and pop if our stack is full or empty respectively. Attempted
+    solution:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE22]'
+  prefs: []
+  type: TYPE_PRE
+- en: Does the following solution work? Take a second before looking at the answer
+    to spot the errors.
+  prefs: []
+  type: TYPE_NORMAL
+- en: So did you catch all of them?
+  prefs: []
+  type: TYPE_NORMAL
+- en: The first one is a simple one. In push, our check should be against the total
+    capacity, not zero.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: We only have if statement checks. wait() could spuriously wake up
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: We never signal any of the threads! Threads could get stuck waiting indefinitely.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Let’s fix those errors Does this solution work?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE23]'
+  prefs: []
+  type: TYPE_PRE
+- en: This solution doesn’t work either! The problem is with the signal. Can you see
+    why? What would you do to fix it?
+  prefs: []
+  type: TYPE_NORMAL
+- en: Now, how would we use counting semaphores to prevent over and underflow? Let’s
+    discuss it in the next section.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Using Semaphores
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Let’s use a counting semaphore to keep track of how many spaces remain and another
+    semaphore to track the number of items in the stack. We will call these two semaphores
+    and . Remember will wait if the semaphore’s count has been decremented to zero
+    (by another thread calling sem_post).
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE24]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Sketch #2 has implemented the too early. Another thread waiting in push can
+    erroneously attempt to write into a full stack. Similarly, a thread waiting in
+    the pop() is allowed to continue too early.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE25]'
+  prefs: []
+  type: TYPE_PRE
+- en: Sketch 3 implements the correct semaphore logic, but can you spot the error?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE26]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Sketch 3 correctly enforces buffer full and buffer empty conditions using semaphores.
+    However, there is no *mutual exclusion*. Two threads can be in the *critical section*
+    at the same time, which would corrupt the data structure or least lead to data
+    loss. The fix is to wrap a mutex around the critical section:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE27]'
+  prefs: []
+  type: TYPE_PRE
+- en: What happens when we start inverting the lock and wait orders?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE28]'
+  prefs: []
+  type: TYPE_PRE
+- en: Rather than giving you the answer, we’ll let you think about this. Is this a
+    permissible way to lock and unlock? Is there a series of operations that could
+    cause a race condition? How about deadlock? If there is, provide it. If there
+    isn’t, provide a short justification proof of why that won’t happen.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Software Solutions to the Critical Section
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: 'As already discussed, there are critical parts of our code that can only be
+    executed by one thread at a time. We describe this requirement as ‘mutual exclusion’.
+    Only one thread (or process) may have access to the shared resource. In multi-threaded
+    programs, we can wrap a critical section with mutex lock and unlock calls:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE29]'
+  prefs: []
+  type: TYPE_PRE
+- en: How would we implement these lock and unlock calls? Can we create a pure software
+    algorithm that assures mutual exclusion? Here is our attempt from earlier.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE30]'
+  prefs: []
+  type: TYPE_PRE
+- en: As we touched on earlier, this implementation *does not satisfy Mutual Exclusion*
+    even considering that threads can unlock other threads locks. Let’s take a close
+    look at this ‘implementation’ from two threads running around the same time.
+  prefs: []
+  type: TYPE_NORMAL
+- en: To simplify the discussion, we consider only two threads. Note these arguments
+    work for threads and processes and the classic CS literature discusses these problems
+    in terms of two processes that need exclusive access to a critical section or
+    shared resource. Raising a flag represents a thread/process’s intention to enter
+    the critical section.
+  prefs: []
+  type: TYPE_NORMAL
+- en: There are three main desirable properties that we desire in a solution to the
+    critical section problem.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Mutual Exclusion. The thread/process gets exclusive access. Others must wait
+    until it exits the critical section.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Bounded Wait. A thread/process cannot get superseded by another thread infinite
+    amounts of time.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Progress. If no thread/process is inside the critical section, the thread/process
+    should be able to proceed without having to wait.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: With these ideas in mind, let’s examine another candidate solution that uses
+    a turn-based flag only if two threads both required access at the same time.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Naive Solutions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Remember that the pseudo-code outlined below is part of a larger program. The
+    thread or process will typically need to enter the critical section many times
+    during the lifetime of the process. So, imagine each example as wrapped inside
+    a loop where for a random amount of time the thread or process is working on something
+    else.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Is there anything wrong with the candidate solution described below?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE31]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Answer: Candidate solution #1 also suffers from a race condition because both
+    threads/processes could read each other’s flag value as lowered and continue.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'This suggests we should raise the flag *before* checking the other thread’s
+    flag, which is candidate solution #2 below.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE32]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Candidate #2 satisfies mutual exclusion. It is impossible for two threads to
+    be inside the critical section at the same time. However, this code suffers from
+    deadlock! Suppose two threads wish to enter the critical section at the same time.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Candidate Solution #2 Analysis'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| Time | Thread 1 | Thread 2 |'
+  prefs: []
+  type: TYPE_TB
+- en: '| --- | --- | --- |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 1 | Raise Flag |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 2 |  | Raise Flag |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 3 | Wait | Wait |'
+  prefs: []
+  type: TYPE_TB
+- en: Both processes are now waiting for the other one to lower their flags. Neither
+    one will enter the critical section as both are now stuck forever! This suggests
+    we should use a turn-based variable to try to resolve who should proceed.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Turn-based solutions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'The following candidate solution #3 uses a turn-based variable to politely
+    allow one thread and then the other to continue'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE33]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Candidate #3 satisfies mutual exclusion. Each thread or process gets exclusive
+    access to the Critical Section. However, both threads/processes must take a strict
+    turn-based approach to use the critical section. They are forced into an alternating
+    critical section access pattern. If thread 1 wishes to read a hash table every
+    millisecond, but another thread writes to a hash table every second, then the
+    reading thread would have to wait another 999ms before being able to read from
+    the hash table again. This ‘solution’ is ineffective because our threads should
+    be able to make progress and enter the critical section if no other thread is
+    currently in the critical section.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Turn and Flag solutions
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Is the following a correct solution to CSP?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE34]'
+  prefs: []
+  type: TYPE_PRE
+- en: Analyzing these solutions is tricky. Even peer-reviewed papers on this specific
+    subject contain incorrect solutions (Hyman [1966](ch018.xhtml#ref-Hyman:1966:CPC:365153.365167))!
+    At first glance, it appears to satisfy Mutual Exclusion, Bounded Wait and Progress
+    The turn-based flag is only used in the event of a tie, so Progress and Bounded
+    Wait is allowed and mutual exclusion appears to be satisfied. Perhaps you can
+    find a counter-example?
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Candidate #4 fails because a thread does not wait until the other thread lowers
+    its flag. After some thought or inspiration, the following scenario can be created
+    to demonstrate how Mutual Exclusion is not satisfied.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Imagine the first thread runs this code twice. The turn flag now points to the
+    second thread. While the first thread is still inside the Critical Section, the
+    second thread arrives. The second thread can immediately continue into the Critical
+    Section!
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Candidate Solution #4'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '| Time | Turn | Thread # 1 | Thread # 2 |'
+  prefs: []
+  type: TYPE_TB
+- en: '| --- | --- | --- | --- |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 1 | 2 | Raise my flag |  |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 2 | 2 | If your flag is raised, wait until my turn | Raise my flag |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 3 | 2 | // Do Critical Section Stuff | If your flag is raised, wait until
+    my turn (TRUE!) |'
+  prefs: []
+  type: TYPE_TB
+- en: '| 4 | 2 | // Do Critical Section Stuff | Do Critical Section Stuff - OOPS |'
+  prefs: []
+  type: TYPE_TB
+- en: Working Solutions
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: The first solution to the problem was Dekker’s Solution. Dekker’s Algorithm
+    (1962) was the first provably correct solution. Though, it was in an unpublished
+    paper, so it was not discovered until later (Dekker and Dijkstra [1965](ch018.xhtml#ref-dekker_dijkstra_1965))
+    (this is an English transcribed version released in 1965). A version of the algorithm
+    is below.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE35]'
+  prefs: []
+  type: TYPE_PRE
+- en: Notice how the process’s flag is always raised during the critical section no
+    matter if the loop is iterated zero, once or more times. Further, the flag can
+    be interpreted as an immediate intent to enter the critical section. Only if the
+    other process has also raised the flag will one process defer, lower their intent
+    flag and wait. Let’s check the conditions.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Mutual Exclusion. Let’s try to sketch a simple proof. The loop invariant is
+    that at the start of checking the condition, your flag has to be raised – this
+    is by exhaustion. Since the only way that a thread can leave the loop is by having
+    the condition be false, the flag must be raised for the entirety of the critical
+    section. Since the loop prevents a thread from exiting while the other thread’s
+    flag is raised and a thread has its flag raised in the critical section, the other
+    thread can’t enter the critical section at the same time.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Bounded Wait. Assuming that the critical section ends in finite time, a thread
+    once it has left the critical section cannot then get the critical section back.
+    The reason being is the turn variable is set to the other thread, meaning that
+    that thread now has priority. That means a thread cannot be superseded infinitely
+    by another thread.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Progress. If the other thread isn’t in the critical section, it will simply
+    continue with a simple check. We didn’t make any statement about if threads are
+    randomly stopped by the system scheduler. This is an idealized scenario where
+    threads will keep executing instructions.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Peterson’s Solution
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Peterson published his novel and surprisingly simple solution in 1981 (Peterson
+    [1981](ch018.xhtml#ref-Peterson1981MythsAT)). A version of his algorithm is shown
+    below that uses a shared variable .
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE36]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'This solution satisfies Mutual Exclusion, Bounded Wait and Progress. If thread
+    #2 has set turn to 2 and is currently inside the critical section. Thread #1 arrives,
+    *sets the turn back to 1* and now waits until thread 2 lowers the flag.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Mutual Exclusion. Let’s try to sketch a simple proof again. A thread doesn’t
+    get into the critical section until the turn variable is yours or the other thread’s
+    flag isn’t up. If the other thread’s flag isn’t up, it isn’t trying to enter the
+    critical section. That is the first action the thread does and the last action
+    the thread undoes. If the turn variable is set to this thread, that means that
+    the other thread has given the control to this thread. Since my flag is raised
+    and the turn variable is set, the other thread has to wait in the loop until the
+    current thread is done.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Bounded Wait. After one thread lowers, a thread waiting in the while loop will
+    leave because the first condition is broken. This means that threads cannot win
+    all the time.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Progress. If no other thread is contesting, other thread’s flags are not up.
+    That means that a thread can go past the while loop and do critical section items.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Unfortunately, we can’t implement a software mutex in the same way today because
+    of out of order instructions. Check the appendix for a solution to the problem.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Implementing Counting Semaphore
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Now that we have a solution to the critical section problem, We can reasonably
+    implement a mutex. How would we implement other synchronization primitives? Let’s
+    start with a semaphore. To implement a semaphore with efficient CPU usage, we
+    will say that we have implemented a condition variable. Implementing an O(1) space
+    condition variable using only a mutex is not trivial, or at least an O(1) heap
+    condition variable is not trivial. We don’t want to call malloc while implementing
+    a primitive, or we may deadlock!
+  prefs: []
+  type: TYPE_NORMAL
+- en: We can implement a counting semaphore using condition variables.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Each semaphore needs a count, a condition variable and a mutex
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE37]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Implement to initialize the mutex and condition variable
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE38]'
+  prefs: []
+  type: TYPE_PRE
+- en: Our implementation of needs to increment the count. We will also wake up any
+    threads sleeping inside the condition variable. Notice we lock and unlock the
+    mutex so only one thread can be inside the critical section at a time.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE39]'
+  prefs: []
+  type: TYPE_PRE
+- en: Our implementation of may need to sleep if the semaphore’s count is zero. Just
+    like , we wrap the critical section using the lock, so only one thread can be
+    executing our code at a time. Notice if the thread does need to wait then the
+    mutex will be unlocked, allowing another thread to enter and awaken us from our
+    sleep!
+  prefs: []
+  type: TYPE_NORMAL
+- en: Also notice that even if a thread is woken up before it returns from , it must
+    re-acquire the lock, so it will have to wait until sem_post finishes.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE40]'
+  prefs: []
+  type: TYPE_PRE
+- en: That is a complete implementation of a counting semaphore Notice that we are
+    calling every single time. In practice, this means would unnecessary call even
+    if there are no waiting threads. A more efficient implementation would only call
+    when necessary i.e.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE41]'
+  prefs: []
+  type: TYPE_PRE
+- en: Other semaphore considerations
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: A production semaphore implementation may include a queue to ensure fairness
+    and priority. Meaning, we wake up the highest-priority and/or longest sleeping
+    thread.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: An advanced use of allows semaphores to be shared across processes. Our implementation
+    only works for threads inside the same process. We could fix this by setting the
+    condition variable and mutex attributes.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Implementing a condition variable with a mutex is complex, so we’ve left that
+    in the appendix.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Barriers
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Suppose we wanted to perform a multi-threaded calculation that has two stages,
+    but we don’t want to advance to the second stage until the first stage is completed.
+    We could use a synchronization method called a **barrier**. When a thread reaches
+    a barrier, it will wait at the barrier until all the threads reach the barrier,
+    and then they’ll all proceed together.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Think of it like being out for a hike with some friends. You make a mental note
+    of how many friends you have and agree to wait for each other at the top of each
+    hill. Say you’re the first one to reach the top of the first hill. You’ll wait
+    there at the top for your friends. One by one, they’ll arrive at the top, but
+    nobody will continue until the last person in your group arrives. Once they do,
+    you’ll all proceed.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Pthreads has a function that implements this. You’ll need to declare a variable
+    and initialize it with . takes the number of threads that will be participating
+    in the barrier as an argument. Here is a sample program using barriers.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE42]'
+  prefs: []
+  type: TYPE_PRE
+- en: Now let’s implement our own barrier and use it to keep all the threads in sync
+    in a large calculation. Here is our thought process,
+  prefs: []
+  type: TYPE_NORMAL
+- en: Threads do first calculation (use and change values in data)
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Barrier! Wait for all threads to finish first calculation before continuing
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Threads do second calculation (use and change values in data)
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: The thread function has four main parts-
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE43]'
+  prefs: []
+  type: TYPE_PRE
+- en: Our main thread will create the 16 threads, and we will divide each calculation
+    into 16 separate pieces. Each thread will be given a unique value (0,1,2,..15),
+    so it can work on its own block. Since a (void*) type can hold small integers,
+    we will pass the value of by casting it to a void pointer.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE44]'
+  prefs: []
+  type: TYPE_PRE
+- en: Note, we will never dereference this pointer value as an actual memory location.
+  prefs: []
+  type: TYPE_NORMAL
+- en: We will cast it straight back to an integer.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE45]'
+  prefs: []
+  type: TYPE_PRE
+- en: After calculation 1 completes, we need to wait for the slower threads unless
+    we are the last thread! So, keep track of the number of threads that have arrived
+    at our barrier ‘checkpoint’.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE46]'
+  prefs: []
+  type: TYPE_PRE
+- en: However, the code has a few flaws. One is two threads might try to decrement
+    . The other is the loop is a busy loop. We can do better! Let’s use a condition
+    variable and then we will use a broadcast/signal functions to wake up the sleeping
+    threads.
+  prefs: []
+  type: TYPE_NORMAL
+- en: A reminder, a condition variable is similar to a house! Threads go there to
+    sleep (). A thread can choose to wake up one thread () or all of them (). If there
+    are no threads currently waiting then these two calls have no effect.
+  prefs: []
+  type: TYPE_NORMAL
+- en: A condition variable version is usually similar to a busy loop incorrect solution
+    - as we will show next. First, let’s add a mutex and condition global variables
+    and don’t forget to initialize them in .
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE47]'
+  prefs: []
+  type: TYPE_PRE
+- en: We will use the mutex to ensure that only one thread modifies at a time. The
+    last arriving thread needs to wake up *all* sleeping threads - so we will use
+    not
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE48]'
+  prefs: []
+  type: TYPE_PRE
+- en: When a thread enters , it releases the mutex and sleeps. After, the thread will
+    be woken up. Once we bring a thread back from its sleep, before returning it must
+    wait until it can lock the mutex. Notice that even if a sleeping thread wakes
+    up early, it will check the while loop condition and re-enter wait if necessary.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '**The above barrier is not reusable**. Meaning that if we stick it into any
+    old calculation loop there is a good chance that the code will encounter a condition
+    where the barrier either deadlocks or thread races ahead one iteration faster.
+    Why is that? Because of the ambitious thread.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: We will assume that one thread is much faster than all the other threads. With
+    the barrier API, this thread should be waiting, but it may not be. To make it
+    concrete, let’s look at this code
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE49]'
+  prefs: []
+  type: TYPE_PRE
+- en: What happens if a thread becomes ambitious. Well
+  prefs: []
+  type: TYPE_NORMAL
+- en: Many other threads wait on the condition variable
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: The last thread broadcasts.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: A single thread leaves the while loop.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: This single thread performs its calculation before any other threads *even wake
+    up*
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: Reset the number of remaining threads and goes back to sleep.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: 'All the other threads who should’ve woken up never do and our implementation
+    deadlocks. How would you go about solving this? Hint: If multiple threads call
+    in a loop then one can guarantee that they are on the same iteration.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Reader Writer Problem
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Imagine you had a key-value map data structure that is used by many threads.
+    Multiple threads should be able to look up (read) values at the same time provided
+    the data structure is not being written to. The writers are not so gregarious.
+    To avoid data corruption, only one thread at a time may modify () the data structure
+    and no readers may be reading at that time.
+  prefs: []
+  type: TYPE_NORMAL
+- en: This is an example of the *Reader Writer Problem*. Namely, how can we efficiently
+    synchronize multiple readers and writers such that multiple readers can read together,
+    but a writer gets exclusive access?
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'An incorrect attempt is shown below (“lock” is a shorthand for ):'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Attempt #1'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '[PRE50]'
+  prefs: []
+  type: TYPE_PRE
+- en: At least our first attempt does not suffer from data corruption. Readers must
+    wait while a writer is writing and vice versa! However, readers must also wait
+    for other readers. Let’s try another implementation.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Attempt #2:'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: '[PRE51]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Our second attempt suffers from a race condition. Imagine if two threads both
+    called and or both called write at the same time. Both threads would be able to
+    proceed! Secondly, we can have multiple readers and multiple writers, so let’s
+    keep track of the total number of readers or writers Which brings us to attempt
+    #3.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Attempt #3'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Remember that performs *Three* actions. Firstly, it atomically unlocks the mutex
+    and then sleeps (until it is woken by or ). Thirdly, the awoken thread must re-acquire
+    the mutex lock before returning. Thus only one thread can actually be running
+    inside the critical section defined by the lock and unlock() methods.
+  prefs: []
+  type: TYPE_NORMAL
+- en: 'Implementation #3 below ensures that a reader will enter the if any writers
+    are writing.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE52]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'However, only one reader a time can read because candidate #3 did not unlock
+    the mutex. A better version unlocks before reading.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE53]'
+  prefs: []
+  type: TYPE_PRE
+- en: Does this mean that a writer and read could read and write at the same time?
+    No! First of all, remember cond_wait requires the thread re-acquire the mutex
+    lock before returning. Thus only one thread can be executing code inside the critical
+    section (marked with **) at a time!
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE54]'
+  prefs: []
+  type: TYPE_PRE
+- en: Writers must wait for everyone. Mutual exclusion is assured by the lock.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE55]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Candidate #3 above also uses . This will only wake up one thread. If many readers
+    are waiting for the writer to complete, only one sleeping reader will be awoken
+    from their slumber. The reader and writer should use so that all threads should
+    wake up and check their while-loop condition.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: Starving writers
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'Candidate #3 above suffers from starvation. If readers are constantly arriving
+    then a writer will never be able to proceed (the ‘reading’ count never reduces
+    to zero). This is known as *starvation* and would be discovered under heavy loads.
+    Our fix is to implement a bounded-wait for the writer. If a writer arrives they
+    will still need to wait for existing readers however future readers must be placed
+    in a “holding pen” and wait for the writer to finish. The “holding pen” can be
+    implemented using a variable and a condition variable so that we can wake up the
+    threads once the writer has finished.'
+  prefs: []
+  type: TYPE_NORMAL
+- en: The plan is that when a writer arrives, and before waiting for current readers
+    to finish, register our intent to write by incrementing a counter ‘writer’
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE56]'
+  prefs: []
+  type: TYPE_PRE
+- en: And incoming readers will not be allowed to continue while writer is nonzero.
+    Notice ‘writer’ indicates a writer has arrived, while ‘reading’ and ‘writing’
+    counters indicate there is an *active* reader or writer.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE57]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Attempt #4'
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Below is our first working solution to the Reader-Writer problem. Note if you
+    continue to read about the “Reader Writer problem” then you will discover that
+    we solved the “Second Reader Writer problem” by giving writers preferential access
+    to the lock. This solution is not optimal. However, it satisfies our original
+    problem of N active readers, single active writer, and avoiding starvation of
+    the writer if there is a constant stream of readers.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Can you identify any improvements? For example, how would you improve the code
+    so that we only woke up readers or one writer?
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE58]'
+  prefs: []
+  type: TYPE_PRE
+- en: Ring Buffer
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: A ring buffer is a simple, usually fixed-sized, storage mechanism where contiguous
+    memory is treated as if it is circular, and two index counters keep track of the
+    current beginning and end of the queue. As array indexing is not circular, the
+    index counters must wrap around to zero when moved past the end of the array.
+    As data is added (enqueued) to the front of the queue or removed (dequeued) from
+    the tail of the queue, the current items in the buffer form a train that appears
+    to circle the track
+  prefs: []
+  type: TYPE_NORMAL
+- en: '![Ring Buffer Visualization](../media/file20.png)'
+  prefs: []
+  type: TYPE_IMG
+- en: Ring Buffer Visualization
+  prefs: []
+  type: TYPE_NORMAL
+- en: A simple (single-threaded) implementation is shown below. Note, enqueue and
+    dequeue do not guard against underflow or overflow. It’s possible to add an item
+    when the queue is full and possible to remove an item when the queue is empty.
+    If we added 20 integers (1, 2, 3, …, 20) to the queue and did not dequeue any
+    items then values, would overwrite the . We won’t fix this problem right now,
+    instead of when we create the multi-threaded version we will ensure enqueue-ing
+    and dequeue-ing threads are blocked while the ring buffer is full or empty respectively.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE59]'
+  prefs: []
+  type: TYPE_PRE
+- en: Ring Buffer Gotchas
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: It’s tempting to write the enqueue or dequeue method in the following compact
+    form.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE60]'
+  prefs: []
+  type: TYPE_PRE
+- en: This method would appear to work but contains a subtle bug. With more than four
+    billion enqueue operations, the int value of will overflow and wrap around to
+    0! Thus, you might end up writing into for example!
+  prefs: []
+  type: TYPE_NORMAL
+- en: A compact form is correct uses bit masking provided N is a power of two. (16,32,64,…)
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE61]'
+  prefs: []
+  type: TYPE_PRE
+- en: This buffer does not yet prevent overwrites. For that, we’ll turn to our multi-threaded
+    attempt that will block a thread until there is space or there is at least one
+    item to remove.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Multithreaded Correctness
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The following code is an incorrect implementation. What will happen? Will and/or
+    block? Is mutual exclusion satisfied? Can the buffer underflow? Can the buffer
+    overflow? For clarity, is shortened to and we assume sem_wait cannot be interrupted.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE62]'
+  prefs: []
+  type: TYPE_PRE
+- en: Analysis
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: Before reading on, see how many mistakes you can find. Then determine what would
+    happen if threads called the enqueue and dequeue methods.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The enqueue method waits and posts on the same semaphore (s1) and similarly
+    with enqueue and (s2) i.e. we decrement the value and then immediately increment
+    the value, so by the end of the function the semaphore value is unchanged!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The initial value of s1 is 16, so the semaphore will never be reduced to zero
+    - enqueue will not block if the ring buffer is full - so overflow is possible.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The initial value of s2 is zero, so calls to dequeue will always block and never
+    return!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The order of mutex lock and sem_wait will need to be swapped; however, this
+    example is so broken that this bug has no effect!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Another Analysis
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: The following code is an incorrect implementation. What will happen? Will and/or
+    block? Is mutual exclusion satisfied? Can the buffer underflow? Can the buffer
+    overflow? For clarity is shortened to and we assume sem_wait cannot be interrupted.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE63]'
+  prefs: []
+  type: TYPE_PRE
+- en: Here are a few problems that we hope you’ve found.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The initial value of s2 is 0\. Thus enqueue will block on the first call to
+    sem_wait even though the buffer is empty!
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The initial value of s1 is 16\. Thus dequeue will not block on the first call
+    to sem_wait even though the buffer is empty - Underflow! The dequeue method will
+    return invalid data.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: The code does not satisfy Mutual Exclusion. Two threads can modify or at the
+    same time! The code appears to use mutex lock. Unfortunately, the lock was never
+    initialized with or - so the lock may not work ( may simply do nothing)
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Correct implementation of a ring buffer
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: As the mutex lock is stored in global (static) memory it can be initialized
+    with . If we had allocated space for the mutex on the heap, then we would have
+    used
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE64]'
+  prefs: []
+  type: TYPE_PRE
+- en: The enqueue method is shown below. Make sure to note.
+  prefs: []
+  type: TYPE_NORMAL
+- en: The lock is only held during the critical section (access to the data structure).
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: A complete implementation would need to guard against early returns from due
+    to POSIX signals.
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+- en: '[PRE65]'
+  prefs: []
+  type: TYPE_PRE
+- en: The implementation is shown below. Notice the symmetry of the synchronization
+    calls to . In both cases, the functions first wait if the count of spaces or count
+    of items is zero.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE66]'
+  prefs: []
+  type: TYPE_PRE
+- en: 'Food for thought:'
+  prefs: []
+  type: TYPE_NORMAL
+- en: What would happen if the order of and calls were swapped?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What would happen if the order of and calls were swapped?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: 'Extra: Process Synchronization'
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: You thought that you were using different processes, so you don’t have to synchronize?
+    Think again! You may not have race conditions within a process but what if your
+    process needs to interact with the system around it? Let’s consider a motivating
+    example
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE67]'
+  prefs: []
+  type: TYPE_PRE
+- en: If none of the system calls fail then we should get something that looks like
+    this given the file was empty to begin with.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE68]'
+  prefs: []
+  type: TYPE_PRE
+- en: '[PRE69]'
+  prefs: []
+  type: TYPE_PRE
+- en: Interruption
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: But, there is a hidden nuance. Most system calls can be meaning that the operating
+    system can stop an ongoing system call because it needs to stop the process. So
+    barring and from failing – they typically go to completion – what happens if fails?
+    If write fails and no bytes are written, we can get something like or . This is
+    data loss which is incorrect but won’t corrupt the file. What happens if write
+    gets interrupted after a partial write? We get all sorts of madness. For example,
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE70]'
+  prefs: []
+  type: TYPE_PRE
+- en: Solution
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+- en: 'A program can create a mutex before fork-ing - however the child and parent
+    process will not share virtual memory and each one will have a mutex independent
+    of the other. Advanced note: There are advanced options using shared memory that
+    allow a child and parent to share a mutex if it’s created with the correct options
+    and uses a shared memory segment. See [stackoverflow example](http://stackoverflow.com/questions/19172541/procs-fork-and-mutexes)'
+  prefs: []
+  type: TYPE_NORMAL
+- en: So what should we do? We should use a shared mutex! Consider the following code.
+  prefs: []
+  type: TYPE_NORMAL
+- en: '[PRE71]'
+  prefs: []
+  type: TYPE_PRE
+- en: What the code does in main is initialize a process shared mutex using a piece
+    of memory. You will find out what this call to does later – assume for the time
+    being that it creates memory that is shared between processes. We can initialize
+    a in that special piece of memory and use it as normal. To counter failing, we
+    have put the call inside a while loop that keeps writing so long as there are
+    bytes left to write. Now if all the other system calls function, there should
+    be more race conditions.
+  prefs: []
+  type: TYPE_NORMAL
+- en: Most programs try to avoid this problem entirely by writing to separate files,
+    but it is good to know that there are mutexes across processes, and they are useful.
+    A program can use all of the primitives that were mentioned previouslty! Barriers,
+    semaphores, and condition variables can all be initialized on a shared piece of
+    memory and used in similar ways to their multithreading counterparts.
+  prefs: []
+  type: TYPE_NORMAL
+- en: You don’t have to worry about arbitrary memory addresses becoming race condition
+    candidates. Only areas that specifically mapped are in danger.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: You get the nice isolation of processes so if one process fails the system can
+    maintain intact.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When you have a lot of threads, creating a process might ease the system load
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There are other ways to synchronize as well, check out goroutines or higher
+    orders of synchronization in the appendix.
+  prefs: []
+  type: TYPE_NORMAL
+- en: External Resources
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Guiding questions for the man pages
+  prefs: []
+  type: TYPE_NORMAL
+- en: How is a recursive mutex different than a default mutex?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: How is mutex trylock different than mutex lock?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why would a mutex lock fail? What’s an example?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What happens if a thread tries to destroy a locked mutex?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Can a thread copy the underlying bytes of a mutex instead of using a pointer?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is the lifecycle of a semaphore?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[pthread_mutex_lock man page](http://linux.die.net/man/3/pthread_mutex_lock)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[pthread_mutex_init man page](http://linux.die.net/man/3/pthread_mutex_init)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[sem_init](http://man7.org/linux/man-pages/man3/sem_init.3.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[sem_wait](http://man7.org/linux/man-pages/man3/sem_wait.3.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[sem_post](http://man7.org/linux/man-pages/man3/sem_post.3.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[sem_destroy](http://man7.org/linux/man-pages/man3/sem_destroy.3.html)'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Topics
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: Atomic operations
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Critical Section
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Producer Consumer Problem
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using Condition Variables
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using Counting Semaphore
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Implementing a barrier
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Implementing a ring buffer
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Using pthread_mutex
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Implementing producer consumer
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Analyzing multi-threaded coded
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Questions
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+- en: What is atomic operation?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why will the following not work in parallel code
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE72]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: And this will?
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: '[PRE73]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: 'What are some downsides to atomic operations? What would be faster: keeping
+    a local variable or many atomic operations?'
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is the critical section?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Once you have identified a critical section, what is one way of assuring that
+    only one thread will be in the section at a time?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Identify the critical section here
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE74]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: How tight can you make the critical section?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is a producer consumer problem? How might the above be a producer consumer
+    problem be used in the above section? How is a producer consumer problem related
+    to a reader writer problem?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is a condition variable? Why is there an advantage to using one over a
+    loop?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Why is this code dangerous?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE75]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: What is a counting semaphore? Give me an analogy to a cookie jar/pizza box/limited
+    food item.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What is a thread barrier?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Use a counting semaphore to implement a barrier.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write up a Producer/Consumer queue, How about a producer consumer stack?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Give me an implementation of a reader-writer lock with condition variables,
+    make a struct with whatever you need, it needs to be able to support the following
+    functions
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE76]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: The only specification is that in between and , no writers can write. In between
+    the writer locks, only one writer may be writing at a time.
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: Write code to implement a producer consumer using ONLY three counting semaphores.
+    Assume there can be more than one thread calling enqueue and dequeue. Determine
+    the initial value of each semaphore.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Write code to implement a producer consumer using condition variables and a
+    mutex. Assume there can be more than one thread calling enqueue and dequeue.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Use CVs to implement add(unsigned int) and subtract(unsigned int) blocking functions
+    that never allow the global value to be greater than 100.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: Use CVs to implement a barrier for 15 threads.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: What does the following code do?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE77]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Is the following code correct? If it isn’t, could you fix it?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE78]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: Sketch how to use a binary semaphore as a mutex. Remember in addition to mutual
+    exclusion, a mutex can only ever be unlocked by the thread who called it.
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: '[PRE79]'
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+- en: How many of the following statements are true?
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There can be multiple active readers
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: There can be multiple active writers
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: When there is an active writer the number of active readers must be zero
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: If there is an active reader the number of active writers must be zero
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+- en: A writer must wait until the current active readers have finished
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
