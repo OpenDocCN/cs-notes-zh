@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <title>Threads</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../styles/stylesheet1.css" />
+</head>
+<body epub:type="bodymatter">
+<section id="threads" class="level1">
+<h1>Threads</h1>
+<p>A thread is short for ‘thread-of-execution’. It represents the sequence of instructions that the CPU has and will execute. To remember how to return from function calls, and to store the values of automatic variables and parameters a thread uses a stack. Almost weirdly, a thread is a process, meaning that creating a thread is similar to , except there is <strong>no copying</strong> meaning no copy on write. What this allows is for a process to share the same address space, variables, heap, file descriptors and etc. The actual system call to create a thread is similar to . It’s . We won’t go into the specifics, but you can read the <a href="http://man7.org/linux/man-pages/man2/clone.2.html">man pages</a> keeping in mind that it is outside the direct scope of this course. LWP or Lightweight Processes or threads are preferred to forking for a lot of scenarios because there is a lot less overhead creating them. But in some cases, notably python uses this, multiprocessing is the way to make your code faster.</p>
+<section id="processes-vs-threads" class="level2">
+<h2>Processes vs threads</h2>
+<p>Creating separate processes is useful when:</p>
+<ul>
+<li><p>When more security is desired. For example, Chrome browser uses different processes for different tabs.</p></li>
+<li><p>When running an existing and complete program then a new process is required, for example starting ‘gcc‘.</p></li>
+<li><p>When you are running into synchronization primitives and each process is operating on something in the system.</p></li>
+<li><p>When you have too many threads – the kernel tries to schedule all the threads near each other which could cause more harm than good.</p></li>
+<li><p>When you don’t want to worry about race conditions</p></li>
+<li><p>When the amount of communication is minimal enough that simple IPC needs to be used.</p></li>
+</ul>
+<p>On the other hand, creating threads is more useful when:</p>
+<ul>
+<li><p>You want to leverage the power of a multi-core system to do one task</p></li>
+<li><p>When you can’t deal with the overhead of processes</p></li>
+<li><p>When you want communication between the processes simplified</p></li>
+<li><p>When you want to threads to be part of the same process</p></li>
+</ul>
+</section>
+<section id="thread-internals" class="level2">
+<h2>Thread Internals</h2>
+<p>Your main function and other functions has automatic variables. We will store them in memory using a stack and keep track of how large the stack is by using a simple pointer (the “stack pointer”). If the thread calls another function, we move our stack pointer down, so that we have more space for parameters and automatic variables. Once it returns from a function, we can move the stack pointer back up to its previous value. We keep a copy of the old stack pointer value - on the stack! This is why returning from a function is quick. It’s easy to ‘free’ the memory used by automatic variables because the program needs to change the stack pointer.</p>
+<p>In a multi-threaded program, there are multiple stacks but only one address space. The pthread library allocates some stack space and uses the function call to start the thread at that stack address.</p>
+<figure>
+<img src="../media/file16.png" alt="Thread stack visualization" /><figcaption>Thread stack visualization</figcaption>
+</figure>
+<p>A program can have more than one thread running inside a process. The programget the first thread for free! It runs the code you write inside ‘main’. If a program need more threads, it can call to create a new thread using the pthread library. You’ll need to pass a pointer to a function so that the thread knows where to start.</p>
+<p>The threads all live inside the same virtual memory because they are part of the same process. Thus they can all see the heap, the global variables, and the program code.</p>
+<figure>
+<img src="../media/file17.png" alt="Threads pointing to the same place in the heap" /><figcaption>Threads pointing to the same place in the heap</figcaption>
+</figure>
+<p>Thus, a program can have two (or more) CPUs working on your program at the same time and inside the same process. It’s up to the operating system to assign the threads to CPUs. If a program has more active threads than CPUs, the kernel will assign the thread to a CPU for a short duration or until it runs out of things to do and then will automatically switch the CPU to work on another thread. For example, one CPU might be processing the game AI while another thread is computing the graphics output.</p>
+</section>
+<section id="simple-usage" class="level2">
+<h2>Simple Usage</h2>
+<p>To use pthreads, include and compile and link with or compiler option. This option tells the compiler that your program requires threading support. To create a thread, use the function . This function takes four arguments:</p>
+<div class="sourceCode" id="cb1" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" title="1"><span class="dt">int</span> pthread_create(pthread_t *thread, <span class="dt">const</span> pthread_attr_t *attr,</a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="dt">void</span> *(*start_routine) (<span class="dt">void</span> *), <span class="dt">void</span> *arg);</a></code></pre></div>
+<ul>
+<li><p>The first is a pointer to a variable that will hold the id of the newly created thread.</p></li>
+<li><p>The second is a pointer to attributes that we can use to tweak and tune some of the advanced features of pthreads.</p></li>
+<li><p>The third is a pointer to a function that we want to run</p></li>
+<li><p>Fourth is a pointer that will be given to our function</p></li>
+</ul>
+<p>The argument is difficult to read! It means a pointer that takes a pointer and returns a pointer. It looks like a function declaration except that the name of the function is wrapped with</p>
+<div class="sourceCode" id="cb2" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb2-1" title="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb2-3" title="3"></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="dt">void</span> *busy(<span class="dt">void</span> *ptr) {</a>
+<a class="sourceLine" id="cb2-5" title="5">  <span class="co">// ptr will point to &quot;Hi&quot;</span></a>
+<a class="sourceLine" id="cb2-6" title="6">  puts(<span class="st">&quot;Hello World&quot;</span>);</a>
+<a class="sourceLine" id="cb2-7" title="7">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb2-8" title="8">}</a>
+<a class="sourceLine" id="cb2-9" title="9"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb2-10" title="10">  pthread_t id;</a>
+<a class="sourceLine" id="cb2-11" title="11">  pthread_create(&amp;id, NULL, busy, <span class="st">&quot;Hi&quot;</span>);</a>
+<a class="sourceLine" id="cb2-12" title="12">  <span class="dt">void</span> *result;</a>
+<a class="sourceLine" id="cb2-13" title="13">  pthread_join(id, &amp;result);</a>
+<a class="sourceLine" id="cb2-14" title="14">}</a></code></pre></div>
+<p>In the above example, the result will be because the busy function returned . We need to pass the address-of result because will be writing into the contents of our pointer.</p>
+<p>In the man pages, it warns that programmers should use as an opaque type and not look at the internals. We do ignore that often, though.</p>
+</section>
+<section id="pthread-functions" class="level2">
+<h2>Pthread Functions</h2>
+<p>Here are some common pthread functions:</p>
+<ul>
+<li><p>creates a new thread. Every thread gets a new stack. If a program calls twice, Your process will contain three stacks - one for each thread. The first thread is created when the process start, the other two after the create. Actually, there can be more stacks than this, but let’s keep it simple. The important idea is that each thread requires a stack because the stack contains automatic variables and the old CPU PC register, so that it can go back to executing the calling function after the function is finished.</p></li>
+<li><p>stops a thread. Note the thread may still continue. For example, it can be terminated when the thread makes an operating system call (e.g. ). In practice, is rarely used because a thread won’t clean up open resources like files. An alternative implementation is to use a boolean (int) variable whose value is used to inform other threads that they should finish and clean up.</p></li>
+<li><p>stops the calling thread meaning the thread never returns after calling . The pthread library will automatically finish the process if no other threads are running. is equivalent to returning from the thread’s function; both finish the thread and also set the return value (void *pointer) for the thread. Calling in the thread is a common way for simple programs to ensure that all threads finish. For example, in the following program, the threads will probably not have time to get started. On the other hand exits the entire process and sets the process’ exit value. This is equivalent to in the main method. All threads inside the process are stopped. Note the version creates thread zombies; however, this is not a long-running process, so we don’t care.</p>
+<div class="sourceCode" id="cb3" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb3-1" title="1"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb3-2" title="2">  pthread_t tid1, tid2;</a>
+<a class="sourceLine" id="cb3-3" title="3">  pthread_create(&amp;tid1, NULL, myfunc, <span class="st">&quot;Jabberwocky&quot;</span>);</a>
+<a class="sourceLine" id="cb3-4" title="4">  pthread_create(&amp;tid2, NULL, myfunc, <span class="st">&quot;Vorpel&quot;</span>);</a>
+<a class="sourceLine" id="cb3-5" title="5">  <span class="cf">if</span> (keep_threads_going) {</a>
+<a class="sourceLine" id="cb3-6" title="6">    pthread_exit(NULL);</a>
+<a class="sourceLine" id="cb3-7" title="7">  } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb3-8" title="8">    exit(<span class="dv">42</span>); <span class="co">//or return 42;</span></a>
+<a class="sourceLine" id="cb3-9" title="9">  }</a>
+<a class="sourceLine" id="cb3-10" title="10"></a>
+<a class="sourceLine" id="cb3-11" title="11">  <span class="co">// No code is run after exit</span></a>
+<a class="sourceLine" id="cb3-12" title="12">}</a></code></pre></div></li>
+<li><p>waits for a thread to finish and records its return value. Finished threads will continue to consume resources. Eventually, if enough threads are created, will fail. In practice, this is only an issue for long-running processes but is not an issue for simple, short-lived processes as all thread resources are automatically freed when the process exits. This is equivalent to turning your children into zombies, so keep this in mind for long-running processes. In the exit example, we could also wait on all the threads.</p>
+<div class="sourceCode" id="cb4" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb4-1" title="1"><span class="co">// ...</span></a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="dt">void</span>* result;</a>
+<a class="sourceLine" id="cb4-3" title="3">pthread_join(tid1, &amp;result);</a>
+<a class="sourceLine" id="cb4-4" title="4">pthread_join(tid2, &amp;result);</a>
+<a class="sourceLine" id="cb4-5" title="5"><span class="cf">return</span> <span class="dv">42</span>;</a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="co">// ...</span></a></code></pre></div></li>
+</ul>
+<p>There are many ways to exit threads. Here is a non-complete list:</p>
+<ul>
+<li><p>Returning from the thread function</p></li>
+<li><p>Calling</p></li>
+<li><p>Canceling the thread with</p></li>
+<li><p>Terminating the process through a signal.</p></li>
+<li><p>calling or</p></li>
+<li><p>Returning from</p></li>
+<li><p>Executing another program</p></li>
+<li><p>Unplugging your computer</p></li>
+<li><p>Some undefined behavior can terminate your threads, it is undefined behavior</p></li>
+</ul>
+</section>
+<section id="race-conditions" class="level2">
+<h2>Race Conditions</h2>
+<p>Race conditions are whenever the outcome of a program is determined by its sequence of events determined by the processor. This means that the execution of the code is non-deterministic. Meaning that the same program can run multiple times and depending on how the kernel schedules the threads could produce inaccurate results. The following is the canonical race condition.</p>
+<div class="sourceCode" id="cb5" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb5-1" title="1"><span class="dt">void</span> *thread_main(<span class="dt">void</span> *p) {</a>
+<a class="sourceLine" id="cb5-2" title="2">  <span class="dt">int</span> *p_int = (<span class="dt">int</span>*) p;</a>
+<a class="sourceLine" id="cb5-3" title="3">  <span class="dt">int</span> x = *p_int;</a>
+<a class="sourceLine" id="cb5-4" title="4">  x += x;</a>
+<a class="sourceLine" id="cb5-5" title="5">  *p_int = x;</a>
+<a class="sourceLine" id="cb5-6" title="6">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb5-7" title="7">}</a>
+<a class="sourceLine" id="cb5-8" title="8"></a>
+<a class="sourceLine" id="cb5-9" title="9"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb5-10" title="10">  <span class="dt">int</span> data = <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb5-11" title="11">  pthread_t one, two;</a>
+<a class="sourceLine" id="cb5-12" title="12">  pthread_create(&amp;one, NULL, thread_main, &amp;data);</a>
+<a class="sourceLine" id="cb5-13" title="13">  pthread_create(&amp;two, NULL, thread_main, &amp;data);</a>
+<a class="sourceLine" id="cb5-14" title="14">  pthread_join(one, NULL);</a>
+<a class="sourceLine" id="cb5-15" title="15">  pthread_join(two, NULL);</a>
+<a class="sourceLine" id="cb5-16" title="16">  printf(<span class="st">&quot;%d</span><span class="sc">\n</span><span class="st">&quot;</span>, data);</a>
+<a class="sourceLine" id="cb5-17" title="17">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb5-18" title="18">}</a></code></pre></div>
+<p>Breaking down the assembly there are many different accesses of the code. We will assume that data is stored in the register. The code to increment is the following with no optimization (assume int_ptr contains eax).</p>
+<pre data-language="[x86masm]Assembler"><code>mov eax, DWORD PTR [rbp-4]    ;Loads int_ptr
+add eax, eax                  ;Does the addition
+mov DWORD PTR [rbp-4], eax    ;Stores it back</code></pre>
+<p>Consider this access pattern.</p>
+<figure>
+<img src="../media/file18.png" alt="Thread access - not a race condition" /><figcaption>Thread access - not a race condition</figcaption>
+</figure>
+<p>This access pattern will cause the variable to be 4. The problem is when the instructions are executed in parallel.</p>
+<figure>
+<img src="../media/file19.png" alt="Thread access - race condition" /><figcaption>Thread access - race condition</figcaption>
+</figure>
+<p>This access pattern will cause the variable to be 2. This is undefined behavior and a race condition. What we want is one thread to access the part of the code at a time.</p>
+<p>But when compiled with , assembly output is a single instruction.</p>
+<pre data-language="[x86masm]Assembler"><code>shl dword ptr [rdi]   # Optimized way of doing the add</code></pre>
+<p>Shouldn’t that fix it? It is a single assembly instruction so no interleaving? It doesn’t fix the problems that the <em>hardware itself</em> may experience a race condition because we as programmers didn’t tell the hardware to check for it. The easiest way is to add the <em>lock</em> prefix <span class="citation" data-cites="guide2011intel">(Guide <a href="ch018.xhtml#ref-guide2011intel" role="doc-biblioref">2011</a>, 1120)</span>.</p>
+<p>But we don’t want to be coding in assembly! We need to come up with a software solution to this problem.</p>
+<section id="a-day-at-the-races" class="level4">
+<h4>A day at the races</h4>
+<p>Here is another small race condition. The following code is supposed to start ten threads with the integers 0 through 9 inclusive. However, when run prints out ! Or seldom does it print out what we expect. Can you see why?</p>
+<div class="sourceCode" id="cb8" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb8-1" title="1"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="dt">void</span>* myfunc(<span class="dt">void</span>* ptr) {</a>
+<a class="sourceLine" id="cb8-3" title="3">  <span class="dt">int</span> i = *((<span class="dt">int</span> *) ptr);</a>
+<a class="sourceLine" id="cb8-4" title="4">  printf(<span class="st">&quot;%d &quot;</span>, i);</a>
+<a class="sourceLine" id="cb8-5" title="5">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb8-6" title="6">}</a>
+<a class="sourceLine" id="cb8-7" title="7"></a>
+<a class="sourceLine" id="cb8-8" title="8"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb8-9" title="9">  <span class="co">// Each thread gets a different value of i to process</span></a>
+<a class="sourceLine" id="cb8-10" title="10">  <span class="dt">int</span> i;</a>
+<a class="sourceLine" id="cb8-11" title="11">  pthread_t tid;</a>
+<a class="sourceLine" id="cb8-12" title="12">  <span class="cf">for</span>(i =<span class="dv">0</span>; i &lt; <span class="dv">10</span>; i++) {</a>
+<a class="sourceLine" id="cb8-13" title="13">    pthread_create(&amp;tid, NULL, myfunc, &amp;i); <span class="co">// ERROR</span></a>
+<a class="sourceLine" id="cb8-14" title="14">  }</a>
+<a class="sourceLine" id="cb8-15" title="15">  pthread_exit(NULL);</a>
+<a class="sourceLine" id="cb8-16" title="16">}</a></code></pre></div>
+<p>The above code suffers from a - the value of i is changing. The new threads start later in the example output the last thread starts after the loop has finished. To overcome this race-condition, we will give each thread a pointer to its own data area. For example, for each thread we may want to store the id, a starting value and an output value. We will instead treat i as a pointer and cast it by value.</p>
+<div class="sourceCode" id="cb9" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb9-1" title="1"><span class="dt">void</span>* myfunc(<span class="dt">void</span>* ptr) {</a>
+<a class="sourceLine" id="cb9-2" title="2">  <span class="dt">int</span> data = ((<span class="dt">int</span>) ptr);</a>
+<a class="sourceLine" id="cb9-3" title="3">  printf(<span class="st">&quot;%d &quot;</span>, data);</a>
+<a class="sourceLine" id="cb9-4" title="4">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb9-5" title="5">}</a>
+<a class="sourceLine" id="cb9-6" title="6"></a>
+<a class="sourceLine" id="cb9-7" title="7"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb9-8" title="8">  <span class="co">// Each thread gets a different value of i to process</span></a>
+<a class="sourceLine" id="cb9-9" title="9">  <span class="dt">int</span> i;</a>
+<a class="sourceLine" id="cb9-10" title="10">  pthread_t tid;</a>
+<a class="sourceLine" id="cb9-11" title="11">  <span class="cf">for</span>(i =<span class="dv">0</span>; i &lt; <span class="dv">10</span>; i++) {</a>
+<a class="sourceLine" id="cb9-12" title="12">    pthread_create(&amp;tid, NULL, myfunc, (<span class="dt">void</span> *)i);</a>
+<a class="sourceLine" id="cb9-13" title="13">  }</a>
+<a class="sourceLine" id="cb9-14" title="14">  pthread_exit(NULL);</a>
+<a class="sourceLine" id="cb9-15" title="15">}</a></code></pre></div>
+<p>Race conditions aren’t in our code. They can be in provided code Some functions like , , , not thread-safe. Let’s look at a simple function that is also not ‘thread-safe’. The result buffer could be stored in global memory. This is good in a single-threaded program. We wouldn’t want to return a pointer to an invalid address on the stack, but there’s only one result buffer in the entire memory. If two threads were to use it at the same time, one would corrupt the other.</p>
+<div class="sourceCode" id="cb10" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb10-1" title="1"><span class="dt">char</span> *to_message(<span class="dt">int</span> num) {</a>
+<a class="sourceLine" id="cb10-2" title="2">  <span class="dt">static</span> <span class="dt">char</span> result [<span class="dv">256</span>];</a>
+<a class="sourceLine" id="cb10-3" title="3">  <span class="cf">if</span> (num &lt; <span class="dv">10</span>) sprintf(result, <span class="st">&quot;%d : blah blah&quot;</span> , num);</a>
+<a class="sourceLine" id="cb10-4" title="4">  <span class="cf">else</span> strcpy(result, <span class="st">&quot;Unknown&quot;</span>);</a>
+<a class="sourceLine" id="cb10-5" title="5">  <span class="cf">return</span> result;</a>
+<a class="sourceLine" id="cb10-6" title="6">}</a></code></pre></div>
+<p>There are ways around this like using synchronization locks, but first let’s do this by design. How would you fix the function above? You can change any of the parameters and any return types. Here is one valid solution.</p>
+<div class="sourceCode" id="cb11" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb11-1" title="1"><span class="dt">int</span> to_message_r(<span class="dt">int</span> num, <span class="dt">char</span> *buf, <span class="dt">size_t</span> nbytes) {</a>
+<a class="sourceLine" id="cb11-2" title="2">  <span class="dt">size_t</span> written;</a>
+<a class="sourceLine" id="cb11-3" title="3">  <span class="cf">if</span> (num &lt; <span class="dv">10</span>) {</a>
+<a class="sourceLine" id="cb11-4" title="4">    written = snprintf(buf, nbtytes, <span class="st">&quot;%d : blah blah&quot;</span> , num);</a>
+<a class="sourceLine" id="cb11-5" title="5">  } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb11-6" title="6">    strncpy(buf, <span class="st">&quot;Unknown&quot;</span>, nbytes);</a>
+<a class="sourceLine" id="cb11-7" title="7">    buf[nbytes] = &#39;\<span class="dv">0</span><span class="er">&#39;</span>;</a>
+<a class="sourceLine" id="cb11-8" title="8">    written = strlen(buf) + <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb11-9" title="9">  }</a>
+<a class="sourceLine" id="cb11-10" title="10">  <span class="cf">return</span> written &lt;= nbytes;</a>
+<a class="sourceLine" id="cb11-11" title="11">}</a></code></pre></div>
+<p>Instead of making the function responsible for the memory, we made the caller responsible! A lot of programs, and hopefully your programs, have minimal communication needed. Often a malloc call is less work than locking a mutex or sending a message to another thread.</p>
+</section>
+<section id="dont-cross-the-streams" class="level3">
+<h3>Don’t Cross the Streams</h3>
+<p>A program can fork inside a process with multiple threads! However, the child process only has a single thread, which is a clone of the thread that called . We can see this as a simple example, where the background threads never print out a second message in the child process.</p>
+<div class="sourceCode" id="cb12" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb12-1" title="1"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb12-2" title="2"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb12-3" title="3"><span class="pp">#include </span><span class="im">&lt;unistd.h&gt;</span></a>
+<a class="sourceLine" id="cb12-4" title="4"></a>
+<a class="sourceLine" id="cb12-5" title="5"><span class="dt">static</span> pid_t child = -<span class="dv">2</span>;</a>
+<a class="sourceLine" id="cb12-6" title="6"></a>
+<a class="sourceLine" id="cb12-7" title="7"><span class="dt">void</span> *sleepnprint(<span class="dt">void</span> *arg) {</a>
+<a class="sourceLine" id="cb12-8" title="8">  printf(<span class="st">&quot;%d:%s starting up...</span><span class="sc">\n</span><span class="st">&quot;</span>, getpid(), (<span class="dt">char</span> *) arg);</a>
+<a class="sourceLine" id="cb12-9" title="9"></a>
+<a class="sourceLine" id="cb12-10" title="10">  <span class="cf">while</span> (child == -<span class="dv">2</span>) {sleep(<span class="dv">1</span>);} <span class="co">/* Later we will use condition variables */</span></a>
+<a class="sourceLine" id="cb12-11" title="11"></a>
+<a class="sourceLine" id="cb12-12" title="12">  printf(<span class="st">&quot;%d:%s finishing...</span><span class="sc">\n</span><span class="st">&quot;</span>,getpid(), (<span class="dt">char</span>*)arg);</a>
+<a class="sourceLine" id="cb12-13" title="13"></a>
+<a class="sourceLine" id="cb12-14" title="14">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb12-15" title="15">}</a>
+<a class="sourceLine" id="cb12-16" title="16"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb12-17" title="17">  pthread_t tid1, tid2;</a>
+<a class="sourceLine" id="cb12-18" title="18">  pthread_create(&amp;tid1,NULL, sleepnprint, <span class="st">&quot;New Thread One&quot;</span>);</a>
+<a class="sourceLine" id="cb12-19" title="19">  pthread_create(&amp;tid2,NULL, sleepnprint, <span class="st">&quot;New Thread Two&quot;</span>);</a>
+<a class="sourceLine" id="cb12-20" title="20"></a>
+<a class="sourceLine" id="cb12-21" title="21">  child = fork();</a>
+<a class="sourceLine" id="cb12-22" title="22">  printf(<span class="st">&quot;%d:%s</span><span class="sc">\n</span><span class="st">&quot;</span>,getpid(), <span class="st">&quot;fork()ing complete&quot;</span>);</a>
+<a class="sourceLine" id="cb12-23" title="23">  sleep(<span class="dv">3</span>);</a>
+<a class="sourceLine" id="cb12-24" title="24"></a>
+<a class="sourceLine" id="cb12-25" title="25">  printf(<span class="st">&quot;%d:%s</span><span class="sc">\n</span><span class="st">&quot;</span>,getpid(), <span class="st">&quot;Main thread finished&quot;</span>);</a>
+<a class="sourceLine" id="cb12-26" title="26"></a>
+<a class="sourceLine" id="cb12-27" title="27">  pthread_exit(NULL);</a>
+<a class="sourceLine" id="cb12-28" title="28">  <span class="cf">return</span> <span class="dv">0</span>; <span class="co">/* Never executes */</span></a>
+<a class="sourceLine" id="cb12-29" title="29">}</a></code></pre></div>
+<pre><code>8970:New Thread One starting up...
+8970:fork()ing complete
+8973:fork()ing complete
+8970:New Thread Two starting up...
+8970:New Thread Two finishing...
+8970:New Thread One finishing...
+8970:Main thread finished
+8973:Main thread finished</code></pre>
+<p>In practice, creating threads before forking can lead to unexpected errors because (as demonstrated above) the other threads are immediately terminated when forking. Another thread might have locked a mutex like by calling malloc and never unlock it again. Advanced users may find useful however we suggest a program avoid creating threads before forking unless you fully understand the limitations and difficulties of this approach.</p>
+</section>
+<section id="embarrassingly-parallel-problems" class="level3">
+<h3>Embarrassingly Parallel Problems</h3>
+<p>The study of parallel algorithms has exploded over the past few years. An embarrassingly parallel problem is any problem that needs little effort to turn parallel. A lot of them have some synchronization concepts with them but not always. You already know a parallelizable algorithm, Merge Sort!</p>
+<div class="sourceCode" id="cb14" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb14-1" title="1"><span class="dt">void</span> merge_sort(<span class="dt">int</span> *arr, <span class="dt">size_t</span> len){</a>
+<a class="sourceLine" id="cb14-2" title="2">  <span class="cf">if</span>(len &gt; <span class="dv">1</span>){</a>
+<a class="sourceLine" id="cb14-3" title="3">    <span class="co">// Merge Sort the left half</span></a>
+<a class="sourceLine" id="cb14-4" title="4">    <span class="co">// Merge Sort the right half</span></a>
+<a class="sourceLine" id="cb14-5" title="5">    <span class="co">// Merge the two halves</span></a>
+<a class="sourceLine" id="cb14-6" title="6">  }</a></code></pre></div>
+<p>With your new understanding of threads, all you need to do is create a thread for the left half, and one for the right half. Given that your CPU has multiple real cores, you will see a speedup following <a href="https://en.wikipedia.org/wiki/Amdahl&#39;s_law">Amdahl’s Law</a>. The time complexity analysis gets interesting here as well. The parallel algorithm runs in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mo>log</mo><mn>3</mn></msup><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log^3(n))</annotation></semantics></math> running time because we have the analysis assumes that we have a lot of cores.</p>
+<p>In practice though, we typically do two changes. One, once the array gets small enough, we ditch the Parallel Merge Sort algorithm and do conventional sort that works fast on small arrays, usually cache coherency rules at this level. The other thing that we know is that CPUs don’t have infinite cores. To get around that, we typically keep a worker pool. You won’t see the speedup right away because of things like cache coherency and scheduling extra threads. Over the bigger pieces of code, though, you will start to see speedups.</p>
+<p>Another embarrassingly parallel problem is parallel map. Say we want to apply a function to an entire array, one element at a time.</p>
+<div class="sourceCode" id="cb15" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb15-1" title="1"><span class="dt">int</span> *map(<span class="dt">int</span> (*func)(<span class="dt">int</span>), <span class="dt">int</span> *arr, <span class="dt">size_t</span> len){</a>
+<a class="sourceLine" id="cb15-2" title="2">  <span class="dt">int</span> *ret = malloc(len*<span class="kw">sizeof</span>(*arr));</a>
+<a class="sourceLine" id="cb15-3" title="3">  <span class="cf">for</span>(<span class="dt">size_t</span> i = <span class="dv">0</span>; i &lt; len; ++i) {</a>
+<a class="sourceLine" id="cb15-4" title="4">    ret[i] = func(arr[i]);</a>
+<a class="sourceLine" id="cb15-5" title="5">  }</a>
+<a class="sourceLine" id="cb15-6" title="6">  <span class="cf">return</span> ret;</a>
+<a class="sourceLine" id="cb15-7" title="7">}</a></code></pre></div>
+<p>Since none of the elements depend on any other element, how would you go about parallelizing this? What do you think would be the best way to split up the work between threads.</p>
+<p>Check out thread scheduling in the appendix for more ways to schedule.</p>
+</section>
+<section id="other-problems" class="level3">
+<h3>Other Problems</h3>
+<p>From <a href="https://en.wikipedia.org/wiki/Embarrassingly_parallel">Wikipedia</a></p>
+<ul>
+<li><p>Serving static files on a web server to multiple users at once.</p></li>
+<li><p>The Mandelbrot set, Perlin noise, and similar images, where each point is calculated independently.</p></li>
+<li><p>Rendering of computer graphics. In computer animation, each frame may be rendered independently (see parallel rendering).</p></li>
+<li><p>Brute-force searches in cryptography.</p></li>
+<li><p>Notable real-world examples include distributed.net and proof-of-work systems used in cryptocurrency.</p></li>
+<li><p>BLAST searches in bioinformatics for multiple queries (but not for individual large queries)</p></li>
+<li><p>Large scale facial recognition systems that compare thousands of arbitrary acquired faces (e.g., a security or surveillance video via closed-circuit television) with a similarly large number of previously stored faces (e.g., a rogues gallery or similar watch list).</p></li>
+<li><p>Computer simulations comparing many independent scenarios, such as climate models.</p></li>
+<li><p>Evolutionary computation meta-heuristics such as genetic algorithms.</p></li>
+<li><p>Ensemble calculations of numerical weather prediction.</p></li>
+<li><p>Event simulation and reconstruction in particle physics.</p></li>
+<li><p>The marching squares algorithm</p></li>
+<li><p>Sieving step of the quadratic sieve and the number field sieve.</p></li>
+<li><p>Tree growth step of the random forest machine learning technique.</p></li>
+<li><p>Discrete Fourier Transform where each harmonic is independently calculated.</p></li>
+</ul>
+</section>
+<section id="advanced-lightweight-processes" class="level3">
+<h3>Advanced: Lightweight Processes?</h3>
+<p>In the beginning of the chapter, we mentioned that threads are processes. What do we mean by that? You can create a thread like a process. Take a look at the example code below.</p>
+<div class="sourceCode" id="cb16" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb16-1" title="1"></a>
+<a class="sourceLine" id="cb16-2" title="2"><span class="co">// 8 KiB stacks</span></a>
+<a class="sourceLine" id="cb16-3" title="3"><span class="pp">#define STACK_SIZE (8 * 1024 * 1024)</span></a>
+<a class="sourceLine" id="cb16-4" title="4"></a>
+<a class="sourceLine" id="cb16-5" title="5"><span class="dt">int</span> thread_start(<span class="dt">void</span> *arg) {</a>
+<a class="sourceLine" id="cb16-6" title="6">  <span class="co">// Just like the pthread function</span></a>
+<a class="sourceLine" id="cb16-7" title="7">  puts(<span class="st">&quot;Hello Clone!&quot;</span>)</a>
+<a class="sourceLine" id="cb16-8" title="8">  <span class="co">// This share the same heap and address space!</span></a>
+<a class="sourceLine" id="cb16-9" title="9">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb16-10" title="10">}</a>
+<a class="sourceLine" id="cb16-11" title="11"></a>
+<a class="sourceLine" id="cb16-12" title="12"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb16-13" title="13">  <span class="co">// Allocate stack space for the child</span></a>
+<a class="sourceLine" id="cb16-14" title="14">  <span class="dt">char</span> *child_stack = malloc(STACK_SIZE);</a>
+<a class="sourceLine" id="cb16-15" title="15">  <span class="co">// Remember stacks work by growing down, so we need</span></a>
+<a class="sourceLine" id="cb16-16" title="16">  <span class="co">// to give the top of the stack</span></a>
+<a class="sourceLine" id="cb16-17" title="17">  <span class="dt">char</span> *stack_top = stack + STACK_SIZE;</a>
+<a class="sourceLine" id="cb16-18" title="18"></a>
+<a class="sourceLine" id="cb16-19" title="19">  <span class="co">// clone create thread</span></a>
+<a class="sourceLine" id="cb16-20" title="20">  pid_t pid = clone(thread_start, stack_top, SIGCHLD, NULL);</a>
+<a class="sourceLine" id="cb16-21" title="21">  <span class="cf">if</span> (pid == -<span class="dv">1</span>) {</a>
+<a class="sourceLine" id="cb16-22" title="22">    perror(<span class="st">&quot;clone&quot;</span>);</a>
+<a class="sourceLine" id="cb16-23" title="23">    exit(<span class="dv">1</span>);</a>
+<a class="sourceLine" id="cb16-24" title="24">  }</a>
+<a class="sourceLine" id="cb16-25" title="25">  printf(<span class="st">&quot;Child pid %ld</span><span class="sc">\n</span><span class="st">&quot;</span>, (<span class="dt">long</span>) pid);</a>
+<a class="sourceLine" id="cb16-26" title="26"></a>
+<a class="sourceLine" id="cb16-27" title="27">  <span class="co">// Wait like any child</span></a>
+<a class="sourceLine" id="cb16-28" title="28">  <span class="cf">if</span> (waitpid(pid, NULL, <span class="dv">0</span>) == -<span class="dv">1</span>) {</a>
+<a class="sourceLine" id="cb16-29" title="29">    perror(<span class="st">&quot;waitpid&quot;</span>);</a>
+<a class="sourceLine" id="cb16-30" title="30">    exit(<span class="dv">1</span>);</a>
+<a class="sourceLine" id="cb16-31" title="31">  }</a>
+<a class="sourceLine" id="cb16-32" title="32"></a>
+<a class="sourceLine" id="cb16-33" title="33">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb16-34" title="34">}</a></code></pre></div>
+<p>It seems pretty simple right? Why not use this functionality? First, there is a decent bit of boilerplate code. In addition, pthreads are part of the POSIX standard and have defined functionality. Pthreads let a program set various attributes – some that resemble the option in clone – to customize your thread. But as we mentioned earlier, with each later of abstraction for portability reasons we lose some functionality. clone can do some neat things like keeping different parts of your heap the same while creating copies of other pages. A program has finer control of scheduling because it is a process with the same mappings.</p>
+<p>At no time in this course should you be using clone. But in the future, know that it is a perfectly viable alternative to fork. You have to be careful and research edge cases.</p>
+</section>
+<section id="further-reading-2" class="level3">
+<h3>Further Reading</h3>
+<p>Guiding questions:</p>
+<ul>
+<li><p>What is the first argument to pthread create?</p></li>
+<li><p>What is the start routing in pthread create? How about arg?</p></li>
+<li><p>Why might pthread create fail?</p></li>
+<li><p>What are a few things that threads share in a process? What are a few things that threads have different?</p></li>
+<li><p>How can a thread uniquely identify itself?</p></li>
+<li><p>What are some examples of non thread safe library functions? Why might they not be thread safe?</p></li>
+<li><p>How can a program stop a thread?</p></li>
+<li><p>How can a program get back a thread’s "return value"?</p></li>
+</ul>
+<ul>
+<li><p><a href="http://man7.org/linux/man-pages/man3/pthread_create.3.html">man page</a></p></li>
+<li><p><a href="http://man7.org/linux/man-pages/man7/pthreads.7.html">pthread reference guide</a></p></li>
+<li><p><a href="http://www.thegeekstuff.com/2012/04/terminate-c-thread/">Concise third party sample code explaining create, join and exit</a></p></li>
+</ul>
+</section>
+</section>
+<section id="topics-3" class="level2">
+<h2>Topics</h2>
+<ul>
+<li><p>pthread life-cycle</p></li>
+<li><p>Each thread has a stack</p></li>
+<li><p>Capturing return values from a thread</p></li>
+<li><p>Using</p></li>
+<li><p>Using</p></li>
+<li><p>Using</p></li>
+<li><p>Under what conditions will a process exit</p></li>
+</ul>
+</section>
+<section id="questions" class="level2">
+<h2>Questions</h2>
+<ul>
+<li><p>What happens when a pthread gets created?</p></li>
+<li><p>Where is each thread’s stack?</p></li>
+<li><p>How does a program get a return value given a ? What are the ways a thread can set that return value? What happens if a program discards the return value?</p></li>
+<li><p>Why is important (think stack space, registers, return values)?</p></li>
+<li><p>What does do if it is not the last thread? What other functions are called when after calling pthread_exit?</p></li>
+<li><p>Give me three conditions under which a multi-threaded process will exit. Are there any more?</p></li>
+<li><p>What is an embarrassingly parallel problem?</p></li>
+</ul>
+</section>
+</section>
+</body>
+</html>
+

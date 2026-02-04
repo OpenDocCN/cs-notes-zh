@@ -1,0 +1,1763 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <title>Synchronization</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../styles/stylesheet1.css" />
+</head>
+<body epub:type="bodymatter">
+<section id="synchronization" class="level1">
+<h1>Synchronization</h1>
+<p>Synchronization coordinates various tasks so that they all finishin the the correct state. In C, we have series of mechanisms to control what threads are allowed to perform at a given state. Most of the time, the threads can progress without having to communicate, but every so often two or more threads may want to access a critical section. A critical section is a section of code that can only be executed by one thread at a time if the program is to function correctly. If two threads (or processes) were to execute code inside the critical section at the same time, it is possible that the program may no longer have the correct behavior.</p>
+<p>As we said in the previous chapter, race conditions happen when an operation touches a piece of memory at the same time as another thread. If the memory location is only accessible by one thread, for example the automatic variable below, then there is no possibility of a race condition and no Critical Section associated with . However, the variable is a global variable and accessed by two threads. It is possible that two threads may attempt to increment the variable at the same time.</p>
+<div class="sourceCode" id="cb1" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" title="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb1-3" title="3"></a>
+<a class="sourceLine" id="cb1-4" title="4"><span class="dt">int</span> sum = <span class="dv">0</span>; <span class="co">//shared</span></a>
+<a class="sourceLine" id="cb1-5" title="5"></a>
+<a class="sourceLine" id="cb1-6" title="6"><span class="dt">void</span> *countgold(<span class="dt">void</span> *param) {</a>
+<a class="sourceLine" id="cb1-7" title="7">  <span class="dt">int</span> i; <span class="co">//local to each thread</span></a>
+<a class="sourceLine" id="cb1-8" title="8">  <span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">10000000</span>; i++) {</a>
+<a class="sourceLine" id="cb1-9" title="9">    sum += <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb1-10" title="10">  }</a>
+<a class="sourceLine" id="cb1-11" title="11">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb1-12" title="12">}</a>
+<a class="sourceLine" id="cb1-13" title="13"></a>
+<a class="sourceLine" id="cb1-14" title="14"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb1-15" title="15">  pthread_t tid1, tid2;</a>
+<a class="sourceLine" id="cb1-16" title="16">  pthread_create(&amp;tid1, NULL, countgold, NULL);</a>
+<a class="sourceLine" id="cb1-17" title="17">  pthread_create(&amp;tid2, NULL, countgold, NULL);</a>
+<a class="sourceLine" id="cb1-18" title="18"></a>
+<a class="sourceLine" id="cb1-19" title="19">  <span class="co">//Wait for both threads to finish:</span></a>
+<a class="sourceLine" id="cb1-20" title="20">  pthread_join(tid1, NULL);</a>
+<a class="sourceLine" id="cb1-21" title="21">  pthread_join(tid2, NULL);</a>
+<a class="sourceLine" id="cb1-22" title="22"></a>
+<a class="sourceLine" id="cb1-23" title="23">  printf(<span class="st">&quot;ARRRRG sum is %d</span><span class="sc">\n</span><span class="st">&quot;</span>, sum);</a>
+<a class="sourceLine" id="cb1-24" title="24">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb1-25" title="25">}</a></code></pre></div>
+<p>A typical output of the above code is because there is a race condition. The code allows two threads to read and write at the same time. For example, both threads copy the current value of sum into CPU that runs each thread (let’s pick 123). Both threads increment one to their own copy. Both threads write back the value (124). If the threads had accessed the sum at different times then the count would have been 125. A few of the possible different orderings are below.</p>
+<p>Permissible Pattern<br />
+</p>
+<table>
+<caption>Good Thread Access Pattern</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thread 1</th>
+<th style="text-align: right;">Thread 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Load Addr, Add 1 (i=1 locally)</td>
+<td style="text-align: right;">...</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Store (i=1 globally)</td>
+<td style="text-align: right;">...</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">...</td>
+<td style="text-align: right;">Load Addr, Add 1 (i=2 locally)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">...</td>
+<td style="text-align: right;">Store (i=2 globally)</td>
+</tr>
+</tbody>
+</table>
+<p><br />
+Partial Overlap</p>
+<p><br />
+</p>
+<table>
+<caption>Bad Thread Access Pattern</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thread 1</th>
+<th style="text-align: right;">Thread 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Load Addr, Add 1 (i=1 locally)</td>
+<td style="text-align: right;">...</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Store (i=1 globally)</td>
+<td style="text-align: right;">Load Addr, Add 1 (i=1 locally)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">...</td>
+<td style="text-align: right;">Store (i=1 globally)</td>
+</tr>
+</tbody>
+</table>
+<p><br />
+Full Overlap<br />
+</p>
+<table>
+<caption>Horrible Thread Access Pattern</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thread 1</th>
+<th style="text-align: right;">Thread 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Load Addr, Add 1 (i=1 locally)</td>
+<td style="text-align: right;">Load Addr, Add 1 (i=1 locally)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Store (i=1 globally)</td>
+<td style="text-align: right;">Store (i=1 globally)</td>
+</tr>
+</tbody>
+</table>
+<p><br />
+We would like the first pattern of the code being mutually exclusive. Which leads us to our first synchronization primitive, a Mutex.</p>
+<section id="mutex" class="level2">
+<h2>Mutex</h2>
+<p>To ensure that only one thread at a time can access a global variable, use a mutex – short for Mutual Exclusion. If one thread is currently inside a critical section we would like another thread to wait until the first thread is complete. A mutex isn’t a primitive in the truest sense, though it is one of the smallest that has useful threading API. A mutex also isn’t a data structure. It is an abstract data type.</p>
+<p>Let’s think about a duck satisfying the mutex api. If someone has the duck then they are allowed to access a shared resource! We call it the mutex duck. Everyone else has to waddle around and wait. Once someone let’s go of the duck, they have to stop interacting with the resource and the next grabber can interact with the shared resource. Now you know the origins of the duck.</p>
+<p>There are many ways to implement a mutex, and we’ll give a few in this chapter. For right now let’s use the black box that the pthread library gives us. Here is how we declare a mutex.</p>
+<div class="sourceCode" id="cb2" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb2-1" title="1">pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;</a>
+<a class="sourceLine" id="cb2-2" title="2">pthread_mutex_lock(&amp;m); <span class="co">// start of Critical Section</span></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="co">// Critical section</span></a>
+<a class="sourceLine" id="cb2-4" title="4">pthread_mutex_unlock(&amp;m); <span class="co">//end of Critical Section</span></a></code></pre></div>
+<section id="mutex-lifetime" class="level3">
+<h3>Mutex Lifetime</h3>
+<p>For all mutexes, there are two ways of initializing a mutex:</p>
+<ul>
+<li></li>
+<li></li>
+</ul>
+<p>The macro is functionally equivalent to the more general purpose . In other words, will create a mutex with default properties. The in the init version includes options to trade performance for additional error-checking, advanced sharing, and more. While we recommend using the init function inside of a program for a mutex located on the heap, you can use either method.</p>
+<div class="sourceCode" id="cb3" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb3-1" title="1">pthread_mutex_t *lock = malloc(<span class="kw">sizeof</span>(pthread_mutex_t));</a>
+<a class="sourceLine" id="cb3-2" title="2">pthread_mutex_init(lock, NULL);</a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="co">//later</span></a>
+<a class="sourceLine" id="cb3-4" title="4">pthread_mutex_destroy(lock);</a>
+<a class="sourceLine" id="cb3-5" title="5">free(lock);</a></code></pre></div>
+<p>Once we are finished with the mutex we should also call too. Note, a program can only destroy an unlocked mutex, destroy on a locked mutex is undefined behavior. Things to keep in mind about initializing and destroying mutexes:</p>
+<ol>
+<li><p>Initializing an already initialized mutex is undefined behavior</p></li>
+<li><p>Destroying a locked mutex is undefined behavior</p></li>
+<li><p>Keep to the pattern of one and only one thread initializing a mutex.</p></li>
+<li><p>Copying the bytes of the mutex to a new memory location and then using the copy is <em>not</em> supported. To reference a mutex, a program <em>must</em> to have a pointer to that memory address.</p></li>
+<li><p>Global/Static mutexes need not be destroyed.</p></li>
+</ol>
+</section>
+<section id="mutex-usages" class="level3">
+<h3>Mutex Usages</h3>
+<p>How does one use a mutex? Here is a complete example in the spirit of the earlier piece of code.</p>
+<div class="sourceCode" id="cb4" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb4-1" title="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb4-3" title="3"></a>
+<a class="sourceLine" id="cb4-4" title="4"><span class="co">// Create a global mutex, this is ready to be locked!</span></a>
+<a class="sourceLine" id="cb4-5" title="5">pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;</a>
+<a class="sourceLine" id="cb4-6" title="6"></a>
+<a class="sourceLine" id="cb4-7" title="7"><span class="dt">int</span> sum = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb4-8" title="8"></a>
+<a class="sourceLine" id="cb4-9" title="9"><span class="dt">void</span> *countgold(<span class="dt">void</span> *param) {</a>
+<a class="sourceLine" id="cb4-10" title="10">  <span class="dt">int</span> i;</a>
+<a class="sourceLine" id="cb4-11" title="11"></a>
+<a class="sourceLine" id="cb4-12" title="12">  <span class="co">//Same thread that locks the mutex must unlock it</span></a>
+<a class="sourceLine" id="cb4-13" title="13">  <span class="co">//Critical section is &#39;sum += 1&#39;</span></a>
+<a class="sourceLine" id="cb4-14" title="14">  <span class="co">//However locking and unlocking ten million times</span></a>
+<a class="sourceLine" id="cb4-15" title="15">  <span class="co">//has significant overhead</span></a>
+<a class="sourceLine" id="cb4-16" title="16"></a>
+<a class="sourceLine" id="cb4-17" title="17">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb4-18" title="18"></a>
+<a class="sourceLine" id="cb4-19" title="19">  <span class="co">// Other threads that call lock will have to wait until we call unlock</span></a>
+<a class="sourceLine" id="cb4-20" title="20"></a>
+<a class="sourceLine" id="cb4-21" title="21">  <span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">10000000</span>; i++) {</a>
+<a class="sourceLine" id="cb4-22" title="22">    sum += <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb4-23" title="23">  }</a>
+<a class="sourceLine" id="cb4-24" title="24">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb4-25" title="25">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb4-26" title="26">}</a>
+<a class="sourceLine" id="cb4-27" title="27"></a>
+<a class="sourceLine" id="cb4-28" title="28"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb4-29" title="29">  pthread_t tid1, tid2;</a>
+<a class="sourceLine" id="cb4-30" title="30">  pthread_create(&amp;tid1, NULL, countgold, NULL);</a>
+<a class="sourceLine" id="cb4-31" title="31">  pthread_create(&amp;tid2, NULL, countgold, NULL);</a>
+<a class="sourceLine" id="cb4-32" title="32"></a>
+<a class="sourceLine" id="cb4-33" title="33">  pthread_join(tid1, NULL);</a>
+<a class="sourceLine" id="cb4-34" title="34">  pthread_join(tid2, NULL);</a>
+<a class="sourceLine" id="cb4-35" title="35"></a>
+<a class="sourceLine" id="cb4-36" title="36">  printf(<span class="st">&quot;ARRRRG sum is %d</span><span class="sc">\n</span><span class="st">&quot;</span>, sum);</a>
+<a class="sourceLine" id="cb4-37" title="37">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb4-38" title="38">}</a></code></pre></div>
+<p>In the code above, the thread gets the lock to the counting house before entering. The critical section is only the so the following version is also correct.</p>
+<div class="sourceCode" id="cb5" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb5-1" title="1"><span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">10000000</span>; i++) {</a>
+<a class="sourceLine" id="cb5-2" title="2">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb5-3" title="3">  sum += <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb5-4" title="4">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb5-5" title="5">}</a>
+<a class="sourceLine" id="cb5-6" title="6"><span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb5-7" title="7">}</a></code></pre></div>
+<p>This process runs slower because we lock and unlock the mutex a million times, which is expensive - at least compared with incrementing a variable. In this simple example, we didn’t need threads - we could have added up twice! A faster multi-thread example would be to add one million using an automatic (local) variable and only then adding it to a shared total after the calculation loop has finished:</p>
+<div class="sourceCode" id="cb6" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb6-1" title="1"><span class="dt">int</span> local = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="cf">for</span> (i = <span class="dv">0</span>; i &lt; <span class="dv">10000000</span>; i++) {</a>
+<a class="sourceLine" id="cb6-3" title="3">  local += <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb6-4" title="4">}</a>
+<a class="sourceLine" id="cb6-5" title="5"></a>
+<a class="sourceLine" id="cb6-6" title="6">pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb6-7" title="7">sum += local;</a>
+<a class="sourceLine" id="cb6-8" title="8">pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb6-9" title="9"></a>
+<a class="sourceLine" id="cb6-10" title="10"><span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb6-11" title="11">}</a></code></pre></div>
+<p>Starting with the gotchas. Firstly, C Mutexes do not lock variables. A mutex is a simple data structure. It works with code, not data. If a mutex is locked, the other threads will continue. It’s only when a thread attempts to lock a mutex that is already locked, will the thread have to wait. As soon as the original thread unlocks the mutex, the second (waiting) thread will acquire the lock and be able to continue. The following code creates a mutex that does effectively nothing.</p>
+<div class="sourceCode" id="cb7" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb7-1" title="1"><span class="dt">int</span> a;</a>
+<a class="sourceLine" id="cb7-2" title="2">pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER,</a>
+<a class="sourceLine" id="cb7-3" title="3">m2 = = PTHREAD_MUTEX_INITIALIZER;</a>
+<a class="sourceLine" id="cb7-4" title="4"><span class="co">// later</span></a>
+<a class="sourceLine" id="cb7-5" title="5"><span class="co">// Thread 1</span></a>
+<a class="sourceLine" id="cb7-6" title="6">pthread_mutex_lock(&amp;m1);</a>
+<a class="sourceLine" id="cb7-7" title="7">a++;</a>
+<a class="sourceLine" id="cb7-8" title="8">pthread_mutex_unlock(&amp;m1);</a>
+<a class="sourceLine" id="cb7-9" title="9"></a>
+<a class="sourceLine" id="cb7-10" title="10"><span class="co">// Thread 2</span></a>
+<a class="sourceLine" id="cb7-11" title="11">pthread_mutex_lock(&amp;m2);</a>
+<a class="sourceLine" id="cb7-12" title="12">a++;</a>
+<a class="sourceLine" id="cb7-13" title="13">pthread_mutex_unlock(&amp;m2);</a></code></pre></div>
+<p>Here are some other gotchas in no particular order</p>
+<ol>
+<li><p>Don’t cross the streams! If using threads, don’t fork in the middle of your program. This means any time after your mutexes have been initialized.</p></li>
+<li><p>The thread that locks a mutex is the only thread that can unlock it.</p></li>
+<li><p>Each program can have multiple mutex locks. A thread safe design might include a lock with each data structure, one lock per heap, or one lock per set of data structures If a program has only one lock, then there may be significant contention for the lock. If two threads were updating two different counters, it isn’t necessary to use the same lock.</p></li>
+<li><p>Locks are only tools. They don’t spot critical sections!</p></li>
+<li><p>There will always be a small amount of overhead of calling and . However, this is the price to pay for correctly functioning programs!</p></li>
+<li><p>Not unlocking a mutex due to an early return during an error condition</p></li>
+<li><p>Resource leak (not calling )</p></li>
+<li><p>Using an uninitialized mutex or using a mutex that has already been destroyed</p></li>
+<li><p>Locking a mutex twice on a thread without unlocking first</p></li>
+<li><p>Deadlock</p></li>
+</ol>
+</section>
+<section id="mutex-implementation" class="level3">
+<h3>Mutex Implementation</h3>
+<p>So we have this cool data structure. How do we implement it? A naive, incorrect implementation is shown below. The function simply unlocks the mutex and returns. The lock function first checks to see if the lock is already locked. If it is currently locked, it will keep checking again until another thread has unlocked the mutex. For the time being, we’ll avoid the condition that other threads are able to unlock a lock they don’t own and focus on the mutual exclusion aspect.</p>
+<div class="sourceCode" id="cb8" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb8-1" title="1"><span class="co">// Version 1 (Incorrect!)</span></a>
+<a class="sourceLine" id="cb8-2" title="2"></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="dt">void</span> lock(mutex_t *m) {</a>
+<a class="sourceLine" id="cb8-4" title="4">  <span class="cf">while</span>(m-&gt;locked) { <span class="co">/*Locked? Never-mind - loop and check again!*/</span> }</a>
+<a class="sourceLine" id="cb8-5" title="5"></a>
+<a class="sourceLine" id="cb8-6" title="6">  m-&gt;locked = <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb8-7" title="7">}</a>
+<a class="sourceLine" id="cb8-8" title="8"></a>
+<a class="sourceLine" id="cb8-9" title="9"><span class="dt">void</span> unlock(mutex_t *m) {</a>
+<a class="sourceLine" id="cb8-10" title="10">  m-&gt;locked = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb8-11" title="11">}</a></code></pre></div>
+<p>Version 1 uses ‘busy-waiting’ unnecessarily wasting CPU resources. However, there is a more serious problem. We have a race-condition! If two threads both called concurrently, it is possible that both threads would read as zero. Thus both threads would believe they have exclusive access to the lock and both threads will continue.</p>
+<p>We might attempt to reduce the CPU overhead a little by calling inside the loop - pthread_yield suggests to the operating system that the thread does not use the CPU for a short while, so the CPU may be assigned to threads that are waiting to run. This still leaves the race-condition. We need a better implementation. We will talk about this later in the critical section part of this chapter. For now, we will talk about semaphores.</p>
+</section>
+<section id="advanced-implementing-a-mutex-with-hardware" class="level3">
+<h3>Advanced: Implementing a Mutex with hardware</h3>
+<p>We can use C11 Atomics to do that perfectly! A complete solution is detailed here. This is a spinlock mutex, <a href="https://locklessinc.com/articles/mutex_cv_futex/">futex</a> implementations can be found online.</p>
+<p>First the data structure and initialization code.</p>
+<div class="sourceCode" id="cb9" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> mutex_{</a>
+<a class="sourceLine" id="cb9-2" title="2">  <span class="co">// We need some variable to see if the lock is locked</span></a>
+<a class="sourceLine" id="cb9-3" title="3">  atomic_int_least8_t lock;</a>
+<a class="sourceLine" id="cb9-4" title="4">  <span class="co">// A mutex needs to keep track of its owner so</span></a>
+<a class="sourceLine" id="cb9-5" title="5">  <span class="co">// Another thread can&#39;t unlock it</span></a>
+<a class="sourceLine" id="cb9-6" title="6">  pthread_t owner;</a>
+<a class="sourceLine" id="cb9-7" title="7">} mutex;</a>
+<a class="sourceLine" id="cb9-8" title="8"></a>
+<a class="sourceLine" id="cb9-9" title="9"><span class="pp">#define UNLOCKED 0</span></a>
+<a class="sourceLine" id="cb9-10" title="10"><span class="pp">#define LOCKED 1</span></a>
+<a class="sourceLine" id="cb9-11" title="11"><span class="pp">#define UNASSIGNED_OWNER 0</span></a>
+<a class="sourceLine" id="cb9-12" title="12"></a>
+<a class="sourceLine" id="cb9-13" title="13"><span class="dt">int</span> mutex_init(mutex* mtx){</a>
+<a class="sourceLine" id="cb9-14" title="14">  <span class="co">// Some simple error checking</span></a>
+<a class="sourceLine" id="cb9-15" title="15">  <span class="cf">if</span>(!mtx){</a>
+<a class="sourceLine" id="cb9-16" title="16">    <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb9-17" title="17">  }</a>
+<a class="sourceLine" id="cb9-18" title="18">  <span class="co">// Not thread-safe the user has to take care of this</span></a>
+<a class="sourceLine" id="cb9-19" title="19">  atomic_init(&amp;mtx-&gt;lock, UNLOCKED);</a>
+<a class="sourceLine" id="cb9-20" title="20">  mtx-&gt;owner = UNASSIGNED_OWNER;</a>
+<a class="sourceLine" id="cb9-21" title="21">  <span class="cf">return</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb9-22" title="22">}</a></code></pre></div>
+<p>This is the initialization code, nothing fancy here. We set the state of the mutex to unlocked and set the owner to locked.</p>
+<div class="sourceCode" id="cb10" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb10-1" title="1"><span class="dt">int</span> mutex_lock(mutex* mtx){</a>
+<a class="sourceLine" id="cb10-2" title="2">  <span class="dt">int_least8_t</span> zero = UNLOCKED;</a>
+<a class="sourceLine" id="cb10-3" title="3">  <span class="cf">while</span>(!atomic_compare_exchange_weak_explicit</a>
+<a class="sourceLine" id="cb10-4" title="4">  (&amp;mtx-&gt;lock,</a>
+<a class="sourceLine" id="cb10-5" title="5">  &amp;zero,</a>
+<a class="sourceLine" id="cb10-6" title="6">  LOCKED,</a>
+<a class="sourceLine" id="cb10-7" title="7">  memory_order_seq_cst,</a>
+<a class="sourceLine" id="cb10-8" title="8">  memory_order_seq_cst)){</a>
+<a class="sourceLine" id="cb10-9" title="9">    zero = UNLOCKED;</a>
+<a class="sourceLine" id="cb10-10" title="10">    sched_yield(); <span class="co">// Use system calls for scheduling speed</span></a>
+<a class="sourceLine" id="cb10-11" title="11">  }</a>
+<a class="sourceLine" id="cb10-12" title="12">  <span class="co">// We have the lock now</span></a>
+<a class="sourceLine" id="cb10-13" title="13">  mtx-&gt;owner = pthread_self();</a>
+<a class="sourceLine" id="cb10-14" title="14">  <span class="cf">return</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb10-15" title="15">}</a></code></pre></div>
+<p>What does this code do? It initializes a variable that we will keep as the unlocked state. <a href="https://en.wikipedia.org/wiki/Compare-and-swap">Atomic Compare and Exchange</a> is an instruction supported by most modern architectures (on x86 it’s ). The pseudocode for this operation looks like this</p>
+<div class="sourceCode" id="cb11" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb11-1" title="1"><span class="dt">int</span> atomic_compare_exchange_pseudo(<span class="dt">int</span>* addr1, <span class="dt">int</span>* addr2, <span class="dt">int</span> val){</a>
+<a class="sourceLine" id="cb11-2" title="2">  <span class="cf">if</span>(*addr1 == *addr2){</a>
+<a class="sourceLine" id="cb11-3" title="3">    *addr1 = val;</a>
+<a class="sourceLine" id="cb11-4" title="4">    <span class="cf">return</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb11-5" title="5">  }<span class="cf">else</span>{</a>
+<a class="sourceLine" id="cb11-6" title="6">    *addr2 = *addr1;</a>
+<a class="sourceLine" id="cb11-7" title="7">    <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb11-8" title="8">  }</a>
+<a class="sourceLine" id="cb11-9" title="9">}</a></code></pre></div>
+<p>Except it is all done <em>atomically</em> meaning in one uninterruptible operation. What does the <em>weak</em> part mean? Atomic instructions are prone to <strong>spurious failures</strong> meaning that there are two versions to these atomic functions a <em>strong</em> and a <em>weak</em> part, strong guarantees the success or failure while weak may fail even when the operation succeeds. These are the same spurious failures that you’ll see in condition variables below. We are using weak because weak is faster, and we are in a loop! That means we are okay if it fails a little bit more often because we will keep spinning around anyway.</p>
+<p>Inside the while loop, we have failed to grab the lock! We reset zero to unlocked and sleep for a little while. When we wake up we try to grab the lock again. Once we successfully swap, we are in the critical section! We set the mutex’s owner to the current thread for the unlock method and return successfully.</p>
+<p>How does this guarantee mutual exclusion? When working with atomics we are unsure! But in this simple example, we can because the thread that can successfully expect the lock to be UNLOCKED (0) and swap it to a LOCKED (1) state is considered the winner. How do we implement unlock?</p>
+<div class="sourceCode" id="cb12" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb12-1" title="1"><span class="dt">int</span> mutex_unlock(mutex* mtx){</a>
+<a class="sourceLine" id="cb12-2" title="2">  <span class="cf">if</span>(unlikely(pthread_self() != mtx-&gt;owner)){</a>
+<a class="sourceLine" id="cb12-3" title="3">    <span class="cf">return</span> <span class="dv">0</span>; <span class="co">// Can&#39;t unlock a mutex if the thread isn&#39;t the owner</span></a>
+<a class="sourceLine" id="cb12-4" title="4">  }</a>
+<a class="sourceLine" id="cb12-5" title="5">  <span class="dt">int_least8_t</span> one = <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb12-6" title="6">  <span class="co">//Critical section ends after this atomic</span></a>
+<a class="sourceLine" id="cb12-7" title="7">  mtx-&gt;owner = UNASSIGNED_OWNER;</a>
+<a class="sourceLine" id="cb12-8" title="8">  <span class="cf">if</span>(!atomic_compare_exchange_strong_explicit(</a>
+<a class="sourceLine" id="cb12-9" title="9">  &amp;mtx-&gt;lock,</a>
+<a class="sourceLine" id="cb12-10" title="10">  &amp;one,</a>
+<a class="sourceLine" id="cb12-11" title="11">  UNLOCKED,</a>
+<a class="sourceLine" id="cb12-12" title="12">  memory_order_seq_cst,</a>
+<a class="sourceLine" id="cb12-13" title="13">  memory_order_seq_cst)){</a>
+<a class="sourceLine" id="cb12-14" title="14">    <span class="co">//The mutex was never locked in the first place</span></a>
+<a class="sourceLine" id="cb12-15" title="15">    <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb12-16" title="16">  }</a>
+<a class="sourceLine" id="cb12-17" title="17">  <span class="cf">return</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb12-18" title="18">}</a></code></pre></div>
+<p>To satisfy the API, a thread can’t unlock the mutex unless the thread is the one who owns it. Then we unassign the mutex owner, because critical section is over after the atomic. We want a strong exchange because we don’t want to block. We expect the mutex to be locked, and we swap it to unlock. If the swap was successful, we unlocked the mutex. If the swap wasn’t, that means that the mutex was UNLOCKED and we tried to switch it from UNLOCKED to UNLOCKED, preserving the behavior of unlock.</p>
+<p>What is this memory order business? We were talking about memory fences earlier, here it is! We won’t go into detail because it is outside the scope of this course but in the scope of <a href="https://gcc.gnu.org/wiki/Atomic/GCCMM/AtomicSync">this article</a>. We need consistency to make sure no loads or stores are ordered before or after. A program need to create dependency chains for more efficient ordering.</p>
+</section>
+<section id="semaphore" class="level3">
+<h3>Semaphore</h3>
+<p>A semaphore is another synchronization primitive. It is initialized to some value. Threads can either or which lowers or increases the value. If the value reaches zero and a wait is called, the thread will be blocked until a post is called.</p>
+<p>Using a semaphore is as easy as using a mutex. First, decide if on the initial value, for example the number of remaining spaces in an array. Unlike pthread mutex there are no shortcuts to creating a semaphore - use .</p>
+<div class="sourceCode" id="cb13" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb13-1" title="1"><span class="pp">#include </span><span class="im">&lt;semaphore.h&gt;</span></a>
+<a class="sourceLine" id="cb13-2" title="2"></a>
+<a class="sourceLine" id="cb13-3" title="3">sem_t s;</a>
+<a class="sourceLine" id="cb13-4" title="4"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb13-5" title="5">  sem_init(&amp;s, <span class="dv">0</span>, <span class="dv">10</span>); <span class="co">// returns -1 (=FAILED) on OS X</span></a>
+<a class="sourceLine" id="cb13-6" title="6">  sem_wait(&amp;s); <span class="co">// Could do this 10 times without blocking</span></a>
+<a class="sourceLine" id="cb13-7" title="7">  sem_post(&amp;s); <span class="co">// Announce that we&#39;ve finished (and one more resource item is available; increment count)</span></a>
+<a class="sourceLine" id="cb13-8" title="8">  sem_destroy(&amp;s); <span class="co">// release resources of the semaphore</span></a>
+<a class="sourceLine" id="cb13-9" title="9">}</a></code></pre></div>
+<p>When using a semaphore, wait and post can be called from different threads! Unlike a mutex, the increment and decrement can be from different threads.</p>
+<p>This becomes especially useful if you want to use a semaphore to implement a mutex. A mutex is a semaphore that always before it . Some textbooks will refer to a mutex as a binary semaphore. You do have to be careful to never add more than one to a semaphore or otherwise your mutex abstraction breaks. That is usually why a mutex is used to implement a semaphore and vice versa.</p>
+<ul>
+<li><p>Initialize the semaphore with a count of one.</p></li>
+<li><p>Replace with</p></li>
+<li><p>Replace with</p></li>
+</ul>
+<div class="sourceCode" id="cb14" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb14-1" title="1">sem_t s;</a>
+<a class="sourceLine" id="cb14-2" title="2">sem_init(&amp;s, <span class="dv">0</span>, <span class="dv">1</span>);</a>
+<a class="sourceLine" id="cb14-3" title="3"></a>
+<a class="sourceLine" id="cb14-4" title="4">sem_wait(&amp;s);</a>
+<a class="sourceLine" id="cb14-5" title="5"><span class="co">// Critical Section</span></a>
+<a class="sourceLine" id="cb14-6" title="6">sem_post(&amp;s);</a></code></pre></div>
+<p>But be warned, it isn’t the same! A mutex can handle what we call lock inversion well. Meaning the following code breaks with a traditional mutex, but produces a race condition with threads.</p>
+<div class="sourceCode" id="cb15" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb15-1" title="1"><span class="co">// Thread 1</span></a>
+<a class="sourceLine" id="cb15-2" title="2">sem_wait(&amp;s);</a>
+<a class="sourceLine" id="cb15-3" title="3"><span class="co">// Critical Section</span></a>
+<a class="sourceLine" id="cb15-4" title="4">sem_post(&amp;s);</a>
+<a class="sourceLine" id="cb15-5" title="5"></a>
+<a class="sourceLine" id="cb15-6" title="6"><span class="co">// Thread 2</span></a>
+<a class="sourceLine" id="cb15-7" title="7"><span class="co">// Some threads want to see the world burn</span></a>
+<a class="sourceLine" id="cb15-8" title="8">sem_post(&amp;s);</a>
+<a class="sourceLine" id="cb15-9" title="9"></a>
+<a class="sourceLine" id="cb15-10" title="10"><span class="co">// Thread 3</span></a>
+<a class="sourceLine" id="cb15-11" title="11">sem_wait(&amp;s);</a>
+<a class="sourceLine" id="cb15-12" title="12"><span class="co">// Not thread-safe!</span></a>
+<a class="sourceLine" id="cb15-13" title="13">sem_post(&amp;s);</a></code></pre></div>
+<p>If we replace it with mutex lock, it won’t work now.</p>
+<div class="sourceCode" id="cb16" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb16-1" title="1"><span class="co">// Thread 1</span></a>
+<a class="sourceLine" id="cb16-2" title="2">mutex_lock(&amp;s);</a>
+<a class="sourceLine" id="cb16-3" title="3"><span class="co">// Critical Section</span></a>
+<a class="sourceLine" id="cb16-4" title="4">mutex_unlock(&amp;s);</a>
+<a class="sourceLine" id="cb16-5" title="5"></a>
+<a class="sourceLine" id="cb16-6" title="6"><span class="co">// Thread 2</span></a>
+<a class="sourceLine" id="cb16-7" title="7"><span class="co">// Foiled!</span></a>
+<a class="sourceLine" id="cb16-8" title="8">mutex_unlock(&amp;s);</a>
+<a class="sourceLine" id="cb16-9" title="9"></a>
+<a class="sourceLine" id="cb16-10" title="10"><span class="co">// Thread 3</span></a>
+<a class="sourceLine" id="cb16-11" title="11">mutex_lock(&amp;s);</a>
+<a class="sourceLine" id="cb16-12" title="12"><span class="co">// Now it&#39;s thread-safe</span></a>
+<a class="sourceLine" id="cb16-13" title="13">mutex_unlock(&amp;s);</a></code></pre></div>
+<p>Also, binary semaphores are different than mutexes because one thread can unlock a mutex from a different thread.</p>
+<section id="signal-safety" class="level4">
+<h4>Signal Safety</h4>
+<p>Also, is one of a handful of functions that can be correctly used inside a signal handler is not. We can release a waiting thread that can now make all of the calls that we disallowed to call inside the signal handler itself e.g. . Here is some code that utilizes this;</p>
+<div class="sourceCode" id="cb17" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb17-1" title="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb17-2" title="2"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb17-3" title="3"><span class="pp">#include </span><span class="im">&lt;signal.h&gt;</span></a>
+<a class="sourceLine" id="cb17-4" title="4"><span class="pp">#include </span><span class="im">&lt;semaphore.h&gt;</span></a>
+<a class="sourceLine" id="cb17-5" title="5"><span class="pp">#include </span><span class="im">&lt;unistd.h&gt;</span></a>
+<a class="sourceLine" id="cb17-6" title="6"></a>
+<a class="sourceLine" id="cb17-7" title="7">sem_t s;</a>
+<a class="sourceLine" id="cb17-8" title="8"></a>
+<a class="sourceLine" id="cb17-9" title="9"><span class="dt">void</span> handler(<span class="dt">int</span> signal) {</a>
+<a class="sourceLine" id="cb17-10" title="10">  sem_post(&amp;s); <span class="co">/* Release the Kraken! */</span></a>
+<a class="sourceLine" id="cb17-11" title="11">}</a>
+<a class="sourceLine" id="cb17-12" title="12"></a>
+<a class="sourceLine" id="cb17-13" title="13"><span class="dt">void</span> *singsong(<span class="dt">void</span> *param) {</a>
+<a class="sourceLine" id="cb17-14" title="14">  sem_wait(&amp;s);</a>
+<a class="sourceLine" id="cb17-15" title="15">  printf(<span class="st">&quot;Waiting until a signal releases...</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb17-16" title="16">}</a>
+<a class="sourceLine" id="cb17-17" title="17"></a>
+<a class="sourceLine" id="cb17-18" title="18"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb17-19" title="19">  <span class="dt">int</span> ok = sem_init(&amp;s, <span class="dv">0</span>, <span class="dv">0</span> <span class="co">/* Initial value of zero*/</span>);</a>
+<a class="sourceLine" id="cb17-20" title="20">  <span class="cf">if</span> (ok == -<span class="dv">1</span>) {</a>
+<a class="sourceLine" id="cb17-21" title="21">    perror(<span class="st">&quot;Could not create unnamed semaphore&quot;</span>);</a>
+<a class="sourceLine" id="cb17-22" title="22">    <span class="cf">return</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb17-23" title="23">  }</a>
+<a class="sourceLine" id="cb17-24" title="24">  signal(SIGINT, handler); <span class="co">// Too simple! See Signals chapter</span></a>
+<a class="sourceLine" id="cb17-25" title="25"></a>
+<a class="sourceLine" id="cb17-26" title="26">  pthread_t tid;</a>
+<a class="sourceLine" id="cb17-27" title="27">  pthread_create(&amp;tid, NULL, singsong, NULL);</a>
+<a class="sourceLine" id="cb17-28" title="28">  pthread_exit(NULL); <span class="co">/* Process will exit when there are no more threads */</span></a>
+<a class="sourceLine" id="cb17-29" title="29">}</a></code></pre></div>
+<p>Other uses for semaphores are keeping track of empty spaces in arrays. We will discuss these in the thread-safe data structures section.</p>
+</section>
+</section>
+</section>
+<section id="condition-variables" class="level2">
+<h2>Condition Variables</h2>
+<p>Condition variables allow a set of threads to sleep until woken up. The API allows either one or all threads to be woken up. If a program only wakes one thread, the operating system will decide which thread to wake up. Threads don’t wake threads other directly like by id. Instead, a thread ‘signal’s the condition variable, which then will wake up one (or all) threads that are sleeping inside the condition variable.</p>
+<p>Condition variables are also used with a mutex and with a loop, so when woken up they have to check a condition in a critical section. If a thread needs to be woken up outside of a critical section, there are other ways to do this in POSIX. Threads sleeping inside a condition variable are woken up by calling (wake up all) or (wake up one). Note despite the function name, this has nothing to do with POSIX s!</p>
+<p>Occasionally, a waiting thread may appear to wake up for no reason. This is called a <em>spurious wakeup</em>. If you read the hardware implementation of a mutex section, this is similar to the atomic failure of the same name.</p>
+<p>Why do spurious wakeups happen? For performance. On multi-CPU systems, it is possible that a race condition could cause a wake-up (signal) request to be unnoticed. The kernel may not detect this lost wake-up call but can detect when it might occur. To avoid the potentially lost signal, the thread is woken up so that the program code can test the condition again. If you want to know why, check out the appendix.</p>
+</section>
+<section id="thread-safe-data-structures" class="level2">
+<h2>Thread-Safe Data Structures</h2>
+<p>Naturally, we want our data structures to be thread-safe as well! We can use mutexes and synchronization primitives to make that happen. First a few definitions. Atomicity is when an operation is thread-safe. We have atomic instructions in hardware by providing the lock prefix</p>
+<pre><code>lock ...</code></pre>
+<p>But Atomicity also applies to higher orders of operations. We say a data structure operation is atomic if it happens all at once and successfully or not at all.</p>
+<p>As such, we can use synchronization primitives to make our data structures thread-safe. For the most part, we will be using mutexes because they carry more semantic meaning than a binary semaphore. Note, this is an introduction. Writing high-performance thread-safe data structures requires its own book! Take for example the following thread-unsafe stack.</p>
+<div class="sourceCode" id="cb19" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb19-1" title="1"><span class="co">// A simple fixed-sized stack (version 1)</span></a>
+<a class="sourceLine" id="cb19-2" title="2"><span class="pp">#define STACK_SIZE 20</span></a>
+<a class="sourceLine" id="cb19-3" title="3"><span class="dt">int</span> count;</a>
+<a class="sourceLine" id="cb19-4" title="4"><span class="dt">double</span> values[STACK_SIZE];</a>
+<a class="sourceLine" id="cb19-5" title="5"></a>
+<a class="sourceLine" id="cb19-6" title="6"><span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb19-7" title="7">  values[count++] = v;</a>
+<a class="sourceLine" id="cb19-8" title="8">}</a>
+<a class="sourceLine" id="cb19-9" title="9"></a>
+<a class="sourceLine" id="cb19-10" title="10"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb19-11" title="11">  <span class="cf">return</span> values[--count];</a>
+<a class="sourceLine" id="cb19-12" title="12">}</a>
+<a class="sourceLine" id="cb19-13" title="13"></a>
+<a class="sourceLine" id="cb19-14" title="14"><span class="dt">int</span> is_empty() {</a>
+<a class="sourceLine" id="cb19-15" title="15">  <span class="cf">return</span> count == <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb19-16" title="16">}</a></code></pre></div>
+<p>Version 1 of the stack is thread-unsafe because if two threads call push or pop at the same time then the results or the stack can be inconsistent. For example, imagine if two threads call pop at the same time then both threads may read the same value, both may read the original count value.</p>
+<p>To turn this into a thread-safe data structure we need to identify the <em>critical sections</em> of our code, meaning we need to ask which section(s) of the code must only have one thread at a time. In the above example the , , and functions access the same memory and all critical sections for the stack. While (and ) is executing, the data structure is an inconsistent state, for example the count may not have been written to, so it may still contain the original value. By wrapping these methods with a mutex we can ensure that only one thread at a time can update (or read) the stack. A candidate ‘solution’ is shown below. Is it correct? If not, how will it fail?</p>
+<div class="sourceCode" id="cb20" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb20-1" title="1"><span class="co">// An attempt at a thread-safe stack (version 2)</span></a>
+<a class="sourceLine" id="cb20-2" title="2"><span class="pp">#define STACK_SIZE 20</span></a>
+<a class="sourceLine" id="cb20-3" title="3"><span class="dt">int</span> count;</a>
+<a class="sourceLine" id="cb20-4" title="4"><span class="dt">double</span> values[STACK_SIZE];</a>
+<a class="sourceLine" id="cb20-5" title="5"></a>
+<a class="sourceLine" id="cb20-6" title="6">pthread_mutex_t m1 = PTHREAD_MUTEX_INITIALIZER;</a>
+<a class="sourceLine" id="cb20-7" title="7">pthread_mutex_t m2 = PTHREAD_MUTEX_INITIALIZER;</a>
+<a class="sourceLine" id="cb20-8" title="8"></a>
+<a class="sourceLine" id="cb20-9" title="9"><span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb20-10" title="10">  pthread_mutex_lock(&amp;m1);</a>
+<a class="sourceLine" id="cb20-11" title="11">  values[count++] = v;</a>
+<a class="sourceLine" id="cb20-12" title="12">  pthread_mutex_unlock(&amp;m1);</a>
+<a class="sourceLine" id="cb20-13" title="13">}</a>
+<a class="sourceLine" id="cb20-14" title="14"></a>
+<a class="sourceLine" id="cb20-15" title="15"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb20-16" title="16">  pthread_mutex_lock(&amp;m2);</a>
+<a class="sourceLine" id="cb20-17" title="17">  <span class="dt">double</span> v = values[--count];</a>
+<a class="sourceLine" id="cb20-18" title="18">  pthread_mutex_unlock(&amp;m2);</a>
+<a class="sourceLine" id="cb20-19" title="19"></a>
+<a class="sourceLine" id="cb20-20" title="20">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb20-21" title="21">}</a>
+<a class="sourceLine" id="cb20-22" title="22"></a>
+<a class="sourceLine" id="cb20-23" title="23"><span class="dt">int</span> is_empty() {</a>
+<a class="sourceLine" id="cb20-24" title="24">  pthread_mutex_lock(&amp;m1);</a>
+<a class="sourceLine" id="cb20-25" title="25">  <span class="cf">return</span> count == <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb20-26" title="26">  pthread_mutex_unlock(&amp;m1);</a>
+<a class="sourceLine" id="cb20-27" title="27">}</a></code></pre></div>
+<p>Version 2 contains at least one error. Take a moment to see if you can the error(s) and work out the consequence(s).</p>
+<p>If three threads called at the same time, the lock ensures that only one thread at time manipulates the stack on push or is_empty – Two threads will need to wait until the first thread completes A similar argument applies to concurrent calls to . However, Version 2 does not prevent push and pop from running at the same time because and use two different mutex locks. The fix is simple in this case - use the same mutex lock for both the push and pop functions.</p>
+<p>The code has a second error. returns after the comparison and leaves the mutex unlocked. However, the error would not be spotted immediately. For example, suppose one thread calls and a second thread later calls . This thread would mysteriously stop. Using debugger, you can discover that the thread is stuck at the lock() method inside the method because the lock was never unlocked by the earlier call. Thus an oversight in one thread led to problems much later in time in an arbitrary other thread. Let’s try to rectify these problems</p>
+<div class="sourceCode" id="cb21" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb21-1" title="1"><span class="co">// An attempt at a thread-safe stack (version 3)</span></a>
+<a class="sourceLine" id="cb21-2" title="2"><span class="dt">int</span> count;</a>
+<a class="sourceLine" id="cb21-3" title="3"><span class="dt">double</span> values[count];</a>
+<a class="sourceLine" id="cb21-4" title="4">pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;</a>
+<a class="sourceLine" id="cb21-5" title="5"></a>
+<a class="sourceLine" id="cb21-6" title="6"><span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb21-7" title="7">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb21-8" title="8">  values[count++] = v;</a>
+<a class="sourceLine" id="cb21-9" title="9">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb21-10" title="10">}</a>
+<a class="sourceLine" id="cb21-11" title="11"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb21-12" title="12">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb21-13" title="13">  <span class="dt">double</span> v = values[--count];</a>
+<a class="sourceLine" id="cb21-14" title="14">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb21-15" title="15">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb21-16" title="16">}</a>
+<a class="sourceLine" id="cb21-17" title="17"><span class="dt">int</span> is_empty() {</a>
+<a class="sourceLine" id="cb21-18" title="18">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb21-19" title="19">  <span class="dt">int</span> result = count == <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb21-20" title="20">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb21-21" title="21">  <span class="cf">return</span> result;</a>
+<a class="sourceLine" id="cb21-22" title="22">}</a></code></pre></div>
+<p>Version 3 is thread-safe. We have ensured mutual exclusion for all of the critical sections. There are a few things to note.</p>
+<ul>
+<li><p>is thread-safe but its result may already be out-of-date. The stack may no longer be empty by the time the thread gets the result! This is usually why in thread-safe data structures, functions that return sizes are removed or deprecated.</p></li>
+<li><p>There is no protection against underflow (popping on an empty stack) or overflow (pushing onto an already-full stack)</p></li>
+</ul>
+<p>The last point can be fixed using counting semaphores. The implementation assumes a single stack. A more general-purpose version might include the mutex as part of the memory structure and use to initialize the mutex. For example,</p>
+<div class="sourceCode" id="cb22" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb22-1" title="1"><span class="co">// Support for multiple stacks (each one has a mutex)</span></a>
+<a class="sourceLine" id="cb22-2" title="2"><span class="kw">typedef</span> <span class="kw">struct</span> stack {</a>
+<a class="sourceLine" id="cb22-3" title="3">  <span class="dt">int</span> count;</a>
+<a class="sourceLine" id="cb22-4" title="4">  pthread_mutex_t m;</a>
+<a class="sourceLine" id="cb22-5" title="5">  <span class="dt">double</span> *values;</a>
+<a class="sourceLine" id="cb22-6" title="6">} stack_t;</a>
+<a class="sourceLine" id="cb22-7" title="7"></a>
+<a class="sourceLine" id="cb22-8" title="8">stack_t* stack_create(<span class="dt">int</span> capacity) {</a>
+<a class="sourceLine" id="cb22-9" title="9">  stack_t *result = malloc(<span class="kw">sizeof</span>(stack_t));</a>
+<a class="sourceLine" id="cb22-10" title="10">  result-&gt;count = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb22-11" title="11">  result-&gt;values = malloc(<span class="kw">sizeof</span>(<span class="dt">double</span>) * capacity);</a>
+<a class="sourceLine" id="cb22-12" title="12">  pthread_mutex_init(&amp;result-&gt;m, NULL);</a>
+<a class="sourceLine" id="cb22-13" title="13">  <span class="cf">return</span> result;</a>
+<a class="sourceLine" id="cb22-14" title="14">}</a>
+<a class="sourceLine" id="cb22-15" title="15"><span class="dt">void</span> stack_destroy(stack_t *s) {</a>
+<a class="sourceLine" id="cb22-16" title="16">  free(s-&gt;values);</a>
+<a class="sourceLine" id="cb22-17" title="17">  pthread_mutex_destroy(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb22-18" title="18">  free(s);</a>
+<a class="sourceLine" id="cb22-19" title="19">}</a>
+<a class="sourceLine" id="cb22-20" title="20"></a>
+<a class="sourceLine" id="cb22-21" title="21"><span class="co">// Warning no underflow or overflow checks!</span></a>
+<a class="sourceLine" id="cb22-22" title="22"></a>
+<a class="sourceLine" id="cb22-23" title="23"><span class="dt">void</span> push(stack_t *s, <span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb22-24" title="24">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb22-25" title="25">  s-&gt;values[(s-&gt;count)++] = v;</a>
+<a class="sourceLine" id="cb22-26" title="26">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb22-27" title="27">}</a>
+<a class="sourceLine" id="cb22-28" title="28"></a>
+<a class="sourceLine" id="cb22-29" title="29"><span class="dt">double</span> pop(stack_t *s) {</a>
+<a class="sourceLine" id="cb22-30" title="30">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb22-31" title="31">  <span class="dt">double</span> v = s-&gt;values[--(s-&gt;count)];</a>
+<a class="sourceLine" id="cb22-32" title="32">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb22-33" title="33">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb22-34" title="34">}</a>
+<a class="sourceLine" id="cb22-35" title="35"></a>
+<a class="sourceLine" id="cb22-36" title="36"><span class="dt">int</span> is_empty(stack_t *s) {</a>
+<a class="sourceLine" id="cb22-37" title="37">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb22-38" title="38">  <span class="dt">int</span> result = s-&gt;count == <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb22-39" title="39">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb22-40" title="40">  <span class="cf">return</span> result;</a>
+<a class="sourceLine" id="cb22-41" title="41">}</a>
+<a class="sourceLine" id="cb22-42" title="42"></a>
+<a class="sourceLine" id="cb22-43" title="43"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb22-44" title="44">  stack_t *s1 = stack_create(<span class="dv">10</span> <span class="co">/* Max capacity*/</span>);</a>
+<a class="sourceLine" id="cb22-45" title="45">  stack_t *s2 = stack_create(<span class="dv">10</span>);</a>
+<a class="sourceLine" id="cb22-46" title="46">  push(s1, <span class="fl">3.141</span>);</a>
+<a class="sourceLine" id="cb22-47" title="47">  push(s2, pop(s1));</a>
+<a class="sourceLine" id="cb22-48" title="48">  stack_destroy(s2);</a>
+<a class="sourceLine" id="cb22-49" title="49">  stack_destroy(s1);</a>
+<a class="sourceLine" id="cb22-50" title="50">}</a></code></pre></div>
+<p>Before we fix the problems with semaphores. How would we fix the problems with condition variables? Try it out before you look at the code in the previous section. We need to wait in push and pop if our stack is full or empty respectively. Attempted solution:</p>
+<div class="sourceCode" id="cb23" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb23-1" title="1"><span class="co">// Assume cv is a condition variable</span></a>
+<a class="sourceLine" id="cb23-2" title="2"><span class="co">// correctly initialized</span></a>
+<a class="sourceLine" id="cb23-3" title="3"></a>
+<a class="sourceLine" id="cb23-4" title="4"><span class="dt">void</span> push(stack_t *s, <span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb23-5" title="5">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb23-6" title="6">  <span class="cf">if</span>(s-&gt;count == <span class="dv">0</span>) pthread_cond_wait(&amp;s-&gt;cv, &amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb23-7" title="7">  s-&gt;values[(s-&gt;count)++] = v;</a>
+<a class="sourceLine" id="cb23-8" title="8">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb23-9" title="9">}</a>
+<a class="sourceLine" id="cb23-10" title="10"></a>
+<a class="sourceLine" id="cb23-11" title="11"><span class="dt">double</span> pop(stack_t *s) {</a>
+<a class="sourceLine" id="cb23-12" title="12">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb23-13" title="13">  <span class="cf">if</span>(s-&gt;count == <span class="dv">0</span>) pthread_cond_wait(&amp;s-&gt;cv, &amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb23-14" title="14">  <span class="dt">double</span> v = s-&gt;values[--(s-&gt;count)];</a>
+<a class="sourceLine" id="cb23-15" title="15">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb23-16" title="16">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb23-17" title="17">}</a></code></pre></div>
+<p>Does the following solution work? Take a second before looking at the answer to spot the errors.</p>
+<p>So did you catch all of them?</p>
+<ol>
+<li><p>The first one is a simple one. In push, our check should be against the total capacity, not zero.</p></li>
+<li><p>We only have if statement checks. wait() could spuriously wake up</p></li>
+<li><p>We never signal any of the threads! Threads could get stuck waiting indefinitely.</p></li>
+</ol>
+<p>Let’s fix those errors Does this solution work?</p>
+<div class="sourceCode" id="cb24" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb24-1" title="1"><span class="dt">void</span> push(stack_t *s, <span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb24-2" title="2">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb24-3" title="3">  <span class="cf">while</span>(s-&gt;count == capacity) pthread_cond_wait(&amp;s-&gt;cv, &amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb24-4" title="4">  s-&gt;values[(s-&gt;count)++] = v;</a>
+<a class="sourceLine" id="cb24-5" title="5">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb24-6" title="6">  pthread_cond_signal(&amp;s-&gt;cv);</a>
+<a class="sourceLine" id="cb24-7" title="7">}</a>
+<a class="sourceLine" id="cb24-8" title="8"></a>
+<a class="sourceLine" id="cb24-9" title="9"><span class="dt">double</span> pop(stack_t *s) {</a>
+<a class="sourceLine" id="cb24-10" title="10">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb24-11" title="11">  <span class="cf">while</span>(s-&gt;count == <span class="dv">0</span>) pthread_cond_wait(&amp;s-&gt;cv, &amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb24-12" title="12">  <span class="dt">double</span> v = s-&gt;values[--(s-&gt;count)];</a>
+<a class="sourceLine" id="cb24-13" title="13">  pthread_cond_broadcast(&amp;s-&gt;cv);</a>
+<a class="sourceLine" id="cb24-14" title="14">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb24-15" title="15">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb24-16" title="16">}</a></code></pre></div>
+<p>This solution doesn’t work either! The problem is with the signal. Can you see why? What would you do to fix it?</p>
+<p>Now, how would we use counting semaphores to prevent over and underflow? Let’s discuss it in the next section.</p>
+<section id="using-semaphores" class="level3">
+<h3>Using Semaphores</h3>
+<p>Let’s use a counting semaphore to keep track of how many spaces remain and another semaphore to track the number of items in the stack. We will call these two semaphores and . Remember will wait if the semaphore’s count has been decremented to zero (by another thread calling sem_post).</p>
+<div class="sourceCode" id="cb25" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb25-1" title="1"><span class="co">// Sketch #1</span></a>
+<a class="sourceLine" id="cb25-2" title="2"></a>
+<a class="sourceLine" id="cb25-3" title="3">sem_t sitems;</a>
+<a class="sourceLine" id="cb25-4" title="4">sem_t sremain;</a>
+<a class="sourceLine" id="cb25-5" title="5"><span class="dt">void</span> stack_init(){</a>
+<a class="sourceLine" id="cb25-6" title="6">  sem_init(&amp;sitems, <span class="dv">0</span>, <span class="dv">0</span>);</a>
+<a class="sourceLine" id="cb25-7" title="7">  sem_init(&amp;sremain, <span class="dv">0</span>, <span class="dv">10</span>);</a>
+<a class="sourceLine" id="cb25-8" title="8">}</a>
+<a class="sourceLine" id="cb25-9" title="9"></a>
+<a class="sourceLine" id="cb25-10" title="10"></a>
+<a class="sourceLine" id="cb25-11" title="11"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb25-12" title="12">  <span class="co">// Wait until there&#39;s at least one item</span></a>
+<a class="sourceLine" id="cb25-13" title="13">  sem_wait(&amp;sitems);</a>
+<a class="sourceLine" id="cb25-14" title="14">  ...</a>
+<a class="sourceLine" id="cb25-15" title="15"></a>
+<a class="sourceLine" id="cb25-16" title="16">  <span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb25-17" title="17">    <span class="co">// Wait until there&#39;s at least one space</span></a>
+<a class="sourceLine" id="cb25-18" title="18">    sem_wait(&amp;sremain);</a>
+<a class="sourceLine" id="cb25-19" title="19">    ...</a>
+<a class="sourceLine" id="cb25-20" title="20">  }</a></code></pre></div>
+<p>Sketch #2 has implemented the too early. Another thread waiting in push can erroneously attempt to write into a full stack. Similarly, a thread waiting in the pop() is allowed to continue too early.</p>
+<div class="sourceCode" id="cb26" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb26-1" title="1"><span class="co">// Sketch #2 (Error!)</span></a>
+<a class="sourceLine" id="cb26-2" title="2"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb26-3" title="3">  <span class="co">// Wait until there&#39;s at least one item</span></a>
+<a class="sourceLine" id="cb26-4" title="4">  sem_wait(&amp;sitems);</a>
+<a class="sourceLine" id="cb26-5" title="5">  sem_post(&amp;sremain); <span class="co">// error! wakes up pushing() thread too early</span></a>
+<a class="sourceLine" id="cb26-6" title="6">  <span class="cf">return</span> values[--count];</a>
+<a class="sourceLine" id="cb26-7" title="7">}</a>
+<a class="sourceLine" id="cb26-8" title="8"><span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb26-9" title="9">  <span class="co">// Wait until there&#39;s at least one space</span></a>
+<a class="sourceLine" id="cb26-10" title="10">  sem_wait(&amp;sremain);</a>
+<a class="sourceLine" id="cb26-11" title="11">  sem_post(&amp;sitems); <span class="co">// error! wakes up a popping() thread too early</span></a>
+<a class="sourceLine" id="cb26-12" title="12">  values[count++] = v;</a>
+<a class="sourceLine" id="cb26-13" title="13">}</a></code></pre></div>
+<p>Sketch 3 implements the correct semaphore logic, but can you spot the error?</p>
+<div class="sourceCode" id="cb27" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb27-1" title="1"><span class="co">// Sketch #3 (Error!)</span></a>
+<a class="sourceLine" id="cb27-2" title="2"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb27-3" title="3">  <span class="co">// Wait until there&#39;s at least one item</span></a>
+<a class="sourceLine" id="cb27-4" title="4">  sem_wait(&amp;sitems);</a>
+<a class="sourceLine" id="cb27-5" title="5">  <span class="dt">double</span> v= values[--count];</a>
+<a class="sourceLine" id="cb27-6" title="6">  sem_post(&amp;sremain);</a>
+<a class="sourceLine" id="cb27-7" title="7">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb27-8" title="8">}</a>
+<a class="sourceLine" id="cb27-9" title="9"></a>
+<a class="sourceLine" id="cb27-10" title="10"><span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb27-11" title="11">  <span class="co">// Wait until there&#39;s at least one space</span></a>
+<a class="sourceLine" id="cb27-12" title="12">  sem_wait(&amp;sremain);</a>
+<a class="sourceLine" id="cb27-13" title="13">  values[count++] = v;</a>
+<a class="sourceLine" id="cb27-14" title="14">  sem_post(&amp;sitems);</a>
+<a class="sourceLine" id="cb27-15" title="15">}</a></code></pre></div>
+<p>Sketch 3 correctly enforces buffer full and buffer empty conditions using semaphores. However, there is no <em>mutual exclusion</em>. Two threads can be in the <em>critical section</em> at the same time, which would corrupt the data structure or least lead to data loss. The fix is to wrap a mutex around the critical section:</p>
+<div class="sourceCode" id="cb28" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb28-1" title="1"><span class="co">// Simple single stack - see the above example on how to convert this into multiple stacks.</span></a>
+<a class="sourceLine" id="cb28-2" title="2"><span class="co">// Also a robust POSIX implementation would check for EINTR and error codes of sem_wait.</span></a>
+<a class="sourceLine" id="cb28-3" title="3"></a>
+<a class="sourceLine" id="cb28-4" title="4"><span class="co">// PTHREAD_MUTEX_INITIALIZER for statics (use pthread_mutex_init() for stack/heap memory)</span></a>
+<a class="sourceLine" id="cb28-5" title="5"><span class="pp">#define SPACES 10</span></a>
+<a class="sourceLine" id="cb28-6" title="6">pthread_mutex_t m= PTHREAD_MUTEX_INITIALIZER;</a>
+<a class="sourceLine" id="cb28-7" title="7"><span class="dt">int</span> count = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb28-8" title="8"><span class="dt">double</span> values[SPACES];</a>
+<a class="sourceLine" id="cb28-9" title="9">sem_t sitems, sremain;</a>
+<a class="sourceLine" id="cb28-10" title="10"></a>
+<a class="sourceLine" id="cb28-11" title="11"><span class="dt">void</span> init() {</a>
+<a class="sourceLine" id="cb28-12" title="12">  sem_init(&amp;sitems, <span class="dv">0</span>, <span class="dv">0</span>);</a>
+<a class="sourceLine" id="cb28-13" title="13">  sem_init(&amp;sremains, <span class="dv">0</span>, SPACES); <span class="co">// 10 spaces</span></a>
+<a class="sourceLine" id="cb28-14" title="14">}</a>
+<a class="sourceLine" id="cb28-15" title="15"></a>
+<a class="sourceLine" id="cb28-16" title="16"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb28-17" title="17">  <span class="co">// Wait until there&#39;s at least one item</span></a>
+<a class="sourceLine" id="cb28-18" title="18">  sem_wait(&amp;sitems);</a>
+<a class="sourceLine" id="cb28-19" title="19"></a>
+<a class="sourceLine" id="cb28-20" title="20">  pthread_mutex_lock(&amp;m); <span class="co">// CRITICAL SECTION</span></a>
+<a class="sourceLine" id="cb28-21" title="21">  <span class="dt">double</span> v= values[--count];</a>
+<a class="sourceLine" id="cb28-22" title="22">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb28-23" title="23"></a>
+<a class="sourceLine" id="cb28-24" title="24">  sem_post(&amp;sremain); <span class="co">// Hey world, there&#39;s at least one space</span></a>
+<a class="sourceLine" id="cb28-25" title="25">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb28-26" title="26">}</a>
+<a class="sourceLine" id="cb28-27" title="27"></a>
+<a class="sourceLine" id="cb28-28" title="28"><span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb28-29" title="29">  <span class="co">// Wait until there&#39;s at least one space</span></a>
+<a class="sourceLine" id="cb28-30" title="30">  sem_wait(&amp;sremain);</a>
+<a class="sourceLine" id="cb28-31" title="31"></a>
+<a class="sourceLine" id="cb28-32" title="32">  pthread_mutex_lock(&amp;m); <span class="co">// CRITICAL SECTION</span></a>
+<a class="sourceLine" id="cb28-33" title="33">  values[count++] = v;</a>
+<a class="sourceLine" id="cb28-34" title="34">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb28-35" title="35"></a>
+<a class="sourceLine" id="cb28-36" title="36">  sem_post(&amp;sitems); <span class="co">// Hey world, there&#39;s at least one item</span></a>
+<a class="sourceLine" id="cb28-37" title="37">}</a>
+<a class="sourceLine" id="cb28-38" title="38"><span class="co">// Note a robust solution will need to check sem_wait&#39;s result for EINTR (more about this later)</span></a></code></pre></div>
+<p>What happens when we start inverting the lock and wait orders?</p>
+<div class="sourceCode" id="cb29" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb29-1" title="1"><span class="dt">double</span> pop() {</a>
+<a class="sourceLine" id="cb29-2" title="2">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb29-3" title="3">  sem_wait(&amp;sitems);</a>
+<a class="sourceLine" id="cb29-4" title="4"></a>
+<a class="sourceLine" id="cb29-5" title="5">  <span class="dt">double</span> v= values[--count];</a>
+<a class="sourceLine" id="cb29-6" title="6">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb29-7" title="7"></a>
+<a class="sourceLine" id="cb29-8" title="8">  sem_post(&amp;sremain);</a>
+<a class="sourceLine" id="cb29-9" title="9">  <span class="cf">return</span> v;</a>
+<a class="sourceLine" id="cb29-10" title="10">}</a>
+<a class="sourceLine" id="cb29-11" title="11"></a>
+<a class="sourceLine" id="cb29-12" title="12"><span class="dt">void</span> push(<span class="dt">double</span> v) {</a>
+<a class="sourceLine" id="cb29-13" title="13">  sem_wait(&amp;sremain);</a>
+<a class="sourceLine" id="cb29-14" title="14"></a>
+<a class="sourceLine" id="cb29-15" title="15">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb29-16" title="16">  values[count++] = v;</a>
+<a class="sourceLine" id="cb29-17" title="17">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb29-18" title="18"></a>
+<a class="sourceLine" id="cb29-19" title="19">  sem_post(&amp;sitems);</a>
+<a class="sourceLine" id="cb29-20" title="20">}</a></code></pre></div>
+<p>Rather than giving you the answer, we’ll let you think about this. Is this a permissible way to lock and unlock? Is there a series of operations that could cause a race condition? How about deadlock? If there is, provide it. If there isn’t, provide a short justification proof of why that won’t happen.</p>
+</section>
+</section>
+<section id="software-solutions-to-the-critical-section" class="level2">
+<h2>Software Solutions to the Critical Section</h2>
+<p>As already discussed, there are critical parts of our code that can only be executed by one thread at a time. We describe this requirement as ‘mutual exclusion’. Only one thread (or process) may have access to the shared resource. In multi-threaded programs, we can wrap a critical section with mutex lock and unlock calls:</p>
+<div class="sourceCode" id="cb30" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb30-1" title="1">pthread_mutex_lock() <span class="co">// one thread allowed at a time! (others will have to wait here)</span></a>
+<a class="sourceLine" id="cb30-2" title="2"><span class="co">// ... Do Critical Section stuff here!</span></a>
+<a class="sourceLine" id="cb30-3" title="3">pthread_mutex_unlock() <span class="co">// let other waiting threads continue</span></a></code></pre></div>
+<p>How would we implement these lock and unlock calls? Can we create a pure software algorithm that assures mutual exclusion? Here is our attempt from earlier.</p>
+<div class="sourceCode" id="cb31" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb31-1" title="1">pthread_mutex_lock(p_mutex_t *m) {</a>
+<a class="sourceLine" id="cb31-2" title="2">  <span class="cf">while</span>(m-&gt;lock) ;</a>
+<a class="sourceLine" id="cb31-3" title="3">  m-&gt;lock = <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb31-4" title="4">}</a>
+<a class="sourceLine" id="cb31-5" title="5">pthread_mutex_unlock(p_mutex_t *m) {</a>
+<a class="sourceLine" id="cb31-6" title="6">  m-&gt;lock = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb31-7" title="7">}</a></code></pre></div>
+<p>As we touched on earlier, this implementation <em>does not satisfy Mutual Exclusion</em> even considering that threads can unlock other threads locks. Let’s take a close look at this ‘implementation’ from two threads running around the same time.</p>
+<p>To simplify the discussion, we consider only two threads. Note these arguments work for threads and processes and the classic CS literature discusses these problems in terms of two processes that need exclusive access to a critical section or shared resource. Raising a flag represents a thread/process’s intention to enter the critical section.</p>
+<p>There are three main desirable properties that we desire in a solution to the critical section problem.</p>
+<ol>
+<li><p>Mutual Exclusion. The thread/process gets exclusive access. Others must wait until it exits the critical section.</p></li>
+<li><p>Bounded Wait. A thread/process cannot get superseded by another thread infinite amounts of time.</p></li>
+<li><p>Progress. If no thread/process is inside the critical section, the thread/process should be able to proceed without having to wait.</p></li>
+</ol>
+<p>With these ideas in mind, let’s examine another candidate solution that uses a turn-based flag only if two threads both required access at the same time.</p>
+<section id="naive-solutions" class="level3">
+<h3>Naive Solutions</h3>
+<p>Remember that the pseudo-code outlined below is part of a larger program. The thread or process will typically need to enter the critical section many times during the lifetime of the process. So, imagine each example as wrapped inside a loop where for a random amount of time the thread or process is working on something else.</p>
+<p>Is there anything wrong with the candidate solution described below?</p>
+<pre><code>// Candidate #1
+wait until your flag is lowered
+raise my flag
+// Do Critical Section stuff
+lower my flag</code></pre>
+<p>Answer: Candidate solution #1 also suffers from a race condition because both threads/processes could read each other’s flag value as lowered and continue.</p>
+<p>This suggests we should raise the flag <em>before</em> checking the other thread’s flag, which is candidate solution #2 below.</p>
+<pre><code>// Candidate #2
+raise my flag
+wait until your flag is lowered
+// Do Critical Section stuff
+lower my flag</code></pre>
+<p>Candidate #2 satisfies mutual exclusion. It is impossible for two threads to be inside the critical section at the same time. However, this code suffers from deadlock! Suppose two threads wish to enter the critical section at the same time.</p>
+<p><br />
+</p>
+<table>
+<caption>Candidate Solution #2 Analysis</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Time</th>
+<th style="text-align: center;">Thread 1</th>
+<th style="text-align: center;">Thread 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: center;">Raise Flag</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">Raise Flag</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: center;">Wait</td>
+<td style="text-align: center;">Wait</td>
+</tr>
+</tbody>
+</table>
+<p><br />
+Both processes are now waiting for the other one to lower their flags. Neither one will enter the critical section as both are now stuck forever! This suggests we should use a turn-based variable to try to resolve who should proceed.</p>
+</section>
+<section id="turn-based-solutions" class="level3">
+<h3>Turn-based solutions</h3>
+<p>The following candidate solution #3 uses a turn-based variable to politely allow one thread and then the other to continue</p>
+<pre><code>// Candidate #3
+wait until my turn is myid
+// Do Critical Section stuff
+turn = yourid</code></pre>
+<p>Candidate #3 satisfies mutual exclusion. Each thread or process gets exclusive access to the Critical Section. However, both threads/processes must take a strict turn-based approach to use the critical section. They are forced into an alternating critical section access pattern. If thread 1 wishes to read a hash table every millisecond, but another thread writes to a hash table every second, then the reading thread would have to wait another 999ms before being able to read from the hash table again. This ‘solution’ is ineffective because our threads should be able to make progress and enter the critical section if no other thread is currently in the critical section.</p>
+</section>
+<section id="turn-and-flag-solutions" class="level3">
+<h3>Turn and Flag solutions</h3>
+<p>Is the following a correct solution to CSP?</p>
+<pre><code>\\ Candidate #4
+raise my flag
+if your flag is raised, wait until my turn
+// Do Critical Section stuff
+turn = yourid
+lower my flag</code></pre>
+<p>Analyzing these solutions is tricky. Even peer-reviewed papers on this specific subject contain incorrect solutions <span class="citation" data-cites="Hyman:1966:CPC:365153.365167">(Hyman <a href="ch018.xhtml#ref-Hyman:1966:CPC:365153.365167" role="doc-biblioref">1966</a>)</span>! At first glance, it appears to satisfy Mutual Exclusion, Bounded Wait and Progress The turn-based flag is only used in the event of a tie, so Progress and Bounded Wait is allowed and mutual exclusion appears to be satisfied. Perhaps you can find a counter-example?</p>
+<p>Candidate #4 fails because a thread does not wait until the other thread lowers its flag. After some thought or inspiration, the following scenario can be created to demonstrate how Mutual Exclusion is not satisfied.</p>
+<p>Imagine the first thread runs this code twice. The turn flag now points to the second thread. While the first thread is still inside the Critical Section, the second thread arrives. The second thread can immediately continue into the Critical Section!</p>
+<p><br />
+</p>
+<table>
+<caption>Candidate Solution #4</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Time</th>
+<th style="text-align: left;">Turn</th>
+<th style="text-align: left;">Thread # 1</th>
+<th style="text-align: left;">Thread # 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Raise my flag</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">If your flag is raised, wait until my turn</td>
+<td style="text-align: left;">Raise my flag</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">// Do Critical Section Stuff</td>
+<td style="text-align: left;">If your flag is raised, wait until my turn (TRUE!)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">// Do Critical Section Stuff</td>
+<td style="text-align: left;">Do Critical Section Stuff - OOPS</td>
+</tr>
+</tbody>
+</table>
+<p><br />
+</p>
+</section>
+</section>
+<section id="working-solutions" class="level2">
+<h2>Working Solutions</h2>
+<p>The first solution to the problem was Dekker’s Solution. Dekker’s Algorithm (1962) was the first provably correct solution. Though, it was in an unpublished paper, so it was not discovered until later <span class="citation" data-cites="dekker_dijkstra_1965">(Dekker and Dijkstra <a href="ch018.xhtml#ref-dekker_dijkstra_1965" role="doc-biblioref">1965</a>)</span> (this is an English transcribed version released in 1965). A version of the algorithm is below.</p>
+<pre><code>raise my flag
+while (your flag is raised) :
+   if it is your turn to win :
+     lower my flag
+     wait while your turn
+     raise my flag
+// Do Critical Section stuff
+set your turn to win
+lower my flag</code></pre>
+<p>Notice how the process’s flag is always raised during the critical section no matter if the loop is iterated zero, once or more times. Further, the flag can be interpreted as an immediate intent to enter the critical section. Only if the other process has also raised the flag will one process defer, lower their intent flag and wait. Let’s check the conditions.</p>
+<ol>
+<li><p>Mutual Exclusion. Let’s try to sketch a simple proof. The loop invariant is that at the start of checking the condition, your flag has to be raised – this is by exhaustion. Since the only way that a thread can leave the loop is by having the condition be false, the flag must be raised for the entirety of the critical section. Since the loop prevents a thread from exiting while the other thread’s flag is raised and a thread has its flag raised in the critical section, the other thread can’t enter the critical section at the same time.</p></li>
+<li><p>Bounded Wait. Assuming that the critical section ends in finite time, a thread once it has left the critical section cannot then get the critical section back. The reason being is the turn variable is set to the other thread, meaning that that thread now has priority. That means a thread cannot be superseded infinitely by another thread.</p></li>
+<li><p>Progress. If the other thread isn’t in the critical section, it will simply continue with a simple check. We didn’t make any statement about if threads are randomly stopped by the system scheduler. This is an idealized scenario where threads will keep executing instructions.</p></li>
+</ol>
+<section id="petersons-solution" class="level3">
+<h3>Peterson’s Solution</h3>
+<p>Peterson published his novel and surprisingly simple solution in 1981 <span class="citation" data-cites="Peterson1981MythsAT">(Peterson <a href="ch018.xhtml#ref-Peterson1981MythsAT" role="doc-biblioref">1981</a>)</span>. A version of his algorithm is shown below that uses a shared variable .</p>
+<pre><code>// Candidate #5
+raise my flag
+turn = other_thread_id
+while (your flag is up and turn is other_thread_id)
+    loop
+// Do Critical Section stuff
+lower my flag</code></pre>
+<p>This solution satisfies Mutual Exclusion, Bounded Wait and Progress. If thread #2 has set turn to 2 and is currently inside the critical section. Thread #1 arrives, <em>sets the turn back to 1</em> and now waits until thread 2 lowers the flag.</p>
+<ol>
+<li><p>Mutual Exclusion. Let’s try to sketch a simple proof again. A thread doesn’t get into the critical section until the turn variable is yours or the other thread’s flag isn’t up. If the other thread’s flag isn’t up, it isn’t trying to enter the critical section. That is the first action the thread does and the last action the thread undoes. If the turn variable is set to this thread, that means that the other thread has given the control to this thread. Since my flag is raised and the turn variable is set, the other thread has to wait in the loop until the current thread is done.</p></li>
+<li><p>Bounded Wait. After one thread lowers, a thread waiting in the while loop will leave because the first condition is broken. This means that threads cannot win all the time.</p></li>
+<li><p>Progress. If no other thread is contesting, other thread’s flags are not up. That means that a thread can go past the while loop and do critical section items.</p></li>
+</ol>
+<p>Unfortunately, we can’t implement a software mutex in the same way today because of out of order instructions. Check the appendix for a solution to the problem.</p>
+</section>
+</section>
+<section id="implementing-counting-semaphore" class="level2">
+<h2>Implementing Counting Semaphore</h2>
+<p>Now that we have a solution to the critical section problem, We can reasonably implement a mutex. How would we implement other synchronization primitives? Let’s start with a semaphore. To implement a semaphore with efficient CPU usage, we will say that we have implemented a condition variable. Implementing an O(1) space condition variable using only a mutex is not trivial, or at least an O(1) heap condition variable is not trivial. We don’t want to call malloc while implementing a primitive, or we may deadlock!</p>
+<ul>
+<li><p>We can implement a counting semaphore using condition variables.</p></li>
+<li><p>Each semaphore needs a count, a condition variable and a mutex</p>
+<div class="sourceCode" id="cb38" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb38-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> sem_t {</a>
+<a class="sourceLine" id="cb38-2" title="2">  <span class="dt">ssize_t</span> count;</a>
+<a class="sourceLine" id="cb38-3" title="3">  pthread_mutex_t m;</a>
+<a class="sourceLine" id="cb38-4" title="4">  pthread_condition_t cv;</a>
+<a class="sourceLine" id="cb38-5" title="5">} sem_t;</a></code></pre></div></li>
+</ul>
+<p>Implement to initialize the mutex and condition variable</p>
+<div class="sourceCode" id="cb39" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb39-1" title="1"><span class="dt">int</span> sem_init(sem_t *s, <span class="dt">int</span> pshared, <span class="dt">int</span> value) {</a>
+<a class="sourceLine" id="cb39-2" title="2">  <span class="cf">if</span> (pshared) {</a>
+<a class="sourceLine" id="cb39-3" title="3">    errno = ENOSYS <span class="co">/* &#39;Not implemented&#39;*/</span>;</a>
+<a class="sourceLine" id="cb39-4" title="4">    <span class="cf">return</span> -<span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb39-5" title="5">  }</a>
+<a class="sourceLine" id="cb39-6" title="6"></a>
+<a class="sourceLine" id="cb39-7" title="7">  s-&gt;count = value;</a>
+<a class="sourceLine" id="cb39-8" title="8">  pthread_mutex_init(&amp;s-&gt;m, NULL);</a>
+<a class="sourceLine" id="cb39-9" title="9">  pthread_cond_init(&amp;s-&gt;cv, NULL);</a>
+<a class="sourceLine" id="cb39-10" title="10">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb39-11" title="11">}</a></code></pre></div>
+<p>Our implementation of needs to increment the count. We will also wake up any threads sleeping inside the condition variable. Notice we lock and unlock the mutex so only one thread can be inside the critical section at a time.</p>
+<div class="sourceCode" id="cb40" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb40-1" title="1"><span class="dt">void</span> sem_post(sem_t *s) {</a>
+<a class="sourceLine" id="cb40-2" title="2">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb40-3" title="3">  s-&gt;count++;</a>
+<a class="sourceLine" id="cb40-4" title="4">  pthread_cond_signal(&amp;s-&gt;cv);</a>
+<a class="sourceLine" id="cb40-5" title="5">  <span class="co">/* A woken thread must acquire the lock, so it will also have to wait until we call unlock*/</span></a>
+<a class="sourceLine" id="cb40-6" title="6"></a>
+<a class="sourceLine" id="cb40-7" title="7">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb40-8" title="8">}</a></code></pre></div>
+<p>Our implementation of may need to sleep if the semaphore’s count is zero. Just like , we wrap the critical section using the lock, so only one thread can be executing our code at a time. Notice if the thread does need to wait then the mutex will be unlocked, allowing another thread to enter and awaken us from our sleep!</p>
+<p>Also notice that even if a thread is woken up before it returns from , it must re-acquire the lock, so it will have to wait until sem_post finishes.</p>
+<div class="sourceCode" id="cb41" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb41-1" title="1"><span class="dt">void</span> sem_wait(sem_t *s) {</a>
+<a class="sourceLine" id="cb41-2" title="2">  pthread_mutex_lock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb41-3" title="3">  <span class="cf">while</span> (s-&gt;count == <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb41-4" title="4">    pthread_cond_wait(&amp;s-&gt;cv, &amp;s-&gt;m); <span class="co">/*unlock mutex, wait, relock mutex*/</span></a>
+<a class="sourceLine" id="cb41-5" title="5">  }</a>
+<a class="sourceLine" id="cb41-6" title="6">  s-&gt;count--;</a>
+<a class="sourceLine" id="cb41-7" title="7">  pthread_mutex_unlock(&amp;s-&gt;m);</a>
+<a class="sourceLine" id="cb41-8" title="8">}</a></code></pre></div>
+<p>That is a complete implementation of a counting semaphore Notice that we are calling every single time. In practice, this means would unnecessary call even if there are no waiting threads. A more efficient implementation would only call when necessary i.e.</p>
+<div class="sourceCode" id="cb42" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb42-1" title="1"><span class="co">/* Did we increment from zero to one- time to signal a thread sleeping inside sem_post */</span></a>
+<a class="sourceLine" id="cb42-2" title="2"><span class="cf">if</span> (s-&gt;count == <span class="dv">1</span>) <span class="co">/* Wake up one waiting thread!*/</span></a>
+<a class="sourceLine" id="cb42-3" title="3">pthread_cond_signal(&amp;s-&gt;cv);</a></code></pre></div>
+<section id="other-semaphore-considerations" class="level3">
+<h3>Other semaphore considerations</h3>
+<ul>
+<li><p>A production semaphore implementation may include a queue to ensure fairness and priority. Meaning, we wake up the highest-priority and/or longest sleeping thread.</p></li>
+<li><p>An advanced use of allows semaphores to be shared across processes. Our implementation only works for threads inside the same process. We could fix this by setting the condition variable and mutex attributes.</p></li>
+</ul>
+<p>Implementing a condition variable with a mutex is complex, so we’ve left that in the appendix.</p>
+</section>
+</section>
+<section id="barriers" class="level2">
+<h2>Barriers</h2>
+<p>Suppose we wanted to perform a multi-threaded calculation that has two stages, but we don’t want to advance to the second stage until the first stage is completed. We could use a synchronization method called a <strong>barrier</strong>. When a thread reaches a barrier, it will wait at the barrier until all the threads reach the barrier, and then they’ll all proceed together.</p>
+<p>Think of it like being out for a hike with some friends. You make a mental note of how many friends you have and agree to wait for each other at the top of each hill. Say you’re the first one to reach the top of the first hill. You’ll wait there at the top for your friends. One by one, they’ll arrive at the top, but nobody will continue until the last person in your group arrives. Once they do, you’ll all proceed.</p>
+<p>Pthreads has a function that implements this. You’ll need to declare a variable and initialize it with . takes the number of threads that will be participating in the barrier as an argument. Here is a sample program using barriers.</p>
+<div class="sourceCode" id="cb43" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb43-1" title="1"><span class="pp">#define _GNU_SOURCE</span></a>
+<a class="sourceLine" id="cb43-2" title="2"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb43-3" title="3"><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></a>
+<a class="sourceLine" id="cb43-4" title="4"><span class="pp">#include </span><span class="im">&lt;unistd.h&gt;</span></a>
+<a class="sourceLine" id="cb43-5" title="5"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb43-6" title="6"><span class="pp">#include </span><span class="im">&lt;time.h&gt;</span></a>
+<a class="sourceLine" id="cb43-7" title="7"></a>
+<a class="sourceLine" id="cb43-8" title="8"><span class="pp">#define THREAD_COUNT 4</span></a>
+<a class="sourceLine" id="cb43-9" title="9"></a>
+<a class="sourceLine" id="cb43-10" title="10">pthread_barrier_t mybarrier;</a>
+<a class="sourceLine" id="cb43-11" title="11"></a>
+<a class="sourceLine" id="cb43-12" title="12"><span class="dt">void</span>* threadFn(<span class="dt">void</span> *id_ptr) {</a>
+<a class="sourceLine" id="cb43-13" title="13">  <span class="dt">int</span> thread_id = *(<span class="dt">int</span>*)id_ptr;</a>
+<a class="sourceLine" id="cb43-14" title="14">  <span class="dt">int</span> wait_sec = <span class="dv">1</span> + rand() % <span class="dv">5</span>;</a>
+<a class="sourceLine" id="cb43-15" title="15">  printf(<span class="st">&quot;thread %d: Wait for %d seconds.</span><span class="sc">\n</span><span class="st">&quot;</span>, thread_id, wait_sec);</a>
+<a class="sourceLine" id="cb43-16" title="16">  sleep(wait_sec);</a>
+<a class="sourceLine" id="cb43-17" title="17">  printf(<span class="st">&quot;thread %d: I&#39;m ready...</span><span class="sc">\n</span><span class="st">&quot;</span>, thread_id);</a>
+<a class="sourceLine" id="cb43-18" title="18"></a>
+<a class="sourceLine" id="cb43-19" title="19">  pthread_barrier_wait(&amp;mybarrier);</a>
+<a class="sourceLine" id="cb43-20" title="20"></a>
+<a class="sourceLine" id="cb43-21" title="21">  printf(<span class="st">&quot;thread %d: going!</span><span class="sc">\n</span><span class="st">&quot;</span>, thread_id);</a>
+<a class="sourceLine" id="cb43-22" title="22">  <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb43-23" title="23">}</a>
+<a class="sourceLine" id="cb43-24" title="24"></a>
+<a class="sourceLine" id="cb43-25" title="25"></a>
+<a class="sourceLine" id="cb43-26" title="26"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb43-27" title="27">  <span class="dt">int</span> i;</a>
+<a class="sourceLine" id="cb43-28" title="28">  pthread_t ids[THREAD_COUNT];</a>
+<a class="sourceLine" id="cb43-29" title="29">  <span class="dt">int</span> short_ids[THREAD_COUNT];</a>
+<a class="sourceLine" id="cb43-30" title="30"></a>
+<a class="sourceLine" id="cb43-31" title="31">  srand(time(NULL));</a>
+<a class="sourceLine" id="cb43-32" title="32">  pthread_barrier_init(&amp;mybarrier, NULL, THREAD_COUNT + <span class="dv">1</span>);</a>
+<a class="sourceLine" id="cb43-33" title="33"></a>
+<a class="sourceLine" id="cb43-34" title="34">  <span class="cf">for</span> (i=<span class="dv">0</span>; i &lt; THREAD_COUNT; i++) {</a>
+<a class="sourceLine" id="cb43-35" title="35">    short_ids[i] = i;</a>
+<a class="sourceLine" id="cb43-36" title="36">    pthread_create(&amp;ids[i], NULL, threadFn, &amp;short_ids[i]);</a>
+<a class="sourceLine" id="cb43-37" title="37">  }</a>
+<a class="sourceLine" id="cb43-38" title="38"></a>
+<a class="sourceLine" id="cb43-39" title="39">  printf(<span class="st">&quot;main() is ready.</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb43-40" title="40"></a>
+<a class="sourceLine" id="cb43-41" title="41">  pthread_barrier_wait(&amp;mybarrier);</a>
+<a class="sourceLine" id="cb43-42" title="42"></a>
+<a class="sourceLine" id="cb43-43" title="43">  printf(<span class="st">&quot;main() is going!</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb43-44" title="44"></a>
+<a class="sourceLine" id="cb43-45" title="45">  <span class="cf">for</span> (i=<span class="dv">0</span>; i &lt; THREAD_COUNT; i++) {</a>
+<a class="sourceLine" id="cb43-46" title="46">    pthread_join(ids[i], NULL);</a>
+<a class="sourceLine" id="cb43-47" title="47">  }</a>
+<a class="sourceLine" id="cb43-48" title="48"></a>
+<a class="sourceLine" id="cb43-49" title="49">  pthread_barrier_destroy(&amp;mybarrier);</a>
+<a class="sourceLine" id="cb43-50" title="50"></a>
+<a class="sourceLine" id="cb43-51" title="51">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb43-52" title="52">}</a></code></pre></div>
+<p>Now let’s implement our own barrier and use it to keep all the threads in sync in a large calculation. Here is our thought process,</p>
+<ol>
+<li><p>Threads do first calculation (use and change values in data)</p></li>
+<li><p>Barrier! Wait for all threads to finish first calculation before continuing</p></li>
+<li><p>Threads do second calculation (use and change values in data)</p></li>
+</ol>
+<p>The thread function has four main parts-</p>
+<div class="sourceCode" id="cb44" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb44-1" title="1"><span class="co">// double data[256][8192]</span></a>
+<a class="sourceLine" id="cb44-2" title="2"></a>
+<a class="sourceLine" id="cb44-3" title="3"><span class="dt">void</span> *calc(<span class="dt">void</span> *arg) {</a>
+<a class="sourceLine" id="cb44-4" title="4">  <span class="co">/* Do my part of the first calculation */</span></a>
+<a class="sourceLine" id="cb44-5" title="5">  <span class="co">/* Is this the last thread to finish? If so wake up all the other threads! */</span></a>
+<a class="sourceLine" id="cb44-6" title="6">  <span class="co">/* Otherwise wait until the other threads have finished part one */</span></a>
+<a class="sourceLine" id="cb44-7" title="7">  <span class="co">/* Do my part of the second calculation */</span></a>
+<a class="sourceLine" id="cb44-8" title="8">}</a></code></pre></div>
+<p>Our main thread will create the 16 threads, and we will divide each calculation into 16 separate pieces. Each thread will be given a unique value (0,1,2,..15), so it can work on its own block. Since a (void*) type can hold small integers, we will pass the value of by casting it to a void pointer.</p>
+<div class="sourceCode" id="cb45" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb45-1" title="1"><span class="pp">#define N (16)</span></a>
+<a class="sourceLine" id="cb45-2" title="2"><span class="dt">double</span> data[<span class="dv">256</span>][<span class="dv">8192</span>] ;</a>
+<a class="sourceLine" id="cb45-3" title="3"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb45-4" title="4">  pthread_t ids[N];</a>
+<a class="sourceLine" id="cb45-5" title="5">  <span class="cf">for</span>(<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; N; i++) {</a>
+<a class="sourceLine" id="cb45-6" title="6">    pthread_create(&amp;ids[i], NULL, calc, (<span class="dt">void</span> *) i);</a>
+<a class="sourceLine" id="cb45-7" title="7">  }</a>
+<a class="sourceLine" id="cb45-8" title="8">  <span class="co">//...</span></a>
+<a class="sourceLine" id="cb45-9" title="9">}</a></code></pre></div>
+<p>Note, we will never dereference this pointer value as an actual memory location.</p>
+<p>We will cast it straight back to an integer.</p>
+<div class="sourceCode" id="cb46" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb46-1" title="1"><span class="dt">void</span> *calc(<span class="dt">void</span> *ptr) {</a>
+<a class="sourceLine" id="cb46-2" title="2">  <span class="co">// Thread 0 will work on rows 0..15, thread 1 on rows 16..31</span></a>
+<a class="sourceLine" id="cb46-3" title="3">  <span class="dt">int</span> x, y, start = N * (<span class="dt">int</span>) ptr;</a>
+<a class="sourceLine" id="cb46-4" title="4">  <span class="dt">int</span> end = start + N;</a>
+<a class="sourceLine" id="cb46-5" title="5">  <span class="cf">for</span>(x = start; x &lt; end; x++) {</a>
+<a class="sourceLine" id="cb46-6" title="6">    <span class="cf">for</span> (y = <span class="dv">0</span>; y &lt; <span class="dv">8192</span>; y++) {</a>
+<a class="sourceLine" id="cb46-7" title="7">      <span class="co">/* do calc #1 */</span></a>
+<a class="sourceLine" id="cb46-8" title="8">    }</a>
+<a class="sourceLine" id="cb46-9" title="9">  }</a>
+<a class="sourceLine" id="cb46-10" title="10">}</a></code></pre></div>
+<p>After calculation 1 completes, we need to wait for the slower threads unless we are the last thread! So, keep track of the number of threads that have arrived at our barrier ‘checkpoint’.</p>
+<div class="sourceCode" id="cb47" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb47-1" title="1"><span class="co">// Global:</span></a>
+<a class="sourceLine" id="cb47-2" title="2"><span class="dt">int</span> remain = N;</a>
+<a class="sourceLine" id="cb47-3" title="3"></a>
+<a class="sourceLine" id="cb47-4" title="4"><span class="co">// After calc #1 code:</span></a>
+<a class="sourceLine" id="cb47-5" title="5">remain--; <span class="co">// We finished</span></a>
+<a class="sourceLine" id="cb47-6" title="6"><span class="cf">if</span> (remain == <span class="dv">0</span>) {<span class="co">/*I&#39;m last!  -  Time for everyone to wake up! */</span> }</a>
+<a class="sourceLine" id="cb47-7" title="7"><span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb47-8" title="8">  <span class="cf">while</span> (remain != <span class="dv">0</span>) { <span class="co">/* spin spin spin*/</span> }</a>
+<a class="sourceLine" id="cb47-9" title="9">}</a></code></pre></div>
+<p>However, the code has a few flaws. One is two threads might try to decrement . The other is the loop is a busy loop. We can do better! Let’s use a condition variable and then we will use a broadcast/signal functions to wake up the sleeping threads.</p>
+<p>A reminder, a condition variable is similar to a house! Threads go there to sleep (). A thread can choose to wake up one thread () or all of them (). If there are no threads currently waiting then these two calls have no effect.</p>
+<p>A condition variable version is usually similar to a busy loop incorrect solution - as we will show next. First, let’s add a mutex and condition global variables and don’t forget to initialize them in .</p>
+<div class="sourceCode" id="cb48" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb48-1" title="1"><span class="co">//global variables</span></a>
+<a class="sourceLine" id="cb48-2" title="2">pthread_mutex_t m;</a>
+<a class="sourceLine" id="cb48-3" title="3">pthread_cond_t cv;</a>
+<a class="sourceLine" id="cb48-4" title="4"></a>
+<a class="sourceLine" id="cb48-5" title="5"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb48-6" title="6">  pthread_mutex_init(&amp;m, NULL);</a>
+<a class="sourceLine" id="cb48-7" title="7">  pthread_cond_init(&amp;cv, NULL);</a></code></pre></div>
+<p>We will use the mutex to ensure that only one thread modifies at a time. The last arriving thread needs to wake up <em>all</em> sleeping threads - so we will use not</p>
+<div class="sourceCode" id="cb49" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb49-1" title="1">pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb49-2" title="2">remain--;</a>
+<a class="sourceLine" id="cb49-3" title="3"><span class="cf">if</span> (remain == <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb49-4" title="4">  pthread_cond_broadcast(&amp;cv);</a>
+<a class="sourceLine" id="cb49-5" title="5">}</a>
+<a class="sourceLine" id="cb49-6" title="6"><span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb49-7" title="7">  <span class="cf">while</span>(remain != <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb49-8" title="8">    pthread_cond_wait(&amp;cv, &amp;m);</a>
+<a class="sourceLine" id="cb49-9" title="9">  }</a>
+<a class="sourceLine" id="cb49-10" title="10">}</a>
+<a class="sourceLine" id="cb49-11" title="11">pthread_mutex_unlock(&amp;m);</a></code></pre></div>
+<p>When a thread enters , it releases the mutex and sleeps. After, the thread will be woken up. Once we bring a thread back from its sleep, before returning it must wait until it can lock the mutex. Notice that even if a sleeping thread wakes up early, it will check the while loop condition and re-enter wait if necessary.</p>
+<p><strong>The above barrier is not reusable</strong>. Meaning that if we stick it into any old calculation loop there is a good chance that the code will encounter a condition where the barrier either deadlocks or thread races ahead one iteration faster. Why is that? Because of the ambitious thread.</p>
+<p>We will assume that one thread is much faster than all the other threads. With the barrier API, this thread should be waiting, but it may not be. To make it concrete, let’s look at this code</p>
+<div class="sourceCode" id="cb50" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb50-1" title="1"><span class="dt">void</span> barrier_wait(barrier *b) {</a>
+<a class="sourceLine" id="cb50-2" title="2">  pthread_mutex_lock(&amp;b-&gt;m);</a>
+<a class="sourceLine" id="cb50-3" title="3">  <span class="co">// If it is 0 before decrement, we should be on</span></a>
+<a class="sourceLine" id="cb50-4" title="4">  <span class="co">// another iteration right?</span></a>
+<a class="sourceLine" id="cb50-5" title="5">  <span class="cf">if</span> (b-&gt;remain == <span class="dv">0</span>) b-&gt;remain = NUM_THREADS;</a>
+<a class="sourceLine" id="cb50-6" title="6">  b-&gt;remain--;</a>
+<a class="sourceLine" id="cb50-7" title="7">  <span class="cf">if</span> (b-&gt;remain == <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb50-8" title="8">    pthread_cond_broadcast(&amp;cv);</a>
+<a class="sourceLine" id="cb50-9" title="9">  }</a>
+<a class="sourceLine" id="cb50-10" title="10">  <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb50-11" title="11">    <span class="cf">while</span>(b-&gt;remain != <span class="dv">0</span>) {</a>
+<a class="sourceLine" id="cb50-12" title="12">      pthread_cond_wait(&amp;cv, &amp;m);</a>
+<a class="sourceLine" id="cb50-13" title="13">    }</a>
+<a class="sourceLine" id="cb50-14" title="14">  }</a>
+<a class="sourceLine" id="cb50-15" title="15">  pthread_mutex_unlock(&amp;b-&gt;m);</a>
+<a class="sourceLine" id="cb50-16" title="16">}</a>
+<a class="sourceLine" id="cb50-17" title="17"></a>
+<a class="sourceLine" id="cb50-18" title="18"><span class="cf">for</span> (<span class="co">/* ... */</span>) {</a>
+<a class="sourceLine" id="cb50-19" title="19">  <span class="co">// Some calc</span></a>
+<a class="sourceLine" id="cb50-20" title="20">  barrier_wait(b);</a>
+<a class="sourceLine" id="cb50-21" title="21">}</a></code></pre></div>
+<p>What happens if a thread becomes ambitious. Well</p>
+<ol>
+<li><p>Many other threads wait on the condition variable</p></li>
+<li><p>The last thread broadcasts.</p></li>
+<li><p>A single thread leaves the while loop.</p></li>
+<li><p>This single thread performs its calculation before any other threads <em>even wake up</em></p></li>
+<li><p>Reset the number of remaining threads and goes back to sleep.</p></li>
+</ol>
+<p>All the other threads who should’ve woken up never do and our implementation deadlocks. How would you go about solving this? Hint: If multiple threads call in a loop then one can guarantee that they are on the same iteration.</p>
+<section id="reader-writer-problem" class="level3">
+<h3>Reader Writer Problem</h3>
+<p>Imagine you had a key-value map data structure that is used by many threads. Multiple threads should be able to look up (read) values at the same time provided the data structure is not being written to. The writers are not so gregarious. To avoid data corruption, only one thread at a time may modify () the data structure and no readers may be reading at that time.</p>
+<p>This is an example of the <em>Reader Writer Problem</em>. Namely, how can we efficiently synchronize multiple readers and writers such that multiple readers can read together, but a writer gets exclusive access?</p>
+<p>An incorrect attempt is shown below (“lock” is a shorthand for ):</p>
+</section>
+<section id="attempt-1" class="level3">
+<h3>Attempt #1</h3>
+<div class="sourceCode" id="cb51" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb51-1" title="1"><span class="dt">void</span> read() {</a>
+<a class="sourceLine" id="cb51-2" title="2">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb51-3" title="3">  <span class="co">// do read stuff</span></a>
+<a class="sourceLine" id="cb51-4" title="4">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb51-5" title="5">}</a>
+<a class="sourceLine" id="cb51-6" title="6"></a>
+<a class="sourceLine" id="cb51-7" title="7"><span class="dt">void</span> write() {</a>
+<a class="sourceLine" id="cb51-8" title="8">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb51-9" title="9">  <span class="co">// do write stuff</span></a>
+<a class="sourceLine" id="cb51-10" title="10">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb51-11" title="11">}</a></code></pre></div>
+<p>At least our first attempt does not suffer from data corruption. Readers must wait while a writer is writing and vice versa! However, readers must also wait for other readers. Let’s try another implementation.</p>
+</section>
+<section id="attempt-2" class="level3">
+<h3>Attempt #2:</h3>
+<div class="sourceCode" id="cb52" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb52-1" title="1"><span class="dt">void</span> read() {</a>
+<a class="sourceLine" id="cb52-2" title="2">  <span class="cf">while</span>(writing) {<span class="co">/*spin*/</span>}</a>
+<a class="sourceLine" id="cb52-3" title="3">  reading = <span class="dv">1</span></a>
+<a class="sourceLine" id="cb52-4" title="4">  <span class="co">// do read stuff</span></a>
+<a class="sourceLine" id="cb52-5" title="5">  reading = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb52-6" title="6">}</a>
+<a class="sourceLine" id="cb52-7" title="7"></a>
+<a class="sourceLine" id="cb52-8" title="8"><span class="dt">void</span> write() {</a>
+<a class="sourceLine" id="cb52-9" title="9">  <span class="cf">while</span>(reading || writing) {<span class="co">/*spin*/</span>}</a>
+<a class="sourceLine" id="cb52-10" title="10">  writing = <span class="dv">1</span></a>
+<a class="sourceLine" id="cb52-11" title="11">  <span class="co">// do write stuff</span></a>
+<a class="sourceLine" id="cb52-12" title="12">  writing = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb52-13" title="13">}</a></code></pre></div>
+<p>Our second attempt suffers from a race condition. Imagine if two threads both called and or both called write at the same time. Both threads would be able to proceed! Secondly, we can have multiple readers and multiple writers, so let’s keep track of the total number of readers or writers Which brings us to attempt #3.</p>
+</section>
+<section id="attempt-3" class="level3">
+<h3>Attempt #3</h3>
+<p>Remember that performs <em>Three</em> actions. Firstly, it atomically unlocks the mutex and then sleeps (until it is woken by or ). Thirdly, the awoken thread must re-acquire the mutex lock before returning. Thus only one thread can actually be running inside the critical section defined by the lock and unlock() methods.</p>
+<p>Implementation #3 below ensures that a reader will enter the if any writers are writing.</p>
+<div class="sourceCode" id="cb53" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb53-1" title="1">read() {</a>
+<a class="sourceLine" id="cb53-2" title="2">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb53-3" title="3">  <span class="cf">while</span> (writing)</a>
+<a class="sourceLine" id="cb53-4" title="4">  cond_wait(&amp;cv, &amp;m)</a>
+<a class="sourceLine" id="cb53-5" title="5">  reading++;</a>
+<a class="sourceLine" id="cb53-6" title="6"></a>
+<a class="sourceLine" id="cb53-7" title="7">  <span class="co">/* Read here! */</span></a>
+<a class="sourceLine" id="cb53-8" title="8"></a>
+<a class="sourceLine" id="cb53-9" title="9">  reading--</a>
+<a class="sourceLine" id="cb53-10" title="10">  cond_signal(&amp;cv)</a>
+<a class="sourceLine" id="cb53-11" title="11">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb53-12" title="12">}</a></code></pre></div>
+<p>However, only one reader a time can read because candidate #3 did not unlock the mutex. A better version unlocks before reading.</p>
+<div class="sourceCode" id="cb54" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb54-1" title="1">read() {</a>
+<a class="sourceLine" id="cb54-2" title="2">  lock(&amp;m);</a>
+<a class="sourceLine" id="cb54-3" title="3">  <span class="cf">while</span> (writing)</a>
+<a class="sourceLine" id="cb54-4" title="4">  cond_wait(&amp;cv, &amp;m)</a>
+<a class="sourceLine" id="cb54-5" title="5">  reading++;</a>
+<a class="sourceLine" id="cb54-6" title="6">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb54-7" title="7"></a>
+<a class="sourceLine" id="cb54-8" title="8">  <span class="co">/* Read here! */</span></a>
+<a class="sourceLine" id="cb54-9" title="9"></a>
+<a class="sourceLine" id="cb54-10" title="10">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb54-11" title="11">  reading--</a>
+<a class="sourceLine" id="cb54-12" title="12">  cond_signal(&amp;cv)</a>
+<a class="sourceLine" id="cb54-13" title="13">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb54-14" title="14">}</a></code></pre></div>
+<p>Does this mean that a writer and read could read and write at the same time? No! First of all, remember cond_wait requires the thread re-acquire the mutex lock before returning. Thus only one thread can be executing code inside the critical section (marked with **) at a time!</p>
+<div class="sourceCode" id="cb55" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb55-1" title="1">read() {</a>
+<a class="sourceLine" id="cb55-2" title="2">  lock(&amp;m);</a>
+<a class="sourceLine" id="cb55-3" title="3">  **  <span class="cf">while</span> (writing)</a>
+<a class="sourceLine" id="cb55-4" title="4">  **      cond_wait(&amp;cv, &amp;m)</a>
+<a class="sourceLine" id="cb55-5" title="5">  **  reading++;</a>
+<a class="sourceLine" id="cb55-6" title="6">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb55-7" title="7">  <span class="co">/* Read here! */</span></a>
+<a class="sourceLine" id="cb55-8" title="8">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb55-9" title="9">  **  reading--</a>
+<a class="sourceLine" id="cb55-10" title="10">  **  cond_signal(&amp;cv)</a>
+<a class="sourceLine" id="cb55-11" title="11">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb55-12" title="12">}</a></code></pre></div>
+<p>Writers must wait for everyone. Mutual exclusion is assured by the lock.</p>
+<div class="sourceCode" id="cb56" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb56-1" title="1">write() {</a>
+<a class="sourceLine" id="cb56-2" title="2">  lock(&amp;m);</a>
+<a class="sourceLine" id="cb56-3" title="3">  **  <span class="cf">while</span> (reading || writing)</a>
+<a class="sourceLine" id="cb56-4" title="4">  **      cond_wait(&amp;cv, &amp;m);</a>
+<a class="sourceLine" id="cb56-5" title="5">  **  writing++;</a>
+<a class="sourceLine" id="cb56-6" title="6">  **</a>
+<a class="sourceLine" id="cb56-7" title="7">  ** <span class="co">/* Write here! */</span></a>
+<a class="sourceLine" id="cb56-8" title="8">  **  writing--;</a>
+<a class="sourceLine" id="cb56-9" title="9">  **  cond_signal(&amp;cv);</a>
+<a class="sourceLine" id="cb56-10" title="10">  unlock(&amp;m);</a>
+<a class="sourceLine" id="cb56-11" title="11">}</a></code></pre></div>
+<p>Candidate #3 above also uses . This will only wake up one thread. If many readers are waiting for the writer to complete, only one sleeping reader will be awoken from their slumber. The reader and writer should use so that all threads should wake up and check their while-loop condition.</p>
+</section>
+<section id="starving-writers" class="level3">
+<h3>Starving writers</h3>
+<p>Candidate #3 above suffers from starvation. If readers are constantly arriving then a writer will never be able to proceed (the ‘reading’ count never reduces to zero). This is known as <em>starvation</em> and would be discovered under heavy loads. Our fix is to implement a bounded-wait for the writer. If a writer arrives they will still need to wait for existing readers however future readers must be placed in a “holding pen” and wait for the writer to finish. The “holding pen” can be implemented using a variable and a condition variable so that we can wake up the threads once the writer has finished.</p>
+<p>The plan is that when a writer arrives, and before waiting for current readers to finish, register our intent to write by incrementing a counter ‘writer’</p>
+<div class="sourceCode" id="cb57" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb57-1" title="1">write() {</a>
+<a class="sourceLine" id="cb57-2" title="2">  lock()</a>
+<a class="sourceLine" id="cb57-3" title="3">  writer++</a>
+<a class="sourceLine" id="cb57-4" title="4"></a>
+<a class="sourceLine" id="cb57-5" title="5">  <span class="cf">while</span> (reading || writing)</a>
+<a class="sourceLine" id="cb57-6" title="6">  cond_wait</a>
+<a class="sourceLine" id="cb57-7" title="7">  unlock()</a>
+<a class="sourceLine" id="cb57-8" title="8">  ...</a>
+<a class="sourceLine" id="cb57-9" title="9">}</a></code></pre></div>
+<p>And incoming readers will not be allowed to continue while writer is nonzero. Notice ‘writer’ indicates a writer has arrived, while ‘reading’ and ‘writing’ counters indicate there is an <em>active</em> reader or writer.</p>
+<div class="sourceCode" id="cb58" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb58-1" title="1">read() {</a>
+<a class="sourceLine" id="cb58-2" title="2">  lock()</a>
+<a class="sourceLine" id="cb58-3" title="3">  <span class="co">// readers that arrive *after* the writer arrived will have to wait here!</span></a>
+<a class="sourceLine" id="cb58-4" title="4">  <span class="cf">while</span>(writer)</a>
+<a class="sourceLine" id="cb58-5" title="5">  cond_wait(&amp;cv,&amp;m)</a>
+<a class="sourceLine" id="cb58-6" title="6"></a>
+<a class="sourceLine" id="cb58-7" title="7">  <span class="co">// readers that arrive while there is an active writer</span></a>
+<a class="sourceLine" id="cb58-8" title="8">  <span class="co">// will also wait.</span></a>
+<a class="sourceLine" id="cb58-9" title="9">  <span class="cf">while</span> (writing)</a>
+<a class="sourceLine" id="cb58-10" title="10">  cond_wait(&amp;cv,&amp;m)</a>
+<a class="sourceLine" id="cb58-11" title="11">  reading++</a>
+<a class="sourceLine" id="cb58-12" title="12">  unlock</a>
+<a class="sourceLine" id="cb58-13" title="13">  ...</a>
+<a class="sourceLine" id="cb58-14" title="14">}</a></code></pre></div>
+</section>
+<section id="attempt-4" class="level3">
+<h3>Attempt #4</h3>
+<p>Below is our first working solution to the Reader-Writer problem. Note if you continue to read about the “Reader Writer problem” then you will discover that we solved the “Second Reader Writer problem” by giving writers preferential access to the lock. This solution is not optimal. However, it satisfies our original problem of N active readers, single active writer, and avoiding starvation of the writer if there is a constant stream of readers.</p>
+<p>Can you identify any improvements? For example, how would you improve the code so that we only woke up readers or one writer?</p>
+<div class="sourceCode" id="cb59" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb59-1" title="1"><span class="dt">int</span> writers; <span class="co">// Number writer threads that want to enter the critical section (some or all of these may be blocked)</span></a>
+<a class="sourceLine" id="cb59-2" title="2"><span class="dt">int</span> writing; <span class="co">// Number of threads that are actually writing inside the C.S. (can only be zero or one)</span></a>
+<a class="sourceLine" id="cb59-3" title="3"><span class="dt">int</span> reading; <span class="co">// Number of threads that are actually reading inside the C.S.</span></a>
+<a class="sourceLine" id="cb59-4" title="4"><span class="co">// if writing !=0 then reading must be zero (and vice versa)</span></a>
+<a class="sourceLine" id="cb59-5" title="5"></a>
+<a class="sourceLine" id="cb59-6" title="6">reader() {</a>
+<a class="sourceLine" id="cb59-7" title="7">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb59-8" title="8">  <span class="cf">while</span> (writers)</a>
+<a class="sourceLine" id="cb59-9" title="9">  cond_wait(&amp;turn, &amp;m)</a>
+<a class="sourceLine" id="cb59-10" title="10">  <span class="co">// No need to wait while(writing here) because we can only exit the above loop</span></a>
+<a class="sourceLine" id="cb59-11" title="11">  <span class="co">// when writing is zero</span></a>
+<a class="sourceLine" id="cb59-12" title="12">  reading++</a>
+<a class="sourceLine" id="cb59-13" title="13">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb59-14" title="14"></a>
+<a class="sourceLine" id="cb59-15" title="15">  <span class="co">// perform reading here</span></a>
+<a class="sourceLine" id="cb59-16" title="16"></a>
+<a class="sourceLine" id="cb59-17" title="17">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb59-18" title="18">  reading--</a>
+<a class="sourceLine" id="cb59-19" title="19">  cond_broadcast(&amp;turn)</a>
+<a class="sourceLine" id="cb59-20" title="20">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb59-21" title="21">}</a>
+<a class="sourceLine" id="cb59-22" title="22"></a>
+<a class="sourceLine" id="cb59-23" title="23">writer() {</a>
+<a class="sourceLine" id="cb59-24" title="24">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb59-25" title="25">  writers++</a>
+<a class="sourceLine" id="cb59-26" title="26">  <span class="cf">while</span> (reading || writing)</a>
+<a class="sourceLine" id="cb59-27" title="27">  cond_wait(&amp;turn, &amp;m)</a>
+<a class="sourceLine" id="cb59-28" title="28">  writing++</a>
+<a class="sourceLine" id="cb59-29" title="29">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb59-30" title="30">  <span class="co">// perform writing here</span></a>
+<a class="sourceLine" id="cb59-31" title="31">  lock(&amp;m)</a>
+<a class="sourceLine" id="cb59-32" title="32">  writing--</a>
+<a class="sourceLine" id="cb59-33" title="33">  writers--</a>
+<a class="sourceLine" id="cb59-34" title="34">  cond_broadcast(&amp;turn)</a>
+<a class="sourceLine" id="cb59-35" title="35">  unlock(&amp;m)</a>
+<a class="sourceLine" id="cb59-36" title="36">}</a></code></pre></div>
+</section>
+</section>
+<section id="ring-buffer" class="level2">
+<h2>Ring Buffer</h2>
+<p>A ring buffer is a simple, usually fixed-sized, storage mechanism where contiguous memory is treated as if it is circular, and two index counters keep track of the current beginning and end of the queue. As array indexing is not circular, the index counters must wrap around to zero when moved past the end of the array. As data is added (enqueued) to the front of the queue or removed (dequeued) from the tail of the queue, the current items in the buffer form a train that appears to circle the track</p>
+<figure>
+<img src="../media/file20.png" alt="Ring Buffer Visualization" /><figcaption>Ring Buffer Visualization</figcaption>
+</figure>
+<p>A simple (single-threaded) implementation is shown below. Note, enqueue and dequeue do not guard against underflow or overflow. It’s possible to add an item when the queue is full and possible to remove an item when the queue is empty. If we added 20 integers (1, 2, 3, …, 20) to the queue and did not dequeue any items then values, would overwrite the . We won’t fix this problem right now, instead of when we create the multi-threaded version we will ensure enqueue-ing and dequeue-ing threads are blocked while the ring buffer is full or empty respectively.</p>
+<div class="sourceCode" id="cb60" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb60-1" title="1"><span class="dt">void</span> *buffer[<span class="dv">16</span>];</a>
+<a class="sourceLine" id="cb60-2" title="2"><span class="dt">unsigned</span> <span class="dt">int</span> in = <span class="dv">0</span>, out = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb60-3" title="3"></a>
+<a class="sourceLine" id="cb60-4" title="4"><span class="dt">void</span> enqueue(<span class="dt">void</span> *value) { <span class="co">/* Add one item to the front of the queue*/</span></a>
+<a class="sourceLine" id="cb60-5" title="5">  buffer[in] = value;</a>
+<a class="sourceLine" id="cb60-6" title="6">  in++; <span class="co">/* Advance the index for next time */</span></a>
+<a class="sourceLine" id="cb60-7" title="7">  <span class="cf">if</span> (in == <span class="dv">16</span>) in = <span class="dv">0</span>; <span class="co">/* Wrap around! */</span></a>
+<a class="sourceLine" id="cb60-8" title="8">}</a>
+<a class="sourceLine" id="cb60-9" title="9"></a>
+<a class="sourceLine" id="cb60-10" title="10"><span class="dt">void</span> *dequeue() { <span class="co">/* Remove one item to the end of the queue.*/</span></a>
+<a class="sourceLine" id="cb60-11" title="11">  <span class="dt">void</span> *result = buffer[out];</a>
+<a class="sourceLine" id="cb60-12" title="12">  out++;</a>
+<a class="sourceLine" id="cb60-13" title="13">  <span class="cf">if</span> (out == <span class="dv">16</span>) out = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb60-14" title="14">  <span class="cf">return</span> result;</a>
+<a class="sourceLine" id="cb60-15" title="15">}</a></code></pre></div>
+<section id="ring-buffer-gotchas" class="level3">
+<h3>Ring Buffer Gotchas</h3>
+<p>It’s tempting to write the enqueue or dequeue method in the following compact form.</p>
+<div class="sourceCode" id="cb61" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb61-1" title="1"><span class="co">// N is the capacity of the buffer</span></a>
+<a class="sourceLine" id="cb61-2" title="2"><span class="dt">void</span> enqueue(<span class="dt">void</span> *value)</a>
+<a class="sourceLine" id="cb61-3" title="3">b[ (in++) % N ] = value;</a>
+<a class="sourceLine" id="cb61-4" title="4">}</a></code></pre></div>
+<p>This method would appear to work but contains a subtle bug. With more than four billion enqueue operations, the int value of will overflow and wrap around to 0! Thus, you might end up writing into for example!</p>
+<p>A compact form is correct uses bit masking provided N is a power of two. (16,32,64,…)</p>
+<div class="sourceCode" id="cb62" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb62-1" title="1">b[ (in++) &amp; (N-<span class="dv">1</span>) ] = value;</a></code></pre></div>
+<p>This buffer does not yet prevent overwrites. For that, we’ll turn to our multi-threaded attempt that will block a thread until there is space or there is at least one item to remove.</p>
+</section>
+<section id="multithreaded-correctness" class="level3">
+<h3>Multithreaded Correctness</h3>
+<p>The following code is an incorrect implementation. What will happen? Will and/or block? Is mutual exclusion satisfied? Can the buffer underflow? Can the buffer overflow? For clarity, is shortened to and we assume sem_wait cannot be interrupted.</p>
+<div class="sourceCode" id="cb63" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb63-1" title="1"><span class="pp">#define N 16</span></a>
+<a class="sourceLine" id="cb63-2" title="2"><span class="dt">void</span> *b[N]</a>
+<a class="sourceLine" id="cb63-3" title="3"><span class="dt">int</span> in = <span class="dv">0</span>, out = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb63-4" title="4">p_m_t lock</a>
+<a class="sourceLine" id="cb63-5" title="5">sem_t s1,s<span class="dv">2</span></a>
+<a class="sourceLine" id="cb63-6" title="6"><span class="dt">void</span> init() {</a>
+<a class="sourceLine" id="cb63-7" title="7">  p_m_init(&amp;lock, NULL)</a>
+<a class="sourceLine" id="cb63-8" title="8">  sem_init(&amp;s1, <span class="dv">0</span>, <span class="dv">16</span>)</a>
+<a class="sourceLine" id="cb63-9" title="9">  sem_init(&amp;s2, <span class="dv">0</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb63-10" title="10">}</a>
+<a class="sourceLine" id="cb63-11" title="11"></a>
+<a class="sourceLine" id="cb63-12" title="12">enqueue(<span class="dt">void</span> *value) {</a>
+<a class="sourceLine" id="cb63-13" title="13">  p_m_lock(&amp;lock)</a>
+<a class="sourceLine" id="cb63-14" title="14"></a>
+<a class="sourceLine" id="cb63-15" title="15">  <span class="co">// Hint: Wait while zero. Decrement and return</span></a>
+<a class="sourceLine" id="cb63-16" title="16">  sem_wait( &amp;s1 )</a>
+<a class="sourceLine" id="cb63-17" title="17"></a>
+<a class="sourceLine" id="cb63-18" title="18">  b[ (in++) &amp; (N-<span class="dv">1</span>) ] = value</a>
+<a class="sourceLine" id="cb63-19" title="19"></a>
+<a class="sourceLine" id="cb63-20" title="20">  <span class="co">// Hint: Increment. Will wake up a waiting thread</span></a>
+<a class="sourceLine" id="cb63-21" title="21">  sem_post(&amp;s1)</a>
+<a class="sourceLine" id="cb63-22" title="22">  p_m_unlock(&amp;lock)</a>
+<a class="sourceLine" id="cb63-23" title="23">}</a>
+<a class="sourceLine" id="cb63-24" title="24"><span class="dt">void</span> *dequeue(){</a>
+<a class="sourceLine" id="cb63-25" title="25">  p_m_lock(&amp;lock)</a>
+<a class="sourceLine" id="cb63-26" title="26">  sem_wait(&amp;s2)</a>
+<a class="sourceLine" id="cb63-27" title="27">  <span class="dt">void</span> *result = b[(out++) &amp; (N-<span class="dv">1</span>) ]</a>
+<a class="sourceLine" id="cb63-28" title="28">  sem_post(&amp;s2)</a>
+<a class="sourceLine" id="cb63-29" title="29">  p_m_unlock(&amp;lock)</a>
+<a class="sourceLine" id="cb63-30" title="30">  <span class="cf">return</span> result</a>
+<a class="sourceLine" id="cb63-31" title="31">}</a></code></pre></div>
+</section>
+<section id="analysis" class="level3">
+<h3>Analysis</h3>
+<p>Before reading on, see how many mistakes you can find. Then determine what would happen if threads called the enqueue and dequeue methods.</p>
+<ul>
+<li><p>The enqueue method waits and posts on the same semaphore (s1) and similarly with enqueue and (s2) i.e. we decrement the value and then immediately increment the value, so by the end of the function the semaphore value is unchanged!</p></li>
+<li><p>The initial value of s1 is 16, so the semaphore will never be reduced to zero - enqueue will not block if the ring buffer is full - so overflow is possible.</p></li>
+<li><p>The initial value of s2 is zero, so calls to dequeue will always block and never return!</p></li>
+<li><p>The order of mutex lock and sem_wait will need to be swapped; however, this example is so broken that this bug has no effect!</p></li>
+</ul>
+</section>
+<section id="another-analysis" class="level3">
+<h3>Another Analysis</h3>
+<p>The following code is an incorrect implementation. What will happen? Will and/or block? Is mutual exclusion satisfied? Can the buffer underflow? Can the buffer overflow? For clarity is shortened to and we assume sem_wait cannot be interrupted.</p>
+<div class="sourceCode" id="cb64" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb64-1" title="1"><span class="dt">void</span> *b[<span class="dv">16</span>]</a>
+<a class="sourceLine" id="cb64-2" title="2"><span class="dt">int</span> in = <span class="dv">0</span>, out = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb64-3" title="3">p_m_t lock</a>
+<a class="sourceLine" id="cb64-4" title="4">sem_t s1, s<span class="dv">2</span></a>
+<a class="sourceLine" id="cb64-5" title="5"><span class="dt">void</span> init() {</a>
+<a class="sourceLine" id="cb64-6" title="6">  sem_init(&amp;s1,<span class="dv">0</span>,<span class="dv">16</span>)</a>
+<a class="sourceLine" id="cb64-7" title="7">  sem_init(&amp;s2,<span class="dv">0</span>,<span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb64-8" title="8">}</a>
+<a class="sourceLine" id="cb64-9" title="9"></a>
+<a class="sourceLine" id="cb64-10" title="10">enqueue(<span class="dt">void</span> *value){</a>
+<a class="sourceLine" id="cb64-11" title="11">  sem_wait(&amp;s2)</a>
+<a class="sourceLine" id="cb64-12" title="12">  p_m_lock(&amp;lock)</a>
+<a class="sourceLine" id="cb64-13" title="13"></a>
+<a class="sourceLine" id="cb64-14" title="14">  b[ (in++) &amp; (N-<span class="dv">1</span>) ] = value</a>
+<a class="sourceLine" id="cb64-15" title="15"></a>
+<a class="sourceLine" id="cb64-16" title="16">  p_m_unlock(&amp;lock)</a>
+<a class="sourceLine" id="cb64-17" title="17">  sem_post(&amp;s1)</a>
+<a class="sourceLine" id="cb64-18" title="18">}</a>
+<a class="sourceLine" id="cb64-19" title="19"></a>
+<a class="sourceLine" id="cb64-20" title="20"><span class="dt">void</span> *dequeue(){</a>
+<a class="sourceLine" id="cb64-21" title="21">  sem_wait(&amp;s1)</a>
+<a class="sourceLine" id="cb64-22" title="22">  p_m_lock(&amp;lock)</a>
+<a class="sourceLine" id="cb64-23" title="23">  <span class="dt">void</span> *result = b[(out++) &amp; (N-<span class="dv">1</span>)]</a>
+<a class="sourceLine" id="cb64-24" title="24">  p_m_unlock(&amp;lock)</a>
+<a class="sourceLine" id="cb64-25" title="25">  sem_post(&amp;s2)</a>
+<a class="sourceLine" id="cb64-26" title="26"></a>
+<a class="sourceLine" id="cb64-27" title="27">  <span class="cf">return</span> result;</a>
+<a class="sourceLine" id="cb64-28" title="28">}</a></code></pre></div>
+<p>Here are a few problems that we hope you’ve found.</p>
+<ul>
+<li><p>The initial value of s2 is 0. Thus enqueue will block on the first call to sem_wait even though the buffer is empty!</p></li>
+<li><p>The initial value of s1 is 16. Thus dequeue will not block on the first call to sem_wait even though the buffer is empty - Underflow! The dequeue method will return invalid data.</p></li>
+<li><p>The code does not satisfy Mutual Exclusion. Two threads can modify or at the same time! The code appears to use mutex lock. Unfortunately, the lock was never initialized with or - so the lock may not work ( may simply do nothing)</p></li>
+</ul>
+</section>
+<section id="correct-implementation-of-a-ring-buffer" class="level3">
+<h3>Correct implementation of a ring buffer</h3>
+<p>As the mutex lock is stored in global (static) memory it can be initialized with . If we had allocated space for the mutex on the heap, then we would have used</p>
+<div class="sourceCode" id="cb65" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb65-1" title="1"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb65-2" title="2"><span class="pp">#include </span><span class="im">&lt;semaphore.h&gt;</span></a>
+<a class="sourceLine" id="cb65-3" title="3"><span class="co">// N must be 2^i</span></a>
+<a class="sourceLine" id="cb65-4" title="4"><span class="pp">#define N (16)</span></a>
+<a class="sourceLine" id="cb65-5" title="5"></a>
+<a class="sourceLine" id="cb65-6" title="6"><span class="dt">void</span> *b[N]</a>
+<a class="sourceLine" id="cb65-7" title="7"><span class="dt">int</span> in = <span class="dv">0</span>, out = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb65-8" title="8">p_m_t lock = PTHREAD_MUTEX_INITIALIZER</a>
+<a class="sourceLine" id="cb65-9" title="9">sem_t countsem, spacesem</a>
+<a class="sourceLine" id="cb65-10" title="10"></a>
+<a class="sourceLine" id="cb65-11" title="11"><span class="dt">void</span> init() {</a>
+<a class="sourceLine" id="cb65-12" title="12">  sem_init(&amp;countsem, <span class="dv">0</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb65-13" title="13">  sem_init(&amp;spacesem, <span class="dv">0</span>, <span class="dv">16</span>)</a>
+<a class="sourceLine" id="cb65-14" title="14">}</a></code></pre></div>
+<p>The enqueue method is shown below. Make sure to note.</p>
+<ol>
+<li><p>The lock is only held during the critical section (access to the data structure).</p></li>
+<li><p>A complete implementation would need to guard against early returns from due to POSIX signals.</p></li>
+</ol>
+<div class="sourceCode" id="cb66" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb66-1" title="1">enqueue(<span class="dt">void</span> *value){</a>
+<a class="sourceLine" id="cb66-2" title="2">  <span class="co">// wait if there is no space left:</span></a>
+<a class="sourceLine" id="cb66-3" title="3">  sem_wait( &amp;spacesem )</a>
+<a class="sourceLine" id="cb66-4" title="4"></a>
+<a class="sourceLine" id="cb66-5" title="5">  p_m_lock(&amp;lock)</a>
+<a class="sourceLine" id="cb66-6" title="6">  b[ (in++) &amp; (N-<span class="dv">1</span>) ] = value</a>
+<a class="sourceLine" id="cb66-7" title="7">  p_m_unlock(&amp;lock)</a>
+<a class="sourceLine" id="cb66-8" title="8"></a>
+<a class="sourceLine" id="cb66-9" title="9">  <span class="co">// increment the count of the number of items</span></a>
+<a class="sourceLine" id="cb66-10" title="10">  sem_post(&amp;countsem)</a>
+<a class="sourceLine" id="cb66-11" title="11">}</a></code></pre></div>
+<p>The implementation is shown below. Notice the symmetry of the synchronization calls to . In both cases, the functions first wait if the count of spaces or count of items is zero.</p>
+<div class="sourceCode" id="cb67" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb67-1" title="1"><span class="dt">void</span> *dequeue(){</a>
+<a class="sourceLine" id="cb67-2" title="2">  <span class="co">// Wait if there are no items in the buffer</span></a>
+<a class="sourceLine" id="cb67-3" title="3">  sem_wait(&amp;countsem)</a>
+<a class="sourceLine" id="cb67-4" title="4"></a>
+<a class="sourceLine" id="cb67-5" title="5">  p_m_lock(&amp;lock)</a>
+<a class="sourceLine" id="cb67-6" title="6">  <span class="dt">void</span> *result = b[(out++) &amp; (N-<span class="dv">1</span>)]</a>
+<a class="sourceLine" id="cb67-7" title="7">  p_m_unlock(&amp;lock)</a>
+<a class="sourceLine" id="cb67-8" title="8"></a>
+<a class="sourceLine" id="cb67-9" title="9">  <span class="co">// Increment the count of the number of spaces</span></a>
+<a class="sourceLine" id="cb67-10" title="10">  sem_post(&amp;spacesem)</a>
+<a class="sourceLine" id="cb67-11" title="11"></a>
+<a class="sourceLine" id="cb67-12" title="12">  <span class="cf">return</span> result</a>
+<a class="sourceLine" id="cb67-13" title="13">}</a></code></pre></div>
+<p>Food for thought:</p>
+<ul>
+<li><p>What would happen if the order of and calls were swapped?</p></li>
+<li><p>What would happen if the order of and calls were swapped?</p></li>
+</ul>
+</section>
+</section>
+<section id="extra-process-synchronization" class="level2">
+<h2>Extra: Process Synchronization</h2>
+<p>You thought that you were using different processes, so you don’t have to synchronize? Think again! You may not have race conditions within a process but what if your process needs to interact with the system around it? Let’s consider a motivating example</p>
+<div class="sourceCode" id="cb68" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb68-1" title="1"><span class="dt">void</span> write_string(<span class="dt">const</span> <span class="dt">char</span> *data) {</a>
+<a class="sourceLine" id="cb68-2" title="2">  <span class="dt">int</span> fd = open(<span class="st">&quot;my_file.txt&quot;</span>, O_WRONLY);</a>
+<a class="sourceLine" id="cb68-3" title="3">  write(fd, data, strlen(data));</a>
+<a class="sourceLine" id="cb68-4" title="4">  close(fd);</a>
+<a class="sourceLine" id="cb68-5" title="5">}</a>
+<a class="sourceLine" id="cb68-6" title="6"></a>
+<a class="sourceLine" id="cb68-7" title="7"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb68-8" title="8">  <span class="cf">if</span>(!fork()) {</a>
+<a class="sourceLine" id="cb68-9" title="9">    write_string(<span class="st">&quot;key1: value1&quot;</span>);</a>
+<a class="sourceLine" id="cb68-10" title="10">    wait(NULL);</a>
+<a class="sourceLine" id="cb68-11" title="11">  } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb68-12" title="12">    write_string(<span class="st">&quot;key2: value2&quot;</span>);</a>
+<a class="sourceLine" id="cb68-13" title="13">  }</a>
+<a class="sourceLine" id="cb68-14" title="14">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb68-15" title="15">}</a></code></pre></div>
+<p>If none of the system calls fail then we should get something that looks like this given the file was empty to begin with.</p>
+<pre><code>key1: value1
+key2: value2</code></pre>
+<pre><code>key2: value2
+key1: value1</code></pre>
+<section id="interruption" class="level3">
+<h3>Interruption</h3>
+<p>But, there is a hidden nuance. Most system calls can be meaning that the operating system can stop an ongoing system call because it needs to stop the process. So barring and from failing – they typically go to completion – what happens if fails? If write fails and no bytes are written, we can get something like or . This is data loss which is incorrect but won’t corrupt the file. What happens if write gets interrupted after a partial write? We get all sorts of madness. For example,</p>
+<pre><code>key2: key1: value1</code></pre>
+</section>
+<section id="solution" class="level3">
+<h3>Solution</h3>
+<p>A program can create a mutex before fork-ing - however the child and parent process will not share virtual memory and each one will have a mutex independent of the other. Advanced note: There are advanced options using shared memory that allow a child and parent to share a mutex if it’s created with the correct options and uses a shared memory segment. See <a href="http://stackoverflow.com/questions/19172541/procs-fork-and-mutexes">stackoverflow example</a></p>
+<p>So what should we do? We should use a shared mutex! Consider the following code.</p>
+<div class="sourceCode" id="cb72" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb72-1" title="1">pthread_mutex_t * mutex = NULL;</a>
+<a class="sourceLine" id="cb72-2" title="2">pthread_mutexattr_t attr;</a>
+<a class="sourceLine" id="cb72-3" title="3"></a>
+<a class="sourceLine" id="cb72-4" title="4"><span class="dt">void</span> write_string(<span class="dt">const</span> <span class="dt">char</span> *data) {</a>
+<a class="sourceLine" id="cb72-5" title="5">  pthread_mutex_lock(mutex);</a>
+<a class="sourceLine" id="cb72-6" title="6">  <span class="dt">int</span> fd = open(<span class="st">&quot;my_file.txt&quot;</span>, O_WRONLY);</a>
+<a class="sourceLine" id="cb72-7" title="7">  <span class="dt">int</span> bytes_to_write = strlen(data), written = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb72-8" title="8">  <span class="cf">while</span>(written &lt; bytes_to_write) {</a>
+<a class="sourceLine" id="cb72-9" title="9">    written += write(fd, data + written, bytes_to_write - written);</a>
+<a class="sourceLine" id="cb72-10" title="10">  }</a>
+<a class="sourceLine" id="cb72-11" title="11">  close(fd);</a>
+<a class="sourceLine" id="cb72-12" title="12">  pthread_mutex_unlock(mutex);</a>
+<a class="sourceLine" id="cb72-13" title="13">}</a>
+<a class="sourceLine" id="cb72-14" title="14"></a>
+<a class="sourceLine" id="cb72-15" title="15"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb72-16" title="16">  pthread_mutexattr_init(&amp;attr);</a>
+<a class="sourceLine" id="cb72-17" title="17">  pthread_mutexattr_setpshared(&amp;attr, PTHREAD_PROCESS_SHARED);</a>
+<a class="sourceLine" id="cb72-18" title="18">  pmutex = mmap (NULL, <span class="kw">sizeof</span>(pthread_mutex_t),</a>
+<a class="sourceLine" id="cb72-19" title="19">  PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANON, -<span class="dv">1</span>, <span class="dv">0</span>);</a>
+<a class="sourceLine" id="cb72-20" title="20">  pthread_mutex_init(pmutex, &amp;attrmutex);</a>
+<a class="sourceLine" id="cb72-21" title="21">  <span class="cf">if</span>(!fork()) {</a>
+<a class="sourceLine" id="cb72-22" title="22">    write_string(<span class="st">&quot;key1: value1&quot;</span>);</a>
+<a class="sourceLine" id="cb72-23" title="23">    wait(NULL);</a>
+<a class="sourceLine" id="cb72-24" title="24">    pthread_mutex_destroy(pmutex);</a>
+<a class="sourceLine" id="cb72-25" title="25">    pthread_mutexattr_destroy(&amp;attrmutex);</a>
+<a class="sourceLine" id="cb72-26" title="26">    munmap((<span class="dt">void</span> *)pmutex, <span class="kw">sizeof</span>(*pmutex));</a>
+<a class="sourceLine" id="cb72-27" title="27">  } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb72-28" title="28">    write_string(<span class="st">&quot;key2: value2&quot;</span>);</a>
+<a class="sourceLine" id="cb72-29" title="29">  }</a>
+<a class="sourceLine" id="cb72-30" title="30">  <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb72-31" title="31">}</a></code></pre></div>
+<p>What the code does in main is initialize a process shared mutex using a piece of memory. You will find out what this call to does later – assume for the time being that it creates memory that is shared between processes. We can initialize a in that special piece of memory and use it as normal. To counter failing, we have put the call inside a while loop that keeps writing so long as there are bytes left to write. Now if all the other system calls function, there should be more race conditions.</p>
+<p>Most programs try to avoid this problem entirely by writing to separate files, but it is good to know that there are mutexes across processes, and they are useful. A program can use all of the primitives that were mentioned previouslty! Barriers, semaphores, and condition variables can all be initialized on a shared piece of memory and used in similar ways to their multithreading counterparts.</p>
+<ul>
+<li><p>You don’t have to worry about arbitrary memory addresses becoming race condition candidates. Only areas that specifically mapped are in danger.</p></li>
+<li><p>You get the nice isolation of processes so if one process fails the system can maintain intact.</p></li>
+<li><p>When you have a lot of threads, creating a process might ease the system load</p></li>
+</ul>
+<p>There are other ways to synchronize as well, check out goroutines or higher orders of synchronization in the appendix.</p>
+</section>
+</section>
+<section id="external-resources" class="level2">
+<h2>External Resources</h2>
+<p>Guiding questions for the man pages</p>
+<ul>
+<li><p>How is a recursive mutex different than a default mutex?</p></li>
+<li><p>How is mutex trylock different than mutex lock?</p></li>
+<li><p>Why would a mutex lock fail? What’s an example?</p></li>
+<li><p>What happens if a thread tries to destroy a locked mutex?</p></li>
+<li><p>Can a thread copy the underlying bytes of a mutex instead of using a pointer?</p></li>
+<li><p>What is the lifecycle of a semaphore?</p></li>
+</ul>
+<ul>
+<li><p><a href="http://linux.die.net/man/3/pthread_mutex_lock">pthread_mutex_lock man page</a></p></li>
+<li><p><a href="http://linux.die.net/man/3/pthread_mutex_init">pthread_mutex_init man page</a></p></li>
+<li><p><a href="http://man7.org/linux/man-pages/man3/sem_init.3.html">sem_init</a></p></li>
+<li><p><a href="http://man7.org/linux/man-pages/man3/sem_wait.3.html">sem_wait</a></p></li>
+<li><p><a href="http://man7.org/linux/man-pages/man3/sem_post.3.html">sem_post</a></p></li>
+<li><p><a href="http://man7.org/linux/man-pages/man3/sem_destroy.3.html">sem_destroy</a></p></li>
+</ul>
+</section>
+<section id="topics-4" class="level2">
+<h2>Topics</h2>
+<ul>
+<li><p>Atomic operations</p></li>
+<li><p>Critical Section</p></li>
+<li><p>Producer Consumer Problem</p></li>
+<li><p>Using Condition Variables</p></li>
+<li><p>Using Counting Semaphore</p></li>
+<li><p>Implementing a barrier</p></li>
+<li><p>Implementing a ring buffer</p></li>
+<li><p>Using pthread_mutex</p></li>
+<li><p>Implementing producer consumer</p></li>
+<li><p>Analyzing multi-threaded coded</p></li>
+</ul>
+</section>
+<section id="questions-1" class="level2">
+<h2>Questions</h2>
+<ul>
+<li><p>What is atomic operation?</p></li>
+<li><p>Why will the following not work in parallel code</p>
+<div class="sourceCode" id="cb73" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb73-1" title="1"><span class="co">//In the global section</span></a>
+<a class="sourceLine" id="cb73-2" title="2"><span class="dt">size_t</span> a;</a>
+<a class="sourceLine" id="cb73-3" title="3"><span class="co">//In pthread function</span></a>
+<a class="sourceLine" id="cb73-4" title="4"><span class="cf">for</span>(<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; <span class="dv">100000000</span>; i++) a++;</a></code></pre></div>
+<p>And this will?</p>
+<div class="sourceCode" id="cb74" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb74-1" title="1"><span class="co">//In the global section</span></a>
+<a class="sourceLine" id="cb74-2" title="2">atomic_size_t a;</a>
+<a class="sourceLine" id="cb74-3" title="3"><span class="co">//In pthread function</span></a>
+<a class="sourceLine" id="cb74-4" title="4"><span class="cf">for</span>(<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; <span class="dv">100000000</span>; i++) atomic_fetch_add(a, <span class="dv">1</span>);</a></code></pre></div></li>
+<li><p>What are some downsides to atomic operations? What would be faster: keeping a local variable or many atomic operations?</p></li>
+<li><p>What is the critical section?</p></li>
+<li><p>Once you have identified a critical section, what is one way of assuring that only one thread will be in the section at a time?</p></li>
+<li><p>Identify the critical section here</p>
+<div class="sourceCode" id="cb75" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb75-1" title="1"><span class="kw">struct</span> linked_list;</a>
+<a class="sourceLine" id="cb75-2" title="2"><span class="kw">struct</span> node;</a>
+<a class="sourceLine" id="cb75-3" title="3"><span class="dt">void</span> add_linked_list(linked_list *ll, <span class="dt">void</span>* elem){</a>
+<a class="sourceLine" id="cb75-4" title="4">  node* packaged = new_node(elem);</a>
+<a class="sourceLine" id="cb75-5" title="5">  <span class="cf">if</span>(ll-&gt;head){</a>
+<a class="sourceLine" id="cb75-6" title="6">    ll-&gt;head =</a>
+<a class="sourceLine" id="cb75-7" title="7">  }<span class="cf">else</span>{</a>
+<a class="sourceLine" id="cb75-8" title="8">    packaged-&gt;next = ll-&gt;head;</a>
+<a class="sourceLine" id="cb75-9" title="9">    ll-&gt;head = packaged;</a>
+<a class="sourceLine" id="cb75-10" title="10">    ll-&gt;size++;</a>
+<a class="sourceLine" id="cb75-11" title="11">  }</a>
+<a class="sourceLine" id="cb75-12" title="12">}</a>
+<a class="sourceLine" id="cb75-13" title="13"></a>
+<a class="sourceLine" id="cb75-14" title="14"><span class="dt">void</span>* pop_elem(linked_list *ll, <span class="dt">size_t</span> index){</a>
+<a class="sourceLine" id="cb75-15" title="15">  <span class="cf">if</span>(index &gt;= ll-&gt;size) <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb75-16" title="16"></a>
+<a class="sourceLine" id="cb75-17" title="17">  node *i, *prev;</a>
+<a class="sourceLine" id="cb75-18" title="18">  <span class="cf">for</span>(i = ll-&gt;head; i &amp;&amp; index; i = i-&gt;next, index--){</a>
+<a class="sourceLine" id="cb75-19" title="19">    prev = i;</a>
+<a class="sourceLine" id="cb75-20" title="20">  }</a>
+<a class="sourceLine" id="cb75-21" title="21"></a>
+<a class="sourceLine" id="cb75-22" title="22">  <span class="co">//i points to the element we need to pop, prev before</span></a>
+<a class="sourceLine" id="cb75-23" title="23">  <span class="cf">if</span>(prev-&gt;next) prev-&gt;next = prev-&gt;next-&gt;next;</a>
+<a class="sourceLine" id="cb75-24" title="24">  ll-&gt;size--;</a>
+<a class="sourceLine" id="cb75-25" title="25">  <span class="dt">void</span>* elem = i-&gt;elem;</a>
+<a class="sourceLine" id="cb75-26" title="26">  destroy_node(i);</a>
+<a class="sourceLine" id="cb75-27" title="27">  <span class="cf">return</span> elem;</a>
+<a class="sourceLine" id="cb75-28" title="28">}</a></code></pre></div></li>
+<li><p>How tight can you make the critical section?</p></li>
+<li><p>What is a producer consumer problem? How might the above be a producer consumer problem be used in the above section? How is a producer consumer problem related to a reader writer problem?</p></li>
+<li><p>What is a condition variable? Why is there an advantage to using one over a loop?</p></li>
+<li><p>Why is this code dangerous?</p>
+<div class="sourceCode" id="cb76" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb76-1" title="1"><span class="cf">if</span>(not_ready){</a>
+<a class="sourceLine" id="cb76-2" title="2">  pthread_cond_wait(&amp;cv, &amp;mtx);</a>
+<a class="sourceLine" id="cb76-3" title="3">}</a></code></pre></div></li>
+<li><p>What is a counting semaphore? Give me an analogy to a cookie jar/pizza box/limited food item.</p></li>
+<li><p>What is a thread barrier?</p></li>
+<li><p>Use a counting semaphore to implement a barrier.</p></li>
+<li><p>Write up a Producer/Consumer queue, How about a producer consumer stack?</p></li>
+<li><p>Give me an implementation of a reader-writer lock with condition variables, make a struct with whatever you need, it needs to be able to support the following functions</p>
+<div class="sourceCode" id="cb77" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb77-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> {</a>
+<a class="sourceLine" id="cb77-2" title="2"></a>
+<a class="sourceLine" id="cb77-3" title="3"></a>
+<a class="sourceLine" id="cb77-4" title="4">} rw_lock_t;</a>
+<a class="sourceLine" id="cb77-5" title="5"></a>
+<a class="sourceLine" id="cb77-6" title="6"><span class="dt">void</span> reader_lock(rw_lock_t* lck) {</a>
+<a class="sourceLine" id="cb77-7" title="7"></a>
+<a class="sourceLine" id="cb77-8" title="8">}</a>
+<a class="sourceLine" id="cb77-9" title="9"></a>
+<a class="sourceLine" id="cb77-10" title="10"><span class="dt">void</span> writer_lock(rw_lock_t* lck) {</a>
+<a class="sourceLine" id="cb77-11" title="11"></a>
+<a class="sourceLine" id="cb77-12" title="12">}</a>
+<a class="sourceLine" id="cb77-13" title="13"></a>
+<a class="sourceLine" id="cb77-14" title="14"><span class="dt">void</span> reader_unlock(rw_lock_t* lck) {</a>
+<a class="sourceLine" id="cb77-15" title="15"></a>
+<a class="sourceLine" id="cb77-16" title="16">}</a>
+<a class="sourceLine" id="cb77-17" title="17"></a>
+<a class="sourceLine" id="cb77-18" title="18"><span class="dt">void</span> writer_unlock(rw_lock_t* lck) {</a>
+<a class="sourceLine" id="cb77-19" title="19"></a>
+<a class="sourceLine" id="cb77-20" title="20">}</a></code></pre></div>
+<p>The only specification is that in between and , no writers can write. In between the writer locks, only one writer may be writing at a time.</p></li>
+<li><p>Write code to implement a producer consumer using ONLY three counting semaphores. Assume there can be more than one thread calling enqueue and dequeue. Determine the initial value of each semaphore.</p></li>
+<li><p>Write code to implement a producer consumer using condition variables and a mutex. Assume there can be more than one thread calling enqueue and dequeue.</p></li>
+<li><p>Use CVs to implement add(unsigned int) and subtract(unsigned int) blocking functions that never allow the global value to be greater than 100.</p></li>
+<li><p>Use CVs to implement a barrier for 15 threads.</p></li>
+<li><p>What does the following code do?</p>
+<div class="sourceCode" id="cb78" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb78-1" title="1"><span class="dt">void</span> main() {</a>
+<a class="sourceLine" id="cb78-2" title="2">    pthread_mutex_t mutex;</a>
+<a class="sourceLine" id="cb78-3" title="3">    pthread_cond_t cond;</a>
+<a class="sourceLine" id="cb78-4" title="4"></a>
+<a class="sourceLine" id="cb78-5" title="5">    pthread_mutex_init(&amp;mutex, NULL);</a>
+<a class="sourceLine" id="cb78-6" title="6">    pthread_cond_init(&amp;cond, NULL);</a>
+<a class="sourceLine" id="cb78-7" title="7"></a>
+<a class="sourceLine" id="cb78-8" title="8">    pthread_cond_broadcast(&amp;cond);</a>
+<a class="sourceLine" id="cb78-9" title="9">    pthread_cond_wait(&amp;cond,&amp;mutex);</a>
+<a class="sourceLine" id="cb78-10" title="10"></a>
+<a class="sourceLine" id="cb78-11" title="11">    <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb78-12" title="12">}</a></code></pre></div></li>
+<li><p>Is the following code correct? If it isn’t, could you fix it?</p>
+<div class="sourceCode" id="cb79" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb79-1" title="1"><span class="kw">extern</span> <span class="dt">int</span> money;</a>
+<a class="sourceLine" id="cb79-2" title="2"><span class="dt">void</span> deposit(<span class="dt">int</span> amount) {</a>
+<a class="sourceLine" id="cb79-3" title="3">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb79-4" title="4">  money += amount;</a>
+<a class="sourceLine" id="cb79-5" title="5">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb79-6" title="6">}</a>
+<a class="sourceLine" id="cb79-7" title="7"></a>
+<a class="sourceLine" id="cb79-8" title="8"><span class="dt">void</span> withdraw(<span class="dt">int</span> amount) {</a>
+<a class="sourceLine" id="cb79-9" title="9">  <span class="cf">if</span> (money &lt; amount) {</a>
+<a class="sourceLine" id="cb79-10" title="10">    pthread_cond_wait(&amp;cv);</a>
+<a class="sourceLine" id="cb79-11" title="11">  }</a>
+<a class="sourceLine" id="cb79-12" title="12"></a>
+<a class="sourceLine" id="cb79-13" title="13">  pthread_mutex_lock(&amp;m);</a>
+<a class="sourceLine" id="cb79-14" title="14">  money -= amount;</a>
+<a class="sourceLine" id="cb79-15" title="15">  pthread_mutex_unlock(&amp;m);</a>
+<a class="sourceLine" id="cb79-16" title="16">}</a></code></pre></div></li>
+<li><p>Sketch how to use a binary semaphore as a mutex. Remember in addition to mutual exclusion, a mutex can only ever be unlocked by the thread who called it.</p>
+<div class="sourceCode" id="cb80" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb80-1" title="1">sem_t sem;</a>
+<a class="sourceLine" id="cb80-2" title="2"></a>
+<a class="sourceLine" id="cb80-3" title="3"><span class="dt">void</span> lock() {</a>
+<a class="sourceLine" id="cb80-4" title="4"></a>
+<a class="sourceLine" id="cb80-5" title="5">}</a>
+<a class="sourceLine" id="cb80-6" title="6"></a>
+<a class="sourceLine" id="cb80-7" title="7"><span class="dt">void</span> unlock() {</a>
+<a class="sourceLine" id="cb80-8" title="8"></a>
+<a class="sourceLine" id="cb80-9" title="9">}</a></code></pre></div></li>
+<li><p>How many of the following statements are true?</p>
+<ul>
+<li><p>There can be multiple active readers</p></li>
+<li><p>There can be multiple active writers</p></li>
+<li><p>When there is an active writer the number of active readers must be zero</p></li>
+<li><p>If there is an active reader the number of active writers must be zero</p></li>
+<li><p>A writer must wait until the current active readers have finished</p></li>
+</ul></li>
+</ul>
+</section>
+</section>
+</body>
+</html>
+

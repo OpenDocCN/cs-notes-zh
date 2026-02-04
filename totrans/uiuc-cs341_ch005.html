@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <title>Memory Allocators</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../styles/stylesheet1.css" />
+</head>
+<body epub:type="bodymatter">
+<section id="memory-allocators" class="level1">
+<h1>Memory Allocators</h1>
+<section id="introduction-1" class="level2">
+<h2>Introduction</h2>
+<p>Memory allocation is important! Allocating and deallocating heap memory is one of the most common operations in any application. The heap at the system level is contiguous series of addresses that the program can expand or contract and use as its accord <span class="citation" data-cites="mallocinternals">(“Overview of Malloc” <a href="ch018.xhtml#ref-mallocinternals" role="doc-biblioref">2018</a>)</span>. In POSIX, this is called the system break. We use to move the system break. Most programs don’t interact directly with this call, they use a memory allocation system around it to handle chunking up and keeping track of which memory is allocated and which is freed.</p>
+<p>We will mainly be looking into simple allocators. Just know that there are other ways of dividing up memory like with or other allocation schemes and methods like .</p>
+</section>
+<section id="c-memory-allocation-api" class="level2">
+<h2>C Memory Allocation API</h2>
+<ul>
+<li><p>is a C library call and is used to reserve a contiguous block of memory that may be uninitialized <span class="citation" data-cites="jones2010wg14">(Jones <a href="ch018.xhtml#ref-jones2010wg14" role="doc-biblioref">2010</a> P. 348)</span>. Unlike stack memory, the memory remains allocated until is called with the same pointer. If can either return a pointer to at least that much free space requested or . That means that malloc can return NULL even if there is some space. Robust programs should check the return value. If your code assumes succeeds, and it does not, then your program will likely crash (segfault) when it tries to write to address 0. Also, malloc leaves garbage in memory because of performance – check your code to make sure that a program all program values are initialized.</p></li>
+<li><p>allows a program to resize an existing memory allocation that was previously allocated on the heap (via malloc, calloc, or realloc) <span class="citation" data-cites="jones2010wg14">(Jones <a href="ch018.xhtml#ref-jones2010wg14" role="doc-biblioref">2010</a> P. 349)</span>. The most common use of realloc is to resize memory used to hold an array of values. There are two gotchas with realloc. One, a new pointer may be returned. Two, it can fail. A naive but readable version of realloc is suggested below with sample usage.</p>
+<div class="sourceCode" id="cb1" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" title="1"><span class="dt">void</span> * realloc(<span class="dt">void</span> * ptr, <span class="dt">size_t</span> newsize) {</a>
+<a class="sourceLine" id="cb1-2" title="2">  <span class="co">// Simple implementation always reserves more memory</span></a>
+<a class="sourceLine" id="cb1-3" title="3">  <span class="co">// and has no error checking</span></a>
+<a class="sourceLine" id="cb1-4" title="4">  <span class="dt">void</span> *result = malloc(newsize);</a>
+<a class="sourceLine" id="cb1-5" title="5">  <span class="dt">size_t</span> oldsize =  ... <span class="co">//(depends on allocator&#39;s internal data structure)</span></a>
+<a class="sourceLine" id="cb1-6" title="6">  <span class="cf">if</span> (ptr) memcpy(result, ptr, newsize &lt; oldsize ? newsize : oldsize);</a>
+<a class="sourceLine" id="cb1-7" title="7">  free(ptr);</a>
+<a class="sourceLine" id="cb1-8" title="8">  <span class="cf">return</span> result;</a>
+<a class="sourceLine" id="cb1-9" title="9">}</a>
+<a class="sourceLine" id="cb1-10" title="10"></a>
+<a class="sourceLine" id="cb1-11" title="11"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb1-12" title="12">  <span class="co">// 1</span></a>
+<a class="sourceLine" id="cb1-13" title="13">  <span class="dt">int</span> *array = malloc(<span class="kw">sizeof</span>(<span class="dt">int</span>) * <span class="dv">2</span>);</a>
+<a class="sourceLine" id="cb1-14" title="14">  array[<span class="dv">0</span>] = <span class="dv">10</span>; array[<span class="dv">1</span>] = <span class="dv">20</span>;</a>
+<a class="sourceLine" id="cb1-15" title="15">  <span class="co">// Oops need a bigger array - so use realloc..</span></a>
+<a class="sourceLine" id="cb1-16" title="16">  array = realloc(array, <span class="dv">3</span> * <span class="kw">sizeof</span>(<span class="dt">int</span>));</a>
+<a class="sourceLine" id="cb1-17" title="17">  array[<span class="dv">2</span>] = <span class="dv">30</span>;</a>
+<a class="sourceLine" id="cb1-18" title="18"></a>
+<a class="sourceLine" id="cb1-19" title="19">}</a></code></pre></div>
+<p>The above code is fragile. If fails then the program leaks memory. Robust code checks for the return value and only reassigns the original pointer if not NULL.</p>
+<div class="sourceCode" id="cb2" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb2-1" title="1"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb2-2" title="2">  <span class="co">// 1</span></a>
+<a class="sourceLine" id="cb2-3" title="3">  <span class="dt">int</span> *array = malloc(<span class="kw">sizeof</span>(<span class="dt">int</span>) * <span class="dv">2</span>);</a>
+<a class="sourceLine" id="cb2-4" title="4">  array[<span class="dv">0</span>] = <span class="dv">10</span>; array[<span class="dv">1</span>] = <span class="dv">20</span>;</a>
+<a class="sourceLine" id="cb2-5" title="5">  <span class="dt">void</span> *tmp = realloc(array, <span class="dv">3</span> * <span class="kw">sizeof</span>(<span class="dt">int</span>));</a>
+<a class="sourceLine" id="cb2-6" title="6">  <span class="cf">if</span> (tmp == NULL) {</a>
+<a class="sourceLine" id="cb2-7" title="7">    <span class="co">// Nothing to do here.</span></a>
+<a class="sourceLine" id="cb2-8" title="8">  } <span class="cf">else</span> <span class="cf">if</span> (tmp == array) {</a>
+<a class="sourceLine" id="cb2-9" title="9">    <span class="co">// realloc returned same space</span></a>
+<a class="sourceLine" id="cb2-10" title="10">    array[<span class="dv">2</span>] = <span class="dv">30</span>;</a>
+<a class="sourceLine" id="cb2-11" title="11">  } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb2-12" title="12">    <span class="co">// realloc returned different space</span></a>
+<a class="sourceLine" id="cb2-13" title="13">    array = tmp;</a>
+<a class="sourceLine" id="cb2-14" title="14">    array[<span class="dv">2</span>] = <span class="dv">30</span>;</a>
+<a class="sourceLine" id="cb2-15" title="15">  }</a>
+<a class="sourceLine" id="cb2-16" title="16"></a>
+<a class="sourceLine" id="cb2-17" title="17">}</a></code></pre></div></li>
+<li><p>initializes memory contents to zero and also takes two arguments: the number of items and the size in bytes of each item. An advanced discussion of these limitations is <a href="http://locklessinc.com/articles/calloc/">in this article</a>. Programmers often use rather than explicitly calling after , to set the memory contents to zero because certain performance considerations are taken into account. Note is identical to , but you should follow the conventions of the manual. A naive implementation of calloc is below.</p>
+<div class="sourceCode" id="cb3" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb3-1" title="1"><span class="dt">void</span> *calloc(<span class="dt">size_t</span> n, <span class="dt">size_t</span> size) {</a>
+<a class="sourceLine" id="cb3-2" title="2">  <span class="dt">size_t</span> total = n * size; <span class="co">// Does not check for overflow!</span></a>
+<a class="sourceLine" id="cb3-3" title="3">  <span class="dt">void</span> *result = malloc(total);</a>
+<a class="sourceLine" id="cb3-4" title="4"></a>
+<a class="sourceLine" id="cb3-5" title="5">  <span class="cf">if</span> (!result) <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb3-6" title="6"></a>
+<a class="sourceLine" id="cb3-7" title="7">  <span class="co">// If we&#39;re using new memory pages</span></a>
+<a class="sourceLine" id="cb3-8" title="8">  <span class="co">// allocated from the system by calling sbrk</span></a>
+<a class="sourceLine" id="cb3-9" title="9">  <span class="co">// then they will be zero so zero-ing out is unnecessary,</span></a>
+<a class="sourceLine" id="cb3-10" title="10">  <span class="co">// We will be non-robust and memset either way.</span></a>
+<a class="sourceLine" id="cb3-11" title="11">  <span class="cf">return</span> memset(result, <span class="dv">0</span>, total);</a>
+<a class="sourceLine" id="cb3-12" title="12">}</a></code></pre></div></li>
+<li><p>takes a pointer to the start of a piece of memory and makes it available for use in subsequent calls to the other allocation functions. This is important because we don’t want every process in our address space to take an enormous amount of memory. Once we are done using memory, we stop using it with ‘free‘. A simple usage is below.</p>
+<div class="sourceCode" id="cb4" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb4-1" title="1"><span class="dt">int</span> *ptr = malloc(<span class="kw">sizeof</span>(*ptr));</a>
+<a class="sourceLine" id="cb4-2" title="2">do_something(ptr);</a>
+<a class="sourceLine" id="cb4-3" title="3">free(ptr);</a></code></pre></div>
+<p>If a program uses a piece of memory after it is freed - that is undefined behavior.</p></li>
+</ul>
+<section id="heaps-and-sbrk" class="level3">
+<h3>Heaps and sbrk</h3>
+<p>The heap is part of the process memory and varies in size. Heap memory allocation is performed by the C library when a program calls (, ) and . By calling the C library can increase the size of the heap as your program demands more heap memory. As the heap and stack need to grow, we put them at opposite ends of the address space. Stacks don’t grow like a heap, new parts of the stack are allocated for new threads. For typical architectures, the heap will grow upwards and the stack grows downwards.</p>
+<p>Nowadays, Modern operating system memory allocators no longer need . Instead, they can request independent regions of virtual memory and maintain multiple memory regions. For example, gibibyte requests may be placed in a different memory region than small allocation requests. However, this detail is an unwanted complexity.</p>
+<p>Programs don’t need to call or typically, though calling can be interesting because it tells a program where your heap currently ends. Instead programs use , , and which are part of the C library. The internal implementation of these functions may call when additional heap memory is required.</p>
+<div class="sourceCode" id="cb5" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb5-1" title="1"><span class="dt">void</span> *top_of_heap = sbrk(<span class="dv">0</span>);</a>
+<a class="sourceLine" id="cb5-2" title="2">malloc(<span class="dv">16384</span>);</a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="dt">void</span> *top_of_heap2 = sbrk(<span class="dv">0</span>);</a>
+<a class="sourceLine" id="cb5-4" title="4">printf(<span class="st">&quot;The top of heap went from %p to %p </span><span class="sc">\n</span><span class="st">&quot;</span>, top_of_heap, top_of_heap2);</a>
+<a class="sourceLine" id="cb5-5" title="5"><span class="co">// Example output: The top of heap went from 0x4000 to 0xa000</span></a></code></pre></div>
+<p>Note that the memory that was newly obtained by the operating system must be zeroed out. If the operating system left the contents of physical RAM as-is, it might be possible for one process to learn about the memory of another process that had previously used the memory. This would be a security leak. Unfortunately, this means that for requests before any memory has been freed is <em>often</em> zero. This is unfortunate because many programmers mistakenly write C programs that assume allocated memory will <em>always</em> be zero.</p>
+<div class="sourceCode" id="cb6" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb6-1" title="1"><span class="dt">char</span>* ptr = malloc(<span class="dv">300</span>);</a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="co">// contents is probably zero because we get brand new memory</span></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="co">// so beginner programs appear to work!</span></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="co">// strcpy(ptr, &quot;Some data&quot;); // work with the data</span></a>
+<a class="sourceLine" id="cb6-5" title="5">free(ptr);</a>
+<a class="sourceLine" id="cb6-6" title="6"><span class="co">// later</span></a>
+<a class="sourceLine" id="cb6-7" title="7"><span class="dt">char</span> *ptr2 = malloc(<span class="dv">300</span>); <span class="co">// Contents might now contain existing data and is probably not zero</span></a></code></pre></div>
+</section>
+</section>
+<section id="intro-to-allocating" class="level2">
+<h2>Intro to Allocating</h2>
+<p>Let’s try to write Malloc. Here is our first attempt at it – the naive version.</p>
+<div class="sourceCode" id="cb7" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb7-1" title="1"><span class="dt">void</span>* malloc(<span class="dt">size_t</span> size)</a>
+<a class="sourceLine" id="cb7-2" title="2">{</a>
+<a class="sourceLine" id="cb7-3" title="3">    <span class="co">// Ask the system for more bytes by extending the heap space.</span></a>
+<a class="sourceLine" id="cb7-4" title="4">    <span class="co">// sbrk returns -1 on failure</span></a>
+<a class="sourceLine" id="cb7-5" title="5">    <span class="dt">void</span> *p = sbrk(size);</a>
+<a class="sourceLine" id="cb7-6" title="6">    <span class="cf">if</span>(p == (<span class="dt">void</span> *) -<span class="dv">1</span>) <span class="cf">return</span> NULL; <span class="co">// No space left</span></a>
+<a class="sourceLine" id="cb7-7" title="7">    <span class="cf">return</span> p;</a>
+<a class="sourceLine" id="cb7-8" title="8">}</a>
+<a class="sourceLine" id="cb7-9" title="9">  <span class="dt">void</span> free() {<span class="co">/* Do nothing */</span>}</a></code></pre></div>
+<p>Above is the simplest implementation of malloc, there are a few drawbacks though.</p>
+<ul>
+<li><p>System calls are slow compared to library calls. We should reserve a large amount of memory and only occasionally ask for more from the system.</p></li>
+<li><p>No reuse of freed memory. Our program never re-uses heap memory - it keeps asking for a bigger heap.</p></li>
+</ul>
+<p>If this allocator was used in a typical program, the process would quickly exhaust all available memory. Instead, we need an allocator that can efficiently use heap space and only ask for more memory when necessary. Some programs use this type of allocator. Consider a video game allocating objects to load the next scene. It is considerably faster to do the above and throw the entire block of memory away than it is to do the following placement strategies.</p>
+<section id="placement-strategies" class="level3">
+<h3>Placement Strategies</h3>
+<p>During program execution, memory is allocated and deallocated, so there will be a gap in the heap memory that can be re-used for future memory requests. The memory allocator needs to keep track of which parts of the heap are currently allocated and which are parts are available. Suppose our current heap size is 64K. Let’s say that our heap looks like the following table.</p>
+<figure>
+<img src="../media/file6.png" alt="Empty heap blocks" /><figcaption>Empty heap blocks</figcaption>
+</figure>
+<p>If a new malloc request for 2KiB is executed (), where should reserve the memory? It could use the last 2KiB hole, which happens to be the perfect size! Or it could split one of the other two free holes. These choices represent different placement strategies. Whichever hole is chosen, the allocator will need to split the hole into two. The newly allocated space, which will be returned to the program and a smaller hole if there is spare space left over. A perfect-fit strategy finds the smallest hole that is of sufficient size (at least 2KiB):</p>
+<figure>
+<img src="../media/file7.png" alt="Best fit finds an exact match" /><figcaption>Best fit finds an exact match</figcaption>
+</figure>
+<p>A worst-fit strategy finds the largest hole that is of sufficient size so break the 30KiB hole into two:</p>
+<figure>
+<img src="../media/file8.png" alt="Worst fit finds the worst match" /><figcaption>Worst fit finds the worst match</figcaption>
+</figure>
+<p>A first-fit strategy finds the first available hole that is of sufficient size so break the 16KiB hole into two. We don’t even have to look through the entire heap!</p>
+<figure>
+<img src="../media/file9.png" alt="First fit finds the first match" /><figcaption>First fit finds the first match</figcaption>
+</figure>
+<p>One thing to keep in mind is those placement strategies don’t need to replace the block. For example, our first fit allocator could’ve returned the original block unbroken. Notice that this would lead to about 14KiB of space to be unused by the user and the allocator. We call this internal fragmentation.</p>
+<p>In contrast, external fragmentation is that even though we have enough memory in the heap, it may be divided up in a way so a continuous block of that size is unavailable. In our previous example, of the 64KiB of heap memory, 17KiB is allocated, and 47KiB is free. However, the largest available block is only 30KiB because our available unallocated heap memory is fragmented into smaller pieces.</p>
+</section>
+<section id="placement-strategy-pros-and-cons" class="level3">
+<h3>Placement Strategy Pros and Cons</h3>
+<p>The challenges of writing a heap allocator are</p>
+<ul>
+<li><p>Need to minimize fragmentation (i.e. maximize memory utilization)</p></li>
+<li><p>Need high performance</p></li>
+<li><p>Fiddly implementation – lots of pointer manipulation using linked lists and pointer arithmetic.</p></li>
+<li><p>Both fragmentation and performance depend on the application allocation profile, which can be evaluated but not predicted and in practice, under-specific usage conditions, a special-purpose allocator can often out-perform a general-purpose implementation.</p></li>
+<li><p>The allocator doesn’t know the program’s memory allocation requests in advance. Even if we did, this is the <a href="http://en.wikipedia.org/wiki/Knapsack_problem">Knapsack problem</a> which is known to be NP-hard!</p></li>
+</ul>
+<p>Different strategies affect the fragmentation of heap memory in non-obvious ways, which only are discovered by mathematical analysis or careful simulations under real-world conditions (for example simulating the memory allocation requests of a database or webserver).</p>
+<p>First, we will have a more mathematical, one-shot approach to each of these algorithms <span class="citation" data-cites="Garey:1972:WAM:800152.804907">(Garey, Graham, and Ullman <a href="ch018.xhtml#ref-Garey:1972:WAM:800152.804907" role="doc-biblioref">1972</a>)</span>. The paper describes a scenario where you have a certain number of bins and a certain number of allocations, and you are trying to fit the allocations in as few bins as possible, hence using as little memory as possible. The paper discusses theoretical implications and puts a nice limit on the ratios in the long run between the ideal memory usage and the actual memory usage. For those who are interested, the paper concludes that actual memory usage over ideal memory usage as the number of bins increases – the bins can have any distribution – is about 1.7 for First-Fit and lower bounded by 1.7 for best fit. The problem with this analysis is that few real-world applications need this type of one-shot allocation. Video game object allocations will typically designate a different subheap for each level and fill up that subheap if they need a quick memory allocation scheme that they can throw away.</p>
+<p>In practice, we’ll be using the result from a more rigorous survey conducted in 2005 <span class="citation" data-cites="10.1007/3-540-60368-9_19">(Wilson et al. <a href="ch018.xhtml#ref-10.1007/3-540-60368-9_19" role="doc-biblioref">1995</a>)</span>. The survey makes sure to note that memory allocation is a moving target. A good allocation scheme to one program may not be a good allocation scheme for another program. Programs don’t uniformly follow the distribution of allocations. The survey talks about all the allocation schemes that we have introduced as well as a few extra ones. Here are some summarized takeaways</p>
+<ol>
+<li><p>Best fit may have problems when a block is chosen that is almost the right size, and the remaining space is split so small that a program probably won’t use it. A way to get around this could be to set a threshold for splitting. This small splitting isn’t observed as frequently under a regular workload. Also, the worst-case behavior of Best-Fit is bad, but it doesn’t usually happen [p. 43].</p></li>
+<li><p>The survey also talks about an important distinction of First-Fit. There are multiple notions of first. First could be ordered in terms of the time of ‘free‘’ing, or it could be ordered through the addresses of the start of the block, or it could be ordered by the time of last free – first being least recently used. The survey didn’t go too in-depth into the performance of each but did make a note that address-ordered and Least Recently Used (LRU) lists ended up with better performance than the most recently used first.</p></li>
+<li><p>The survey concludes by first saying that under simulated random (assuming uniform at random) workloads, best fit and first fit do as well. Even in practice, both best and address ordered first fit do about as equally as well with a splitting threshold and coalescing. The reasons why aren’t entirely known.</p></li>
+</ol>
+<p>Some additional notes we make</p>
+<ol>
+<li><p>Best fit may take less time than a full heap scan. When a block of perfect size or perfect size within a threshold is found, that can be returned, depending on what edge-case policy you have.</p></li>
+<li><p>Worst fit follows this as well. Your heap could be represented with the max-heap data structure and each allocation call could simply pop the top off, re-heapify, and possibly insert a split memory block. Using Fibonacci heaps, however, could be extremely inefficient.</p></li>
+<li><p>First-Fit needs to have a block order. Most of the time programmers will default to linked lists which is a fine choice. There aren’t too many improvements you can make with a least recently used and most recently used linked list policy, but with address ordered linked lists you can speed up insertion from O(n) to O(log(n)) by using a randomized skip-list in conjunction with your singly-linked list. An insert would use the skip list as shortcuts to find the right place to insert the block and removal would go through the list as normal.</p></li>
+<li><p>There are many placement strategies that we haven’t talked about, one is next-fit which is first fit on the next fit block. This adds deterministic randomness – pardon the oxymoron. You won’t be expected to know this algorithm, know as you are implementing a memory allocator as part of a machine problem, there are more than these.</p></li>
+</ol>
+</section>
+</section>
+<section id="memory-allocator-tutorial" class="level2">
+<h2>Memory Allocator Tutorial</h2>
+<p>A memory allocator needs to keep track of which bytes are currently allocated and which are available for use. This section introduces the implementation and conceptual details of building an allocator, or the actual code that implements and .</p>
+<p>Conceptually, we are thinking about creating linked lists and lists of blocks! Please enjoy the following ASCII art. bt is short for boundary tag.</p>
+<figure>
+<img src="../media/file10.png" alt="3 Adjacent Memory blocks" /><figcaption>3 Adjacent Memory blocks</figcaption>
+</figure>
+<p>We will have implicit pointers in our next block, meaning that we can get from one block to another using addition. This is in contrast to an explicit field in our meta block.</p>
+<figure>
+<img src="../media/file11.png" alt="Malloc addition" /><figcaption>Malloc addition</figcaption>
+</figure>
+<p>One can grab the next block by finding the end of the current one. That is what we mean by “implicit list”.</p>
+<p>The actual spacing may be different. The metadata can contain different things. A minimal metadata implementation would simply have the size of the block.</p>
+<p>Since we write integers and pointers into memory that we already control, we can later consistently hop from one address to the next. This internal information represents some overhead. Meaning even if we had requested 1024 KiB of contiguous memory from the system, we an allocation of that size will fail.</p>
+<p>Our heap memory is a list of blocks where each block is either allocated or unallocated. Thus there is conceptually a list of free blocks, but it is implicit in the form of block size information that we store as part of each block. Let’s think of it in terms of a simple implementation.</p>
+<div class="sourceCode" id="cb8" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> {</a>
+<a class="sourceLine" id="cb8-2" title="2">  <span class="dt">size_t</span> block_size;</a>
+<a class="sourceLine" id="cb8-3" title="3">  <span class="dt">char</span> data[<span class="dv">0</span>];</a>
+<a class="sourceLine" id="cb8-4" title="4">} block;</a>
+<a class="sourceLine" id="cb8-5" title="5">block *p = sbrk(<span class="dv">100</span>);</a>
+<a class="sourceLine" id="cb8-6" title="6">p-&gt;size = <span class="dv">100</span> - <span class="kw">sizeof</span>(*p) - <span class="kw">sizeof</span>(BTag);</a>
+<a class="sourceLine" id="cb8-7" title="7"><span class="co">// Other block allocations</span></a></code></pre></div>
+<p>We could navigate from one block to the next block by adding the block’s size.</p>
+<div class="sourceCode" id="cb9" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb9-1" title="1">p + <span class="kw">sizeof</span>(metadata) + p-&gt;block_size + <span class="kw">sizeof</span>(BTag)</a></code></pre></div>
+<p>Make sure to get your casting right! Otherwise, the program will move an extreme amount of bytes over.</p>
+<p>The calling program never sees these values. They are internal to the implementation of the memory allocator. As an example, suppose your allocator is asked to reserve 80 bytes () and requires 8 bytes of internal header data. The allocator would need to find an unallocated space of at least 88 bytes. After updating the heap data it would return a pointer to the block. However, the returned pointer points to the usable space, not the internal data! Instead, we would return the start of the block + 8 bytes. In the implementation, remember that pointer arithmetic depends on type. For example, adds , not necessarily 8 bytes!</p>
+<section id="implementing-a-memory-allocator" class="level3">
+<h3>Implementing a Memory Allocator</h3>
+<p>The simplest implementation uses First-Fit. Start at the first block, assuming it exists, and iterate until a block that represents an unallocated space of sufficient size is found, or we’ve checked all the blocks. If no suitable block is found, it’s time to call again to sufficiently extend the size of the heap. For this class, we will try to serve every memory request until the operating system tells us we are going to run out of heap space. Other applications may limit themselves to a certain heap size and cause requests to intermittently fail. Besides, a fast implementation might extend it a significant amount so that we will not need to request more heap memory soon.</p>
+<p>When a free block is found, it may be larger than the space we need. If so, we will create two entries in our implicit list. The first entry is the allocated block, the second entry is the remaining space. There are ways to do this if the program wants to keep the overhead small. We recommend first for going with readability.</p>
+<div class="sourceCode" id="cb10" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> {</a>
+<a class="sourceLine" id="cb10-2" title="2">  <span class="dt">size_t</span> block_size;</a>
+<a class="sourceLine" id="cb10-3" title="3">  <span class="dt">int</span> is_free;</a>
+<a class="sourceLine" id="cb10-4" title="4">  <span class="dt">char</span> data[<span class="dv">0</span>];</a>
+<a class="sourceLine" id="cb10-5" title="5">} block;</a>
+<a class="sourceLine" id="cb10-6" title="6">block *p = sbrk(<span class="dv">100</span>);</a>
+<a class="sourceLine" id="cb10-7" title="7">p-&gt;size = <span class="dv">100</span> - <span class="kw">sizeof</span>(*p) - <span class="kw">sizeof</span>(boundary_tag);</a>
+<a class="sourceLine" id="cb10-8" title="8"><span class="co">// Other block allocations</span></a></code></pre></div>
+<p>If the program wants certain bits to hold different pieces of information, use bit fields!</p>
+<div class="sourceCode" id="cb11" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> {</a>
+<a class="sourceLine" id="cb11-2" title="2">  <span class="dt">unsigned</span> <span class="dt">int</span> block_size : <span class="dv">7</span>;</a>
+<a class="sourceLine" id="cb11-3" title="3">  <span class="dt">unsigned</span> <span class="dt">int</span> is_free : <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb11-4" title="4">} size_free;</a>
+<a class="sourceLine" id="cb11-5" title="5"></a>
+<a class="sourceLine" id="cb11-6" title="6"><span class="kw">typedef</span> <span class="kw">struct</span> {</a>
+<a class="sourceLine" id="cb11-7" title="7">  size_free info;</a>
+<a class="sourceLine" id="cb11-8" title="8">  <span class="dt">char</span> data[<span class="dv">0</span>];</a>
+<a class="sourceLine" id="cb11-9" title="9">} block;</a></code></pre></div>
+<p>The compiler will handle the shifting. After setting up your fields then it becomes simply looping through each of the blocks and checking the appropriate fields</p>
+<p>Here is a visual representation of what happens. If we assume that we have a block that looks like this, we want to spit if the allocation is let’s say 16 bytes The split we’ll have to do is the following.</p>
+<figure>
+<img src="../media/file12.png" alt="Malloc split" /><figcaption>Malloc split</figcaption>
+</figure>
+<p>This is before alignment concerns as well.</p>
+</section>
+<section id="alignment-and-rounding-up-considerations" class="level3">
+<h3>Alignment and rounding up considerations</h3>
+<p>Many architectures expect multibyte primitives to be aligned to some multiple of 2 (4, 16, etc). For example, it’s common to require 4-byte types to be aligned to 4-byte boundaries and 8-byte types on 8-byte boundaries. If multi-byte primitives are stored on an unreasonable boundary, the performance can be significantly impacted because it may require an additional memory read. On some architectures the penalty is even greater - the program will crash with a <a href="http://en.wikipedia.org/wiki/Bus_error#Unaligned_access">bus error</a>. Most of you have experienced this in your architecture classes if there was no memory protection.</p>
+<p>As does not know how the user will use the allocated memory, the pointer returned to the program needs to be aligned for the worst case, which is architecture-dependent.</p>
+<p>From glibc documentation, the glibc uses the following heuristic <span class="citation" data-cites="vma_paging">(“Virtual Memory Allocation and Paging” <a href="ch018.xhtml#ref-vma_paging" role="doc-biblioref">2001</a>)</span></p>
+<blockquote>
+<p>The block that malloc gives you is guaranteed to be aligned so that it can hold any type of data. On GNU systems, the address is always a multiple of eight on most systems and a multiple of 16 on 64-bit systems." For example, if you need to calculate how many 16 byte units are required, don’t forget to round up.</p>
+</blockquote>
+<p>This is what the math would look like in C.</p>
+<div class="sourceCode" id="cb12" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb12-1" title="1"><span class="dt">int</span> s = (requested_bytes + tag_overhead_bytes + <span class="dv">15</span>) / <span class="dv">16</span></a></code></pre></div>
+<p>The additional constant ensures incomplete units are rounded up. Note, real code is more likely to symbol sizes e.g. , rather than coding numerical constant 15. <a href="http://www.ibm.com/developerworks/library/pa-dalign/">Here’s a great article on memory alignment, if you are further interested</a></p>
+<p>Another added effect could be internal fragmentation happens when the given block is larger than their allocation size. Let’s say that we have a free block of size 16B (not including metadata). If they allocate 7 bytes, the allocator may want to round up to 16B and return the entire block. This gets sinister when implementing coalescing and splitting. If the allocator doesn’t implement either, it may end up returning a block of size 64B for a 7B allocation! There is a <em>lot</em> of overhead for that allocation which is what we are trying to avoid.</p>
+</section>
+<section id="implementing-free" class="level3">
+<h3>Implementing free</h3>
+<p>When is called we need to re-apply the offset to get back to the ‘real’ start of the block – to where we stored the size information. A naive implementation would simply mark the block as unused. If we are storing the block allocation status in a bitfield, then we need to clear the bit:</p>
+<div class="sourceCode" id="cb13" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb13-1" title="1">p-&gt;info.is_free = <span class="dv">0</span>;</a></code></pre></div>
+<p>However, we have a bit more work to do. If the current block and the next block (if it exists) are both free we need to coalesce these blocks into a single block. Similarly, we also need to check the previous block, too. If that exists and represents an unallocated memory, then we need to coalesce the blocks into a single large block.</p>
+<p>To be able to coalesce a free block with a previous free block we will also need to find the previous block, so we store the block’s size at the end of the block, too. These are called “boundary tags” <span class="citation" data-cites="knuth1973art">(Knuth <a href="ch018.xhtml#ref-knuth1973art" role="doc-biblioref">1973</a>)</span>. These are Knuth’s solution to the coalescing problem both ways. As the blocks are contiguous, the end of one block sits right next to the start of the next block. So the current block (apart from the first one) can look a few bytes further back to look up the size of the previous block. With this information, the allocator can now jump backward!</p>
+<p>Take for example a double coalesce. If we wanted to free the middle block we need to turn the surrounding blocks into one big blocks</p>
+<figure>
+<img src="../media/file13.png" alt="Free double coalesce" /><figcaption>Free double coalesce</figcaption>
+</figure>
+</section>
+<section id="performance" class="level3">
+<h3>Performance</h3>
+<p>With the above description, it’s possible to build a memory allocator. Its main advantage is simplicity - at least simple compared to other allocators! Allocating memory is a worst-case linear time operation – search linked lists for a sufficiently large free block. De-allocation is constant time. No more than 3 blocks will need to coalesce into a single block, and using a most recently used block scheme only one linked list entry.</p>
+<p>Using this allocator it is possible to experiment with different placement strategies. For example, the allocator could start searching from the last deallocated block. If the allocator stores pointers to blocks, it needs to update the pointers so that they always remain valid.</p>
+</section>
+<section id="explicit-free-lists-allocators" class="level3">
+<h3>Explicit Free Lists Allocators</h3>
+<p>Better performance can be achieved by implementing an explicit doubly-linked list of free nodes. In that case, we can immediately traverse to the next free block and the previous free block. This can reduce the search time because the linked list only includes unallocated blocks. A second advantage is that we now have some control over the ordering of the linked list. For example, when a block is deallocated, we could choose to insert it into the beginning of the linked list rather than always between its neighbors. We may update our struct to look like this</p>
+<div class="sourceCode" id="cb14" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> {</a>
+<a class="sourceLine" id="cb14-2" title="2">  <span class="dt">size_t</span> info;</a>
+<a class="sourceLine" id="cb14-3" title="3">  <span class="kw">struct</span> block *next;</a>
+<a class="sourceLine" id="cb14-4" title="4">  <span class="dt">char</span> data[<span class="dv">0</span>];</a>
+<a class="sourceLine" id="cb14-5" title="5">} block;</a></code></pre></div>
+<p>Here is what that would look like along with our implicit linked list</p>
+<figure>
+<img src="../media/file14.png" alt="Free list" /><figcaption>Free list</figcaption>
+</figure>
+<p>Where do we store the pointers of our linked list? A simple trick is to realize that the block itself is not being used and store the next and previous pointers as part of the block, though you have to ensure that the free blocks are always sufficiently large to hold two pointers. We still need to implement Boundary Tags, so we can correctly free blocks and coalesce them with their two neighbors. Consequently, explicit free lists require more code and complexity. With explicitly linked lists a fast and simple ‘Find-First’ algorithm is used to find the first sufficiently large link. However, since the link order can be modified, this corresponds to different placement strategies. If the links are maintained from largest to smallest, then this produces a ‘Worst-Fit’ placement strategy.</p>
+<p>There are edge cases though, consider how to maintain your free list if also double coalescing. We’ve included a figure with a common mistake.</p>
+<figure>
+<img src="../media/file15.png" alt="Free list good and bad coalesce" /><figcaption>Free list good and bad coalesce</figcaption>
+</figure>
+<p>We recommend when trying to implement malloc that you draw out all the cases conceptually and then write the code.</p>
+<section id="explicit-linked-list-insertion-policy" class="level4">
+<h4>Explicit linked list insertion policy</h4>
+<p>The newly deallocated block can be inserted easily into two possible positions: at the beginning or in address order. Inserting at the beginning creates a LIFO (last-in, first-out) policy. The most recently deallocated spaces will be reused. Studies suggest fragmentation is worse than using address order <span class="citation" data-cites="10.1007/3-540-60368-9_19">(Wilson et al. <a href="ch018.xhtml#ref-10.1007/3-540-60368-9_19" role="doc-biblioref">1995</a>)</span>.</p>
+<p>Inserting in address order (“Address ordered policy”) inserts deallocated blocks so that the blocks are visited in increasing address order. This policy required more time to free a block because the boundary tags (size data) must be used to find the next and previous unallocated blocks. However, there is less fragmentation.</p>
+</section>
+</section>
+</section>
+<section id="case-study-buddy-allocator-an-example-of-a-segregated-list" class="level2">
+<h2>Case Study: Buddy Allocator, an example of a segregated list</h2>
+<p>A segregated allocator is one that divides the heap into different areas that are handled by different sub-allocators dependent on the size of the allocation request. Sizes are grouped into powers of two and each size is handled by a different sub-allocator and each size maintains its free list.</p>
+<p>A well-known allocator of this type is the buddy allocator <span class="citation" data-cites="rangan1999foundations">(Rangan, Raman, and Ramanujam <a href="ch018.xhtml#ref-rangan1999foundations" role="doc-biblioref">1999</a> P. 85)</span>. We’ll discuss the binary buddy allocator which splits allocation into blocks of size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup><mo>;</mo><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>.</mi><mi>.</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">2^n; n = 1, 2, 3, ...</annotation></semantics></math> times some base unit number of bytes, but others also exist like Fibonacci split where the allocation is rounded up to the next Fibonacci number. The basic concept is simple: If there are no free blocks of size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mi>n</mi></msup><annotation encoding="application/x-tex">2^n</annotation></semantics></math>, go to the next level and steal that block and split it into two. If two neighboring blocks of the same size become unallocated, they can coalesce together into a single large block of twice the size.</p>
+<p>Buddy allocators are fast because the neighboring blocks to coalesce with can be calculated from the deallocated block’s address, rather than traversing the size tags. Ultimate performance often requires a small amount of assembler code to use a specialized CPU instruction to find the lowest non-zero bit.</p>
+<p>The main disadvantage of the Buddy allocator is that they suffer from <em>internal fragmentation</em> because allocations are rounded up to the nearest block size. For example, a 68-byte allocation will require a 128-byte block.</p>
+</section>
+<section id="case-study-slub-allocator-slab-allocation" class="level2">
+<h2>Case Study: SLUB Allocator, Slab allocation</h2>
+<p>The SLUB allocator is a slab allocator that serves different needs for the Linux kernel <a href="http://en.wikipedia.org/wiki/SLUB_%28software%29">SLUB</a>. Imagine you are creating an allocator for the kernel, what are your requirements? Here is a hypothetical shortlist.</p>
+<ol>
+<li><p>First and foremost is you want a low memory footprint to have the kernel be able to be installed on all types of hardware: embedded, desktop, supercomputer, etc.</p></li>
+<li><p>Then, you want the actual memory to be as contiguous as possible to make use of caching. Every time a system call is performed, the kernel’s pages need to get loaded into memory. This means that if they are all contiguous, the processor will be able to cache them more efficiently</p></li>
+<li><p>Lastly, you want your allocations to be fast.</p></li>
+</ol>
+<p>Enter the SLUB allocator . The SLUB allocator is a segregated list allocator with minimal splitting and coalescing. The difference here is that the segregated list focuses on more realistic allocation sizes, instead of powers of two. SLUB also focuses on a low overall memory footprint while keeping pages in the cache. There are blocks of different sizes and the kernel rounds up each allocation request to the lowest block size that satisfies it. One of the big differences between this allocator and the others is that it usually conforms to page sizes. We’ll talk about virtual memory and pages in another chapter, but the kernel will be working with direct memory pages in spans of 4Kib or 4096 Bytes.</p>
+</section>
+<section id="further-reading-1" class="level2">
+<h2>Further Reading</h2>
+<p>Guiding questions</p>
+<ul>
+<li><p>Is malloc’ed memory initialized? How about calloc’ed or realloc’ed memory?</p></li>
+<li><p>Does realloc accept, as its argument, the number of elements or space (in bytes)?</p></li>
+<li><p>Why may the allocation functions error?</p></li>
+</ul>
+<p>See <a href="http://man7.org/linux/man-pages/man3/malloc.3.html">the man page</a> or the appendix of the book <a href="ch017.xhtml#man_malloc" data-reference-type="ref" data-reference="man_malloc">17.18.1</a>!</p>
+<ul>
+<li><p><a href="https://en.wikipedia.org/wiki/Slab_allocation">Slab Allocation</a></p></li>
+<li><p><a href="http://en.wikipedia.org/wiki/Buddy_memory_allocation">Buddy Memory Allocation</a></p></li>
+</ul>
+</section>
+<section id="topics-2" class="level2">
+<h2>Topics</h2>
+<ul>
+<li><p>Best Fit</p></li>
+<li><p>Worst Fit</p></li>
+<li><p>First Fit</p></li>
+<li><p>Buddy Allocator</p></li>
+<li><p>Internal Fragmentation</p></li>
+<li><p>External Fragmentation</p></li>
+<li><p>sbrk</p></li>
+<li><p>Natural Alignment</p></li>
+<li><p>Boundary Tag</p></li>
+<li><p>Coalescing</p></li>
+<li><p>Splitting</p></li>
+<li><p>Slab Allocation/Memory Pool</p></li>
+</ul>
+</section>
+<section id="questionsexercises-2" class="level2">
+<h2>Questions/Exercises</h2>
+<ul>
+<li><p>What is Internal Fragmentation? When does it become an issue?</p></li>
+<li><p>What is External Fragmentation? When does it become an issue?</p></li>
+<li><p>What is a Best Fit placement strategy? How is it with External Fragmentation? Time Complexity?</p></li>
+<li><p>What is a Worst Fit placement strategy? Is it any better with External Fragmentation? Time Complexity?</p></li>
+<li><p>What is the First Fit Placement strategy? It’s a little bit better with Fragmentation, right? Expected Time Complexity?</p></li>
+<li><p>Let’s say that we are using a buddy allocator with a new slab of 64kb. How does it go about allocating 1.5kb?</p></li>
+<li><p>When does the 5 line implementation of malloc have a use?</p></li>
+<li><p>What is natural alignment?</p></li>
+<li><p>What is Coalescing/Splitting? How do they increase/decrease fragmentation? When can you coalesce or split?</p></li>
+<li><p>How do boundary tags work? How can they be used to coalesce or split?</p></li>
+</ul>
+</section>
+</section>
+</body>
+</html>
+

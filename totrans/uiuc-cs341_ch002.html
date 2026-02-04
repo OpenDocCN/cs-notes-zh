@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <title>Background</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../styles/stylesheet1.css" />
+</head>
+<body epub:type="bodymatter">
+<section id="background" class="level1">
+<h1>Background</h1>
+<section id="systems-architecture" class="level2">
+<h2>Systems Architecture</h2>
+<p>This section is a short review of System Architecture topics that you’ll need for System Programming.</p>
+<section id="assembly" class="level3">
+<h3>Assembly</h3>
+<p>What is assembly? Assembly is the lowest that you’ll get to machine language without writing 1’s and 0’s. Each computer has an architecture, and that architecture has an associated assembly language. Each assembly command has a 1:1 mapping to a set of 1’s and 0’s that tell the computer exactly what to do. For example, the following in the widely used x86 Assembly language add one to the memory address 20 <span class="citation" data-cites="wiki:xxx">(Wikibooks <a href="ch018.xhtml#ref-wiki:xxx" role="doc-biblioref">2018</a>)</span> – you can also look in <span class="citation" data-cites="guide2011intel">(Guide <a href="ch018.xhtml#ref-guide2011intel" role="doc-biblioref">2011</a>)</span> Section 2A under the add instruction though it is more verbose.</p>
+<pre data-language="[x86masm]Assembler"><code>add BYTE PTR [0x20], 1</code></pre>
+<p>Why do we mention this? Because it is important that although you are going to be doing most of this class in C, that this is what the code is translated into. Serious implications arise for race conditions and atomic operations.</p>
+</section>
+<section id="atomic-operations" class="level3">
+<h3>Atomic Operations</h3>
+<p>An operation is atomic if no other processor should interrupt it. Take for example the above assembly code to add one to a register. In the architecture, it may actually have a few different steps on the circuit. The operation may start by fetching the value of the memory from the stick of ram, then storing it in the cache or a register, and then finally writing back <span class="citation" data-cites="schweizer2015evaluating">(Schweizer, Besta, and Hoefler <a href="ch018.xhtml#ref-schweizer2015evaluating" role="doc-biblioref">2015</a>)</span> – under the description for <em>fetch-and-add</em> though your micro-architecture may vary. Or depending on performance operations, it may keep that value in cache or in a register which is local to that process – try dumping the optimized assembly of incrementing a variable. The problem comes in if two processors try to do it at the same time. The two processors could at the same time copy the value of the memory address, add one, and store the same result back, resulting in the value only being incremented once. That is why we have a special set of instructions on modern systems called atomic operations. If an instruction is atomic, it makes sure that only one processor or thread performs any intermediate step at a time. With x86 this is done by the prefix <span class="citation" data-cites="guide2011intel">(Guide <a href="ch018.xhtml#ref-guide2011intel" role="doc-biblioref">2011</a>, 1120)</span>.</p>
+<pre><code>lock add BYTE PTR [0x20], 1</code></pre>
+<p>Why don’t we do this for everything? It makes commands slower! If every time a computer does something it has to make sure that the other cores or processors aren’t doing anything, it’ll be much slower. Most of the time we differentiate these with special consideration. Meaning, we will tell you when we use something like this. Most of the time you can assume the instructions are unlocked.</p>
+</section>
+<section id="caching" class="level3">
+<h3>Caching</h3>
+<p>Ah yes, Caching. One of computer science’s greatest problems. The caching that we are referring to is processor caching. If a particular address is already in the cache when reading or writing, the processor will perform the operation on the cache, such as adding and update the actual memory, later because updating memory is slow <span class="citation" data-cites="intel2015improving">(Intel <a href="ch018.xhtml#ref-intel2015improving" role="doc-biblioref">2015</a> Section 3.4)</span>. If it isn’t, the processor requests a chunk of memory from the memory chip and stores it in the cache, kicking out the least recently used page – this depends on caching policy, but Intel’s does use this. This is done because the l3 processor cache is roughly three times faster to reach than the memory in terms of time <span class="citation" data-cites="levinthal2009performance">(Levinthal <a href="ch018.xhtml#ref-levinthal2009performance" role="doc-biblioref">2009</a>, 22)</span> though exact speeds will vary based on the clock speed and architecture. Naturally, this leads to problems because there are two different copies of the same value, in the cited paper this refers to an unshared line. This isn’t a class about caching, but you should know how this could impact your code. A short but non-complete list could be</p>
+<ol>
+<li><p>Race Conditions! If a value is stored in two different processor caches, then that value should be accessed by a single thread.</p></li>
+<li><p>Speed. With a cache, your program may look faster mysteriously. Just assume that reads and writes that either happened recently or are next to each other in memory are fast.</p></li>
+<li><p>Side effects. Every read or write affects the cache state. While most of the time this doesn’t help or hurt, it is important to know. Check the Intel programmer guide on the lock prefix for more information.</p></li>
+</ol>
+</section>
+<section id="interrupts" class="level3">
+<h3>Interrupts</h3>
+<p>Interrupts are an important part of system programming. An interrupt is internally an electrical signal that is delivered to the processor when something happens – this is a hardware interrupt <span class="citation" data-cites="redhat_hardware_int">(“Chapter 3. Hardware Interrupts,” <a href="ch018.xhtml#ref-redhat_hardware_int" role="doc-biblioref">n.d.</a>)</span>. Then the hardware decides if this is something that it should handle (e.g., handling keyboard or mouse input for older keyboard and mouses) or it should pass to the operating system. The operating system then decides if this is something that it should handle (e.g., paging a memory table from disk) or something the application should handle (e.g., a SEGFAULT). If the operating system decides that this is something that the process or program should take care of, it sends a <strong>software fault</strong> and that software fault is then propagated. The application then decides if it is an error (SEGFAULT) or not (SIGPIPE for example) and reports to the user. Applications can also send signals to the kernel and to the hardware as well. This is an oversimplification because there are certain hardware faults that can’t be ignored or masked away, but this class isn’t about teaching you to build an operating system.</p>
+<p>An important application of this is how system calls are served! There is a well-established set of registers that the arguments go in according to the kernel as well as a system call “number” again defined by the kernel. Then the operating system triggers an interrupt which the kernel catches and serves the system call <span class="citation" data-cites="garg_2006">(Garg <a href="ch018.xhtml#ref-garg_2006" role="doc-biblioref">2006</a>)</span>.</p>
+<p>Operating system developers and instruction set developers alike didn’t like the overhead of causing an interrupt on a system call. Now, systems use and which has a cleaner way of transferring control safely to the kernel and safely back. What safely means is obvious out of the scope for this class, but it persists.</p>
+</section>
+<section id="optional-hyperthreading" class="level3">
+<h3>Optional: Hyperthreading</h3>
+<p>Hyperthreading is a new technology and is in no way shape or form multithreading. Hyperthreading allows one physical core to appear as many virtual cores to the operating system <span class="citation" data-cites="guide2011intel">(Guide <a href="ch018.xhtml#ref-guide2011intel" role="doc-biblioref">2011</a>, P.51)</span>. The operating system can then schedule processes on these virtual cores and one core will execute them. Each core interleaves processes or threads. While the core is waiting for one memory access to complete, it may perform a few instructions of another process thread. The overall result is more instructions executed in a shorter time. This potentially means that you can divide the number of cores you need to power smaller devices.</p>
+<p>There be dragons here, though. With hyperthreading, you must be wary of optimizations. A famous hyperthreading bug caused programs to crash if at least two processes were scheduled on a physical core, using specific registers, in a tight loop. The actual problem is better explained through an architecture lens. But, the actual application was found through systems programmers working on OCaml’s mainline <span class="citation" data-cites="leroy_2017">(Leroy <a href="ch018.xhtml#ref-leroy_2017" role="doc-biblioref">2017</a>)</span>.</p>
+</section>
+</section>
+<section id="debugging-and-environments" class="level2">
+<h2>Debugging and Environments</h2>
+<p>I’m going to tell you a secret about this course: it is about working smarter <em>not</em> harder. The course can be time-consuming but the reason that so many people see it as such (and why so many students don’t see it as such) is the relative familiarity of people with their tools. Let’s go through some of the common tools that you’ll be working on and need to be familiar with.</p>
+<section id="ssh" class="level3">
+<h3>ssh</h3>
+<p>is short for the Secure Shell <span class="citation" data-cites="openbsd_ssh">(“Ssh(1),” <a href="ch018.xhtml#ref-openbsd_ssh" role="doc-biblioref">n.d.</a>)</span>. It is a network protocol that allows you to spawn a shell on a remote machine. Most of the times in this class you will need to ssh into your VM like this</p>
+<div class="sourceCode" id="cb3" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1">$ <span class="fu">ssh</span> netid@sem-cs341-VM.cs.illinois.edu</a></code></pre></div>
+<p>If you don’t want to type your password out every time, you can generate an ssh key that uniquely identifies your machine. If you already have a key pair, you can skip to the copy id stage.</p>
+<div class="sourceCode" id="cb4" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="op">&gt;</span> <span class="fu">ssh-keygen</span> -t rsa -b 4096</a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="co"># Do whatever keygen tells you</span></a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="co"># Don&#39;t feel like you need a passcode if your login password is secure</span></a>
+<a class="sourceLine" id="cb4-4" title="4"><span class="op">&gt;</span> <span class="ex">ssh-copy-id</span> netid@sem-cs341-VM.cs.illinois.edu</a>
+<a class="sourceLine" id="cb4-5" title="5"><span class="co"># Enter your password for maybe the final time</span></a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="op">&gt;</span> <span class="fu">ssh</span>  netid@sem-cs341-VM.cs.illinois.edu</a></code></pre></div>
+<p>If you still think that that is too much typing, you can always alias hosts. You may need to restart your VM or reload sshd for this to take effect. The config file is available on Linux and Mac distros. For Windows, you’ll have to use the Windows Linux Subsystem or configure any aliases in PuTTY</p>
+<div class="sourceCode" id="cb5" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" title="1"><span class="op">&gt;</span> <span class="fu">cat</span> ~/.ssh/config</a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="ex">Host</span> vm</a>
+<a class="sourceLine" id="cb5-3" title="3">  <span class="ex">User</span>          netid</a>
+<a class="sourceLine" id="cb5-4" title="4">  <span class="ex">HostName</span>      sem-cs341-VM.cs.illinois.edu</a>
+<a class="sourceLine" id="cb5-5" title="5"><span class="op">&gt;</span> <span class="fu">ssh</span> vm</a></code></pre></div>
+</section>
+<section id="git" class="level3">
+<h3>git</h3>
+<p>What is ‘git‘? Git is a version control system. What that means is git stores the entire history of a directory. We refer to the directory as a repository. So what do you need to know is a few things. First, create your repository with the repo creator. If you haven’t already signed into enterprise GitHub, make sure to do so otherwise your repository won’t be created for you. After that, your repository is created on the server. Git is a decentralized version control system, meaning that you’ll need to get a repository onto your VM. We can do this with a clone. Whatever you do, <strong>do not go through the README.md tutorial</strong>.</p>
+<div class="sourceCode" id="cb6" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1">$ <span class="fu">git</span> clone https://github.com/illinois-cs-coursework/fa23_cs341_<span class="op">&lt;</span>netid<span class="op">&gt;</span></a></code></pre></div>
+<p>This will create a local repository. The workflow is you make a change on your local repository, add the changes to a current commit, actually commit, and push the changes to the server.</p>
+<div class="sourceCode" id="cb7" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1">$ <span class="co"># edit the file, maybe using vim</span></a>
+<a class="sourceLine" id="cb7-2" title="2">$ <span class="fu">git</span> add <span class="op">&lt;</span>file<span class="op">&gt;</span></a>
+<a class="sourceLine" id="cb7-3" title="3">$ <span class="fu">git</span> commit -m <span class="st">&quot;Committing my file&quot;</span></a>
+<a class="sourceLine" id="cb7-4" title="4">$ <span class="fu">git</span> push origin master</a></code></pre></div>
+<p>Now to explain git well, you need to understand that git for our purposes will look like a linked list. You will always be at the head of master, and you will do the edit-add-commit-push loop. We have a separate branch on Github that we push feedback to under a specific branch which you can view on Github website. The markdown file will have information on the test cases and results (like standard out).</p>
+<p>Every so often git can break. Here is a list of commands you probably won’t need to fix your repo</p>
+<ol>
+<li><p>git-cherry-pick</p></li>
+<li><p>git-pack</p></li>
+<li><p>git-gc</p></li>
+<li><p>git-clean</p></li>
+<li><p>git-rebase</p></li>
+<li><p>git-stash/git-apply/git-pop</p></li>
+<li><p>git-branch</p></li>
+</ol>
+<p>If you are currently on a branch, and you don’t see either</p>
+<div class="sourceCode" id="cb8" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" title="1">$ <span class="fu">git</span> status</a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="ex">On</span> branch master</a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="ex">Your</span> branch is up-to-date with <span class="st">&#39;origin/master&#39;</span>.</a>
+<a class="sourceLine" id="cb8-4" title="4"><span class="ex">nothing</span> to commit, working directory clean</a></code></pre></div>
+<p>or</p>
+<div class="sourceCode" id="cb9" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" title="1">$ <span class="fu">git</span> status</a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="ex">On</span> branch master</a>
+<a class="sourceLine" id="cb9-3" title="3"><span class="ex">Your</span> branch is up-to-date with <span class="st">&#39;origin/master&#39;</span>.</a>
+<a class="sourceLine" id="cb9-4" title="4"><span class="ex">Changes</span> not staged for commit:</a>
+<a class="sourceLine" id="cb9-5" title="5">  <span class="kw">(</span><span class="ex">use</span> <span class="st">&quot;git add &lt;file&gt;...&quot;</span> to update what will be committed<span class="kw">)</span></a>
+<a class="sourceLine" id="cb9-6" title="6">  <span class="kw">(</span><span class="ex">use</span> <span class="st">&quot;git checkout -- &lt;file&gt;...&quot;</span> to discard changes in working directory<span class="kw">)</span></a>
+<a class="sourceLine" id="cb9-7" title="7"></a>
+<a class="sourceLine" id="cb9-8" title="8">        <span class="ex">modified</span>:   <span class="op">&lt;</span>FILE<span class="op">&gt;</span></a>
+<a class="sourceLine" id="cb9-9" title="9">        <span class="ex">...</span></a>
+<a class="sourceLine" id="cb9-10" title="10"></a>
+<a class="sourceLine" id="cb9-11" title="11"><span class="ex">no</span> changes added to commit (use <span class="st">&quot;git add&quot;</span> and/or <span class="st">&quot;git commit -a&quot;</span>)</a></code></pre></div>
+<p>And something like</p>
+<div class="sourceCode" id="cb10" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb10-1" title="1">$ <span class="fu">git</span> status</a>
+<a class="sourceLine" id="cb10-2" title="2"><span class="ex">HEAD</span> detached at 4bc4426</a>
+<a class="sourceLine" id="cb10-3" title="3"><span class="ex">nothing</span> to commit, working directory clean</a></code></pre></div>
+<p>Don’t panic, but your repository may be in an unworkable state. If you aren’t nearing a deadline, come to office hours or ask your question on Edstem, and we’d be happy to help. In an emergency scenario, delete your repository and re-clone (you’ll have to add the as above). <strong>This will lose any local uncommitted changes. Make sure to copy any files you were working on outside the directory, remove and copy them back in</strong></p>
+<p>If you want to learn more about git, there are all but an endless number of tutorials and resources online that can help you. Here are some links that can help you out</p>
+<ol>
+<li><p><a href="https://git-scm.com/docs/gittutorial">https://git-scm.com/docs/gittutorial</a></p></li>
+<li><p><a href="https://www.atlassian.com/git/tutorials/what-is-version-control">https://www.atlassian.com/git/tutorials/what-is-version-control</a></p></li>
+<li><p><a href="https://thenewstack.io/tutorial-git-for-absolutely-everyone/">https://thenewstack.io/tutorial-git-for-absolutely-everyone/</a></p></li>
+</ol>
+</section>
+<section id="editors" class="level3">
+<h3>Editors</h3>
+<p>Some people take this as an opportunity to learn a new editor, others not so much. The first part is those of you who want to learn a new editor. In the editor war that spans decades, we have come to the battle of vim vs emacs.</p>
+<p>Vim is a text editor and a Unix-like utility. You enter vim by typing , which takes you into the editor. There are three most commonly used modes: normal mode, insert mode, and command mode. You start off in normal mode. In this mode, you can move around with many keys with the most common ones being (corresponding to left, down, up, and right, respectively). To run commands in vim, you can first type and then a command after it. For instance, to quit vim, simply type (q stands for quit). If you have any unsaved edits, you must either save them , save and quit , or quit and discard changes . To make edits you can either type to change you into insert mode or to change to insert mode <strong>a</strong>fter the cursor. This is the basics when it comes to vim. In addition to the countless great resources out there on the internet, vim also has its own built-in tutorials set up for beginners. To access the interactive tutorial, enter in the command line (not inside of vim), and you are all set!</p>
+<p>Emacs is more of a way of life, and I don’t mean that figuratively. A lot of people say that emacs is a powerful operating system lacking a decent text editor. This means emacs can house a terminal, gdb session, ssh session, code and a whole lot more. It would not be fitting any other way to introduce you to the gnu-emacs any other way than the gnu-docs <a href="https://www.gnu.org/software/emacs/tour/">https://www.gnu.org/software/emacs/tour/</a>. Just note that emacs is <em>insanely</em> powerful. You can do almost anything with it. There are a fair number of students who like the IDE-aspect of other programming languages. Know that you can set up emacs to be an IDE, but you have to learn a bit of Lisp <a href="http://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html">http://martinsosic.com/development/emacs/2017/12/09/emacs-cpp-ide.html</a>.</p>
+<p>Then there are those of you who like to use your own editors. That is completely fine. For this, we require sshfs which has ports on many different machines.</p>
+<ol>
+<li><p>Windows <a href="https://github.com/billziss-gh/sshfs-win">https://github.com/billziss-gh/sshfs-win</a></p></li>
+<li><p>Mac <a href="https://github.com/osxfuse/osxfuse/wiki/SSHFS">https://github.com/osxfuse/osxfuse/wiki/SSHFS</a></p></li>
+<li><p>Linux <a href="https://help.ubuntu.com/community/SSHFS">https://help.ubuntu.com/community/SSHFS</a></p></li>
+</ol>
+<p>At that point, the files on your VM are synced with the files on your machine and edits can be made and will be synced.</p>
+<p>At the time of writing, an author likes to use spacemacs <a href="http://spacemacs.org/">http://spacemacs.org/</a> which marries both vim and emacs and both of their difficulties. I’ll give my soapbox for why I like it, but be warned that if you are starting from absolutely no vim or emacs experience the learning curve along with this course may be too much.</p>
+<ol>
+<li><p>Extensible. Spacemacs has a clean design written in lisp. There are 100s of packages ready to be installed by editing your spacemacs config and reloading that do everything from syntax checking, automatic static analyzing, etc.</p></li>
+<li><p>Most of the good parts from vim and emacs. Emacs is good at doing everything by being a fast editor. Vim is good at making fast edits and moving around. Spacemacs is the best of both worlds allowing vim keybindings to all the emacs goodness underneath.</p></li>
+<li><p>Lots of preconfiguration done. As opposed with a fresh emacs install, a lot of the configurations with language and projects are done for you like neotree, helm, various language layers. All that you have to do is navigate neotree to the base of your project and emacs will turn into an IDE for that programming language.</p></li>
+</ol>
+<p>But obviously to each his or her own. Many people will argue that editor gurus spend more time editing their editors and actually editing.</p>
+</section>
+<section id="clean-code" class="level3">
+<h3>Clean Code</h3>
+<p>Make your code modular using helper functions. If there is a repeated task (getting the pointers to contiguous blocks in the malloc MP, for example), make them helper functions. And make sure each function does one thing well so that you don’t have to debug twice. Let’s say that we are doing selection sort by finding the minimum element each iteration like so,</p>
+<div class="sourceCode" id="cb11" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb11-1" title="1"><span class="dt">void</span> selection_sort(<span class="dt">int</span> *a, <span class="dt">long</span> len){</a>
+<a class="sourceLine" id="cb11-2" title="2">     <span class="cf">for</span>(<span class="dt">long</span> i = len-<span class="dv">1</span>; i &gt; <span class="dv">0</span>; --i){</a>
+<a class="sourceLine" id="cb11-3" title="3">         <span class="dt">long</span> max_index = i;</a>
+<a class="sourceLine" id="cb11-4" title="4">         <span class="cf">for</span>(<span class="dt">long</span> j = len-<span class="dv">1</span>; j &gt;= <span class="dv">0</span>; --j){</a>
+<a class="sourceLine" id="cb11-5" title="5">             <span class="cf">if</span>(a[max_index] &lt; a[j]){</a>
+<a class="sourceLine" id="cb11-6" title="6">                  max_index = j;</a>
+<a class="sourceLine" id="cb11-7" title="7">             }</a>
+<a class="sourceLine" id="cb11-8" title="8">         }</a>
+<a class="sourceLine" id="cb11-9" title="9">         <span class="dt">int</span> temp = a[i];</a>
+<a class="sourceLine" id="cb11-10" title="10">         a[i] = a[max_index];</a>
+<a class="sourceLine" id="cb11-11" title="11">         a[max_index] = temp;</a>
+<a class="sourceLine" id="cb11-12" title="12">     }</a>
+<a class="sourceLine" id="cb11-13" title="13"></a>
+<a class="sourceLine" id="cb11-14" title="14">}</a></code></pre></div>
+<p>Many can see the bug in the code, but it can help to refactor the above method into</p>
+<div class="sourceCode" id="cb12" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb12-1" title="1"><span class="dt">long</span> max_index(<span class="dt">int</span> *a, <span class="dt">long</span> start, <span class="dt">long</span> end);</a>
+<a class="sourceLine" id="cb12-2" title="2"><span class="dt">void</span> swap(<span class="dt">int</span> *a, <span class="dt">long</span> idx1, <span class="dt">long</span> idx2);</a>
+<a class="sourceLine" id="cb12-3" title="3"><span class="dt">void</span> selection_sort(<span class="dt">int</span> *a, <span class="dt">long</span> len);</a></code></pre></div>
+<p>And the error is specifically in one function. In the end, this class is about writing system programs, not a class about refactoring/debugging your code. In fact, most kernel code is so atrocious that you don’t want to read it – the defense there is that it needs to be. But for the sake of debugging, it may benefit you in the long run to adopt some of these practices.</p>
+</section>
+<section id="asserts" class="level3">
+<h3>Asserts</h3>
+<p>Use assertions to make sure your code works up to a certain point – and importantly, to make sure you don’t break it later. For example, if your data structure is a doubly-linked list, you can do something like to assert that the next node has a pointer to the current node. You can also check the pointer is pointing to an expected range of memory address, non-null, -&gt;size is reasonable, etc. The macro will disable all assertions, so don’t forget to set that once you finish debugging <span class="citation" data-cites="cplusplus_assert">(“Assert,” <a href="ch018.xhtml#ref-cplusplus_assert" role="doc-biblioref">n.d.</a>)</span>.</p>
+<p>Here is a quick example with an assert. Let’s say that we are writing code using memcpy. We would want to put an assert before that checks whether my two memory regions overlap. If they do overlap, memcpy runs into undefined behavior, so we want to discover that problem sooner rather than later.</p>
+<div class="sourceCode" id="cb13" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb13-1" title="1">assert( src+n &lt; dest || src &gt;= dest + n); <span class="co">// source should finish before the destination or the source starts after the end of destination</span></a>
+<a class="sourceLine" id="cb13-2" title="2">memcpy(dest, src, n);</a></code></pre></div>
+<p>This check can be turned off at compile-time, but will save you <strong>tons</strong> of trouble debugging!</p>
+</section>
+</section>
+<section id="valgrind" class="level2">
+<h2>Valgrind</h2>
+<p>Valgrind is a suite of tools designed to provide debugging and profiling tools to make your programs more correct and detect some runtime issues <span class="citation" data-cites="valgrind">(“4. Memcheck: A Memory Error Detector,” <a href="ch018.xhtml#ref-valgrind" role="doc-biblioref">n.d.</a>)</span>. The most used of these tools is Memcheck, which can detect many memory-related errors that are common in C and C++ programs and that can lead to crashes and unpredictable behavior (for example, unfreed memory buffers). To run Valgrind on your program:</p>
+<div class="sourceCode" id="cb14" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb14-1" title="1">valgrind --leak-check=full --show-leak-kinds=all myprogram arg1 arg<span class="dv">2</span></a></code></pre></div>
+<p>Arguments are optional and the default tool that will run is Memcheck. The output will be presented in the form: the number of allocations, frees, and errors. Suppose we have a simple program like this:</p>
+<div class="sourceCode" id="cb15" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb15-1" title="1"><span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></a>
+<a class="sourceLine" id="cb15-2" title="2"></a>
+<a class="sourceLine" id="cb15-3" title="3"><span class="dt">void</span> dummy_function() {</a>
+<a class="sourceLine" id="cb15-4" title="4">	<span class="dt">int</span>* x = malloc(<span class="dv">10</span> * <span class="kw">sizeof</span>(<span class="dt">int</span>));</a>
+<a class="sourceLine" id="cb15-5" title="5">	x[<span class="dv">10</span>] = <span class="dv">0</span>;        <span class="co">// error 1: Out of bounds write, as you can see here we write to an out of bound memory address.</span></a>
+<a class="sourceLine" id="cb15-6" title="6">}                    <span class="co">// error 2: Memory Leak, x is allocated at function exit.</span></a>
+<a class="sourceLine" id="cb15-7" title="7"></a>
+<a class="sourceLine" id="cb15-8" title="8"><span class="dt">int</span> main(<span class="dt">void</span>) {</a>
+<a class="sourceLine" id="cb15-9" title="9">	dummy_function();</a>
+<a class="sourceLine" id="cb15-10" title="10">	<span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb15-11" title="11">}</a></code></pre></div>
+<p>This program compiles and runs with no errors. Let’s see what Valgrind will output.</p>
+<div class="sourceCode" id="cb16" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb16-1" title="1">==<span class="dv">29515</span>== Memcheck, a memory error detector</a>
+<a class="sourceLine" id="cb16-2" title="2">==<span class="dv">29515</span>== Copyright (C) <span class="dv">2002</span>-<span class="dv">2015</span>, and GNU GPL&#39;d, by Julian Seward et al.</a>
+<a class="sourceLine" id="cb16-3" title="3">==<span class="dv">29515</span>== Using Valgrind-<span class="fl">3.11</span><span class="er">.0</span> and LibVEX; rerun with -h <span class="cf">for</span> copyright info</a>
+<a class="sourceLine" id="cb16-4" title="4">==<span class="dv">29515</span>== Command: ./a</a>
+<a class="sourceLine" id="cb16-5" title="5">==<span class="dv">29515</span>==</a>
+<a class="sourceLine" id="cb16-6" title="6">==<span class="dv">29515</span>== Invalid write of size <span class="dv">4</span></a>
+<a class="sourceLine" id="cb16-7" title="7">==<span class="dv">29515</span>==    at <span class="bn">0x400544</span>: dummy_function (in /home/rafi/projects/exocpp/a)</a>
+<a class="sourceLine" id="cb16-8" title="8">==<span class="dv">29515</span>==    by <span class="bn">0x40055A</span>: main (in /home/rafi/projects/exocpp/a)</a>
+<a class="sourceLine" id="cb16-9" title="9">==<span class="dv">29515</span>==  Address <span class="bn">0x5203068</span> is <span class="dv">0</span> bytes after a block of size <span class="dv">40</span> alloc&#39;d</a>
+<a class="sourceLine" id="cb16-10" title="10">==<span class="dv">29515</span>==    at <span class="bn">0x4C2DB8F</span>: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)</a>
+<a class="sourceLine" id="cb16-11" title="11">==<span class="dv">29515</span>==    by <span class="bn">0x400537</span>: dummy_function (in /home/rafi/projects/exocpp/a)</a>
+<a class="sourceLine" id="cb16-12" title="12">==<span class="dv">29515</span>==    by <span class="bn">0x40055A</span>: main (in /home/rafi/projects/exocpp/a)</a>
+<a class="sourceLine" id="cb16-13" title="13">==<span class="dv">29515</span>==</a>
+<a class="sourceLine" id="cb16-14" title="14">==<span class="dv">29515</span>==</a>
+<a class="sourceLine" id="cb16-15" title="15">==<span class="dv">29515</span>== HEAP SUMMARY:</a>
+<a class="sourceLine" id="cb16-16" title="16">==<span class="dv">29515</span>==     in use at exit: <span class="dv">40</span> bytes in <span class="dv">1</span> blocks</a>
+<a class="sourceLine" id="cb16-17" title="17">==<span class="dv">29515</span>==   total heap usage: <span class="dv">1</span> allocs, <span class="dv">0</span> frees, <span class="dv">40</span> bytes allocated</a>
+<a class="sourceLine" id="cb16-18" title="18">==<span class="dv">29515</span>==</a>
+<a class="sourceLine" id="cb16-19" title="19">==<span class="dv">29515</span>== LEAK SUMMARY:</a>
+<a class="sourceLine" id="cb16-20" title="20">==<span class="dv">29515</span>==    definitely lost: <span class="dv">40</span> bytes in <span class="dv">1</span> blocks</a>
+<a class="sourceLine" id="cb16-21" title="21">==<span class="dv">29515</span>==    indirectly lost: <span class="dv">0</span> bytes in <span class="dv">0</span> blocks</a>
+<a class="sourceLine" id="cb16-22" title="22">==<span class="dv">29515</span>==      possibly lost: <span class="dv">0</span> bytes in <span class="dv">0</span> blocks</a>
+<a class="sourceLine" id="cb16-23" title="23">==<span class="dv">29515</span>==    still reachable: <span class="dv">0</span> bytes in <span class="dv">0</span> blocks</a>
+<a class="sourceLine" id="cb16-24" title="24">==<span class="dv">29515</span>==         suppressed: <span class="dv">0</span> bytes in <span class="dv">0</span> blocks</a>
+<a class="sourceLine" id="cb16-25" title="25">==<span class="dv">29515</span>== Rerun with --leak-check=full to see details of leaked memory</a>
+<a class="sourceLine" id="cb16-26" title="26">==<span class="dv">29515</span>==</a>
+<a class="sourceLine" id="cb16-27" title="27">==<span class="dv">29515</span>== For counts of detected and suppressed errors, rerun with: -v</a>
+<a class="sourceLine" id="cb16-28" title="28">==<span class="dv">29515</span>== ERROR SUMMARY: <span class="dv">1</span> errors from <span class="dv">1</span> contexts (suppressed: <span class="dv">0</span> from <span class="dv">0</span>)</a></code></pre></div>
+<p><strong>Invalid write</strong>: It detected our heap block overrun, writing outside of an allocated block.</p>
+<p><strong>Definitely lost</strong>: Memory leak — you probably forgot to free a memory block.</p>
+<p>Valgrind is a effective tool to check for errors at runtime. C is special when it comes to such behavior, so after compiling your program you can use Valgrind to fix errors that your compiler may miss and that usually happens when your program is running.</p>
+<p>For more information, you can refer to the manual <span class="citation" data-cites="valgrind">(“4. Memcheck: A Memory Error Detector,” <a href="ch018.xhtml#ref-valgrind" role="doc-biblioref">n.d.</a>)</span></p>
+<section id="tsan" class="level3">
+<h3>TSAN</h3>
+<p>ThreadSanitizer is a tool from Google, built into clang and gcc, to help you detect race conditions in your code <span class="citation" data-cites="threadsanitizercppmanual_2018">(“ThreadSanitizerCppManual” <a href="ch018.xhtml#ref-threadsanitizercppmanual_2018" role="doc-biblioref">2018</a>)</span>. Note, that running with tsan will slow your code down a bit. Consider the following code.</p>
+<div class="sourceCode" id="cb17" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb17-1" title="1"><span class="pp">#include </span><span class="im">&lt;pthread.h&gt;</span></a>
+<a class="sourceLine" id="cb17-2" title="2"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb17-3" title="3"></a>
+<a class="sourceLine" id="cb17-4" title="4"><span class="dt">int</span> global;</a>
+<a class="sourceLine" id="cb17-5" title="5"></a>
+<a class="sourceLine" id="cb17-6" title="6"><span class="dt">void</span> *Thread1(<span class="dt">void</span> *x) {</a>
+<a class="sourceLine" id="cb17-7" title="7">    global++;</a>
+<a class="sourceLine" id="cb17-8" title="8">    <span class="cf">return</span> NULL;</a>
+<a class="sourceLine" id="cb17-9" title="9">}</a>
+<a class="sourceLine" id="cb17-10" title="10"></a>
+<a class="sourceLine" id="cb17-11" title="11"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb17-12" title="12">    pthread_t t[<span class="dv">2</span>];</a>
+<a class="sourceLine" id="cb17-13" title="13">    pthread_create(&amp;t[<span class="dv">0</span>], NULL, Thread1, NULL);</a>
+<a class="sourceLine" id="cb17-14" title="14">    global = <span class="dv">100</span>;</a>
+<a class="sourceLine" id="cb17-15" title="15">    pthread_join(t[<span class="dv">0</span>], NULL);</a>
+<a class="sourceLine" id="cb17-16" title="16">}</a>
+<a class="sourceLine" id="cb17-17" title="17"><span class="co">// compile with gcc -fsanitize=thread -pie -fPIC -ltsan -g simple_race.c</span></a></code></pre></div>
+<p>We can see that there is a race condition on the variable . Both the main thread and created thread will try to change the value at the same time. But, does ThreadSantizer catch it?</p>
+<div class="sourceCode" id="cb18" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb18-1" title="1">$ <span class="ex">./a.out</span></a>
+<a class="sourceLine" id="cb18-2" title="2">==================</a>
+<a class="sourceLine" id="cb18-3" title="3"><span class="ex">WARNING</span>: ThreadSanitizer: data race (pid=28888)</a>
+<a class="sourceLine" id="cb18-4" title="4">  <span class="ex">Read</span> of size 4 at 0x7f73ed91c078 by thread T1:</a>
+<a class="sourceLine" id="cb18-5" title="5">    <span class="co">#0 Thread1 /home/zmick2/simple_race.c:7 (exe+0x000000000a50)</span></a>
+<a class="sourceLine" id="cb18-6" title="6">    <span class="co">#1  :0 (libtsan.so.0+0x00000001b459)</span></a>
+<a class="sourceLine" id="cb18-7" title="7"></a>
+<a class="sourceLine" id="cb18-8" title="8">  <span class="ex">Previous</span> write of size 4 at 0x7f73ed91c078 by main thread:</a>
+<a class="sourceLine" id="cb18-9" title="9">    <span class="co">#0 main /home/zmick2/simple_race.c:14 (exe+0x000000000ac8)</span></a>
+<a class="sourceLine" id="cb18-10" title="10"></a>
+<a class="sourceLine" id="cb18-11" title="11">  <span class="ex">Thread</span> T1 (tid=28889, running) <span class="ex">created</span> by main thread at:</a>
+<a class="sourceLine" id="cb18-12" title="12">    <span class="co">#0  :0 (libtsan.so.0+0x00000001f6ab)</span></a>
+<a class="sourceLine" id="cb18-13" title="13">    <span class="co">#1 main /home/zmick2/simple_race.c:13 (exe+0x000000000ab8)</span></a>
+<a class="sourceLine" id="cb18-14" title="14"></a>
+<a class="sourceLine" id="cb18-15" title="15"><span class="ex">SUMMARY</span>: ThreadSanitizer: data race /home/zmick2/simple_race.c:7 Thread1</a>
+<a class="sourceLine" id="cb18-16" title="16">==================</a>
+<a class="sourceLine" id="cb18-17" title="17"><span class="ex">ThreadSanitizer</span>: reported 1 warnings</a></code></pre></div>
+<p>If we compiled with the debug flag, then it would give us the variable name as well.</p>
+</section>
+</section>
+<section id="gdb" class="level2">
+<h2>GDB</h2>
+<p>GDB is short for the GNU Debugger. GDB is a program that helps you track down errors by interactively debugging them <span class="citation" data-cites="gdb">(“GDB: The Gnu Project Debugger” <a href="ch018.xhtml#ref-gdb" role="doc-biblioref">2019</a>)</span>. It can start and stop your program, look around, and put in ad hoc constraints and checks. Here are a few examples.</p>
+<section id="setting-breakpoints-programmatically" class="level5">
+<h5>Setting breakpoints programmatically</h5>
+<p>A breakpoint is a line of code where you want the execution to stop and give control back to the debugger. A useful trick when debugging complex C programs with GDB is setting breakpoints in the source code.</p>
+<div class="sourceCode" id="cb19" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb19-1" title="1"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb19-2" title="2">    <span class="dt">int</span> val = <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb19-3" title="3">    val = <span class="dv">42</span>;</a>
+<a class="sourceLine" id="cb19-4" title="4">    asm(<span class="st">&quot;int $3&quot;</span>); <span class="co">// set a breakpoint here</span></a>
+<a class="sourceLine" id="cb19-5" title="5">    val = <span class="dv">7</span>;</a>
+<a class="sourceLine" id="cb19-6" title="6">}</a></code></pre></div>
+<div class="sourceCode" id="cb20" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb20-1" title="1">$ <span class="fu">gcc</span> main.c -g -o main</a>
+<a class="sourceLine" id="cb20-2" title="2">$ <span class="fu">gdb</span> --args ./main</a>
+<a class="sourceLine" id="cb20-3" title="3"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">r</span></a>
+<a class="sourceLine" id="cb20-4" title="4">[<span class="ex">...</span>]</a>
+<a class="sourceLine" id="cb20-5" title="5"><span class="ex">Program</span> received signal SIGTRAP, Trace/breakpoint trap.</a>
+<a class="sourceLine" id="cb20-6" title="6"><span class="fu">main ()</span> <span class="ex">at</span> main.c:6</a>
+<a class="sourceLine" id="cb20-7" title="7"><span class="ex">6</span>     val = 7<span class="kw">;</span></a>
+<a class="sourceLine" id="cb20-8" title="8"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">p</span> val</a>
+<a class="sourceLine" id="cb20-9" title="9"><span class="va">$1</span> = <span class="ex">42</span></a></code></pre></div>
+<p>You can also set breakpoints programmatically. Assume that we have no optimization and the line numbers are as follows</p>
+<div class="sourceCode" id="cb21" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb21-1" title="1"><span class="ex">1.</span> int main() <span class="kw">{</span></a>
+<a class="sourceLine" id="cb21-2" title="2"><span class="ex">2.</span>     int val = 1<span class="kw">;</span></a>
+<a class="sourceLine" id="cb21-3" title="3"><span class="ex">3.</span>     val = 42<span class="kw">;</span></a>
+<a class="sourceLine" id="cb21-4" title="4"><span class="ex">4.</span>     val = 7<span class="kw">;</span></a>
+<a class="sourceLine" id="cb21-5" title="5"><span class="ex">5.</span> <span class="kw">}</span></a></code></pre></div>
+<p>We can now set the breakpoint before the program starts.</p>
+<div class="sourceCode" id="cb22" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb22-1" title="1">$ <span class="fu">gcc</span> main.c -g -o main</a>
+<a class="sourceLine" id="cb22-2" title="2">$ <span class="fu">gdb</span> --args ./main</a>
+<a class="sourceLine" id="cb22-3" title="3"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="bu">break</span> main.c:4</a>
+<a class="sourceLine" id="cb22-4" title="4">[<span class="ex">...</span>]</a>
+<a class="sourceLine" id="cb22-5" title="5"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">p</span> val</a>
+<a class="sourceLine" id="cb22-6" title="6"><span class="va">$1</span> = <span class="ex">42</span></a></code></pre></div>
+</section>
+<section id="checking-memory-content" class="level5">
+<h5>Checking memory content</h5>
+<p>We can also use gdb to check the content of different pieces of memory. For example,</p>
+<div class="sourceCode" id="cb23" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb23-1" title="1"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb23-2" title="2">    <span class="dt">char</span> bad_string[<span class="dv">3</span>] = {<span class="ch">&#39;C&#39;</span>, <span class="ch">&#39;a&#39;</span>, <span class="ch">&#39;t&#39;</span>};</a>
+<a class="sourceLine" id="cb23-3" title="3">    printf(<span class="st">&quot;%s&quot;</span>, bad_string);</a>
+<a class="sourceLine" id="cb23-4" title="4">}</a></code></pre></div>
+<p>Compiled we get</p>
+<div class="sourceCode" id="cb24" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb24-1" title="1">$ <span class="fu">gcc</span> main.c -g -o main <span class="kw">&amp;&amp;</span> <span class="ex">./main</span></a>
+<a class="sourceLine" id="cb24-2" title="2">$ <span class="ex">Cat</span> ZVQ� $</a></code></pre></div>
+<p>We can now use gdb to look at specific bytes of the string and reason about when the program should’ve stopped running</p>
+<div class="sourceCode" id="cb25" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">l</span></a>
+<a class="sourceLine" id="cb25-2" title="2"><span class="ex">1</span> <span class="co">#include &lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb25-3" title="3"><span class="ex">2</span> int main() <span class="kw">{</span></a>
+<a class="sourceLine" id="cb25-4" title="4"><span class="ex">3</span>     char bad_string[3] = {<span class="st">&#39;C&#39;</span>, <span class="st">&#39;a&#39;</span>, <span class="st">&#39;t&#39;</span><span class="kw">}</span>;</a>
+<a class="sourceLine" id="cb25-5" title="5"><span class="ex">4</span>     printf(<span class="st">&quot;%s&quot;</span>, bad_string);</a>
+<a class="sourceLine" id="cb25-6" title="6"><span class="ex">5</span> }</a>
+<a class="sourceLine" id="cb25-7" title="7"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">b</span> 4</a>
+<a class="sourceLine" id="cb25-8" title="8"><span class="ex">Breakpoint</span> 1 at 0x100000f57: file main.c, line 4.</a>
+<a class="sourceLine" id="cb25-9" title="9"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">r</span></a>
+<a class="sourceLine" id="cb25-10" title="10">[<span class="ex">...</span>]</a>
+<a class="sourceLine" id="cb25-11" title="11"><span class="ex">Breakpoint</span> 1, main () <span class="ex">at</span> main.c:4</a>
+<a class="sourceLine" id="cb25-12" title="12"><span class="ex">4</span>     printf(<span class="st">&quot;%s&quot;</span>, bad_string);</a>
+<a class="sourceLine" id="cb25-13" title="13"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">x/16xb</span> bad_string</a>
+<a class="sourceLine" id="cb25-14" title="14"><span class="ex">0x7fff5fbff9cd</span>: 0x63  0x61  0x74  0xe0  0xf9  0xbf  0x5f  0xff</a>
+<a class="sourceLine" id="cb25-15" title="15"><span class="ex">0x7fff5fbff9d5</span>: 0x7f  0x00  0x00  0xfd  0xb5  0x23  0x89  0xff</a>
+<a class="sourceLine" id="cb25-16" title="16"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span></a></code></pre></div>
+<p>Here, by using the command with parameters , we can see that starting at memory address (value of ), would actually see the following sequence of bytes as a string because we provided a malformed string without a null terminator.</p>
+</section>
+<section id="involved-gdb-example" class="level3">
+<h3>Involved gdb example</h3>
+<p>Here is how one of your TAs would go through and debug a simple program that is going wrong. First, the source code of the program. If you can see the error immediately, please bear with us.</p>
+<div class="sourceCode" id="cb26" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb26-1" title="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb26-2" title="2"></a>
+<a class="sourceLine" id="cb26-3" title="3"><span class="dt">double</span> convert_to_radians(<span class="dt">int</span> deg);</a>
+<a class="sourceLine" id="cb26-4" title="4"></a>
+<a class="sourceLine" id="cb26-5" title="5"><span class="dt">int</span> main(){</a>
+<a class="sourceLine" id="cb26-6" title="6">	<span class="cf">for</span> (<span class="dt">int</span> deg = <span class="dv">0</span>; deg &gt; <span class="dv">360</span>; ++deg){</a>
+<a class="sourceLine" id="cb26-7" title="7">		<span class="dt">double</span> radians = convert_to_radians(deg);</a>
+<a class="sourceLine" id="cb26-8" title="8">		printf(<span class="st">&quot;%d. %f</span><span class="sc">\n</span><span class="st">&quot;</span>, deg, radians);</a>
+<a class="sourceLine" id="cb26-9" title="9">	}</a>
+<a class="sourceLine" id="cb26-10" title="10">	<span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb26-11" title="11">}</a>
+<a class="sourceLine" id="cb26-12" title="12"></a>
+<a class="sourceLine" id="cb26-13" title="13"><span class="dt">double</span> convert_to_radians(<span class="dt">int</span> deg){</a>
+<a class="sourceLine" id="cb26-14" title="14">	<span class="cf">return</span> ( <span class="dv">31415</span> / <span class="dv">1000</span> ) * deg / <span class="dv">180</span>;</a>
+<a class="sourceLine" id="cb26-15" title="15">}</a></code></pre></div>
+<p>How can we use gdb to debug? First we ought to load GDB.</p>
+<div class="sourceCode" id="cb27" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb27-1" title="1">$ <span class="fu">gdb</span> --args ./main</a>
+<a class="sourceLine" id="cb27-2" title="2"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">layout</span> src<span class="kw">;</span> <span class="co"># If you want a GUI type</span></a>
+<a class="sourceLine" id="cb27-3" title="3"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">run</span></a>
+<a class="sourceLine" id="cb27-4" title="4"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span></a></code></pre></div>
+<p>Want to take a look at the source?</p>
+<div class="sourceCode" id="cb28" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb28-1" title="1"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">l</span></a>
+<a class="sourceLine" id="cb28-2" title="2"><span class="ex">1</span>	<span class="co">#include &lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb28-3" title="3"><span class="ex">2</span>	</a>
+<a class="sourceLine" id="cb28-4" title="4"><span class="ex">3</span>	double convert_to_radians(int deg);</a>
+<a class="sourceLine" id="cb28-5" title="5"><span class="ex">4</span>	</a>
+<a class="sourceLine" id="cb28-6" title="6"><span class="ex">5</span>	int main()<span class="kw">{</span></a>
+<a class="sourceLine" id="cb28-7" title="7"><span class="ex">6</span>		for (int deg = 0<span class="kw">;</span> <span class="ex">deg</span> <span class="op">&gt;</span> 360<span class="kw">;</span> <span class="ex">++deg</span>)<span class="kw">{</span></a>
+<a class="sourceLine" id="cb28-8" title="8"><span class="ex">7</span>			double radians = convert_to_radians(deg);</a>
+<a class="sourceLine" id="cb28-9" title="9"><span class="ex">8</span>			printf(<span class="st">&quot;%d. %f\n&quot;</span>, deg, radians);</a>
+<a class="sourceLine" id="cb28-10" title="10"><span class="ex">9</span>		<span class="kw">}</span></a>
+<a class="sourceLine" id="cb28-11" title="11"><span class="ex">10</span>	    return 0<span class="kw">;</span></a>
+<a class="sourceLine" id="cb28-12" title="12"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="bu">break</span> 7 <span class="co"># break &lt;file&gt;:line or break &lt;file&gt;:function</span></a>
+<a class="sourceLine" id="cb28-13" title="13"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">run</span></a>
+<a class="sourceLine" id="cb28-14" title="14"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span></a></code></pre></div>
+<p>From running the code, the breakpoint didn’t even trigger, meaning the code never got to that point. That’s because of the comparison! Okay, flip the sign it should work now right?</p>
+<div class="sourceCode" id="cb29" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb29-1" title="1"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">run</span></a>
+<a class="sourceLine" id="cb29-2" title="2"><span class="ex">350.</span> 60.000000</a>
+<a class="sourceLine" id="cb29-3" title="3"><span class="ex">351.</span> 60.000000</a>
+<a class="sourceLine" id="cb29-4" title="4"><span class="ex">352.</span> 60.000000</a>
+<a class="sourceLine" id="cb29-5" title="5"><span class="ex">353.</span> 60.000000</a>
+<a class="sourceLine" id="cb29-6" title="6"><span class="ex">354.</span> 60.000000</a>
+<a class="sourceLine" id="cb29-7" title="7"><span class="ex">355.</span> 61.000000</a>
+<a class="sourceLine" id="cb29-8" title="8"><span class="ex">356.</span> 61.000000</a>
+<a class="sourceLine" id="cb29-9" title="9"><span class="ex">357.</span> 61.000000</a>
+<a class="sourceLine" id="cb29-10" title="10"><span class="ex">358.</span> 61.000000</a>
+<a class="sourceLine" id="cb29-11" title="11"><span class="ex">359.</span> 61.000000</a></code></pre></div>
+<div class="sourceCode" id="cb30" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb30-1" title="1"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="bu">break</span> 14 if deg == 359 <span class="co"># Let&#39;s check the last iteration only</span></a>
+<a class="sourceLine" id="cb30-2" title="2"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">run</span></a>
+<a class="sourceLine" id="cb30-3" title="3"><span class="ex">...</span></a>
+<a class="sourceLine" id="cb30-4" title="4"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">print/x</span> deg <span class="co"># print the hex value of degree</span></a>
+<a class="sourceLine" id="cb30-5" title="5"><span class="va">$1</span> = <span class="ex">0x167</span></a>
+<a class="sourceLine" id="cb30-6" title="6"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">print</span> (31415/1000)</a>
+<a class="sourceLine" id="cb30-7" title="7"><span class="va">$2</span> = <span class="ex">0x31</span></a>
+<a class="sourceLine" id="cb30-8" title="8"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">print</span> (31415/1000.0)</a>
+<a class="sourceLine" id="cb30-9" title="9"><span class="va">$3</span> = <span class="ex">201.749</span></a>
+<a class="sourceLine" id="cb30-10" title="10"><span class="kw">(</span><span class="fu">gdb</span><span class="kw">)</span> <span class="ex">print</span> (31415.0/10000.0)</a>
+<a class="sourceLine" id="cb30-11" title="11"><span class="va">$4</span> = <span class="ex">3.1414999999999999</span></a></code></pre></div>
+<p>That was only the bare minimum, though most of you will get by with that. There are a whole load more resources on the web, here are a few specific ones that can help you get started.</p>
+<ol>
+<li><p><a href="http://www.cs.cmu.edu/~gilpin/tutorial/">Introduction to gdb</a></p></li>
+<li><p><a href="https://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_toc.html">GDB Manual</a></p></li>
+<li><p><a href="https://www.youtube.com/watch?v=PorfLSr3DDI">CppCon 2015: Greg Law “Give me 15 minutes &amp; I’ll change your view of GDB”</a></p></li>
+</ol>
+</section>
+<section id="shell" class="level3">
+<h3>Shell</h3>
+<p>What do you actually use to run your program? A shell! A shell is a programming language that is running inside your terminal. A terminal is merely a window to input commands. Now, on POSIX we usually have one shell called that is linked to a POSIX compliant shell called . Most of the time, you use a shell called that is somewhat POSIX compliant but has some nifty built-in features. If you want to be even more advanced, has some more powerful features like tab complete on programs and fuzzy patterns.</p>
+</section>
+<section id="undefined-behavior-sanitizer" class="level3">
+<h3>Undefined Behavior Sanitizer</h3>
+<p>The undefined behavior sanitizer is a wonderful tool provided by the llvm project. It allows you to compile code with a runtime checker to make sure that you don’t do undefined behavior for various categories. We will try to include it into our projects, but requires support form all the external libraries that we use so we may not get around to all of them. <a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html</a></p>
+<section id="undefined-behavior---why-we-cant-solve-it-in-general" class="level4">
+<h4>Undefined behavior - why we can’t solve it in general</h4>
+<p>Also please please read Chris Lattner’s 3 Part blog post on undefined behavior. It can shed light on debug builds and the mystery of compiler optimization.</p>
+<p><a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html">http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html</a></p>
+</section>
+</section>
+<section id="clang-static-build-tools" class="level3">
+<h3>Clang Static Build Tools</h3>
+<p>Clang provides a great drop-in replacement tools for compiling programs. If you want to see if there is an error that may cause a race condition, casting error, etc, all you need to do is the following.</p>
+<div class="sourceCode" id="cb31" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb31-1" title="1">$ <span class="ex">scan-build</span> make</a></code></pre></div>
+<p>And in addition to the make output, you will get static build warnings.</p>
+</section>
+<section id="strace-and-ltrace" class="level3">
+<h3>strace and ltrace</h3>
+<p>strace and ltrace are two programs that trace the system calls and library calls, respectively, of a running program or command. These may be missing on your system, so to install, run the following:</p>
+<div class="sourceCode" id="cb32" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb32-1" title="1">$ <span class="fu">sudo</span> apt install strace ltrace</a></code></pre></div>
+<p>Debugging with ltrace can be as simple as figuring out what was the return call of the last library call that failed.</p>
+<div class="sourceCode" id="cb33" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb33-1" title="1"><span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb33-2" title="2">    <span class="dt">FILE</span> *fp = fopen(<span class="st">&quot;I don&#39;t exist&quot;</span>, <span class="st">&quot;r&quot;</span>);</a>
+<a class="sourceLine" id="cb33-3" title="3">    fprintf(fp, <span class="st">&quot;a&quot;</span>);</a>
+<a class="sourceLine" id="cb33-4" title="4">    fclose(fp);</a>
+<a class="sourceLine" id="cb33-5" title="5">    <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb33-6" title="6">}</a></code></pre></div>
+<div class="sourceCode" id="cb34" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb34-1" title="1"><span class="op">&gt;</span> <span class="ex">ltrace</span> ./a.out</a>
+<a class="sourceLine" id="cb34-2" title="2"> <span class="ex">__libc_start_main</span>(0x8048454, 1, 0xbfc19db4, 0x80484c0, 0x8048530 <span class="op">&lt;</span>unfinished ...<span class="op">&gt;</span></a>
+<a class="sourceLine" id="cb34-3" title="3"> <span class="ex">fopen</span>(<span class="st">&quot;I don&#39;t exist&quot;</span>, <span class="st">&quot;r&quot;</span>)                          = <span class="ex">0x0</span></a>
+<a class="sourceLine" id="cb34-4" title="4"> <span class="ex">fwrite</span>(<span class="st">&quot;Invalid Write\n&quot;</span>, 1, 14, 0x0 <span class="op">&lt;</span>unfinished ...<span class="op">&gt;</span></a>
+<a class="sourceLine" id="cb34-5" title="5"> <span class="ex">---</span> SIGSEGV (Segmentation fault) <span class="ex">---</span></a>
+<a class="sourceLine" id="cb34-6" title="6"> <span class="ex">+++</span> killed by SIGSEGV +++</a></code></pre></div>
+<p>ltrace output can clue you in to weird things your program is doing live. Unfortunately, ltrace can’t be used to inject faults, meaning that ltrace can tell you what is happening, but it can’t tamper with what is already happening.</p>
+<p>strace on the other hand could modify your program. Debugging with strace is amazing. The basic usage is running strace with a program, and it’ll get you a complete list of system call parameters.</p>
+<div class="sourceCode" id="cb35" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb35-1" title="1">$ <span class="ex">strace</span> head README.md</a>
+<a class="sourceLine" id="cb35-2" title="2"><span class="ex">execve</span>(<span class="st">&quot;/usr/bin/head&quot;</span>, [<span class="st">&quot;head&quot;</span>, <span class="st">&quot;README.md&quot;</span>], 0x7ffff28c8fa8 /* 60 vars */) = <span class="ex">0</span></a>
+<a class="sourceLine" id="cb35-3" title="3"><span class="ex">brk</span>(NULL)                               = <span class="ex">0x7ffff5719000</span></a>
+<a class="sourceLine" id="cb35-4" title="4"><span class="ex">access</span>(<span class="st">&quot;/etc/ld.so.nohwcap&quot;</span>, F_OK)      = <span class="ex">-1</span> ENOENT (No such file or directory)</a>
+<a class="sourceLine" id="cb35-5" title="5"><span class="ex">access</span>(<span class="st">&quot;/etc/ld.so.preload&quot;</span>, R_OK)      = <span class="ex">-1</span> ENOENT (No such file or directory)</a>
+<a class="sourceLine" id="cb35-6" title="6"><span class="ex">openat</span>(AT_FDCWD, <span class="st">&quot;/etc/ld.so.cache&quot;</span>, O_RDONLY<span class="kw">|</span><span class="ex">O_CLOEXEC</span>) = <span class="ex">3</span></a>
+<a class="sourceLine" id="cb35-7" title="7"><span class="ex">fstat</span>(3, {st_mode=S_IFREG<span class="kw">|</span><span class="ex">0644</span>, st_size=32804, ...}) = <span class="ex">0</span></a>
+<a class="sourceLine" id="cb35-8" title="8"><span class="ex">...</span></a></code></pre></div>
+<p>If the output is too verbose, you can use trace= with a command delimited list of syscalls to filter all but those calls.</p>
+<div class="sourceCode" id="cb36" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb36-1" title="1">$ <span class="ex">strace</span> -e trace=read,write head README.md</a>
+<a class="sourceLine" id="cb36-2" title="2"><span class="bu">read</span>(3, <span class="st">&quot;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\260\34\2\0\0\0\0\0&quot;</span>..., 832) = <span class="ex">832</span></a>
+<a class="sourceLine" id="cb36-3" title="3"><span class="bu">read</span>(3, <span class="st">&quot;# Locale name alias data base.\n#&quot;</span>..., 4096) = <span class="ex">2995</span></a>
+<a class="sourceLine" id="cb36-4" title="4"><span class="bu">read</span>(3, <span class="st">&quot;&quot;</span>, 4096)                       = <span class="ex">0</span></a>
+<a class="sourceLine" id="cb36-5" title="5"><span class="bu">read</span>(3, <span class="st">&quot;# C Datastructures\n\n[![Build Sta&quot;</span>..., 8192) = <span class="ex">1250</span></a>
+<a class="sourceLine" id="cb36-6" title="6"><span class="fu">write</span>(1, <span class="st">&quot;# C Datastructures\n&quot;</span>, 19# C Datastructures</a></code></pre></div>
+<p>You can also trace files or targets.</p>
+<div class="sourceCode" id="cb37" data-language="bash"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb37-1" title="1">$ <span class="ex">strace</span> -e trace=read,write -P README.md head README.md</a>
+<a class="sourceLine" id="cb37-2" title="2"><span class="ex">strace</span>: Requested path <span class="st">&#39;README.md&#39;</span> resolved into <span class="st">&#39;/mnt/c/Users/user/personal/libds/README.md&#39;</span></a>
+<a class="sourceLine" id="cb37-3" title="3"><span class="bu">read</span>(3, <span class="st">&quot;# C Datastructures\n\n[![Build Sta&quot;</span>..., 8192) = <span class="ex">1250</span></a></code></pre></div>
+<p>Newer versions of strace can actually inject faults into your program. This is useful when you want to occasionally make reads and writes fail for example in a networking application, which your program should handle. The problem is as of early 2019, that version is missing from Ubuntu repositories. Meaning that you’ll have to install it from the source.</p>
+</section>
+<section id="printfs" class="level3">
+<h3>printfs</h3>
+<p>When all else fails, print! Each of your functions should have an idea of what it is going to do. You want to test that each of your functions is doing what it set out to do and see exactly where your code breaks. In the case with race conditions, tsan may be able to help, but having each thread print out data at certain times could help you identify the race condition.</p>
+<p>To make printfs useful, try to have a macro that fills in the context by which the printf was called – a log statement if you will. A simple useful but untested log statement could be as follows. Try to make a test and figure out something that is going wrong, then log the state of your variables.</p>
+<div class="sourceCode" id="cb38" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb38-1" title="1">  <span class="pp">#include </span><span class="im">&lt;execinfo.h&gt;</span></a>
+<a class="sourceLine" id="cb38-2" title="2">  <span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb38-3" title="3">  <span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span></a>
+<a class="sourceLine" id="cb38-4" title="4">  <span class="pp">#include </span><span class="im">&lt;stdarg.h&gt;</span></a>
+<a class="sourceLine" id="cb38-5" title="5">  <span class="pp">#include </span><span class="im">&lt;unistd.h&gt;</span></a>
+<a class="sourceLine" id="cb38-6" title="6"></a>
+<a class="sourceLine" id="cb38-7" title="7">  <span class="co">// bt is print backtrace</span></a>
+<a class="sourceLine" id="cb38-8" title="8">  <span class="dt">const</span> <span class="dt">int</span> num_stack = <span class="dv">10</span>;</a>
+<a class="sourceLine" id="cb38-9" title="9">  <span class="dt">int</span> __log(<span class="dt">int</span> line, <span class="dt">const</span> <span class="dt">char</span> *file, <span class="dt">int</span> bt, <span class="dt">const</span> <span class="dt">char</span> *fmt, ...) {</a>
+<a class="sourceLine" id="cb38-10" title="10">    <span class="cf">if</span> (bt) {</a>
+<a class="sourceLine" id="cb38-11" title="11">      <span class="dt">void</span> *raw_trace[num_stack];</a>
+<a class="sourceLine" id="cb38-12" title="12">      <span class="dt">size_t</span> size = backtrace(raw_trace, <span class="kw">sizeof</span>(raw_trace) / <span class="kw">sizeof</span>(raw_trace[<span class="dv">0</span>]));</a>
+<a class="sourceLine" id="cb38-13" title="13">      <span class="dt">char</span> **syms = backtrace_symbols(raw_trace, size);</a>
+<a class="sourceLine" id="cb38-14" title="14"></a>
+<a class="sourceLine" id="cb38-15" title="15">      <span class="cf">for</span>(<span class="dt">ssize_t</span> i = <span class="dv">0</span>; i &lt; size; i++) {</a>
+<a class="sourceLine" id="cb38-16" title="16">        fprintf(stderr, <span class="st">&quot;|%s:%d| %s</span><span class="sc">\n</span><span class="st">&quot;</span>, file, line, syms[i]);</a>
+<a class="sourceLine" id="cb38-17" title="17">      }</a>
+<a class="sourceLine" id="cb38-18" title="18">      free(syms);</a>
+<a class="sourceLine" id="cb38-19" title="19">    }</a>
+<a class="sourceLine" id="cb38-20" title="20">    <span class="dt">int</span> ret = fprintf(stderr, <span class="st">&quot;|%s:%d| &quot;</span>, file, line);</a>
+<a class="sourceLine" id="cb38-21" title="21">    <span class="dt">va_list</span> args;</a>
+<a class="sourceLine" id="cb38-22" title="22">    va_start(args, fmt);</a>
+<a class="sourceLine" id="cb38-23" title="23">    ret += vfprintf(stderr, fmt, args);</a>
+<a class="sourceLine" id="cb38-24" title="24">    va_end(args);</a>
+<a class="sourceLine" id="cb38-25" title="25">    ret += fprintf(stderr, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb38-26" title="26">    <span class="cf">return</span> ret;</a>
+<a class="sourceLine" id="cb38-27" title="27">  }</a>
+<a class="sourceLine" id="cb38-28" title="28"></a>
+<a class="sourceLine" id="cb38-29" title="29">  <span class="pp">#ifdef DEBUG</span></a>
+<a class="sourceLine" id="cb38-30" title="30">  <span class="pp">#define log(...) __log(__LINE__, __FILE__, 0, __VA_ARGS__)</span></a>
+<a class="sourceLine" id="cb38-31" title="31">  <span class="pp">#define bt(...) __log(__LINE__, __FILE__, 1, __VA_ARGS__)</span></a>
+<a class="sourceLine" id="cb38-32" title="32">  <span class="pp">#else</span></a>
+<a class="sourceLine" id="cb38-33" title="33">  <span class="pp">#define log(...)</span></a>
+<a class="sourceLine" id="cb38-34" title="34">  <span class="pp">#define bt(...)</span></a>
+<a class="sourceLine" id="cb38-35" title="35">  <span class="pp">#endif</span></a>
+<a class="sourceLine" id="cb38-36" title="36"></a>
+<a class="sourceLine" id="cb38-37" title="37">  <span class="co">//Use as log(args like printf) or bt(args like printf) to either log or get backtrace</span></a>
+<a class="sourceLine" id="cb38-38" title="38"></a>
+<a class="sourceLine" id="cb38-39" title="39">  <span class="dt">int</span> main() {</a>
+<a class="sourceLine" id="cb38-40" title="40">    log(<span class="st">&quot;Hello Log&quot;</span>);</a>
+<a class="sourceLine" id="cb38-41" title="41">    bt(<span class="st">&quot;Hello Backtrace&quot;</span>);</a>
+<a class="sourceLine" id="cb38-42" title="42">  }</a></code></pre></div>
+<p>And then use as appropriately. Check out the compiling and linking section in the appendix if you have any questions on how a C program gets translated to machine code.</p>
+</section>
+</section>
+<section id="homework-0" class="level2">
+<h2>Homework 0</h2>
+<div class="sourceCode" id="cb39" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb39-1" title="1"><span class="co">// First, can you guess which lyrics have been transformed into this C-like system code?</span></a>
+<a class="sourceLine" id="cb39-2" title="2"><span class="dt">char</span> q[] = <span class="st">&quot;Do you wanna build a C99 program?&quot;</span>;</a>
+<a class="sourceLine" id="cb39-3" title="3"><span class="pp">#define or &quot;go debugging with gdb?&quot;</span></a>
+<a class="sourceLine" id="cb39-4" title="4"><span class="dt">static</span> <span class="dt">unsigned</span> <span class="dt">int</span> i = <span class="kw">sizeof</span>(or) != strlen(or);</a>
+<a class="sourceLine" id="cb39-5" title="5"><span class="dt">char</span>* ptr = <span class="st">&quot;lathe&quot;</span>;</a>
+<a class="sourceLine" id="cb39-6" title="6"><span class="dt">size_t</span> come = fprintf(stdout,<span class="st">&quot;%s door&quot;</span>, ptr+<span class="dv">2</span>);</a>
+<a class="sourceLine" id="cb39-7" title="7"><span class="dt">int</span> away = ! (<span class="dt">int</span>) * <span class="st">&quot;&quot;</span>;</a>
+<a class="sourceLine" id="cb39-8" title="8"></a>
+<a class="sourceLine" id="cb39-9" title="9"><span class="dt">int</span>* shared = mmap(NULL, <span class="kw">sizeof</span>(<span class="dt">int</span>*), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -<span class="dv">1</span>, <span class="dv">0</span>);</a>
+<a class="sourceLine" id="cb39-10" title="10">munmap(shared,<span class="kw">sizeof</span>(<span class="dt">int</span>*));</a>
+<a class="sourceLine" id="cb39-11" title="11"></a>
+<a class="sourceLine" id="cb39-12" title="12"><span class="cf">if</span>(!fork()) {</a>
+<a class="sourceLine" id="cb39-13" title="13">    execlp(<span class="st">&quot;man&quot;</span>,<span class="st">&quot;man&quot;</span>,<span class="st">&quot;-3&quot;</span>,<span class="st">&quot;ftell&quot;</span>, (<span class="dt">char</span>*)<span class="dv">0</span>); perror(<span class="st">&quot;failed&quot;</span>);</a>
+<a class="sourceLine" id="cb39-14" title="14">}</a>
+<a class="sourceLine" id="cb39-15" title="15"></a>
+<a class="sourceLine" id="cb39-16" title="16"><span class="cf">if</span>(!fork()) {</a>
+<a class="sourceLine" id="cb39-17" title="17">    execlp(<span class="st">&quot;make&quot;</span>,<span class="st">&quot;make&quot;</span>, <span class="st">&quot;snowman&quot;</span>, (<span class="dt">char</span>*)<span class="dv">0</span>); execlp(<span class="st">&quot;make&quot;</span>,<span class="st">&quot;make&quot;</span>, (<span class="dt">char</span>*)<span class="dv">0</span>));</a>
+<a class="sourceLine" id="cb39-18" title="18">}</a>
+<a class="sourceLine" id="cb39-19" title="19"></a>
+<a class="sourceLine" id="cb39-20" title="20">exit(<span class="dv">0</span>);</a></code></pre></div>
+<section id="so-you-want-to-master-system-programming-and-get-a-better-grade-than-b" class="level3">
+<h3>So you want to master System Programming? And get a better grade than B?</h3>
+<div class="sourceCode" id="cb40"><pre class="sourceCode C"><code class="sourceCode c"><a class="sourceLine" id="cb40-1" title="1"><span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span>** argv) {</a>
+<a class="sourceLine" id="cb40-2" title="2">	puts(<span class="st">&quot;Great! We have plenty of useful resources for you, but it&#39;s up to you to&quot;</span>);</a>
+<a class="sourceLine" id="cb40-3" title="3">	puts(<span class="st">&quot; be an active learner and learn how to solve problems and debug code.&quot;</span>);</a>
+<a class="sourceLine" id="cb40-4" title="4">	puts(<span class="st">&quot;Bring your near-completed answers the problems below&quot;</span>);</a>
+<a class="sourceLine" id="cb40-5" title="5">	puts(<span class="st">&quot; to the first lab to show that you&#39;ve been working on this.&quot;</span>);</a>
+<a class="sourceLine" id="cb40-6" title="6">	printf(<span class="st">&quot;A few </span><span class="sc">\&quot;</span><span class="st">don&#39;t knows</span><span class="sc">\&quot;</span><span class="st"> or </span><span class="sc">\&quot;</span><span class="st">unsure</span><span class="sc">\&quot;</span><span class="st"> is fine for lab 1.</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb40-7" title="7">	puts(<span class="st">&quot;Warning: you and your peers will work hard in this class.&quot;</span>);</a>
+<a class="sourceLine" id="cb40-8" title="8">	puts(<span class="st">&quot;This is not CS225; you will be pushed much harder to&quot;</span>);</a>
+<a class="sourceLine" id="cb40-9" title="9">	puts(<span class="st">&quot; work things out on your own.&quot;</span>);</a>
+<a class="sourceLine" id="cb40-10" title="10">	fprintf(stdout,<span class="st">&quot;This homework is a stepping stone to all future assignments.</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb40-11" title="11">	<span class="dt">char</span> p[] = <span class="st">&quot;So, you will want to clear up any confusions or misconceptions.</span><span class="sc">\n</span><span class="st">&quot;</span>;</a>
+<a class="sourceLine" id="cb40-12" title="12">	write(<span class="dv">1</span>, p, strlen(p) );</a>
+<a class="sourceLine" id="cb40-13" title="13">	<span class="dt">char</span> buffer[<span class="dv">1024</span>];</a>
+<a class="sourceLine" id="cb40-14" title="14">	sprintf(buffer,<span class="st">&quot;For grading purposes, this homework 0 will be graded as part of your lab %d work.</span><span class="sc">\n</span><span class="st">&quot;</span>, <span class="dv">1</span>);</a>
+<a class="sourceLine" id="cb40-15" title="15">	write(<span class="dv">1</span>, buffer, strlen(buffer));</a>
+<a class="sourceLine" id="cb40-16" title="16">	printf(<span class="st">&quot;Press Return to continue</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb40-17" title="17">	read(<span class="dv">0</span>, buffer, <span class="kw">sizeof</span>(buffer));</a>
+<a class="sourceLine" id="cb40-18" title="18">	<span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb40-19" title="19">}</a></code></pre></div>
+</section>
+<section id="watch-the-videos-and-write-up-your-answers-to-the-following-questions" class="level3">
+<h3>Watch the videos and write up your answers to the following questions</h3>
+<p><strong>Important!</strong></p>
+<p>The virtual machine-in-your-browser and the videos you need for HW0 are here:</p>
+<p><a href="http://cs-education.github.io/sys/">http://cs-education.github.io/sys/</a></p>
+<p>Questions? Comments? Use the current semester’s CS341 Edstem: <a href="https://edstem.org/us/courses/61021/discussion/">https://edstem.org/us/courses/61021/discussion/</a></p>
+<p>The in-browser virtual machine runs entirely in JavaScript and is fastest in Chrome. Note the VM and any code you write is reset when you reload the page, <strong>so copy your code to a separate document.</strong> The post-video challenges are not part of homework 0, but you learn the most by doing rather than passively watching. You have some fun with each end-of-video challenge.</p>
+<p>HW0 questions are below. Copy your answers into a text document because you’ll need to submit them later in the course.</p>
+</section>
+<section id="chapter-1" class="level3">
+<h3>Chapter 1</h3>
+<p>In which our intrepid hero battles standard out, standard error, file descriptors and writing to files</p>
+<ol>
+<li><p><strong>Hello, World! (system call style)</strong> Write a program that uses to print out "Hi! My name is &lt;Your Name&gt;".</p></li>
+<li><p><strong>Hello, Standard Error Stream!</strong> Write a function to print out a triangle of height to standard error. Your function should have the signature and should use . The triangle should look like this, for n = 3:</p>
+<div class="sourceCode" id="cb41" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb41-1" title="1">*</a>
+<a class="sourceLine" id="cb41-2" title="2">**</a>
+<a class="sourceLine" id="cb41-3" title="3">***</a></code></pre></div></li>
+<li><p><strong>Writing to files</strong> Take your program from "Hello, World!" modify it write to a file called . Make sure to use correct flags and a correct mode for ( is your friend).</p></li>
+<li><p><strong>Not everything is a system call</strong> Take your program from "Writing to files" and replace with . <em>Make sure to print to the file instead of standard out!</em></p></li>
+<li><p>What are some differences between and ?</p></li>
+</ol>
+</section>
+<section id="chapter-2" class="level3">
+<h3>Chapter 2</h3>
+<p>Sizing up C types and their limits, and arrays, and incrementing pointers</p>
+<ol>
+<li><p>How many bits are there in a byte?</p></li>
+<li><p>How many bytes are there in a ?</p></li>
+<li><p>How many bytes the following are on your machine? , , , , and</p></li>
+<li><p>On a machine with 8 byte integers, the declaration for the variable is . If the address of data is , then what is the address of ?</p></li>
+<li><p>What is equivalent to in C? Hint: what does C convert to before dereferencing the address? Remember, the type of a string constant is an array.</p></li>
+<li><p>Why does this SEGFAULT?</p>
+<div class="sourceCode" id="cb42" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb42-1" title="1"><span class="dt">char</span> *ptr = <span class="st">&quot;hello&quot;</span>;</a>
+<a class="sourceLine" id="cb42-2" title="2">*ptr = <span class="ch">&#39;J&#39;</span>;</a></code></pre></div></li>
+<li><p>What is the value of the variable ?</p>
+<div class="sourceCode" id="cb43" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb43-1" title="1"><span class="dt">ssize_t</span> str_size = <span class="kw">sizeof</span>(<span class="st">&quot;Hello\0World&quot;</span>)</a></code></pre></div></li>
+<li><p>What is the value of the variable</p>
+<div class="sourceCode" id="cb44" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb44-1" title="1"><span class="dt">ssize_t</span> str_len = strlen(<span class="st">&quot;Hello\0World&quot;</span>)</a></code></pre></div></li>
+<li><p>Give an example of X such that is 3.</p></li>
+<li><p>Give an example of Y such that might be 4 or 8 depending on the machine.</p></li>
+</ol>
+</section>
+<section id="chapter-3" class="level3">
+<h3>Chapter 3</h3>
+<p>Program arguments, environment variables, and working with character arrays (strings)</p>
+<ol>
+<li><p>What are at least two ways to find the length of ?</p></li>
+<li><p>What does represent?</p></li>
+<li><p>Where are the pointers to environment variables stored (on the stack, the heap, somewhere else)?</p></li>
+<li><p>On a machine where pointers are 8 bytes, and with the following code:</p>
+<div class="sourceCode" id="cb45" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb45-1" title="1"><span class="dt">char</span> *ptr = <span class="st">&quot;Hello&quot;</span>;</a>
+<a class="sourceLine" id="cb45-2" title="2"><span class="dt">char</span> array[] = <span class="st">&quot;Hello&quot;</span>;</a></code></pre></div>
+<p>What are the values of and ? Why?</p></li>
+<li><p>What data structure manages the lifetime of automatic variables?</p></li>
+</ol>
+</section>
+<section id="chapter-4" class="level3">
+<h3>Chapter 4</h3>
+<p>Heap and stack memory, and working with structs</p>
+<ol>
+<li><p>If I want to use data after the lifetime of the function it was created in ends, where should I put it? How do I put it there?</p></li>
+<li><p>What are the differences between heap and stack memory?</p></li>
+<li><p>Are there other kinds of memory in a process?</p></li>
+<li><p>Fill in the blank: "In a good C program, for every malloc, there is a ___".</p></li>
+<li><p>What is one reason can fail?</p></li>
+<li><p>What are some differences between and ?</p></li>
+<li><p>What is wrong with this code snippet?</p>
+<div class="sourceCode" id="cb46" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb46-1" title="1">free(ptr);</a>
+<a class="sourceLine" id="cb46-2" title="2">free(ptr);</a></code></pre></div></li>
+<li><p>What is wrong with this code snippet?</p>
+<div class="sourceCode" id="cb47" data-language="C"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb47-1" title="1">free(ptr);</a>
+<a class="sourceLine" id="cb47-2" title="2">printf(<span class="st">&quot;%s</span><span class="sc">\n</span><span class="st">&quot;</span>, ptr);</a></code></pre></div></li>
+<li><p>How can one avoid the previous two mistakes?</p></li>
+<li><p>Create a that represents a . Then make a , so that can be replaced with a single word. A person should contain the following information: their name (a string), their age (an integer), and a list of their friends (stored as a pointer to an array of pointers to s).</p></li>
+<li><p>Now, make two persons on the heap, "Agent Smith" and "Sonny Moore", who are 128 and 256 years old respectively and are friends with each other. Create functions to create and destroy a Person (Person’s and their names should live on the heap).</p></li>
+<li><p>should take a name and age. The name should be copied onto the heap. Use malloc to reserve sufficient memory for everyone having up to ten friends. Be sure initialize all fields (why?).</p></li>
+<li><p>should free up both the memory of the person struct and all of its attributes that are stored on the heap. Destroying one person keeps other people in tact any other.</p></li>
+</ol>
+</section>
+<section id="chapter-5" class="level3">
+<h3>Chapter 5</h3>
+<p>Text input and output and parsing using , , and .</p>
+<ol>
+<li><p>What functions can be used for getting characters from and writing them to ?</p></li>
+<li><p>Name one issue with .</p></li>
+<li><p>Write code that parses the string "Hello 5 World" and initializes 3 variables to "Hello", 5, and "World".</p></li>
+<li><p>What does one need to define before including ?</p></li>
+<li><p>Write a C program to print out the content of a file line-by-line using .</p></li>
+</ol>
+</section>
+<section id="c-development" class="level3">
+<h3>C Development</h3>
+<p>These are general tips for compiling and developing using a compiler and git. Some web searches will be useful here</p>
+<ol>
+<li><p>What compiler flag is used to generate a debug build?</p></li>
+<li><p>You fix a problem in the Makefile and type again. Explain why this may be insufficient to generate a new build.</p></li>
+<li><p>Are tabs or spaces used to indent the commands after the rule in a Makefile?</p></li>
+<li><p>What does do? What’s a in the context of git?</p></li>
+<li><p>What does show you?</p></li>
+<li><p>What does tell you and how would the contents of change its output?</p></li>
+<li><p>What does do? Why is it insufficient to commit with ?</p></li>
+<li><p>What does a non-fast-forward error reject mean? What is the most common way of dealing with this?</p></li>
+</ol>
+</section>
+<section id="optional-just-for-fun" class="level3">
+<h3>Optional: Just for fun</h3>
+<ul>
+<li><p>Convert a song lyrics into System Programming and C code covered in this wiki book and share on the class forum.</p></li>
+<li><p>Find, in your opinion, the best and worst C code on the web and post the link to the class forum.</p></li>
+<li><p>Write a short C program with a deliberate subtle C bug and post it on the class forum to see if others can spot your bug.</p></li>
+<li><p>Do you have any cool/disastrous system programming bugs you’ve heard about? Feel free to share with your peers and the course staff on the class forum.</p></li>
+</ul>
+</section>
+</section>
+<section id="university-of-illinois-specific-guidelines" class="level2">
+<h2>University of Illinois Specific Guidelines</h2>
+<section id="the-class-forum" class="level3">
+<h3>The class forum</h3>
+<p>TAs and student assistants get a ton of questions. Some are well-researched, and some are not. This is a handy guide that’ll help you move away from the latter and towards the former. Oh, and did I mention that this is an easy way to score points with your internship managers? Ask yourself...</p>
+<ol>
+<li><p>Am I running on my Virtual Machine?</p></li>
+<li><p><strong>Did I check the man pages?</strong></p></li>
+<li><p>Have I searched for similar questions/followups on the class forum?</p></li>
+<li><p>Have I read the MP/Lab specification completely?</p></li>
+<li><p>Have I watched all of the videos?</p></li>
+<li><p>Did I Google the error message and a few permutations thereof if necessary? How about StackOverflow.</p></li>
+<li><p>Did I try commenting out, printing, and/or stepping through parts of the code bit by bit to find out precisely where the error occurs?</p></li>
+<li><p><strong>Did I commit my code to git in case the TAs need more context?</strong></p></li>
+<li><p>Did I include the console/GDB/Valgrind output **AND** code surrounding the bug in my the class forum post?</p></li>
+<li><p>Have I fixed other segmentation faults unrelated to the issue I’m having?</p></li>
+<li><p>Am I following good programming practice? (i.e. encapsulation, functions to limit repetition, etc)</p></li>
+</ol>
+<p>The biggest tip that we can give you when asking a question on the class forum if you want a swift answer is to <strong>ask your question like you were trying to answer it</strong>. Like before you ask a question, try to answer it yourself. If you are thinking about posting</p>
+<blockquote>
+<p>Hi, My code got a 50</p>
+</blockquote>
+<p>Sounds good and courteous, but course staff would much much prefer a post resembling the following</p>
+<blockquote>
+<p>Hi, I recently failed test X, Y, Z which is about half the tests on this current assignment. I noticed that they all have something to do with networking and epoll, but couldn’t figure out what was linking them together, or I may be completely off track. So to test my idea, I tried spawning 1000 clients with various get and put requests and verifying the files matched their originals. I couldn’t get it to fail while running normally, the debug build, or valgrind or tsan. I have no warnings and none of the pre-syntax checks showed me anything. Could you tell me if my understanding of the failure is correct and what I could do to modify my tests to better reflect X, Y, Z? netid: bvenkat2</p>
+</blockquote>
+<p>You don’t need to be as courteous, though we’d appreciate it, this will get a faster response time hand over foot. If you were trying to answer this question, you’d have everything you need in the question body.</p>
+</section>
+</section>
+</section>
+</body>
+</html>
+
