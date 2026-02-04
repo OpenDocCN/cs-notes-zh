@@ -1,11 +1,15 @@
 - en: Memory Allocators
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 内存分配器
 - en: Introduction
+  id: totrans-1
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 简介
 - en: Memory allocation is important! Allocating and deallocating heap memory is one
     of the most common operations in any application. The heap at the system level
     is contiguous series of addresses that the program can expand or contract and
@@ -14,17 +18,24 @@
     programs don’t interact directly with this call, they use a memory allocation
     system around it to handle chunking up and keeping track of which memory is allocated
     and which is freed.
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 内存分配很重要！在任何应用程序中，分配和释放堆内存是最常见的操作之一。在系统级别，堆是一系列连续的地址，程序可以扩展或收缩并用作其地址空间（“malloc概述”
+    [2018](ch018.xhtml#ref-mallocinternals)）。在POSIX中，这被称为系统断点。我们使用来移动系统断点。大多数程序不会直接与这个调用交互，它们使用围绕它的内存分配系统来处理分块和跟踪哪些内存已分配，哪些已释放。
 - en: We will mainly be looking into simple allocators. Just know that there are other
     ways of dividing up memory like with or other allocation schemes and methods like
     .
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将主要探讨简单的分配器。只需知道还有其他方式来划分内存，比如使用或其他分配方案和方法。
 - en: C Memory Allocation API
+  id: totrans-4
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: C内存分配API
 - en: is a C library call and is used to reserve a contiguous block of memory that
     may be uninitialized (Jones [2010](ch018.xhtml#ref-jones2010wg14) P. 348). Unlike
     stack memory, the memory remains allocated until is called with the same pointer.
@@ -34,31 +45,42 @@
     then your program will likely crash (segfault) when it tries to write to address
     0\. Also, malloc leaves garbage in memory because of performance – check your
     code to make sure that a program all program values are initialized.
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是一个C库调用，用于保留可能未初始化的连续内存块（Jones [2010](ch018.xhtml#ref-jones2010wg14) P. 348）。与栈内存不同，内存保留分配直到用相同的指针调用。如果可以返回至少请求这么多空闲空间的指针，或者。这意味着malloc即使在有空间的情况下也可能返回NULL。健壮的程序应该检查返回值。如果你的代码假设成功，但实际上没有，那么当程序尝试写入地址0时，程序可能会崩溃（segfault）。此外，由于性能原因，malloc会在内存中留下垃圾，请检查你的代码以确保程序中所有程序值都已初始化。
 - en: allows a program to resize an existing memory allocation that was previously
     allocated on the heap (via malloc, calloc, or realloc) (Jones [2010](ch018.xhtml#ref-jones2010wg14)
     P. 349). The most common use of realloc is to resize memory used to hold an array
     of values. There are two gotchas with realloc. One, a new pointer may be returned.
     Two, it can fail. A naive but readable version of realloc is suggested below with
     sample usage.
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 允许程序调整先前在堆上分配的现有内存分配的大小（通过malloc、calloc或realloc）（Jones [2010](ch018.xhtml#ref-jones2010wg14)
+    P. 349）。realloc最常用的用途是调整用于存储值数组的内存的大小。realloc有两个需要注意的问题。一是可能会返回新的指针。二是它可能会失败。以下是一个建议的realloc简单但可读的实现版本，以及示例用法。
 - en: '[PRE0]'
+  id: totrans-7
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: The above code is fragile. If fails then the program leaks memory. Robust code
     checks for the return value and only reassigns the original pointer if not NULL.
+  id: totrans-8
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 上述代码很脆弱。如果失败，程序会泄漏内存。健壮的代码会检查返回值，并且只有在非NULL的情况下才重新分配原始指针。
 - en: '[PRE1]'
+  id: totrans-9
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: 'initializes memory contents to zero and also takes two arguments: the number
     of items and the size in bytes of each item. An advanced discussion of these limitations
     is [in this article](http://locklessinc.com/articles/calloc/). Programmers often
@@ -66,33 +88,45 @@
     because certain performance considerations are taken into account. Note is identical
     to , but you should follow the conventions of the manual. A naive implementation
     of calloc is below.'
+  id: totrans-10
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将内存内容初始化为零，并接受两个参数：项目数量和每个项目的字节大小。关于这些限制的深入讨论见[这篇文章](http://locklessinc.com/articles/calloc/)。程序员通常使用而不是显式调用，来将内存内容设置为零，因为考虑到了某些性能因素。注意与是相同的，但你应该遵循手册中的约定。以下是一个calloc的简单实现。
 - en: '[PRE2]'
+  id: totrans-11
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: takes a pointer to the start of a piece of memory and makes it available for
     use in subsequent calls to the other allocation functions. This is important because
     we don’t want every process in our address space to take an enormous amount of
     memory. Once we are done using memory, we stop using it with ‘free‘. A simple
     usage is below.
+  id: totrans-12
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 接收一个指向内存块开始的指针，并在后续调用其他分配函数时使其可用。这是很重要的，因为我们不希望我们的地址空间中的每个进程都占用大量的内存。一旦我们完成对内存的使用，我们就停止使用它，使用‘free’。以下是一个简单用法的示例。
 - en: '[PRE3]'
+  id: totrans-13
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: If a program uses a piece of memory after it is freed - that is undefined behavior.
+  id: totrans-14
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 如果程序在释放内存后使用了一块内存——这是未定义的行为。
 - en: Heaps and sbrk
+  id: totrans-15
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 堆和sbrk
 - en: The heap is part of the process memory and varies in size. Heap memory allocation
     is performed by the C library when a program calls (, ) and . By calling the C
     library can increase the size of the heap as your program demands more heap memory.
@@ -100,23 +134,31 @@
     space. Stacks don’t grow like a heap, new parts of the stack are allocated for
     new threads. For typical architectures, the heap will grow upwards and the stack
     grows downwards.
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 堆是进程内存的一部分，其大小会变化。当程序调用（,）和时，堆内存分配由C库执行。通过调用C库，可以根据程序对更多堆内存的需求增加堆的大小。由于堆和栈都需要增长，我们将它们放在地址空间的相反两端。栈的增长方式与堆不同，新的栈部分是为新的线程分配的。对于典型的架构，堆向上增长，而栈向下增长。
 - en: Nowadays, Modern operating system memory allocators no longer need . Instead,
     they can request independent regions of virtual memory and maintain multiple memory
     regions. For example, gibibyte requests may be placed in a different memory region
     than small allocation requests. However, this detail is an unwanted complexity.
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，现代操作系统的内存分配器不再需要。相反，它们可以请求独立的虚拟内存区域，并维护多个内存区域。例如，吉字节请求可能被放置在比小分配请求不同的内存区域。然而，这个细节是不必要的复杂性。
 - en: Programs don’t need to call or typically, though calling can be interesting
     because it tells a program where your heap currently ends. Instead programs use
     , , and which are part of the C library. The internal implementation of these
     functions may call when additional heap memory is required.
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 程序通常不需要调用，尽管调用可能很有趣，因为它告诉程序堆当前结束的位置。相反，程序使用，和，它们是C库的一部分。这些函数的内部实现可能需要在额外的堆内存时调用。
 - en: '[PRE4]'
+  id: totrans-19
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: Note that the memory that was newly obtained by the operating system must be
     zeroed out. If the operating system left the contents of physical RAM as-is, it
     might be possible for one process to learn about the memory of another process
@@ -124,59 +166,85 @@
     this means that for requests before any memory has been freed is *often* zero.
     This is unfortunate because many programmers mistakenly write C programs that
     assume allocated memory will *always* be zero.
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意，操作系统新获得的内存必须被清零。如果操作系统保留了物理RAM的内容，那么一个进程可能会了解到之前使用过该内存的另一个进程的内存。这将是一个安全漏洞。不幸的是，这意味着在释放任何内存之前，请求通常是零。这是不幸的，因为许多程序员错误地编写了假设分配的内存将*始终*为零的C程序。
 - en: '[PRE5]'
+  id: totrans-21
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: Intro to Allocating
+  id: totrans-22
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 分配简介
 - en: Let’s try to write Malloc. Here is our first attempt at it – the naive version.
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 让我们尝试编写Malloc。这是我们第一次尝试——一个简单的版本。
 - en: '[PRE6]'
+  id: totrans-24
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: Above is the simplest implementation of malloc, there are a few drawbacks though.
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 上面的malloc实现是最简单的，尽管有一些缺点。
 - en: System calls are slow compared to library calls. We should reserve a large amount
     of memory and only occasionally ask for more from the system.
+  id: totrans-26
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 系统调用与库调用相比速度较慢。我们应该预留大量内存，并且只偶尔从系统请求更多内存。
 - en: No reuse of freed memory. Our program never re-uses heap memory - it keeps asking
     for a bigger heap.
+  id: totrans-27
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 释放内存后不重用。我们的程序从不重用堆内存——它总是请求更大的堆。
 - en: If this allocator was used in a typical program, the process would quickly exhaust
     all available memory. Instead, we need an allocator that can efficiently use heap
     space and only ask for more memory when necessary. Some programs use this type
     of allocator. Consider a video game allocating objects to load the next scene.
     It is considerably faster to do the above and throw the entire block of memory
     away than it is to do the following placement strategies.
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果在典型程序中使用此分配器，进程会很快耗尽所有可用内存。相反，我们需要一个可以高效使用堆空间并且仅在必要时请求更多内存的分配器。一些程序使用这种类型的分配器。考虑一个视频游戏在加载下一个场景时分配对象。与以下放置策略相比，这样做并丢弃整个内存块要快得多。
 - en: Placement Strategies
+  id: totrans-29
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 放置策略
 - en: During program execution, memory is allocated and deallocated, so there will
     be a gap in the heap memory that can be re-used for future memory requests. The
     memory allocator needs to keep track of which parts of the heap are currently
     allocated and which are parts are available. Suppose our current heap size is
     64K. Let’s say that our heap looks like the following table.
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 在程序执行期间，内存被分配和释放，因此在堆内存中会出现可以用于未来内存请求的间隙。内存分配器需要跟踪堆的哪些部分当前被分配，哪些部分是可用的。假设我们的当前堆大小是64K。让我们假设堆看起来像以下表格。
 - en: '![Empty heap blocks](../media/file6.png)'
+  id: totrans-31
   prefs: []
   type: TYPE_IMG
+  zh: '![空堆块](../media/file6.png)'
 - en: Empty heap blocks
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 空堆块
 - en: 'If a new malloc request for 2KiB is executed (), where should reserve the memory?
     It could use the last 2KiB hole, which happens to be the perfect size! Or it could
     split one of the other two free holes. These choices represent different placement
@@ -184,87 +252,125 @@
     into two. The newly allocated space, which will be returned to the program and
     a smaller hole if there is spare space left over. A perfect-fit strategy finds
     the smallest hole that is of sufficient size (at least 2KiB):'
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果执行一个新的2KiB malloc请求（），应该在何处保留内存？它可以使用最后一个2KiB的空隙，这恰好是完美的尺寸！或者它可以将其他两个空闲空隙中的一个分割。这些选择代表了不同的安置策略。无论选择哪个空隙，分配器都需要将空隙分割成两个。新分配的空间，将返回给程序，如果还有剩余空间，则是一个更小的空隙。完美适配策略找到足够小的最小空隙（至少2KiB）：
 - en: '![Best fit finds an exact match](../media/file7.png)'
+  id: totrans-34
   prefs: []
   type: TYPE_IMG
+  zh: '![最佳适配找到精确匹配](../media/file7.png)'
 - en: Best fit finds an exact match
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 最佳适配找到精确匹配
 - en: 'A worst-fit strategy finds the largest hole that is of sufficient size so break
     the 30KiB hole into two:'
+  id: totrans-36
   prefs: []
   type: TYPE_NORMAL
+  zh: 最坏适配策略找到足够大的最大空隙，因此将30KiB的空隙分割成两个：
 - en: '![Worst fit finds the worst match](../media/file8.png)'
+  id: totrans-37
   prefs: []
   type: TYPE_IMG
+  zh: '![最坏适配找到最不匹配项](../media/file8.png)'
 - en: Worst fit finds the worst match
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 最坏适配找到最不匹配项
 - en: A first-fit strategy finds the first available hole that is of sufficient size
     so break the 16KiB hole into two. We don’t even have to look through the entire
     heap!
+  id: totrans-39
   prefs: []
   type: TYPE_NORMAL
+  zh: 首次适配策略找到足够大的第一个可用空隙，因此将16KiB的空隙分割成两个。我们甚至不需要查看整个堆！
 - en: '![First fit finds the first match](../media/file9.png)'
+  id: totrans-40
   prefs: []
   type: TYPE_IMG
+  zh: '![首次适配找到第一个匹配项](../media/file9.png)'
 - en: First fit finds the first match
+  id: totrans-41
   prefs: []
   type: TYPE_NORMAL
+  zh: 首次适配找到第一个匹配项
 - en: One thing to keep in mind is those placement strategies don’t need to replace
     the block. For example, our first fit allocator could’ve returned the original
     block unbroken. Notice that this would lead to about 14KiB of space to be unused
     by the user and the allocator. We call this internal fragmentation.
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 需要记住的一点是，这些安置策略不需要替换块。例如，我们的首次适配分配器可以返回未损坏的原始块。注意，这将导致大约14KiB的空间被用户和分配器未使用。我们称之为内部碎片。
 - en: In contrast, external fragmentation is that even though we have enough memory
     in the heap, it may be divided up in a way so a continuous block of that size
     is unavailable. In our previous example, of the 64KiB of heap memory, 17KiB is
     allocated, and 47KiB is free. However, the largest available block is only 30KiB
     because our available unallocated heap memory is fragmented into smaller pieces.
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 相比之下，外部碎片化是指尽管我们在堆中有足够的内存，但它可能被分割成一种方式，使得连续的该尺寸块不可用。在我们的上一个例子中，64KiB的堆内存中，有17KiB被分配，47KiB是空闲的。然而，最大的可用块只有30KiB，因为我们的可用未分配堆内存被分割成更小的块。
 - en: Placement Strategy Pros and Cons
+  id: totrans-44
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 安置策略的优缺点
 - en: The challenges of writing a heap allocator are
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 编写堆分配器的挑战
 - en: Need to minimize fragmentation (i.e. maximize memory utilization)
+  id: totrans-46
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要最小化碎片化（即最大化内存利用率）
 - en: Need high performance
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 需要高性能
 - en: Fiddly implementation – lots of pointer manipulation using linked lists and
     pointer arithmetic.
+  id: totrans-48
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 实现复杂——使用链表和指针算术进行大量指针操作。
 - en: Both fragmentation and performance depend on the application allocation profile,
     which can be evaluated but not predicted and in practice, under-specific usage
     conditions, a special-purpose allocator can often out-perform a general-purpose
     implementation.
+  id: totrans-49
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 无论是碎片化还是性能，都取决于应用程序的分配配置文件，这可以评估但不能预测，在实践中，在特定的使用条件下，专用分配器通常可以优于通用实现。
 - en: The allocator doesn’t know the program’s memory allocation requests in advance.
     Even if we did, this is the [Knapsack problem](http://en.wikipedia.org/wiki/Knapsack_problem)
     which is known to be NP-hard!
+  id: totrans-50
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 分配器事先不知道程序的内存分配请求。即使我们知道，这也是一个已知的NP-hard问题——背包问题！
 - en: Different strategies affect the fragmentation of heap memory in non-obvious
     ways, which only are discovered by mathematical analysis or careful simulations
     under real-world conditions (for example simulating the memory allocation requests
     of a database or webserver).
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 不同的策略以非直观的方式影响堆内存的碎片化，这些影响只有通过数学分析或在现实条件下的仔细模拟（例如模拟数据库或网络服务器的内存分配请求）才能发现。
 - en: First, we will have a more mathematical, one-shot approach to each of these
     algorithms (Garey, Graham, and Ullman [1972](ch018.xhtml#ref-Garey:1972:WAM:800152.804907)).
     The paper describes a scenario where you have a certain number of bins and a certain
@@ -279,8 +385,10 @@
     allocations will typically designate a different subheap for each level and fill
     up that subheap if they need a quick memory allocation scheme that they can throw
     away.
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 首先，我们将对每个算法（Garey, Graham, 和 Ullman [1972](ch018.xhtml#ref-Garey:1972:WAM:800152.804907)）采用更数学化、一次性的方法。论文描述了一个场景，即你有一定数量的桶和一定数量的分配，你试图将分配放入尽可能少的桶中，从而尽可能少地使用内存。论文讨论了理论影响，并在长期运行中对理想内存使用和实际内存使用之间的比率设定了一个很好的限制。对于那些感兴趣的人来说，论文得出结论，随着桶数量的增加，实际内存使用与理想内存使用的比率约为1.7，对于最佳匹配算法，这个比率下限为1.7。这个分析的问题在于，很少有实际应用需要这种一次性分配。视频游戏对象分配通常会为每个级别指定不同的子堆，并在需要快速内存分配方案时填满该子堆。
 - en: In practice, we’ll be using the result from a more rigorous survey conducted
     in 2005 (Wilson et al. [1995](ch018.xhtml#ref-10.1007/3-540-60368-9_19)). The
     survey makes sure to note that memory allocation is a moving target. A good allocation
@@ -288,16 +396,20 @@
     Programs don’t uniformly follow the distribution of allocations. The survey talks
     about all the allocation schemes that we have introduced as well as a few extra
     ones. Here are some summarized takeaways
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 在实践中，我们将使用2005年进行的一项更严格调查的结果（Wilson 等人 [1995](ch018.xhtml#ref-10.1007/3-540-60368-9_19)）。调查确保指出内存分配是一个不断变化的目标。对一个程序来说好的分配方案可能对另一个程序来说并不好。程序不会均匀地遵循分配的分布。调查讨论了我们介绍的所有分配方案以及一些额外的方案。以下是一些总结的要点：
 - en: Best fit may have problems when a block is chosen that is almost the right size,
     and the remaining space is split so small that a program probably won’t use it.
     A way to get around this could be to set a threshold for splitting. This small
     splitting isn’t observed as frequently under a regular workload. Also, the worst-case
     behavior of Best-Fit is bad, but it doesn’t usually happen [p. 43].
+  id: totrans-54
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 最佳匹配算法在选取几乎合适的块大小时可能会出现问题，剩余空间被分割得非常小，以至于程序可能不会使用它。解决这个问题的一个方法可能是设置一个分割阈值。在常规负载下，这种小的分割并不常见。此外，最佳匹配算法的最坏情况行为很糟糕，但这种情况通常不会发生[第43页]。
 - en: The survey also talks about an important distinction of First-Fit. There are
     multiple notions of first. First could be ordered in terms of the time of ‘free‘’ing,
     or it could be ordered through the addresses of the start of the block, or it
@@ -305,32 +417,42 @@
     survey didn’t go too in-depth into the performance of each but did make a note
     that address-ordered and Least Recently Used (LRU) lists ended up with better
     performance than the most recently used first.
+  id: totrans-55
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 调查还讨论了首次匹配的一个重要区别。首次匹配可以有多个概念。首次可以是按照“释放”的时间顺序排列，或者可以通过块的起始地址排列，或者可以按照最后释放的时间顺序排列——首次是最不经常使用的。调查没有深入探讨每种性能，但确实记录了地址顺序和最近最少使用（LRU）列表最终比最近最常使用列表有更好的性能。
 - en: The survey concludes by first saying that under simulated random (assuming uniform
     at random) workloads, best fit and first fit do as well. Even in practice, both
     best and address ordered first fit do about as equally as well with a splitting
     threshold and coalescing. The reasons why aren’t entirely known.
+  id: totrans-56
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 调查最后总结说，在模拟随机（假设随机均匀）的工作负载下，最佳适配（best fit）和首次适配（first fit）表现相当。即使在实践中，最佳适配和地址排序的首次适配在分割阈值和合并操作中也表现得相当。原因并不完全清楚。
 - en: Some additional notes we make
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们还做一些额外的笔记
 - en: Best fit may take less time than a full heap scan. When a block of perfect size
     or perfect size within a threshold is found, that can be returned, depending on
     what edge-case policy you have.
+  id: totrans-58
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 最佳适配可能比完整堆扫描所需时间更少。当找到一个完美大小或完美大小在阈值内的块时，可以根据你的边缘情况策略返回该块。
 - en: Worst fit follows this as well. Your heap could be represented with the max-heap
     data structure and each allocation call could simply pop the top off, re-heapify,
     and possibly insert a split memory block. Using Fibonacci heaps, however, could
     be extremely inefficient.
+  id: totrans-59
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 最坏适配也是如此。你的堆可以用最大堆数据结构表示，每次分配调用可以简单地弹出顶部，重新堆化，并可能插入一个分割内存块。然而，使用斐波那契堆可能会非常低效。
 - en: First-Fit needs to have a block order. Most of the time programmers will default
     to linked lists which is a fine choice. There aren’t too many improvements you
     can make with a least recently used and most recently used linked list policy,
@@ -338,81 +460,119 @@
     O(log(n)) by using a randomized skip-list in conjunction with your singly-linked
     list. An insert would use the skip list as shortcuts to find the right place to
     insert the block and removal would go through the list as normal.
+  id: totrans-60
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 首次适配（First-Fit）需要有一个块顺序。大多数情况下，程序员会默认选择链表，这是一个不错的选择。在使用最近最少使用（least recently
+    used）和最近最少使用（most recently used）链表策略时，改进空间不大，但使用地址排序的链表，你可以通过结合使用随机跳表（skip-list）和单链表，将插入速度从O(n)提升到O(log(n))。插入操作会使用跳表作为快捷方式来找到插入块的正确位置，而删除操作会像正常一样遍历列表。
 - en: There are many placement strategies that we haven’t talked about, one is next-fit
     which is first fit on the next fit block. This adds deterministic randomness –
     pardon the oxymoron. You won’t be expected to know this algorithm, know as you
     are implementing a memory allocator as part of a machine problem, there are more
     than these.
+  id: totrans-61
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 我们还没有讨论过许多放置策略，其中一个是下一个适配（next-fit），它是在下一个适配块上的首次适配。这增加了确定性随机性——请原谅这个矛盾的说法。你不需要了解这个算法，因为你知道你正在实现一个作为机器问题一部分的内存分配器，还有更多这样的算法。
 - en: Memory Allocator Tutorial
+  id: totrans-62
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 内存分配器教程
 - en: A memory allocator needs to keep track of which bytes are currently allocated
     and which are available for use. This section introduces the implementation and
     conceptual details of building an allocator, or the actual code that implements
     and .
+  id: totrans-63
   prefs: []
   type: TYPE_NORMAL
+  zh: 内存分配器需要跟踪哪些字节当前已被分配，哪些可供使用。本节介绍了构建分配器或实现分配器的实际代码的实现和概念细节。
 - en: Conceptually, we are thinking about creating linked lists and lists of blocks!
     Please enjoy the following ASCII art. bt is short for boundary tag.
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 从概念上讲，我们正在考虑创建链表和块列表！请欣赏以下ASCII艺术。bt是边界标签的缩写。
 - en: '![3 Adjacent Memory blocks](../media/file10.png)'
+  id: totrans-65
   prefs: []
   type: TYPE_IMG
+  zh: '![3 Adjacent Memory blocks](../media/file10.png)'
 - en: 3 Adjacent Memory blocks
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 3 Adjacent Memory blocks
 - en: We will have implicit pointers in our next block, meaning that we can get from
     one block to another using addition. This is in contrast to an explicit field
     in our meta block.
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 在我们的下一个块中，我们将有隐式指针，这意味着我们可以通过加法从一个块跳转到另一个块。这与我们的元块中的显式字段形成对比。
 - en: '![Malloc addition](../media/file11.png)'
+  id: totrans-68
   prefs: []
   type: TYPE_IMG
+  zh: '![Malloc addition](../media/file11.png)'
 - en: Malloc addition
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: Malloc addition
 - en: One can grab the next block by finding the end of the current one. That is what
     we mean by “implicit list”.
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以通过找到当前块的末尾来获取下一个块。这就是我们所说的“隐式列表”。
 - en: The actual spacing may be different. The metadata can contain different things.
     A minimal metadata implementation would simply have the size of the block.
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际的间隔可能不同。元数据可以包含不同内容。最小化元数据实现将仅包含块的大小。
 - en: Since we write integers and pointers into memory that we already control, we
     can later consistently hop from one address to the next. This internal information
     represents some overhead. Meaning even if we had requested 1024 KiB of contiguous
     memory from the system, we an allocation of that size will fail.
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 由于我们写入内存中的整数和指针是我们已经控制的，因此我们可以后来一致地从地址跳转到下一个地址。这种内部信息代表了一些开销。这意味着即使我们从系统请求了1024
+    KiB的连续内存，分配该大小的请求也可能失败。
 - en: Our heap memory is a list of blocks where each block is either allocated or
     unallocated. Thus there is conceptually a list of free blocks, but it is implicit
     in the form of block size information that we store as part of each block. Let’s
     think of it in terms of a simple implementation.
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们的堆内存是一系列块，其中每个块要么已分配，要么未分配。因此，在概念上有一个空闲块列表，但它以我们存储在每个块中的块大小信息的形式隐含存在。让我们从简单实现的角度来考虑它。
 - en: '[PRE7]'
+  id: totrans-74
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: We could navigate from one block to the next block by adding the block’s size.
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可以通过向块的尺寸添加来从一个块导航到下一个块。
 - en: '[PRE8]'
+  id: totrans-76
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: Make sure to get your casting right! Otherwise, the program will move an extreme
     amount of bytes over.
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 确保你的类型转换正确！否则，程序将移动极端数量的字节。
 - en: The calling program never sees these values. They are internal to the implementation
     of the memory allocator. As an example, suppose your allocator is asked to reserve
     80 bytes () and requires 8 bytes of internal header data. The allocator would
@@ -421,12 +581,16 @@
     to the usable space, not the internal data! Instead, we would return the start
     of the block + 8 bytes. In the implementation, remember that pointer arithmetic
     depends on type. For example, adds , not necessarily 8 bytes!
+  id: totrans-78
   prefs: []
   type: TYPE_NORMAL
+  zh: 调用程序永远不会看到这些值。它们是内存分配器实现内部的。例如，假设你的分配器被要求保留80字节（()）并需要8字节的内部头数据。分配器需要找到一个至少88字节的未分配空间。在更新堆数据后，它会返回一个指向块的指针。然而，返回的指针指向的是可用空间，而不是内部数据！相反，我们将返回块的起始地址加8字节。在实现中，请记住指针算术依赖于类型。例如，它加上，不一定是8字节！
 - en: Implementing a Memory Allocator
+  id: totrans-79
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 实现内存分配器
 - en: The simplest implementation uses First-Fit. Start at the first block, assuming
     it exists, and iterate until a block that represents an unallocated space of sufficient
     size is found, or we’ve checked all the blocks. If no suitable block is found,
@@ -436,47 +600,69 @@
     to a certain heap size and cause requests to intermittently fail. Besides, a fast
     implementation might extend it a significant amount so that we will not need to
     request more heap memory soon.
+  id: totrans-80
   prefs: []
   type: TYPE_NORMAL
+  zh: 最简单的实现使用首次适配。从第一个块开始，假设它存在，并迭代，直到找到一个表示足够大未分配空间的块，或者我们已经检查了所有块。如果没有找到合适的块，那么是时候再次调用以足够扩展堆的大小了。对于这门课程，我们将尝试服务每一个内存请求，直到操作系统告诉我们我们将耗尽堆空间。其他应用程序可能限制自己使用特定的堆大小，导致请求间歇性失败。此外，快速实现可能会显著扩展它，这样我们就不需要很快请求更多的堆内存。
 - en: When a free block is found, it may be larger than the space we need. If so,
     we will create two entries in our implicit list. The first entry is the allocated
     block, the second entry is the remaining space. There are ways to do this if the
     program wants to keep the overhead small. We recommend first for going with readability.
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 当找到一个空闲块时，它可能比我们需要的空间大。如果是这样，我们将在我们的隐式列表中创建两个条目。第一个条目是已分配的块，第二个条目是剩余的空间。如果程序想要保持开销小，有方法可以做到这一点。我们建议首先考虑可读性。
 - en: '[PRE9]'
+  id: totrans-82
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: If the program wants certain bits to hold different pieces of information, use
     bit fields!
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果程序想要某些位持有不同的信息片段，请使用位字段！
 - en: '[PRE10]'
+  id: totrans-84
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: The compiler will handle the shifting. After setting up your fields then it
     becomes simply looping through each of the blocks and checking the appropriate
     fields
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 编译器将处理位移。设置好你的字段后，它就变成了简单地遍历每个块并检查适当的字段。
 - en: Here is a visual representation of what happens. If we assume that we have a
     block that looks like this, we want to spit if the allocation is let’s say 16
     bytes The split we’ll have to do is the following.
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里是发生情况的视觉表示。如果我们假设我们有一个看起来像这样的块，我们想要分配16字节的空间，那么我们需要做的分割如下。
 - en: '![Malloc split](../media/file12.png)'
+  id: totrans-87
   prefs: []
   type: TYPE_IMG
+  zh: '![Malloc split](../media/file12.png)'
 - en: Malloc split
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: Malloc split
 - en: This is before alignment concerns as well.
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 这也涉及到对齐问题。
 - en: Alignment and rounding up considerations
+  id: totrans-90
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 对齐和向上取整的考虑
 - en: Many architectures expect multibyte primitives to be aligned to some multiple
     of 2 (4, 16, etc). For example, it’s common to require 4-byte types to be aligned
     to 4-byte boundaries and 8-byte types on 8-byte boundaries. If multi-byte primitives
@@ -485,34 +671,49 @@
     is even greater - the program will crash with a [bus error](http://en.wikipedia.org/wiki/Bus_error#Unaligned_access).
     Most of you have experienced this in your architecture classes if there was no
     memory protection.
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 许多架构期望多字节数据对齐到 2 的某个倍数（例如 4、16 等）。例如，通常要求 4 字节数据对齐到 4 字节边界，8 字节数据对齐到 8 字节边界。如果多字节数据存储在不合理的边界上，性能可能会受到显著影响，因为它可能需要额外的内存读取。在某些架构上，这种惩罚甚至更大——程序会因为[总线错误](http://en.wikipedia.org/wiki/Bus_error#Unaligned_access)而崩溃。如果你们的架构课程中没有内存保护，你们中的大多数人可能都经历过这种情况。
 - en: As does not know how the user will use the allocated memory, the pointer returned
     to the program needs to be aligned for the worst case, which is architecture-dependent.
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 由于不知道用户将如何使用分配的内存，返回给程序的指针需要针对最坏情况对齐，这取决于架构。
 - en: From glibc documentation, the glibc uses the following heuristic (“Virtual Memory
     Allocation and Paging” [2001](ch018.xhtml#ref-vma_paging))
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 根据 glibc 文档，glibc 使用以下启发式方法（“虚拟内存分配和分页” [2001](ch018.xhtml#ref-vma_paging))
 - en: The block that malloc gives you is guaranteed to be aligned so that it can hold
     any type of data. On GNU systems, the address is always a multiple of eight on
     most systems and a multiple of 16 on 64-bit systems." For example, if you need
     to calculate how many 16 byte units are required, don’t forget to round up.
+  id: totrans-94
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: malloc 给你的块保证是对齐的，这样它就可以容纳任何类型的数据。在 GNU 系统上，地址通常是 8 的倍数，在 64 位系统上是 16 的倍数。"例如，如果你需要计算所需的
+    16 字节单元数，别忘了向上取整。
 - en: This is what the math would look like in C.
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是 C 中的数学看起来像什么。
 - en: '[PRE11]'
+  id: totrans-96
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: The additional constant ensures incomplete units are rounded up. Note, real
     code is more likely to symbol sizes e.g. , rather than coding numerical constant
     15\. [Here’s a great article on memory alignment, if you are further interested](http://www.ibm.com/developerworks/library/pa-dalign/)
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 额外的常数确保不完整的单元向上取整。注意，真正的代码更可能使用符号大小，例如，而不是编码数值常数 15。[这里有一篇关于内存对齐的精彩文章，如果你对此更感兴趣](http://www.ibm.com/developerworks/library/pa-dalign/)
 - en: Another added effect could be internal fragmentation happens when the given
     block is larger than their allocation size. Let’s say that we have a free block
     of size 16B (not including metadata). If they allocate 7 bytes, the allocator
@@ -520,28 +721,39 @@
     implementing coalescing and splitting. If the allocator doesn’t implement either,
     it may end up returning a block of size 64B for a 7B allocation! There is a *lot*
     of overhead for that allocation which is what we are trying to avoid.
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个可能的影响是，当给定的块大于其分配大小时，可能会发生内部碎片。假设我们有一个大小为 16B 的空闲块（不包括元数据）。如果它们分配 7 字节，分配器可能想要向上取整到
+    16B 并返回整个块。当实现合并和分割时，这会变得很危险。如果分配器没有实现其中任何一个，它可能最终会为一个 7B 的分配返回一个大小为 64B 的块！这个分配的开销很大，这正是我们试图避免的。
 - en: Implementing free
+  id: totrans-99
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 实现free
 - en: 'When is called we need to re-apply the offset to get back to the ‘real’ start
     of the block – to where we stored the size information. A naive implementation
     would simply mark the block as unused. If we are storing the block allocation
     status in a bitfield, then we need to clear the bit:'
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 当调用时，我们需要重新应用偏移量以回到块的“真实”起始位置——即我们存储大小信息的地方。一个简单的实现会简单地标记块为未使用。如果我们正在将块分配状态存储在位域中，那么我们需要清除位：
 - en: '[PRE12]'
+  id: totrans-101
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: However, we have a bit more work to do. If the current block and the next block
     (if it exists) are both free we need to coalesce these blocks into a single block.
     Similarly, we also need to check the previous block, too. If that exists and represents
     an unallocated memory, then we need to coalesce the blocks into a single large
     block.
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 然而，我们还有更多的工作要做。如果当前块和下一个块（如果存在）都是空闲的，我们需要将这些块合并成一个单独的块。同样，我们还需要检查上一个块。如果它存在并且代表未分配的内存，那么我们需要将这些块合并成一个大的单独块。
 - en: To be able to coalesce a free block with a previous free block we will also
     need to find the previous block, so we store the block’s size at the end of the
     block, too. These are called “boundary tags” (Knuth [1973](ch018.xhtml#ref-knuth1973art)).
@@ -550,40 +762,56 @@
     block. So the current block (apart from the first one) can look a few bytes further
     back to look up the size of the previous block. With this information, the allocator
     can now jump backward!
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了能够将一个空闲块与前面的空闲块合并，我们还需要找到前面的块，因此我们也将块的大小存储在块的末尾。这些被称为“边界标签”（Knuth [1973](ch018.xhtml#ref-knuth1973art)）。这是Knuth解决合并问题的两种方法。由于块是连续的，一个块的末尾紧邻下一个块的开始。因此，当前块（除了第一个块之外）可以向后查看几个字节以查找前一个块的大小。有了这些信息，分配器现在可以向后跳转！
 - en: Take for example a double coalesce. If we wanted to free the middle block we
     need to turn the surrounding blocks into one big blocks
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 以双合并为例。如果我们想要释放中间的块，我们需要将周围的块转换成一个大的块
 - en: '![Free double coalesce](../media/file13.png)'
+  id: totrans-105
   prefs: []
   type: TYPE_IMG
+  zh: '![空闲双合并](../media/file13.png)'
 - en: Free double coalesce
+  id: totrans-106
   prefs: []
   type: TYPE_NORMAL
+  zh: 空闲双合并
 - en: Performance
+  id: totrans-107
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 性能
 - en: With the above description, it’s possible to build a memory allocator. Its main
     advantage is simplicity - at least simple compared to other allocators! Allocating
     memory is a worst-case linear time operation – search linked lists for a sufficiently
     large free block. De-allocation is constant time. No more than 3 blocks will need
     to coalesce into a single block, and using a most recently used block scheme only
     one linked list entry.
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 根据上述描述，可以构建一个内存分配器。其主要优点是简单性——至少与其他分配器相比是简单的！分配内存是一个最坏情况下的线性时间操作——搜索链表以找到足够大的空闲块。释放分配是常数时间。不需要超过3个块合并成一个单独的块，并且使用最近最少使用块方案，只需要一个链表条目。
 - en: Using this allocator it is possible to experiment with different placement strategies.
     For example, the allocator could start searching from the last deallocated block.
     If the allocator stores pointers to blocks, it needs to update the pointers so
     that they always remain valid.
+  id: totrans-109
   prefs: []
   type: TYPE_NORMAL
+  zh: 使用这个分配器，可以尝试不同的放置策略。例如，分配器可以从最后一个释放的块开始搜索。如果分配器存储块指针，它需要更新指针，以确保它们始终有效。
 - en: Explicit Free Lists Allocators
+  id: totrans-110
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 显式空闲列表分配器
 - en: Better performance can be achieved by implementing an explicit doubly-linked
     list of free nodes. In that case, we can immediately traverse to the next free
     block and the previous free block. This can reduce the search time because the
@@ -592,20 +820,30 @@
     is deallocated, we could choose to insert it into the beginning of the linked
     list rather than always between its neighbors. We may update our struct to look
     like this
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 通过实现一个显式的双向链表来管理空闲节点，可以取得更好的性能。在这种情况下，我们可以立即遍历到下一个空闲块和上一个空闲块。这可以减少搜索时间，因为链表只包括未分配的块。第二个优点是，我们现在可以控制链表的顺序。例如，当一个块被释放时，我们可以选择将其插入到链表的开始处，而不是总是插入到其邻居之间。我们可能需要更新我们的结构体，使其看起来像这样
 - en: '[PRE13]'
+  id: totrans-112
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: Here is what that would look like along with our implicit linked list
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 这就是它看起来像什么，以及我们的隐式链表
 - en: '![Free list](../media/file14.png)'
+  id: totrans-114
   prefs: []
   type: TYPE_IMG
+  zh: '![空闲列表](../media/file14.png)'
 - en: Free list
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 空闲列表
 - en: Where do we store the pointers of our linked list? A simple trick is to realize
     that the block itself is not being used and store the next and previous pointers
     as part of the block, though you have to ensure that the free blocks are always
@@ -616,49 +854,69 @@
     large link. However, since the link order can be modified, this corresponds to
     different placement strategies. If the links are maintained from largest to smallest,
     then this produces a ‘Worst-Fit’ placement strategy.
+  id: totrans-116
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们在哪里存储我们链表的指针？一个简单的技巧是意识到块本身没有被使用，并将下一个和前一个指针作为块的一部分存储，尽管你必须确保空闲块总是足够大，可以容纳两个指针。我们仍然需要实现边界标签，这样我们就可以正确地释放块并将它们与其两个邻居合并。因此，显式空闲列表需要更多的代码和复杂性。使用显式链接列表时，使用一个快速简单的“查找第一个”算法来查找第一个足够大的链接。然而，由于链接顺序可以修改，这对应着不同的放置策略。如果链接是从大到小维护的，那么这会产生一个“最坏匹配”放置策略。
 - en: There are edge cases though, consider how to maintain your free list if also
     double coalescing. We’ve included a figure with a common mistake.
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 尽管如此，也存在边缘情况，考虑如何在双合并的同时维护你的空闲列表。我们包含了一个常见的错误示例图。
 - en: '![Free list good and bad coalesce](../media/file15.png)'
+  id: totrans-118
   prefs: []
   type: TYPE_IMG
+  zh: '![空闲列表的良好和不良合并](../media/file15.png)'
 - en: Free list good and bad coalesce
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 空闲列表的良好和不良合并
 - en: We recommend when trying to implement malloc that you draw out all the cases
     conceptually and then write the code.
+  id: totrans-120
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们建议在尝试实现malloc时，先在概念上绘制所有情况，然后再编写代码。
 - en: Explicit linked list insertion policy
+  id: totrans-121
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 显式链接列表插入策略
 - en: 'The newly deallocated block can be inserted easily into two possible positions:
     at the beginning or in address order. Inserting at the beginning creates a LIFO
     (last-in, first-out) policy. The most recently deallocated spaces will be reused.
     Studies suggest fragmentation is worse than using address order (Wilson et al.
     [1995](ch018.xhtml#ref-10.1007/3-540-60368-9_19)).'
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 新释放的块可以轻松地插入两个可能的位置：在开始处或在地址顺序中。在开始处插入创建了一个LIFO（后进先出）策略。最近释放的空间将被重用。研究表明，碎片化比使用地址顺序更严重（Wilson等人[1995](ch018.xhtml#ref-10.1007/3-540-60368-9_19)))。
 - en: Inserting in address order (“Address ordered policy”) inserts deallocated blocks
     so that the blocks are visited in increasing address order. This policy required
     more time to free a block because the boundary tags (size data) must be used to
     find the next and previous unallocated blocks. However, there is less fragmentation.
+  id: totrans-123
   prefs: []
   type: TYPE_NORMAL
+  zh: 按地址顺序插入（“地址顺序策略”）将已释放的块插入，以便块按递增的地址顺序访问。这种策略需要更多时间来释放一个块，因为必须使用边界标签（大小数据）来找到下一个和上一个未分配的块。然而，碎片化较少。
 - en: 'Case Study: Buddy Allocator, an example of a segregated list'
+  id: totrans-124
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 案例研究：伙伴分配器，一个分隔列表的例子
 - en: A segregated allocator is one that divides the heap into different areas that
     are handled by different sub-allocators dependent on the size of the allocation
     request. Sizes are grouped into powers of two and each size is handled by a different
     sub-allocator and each size maintains its free list.
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 分隔分配器是指将堆分成不同区域，这些区域由不同子分配器根据分配请求的大小来处理的分配器。大小被分组为2的幂，每个大小由不同的子分配器处理，并且每个大小都维护其空闲列表。
 - en: 'A well-known allocator of this type is the buddy allocator (Rangan, Raman,
     and Ramanujam [1999](ch018.xhtml#ref-rangan1999foundations) P. 85). We’ll discuss
     the binary buddy allocator which splits allocation into blocks of size <semantics><mrow><msup><mn>2</mn><mi>n</mi></msup><mo>;</mo><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>.</mi><mi>.</mi><mi>.</mi></mrow><annotation
@@ -670,46 +928,65 @@
     and steal that block and split it into two. If two neighboring blocks of the same
     size become unallocated, they can coalesce together into a single large block
     of twice the size.'
+  id: totrans-126
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种类型的知名分配器是buddy分配器（Rangan, Raman, 和 Ramanujam [1999](ch018.xhtml#ref-rangan1999foundations)
+    P. 85）。我们将讨论二进制buddy分配器，它将分配分成大小为<semantics><mrow><msup><mn>2</mn><mi>n</mi></msup><mo>;</mo><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mi>.</mi><mi>.</mi><mi>.</mi></mrow><annotation
+    encoding="application/x-tex">2^n; n = 1, 2, 3, ...</annotation></semantics>倍的一些基本单元字节数的块，但其他也存在，如斐波那契分割，其中分配会被向上舍入到下一个斐波那契数。基本概念很简单：如果没有大小为<semantics><msup><mn>2</mn><mi>n</mi></msup><annotation
+    encoding="application/x-tex">2^n</annotation></semantics>的空闲块，就转到下一级，并偷取那个块并将其分割成两个。如果两个相同大小的相邻块都未被分配，它们可以合并成一个大小加倍的单一大块。
 - en: Buddy allocators are fast because the neighboring blocks to coalesce with can
     be calculated from the deallocated block’s address, rather than traversing the
     size tags. Ultimate performance often requires a small amount of assembler code
     to use a specialized CPU instruction to find the lowest non-zero bit.
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: Buddy分配器速度快，因为可以计算与合并的相邻块地址，而不是遍历大小标签。最佳性能通常需要少量汇编代码来使用专门的CPU指令找到最低的非零位。
 - en: The main disadvantage of the Buddy allocator is that they suffer from *internal
     fragmentation* because allocations are rounded up to the nearest block size. For
     example, a 68-byte allocation will require a 128-byte block.
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: Buddy分配器的主要缺点是它们会遭受*内部碎片化*，因为分配会被向上舍入到最近的块大小。例如，一个68字节的分配将需要一个128字节的块。
 - en: 'Case Study: SLUB Allocator, Slab allocation'
+  id: totrans-129
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 案例研究：SLUB分配器，Slab分配
 - en: The SLUB allocator is a slab allocator that serves different needs for the Linux
     kernel [SLUB](http://en.wikipedia.org/wiki/SLUB_%28software%29). Imagine you are
     creating an allocator for the kernel, what are your requirements? Here is a hypothetical
     shortlist.
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: SLUB分配器是一种为Linux内核[SLUB](http://en.wikipedia.org/wiki/SLUB_%28software%29)服务的slab分配器。想象一下，你正在为内核创建一个分配器，你的要求是什么？这里是一个假设的简短清单。
 - en: 'First and foremost is you want a low memory footprint to have the kernel be
     able to be installed on all types of hardware: embedded, desktop, supercomputer,
     etc.'
+  id: totrans-131
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 首要的是，你希望内存占用低，以便内核能够安装在所有类型的硬件上：嵌入式、桌面、超级计算机等。
 - en: Then, you want the actual memory to be as contiguous as possible to make use
     of caching. Every time a system call is performed, the kernel’s pages need to
     get loaded into memory. This means that if they are all contiguous, the processor
     will be able to cache them more efficiently
+  id: totrans-132
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 然后，你希望实际内存尽可能连续，以便利用缓存。每次执行系统调用时，内核的页面都需要加载到内存中。这意味着如果它们都是连续的，处理器将能够更有效地缓存它们。
 - en: Lastly, you want your allocations to be fast.
+  id: totrans-133
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 最后，你希望你的分配速度快。
 - en: Enter the SLUB allocator . The SLUB allocator is a segregated list allocator
     with minimal splitting and coalescing. The difference here is that the segregated
     list focuses on more realistic allocation sizes, instead of powers of two. SLUB
@@ -719,137 +996,203 @@
     this allocator and the others is that it usually conforms to page sizes. We’ll
     talk about virtual memory and pages in another chapter, but the kernel will be
     working with direct memory pages in spans of 4Kib or 4096 Bytes.
+  id: totrans-134
   prefs: []
   type: TYPE_NORMAL
+  zh: 进入SLUB分配器。SLUB分配器是一个具有最小分割和合并的分离列表分配器。这里的区别在于，分离列表专注于更现实的分配大小，而不是2的幂。SLUB还专注于保持缓存中的页面，同时尽量减少整体内存占用。存在不同大小的块，内核将每个分配请求向上舍入到满足其要求的最小块大小。与其它分配器相比，这个分配器的一个重大区别是它通常符合页面大小。我们将在另一章中讨论虚拟内存和页面，但内核将以4Kib或4096字节的跨度直接处理内存页面。
 - en: Further Reading
+  id: totrans-135
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 进一步阅读
 - en: Guiding questions
+  id: totrans-136
   prefs: []
   type: TYPE_NORMAL
+  zh: 指导性问题
 - en: Is malloc’ed memory initialized? How about calloc’ed or realloc’ed memory?
+  id: totrans-137
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: malloc分配的内存是否已初始化？calloc或realloc分配的内存呢？
 - en: Does realloc accept, as its argument, the number of elements or space (in bytes)?
+  id: totrans-138
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: realloc是否接受元素数量或空间（以字节为单位）作为其参数？
 - en: Why may the allocation functions error?
+  id: totrans-139
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么分配函数可能会出错？
 - en: See [the man page](http://man7.org/linux/man-pages/man3/malloc.3.html) or the
     appendix of the book [17.18.1](ch017.xhtml#man_malloc)!
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 请参阅[手册页](http://man7.org/linux/man-pages/man3/malloc.3.html)或书籍附录中的[17.18.1](ch017.xhtml#man_malloc)部分！
 - en: '[Slab Allocation](https://en.wikipedia.org/wiki/Slab_allocation)'
+  id: totrans-141
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[块分配](https://en.wikipedia.org/wiki/Slab_allocation)'
 - en: '[Buddy Memory Allocation](http://en.wikipedia.org/wiki/Buddy_memory_allocation)'
+  id: totrans-142
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[伙伴内存分配](http://en.wikipedia.org/wiki/Buddy_memory_allocation)'
 - en: Topics
+  id: totrans-143
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 主题
 - en: Best Fit
+  id: totrans-144
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 最佳适应
 - en: Worst Fit
+  id: totrans-145
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 最坏适应
 - en: First Fit
+  id: totrans-146
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 首次适应
 - en: Buddy Allocator
+  id: totrans-147
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 伙伴分配器
 - en: Internal Fragmentation
+  id: totrans-148
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 内部碎片化
 - en: External Fragmentation
+  id: totrans-149
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 外部碎片化
 - en: sbrk
+  id: totrans-150
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: sbrk
 - en: Natural Alignment
+  id: totrans-151
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 自然对齐
 - en: Boundary Tag
+  id: totrans-152
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 边界标记
 - en: Coalescing
+  id: totrans-153
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 合并
 - en: Splitting
+  id: totrans-154
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 分割
 - en: Slab Allocation/Memory Pool
+  id: totrans-155
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 块分配/内存池
 - en: Questions/Exercises
+  id: totrans-156
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 问题/练习
 - en: What is Internal Fragmentation? When does it become an issue?
+  id: totrans-157
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是内部碎片化？何时会成为一个问题？
 - en: What is External Fragmentation? When does it become an issue?
+  id: totrans-158
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是外部碎片化？何时会成为一个问题？
 - en: What is a Best Fit placement strategy? How is it with External Fragmentation?
     Time Complexity?
+  id: totrans-159
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是最佳适应放置策略？它在外部碎片化方面如何？时间复杂度是多少？
 - en: What is a Worst Fit placement strategy? Is it any better with External Fragmentation?
     Time Complexity?
+  id: totrans-160
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是最坏适应放置策略？它在外部碎片化方面是否有任何优势？时间复杂度是多少？
 - en: What is the First Fit Placement strategy? It’s a little bit better with Fragmentation,
     right? Expected Time Complexity?
+  id: totrans-161
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是首次适应放置策略？它在外部碎片化方面有何优势？期望的时间复杂度是多少？
 - en: Let’s say that we are using a buddy allocator with a new slab of 64kb. How does
     it go about allocating 1.5kb?
+  id: totrans-162
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 假设我们正在使用一个64kb的新块伙伴分配器。它是如何分配1.5kb的？
 - en: When does the 5 line implementation of malloc have a use?
+  id: totrans-163
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当malloc的5行实现有何用途？
 - en: What is natural alignment?
+  id: totrans-164
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是自然对齐？
 - en: What is Coalescing/Splitting? How do they increase/decrease fragmentation? When
     can you coalesce or split?
+  id: totrans-165
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是合并/分割？它们如何增加/减少碎片化？何时可以进行合并或分割？
 - en: How do boundary tags work? How can they be used to coalesce or split?
+  id: totrans-166
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 边界标记是如何工作的？它们如何被用来合并或分割？

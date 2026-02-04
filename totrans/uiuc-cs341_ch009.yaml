@@ -1,7 +1,9 @@
 - en: Virtual Memory and Interprocess Communication
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 虚拟内存和进程间通信
 - en: In simple embedded systems and early computers, processes directly access memory
     – “Address 1234” corresponds to a particular byte stored in a particular part
     of physical memory. For example, the IBM 709 had to read and write directly to
@@ -19,38 +21,55 @@
     another process’s memory. Virtual memory also allows the system to efficiently
     allocate and reallocate portions of memory to different processes. The modern
     process of translating memory is as follows.
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 在简单的嵌入式系统和早期的计算机中，进程直接访问内存——“地址 1234”对应于物理内存特定部分存储的特定字节。例如，IBM 709 必须直接读取和写入磁带，没有任何抽象层次（IBM，1958
+    年 8 月 P. 65）。即使在之后的系统中，采用虚拟内存也很困难，因为虚拟内存需要通过硬件改变整个获取周期——许多制造商仍然认为这是一个昂贵的改变。在 PDP-10
+    中，通过为每个进程使用不同的寄存器来使用一种解决方案，后来又添加了虚拟内存（“DEC Pdp-10 Ka10 控制面板”，[n.d.](ch018.xhtml#ref-ricm)）。在现代系统中，情况不再是这样。相反，每个进程都是隔离的，并且有一个地址转换过程，将特定
+    CPU 指令的地址或进程的数据块与物理内存的实际字节（“RAM”）相对应。内存地址不再映射到物理地址，进程在虚拟内存中运行。虚拟内存使进程保持安全，因为一个进程不能直接读取或修改另一个进程的内存。虚拟内存还允许系统有效地分配和重新分配内存的不同部分给不同的进程。现代的内存转换过程如下。
 - en: A process makes a memory request
+  id: totrans-2
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 进程发出内存请求
 - en: The circuit first checks the Translation Lookaside Buffer (TLB) if the address
     page is cached into memory. It skips to the reading from/writing to phase if found
     otherwise the request goes to the MMU.
+  id: totrans-3
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 电路首先检查地址页是否缓存在内存中的转换查找缓冲器（TLB）。如果找到，则跳转到读取/写入阶段，否则请求将发送到 MMU。
 - en: The Memory Management Unit (MMU) performs the address translation. If the translation
     succeeds, the page gets pulled from RAM – conceptually the entire page isn’t loaded
     up. The result is cached in the TLB.
+  id: totrans-4
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 内存管理单元（MMU）执行地址转换。如果转换成功，页面将从 RAM 中拉取——概念上整个页面并没有被加载。结果是缓存在 TLB 中。
 - en: The CPU performs the operation by either reading from the physical address or
     writing to the address.
+  id: totrans-5
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: CPU 通过从物理地址读取或写入地址来执行操作。
 - en: Translating Addresses
+  id: totrans-6
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 地址转换
 - en: The Memory Management Unit is part of the CPU, and it converts a virtual memory
     address into a physical address. First, we’ll talk about what the virtual memory
     abstraction is and how to translate addresses
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 内存管理单元是 CPU 的一部分，它将虚拟内存地址转换为物理地址。首先，我们将讨论虚拟内存抽象是什么以及如何转换地址
 - en: To illustrate, consider a 32-bit machine, meaning pointers are 32-bits. They
     can address <semantics><msup><mn>2</mn><mn>32</mn></msup><annotation encoding="application/x-tex">2^{32}</annotation></semantics>
     different locations or 4GB of memory where one address is one byte. Imagine we
@@ -62,64 +81,97 @@
     than the memory we have otherwise we will have no space left for our actual programs
     and operating system data. The solution is to chunk memory into small regions
     called ‘pages’ and ‘frames’ and use a lookup table for each page.
+  id: totrans-8
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了说明，考虑一个32位机器，这意味着指针是32位的。它们可以访问<semantics><msup><mn>2</mn><mn>32</mn></msup><annotation
+    encoding="application/x-tex">2^{32}</annotation></semantics>个不同的位置或4GB的内存，其中每个地址对应一个字节。想象一下，我们有一个大表，用于存储每个可能的地址，我们将存储‘真实’的即物理地址。每个物理地址需要4个字节——来存储32位。自然地，这个方案将需要160亿字节来存储所有条目。很明显，我们的查找方案将消耗掉我们为4GB机器所能购买的所有内存。我们的查找表应该比我们拥有的内存小，否则我们将没有空间留给我们的实际程序和操作系统数据。解决方案是将内存分成小块，称为“页面”和“帧”，并为每个页面使用一个查找表。
 - en: Terminology
+  id: totrans-9
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 术语
 - en: A **page** is a block of virtual memory. A typical block size on Linux is 4KiB
     or <semantics><msup><mn>2</mn><mn>12</mn></msup><annotation encoding="application/x-tex">2^{12}</annotation></semantics>
     addresses, though one can find examples of larger blocks. So rather than talking
     about individual bytes, we can talk about blocks of 4KiBs, each block is called
     a page. We can also number our pages (“Page 0” “Page 1” etc). Let’s do a sample
     calculation of how many pages are there assume page size of 4KiB.
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: '**页面**是一个虚拟内存块。在Linux上，典型的块大小是4KiB或<semantics><msup><mn>2</mn><mn>12</mn></msup><annotation
+    encoding="application/x-tex">2^{12}</annotation></semantics>地址，尽管也可以找到更大块大小的例子。因此，我们与其谈论单个字节，不如谈论4KiB的块，每个块被称为页面。我们也可以对页面进行编号（“页面0”、“页面1”等）。让我们做一个示例计算，假设页面大小为4KiB，看看有多少页面。'
 - en: For a 32-bit machine,
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于32位机器，
 - en: <semantics><mrow><msup><mn>2</mn><mn>32</mn></msup><mtext mathvariant="normal">address</mtext><mi>/</mi><msup><mn>2</mn><mn>12</mn></msup><mtext
     mathvariant="normal">(address/page)</mtext><mo>=</mo><msup><mn>2</mn><mn>20</mn></msup><mtext
     mathvariant="normal">pages</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">2^{32}
     \text{address} / 2^{12} \text{(address/page)} = 2^{20} \text{pages}.</annotation></semantics>
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: <semantics><mrow><msup><mn>2</mn><mn>32</mn></msup><mtext mathvariant="normal">地址</mtext><mi>/</mi><msup><mn>2</mn><mn>12</mn></msup><mtext
+    mathvariant="normal">(地址/页面)</mtext><mo>=</mo><msup><mn>2</mn><mn>20</mn></msup><mtext
+    mathvariant="normal">页面</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">2^{32}
+    \text{地址} / 2^{12} \text{(地址/页面)} = 2^{20} \text{页面}.</annotation></semantics>
 - en: For a 64-bit machine,
+  id: totrans-13
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于64位机器，
 - en: <semantics><mrow><msup><mn>2</mn><mn>64</mn></msup><mtext mathvariant="normal">address</mtext><mi>/</mi><msup><mn>2</mn><mn>12</mn></msup><mtext
     mathvariant="normal">(address/page)</mtext><mo>=</mo><msup><mn>2</mn><mn>52</mn></msup><mtext
     mathvariant="normal">pages</mtext><mo>≈</mo><msup><mn>10</mn><mn>15</mn></msup><mtext
     mathvariant="normal">pages</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">2^{64}
     \text{address} / 2^{12} \text{(address/page)} = 2^{52} \text{pages} \approx 10^{15}
     \text{pages}.</annotation></semantics>
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: <semantics><mrow><msup><mn>2</mn><mn>64</mn></msup><mtext mathvariant="normal">地址</mtext><mi>/</mi><msup><mn>2</mn><mn>12</mn></msup><mtext
+    mathvariant="normal">(地址/页面)</mtext><mo>=</mo><msup><mn>2</mn><mn>52</mn></msup><mtext
+    mathvariant="normal">页面</mtext><mo>≈</mo><msup><mn>10</mn><mn>15</mn></msup><mtext
+    mathvariant="normal">页面</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">2^{64}
+    \text{地址} / 2^{12} \text{(地址/页面)} = 2^{52} \text{页面} \approx 10^{15} \text{页面}.</annotation></semantics>
 - en: We also call this a **frame** or sometimes called a ‘page frame’ is a block
     of *physical memory* or RAM – Random Access Memory. A frame is the same number
     of bytes as a virtual page or 4KiB on our machine. It stores the bytes of interest.
     To access a particular byte in a frame, an MMU goes from the start of the frame
     and adds the offset – discussed later.
+  id: totrans-15
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们也称之为**帧**或有时称为“页面帧”，它是一块**物理内存**或RAM——随机存取存储器。帧的大小与虚拟页面相同，在我们的机器上是4KiB。它存储感兴趣的字节。要访问帧中的特定字节，MMU从帧的起始位置开始并添加偏移量——稍后讨论。
 - en: A **page table** is a map from a number to a particular frame. For example Page
     1 might be mapped to frame 45, page 2 mapped to frame 30\. Other frames might
     be currently unused or assigned to other running processes or used internally
     by the operating system. Implied from the name, imagine a page table as a table.
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: '**页表**是从数字到特定帧的映射。例如，页面1可能映射到帧45，页面2映射到帧30。其他帧可能目前未被使用，或分配给其他正在运行的过程，或由操作系统内部使用。从名称中隐含地想象，将页表想象成一个表。'
 - en: '![Explicit Frame Table](../media/file29.png)'
+  id: totrans-17
   prefs: []
   type: TYPE_IMG
+  zh: '![Explicit Frame Table](../media/file29.png)'
 - en: Explicit Frame Table
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 显式帧表
 - en: In practice, we will omit the first column because it will always be sequentially
     0, 1, 2, etc and instead we’ll use the offset from the start of the table as the
     entry number.
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 在实践中，我们将省略第一列，因为它始终是顺序的0，1，2等，而我们将使用从表开始处的偏移量作为条目号。
 - en: Now to go through the actual calculations. We will assume that a 32-bit machine
     has 4KiB pages Naturally, to address all the possible entries, there are <semantics><msup><mn>2</mn><mn>20</mn></msup><annotation
     encoding="application/x-tex">2^{20}</annotation></semantics> frames. Since there
@@ -129,57 +181,87 @@
     interesting with the rest of the bits. With 4 bytes per entry x <semantics><msup><mn>2</mn><mn>20</mn></msup><annotation
     encoding="application/x-tex">2^{20}</annotation></semantics> entries = 4 MiB of
     physical memory are required to hold the entire page table for a process.
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在进行实际计算。我们将假设一个32位机器有4KiB页面。自然地，为了地址所有可能的条目，有<semantics><msup><mn>2</mn><mn>20</mn></msup><annotation
+    encoding="application/x-tex">2^{20}</annotation></semantics>个帧。由于有<semantics><msup><mn>2</mn><mn>20</mn></msup><annotation
+    encoding="application/x-tex">2^{20}</annotation></semantics>个可能的帧，我们需要20位来编号所有可能的帧，这意味着必须是2.5字节长。在实践中，我们将它向上取整到4字节，并对剩余的位进行一些有趣的操作。每个条目4字节
+    x <semantics><msup><mn>2</mn><mn>20</mn></msup><annotation encoding="application/x-tex">2^{20}</annotation></semantics>条目
+    = 4 MiB的物理内存用于存储进程的整个页表。
 - en: Remember our page table maps pages to frames, but each frame is a block of contiguous
     addresses. How do we calculate which particular byte to use inside a particular
     frame? The solution is to re-use the lowest bits of the virtual memory address
     directly. For example, suppose our process is reading the following address-
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 记住我们的页表将页面映射到帧，但每个帧是一块连续的地址。我们如何计算特定帧内要使用的特定字节？解决方案是直接重用虚拟内存地址的最低位。例如，假设我们的进程正在读取以下地址-
 - en: So to give an example say we have the virtual address above. How would we split
     it up using a one-page table to frame scheme?
+  id: totrans-22
   prefs: []
   type: TYPE_NORMAL
+  zh: 以上的虚拟地址为例，我们如何使用单页表框架方案将其拆分？
 - en: '![Splitting Address](../media/file30.png)'
+  id: totrans-23
   prefs: []
   type: TYPE_IMG
+  zh: '![Splitting Address](../media/file30.png)'
 - en: Splitting Address
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 分割地址
 - en: We can imagine the steps to dereference as one process. In general, it looks
     like the following.
+  id: totrans-25
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们可以将解引用的步骤想象成一个过程。一般来说，它看起来像以下这样。
 - en: '![One level dereference](../media/file31.png)'
+  id: totrans-26
   prefs: []
   type: TYPE_IMG
+  zh: '![One level dereference](../media/file31.png)'
 - en: One level dereference
+  id: totrans-27
   prefs: []
   type: TYPE_NORMAL
+  zh: 一级解引用
 - en: The way to read from a particular address above is visualized below.
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 从上述特定地址读取的方式在下面进行了可视化。
 - en: '![One level dereference example](../media/file32.png)'
+  id: totrans-29
   prefs: []
   type: TYPE_IMG
+  zh: '![One level dereference example](../media/file32.png)'
 - en: One level dereference example
+  id: totrans-30
   prefs: []
   type: TYPE_NORMAL
+  zh: 一级解引用示例
 - en: And if we were reading from it, ’return’ that value. This sounds like a perfect
     solution. Take each address and map it to a virtual address in sequential order.
     The process will believe that the address looks continuous, but the top 20 bits
     are used to figure out , which will allow us to find the frame number, find the
     frame, add the **offset** – derived from the last 12 bits – and do the read or
     write.
+  id: totrans-31
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们从它读取，则返回该值。这听起来像是一个完美的解决方案。将每个地址按顺序映射到虚拟地址。这个过程会认为地址是连续的，但前20位用于确定，这将允许我们找到帧号，找到帧，加上**偏移量**（由最后12位推导而来）并执行读取或写入操作。
 - en: There are other ways to split it as well. On a machine with page size 256 Bytes,
     then the lowest 8 bits (10101010) will be used as the offset. The remaining upper
     bits will be the page number (111100001111000011110000). This offset is treated
     as a binary number and is added to the start of the frame when we get it.
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 还有其他方法可以分割它。在一个页面大小为256字节的机器上，最低的8位（10101010）将用作偏移量。剩余的上位将是页面号（111100001111000011110000）。这个偏移量被视为一个二进制数，并在获取时添加到帧的开始处。
 - en: We do have a problem with 64-bit operating systems. For a 64-bit machine with
     4KiB pages, each entry needs 52 bits. Meaning we need roughly With <semantics><msup><mn>2</mn><mn>52</mn></msup><annotation
     encoding="application/x-tex">2^{52}</annotation></semantics> entries, that’s <semantics><msup><mn>2</mn><mn>55</mn></msup><annotation
@@ -188,59 +270,90 @@
     are sparse, so we need a mechanism to reduce the page table size, given that most
     of the entries will never be used. We’ll take about this below. There is one last
     piece of terminology that needs to be covered.
+  id: totrans-33
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们确实在64位操作系统中遇到了一个问题。对于具有4KiB页面的64位机器，每个条目需要52位。这意味着我们需要大约<semantics><msup><mn>2</mn><mn>52</mn></msup><annotation
+    encoding="application/x-tex">2^{52}</annotation></semantics>个条目，这相当于<semantics><msup><mn>2</mn><mn>55</mn></msup><annotation
+    encoding="application/x-tex">2^{55}</annotation></semantics>字节（大约40拍字节）。所以我们的页面表太大了。在64位架构中，内存地址是稀疏的，因此我们需要一种机制来减少页面表的大小，考虑到大多数条目将永远不会被使用。我们将在下面讨论这个问题。还有一个术语需要解释。
 - en: Multi-level page tables
+  id: totrans-34
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 多级页面表
 - en: Multi-level pages are one solution to the page table size issue for 64-bit architectures.
     We’ll look at the simplest implementation - a two-level page table. Each table
     is a list of pointers that point to the next level of tables, som sub-tables may
     be omitted. An example, a two-level page table for a 32-bit architecture is shown
     below.
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 多级页面是解决64位架构页面表大小问题的解决方案之一。我们将查看最简单的实现方式——两级页面表。每个表都是一个指向下一级表的指针列表，某些子表可能被省略。以下是一个示例，展示了一个32位架构的两级页面表。
 - en: '![Three Way Address Split](../media/file33.png)'
+  id: totrans-36
   prefs: []
   type: TYPE_IMG
+  zh: '![三级地址分割](../media/file33.png)'
 - en: Three Way Address Split
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 三级地址分割
 - en: So what is the intuition for dereferencing an address? First, the MMU takes
     the top-level page table and find the ’th entry. That will contain a number that
     will lead the MMU to the appropriate sub-table Then go to the ’th entry of that
     table. That will contain a frame number. This is the good old fashioned 4KiB RAM
     that we were talking about earlier. Then, the MMU adds the offset and do the read
     or write.
+  id: totrans-38
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，取消引用地址的直觉是什么？首先，MMU（内存管理单元）取顶级页面表并找到第’t’个条目。这将包含一个数字，将MMU引导到适当的子表。然后转到该表的第’t’个条目。这将包含一个帧号。这是我们之前提到过的老式的4KiB
+    RAM。然后，MMU添加偏移量并执行读取或写入操作。
 - en: Visualizing The Dereference
+  id: totrans-39
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 可视化取消引用
 - en: In one diagram, the dereference looks like the following image.
+  id: totrans-40
   prefs: []
   type: TYPE_NORMAL
+  zh: 在一张图中，取消引用看起来像以下图像。
 - en: '![Full page table dereference](../media/file34.png)'
+  id: totrans-41
   prefs: []
   type: TYPE_IMG
+  zh: '![全页表取消引用](../media/file34.png)'
 - en: Full page table dereference
+  id: totrans-42
   prefs: []
   type: TYPE_NORMAL
+  zh: 全页表取消引用
 - en: Following our example, here is what the dereference would look like.
+  id: totrans-43
   prefs: []
   type: TYPE_NORMAL
+  zh: 按照我们的示例，以下是取消引用的外观。
 - en: '![Full page example dereference](../media/file35.png)'
+  id: totrans-44
   prefs: []
   type: TYPE_IMG
+  zh: '![全页示例取消引用](../media/file35.png)'
 - en: Full page example dereference
+  id: totrans-45
   prefs: []
   type: TYPE_NORMAL
+  zh: 全页示例取消引用
 - en: Calculating Size Concerns
+  id: totrans-46
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 计算大小问题
 - en: Now some calculations on size. Each index is 10 bits wide because there are
     only <semantics><msup><mn>2</mn><mn>10</mn></msup><annotation encoding="application/x-tex">2^{10}</annotation></semantics>
     possible , so we need 10 bits to store each directory index. We’ll round up to
@@ -252,8 +365,12 @@
     to be able to address all the frames as mentioned earlier. However, for processes
     with only tiny memory needs, we only need to specify entries for low memory addresses
     for the heap and program code and high memory addresses for the stack.
+  id: totrans-47
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在来计算一下大小。每个索引有10位宽，因为只有<semantics><msup><mn>2</mn><mn>10</mn></msup><annotation
+    encoding="application/x-tex">2^{10}</annotation></semantics>种可能，所以我们需要10位来存储每个目录索引。为了便于推理，我们将它四舍五入到2字节。如果顶级表中的每个条目使用2字节，并且只有<semantics><msup><mn>2</mn><mn>10</mn></msup><annotation
+    encoding="application/x-tex">2^{10}</annotation></semantics>个条目，我们只需要2KiB来存储整个第一级页面表。每个子表将指向物理帧，它们的每个条目都需要4字节，以便能够像之前提到的那样寻址所有帧。然而，对于只有微小内存需求的进程，我们只需要指定堆和程序代码的低内存地址条目以及堆栈的高内存地址条目。
 - en: Thus, the total memory overhead for our multi-level page table has shrunk from
     4MiB for the single-level implementation to three page tables of memory or 2KiB
     for the top-level and 4KiB for the two intermediate levels of size 10KiB. Here’s
@@ -264,18 +381,24 @@
     more sub-table entries, as each subtable can only reference 1024*4KiB = 4MiB of
     address space. The main point still stands. We have significantly reduced the
     memory overhead required to perform page table lookups.
+  id: totrans-48
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，我们多级页表的内存开销从单级实现的4MiB减少到三个页表内存，即顶级页表2KiB和两个中间级别各4KiB。原因如下。我们需要至少一个帧用于高级目录和两个帧用于两个子表。一个子表是必要的，用于低地址——程序代码、常量和可能是一个非常小的堆。另一个子表用于环境和高地址栈。在实践中，实际程序可能需要更多的子表条目，因为每个子表只能引用1024*4KiB=4MiB的地址空间。主要观点仍然成立。我们已经显著减少了执行页表查找所需的内存开销。
 - en: Page Table Disadvantages
+  id: totrans-49
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 页表缺点
 - en: There are lots of problems with page tables – one of the big problems is that
     they are slow. For a single page table, our machine is now twice as slow! Two
     memory accesses are required. For a two-level page table, memory access is now
     three times as slow – three memory accesses are required.
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 页表有很多问题——其中一个主要问题是它们很慢。对于单个页表，我们的机器现在慢了两倍！需要两次内存访问。对于两级页表，内存访问现在慢了三倍——需要三次内存访问。
 - en: To overcome this overhead, the MMU includes an associative cache of recently-used
     virtual-page-to-frame lookups. This cache is called the TLB (“translation lookaside
     buffer”). Every time a virtual address needs to be translated into a physical
@@ -284,85 +407,117 @@
     the results. However, if a program has inadequate cache coherence, the address
     will be missing in the TLB, meaning the MMU must use the much slower page table
     translation.
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了克服这种开销，MMU包括一个最近使用的虚拟页到帧查找的关联缓存。这个缓存称为TLB（“转换旁路缓存”）。每次需要将虚拟地址转换为物理内存位置时，TLB都会与页表并行查询。对于大多数程序的大多数内存访问，TLB缓存结果的可能性很大。然而，如果一个程序缺乏缓存一致性，地址将缺失在TLB中，这意味着MMU必须使用较慢的页表转换。
 - en: MMU Algorithm
+  id: totrans-52
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: MMU 算法
 - en: There is a sort of pseudocode associated with the MMU. We will assume that this
     is for a single-level page table.
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 与MMU相关联有一种伪代码。我们将假设这是针对单级页表的。
 - en: Receive address
+  id: totrans-54
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 接收地址
 - en: Try to translate address according to the programmed scheme
+  id: totrans-55
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 尝试根据编程方案转换地址
 - en: If the translation fails, report an invalid address
+  id: totrans-56
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果转换失败，报告无效地址
 - en: Otherwise,
+  id: totrans-57
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 否则，
 - en: If the TLB contains the physical memory, get the physical frame from the TLB
     and perform the read and write.
+  id: totrans-58
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果TLB包含物理内存，则从TLB获取物理帧并执行读写操作。
 - en: If the page exists in memory, check if the process has permissions to perform
     the operation on the page meaning the process has access to the page, and it is
     reading from the page/writing to a page that it has permission to do so.
+  id: totrans-59
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果页面存在于内存中，检查进程是否有权限在页面上执行操作，这意味着进程可以访问页面，并且正在从页面读取/写入它有权限进行的页面。
 - en: If so then do the dereference provide the address, cache the results in the
     TLB
+  id: totrans-60
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果是这样，则进行解引用提供地址，将结果缓存到TLB中
 - en: Otherwise, trigger a hardware interrupt. The kernel will most likely send a
     SIGSEGV or a Segmentation Violation.
+  id: totrans-61
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 否则，触发硬件中断。内核很可能会向进程发送SIGSEGV或段错误。
 - en: If the page doesn’t exist in memory, generate an Interrupt.
+  id: totrans-62
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果页面不在内存中，则生成一个中断。
 - en: The kernel could realize that this page could either be not allocated or on
     disk. If it fits the mapping, allocate the page and try the operation again.
+  id: totrans-63
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 内核可能会意识到这个页面可能既未分配也可能在磁盘上。如果它符合映射，则分配页面并再次尝试操作。
 - en: Otherwise, this is invalid access and the kernel will most likely send a SIGSEGV
     to the process.
+  id: totrans-64
   prefs:
   - PREF_IND
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 否则，这是无效访问，内核很可能会向进程发送SIGSEGV。
 - en: How would you alter this for a multi-level page table?
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 如何将其修改为多级页表？
 - en: Frames and Page Protections
+  id: totrans-66
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 帧和页面保护
 - en: Frames can be shared between processes, and this is where the heart of the chapter
     comes into play. We can use these tables to communicate with processes. In addition
     to storing the frame number, the page table can be used to store whether a process
@@ -373,41 +528,54 @@
     to write to a read-only page in memory, it will . That is why sometimes memory
     accesses SEGFAULT and sometimes they don’t, it all depends on if your hardware
     says that a program can access.
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 帧可以在进程之间共享，这也是本章的核心所在。我们可以使用这些表与进程进行通信。除了存储帧号外，页表还可以用来存储进程是否可以写入或仅读取特定的帧。只读帧可以安全地在多个进程之间共享。例如，C库指令代码可以在所有动态将代码加载到进程内存的进程中共享。每个进程只能读取该内存。这意味着如果程序尝试写入内存中的只读页面，它将。这就是为什么有时内存访问会导致SEGFAULT，有时则不会，这完全取决于你的硬件是否允许程序访问。
 - en: Also, processes can share a page with a child process using the system call.
     is an interesting call because instead of tying each virtual address to a physical
     frame, it ties it to something else. It is an important distinction that we are
     talking about mmap and not memory-mapped IO in general. The system call can’t
     reliably be used to do other memory-mapped operations like communicate with GPUs
     and write pixels to the screen – this is mainly hardware dependent.
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 此外，进程可以使用系统调用与子进程共享页面。这是一个有趣的调用，因为它不是将每个虚拟地址绑定到一个物理帧上，而是将其绑定到其他东西上。这是一个重要的区别，我们正在讨论的是mmap，而不是一般的内存映射I/O。系统调用不能可靠地用于执行其他内存映射操作，如与GPU通信和将像素写入屏幕
+    – 这主要取决于硬件。
 - en: Bits on Pages
+  id: totrans-69
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 页面上的位
 - en: This is *heavily* dependent on the chipset. We will include some bits that have
     historically been popular in chipsets.
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 这与芯片组密切相关。我们将包括一些在芯片组中历史上流行的位。
 - en: The read-only bit marks the page as read-only. Attempts to write to the page
     will cause a page fault. The page fault will then be handled by the Kernel. Two
     examples of the read-only page include sharing the C standard library between
     multiple processes for security you wouldn’t want to allow one process to modify
     the library and Copy-On-Write where the cost of duplicating a page can be delayed
     until the first write occurs.
+  id: totrans-71
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 只读位将页面标记为只读。尝试写入页面的操作将导致页面错误。然后内核将处理页面错误。只读页面的两个例子包括在多个进程之间共享C标准库以增强安全性（你不希望允许一个进程修改库）和写时复制（Copy-On-Write），其中复制页面的成本可以延迟到第一次写入发生。
 - en: 'The execution bit defines whether bytes in a page can be executed as CPU instructions.
     Processors may merge these bits into one and deem a page either writable or executable.
     This bit is useful because it prevents stack overflow or code injection attacks
     when writing user data into the heap or the stack because those are not read-only
     and thus not executable. Further reading: [background](http://en.wikipedia.org/wiki/NX_bit#Hardware_background)'
+  id: totrans-72
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 执行位定义了页面上字节是否可以作为CPU指令执行。处理器可能将这些位合并为一个，并认为页面要么可写要么可执行。这个位很有用，因为它防止了在将用户数据写入堆或栈时栈溢出或代码注入攻击，因为这些不是只读的，因此不是可执行的。进一步阅读：[背景信息](http://en.wikipedia.org/wiki/NX_bit#Hardware_background)
 - en: The dirty bit allows for performance optimization. A page exclusively read from
     can be discarded without syncing to disk, since the page hasn’t changed. However,
     if the page was written to after it’s paged in, its dirty bit will be set, indicating
@@ -416,69 +584,93 @@
     When a dirty bit is omitted, the backing store need only be as large as the instantaneous
     total size of all paged-out pages at any moment. When a dirty bit is used, at
     all times some pages will exist in both physical memory and the backing store.
+  id: totrans-73
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 污点位允许进行性能优化。如果一个页面仅被读取而没有更改，那么可以丢弃该页面而不需要同步到磁盘，因为页面没有发生变化。然而，如果页面在分页到内存后已被写入，其污点位将被设置，表示该页面必须写回后备存储。这种策略要求后备存储在页面分页到内存后保留页面的副本。当省略污点位时，后备存储只需要与任何时刻所有已分页出页的瞬时总大小一样大。当使用污点位时，始终会有一些页面同时存在于物理内存和后备存储中。
 - en: There are plenty of other bits. Take a look at your favorite architecture and
     see what other bits are associated!
+  id: totrans-74
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 还有许多其他内容。看看你最喜欢的架构，看看还有哪些位与之相关！
 - en: Page Faults
+  id: totrans-75
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 页面错误
 - en: A page fault may happen when a process accesses an address in a frame missing
     in memory. There are three types of Page Faults
+  id: totrans-76
   prefs: []
   type: TYPE_NORMAL
+  zh: 当进程访问内存中缺失的帧的地址时，可能会发生页面错误。页面错误有三种类型
 - en: '**Minor** If there is no mapping yet for the page, but it is a valid address.
     This could be memory asked for by but not written to yet meaning that the operating
     system can wait for the first write before allocating space – if it was read from,
     the operating system could short circuit the operation to read 0\. The OS simply
     makes the page, loads it into memory, and moves on.'
+  id: totrans-77
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**次要** 如果页面还没有映射，但它是一个有效的地址。这可能意味着操作系统可以等待第一次写入之前分配空间，如果它被读取了，操作系统可以短路操作来读取0。操作系统只是创建页面，将其加载到内存中，然后继续。'
 - en: '**Major** If the mapping to the page is exclusively on disk. The operating
     system will swap the page into memory and swap another page out. If this happens
     frequently enough, your program is said to *thrash* the MMU.'
+  id: totrans-78
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**主要** 如果页面的映射仅限于磁盘。操作系统会将页面交换到内存中，并将另一个页面交换出去。如果这种情况频繁发生，你的程序就被说成是*thrash*了MMU。'
 - en: '**Invalid** When a program tries to write to a non-writable memory address
     or read to a non-readable memory address. The MMU generates an invalid fault and
     the OS will usually generate a meaning segmentation violation meaning that the
     program wrote outside the segment that it could write to.'
+  id: totrans-79
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: '**无效** 当程序尝试写入不可写的内存地址或读取不可读的内存地址时。MMU生成一个无效故障，操作系统通常会生成一个意义分割错误，意味着程序写到了它不能写入的段之外。'
 - en: Link Back to IPC
+  id: totrans-80
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 返回到IPC
 - en: What does this have to do with IPC? Before, you knew that processes had isolation.
     One, you didn’t know how that isolation mapped. Two, you may not know how you
     can break this isolation. To break any memory level isolation you have two avenues.
     One is to ask the kernel to provide some kind of interface. The other is to ask
     the kernel to map two pages of memory to the same virtual memory area and handle
     all the synchronization yourself.
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 这与IPC有什么关系？在此之前，你知道进程有隔离。一是你不知道这种隔离是如何映射的。二是你可能不知道你如何打破这种隔离。要打破任何内存级别的隔离，你有两条途径。一是要求内核提供某种类型的接口。二是要求内核将两个页面的内存映射到相同的虚拟内存区域，并自行处理所有同步。
 - en: mmap
+  id: totrans-82
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: mmap
 - en: is a trick of virtual memory of instead of mapping a page to a frame, that frame
     can be backed by a file on disk, or the frame can be shared among processes. We
     can use that to read from a file on disk efficiently or sync changes to the file.
     One of the big optimizations is a file may be lazily allocated to memory. Take
     the following code for example.
+  id: totrans-83
   prefs: []
   type: TYPE_NORMAL
+  zh: 是虚拟内存的一个技巧，而不是将页面映射到帧，该帧可以由磁盘上的文件支持，或者帧可以在进程间共享。我们可以利用它来高效地从磁盘上的文件读取或同步对文件的变化。其中一个大的优化是文件可以延迟分配到内存中。以下代码为例。
 - en: '[PRE0]'
+  id: totrans-84
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: The kernel sees that the program wants to mmap the file into memory, so it will
     reserve some space in your address space that is the length of the file. That
     means when the program writes to that it writes to the first byte of the file.
@@ -486,164 +678,237 @@
     memory, it may only load pages at a time. A program may only access 3 or 4 pages
     making loading the entire file a waste of time. Page faults are so powerful because
     let the operating system take control of when a file is used.
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 内核看到程序想要将文件映射到内存中，所以它会在你的地址空间中预留一些空间，其长度与文件长度相同。这意味着当程序写入时，它写入文件的第一字节。内核也可以进行一些优化。它不必将整个文件加载到内存中，它可能一次只加载页面。一个程序可能只访问3或4个页面，使加载整个文件成为浪费时间。页面错误之所以强大，是因为它让操作系统控制文件何时被使用。
 - en: mmap Definitions
+  id: totrans-86
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: mmap 定义
 - en: does more than take a file and map it to memory. It is the general interface
     for creating shared memory among processes. Currently it only supports regular
     files and POSIX (“Mmap” [2018](ch018.xhtml#ref-mmap_2018)). Naturally, you can
     read all about it in the reference above, which references the current working
     group POSIX standard. Some other options to note in the page will follow.
+  id: totrans-87
   prefs: []
   type: TYPE_NORMAL
+  zh: 不仅将文件映射到内存中，它还是创建进程间共享内存的通用接口。目前它仅支持常规文件和POSIX（“Mmap” [2018](ch018.xhtml#ref-mmap_2018)）。自然地，你可以在上面的参考中详细了解它，其中引用了当前的工作组POSIX标准。页面上的其他一些选项将在下面说明。
 - en: The first option is that the argument of mmap can take many options.
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 第一个选项是mmap的参数可以接受许多选项。
 - en: This means the process can read the memory. This isn’t the only flag that gives
     the process read permission, however! The underlying file descriptor, in this
     case, must be opened with read privileges.
+  id: totrans-89
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这意味着进程可以读取内存。然而，这并不是唯一给予进程读取权限的标志！在这种情况下，基础文件描述符必须以读权限打开。
 - en: This means the process can write to the memory. This has to be supplied for
     a process to write to a mapping. If this is supplied and is also supplied, the
     latter wins and no writes can be performed. The underlying file descriptor, in
     this case, must either be opened with write privileges or a private mapping must
     be supplied below
+  id: totrans-90
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这意味着进程可以向内存写入。为了使进程能够写入映射，必须提供这一点。如果提供了这一点，并且也提供了，那么后者将获胜，并且无法执行任何写入。在这种情况下，基础文件描述符必须以写权限打开，或者必须提供以下私有映射。
 - en: This means the process can execute this piece of memory. Although this is not
     stated in POSIX documents, this shouldn’t be supplied with WRITE or NONE because
     that would make this invalid under the NX bit or not being able to execute (respectively)
+  id: totrans-91
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这意味着进程可以执行这块内存。尽管这一点在 POSIX 文档中没有明确说明，但这不应该与 WRITE 或 NONE 一起提供，因为这会使它在 NX 位或无法执行（分别）的情况下无效。
 - en: This means the process can’t do anything with the mapping. This could be useful
     if you implement guard pages in terms of security. If you surround critical data
     with many more pages that can’t be accessed, that decreases the chance of various
     attacks.
+  id: totrans-92
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这意味着这个过程无法对映射做任何事情。如果你从安全角度实现守卫页面，这可能是有用的。如果你用许多无法访问的页面包围关键数据，这会降低各种攻击的机会。
 - en: This mapping will be synchronized to the underlying file object. The file descriptor
     must’ve been opened with write permissions in this case.
+  id: totrans-93
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这个映射将与底层文件对象同步。在这种情况下，文件描述符必须以写权限打开。
 - en: This mapping will only be visible to the process itself. Useful to not thrash
     the operating system.
+  id: totrans-94
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这个映射只会对进程本身可见。这对于避免操作系统过载很有用。
 - en: Remember that once a program is done ping that the program must to tell the
     operating system that it is no longer using the pages allocated, so the OS can
     write it back to disk and give back the addresses in case another mmap needs to
     occur. There are accompanying calls that take a piece of mmap’ed memory and sync
     the changes back to the filesystem though we won’t cover that in-depth. The other
     parameters to mmap are described in the annotated walkthrough below.
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 记住，一旦程序完成 ping，程序必须通知操作系统它不再使用分配的页面，这样操作系统就可以将其写回磁盘，并在需要另一个 mmap 时释放地址。虽然我们不会深入探讨这一点，但有一些伴随调用可以接受一个
+    mmap’ed 内存块并将其更改同步回文件系统。下面的注释说明中描述了 mmap 的其他参数。
 - en: Annotated mmap Walkthrough
+  id: totrans-96
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 注释说明的 mmap 流程
 - en: Below is an annotated walkthrough of the example code in the man pages. Our
     command-line utility will take a file, offset, and length to print. We can assume
     that these are initialized correctly and the offset + length is less than the
     length of the file.
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 下面是 man 页面中示例代码的注释说明。我们的命令行工具将接受一个文件、偏移量和长度来打印。我们可以假设这些已经被正确初始化，并且偏移量 + 长度小于文件长度。
 - en: '[PRE1]'
+  id: totrans-98
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: We’ll assume that all system calls succeed. First, we have to open the file
     and get the size.
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们假设所有系统调用都成功。首先，我们必须打开文件并获取其大小。
 - en: '[PRE2]'
+  id: totrans-100
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: Then, we need to introduce another variable known as . mmap doesn’t let the
     program pass in any value as an offset, it needs to be a multiple of the page
     size. In our case, we will round down.
+  id: totrans-101
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，我们需要引入另一个变量，称为 . mmap 不允许程序传递任何值作为偏移量，它必须是页面大小的倍数。在我们的情况下，我们将向下取整。
 - en: '[PRE3]'
+  id: totrans-102
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: Then, we make the call to mmap, here is the order of arguments.
+  id: totrans-103
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，我们调用 mmap，以下是参数的顺序。
 - en: NULL, this tells mmap we don’t need any particular address to start from
+  id: totrans-104
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: NULL，这告诉 mmap 我们不需要从任何特定地址开始
 - en: length + offset - page_offset, mmaps the “rest” of the file into memory (starting
     from offset)
+  id: totrans-105
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: length + offset - page_offset，将文件的“剩余部分”映射到内存中（从偏移量开始）
 - en: PROT_READ, we want to read the file
+  id: totrans-106
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: PROT_READ，我们想要读取文件
 - en: MAP_PRIVATE, tell the OS, we don’t want to share our mapping
+  id: totrans-107
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: MAP_PRIVATE，告诉操作系统，我们不希望共享我们的映射
 - en: fd, object descriptor that we refer to
+  id: totrans-108
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: fd，我们引用的对象描述符
 - en: pa_offset, the page aligned offset to start from
+  id: totrans-109
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: pa_offset，从哪里开始的页面对齐偏移量
 - en: '[PRE4]'
+  id: totrans-110
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: Now, we can interact with the address as if it were a normal buffer. After,
     we have to unmap the file and close the file descriptor to make sure other system
     resources are freed.
+  id: totrans-111
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，我们可以像处理正常缓冲区一样与地址交互。之后，我们必须取消映射文件并关闭文件描述符，以确保释放其他系统资源。
 - en: '[PRE5]'
+  id: totrans-112
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: Check out the full listing in the man pages.
+  id: totrans-113
   prefs: []
   type: TYPE_NORMAL
+  zh: 查看 man 页面中的完整列表。
 - en: MMAP Communication
+  id: totrans-114
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: MMAP 通信
 - en: So how would we use mmap to communicate across processes? Conceptually, it would
     be the same as using threading. Let’s go through a broken down example. First,
     we need to allocate some space. We can do that with the call. We’ll also allocate
     space for 100 integers
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们如何使用mmap在进程间进行通信？从概念上讲，这就像使用线程一样。让我们通过一个分解的例子来探讨。首先，我们需要分配一些空间。我们可以通过调用来实现。我们还将为100个整数分配空间。
 - en: '[PRE6]'
+  id: totrans-116
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: Then, we need to fork and perform some communication. Our parent will store
     some values, and our child will read those values.
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 然后，我们需要进行分支并执行一些通信。我们的父进程将存储一些值，而我们的子进程将读取这些值。
 - en: '[PRE7]'
+  id: totrans-118
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: Now, there is no assurance that the values will be communicated because the
     process used , not a mutex. Most of the time this will work.
+  id: totrans-119
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，不能保证值会被传递，因为使用的进程不是互斥锁。大多数时候这会工作。
 - en: '[PRE8]'
+  id: totrans-120
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: This piece of code allocates space for a 100 integers and creates a piece of
     memory that is shared between all processes. The code then forks. The parent process
     writes two integers to the first two slots. To avoid a data race, the child sleeps
@@ -651,25 +916,33 @@
     protect against data races. We could use a mutex across the processes mentioned
     in the synchronization section. But for this simple example, it works fine. Note
     that each process should call munmap when done using the piece of memory.
+  id: totrans-121
   prefs: []
   type: TYPE_NORMAL
+  zh: 这段代码为100个整数分配空间，并创建了一个所有进程共享的内存块。然后代码执行分支。父进程将两个整数写入前两个槽位。为了避免数据竞争，子进程休眠一秒钟，然后打印出存储的值。这是一种不完美的防止数据竞争的方法。我们可以在同步部分提到的进程间使用互斥锁。但在这个简单的例子中，它工作得很好。请注意，每个进程在使用完这块内存后都应该调用munmap。
 - en: Sharing anonymous memory is an efficient form of inter-process communication
     because there is no copying, system call, or disk-access overhead - the two processes
     share the same physical frame of main memory. On the other hand, shared memory,
     like in a multithreading context, creates room for data races. Processes that
     share writable memory might need to use synchronization primitives like mutexes
     to prevent these from happening.
+  id: totrans-122
   prefs: []
   type: TYPE_NORMAL
+  zh: 共享匿名内存是进程间通信的一种高效形式，因为没有复制、系统调用或磁盘访问开销——两个进程共享相同的物理内存帧。另一方面，共享内存，就像在多线程上下文中一样，为数据竞争创造了空间。共享可写内存的进程可能需要使用互斥锁等同步原语来防止这种情况发生。
 - en: Pipes
+  id: totrans-123
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 管道
 - en: You’ve seen the virtual memory way of IPC, but there are more standard versions
     of IPC that are provided by the kernel. One of the big utilities is POSIX pipes.
     A pipe simply takes in a stream of bytes and spits out a sequence of bytes.
+  id: totrans-124
   prefs: []
   type: TYPE_NORMAL
+  zh: 你已经看到了虚拟内存方式的IPC，但内核还提供了更多标准的IPC版本。其中一个大效用是POSIX管道。管道简单地接收一个字节流，并输出一个字节序列。
 - en: One of the big starting points of pipes was way back in the PDP-10 days. In
     those days, a write to the disk or even your terminal was slow as it may have
     to be printed out. The Unix programmers still wanted to create small, portable
@@ -677,25 +950,35 @@
     to take the output of one program and feed it to the input of another program
     though they have other uses today – you can read more [At the Wikipedia page](https://en.wikipedia.org/wiki/Pipeline_%28Unix%29)
     Consider if you type the following into your terminal.
+  id: totrans-125
   prefs: []
   type: TYPE_NORMAL
+  zh: 管道的起点可以追溯到PDP-10时代。在那个时代，对磁盘的写入甚至对终端的写入都很慢，因为可能需要打印出来。Unix程序员仍然想要创建小型、可移植的程序，这些程序擅长做一件事，并且可以组合使用。因此，发明了管道来将一个程序的输出传递给另一个程序的输入，尽管它们今天还有其他用途——你可以在维基百科页面[管道（Unix）](https://en.wikipedia.org/wiki/Pipeline_%28Unix%29)上了解更多。考虑如果你在终端输入以下内容。
 - en: '[PRE9]'
+  id: totrans-126
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: What does the following code do? First, it lists the current directory. The
     -1 means that it outputs one entry per line. The command then takes everything
     before the first period. sorts all the input lines, makes sure all the lines are
     unique. Finally, outputs the contents to the file and the terminal for your perusal.
     The important part is that bash creates **5 separate processes** and connects
     their standard outs/stdins with pipes the trail looks something like this.
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 以下代码做了什么？首先，它列出当前目录。-1 表示每行输出一个条目。然后命令取第一个点之前的所有内容。对所有输入行进行排序，确保所有行都是唯一的。最后，将内容输出到文件和终端供您查阅。重要的是，bash创建了**5个独立的过程**，并通过管道将它们的标准输出/标准输入连接起来，其轨迹看起来像这样。
 - en: '![Pipe Process Filedescriptor redirection](../media/file36.png)'
+  id: totrans-128
   prefs: []
   type: TYPE_IMG
+  zh: '![管道进程 文件描述符重定向](../media/file36.png)'
 - en: Pipe Process Filedescriptor redirection
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 管道进程 文件描述符重定向
 - en: The numbers in the pipes are the file descriptors for each process and the arrow
     represents the redirect or where the output of the pipe is going. A POSIX pipe
     is almost like its real counterpart - a program can stuff bytes down one end and
@@ -704,200 +987,286 @@
     and the other for writing. The system call is used to create a pipe. These file
     descriptors can be used with and . A common method of using pipes is to create
     the pipe before forking to communicate with a child process
+  id: totrans-130
   prefs: []
   type: TYPE_NORMAL
+  zh: 管道中的数字是每个进程的文件描述符，箭头表示重定向或管道输出的去向。POSIX管道几乎就像它的实际对应物——一个程序可以将字节从一端塞入，它们将以相同的顺序出现在另一端。然而，与真实管道不同的是，流量始终是单向的，一个文件描述符用于读取，另一个用于写入。系统调用用于创建管道。这些文件描述符可以与和一起使用。使用管道的常见方法是在创建进程之前创建管道，以与子进程通信
 - en: '[PRE10]'
+  id: totrans-131
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: There are two file descriptors that pipe creates. contains the read end. contains
     the write end. How your friendly neighborhood TAs remember it is one can *read
     before they can write, or reading comes before writing*. You can groan all you
     want at it, but it is helpful to remember what is the read end and what is the
     write end.
+  id: totrans-132
   prefs: []
   type: TYPE_NORMAL
+  zh: 管道创建了两个文件描述符。包含读取端。包含写入端。你友好的邻家助教记住的是，一个可以*在写入之前读取，或者读取在写入之前发生*。你可以尽情地抱怨，但这有助于记住哪个是读取端，哪个是写入端。
 - en: One can use pipes inside of the same process, but there tends to be no added
     benefit. Here’s an example program that sends a message to itself.
+  id: totrans-133
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以在同一个进程中使用管道，但通常没有额外的优势。这里有一个发送消息给自身的示例程序。
 - en: '[PRE11]'
+  id: totrans-134
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: The problem with using a pipe in this fashion is that writing to a pipe can
     block meaning the pipe only has a limited buffering capacity. The maximum size
     of the buffer is system-dependent; typical values from 4KiB up to 128KiB though
     they can be changed.
+  id: totrans-135
   prefs: []
   type: TYPE_NORMAL
+  zh: 以这种方式使用管道的问题在于写入管道可能会阻塞，这意味着管道只有有限的缓冲区容量。缓冲区的最大大小是系统相关的；典型的值从4KiB到128KiB，尽管它们可以被更改。
 - en: '[PRE12]'
+  id: totrans-136
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: Pipe Gotchas
+  id: totrans-137
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 管道陷阱
 - en: Here’s a complete example that doesn’t work! The child reads one byte at a time
     from the pipe and prints it out - but we never see the message! Can you see why?
+  id: totrans-138
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里有一个不完整的例子！子进程逐字节从管道中读取并打印出来——但我们从未看到消息！你能看出为什么吗？
 - en: '[PRE13]'
+  id: totrans-139
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: The parent sends the bytes into the pipe. The child starts reading the pipe
     one byte at a time. In the above case, the child process will read and print each
     character. However, it never leaves the while loop! When there are no characters
     left to read it simply blocks and waits for more unless **All the writers close
     their ends** Another solution could also exit the loop by checking for an end-of-message
     marker,
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 父进程将字节发送到管道中。子进程开始逐字节读取管道。在上面的例子中，子进程将读取并打印每个字符。然而，它永远不会离开while循环！当没有剩余的字符可读取时，它简单地阻塞并等待更多，除非**所有写入者都关闭了它们的端点**。另一种解决方案也可以通过检查消息结束标记来退出循环，
 - en: '[PRE14]'
+  id: totrans-141
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE14]'
 - en: We know that when a process tries to read from a pipe where there are still
     writers, the process blocks. If no pipe has no writers, read returns 0\. If a
     process tries to write with some reader’s read goes through, or fails – partially
     or completely – if the pipe is full. Why happens when a process tries to write
     when there are no readers left?
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们知道，当进程尝试从一个仍有写入者的管道中读取时，进程会阻塞。如果没有管道有写入者，读取会返回0。如果进程尝试写入，而某个读取器的读取操作通过，或者失败——部分或完全失败——如果管道已满。那么当进程尝试写入而没有剩余的读取者时会发生什么呢？
 - en: '[PRE15]'
+  id: totrans-143
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE15]'
 - en: 'Tip: Notice only the writer (not a reader) can use this signal. To inform the
     reader that a writer is closing their end of the pipe, a program could write your
     special byte (e.g. 0xff) or a message ()'
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 小贴士：注意只有写入者（而不是读取者）可以使用这个信号。为了通知读取者写入者正在关闭管道的端点，程序可以写入一个特殊的字节（例如0xff）或一条消息()
 - en: Here’s an example of catching this signal that fails! Can you see why?
+  id: totrans-145
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里有一个捕捉这个失败信号的例子！你能看出为什么吗？
 - en: '[PRE16]'
+  id: totrans-146
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE16]'
 - en: The mistake in the above code is that there is still a reader for the pipe!
     The child still has the pipe’s first file descriptor open and remember the specification?
     All readers must be closed
+  id: totrans-147
   prefs: []
   type: TYPE_NORMAL
+  zh: 上述代码中的错误在于管道仍然有一个读取器！子进程仍然保留了管道的第一个文件描述符，并记得这个规范？所有读取器都必须关闭
 - en: When forking, *It is common practice* to close the unnecessary (unused) end
     of each pipe in the child and parent process. For example, the parent might close
     the reading end and the child might close the writing end.
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: 在进行进程创建时，*通常的做法*是在子进程和父进程中关闭每个管道的不必要（未使用）的端点。例如，父进程可能会关闭读取端，而子进程可能会关闭写入端。
 - en: The last addendum is that a program can set the file descriptor to return when
     there is no one listening instead of SIGPIPE because by default SIGPIPE terminates
     your program. The reason that this is default behavior is it makes the pipe example
     above work. Consider this useless use of cat
+  id: totrans-149
   prefs: []
   type: TYPE_NORMAL
+  zh: 最后的补充是，程序可以将文件描述符设置为在没有监听者时返回，而不是使用SIGPIPE，因为默认情况下SIGPIPE会终止你的程序。这种默认行为的原因是它使得上面的管道示例能够工作。考虑一下这个看似无用的cat用法
 - en: '[PRE17]'
+  id: totrans-150
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE17]'
 - en: Which grabs 20 lines of input from urandom. will terminate after 20 newline
     characters have been read. What about ? needs to receive a SIGPIPE informing it
     that the program tried to write to a pipe that no one is listening on.
+  id: totrans-151
   prefs: []
   type: TYPE_NORMAL
+  zh: Which从urandom读取20行输入。在读取了20个换行符后终止。关于?需要接收一个SIGPIPE信号，告知程序尝试写入一个没有监听者的管道。
 - en: Other pipe facts
+  id: totrans-152
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 其他管道事实
 - en: A pipe gets filled up when the writer writes too much to the pipe without the
     reader reading any of it. When the pipes become full, all writes fail until a
     read occurs. Even then, a write may partially fail if the pipe has a little bit
     of space left but not enough for the entire message. Usually, two things are done
     to avoid this. Either increase the size of the pipe. Or more commonly, fix your
     program design so that the pipe is constantly being read from.
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: 当写入者向管道写入太多内容而没有读者读取任何内容时，管道会填满。当管道满时，所有写入都会失败，直到发生读取。即使这样，如果管道还有一点空间但不足以容纳整个消息，写入可能只会部分失败。通常，为了避免这种情况，会做两件事。要么增加管道的大小。或者更常见的是，修复你的程序设计，使管道始终被读取。
 - en: As hinted at before, Pipe writes are atomic up to the size of the pipe. Meaning
     that if two processes try to write to the same pipe, the kernel has internal mutexes
     with the pipe that it will lock, do the write, and return. The only gotcha is
     when the pipe is about to become full. If two processes are trying to write and
     the pipe can only satisfy a partial write, that pipe write is not atomic – be
     careful about that!
+  id: totrans-154
   prefs: []
   type: TYPE_NORMAL
+  zh: 如前所述，管道写入是原子的，直到管道的大小。这意味着如果有两个进程尝试写入同一个管道，内核会与管道内部使用互斥锁，锁定它，执行写入，然后返回。唯一需要注意的问题是当管道即将满时。如果有两个进程正在尝试写入，而管道只能满足部分写入，那么这个管道写入就不是原子的——对此要小心！
 - en: Unnamed pipes live in memory and are a simple and efficient form of inter-process
     communication (IPC) that is useful for streaming data and simple messages. Once
     all processes have closed, the pipe resources are freed.
+  id: totrans-155
   prefs: []
   type: TYPE_NORMAL
+  zh: 无名管道存在于内存中，是一种简单且高效的进程间通信（IPC）形式，适用于流式数据和简单消息。一旦所有进程都已关闭，管道资源就会被释放。
 - en: It is also common design for a pipe to be one way – meaning one process should
     do the writing and one process do the reading. Otherwise, the child would attempt
     to read its data intended for the parent (and vice versa)!
+  id: totrans-156
   prefs: []
   type: TYPE_NORMAL
+  zh: 管道通常设计为单向——意味着一个进程应该负责写入，另一个进程负责读取。否则，子进程会尝试读取其父进程（反之亦然）的数据！
 - en: Pipes and Dup
+  id: totrans-157
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 管道和Dup
 - en: Often, you’ll want to use in combination with dup. Take for example the simple
     program in the command line.
+  id: totrans-158
   prefs: []
   type: TYPE_NORMAL
+  zh: 通常，你希望与dup结合使用。以命令行中的简单程序为例。
 - en: '[PRE18]'
+  id: totrans-159
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE18]'
 - en: This command takes the output of which lists the content of the current directory
     on one line each and pipes it to cut. Cut take a delimiter, in this case, a dot,
     and a field position, in our case 1, and outputs per line the nth field by each
     delimiter. At a high level, this grabs the file names without the extension of
     our current directory.
+  id: totrans-160
   prefs: []
   type: TYPE_NORMAL
+  zh: 这个命令将which的输出（它按行列出当前目录的内容）通过管道传递给cut。Cut接受一个分隔符，在这种情况下是一个点，以及一个字段位置，在我们的例子中是1，并按行输出每个分隔符的第n个字段。从高层次来看，这是获取当前目录中不带扩展名的文件名。
 - en: Underneath the hood, this is how bash does it internally.
+  id: totrans-161
   prefs: []
   type: TYPE_NORMAL
+  zh: 在内部，bash就是这样做的
 - en: '[PRE19]'
+  id: totrans-162
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE19]'
 - en: The results of the two programs should be the same. Remember as you encounter
     more complicated examples of piping processes up, a program needs to close all
     unused ends of pipes otherwise the program will deadlock waiting for your processes
     to finish.
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 两个程序的结果应该是相同的。记住，当你遇到更复杂的管道过程示例时，程序需要关闭所有未使用的管道端，否则程序将因为等待进程完成而陷入死锁。
 - en: Pipe Conveniences
+  id: totrans-164
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 管道便利
 - en: If the program already has a file descriptor, it can ‘wrap’ it yourself into
     a FILE pointer using .
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果程序已经有一个文件描述符，它可以使用.将其“包装”成一个FILE指针
 - en: '[PRE20]'
+  id: totrans-166
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE20]'
 - en: For writing to files, this is unnecessary. Use which does the same as and .
     However for pipes, we already have a file descriptor, so this is a great time
     to use
+  id: totrans-167
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于写入文件，这并不必要。使用which与.做相同的事情。然而，对于管道，我们已经有了一个文件描述符，所以这是一个很好的使用时机
 - en: 'Here’s a complete example using pipes that almost works! Can you spot the error?
     Hint: The parent never prints anything!'
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里有一个使用管道的完整示例，几乎可以工作！你能找到错误吗？提示：父进程从未打印过任何东西！
 - en: '[PRE21]'
+  id: totrans-169
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE21]'
 - en: Note the unnamed pipe resource will disappear once both the child and parent
     have exited. In the above example, the child will send the bytes and the parent
     will receive the bytes from the pipe. However, no end-of-line character is ever
     sent, so will continue to ask for bytes because it is waiting for the end of the
     line i.e. it will wait forever! The fix is to ensure we send a newline character
     so that will return.
+  id: totrans-170
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意，一旦子进程和父进程都退出，无名的管道资源将会消失。在上面的例子中，子进程会发送字节，父进程会从管道接收字节。然而，永远不会发送行结束字符，所以会继续请求字节，因为它正在等待行结束，即它会永远等待！修复方法是确保我们发送一个换行符，这样就会返回。
 - en: '[PRE22]'
+  id: totrans-171
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE22]'
 - en: If you want your bytes to be sent to the pipe immediately, you’ll need to fflush!
     Remember back to the introduction section that shows the difference between terminal
     vs non-terminal outputs of stdout.
+  id: totrans-172
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你希望你的字节立即发送到管道，你需要使用fflush！记得回到介绍部分，展示了终端与非终端输出stdout之间的区别。
 - en: '**Even though we have a section on it, it is highly not recommended to use
     the file descriptor API for non-seekable files**. The reason being is that while
     we get conveniences we also get annoyances like the buffering example we mentioned,
@@ -905,16 +1274,22 @@
     or move to an arbitrary position, it should be able to . Files satisfy this behavior,
     shared memory also, terminals, etc. When it comes to pipes, sockets, epoll objects,
     etc, don’t do it.'
+  id: totrans-173
   prefs: []
   type: TYPE_NORMAL
+  zh: '**尽管我们有一个关于它的部分，但强烈不推荐使用文件描述符API来处理非可寻址文件**。原因是虽然我们得到了便利，但也带来了像我们提到的缓冲区示例这样的烦恼，缓存等。基本的C库座右铭是，任何程序可以正确地移动到任意位置的设备，它应该能够做到。文件满足这种行为，共享内存也是如此，终端等。当涉及到管道、套接字、epoll对象等时，不要这样做。'
 - en: Named Pipes
+  id: totrans-174
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 命名管道
 - en: 'An alternative to *unnamed* pipes is *named* pipes created using . From the
     command line: From C:'
+  id: totrans-175
   prefs: []
   type: TYPE_NORMAL
+  zh: '*无名的*管道的替代方案是使用.创建的*命名*管道。从命令行：从C：'
 - en: You give it the pathname and the operation mode, it will be ready to go! Named
     pipes take up virtually no space on a file system. This means the actual contents
     of the pipe aren’t printed to the file and read from that same file. What the
@@ -923,232 +1298,344 @@
     magic. This is for programming convenience if processes are started without forking
     meaning that there would be no way to get the file descriptor to the child process
     for an unnamed pipe.
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 你给它路径名和操作模式，它就准备好出发了！命名管道在文件系统上几乎不占用空间。这意味着管道的实际内容不会打印到文件中，也不会从同一个文件中读取。当你有一个命名管道时，操作系统会告诉你它会创建一个无名的管道，该管道指向命名管道，仅此而已！这里没有额外的魔法。这是为了编程方便，如果进程没有通过fork启动，那么就没有办法将文件描述符传递给子进程的无名管道。
 - en: Hanging Named Pipes
+  id: totrans-177
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 挂起的命名管道
 - en: A named pipe is a pipe that a program calls on with read and/or write permissions.
     This is useful if you want to have a pipe between two processes without one processing
     having to fork the other process. There are some gotchas with named pipes. There
     is more down below, but we’ll introduce it here for a simple example. Reads and
     writes hang on Named Pipes until there is at least one reader and one writer,
     take this.
+  id: totrans-178
   prefs: []
   type: TYPE_NORMAL
+  zh: 命名管道是一个程序调用带有读取和/或写入权限的管道。如果你想在不让一个进程必须fork另一个进程的情况下在两个进程之间有一个管道，这很有用。命名管道有一些需要注意的问题。下面有更多内容，但我们将在这里介绍一个简单的例子。读取和写入在命名管道上挂起，直到至少有一个读者和一个写者，注意这一点。
 - en: '[PRE23]'
+  id: totrans-179
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE23]'
 - en: Any is called on a named pipe the kernel blocks until another process calls
     the opposite open. Meaning, echo calls but that blocks until cat calls , then
     the programs are allowed to continue.
+  id: totrans-180
   prefs: []
   type: TYPE_NORMAL
+  zh: 在命名管道上调用任何操作时，内核会阻塞，直到另一个进程调用相反的打开操作。这意味着echo调用会阻塞，直到cat调用，然后程序才被允许继续。
 - en: Race condition with named pipes
+  id: totrans-181
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 命名管道的竞态条件
 - en: What is wrong with the following program?
+  id: totrans-182
   prefs: []
   type: TYPE_NORMAL
+  zh: 以下程序有什么问题？
 - en: '[PRE24]'
+  id: totrans-183
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE24]'
 - en: This may never print hello because of a race condition. Since a program opened
     the pipe in the first process under both permissions, open won’t wait for a reader
     because the program told the operating system that it is a reader! Sometimes it
     looks like it works because the execution of the code looks something like this.
+  id: totrans-184
   prefs: []
   type: TYPE_NORMAL
+  zh: 这可能永远不会打印hello，因为存在竞态条件。由于程序在第一个进程下以两种权限打开了管道，open不会等待读者，因为程序告诉操作系统它是读者！有时它看起来像它工作了一样，因为代码的执行看起来像这样。
 - en: Fine Pipe Access Pattern
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: 精细管道访问模式
 - en: '|  | Process 1 | Process 2 |'
+  id: totrans-186
   prefs: []
   type: TYPE_TB
+  zh: '|  | 进程 1 | 进程 2 |'
 - en: '| --- | --- | --- |'
+  id: totrans-187
   prefs: []
   type: TYPE_TB
+  zh: '| --- | --- | --- |'
 - en: '| Time 1 | open(O_RDWR) & write() |  |'
+  id: totrans-188
   prefs: []
   type: TYPE_TB
+  zh: '| 时间 1 | open(O_RDWR) & write() |  |'
 - en: '| Time 2 |  | open(O_RDONLY) & read() |'
+  id: totrans-189
   prefs: []
   type: TYPE_TB
+  zh: '| 时间 2 |  | open(O_RDONLY) & read() |'
 - en: '| Time 3 | close() & exit() |  |'
+  id: totrans-190
   prefs: []
   type: TYPE_TB
+  zh: '| 时间 3 | close() & exit() |  |'
 - en: '| Time 4 | print() & exit() |  |'
+  id: totrans-191
   prefs: []
   type: TYPE_TB
+  zh: '| 时间 4 | print() & exit() |  |'
 - en: But here is an invalid series of operations that cause a race condition.
+  id: totrans-192
   prefs: []
   type: TYPE_NORMAL
+  zh: 但这里有一系列无效的操作，会导致竞争条件。
 - en: Pipe Race Condition
+  id: totrans-193
   prefs: []
   type: TYPE_NORMAL
+  zh: 管道竞争条件
 - en: '|  | Process 1 | Process 2 |'
+  id: totrans-194
   prefs: []
   type: TYPE_TB
+  zh: '|  | 进程 1 | 进程 2 |'
 - en: '| --- | --- | --- |'
+  id: totrans-195
   prefs: []
   type: TYPE_TB
+  zh: '| --- | --- | --- |'
 - en: '| Time 1 | open(O_RDWR) & write() |  |'
+  id: totrans-196
   prefs: []
   type: TYPE_TB
+  zh: '| 时间 1 | open(O_RDWR) & write() |  |'
 - en: '| Time 2 | close() & exit() |  |'
+  id: totrans-197
   prefs: []
   type: TYPE_TB
+  zh: '| 时间 2 | close() & exit() |  |'
 - en: '| Time 3 |  | open(O_RDONLY) (Blocks Indefinitely) |'
+  id: totrans-198
   prefs: []
   type: TYPE_TB
+  zh: '| 时间 3 |  | open(O_RDONLY) (无限期阻塞) |'
 - en: Files
+  id: totrans-199
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 文件
 - en: On Linux, there are two abstractions with files. The first is the Linux level
     abstraction.
+  id: totrans-200
   prefs: []
   type: TYPE_NORMAL
+  zh: 在Linux中，有两个与文件相关的抽象。第一个是Linux级别的抽象。
 - en: takes a path to a file and creates a file descriptor entry in the process table.
     If the file is inaccessible, it errors out.
+  id: totrans-201
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 接受一个指向文件的路径并创建进程表中的文件描述符条目。如果文件不可访问，则出错。
 - en: takes a certain number of bytes that the kernel has received and reads them
     into a user-space buffer. If the file is not open in read mode, this will break.
+  id: totrans-202
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 接收内核接收的一定数量的字节并将它们读入用户空间缓冲区。如果文件不是以读取模式打开，这将导致错误。
 - en: outputs a certain number of bytes to a file descriptor. If the file is not open
     in write mode, this will break. This may be buffered internally.
+  id: totrans-203
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将一定数量的字节输出到文件描述符。如果文件不是以写入模式打开，这将导致错误。这可能是在内部缓冲的。
 - en: removes a file descriptor from a process’ file descriptors. This always succeeds
     for a valid file descriptor.
+  id: totrans-204
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从进程的文件描述符中删除文件描述符。对于有效的文件描述符，这总是成功的。
 - en: takes a file descriptor and moves it to a certain position. It can fail if the
     seek is out of bounds.
+  id: totrans-205
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将文件描述符移动到某个位置。如果查找超出范围，则可能失败。
 - en: is the catch-all function for file descriptors. Set file locks, read, write,
     edit permissions, etc.
+  id: totrans-206
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 是文件描述符的通用函数。设置文件锁、读取、写入、编辑权限等。
 - en: The Linux interface is powerful and expressive, but sometimes we need portability
     for example if we are writing for a Macintosh or windows. This is where C’s abstraction
     comes into play. On different operating systems, C uses the low-level functions
     to create a wrapper around files used everywhere, meaning that C on Linux uses
     the above calls.
+  id: totrans-207
   prefs: []
   type: TYPE_NORMAL
+  zh: Linux接口功能强大且表达性强，但有时我们需要可移植性，例如如果我们正在为Macintosh或Windows编写程序。这就是C的抽象发挥作用的地方。在不同的操作系统上，C使用低级函数在所有地方使用的文件周围创建包装器，这意味着Linux上的C使用上述调用。
 - en: opens a file and returns an object. is returned if the program doesn’t have
     permission for the file.
+  id: totrans-208
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 打开一个文件并返回一个对象。如果没有权限访问文件，程序将返回。
 - en: reads a certain number of bytes from a file. An error is returned if already
     at the end of the file when which the program must call to check if the program
     attempted to read *past* the end of the file.
+  id: totrans-209
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从文件中读取一定数量的字节。如果到达文件末尾时返回错误，程序必须调用以检查程序是否尝试读取*超出*文件末尾。
 - en: Get a char or a string from a file
+  id: totrans-210
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从文件中获取字符或字符串
 - en: Read a format string from the file
+  id: totrans-211
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从文件中读取格式化字符串
 - en: Write some objects to a file
+  id: totrans-212
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将一些对象写入文件
 - en: Write a formatted string to a file
+  id: totrans-213
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 将格式化字符串写入文件
 - en: Close a file handle
+  id: totrans-214
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 关闭文件句柄
 - en: Take any buffered changes and flush them to a file
+  id: totrans-215
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 取消任何缓冲更改并将它们刷新到文件
 - en: Returns true if you are at the end of a file
+  id: totrans-216
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果你在文件末尾，则返回true
 - en: Returns true if an error occured reading, writing or seeking.
+  id: totrans-217
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果在读取、写入或查找时发生错误，则返回true。
 - en: Sets the buffering (None,Line or Full) and the memory used for buffering
+  id: totrans-218
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 设置缓冲（None、Line或Full）和用于缓冲的内存
 - en: But programs don’t get the expressiveness that Linux gives with system calls.
     A program can convert back and forth between them with and . Also, C files are
     **buffered** meaning that their contents may be written to the backing after the
     call returns. You can change that with C options.
+  id: totrans-219
   prefs: []
   type: TYPE_NORMAL
+  zh: 但程序没有获得Linux系统调用提供的表达性。程序可以使用和来在它们之间来回转换。此外，C文件是**缓冲的**，这意味着它们的内 容可能在调用返回后写入支持文件。您可以使用C选项来更改这一点。
 - en: Determining File Length
+  id: totrans-220
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 确定文件长度
 - en: For files less than the size of a long, using fseek and ftell is a simple way
     to accomplish this. Move to the end of the file and find out the current position.
+  id: totrans-221
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于小于长文件大小的文件，使用fseek和ftell是一种简单的方法来完成这项任务。移动到文件末尾并找出当前位置。
 - en: '[PRE25]'
+  id: totrans-222
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE25]'
 - en: This tells us the current position in the file in bytes - i.e. the length of
     the file!
+  id: totrans-223
   prefs: []
   type: TYPE_NORMAL
+  zh: 这告诉我们文件中的当前位置（以字节为单位）——即文件的长度！
 - en: can also be used to set the absolute position.
+  id: totrans-224
   prefs: []
   type: TYPE_NORMAL
+  zh: 也可以用来设置绝对位置。
 - en: '[PRE26]'
+  id: totrans-225
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE26]'
 - en: All future reads and writes in the parent or child processes will honor this
     position. Note writing or reading from the file will change the current position.
     See the man pages for fseek and ftell for more information.
+  id: totrans-226
   prefs: []
   type: TYPE_NORMAL
+  zh: 父进程或子进程中的所有后续读取和写入都将尊重这个位置。注意从文件写入或读取会改变当前位置。有关fseek和ftell的更多信息，请参阅man页面。
 - en: Use stat instead
+  id: totrans-227
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 使用stat代替
 - en: This only works on some architectures and compilers That quirk is that longs
     only need to be **4 Bytes big** meaning that the maximum size that can return
     is a little under 2 Gibibytes. Nowadays, our files could be hundreds of gibibytes
     or even terabytes on a distributed file system. What should we do instead? Use
     ! We will cover stat in a later part but here is some code that will tell a program
     the size of the file
+  id: totrans-228
   prefs: []
   type: TYPE_NORMAL
+  zh: 这只在某些架构和编译器上有效。这个特性是长整型只需要**4字节**大小，这意味着可以返回的最大大小略小于2吉字节。如今，我们的文件可能在大文件系统中达到数百吉字节甚至太字节。我们应该怎么做呢？使用！我们将在后面的部分介绍stat，但这里有一些代码可以告诉程序文件的大小
 - en: '[PRE27]'
+  id: totrans-229
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE27]'
 - en: is of type which is big enough for large files.
+  id: totrans-230
   prefs: []
   type: TYPE_NORMAL
+  zh: 是类型，足够大以处理大文件。
 - en: Gotchas with files
+  id: totrans-231
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 文件使用时的注意事项
 - en: What happens when file streams are closed by two different processes? Closing
     a file stream is unique to each process. Other processes can continue to use their
     file handles. Remember, everything is copied over when a child is created, even
@@ -1156,23 +1643,31 @@
     is a quirk of the implementation of files and their caches on Ubuntu that will
     rewind a file descriptor once a file has been closed. As such, make sure to close
     before forking or at least don’t trigger a cache inconsistency which is much harder.
+  id: totrans-232
   prefs: []
   type: TYPE_NORMAL
+  zh: 当两个不同的进程关闭文件流时会发生什么？关闭文件流是每个进程特有的。其他进程可以继续使用它们的文件句柄。记住，当创建子进程时，一切都会被复制，包括文件的相对位置。正如你可能在使用时观察到的，Ubuntu上文件及其缓存实现的怪癖会在文件关闭后重置文件描述符。因此，确保在fork之前关闭，或者至少不要触发缓存不一致，这会难得多。
 - en: IPC Alternatives
+  id: totrans-233
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: IPC替代方案
 - en: Okay so now you have a list of tools in your toolbox to tackle communicating
     between processes, so what should you use?
+  id: totrans-234
   prefs: []
   type: TYPE_NORMAL
+  zh: 好的，现在你的工具箱里有了处理进程间通信的工具列表，那么你应该使用哪个呢？
 - en: There is no hard answer, though this is the most interesting question. Generally,
     we have retained pipes for legacy reasons. This means that we only use them to
     redirect stdin, stdout, and stderr for the collection of logs and similar programs.
     You may find processes trying to communicate with unnamed or named pipes as well.
     Most of the time you won’t be dealing with this interaction directly though.
+  id: totrans-235
   prefs: []
   type: TYPE_NORMAL
+  zh: 虽然这是一个最有趣的问题，但并没有明确的答案。通常，我们保留管道是为了遗留原因。这意味着我们只使用它们来重定向stdin、stdout和stderr以收集日志和类似程序。你也可能会发现进程试图与未命名或命名的管道进行通信。但大多数时候你不会直接处理这种交互。
 - en: Files are used almost all the time as a form of IPC. Hadoop is a great example
     where processes will write to append-only tables and then other processes will
     read from those tables. We generally use files under a few cases. One case is
@@ -1180,8 +1675,10 @@
     use. Another case is if putting it in memory would cause an out of memory error.
     On Linux, file operations are generally pretty cheap, so most programmers use
     it for larger intermediate storage.
+  id: totrans-236
   prefs: []
   type: TYPE_NORMAL
+  zh: 几乎所有时候都使用文件作为IPC的一种形式。Hadoop是一个很好的例子，其中进程将写入只追加表，然后其他进程将从中读取。我们通常在以下几种情况下使用文件。一种情况是我们想将操作的中间结果保存到文件中供将来使用。另一种情况是将它放入内存会导致内存不足错误。在Linux上，文件操作通常相当便宜，所以大多数程序员用它来存储较大的中间存储。
 - en: mmap is used for two scenarios. One is a or read through of the file. Meaning,
     a program reads the file front to back or back to front. The key is that the program
     doesn’t jump around too much. Jumping around too much causes thrashing and loses
@@ -1189,178 +1686,260 @@
     communication. This means that a program can store structures in a piece of mmap’ed
     memory and share them between two processes. Python and Ruby use this mapping
     all the time to utilize copy on write semantics.
+  id: totrans-237
   prefs: []
   type: TYPE_NORMAL
+  zh: mmap用于两种场景。一种是对文件的前向或后向读取。这意味着，程序从前到后或从后向前读取文件。关键是程序不要跳转太多。跳转太多会导致颠簸，并失去使用mmap的所有好处。mmap的另一种用法是用于直接进程间内存通信。这意味着程序可以将结构存储在mmap内存片段中，并在两个进程之间共享它们。Python和Ruby经常使用这种映射来利用写时复制语义。
 - en: Topics
+  id: totrans-238
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 主题
 - en: Virtual Memory
+  id: totrans-239
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 虚拟内存
 - en: Page Table
+  id: totrans-240
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 页表
 - en: MMU/TLB
+  id: totrans-241
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: MMU/TLB
 - en: Address Translation
+  id: totrans-242
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 地址转换
 - en: Page Faults
+  id: totrans-243
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 页面错误
 - en: Frames/Pages
+  id: totrans-244
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 帧页
 - en: Single-level vs multi-level page table
+  id: totrans-245
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 单级与多级页表
 - en: Calculating offsets for multi-level page table
+  id: totrans-246
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 计算多级页表的偏移量
 - en: Pipes
+  id: totrans-247
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 管道
 - en: Pipe read write ends
+  id: totrans-248
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 管道读写端
 - en: Writing to a zero reader pipe
+  id: totrans-249
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 向零读者管道写入
 - en: Reading from a zero writer pipe
+  id: totrans-250
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 从零写入管道读取
 - en: Named pipe and Unnamed Pipes
+  id: totrans-251
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 命名管道和无名管道
 - en: Buffer Size/Atomicity
+  id: totrans-252
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 缓冲区大小/原子性
 - en: Scheduling Algorithms
+  id: totrans-253
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 调度算法
 - en: Measures of Efficiency
+  id: totrans-254
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 效率度量
 - en: Questions
+  id: totrans-255
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 问题
 - en: What is virtual memory?
+  id: totrans-256
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 什么是虚拟内存？
 - en: What are the following and what is their purpose?
+  id: totrans-257
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 以下是什么，它们的目的又是什么？
 - en: Translation Lookaside Buffer
+  id: totrans-258
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 翻译后备缓冲区
 - en: Physical Address
+  id: totrans-259
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 物理地址
 - en: Memory Management Unit. Multilevel page table. Frame number. Page number and
     page offset.
+  id: totrans-260
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 内存管理单元。多级页表。帧号。页面号和页面偏移量。
 - en: The dirty bit
+  id: totrans-261
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 污点位
 - en: The NX Bit
+  id: totrans-262
   prefs:
   - PREF_IND
   - PREF_OL
   type: TYPE_NORMAL
+  zh: NX位
 - en: What is a page table? How about a physical frame? Does a page always need to
     point to a physical frame?
+  id: totrans-263
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 什么是页面表？物理帧呢？页面是否总是需要指向物理帧？
 - en: What is a page fault? What are the types? When does it result in a SEGFAULT?
+  id: totrans-264
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 什么是页面故障？有哪些类型？何时会导致SEGFAULT？
 - en: What are the advantages to a single-level page table? Disadvantages? How about
     a multi-level table?
+  id: totrans-265
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 单级页表的优势是什么？劣势？多级表呢？
 - en: What does a multi-leveled table look like in memory?
+  id: totrans-266
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 多级表在内存中看起来是什么样子？
 - en: How do you determine how many bits are used in the page offset?
+  id: totrans-267
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 你如何确定页面偏移量使用了多少位？
 - en: Given a 64-bit address space, 4kb pages and frames, and a 3 level page table,
     how many bits are the Virtual page number 1, VPN2, VPN3 and the offset?
+  id: totrans-268
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 给定一个64位地址空间，4kb页面和帧，以及3级页表，虚拟页号1，VPN2，VPN3和偏移量各占多少位？
 - en: What is a pipe? How do we create pipes?
+  id: totrans-269
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 什么是管道？我们如何创建管道？
 - en: When is SIGPIPE delivered to a process?
+  id: totrans-270
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在什么情况下SIGPIPE会被发送给一个进程？
 - en: Under what conditions will calling read() on a pipe block? Under what conditions
     will read() immediately return 0
+  id: totrans-271
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在什么条件下调用pipe上的read()会阻塞？在什么条件下read()会立即返回0
 - en: What is the difference between a named pipe and an unnamed pipe?
+  id: totrans-272
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 命名管道和无名管道有什么区别？
 - en: Is a pipe thread-safe?
+  id: totrans-273
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 管道是线程安全的吗？
 - en: Write a function that uses fseek and ftell to replace the middle character of
     a file with an ’X’
+  id: totrans-274
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 编写一个函数，使用fseek和ftell替换文件中间的字符为‘X’
 - en: Write a function that creates a pipe and uses write to send 5 bytes, "HELLO"
     to the pipe. Return the read file descriptor of the pipe.
+  id: totrans-275
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 编写一个函数，创建一个管道并使用write向管道发送5个字节，“HELLO”。返回管道的读取文件描述符。
 - en: What happens when you mmap a file?
+  id: totrans-276
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 当你mmap一个文件时会发生什么？
 - en: Why is getting the file size with ftell not recommended? How should you do it
     instead?
+  id: totrans-277
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 为什么不建议使用ftell获取文件大小？应该怎样做？

@@ -1,18 +1,24 @@
 - en: Filesystems
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 文件系统
 - en: Filesystems are important because they allow you to persist data after a computer
     is shut down, crashes, or has memory corruption. Back in the day, filesystems
     were expensive to use. Writing to the filesystem (FS) involved writing to magnetic
     tape and reading from that tape (“International,” [n.d.](ch018.xhtml#ref-iec)).
     It was slow, heavy, and prone to errors.
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统很重要，因为它们允许你在计算机关闭、崩溃或内存损坏后持久化数据。在过去，文件系统使用成本很高。向文件系统（FS）写入涉及将数据写入磁带并从磁带中读取（“国际的”，[n.d.](ch018.xhtml#ref-iec)）。这很慢，很重，并且容易出错。
 - en: Nowadays most of our files are stored on disk – though not all of them! The
     disk is still slower than memory by an order of magnitude at the least.
+  id: totrans-2
   prefs: []
   type: TYPE_NORMAL
+  zh: 如今，我们的大部分文件都存储在磁盘上——尽管并非所有文件都是这样！至少在速度上，磁盘仍然比内存慢一个数量级。
 - en: Some terminology before we begin this chapter. A **filesystem**, as we’ll define
     more concretely later, is anything that satisfies the API of a filesystem. A filesystem
     is backed by a storage medium, such as a hard disk drive, solid state drive, RAM,
@@ -34,52 +40,82 @@
     the next iteration of linux if there was a new system call to create a backup
     of a file, the OS can implement that with the internal API rather than requiring
     all filesystem drivers to change their code.
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 在我们开始本章之前，先介绍一些术语。**文件系统**，我们将在后面更具体地定义，是指满足文件系统API的任何东西。文件系统由存储介质支持，例如硬盘驱动器、固态驱动器、RAM等。硬盘可以是**硬盘驱动器（HDD）**，它包括一个旋转的金属盘和一个可以电击盘面来编码1或0的磁头，或者是一个可以翻转芯片或独立驱动器上的某些NAND门的设备来存储1或0。截至2019年，SSD的速度比标准HDD快一个数量级。这些都是文件系统的典型支持介质。文件系统是在这个支持介质之上实现的，这意味着我们可以在商业可用的硬盘上实现EXT、MinixFS、NTFS、FAT32等。这个文件系统告诉操作系统如何组织1和0来存储文件信息以及目录信息，但关于这一点我们稍后再谈。为了避免过于拘泥于细节，我们可以说EXT或NTFS这样的文件系统直接实现了文件系统API（打开、关闭等）。通常，操作系统会添加一层抽象，并要求操作系统满足其API（例如，想象中的函数linux_open、linux_close等）。这两个好处是，一个文件系统可以为多个操作系统API实现，添加新的操作系统文件系统调用不需要所有底层文件系统更改它们的API。例如，在linux的下一个版本中，如果有一个新的系统调用用于创建文件的备份，操作系统可以使用内部API来实现，而不是要求所有文件系统驱动程序更改它们的代码。
 - en: '**The last piece of background is an important one.** In this chapter, we will
     refer to sizes of files in the ISO-compliant KiB or Kibibyte. The *iB family is
     short for power of two storage. That means the following:'
+  id: totrans-4
   prefs: []
   type: TYPE_NORMAL
+  zh: '**最后一点背景信息非常重要。**在本章中，我们将使用ISO兼容的KiB或Kibibyte来表示文件的大小。*iB系列是二进制存储的简称。这意味着以下内容：'
 - en: Kibibyte Values
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: Kibibyte值
 - en: '| Prefix | Byte Value |'
+  id: totrans-6
   prefs: []
   type: TYPE_TB
+  zh: '| 前缀 | 字节数值 |'
 - en: '| --- | --- |'
+  id: totrans-7
   prefs: []
   type: TYPE_TB
+  zh: '| --- | --- |'
 - en: '| KiB | 1024B |'
+  id: totrans-8
   prefs: []
   type: TYPE_TB
+  zh: '| KiB | 1024B |'
 - en: '| MiB | 1024 * 1024 B |'
+  id: totrans-9
   prefs: []
   type: TYPE_TB
+  zh: '| MiB | 1024 * 1024 B |'
 - en: '| GiB | 1024 3̂ B |'
+  id: totrans-10
   prefs: []
   type: TYPE_TB
+  zh: '| GiB | 1024 3̂ B |'
 - en: 'The standard notational prefixes mean the following:'
+  id: totrans-11
   prefs: []
   type: TYPE_NORMAL
+  zh: 标准记数前缀的含义如下：
 - en: Kilobyte Values
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 千字节值
 - en: '| Prefix | Byte Value |'
+  id: totrans-13
   prefs: []
   type: TYPE_TB
+  zh: '| 前缀 | 字节数值 |'
 - en: '| --- | --- |'
+  id: totrans-14
   prefs: []
   type: TYPE_TB
+  zh: '| --- | --- |'
 - en: '| KB | 1000B |'
+  id: totrans-15
   prefs: []
   type: TYPE_TB
+  zh: '| KB | 1000B |'
 - en: '| MB | 1000 * 1000 B |'
+  id: totrans-16
   prefs: []
   type: TYPE_TB
+  zh: '| MB | 1000 * 1000 B |'
 - en: '| GB | 1000 3̂ B |'
+  id: totrans-17
   prefs: []
   type: TYPE_TB
+  zh: '| GB | 1000 3̂ B |'
 - en: We will do this in the book and in the Networking chapter for the sake of consistency
     and to not confuse anyone. **Confusingly in the real world, there is a different
     convention.** That convention is that when a file is displayed in the operating
@@ -96,163 +132,233 @@
     to a filesystems question, you can safely infer that they are referring to 1024
     as the base unit. Though when you are pushing production code, make sure to ask
     about the difference!
+  id: totrans-18
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将在书中和网络章节中这样做，以保持一致性，避免混淆任何人。**在现实世界中，存在不同的惯例。**这个惯例是，当一个文件在操作系统中显示时，**KB
+    与 KiB 是相同的**。当我们谈论计算机网络、CD、其他存储时，**KB 与 KiB 不相同，并且是 ISO/公制定义的**。这是历史上的一个小怪癖，是由网络开发者和内存/硬盘存储开发者之间的冲突带来的。硬盘和内存开发者发现，如果一个比特可以处于两种状态之一，那么将千位前缀称为
+    1024 是自然的，因为它大约是 1000。网络开发者必须处理比特、实时信号处理以及各种其他因素，所以他们遵循了已经接受的惯例，即 Kilo- 表示某物的
+    1000 倍（“International,” [n.d.](ch018.xhtml#ref-iec)）。你需要知道的是，如果你在野外看到 KB，它可能基于上下文是
+    1024。如果在任何时候你在这个班级中看到 KB 或任何家族成员提到文件系统问题，你可以安全地推断它们指的是 1024 作为基本单位。尽管如此，当你推动生产代码时，请确保询问这些差异！
 - en: What is a filesystem?
+  id: totrans-19
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 什么是文件系统？
 - en: 'You may have encountered the old UNIX adage, "everything is a file". In most
     UNIX systems, file operations provide an interface to abstract many different
     operations. Network sockets, hardware devices, and data on the disk are all represented
     by file-like objects. A file-like object must follow the following conventions:'
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可能遇到过古老的 UNIX 格言，“万物皆文件”。在大多数 UNIX 系统中，文件操作提供了一个接口来抽象许多不同的操作。网络套接字、硬件设备和磁盘上的数据都由类似文件的对象表示。一个类似文件的对象必须遵循以下约定：
 - en: It must present itself to the filesystem.
+  id: totrans-21
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 它必须向文件系统呈现自己。
 - en: It must support common filesystem operations, such as , , . At a minimum, it
     needs to be opened and closed.
+  id: totrans-22
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 它必须支持常见的文件系统操作，例如创建、删除、重命名。至少，它需要能够打开和关闭。
 - en: A filesystem is an implementation of the file interface. In this chapter, we
     will be exploring the various callbacks a filesystem provides, some typical functionality
     and associated implementation details. In this class, we will mostly talk about
     filesystems that serve to allow users to access data on disk, which are integral
     to modern computers.
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统是文件接口的实现。在本章中，我们将探讨文件系统提供的各种回调，一些典型功能及其相关实现细节。在本课程中，我们将主要讨论那些允许用户访问磁盘数据的文件系统，这对于现代计算机至关重要。
 - en: 'Here are some common features of a filesystem:'
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里是一些文件系统的常见特性：
 - en: They deal with both storing local files and handle special devices that allow
     for safe communication between the kernel and user space.
+  id: totrans-25
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 它们处理存储本地文件和处理允许内核和用户空间之间安全通信的特殊设备。
 - en: They deal with failures, scalability, indexing, encryption, compression, and
     performance.
+  id: totrans-26
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 它们处理故障、可扩展性、索引、加密、压缩和性能。
 - en: They handle the abstraction between a file that contains data and how exactly
     that data is stored on disk, partitioned, and protected.
+  id: totrans-27
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 它们处理文件包含数据以及数据如何在磁盘上存储、分区和保护之间的抽象。
 - en: Before we dive into the details of a filesystem, let’s take a look at some examples.
     To clarify, a mount point is simply a mapping of a directory to a filesystem represented
     in the kernel.
+  id: totrans-28
   prefs: []
   type: TYPE_NORMAL
+  zh: 在我们深入探讨文件系统的细节之前，让我们看看一些例子。为了澄清，挂载点仅仅是将目录映射到内核中表示的文件系统。
 - en: Usually mounted at / on Linux systems, this is the filesystem that usually provides
     disk access as you’re used to.
+  id: totrans-29
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 通常在 Linux 系统上挂载到 /，这是通常提供磁盘访问的文件系统，正如你所习惯的那样。
 - en: Usually mounted at /proc, provides information and control over processes.
+  id: totrans-30
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 通常挂载到 /proc，提供对进程的信息和控制。
 - en: Usually mounted at /sys, a more modern version of /proc that also allows control
     over various other hardware such as network sockets.
+  id: totrans-31
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 通常安装在 /sys，这是 /proc 的一个更现代版本，它还允许控制各种其他硬件，例如网络套接字。
 - en: Mounted at /tmp in some systems, an in-memory filesystem to hold temporary files.
+  id: totrans-32
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在某些系统中安装在 /tmp，这是一个内存文件系统，用于存储临时文件。
 - en: This syncs files across the protocol.
+  id: totrans-33
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 这通过协议同步文件。
 - en: It tells you what filesystem directory-based system calls resolve to. For example,
     is resolved by the filesystem in our case, but is resolved by the system even
     though it contains as a subsystem.
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 它告诉您基于目录的文件系统系统调用解析为什么。例如，在我们的情况下由文件系统解析，尽管它包含作为子系统的，但它由系统解析。
 - en: As you may have noticed, some filesystems provide an interface to things that
     aren’t "files". Filesystems such as are usually referred to as *virtual* filesystems,
     since they don’t provide data access in the same sense as a traditional filesystem
     would. Technically, all filesystems in the kernel are represented by virtual filesystems,
     but we will differentiate *virtual* filesystems as filesystems that actually don’t
     store anything on a hard disk.
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 如您所注意到的，一些文件系统提供了对“非文件”事物的接口。例如，通常被称为*虚拟*文件系统，因为它们不提供与传统文件系统相同的数据访问。技术上，内核中的所有文件系统都表示为虚拟文件系统，但我们将区分*虚拟*文件系统为实际上不存储任何东西在硬盘上的文件系统。
 - en: The File API
+  id: totrans-36
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 文件API
 - en: 'A filesystem must provide callback functions to a variety of actions. Some
     of them are listed below:'
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统必须为各种操作提供回调函数。其中一些列在下面：
 - en: Opens a file for IO
+  id: totrans-38
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 打开文件进行IO操作
 - en: Read contents of a file
+  id: totrans-39
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 读取文件内容
 - en: Write to a file
+  id: totrans-40
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 向文件写入
 - en: Close a file and free associated resources
+  id: totrans-41
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 关闭文件并释放相关资源
 - en: Modify permissions of a file
+  id: totrans-42
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 修改文件的权限
 - en: Interact with device parameters of character devices such as terminals
+  id: totrans-43
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与字符设备（如终端）的设备参数交互
 - en: Not every filesystem supports all the possible callback functions. For example,
     many filesystems omit or . Many filesystems aren’t meaning that they exclusively
     provide sequential access. A program cannot move to an arbitrary point in the
     file. This is analogous to s. In this chapter, we will not be examining each filesystem
     callback. If you would like to learn more about this interface, try looking at
     the documentation for Filesystems at the User Space Level (FUSE).
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 并非每个文件系统都支持所有可能的回调函数。例如，许多文件系统省略或。许多文件系统不提供，这意味着它们只提供顺序访问。程序不能移动到文件中的任意位置。这与类似。在本章中，我们不会检查每个文件系统回调。如果您想了解更多关于此接口的信息，请尝试查看用户空间级别的文件系统（FUSE）的文档。
 - en: Storing data on disk
+  id: totrans-45
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 在磁盘上存储数据
 - en: To understand how a filesystem interacts with data on disk, there are three
     key terms we will be using.
+  id: totrans-46
   prefs: []
   type: TYPE_NORMAL
+  zh: 要了解文件系统如何与磁盘上的数据交互，我们将使用三个关键术语。
 - en: A disk block is a portion of the disk that is reserved for storing the contents
     of a file or a directory.
+  id: totrans-47
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 磁盘块是磁盘的一部分，用于存储文件或目录的内容。
 - en: An inode *is* a file or directory. This means that an inode contains metadata
     about the file as well as pointers to disk blocks so that the file can actually
     be written to or read from.
+  id: totrans-48
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 一个inode *是*一个文件或目录。这意味着inode包含有关文件的元数据以及指向磁盘块的指针，以便文件实际上可以被写入或读取。
 - en: A superblock contains metadata about the inodes and disk blocks. An example
     superblock can store how full each disk block is, which inodes are being used
     etc. Modern filesystems may actually contain multiple superblocks and a sort-of
     super-super block that keeps track of which sectors are governed by which superblocks.
     This tends to help with fragmentation.
+  id: totrans-49
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 超块包含有关inode和磁盘块元数据。一个示例超块可以存储每个磁盘块的使用情况，哪些inode正在使用等。现代文件系统可能实际上包含多个超块和一个类似超级块的超级块，它跟踪哪些扇区由哪些超级块管理。这有助于减少碎片。
 - en: It may seem overwhelming, but by the end of this chapter, we will be able to
     make sense of every part of the filesystem.
+  id: totrans-50
   prefs: []
   type: TYPE_NORMAL
+  zh: 虽然可能看起来令人不知所措，但到本章结束时，我们将能够理解文件系统的每个部分。
 - en: To reason about data on some form of storage – spinning disks, solid state drives,
     magnetic tape – it is common practice to first consider the medium of storage
     as a collection of *blocks*. A block can be thought of as a contiguous region
@@ -260,8 +366,10 @@
     hardware, it is more frequently determined based on the size of a page of memory
     for a given system, so that data from the disk can be cached in memory for faster
     access – a important feature of many filesystems.
+  id: totrans-51
   prefs: []
   type: TYPE_NORMAL
+  zh: 要对某种形式的存储上的数据进行推理——旋转磁盘、固态驱动器、磁带——通常的做法是首先考虑存储介质为*块*的集合。块可以被视为磁盘上的连续区域。虽然其大小有时由底层硬件的一些属性决定，但它更频繁地基于给定系统的页面大小来决定，这样可以从内存中缓存磁盘数据以实现更快的访问——这是许多文件系统的一个重要特性。
 - en: A filesystem has a special block denoted as a *superblock* that stores metadata
     about the filesystem such as a journal (which logs changes to the filesystem),
     a table of inodes, the location of the first inode on disk, etc. The important
@@ -269,57 +377,81 @@
     computer may fail to boot! Consider a simple ROM programmed into your motherboard.
     If your processor can’t tell the motherboard to start reading and decipher a disk
     block to start the boot sequence, you are out of luck.
+  id: totrans-52
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统有一个特殊的块，称为*超级块*，它存储有关文件系统的元数据，例如日志（记录文件系统的更改）、inode表、磁盘上第一个inode的位置等。关于超级块的重要之处在于它在磁盘上的位置是已知的。如果不是这样，你的计算机可能无法启动！考虑一个编程到主板上的简单ROM。如果你的处理器不能告诉主板开始读取和解码磁盘块以启动启动序列，你就麻烦了。
 - en: The inode is the most important structure for our filesystem as it represents
     a file. Before we explore it in-depth, let’s list out the key information we need
     to have a usable file.
+  id: totrans-53
   prefs: []
   type: TYPE_NORMAL
+  zh: 索引节点是我们文件系统最重要的结构，因为它代表了一个文件。在我们深入探讨它之前，让我们列出我们需要的关键信息，以便能够使用文件。
 - en: Name
+  id: totrans-54
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 名称
 - en: File size
+  id: totrans-55
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件大小
 - en: Time created, last modified, last accessed
+  id: totrans-56
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 创建时间、最后修改时间、最后访问时间
 - en: Permissions
+  id: totrans-57
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限
 - en: Filepath
+  id: totrans-58
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件路径
 - en: Checksum
+  id: totrans-59
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 校验和
 - en: File data
+  id: totrans-60
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件数据
 - en: File Contents
+  id: totrans-61
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 文件内容
 - en: 'From [Wikipedia](http://en.wikipedia.org/wiki/Inode):'
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 来自 [维基百科](http://en.wikipedia.org/wiki/Inode)：
 - en: '*In a Unix-style file system, an index node, informally referred to as an inode,
     is a data structure used to represent a filesystem object, which can be various
     things including a file or a directory. Each inode stores the attributes and disk
     block location(s) of the filesystem object’s data. Filesystem object attributes
     may include manipulation metadata (e.g. change, access, modify time), as well
     as owner and permission data (e.g. group-id, user-id, permissions).*'
+  id: totrans-63
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: '*在Unix风格的文件系统中，索引节点，非正式地称为inode，是一种用于表示文件系统对象的数据结构，它可以表示各种事物，包括文件或目录。每个inode存储了文件系统对象数据的属性和磁盘块位置。文件系统对象的属性可能包括操作元数据（例如更改、访问、修改时间），以及所有者和权限数据（例如组ID、用户ID、权限）。*'
 - en: The superblock may store an array of inodes, each of which stores direct, and
     potentially several kinds of indirect pointers to disk blocks. Since inodes are
     stored in the superblock, most filesystems have a limit on how many inodes can
@@ -331,18 +463,24 @@
     This isn’t to say there aren’t any solutions at all, although typically there
     is no need to increase the number of inodes since the number of inodes is usually
     sufficiently high.
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 超块可能存储一个inode数组，每个inode存储直接和可能的几种间接指针到磁盘块。由于inode存储在超块中，大多数文件系统对可以存在的inode数量有一个限制。由于每个inode对应一个文件，这也是该文件系统能够拥有的文件数量的限制。试图通过在其他位置存储inode来克服这个问题会极大地增加文件系统的复杂性。试图重新分配inode表的空间也是不可行的，因为inode数组之后的每个字节都必须移动，这是一个非常昂贵的操作。这并不是说完全没有解决方案，尽管通常没有必要增加inode的数量，因为inode的数量通常已经足够高。
 - en: 'Big idea: Forget names of files. The ‘inode’ is the file.'
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 大概念：忘记文件名。‘inode’就是文件。
 - en: It is common to think of the file name as the ‘actual’ file. It’s not! Instead,
     consider the inode as the file. The inode holds the meta-information (last accessed,
     ownership, size) and points to the disk blocks used to hold the file contents.
     However, the inode does not usually store a filename. Filenames are usually only
     stored in directories (see below).
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 人们通常认为文件名是“实际”的文件。不是这样！相反，考虑inode作为文件。inode包含元信息（最后访问时间、所有权、大小）并指向用于存储文件内容的磁盘块。然而，inode通常不存储文件名。文件名通常只存储在目录中（见下文）。
 - en: For example, to read the first few bytes of the file, follow the first direct
     block pointer to the first direct block and read the first few bytes. Writing
     follows the same process. If a program wants to read the entire file, keep reading
@@ -351,20 +489,28 @@
     by the size of a block, then unused block pointers will be undefined. Similarly,
     if the size of a file is not a multiple of the size of a block, data past the
     end of the last byte in the last block will be garbage.
+  id: totrans-67
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如，要读取文件的前几个字节，遵循第一个直接块指针到第一个直接块，并读取前几个字节。写入过程遵循相同的步骤。如果一个程序想要读取整个文件，则持续读取直接块，直到读取的字节数等于文件的大小。如果文件的总大小小于直接块数量乘以块大小，则未使用的块指针将是未定义的。同样，如果文件的大小不是块大小的倍数，则最后一个块最后一个字节之后的数据将是垃圾。
 - en: What if a file is bigger than the maximum space addressable by its direct blocks?
     To that, we present a motto programmers take too seriously.
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果一个文件比其直接块能寻址的最大空间还要大怎么办？针对这个问题，我们提出了程序员过于认真对待的一个格言。
 - en: “All problems in computer science can be solved by another level of indirection.”
     - David Wheeler
+  id: totrans-69
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: “所有计算机科学问题都可以通过另一层间接引用来解决。” - 大卫·惠勒
 - en: Except for the problem of too many layers of indirection.
+  id: totrans-70
   prefs: []
   type: TYPE_NORMAL
+  zh: 除了过多间接引用层的问题。
 - en: To solve this problem, we introduce . A single indirect block is a block that
     stores pointers to more data blocks. Similarly, a double indirect block stores
     pointers to single indirect blocks, and the concept can be generalized to arbitrary
@@ -372,8 +518,10 @@
     superblock, or some other structure in a well known location with a constant amount
     of space, indirection allows exponential increases in the amount of space an inode
     can keep track of.
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了解决这个问题，我们引入了。一个单级间接块是一个存储指向更多数据块的指针的块。同样，双级间接块存储指向单级间接块的指针，这个概念可以推广到任意层次的间接引用。这是一个重要的概念，因为inode存储在超级块中，或者在一些已知位置的其他结构中，具有固定数量的空间，间接引用允许inode跟踪的空间量呈指数增长。
 - en: As a worked example, suppose we divide the disk into 4KiB blocks and we want
     to address up to <semantics><msup><mn>2</mn><mn>32</mn></msup><annotation encoding="application/x-tex">2^{32}</annotation></semantics>
     blocks. The maximum disk size is <semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>*</mo><msup><mn>2</mn><mn>32</mn></msup><mo>=</mo><mn>16</mn><mi>T</mi><mi>i</mi><mi>B</mi></mrow><annotation
@@ -392,254 +540,368 @@
     Similarly, a triple indirect block can refer up to 4TiB of data. This is three
     times as slow for reading between blocks, due to increased levels of indirection.
     The actual intra-block reading times don’t change.
+  id: totrans-72
   prefs: []
   type: TYPE_NORMAL
+  zh: 作为一个工作示例，假设我们将磁盘划分为4KiB大小的块，并且我们想要访问多达<semantics><msup><mn>2</mn><mn>32</mn></msup><annotation
+    encoding="application/x-tex">2^{32}</annotation></semantics>个块。最大磁盘大小是<semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>*</mo><msup><mn>2</mn><mn>32</mn></msup><mo>=</mo><mn>16</mn><mi>T</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">4KiB *2^{32} = 16TiB</annotation></semantics>，记住<semantics><mrow><msup><mn>2</mn><mn>10</mn></msup><mo>=</mo><mn>1024</mn></mrow><annotation
+    encoding="application/x-tex">2^{10} = 1024</annotation></semantics>。一个磁盘块可以存储<semantics><mfrac><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><mrow><mn>4</mn><mi>B</mi></mrow></mfrac><annotation
+    encoding="application/x-tex">\frac{4KiB}{4B}</annotation></semantics>个可能的指针或1024个指针。由于我们想要访问32位块，因此需要四个字节的指针。每个指针指向一个4KiB的磁盘块，因此你可以引用多达<semantics><mrow><mn>1024</mn><mo>*</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>=</mo><mn>4</mn><mi>M</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">1024*4KiB = 4MiB</annotation></semantics>的数据。对于相同的磁盘配置，一个双间接块存储1024个指向1024个间接表的指针。因此，一个双间接块可以引用多达<semantics><mrow><mn>1024</mn><mo>*</mo><mn>4</mn><mi>M</mi><mi>i</mi><mi>B</mi><mo>=</mo><mn>4</mn><mi>G</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">1024 * 4MiB = 4GiB</annotation></semantics>的数据。同样，一个三间接块可以引用多达4TiB的数据。由于间接级别增加，读取块之间的速度会慢三倍。实际的块内读取时间不会改变。
 - en: Directory Implementation
+  id: totrans-73
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 目录实现
 - en: A directory is a mapping of names to inode numbers. It is typically a normal
     file, but with some special bits set in its inode and a specific structure for
     its contents. POSIX provides a small set of functions to read the filename and
     inode number for each entry, which we will talk about in depth later in this chapter.
+  id: totrans-74
   prefs: []
   type: TYPE_NORMAL
+  zh: 目录是名称到inode编号的映射。它通常是普通文件，但在其inode中设置了一些特殊位，并且其内容具有特定的结构。POSIX提供了一组小函数来读取每个条目的文件名和inode编号，我们将在本章后面深入讨论。
 - en: Let’s think about what directories looks like in the actual file system. Theoretically,
     they are files. The disk blocks will contain *directory entries* or *dirents*.
     What that means is that our disk block can look like this
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 让我们思考一下实际文件系统中目录的样子。从理论上讲，它们是文件。磁盘块将包含*目录条目*或*dirents*。这意味着我们的磁盘块可以看起来像这样
 - en: '[PRE0]'
+  id: totrans-76
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: Each directory entry could either be a fixed size, or a variable length C-string.
     It depends on how the particular filesystem implements it at the lower level.
     To see a mapping of filenames to inode numbers on a POSIX system, from a shell,
     use with the option
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 每个目录条目可以是固定大小的，也可以是可变长度的C字符串。这取决于特定的文件系统在底层如何实现它。要在POSIX系统上查看文件名到inode编号的映射，从shell中使用选项
 - en: '[PRE1]'
+  id: totrans-78
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: You can see later that this is a powerful abstraction. One can have a file be
     multiple different names in a directory, or exist in multiple directories.
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可以稍后看到这是一个强大的抽象。一个文件可以在目录中有多个不同的名称，或者存在于多个目录中。
 - en: UNIX Directory Conventions
+  id: totrans-80
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: UNIX目录约定
 - en: In standard UNIX filesystems, the following entries are specially added on requests
     to read a directory.
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 在标准UNIX文件系统中，在请求读取目录时，会特别添加以下条目。
 - en: represents the current directory
+  id: totrans-82
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 代表当前目录
 - en: represents the parent directory
+  id: totrans-83
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 代表父目录
 - en: Counterintuitively, could be the name of a file or directory on disk (You can
     try this with ), not the grandparent directory. Only the current directory and
     the parent directory have special aliases involving (namely , and ). Confusingly,
     the shell does interpret as a handy shortcut to the grandparent directory (should
     it exist) while expanding shell commands.
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 令人反直觉的是，可以是磁盘上文件或目录的名称（你可以用试试），而不是祖父目录。只有当前目录和父目录有涉及（即，和）。令人困惑的是，shell在展开shell命令时将解释为访问祖父目录的便捷快捷方式（如果存在）。
 - en: 'Additional facts about name-related conventions:'
+  id: totrans-85
   prefs: []
   type: TYPE_NORMAL
+  zh: 关于名称相关约定的额外事实：
 - en: is usually expanded to the home directory by the shell
+  id: totrans-86
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 通常由shell展开为家目录
 - en: Files that start with ’.’ (a period) on disk are conventionally considered ’hidden’
     and will be omitted by programs like without additional flags (). This is not
     a feature of the filesystem, and programs may choose to ignore this.
+  id: totrans-87
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 在磁盘上以‘.’（点）开头的文件传统上被认为是‘隐藏’的，并且在没有额外标志的情况下（例如，程序会省略它们）。这不是文件系统的功能，程序可以选择忽略这一点。
 - en: Some files may also start with a NUL byte. These are usually *abstract UNIX
     sockets* and are used to prevent cluttering up the filesystem since they will
     be effectively hidden by any unexpecting program. They will, however, be listed
     by tools that detail information about sockets, so this is not a feature providing
     security.
+  id: totrans-88
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 一些文件也可能以空字节NUL开头。这些通常是*抽象UNIX套接字*，用于防止文件系统杂乱无章，因为它们将被任何未预料到的程序有效地隐藏。然而，它们将被详细提供套接字信息的工具列出，因此这不是提供安全性的功能。
 - en: If you want to annoy your neighbor, create a file with the terminal bell character.
     Every single time the file is listed (by calling ‘ls’, for example), an audible
     bell will be heard.
+  id: totrans-89
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 如果你想要惹恼你的邻居，创建一个包含终端响铃字符的文件。每次文件被列出（例如通过调用‘ls’）时，都会听到一个可听到的响铃。
 - en: Directory API
+  id: totrans-90
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 目录API
 - en: While interacting with a file in C is typically done by using to open the file
     and then or to interact with the file before calling to release resources, directories
     have special calls such as, , and . There is no function since typically that
     implies creating a file or link. The program would use something like or .
+  id: totrans-91
   prefs: []
   type: TYPE_NORMAL
+  zh: 在C语言中与文件交互通常是通过使用打开文件，然后或与文件交互，在调用之前释放资源来完成的，目录有特殊的调用，如，和。没有函数，因为这通常意味着创建文件或链接。程序会使用类似或的东西。
 - en: To explore these functions, let’s write a program to search the contents of
     a directory for a particular file. The code below has a bug, try to spot it!
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 要探索这些功能，让我们编写一个程序来搜索目录中的特定文件。下面的代码有错误，试着找出它！
 - en: '[PRE2]'
+  id: totrans-93
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: Did you find the bug? It leaks resources! If a matching filename is found then
     ‘closedir’ is never called as part of the early return. Any file descriptors opened
     and any memory allocated by opendir are never released. This means eventually
     the process will run out of resources and an or call will fail.
+  id: totrans-94
   prefs: []
   type: TYPE_NORMAL
+  zh: 你找到错误了吗？它泄漏资源！如果找到一个匹配的文件名，那么在早期返回时永远不会调用‘closedir’。任何打开的文件描述符和由‘opendir’分配的任何内存永远不会释放。这意味着最终进程将耗尽资源，或者调用将失败。
 - en: The fix is to ensure we free up resources in every possible code path.
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 修复方法是确保我们在所有可能的代码路径中释放资源。
 - en: In the above code, this means calling before . Forgetting to release resources
     is a common C programming bug because there is no support in the C language to
     ensure resources are always released with all code paths.
+  id: totrans-96
   prefs: []
   type: TYPE_NORMAL
+  zh: 在上面的代码中，这意味着在之前调用。忘记释放资源是C编程中常见的错误，因为C语言没有支持确保所有代码路径都释放资源的功能。
 - en: Given an open directory, after a call to , either (XOR), the parent or the child
     can use , or . If both the parent and the child use the above, the behavior is
     undefined.
+  id: totrans-97
   prefs: []
   type: TYPE_NORMAL
+  zh: 给定一个打开的目录，在调用后，要么（XOR），父目录或子目录可以使用，或者。如果父目录和子目录都使用上述方法，则行为是未定义的。
 - en: There are two main gotchas and one consideration. The function returns “.” (current
     directory) and “..” (parent directory). The other is programs need to explicity
     exclude subdirectories from a search, otherwise the search may take a long time.
+  id: totrans-98
   prefs: []
   type: TYPE_NORMAL
+  zh: 有两个主要的问题和一个注意事项。函数返回“.”（当前目录）和“..”（父目录）。另一个是程序需要显式排除子目录的搜索，否则搜索可能需要很长时间。
 - en: For many applications, it’s reasonable to check the current directory first
     before recursively searching sub-directories. This can be achieved by storing
     the results in a linked list, or resetting the directory struct to restart from
     the beginning.
+  id: totrans-99
   prefs: []
   type: TYPE_NORMAL
+  zh: 对于许多应用来说，在递归搜索子目录之前先检查当前目录是合理的。这可以通过存储结果在链表中或重置目录结构从开始处重新启动来实现。
 - en: The following code attempts to list all files in a directory recursively. As
     an exercise, try to identify the bugs it introduces.
+  id: totrans-100
   prefs: []
   type: TYPE_NORMAL
+  zh: 以下代码尝试递归地列出目录中的所有文件。作为一个练习，尝试识别它引入的错误。
 - en: '[PRE3]'
+  id: totrans-101
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: Did you find all 5 bugs?
+  id: totrans-102
   prefs: []
   type: TYPE_NORMAL
+  zh: 你找到了所有的5个错误吗？
 - en: '[PRE4]'
+  id: totrans-103
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: One final note of caution. is not thread-safe! You shouldn’t use the re-entrant
     version of the function. Synchronizing the filesystem within a process is important,
     so use locks around .
+  id: totrans-104
   prefs: []
   type: TYPE_NORMAL
+  zh: 最后一点注意事项。这不是线程安全的！你不应该使用函数的重入版本。在进程内同步文件系统很重要，所以使用锁来包围 。
 - en: See the [man page of readdir](https://linux.die.net/man/3/readdir) for more
     details.
+  id: totrans-105
   prefs: []
   type: TYPE_NORMAL
+  zh: 有关更多详细信息，请参阅[readdir的man页](https://linux.die.net/man/3/readdir)。
 - en: Linking
+  id: totrans-106
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 链接
 - en: Links are what force us to model a filesystem as a graph rather than a tree.
+  id: totrans-107
   prefs: []
   type: TYPE_NORMAL
+  zh: 链接迫使我们将文件系统建模为图而不是树。
 - en: 'While modeling the filesystem as a tree would imply that every inode has a
     unique parent directory, links allow inodes to present themselves as files in
     multiple places, potentially with different names, thus leading to an inode having
     multiple parent directories. There are two kinds of links:'
+  id: totrans-108
   prefs: []
   type: TYPE_NORMAL
+  zh: 当将文件系统建模为树时，会暗示每个inode都有一个唯一的父目录，但链接允许inode在多个地方呈现为文件，可能具有不同的名称，从而导致inode有多个父目录。有两种类型的链接：
 - en: 'A hard link is simply an entry in a directory assigning some name to an inode
     number that already has a different name and mapping in either the same directory
     or a different one. If we already have a file on a file system we can create another
     link to the same inode using the command:'
+  id: totrans-109
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 硬链接简单来说就是目录中的一个条目，将某个inode号分配给已经具有不同名称和映射的inode。如果我们已经在文件系统上有一个文件，我们可以使用以下命令创建指向相同inode的另一个链接：
 - en: '[PRE5]'
+  id: totrans-110
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: However, blip.txt *is* the same file. If we edit blip, I’m editing the same
     file as ‘file1.txt!’. We can prove this by showing that both file names refer
     to the same inode.
+  id: totrans-111
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 然而，blip.txt *确实是*同一个文件。如果我们编辑blip，我正在编辑与‘file1.txt’相同的文件。我们可以通过证明这两个文件名都指向相同的inode来证明这一点。
 - en: '[PRE6]'
+  id: totrans-112
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: The equivalent C call is
+  id: totrans-113
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 相应的C调用是
 - en: '[PRE7]'
+  id: totrans-114
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: For simplicity, the above examples made hard links inside the same directory.
     Hard links can be created anywhere inside the same filesystem.
+  id: totrans-115
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 为了简单起见，上面的例子在同一个目录内创建了硬链接。硬链接可以在同一个文件系统的任何地方创建。
 - en: The second kind of link is called a soft link, symbolic link, or symlink. A
     symbolic link is different because it is a file with a special bit set and stores
     a path to another file. Quite simply, without the special bit, it is nothing more
     than a text file with a file path inside. Note when people generally talk about
     a link without specifying hard or soft, they are referring to a hard link.
+  id: totrans-116
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 第二种链接称为软链接、符号链接或symlink。符号链接不同，因为它是一个设置了特殊位的文件，并存储指向另一个文件的路径。简单来说，如果没有这个特殊位，它不过是一个包含文件路径的文本文件。注意，当人们通常谈论一个链接而没有指定硬链接或软链接时，他们指的是硬链接。
 - en: To create a symbolic link in the shell, use . To read the contents of the link
     as a file, use . These are both demonstrated below.
+  id: totrans-117
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 在shell中创建符号链接，使用 。要读取链接的内容作为文件，使用 。这两个都在下面演示。
 - en: '[PRE8]'
+  id: totrans-118
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: Note that and have different inode numbers, unlike the hard link, .
+  id: totrans-119
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 注意，和有不同的inode号，与硬链接不同。
 - en: There is a C library call to create symlinks which is similar to link.
+  id: totrans-120
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 有一个创建符号链接的C库函数，它与`link`函数类似。
 - en: '[PRE9]'
+  id: totrans-121
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: Some advantages of symbolic links are
+  id: totrans-122
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 符号链接的一些优点是
 - en: Can refer to files that don’t exist yet
+  id: totrans-123
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以引用尚未存在的文件
 - en: Unlike hard links, can refer to directories as well as regular files
+  id: totrans-124
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与硬链接不同，可以引用目录以及常规文件
 - en: Can refer to files (and directories) that exist outside of the current file
     system
+  id: totrans-125
   prefs:
   - PREF_IND
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可以引用当前文件系统之外的文件（和目录）
 - en: However, symlinks have a key disadvantage, they as slower than regular files
     and directories. When the link’s contents are read, they must be interpreted as
     a new path to the target file, resulting in an additional call to open and read
@@ -647,9 +909,13 @@
     forbids hard linking directories where as soft links are allowed. The command
     will only allow root to do this and only if you provide the option. However, even
     root may not be able to perform this because most filesystems prevent it!
+  id: totrans-126
   prefs:
   - PREF_IND
   type: TYPE_NORMAL
+  zh: 然而，符号链接有一个关键缺点，它们比常规文件和目录要慢。当读取链接的内容时，它们必须被解释为指向目标文件的新路径，这导致需要额外的 open 和 read
+    调用，因为必须打开和读取实际文件。另一个缺点是 POSIX 禁止硬链接目录，而允许符号链接。该命令将只允许 root 执行此操作，并且只有当您提供选项时。然而，即使是
+    root 也可能无法执行此操作，因为大多数文件系统都阻止这样做！
 - en: The integrity of the file system assumes the directory structure is an acyclic
     tree that is reachable from the root directory. It becomes expensive to enforce
     or verify this constraint if directory linking is allowed. Breaking these assumptions
@@ -657,27 +923,36 @@
     potentially never terminate and directories can have more than one parent but
     “..” can only refer to a single parent. All in all, a bad idea. Soft links are
     merely ignored, which is why we can use them to reference directories.
+  id: totrans-127
   prefs: []
   type: TYPE_NORMAL
+  zh: 文件系统的完整性假设目录结构是一个从根目录可达的循环树。如果允许目录链接，强制执行或验证此约束将变得昂贵。打破这些假设可能会使文件完整性工具无法修复文件系统。递归搜索可能永远不会终止，目录可以有多个父目录，但
+    “..” 只能引用一个父目录。总的来说，这是一个坏主意。符号链接只是被忽略，这就是为什么我们可以使用它们来引用目录。
 - en: When you remove a file using or , you are removing an inode reference from a
     directory. However, the inode may still be referenced from other directories.
     To determine if the contents of the file are still required, each inode keeps
     a reference count that is updated whenever a new link is created or destroyed.
     This count only tracks hard links, symlinks are allowed to refer to a non-existent
     file and thus, do not matter.
+  id: totrans-128
   prefs: []
   type: TYPE_NORMAL
+  zh: 当您使用 rm 或 rmdir 删除文件时，您正在从一个目录中删除一个inode引用。然而，inode可能仍然被其他目录引用。为了确定文件内容是否仍然需要，每个inode都保留一个引用计数，该计数在创建或删除新链接时更新。这个计数只跟踪硬链接，符号链接可以引用一个不存在的文件，因此，并不重要。
 - en: An example use of hard links is to efficiently create multiple archives of a
     file system at different points in time. Once the archive area has a copy of a
     particular file, then future archives can re-use these archive files rather than
     creating a duplicate file. This is called an incremental backup. Apple’s “Time
     Machine” software does this.
+  id: totrans-129
   prefs: []
   type: TYPE_NORMAL
+  zh: 硬链接的一个例子是高效地在不同的时间点创建文件系统的多个存档。一旦存档区域有特定文件的副本，未来的存档就可以重新使用这些存档文件，而不是创建一个重复的文件。这被称为增量备份。苹果的“时间机器”软件就是这样做的。
 - en: Pathing
+  id: totrans-130
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 路径
 - en: Now that we have definitions, and have talked about directories, we come across
     the concept of a path. A path is a sequence of directories that provide one with
     a "path" in the graph that is a filesystem. However, there are some nuances. It
@@ -688,87 +963,133 @@
     remember that means ‘parent folder’ and that means ‘current folder’. Below is
     an example that illustrates the simplification of the `a/b/../c/.` by using in
     a shell to navigate a filesystem.
+  id: totrans-131
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在我们有了定义，并且已经讨论了目录，我们遇到了路径的概念。路径是一系列目录，为用户提供了一个文件系统中的“路径”。然而，也有一些细微差别。可能存在一个名为
+    `a/b/../c/./` 的路径。由于 . 和 .. 是目录中的特殊条目，这是一个有效的路径，实际上指的是 `a/c`。大多数文件系统功能都允许传递未压缩的路径。C库提供了一个压缩路径或获取绝对路径的函数。为了简化，请记住，.
+    表示“父文件夹”，而 .. 表示“当前文件夹”。下面是一个示例，说明如何使用 shell 在文件系统中导航来简化 `a/b/../c/.`。
 - en: (in a)
+  id: totrans-132
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (在/a)
 - en: (in a/b)
+  id: totrans-133
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (在/a/b)
 - en: (in a, because .. represents ‘parent folder’)
+  id: totrans-134
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (在/a中，因为 .. 代表“父文件夹”)
 - en: (in a/c)
+  id: totrans-135
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (在/a/c)
 - en: (in a/c, because . represents ‘current folder’)
+  id: totrans-136
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (在/a/c中，因为 . 代表“当前文件夹”)
 - en: Thus, this path can be simplified to .
+  id: totrans-137
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，这个路径可以简化为 .
 - en: Metadata
+  id: totrans-138
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 元数据
 - en: How can we distinguish between a regular file and a directory? For that matter,
     there are many other attributes that files also might contain. We distinguish
     a file type – different from the file extension i.e. png, svg, pdf – using fields
     inside the inode. How does the system know what type the file is?
+  id: totrans-139
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们如何区分常规文件和目录？就这个而言，文件还可能包含许多其他属性。我们通过区分文件类型——与文件扩展名不同，例如 png、svg、pdf——使用inode内的字段来区分。系统是如何知道文件类型的？
 - en: This information is stored within an inode. To access it, use the stat calls.
     For example, to find out when my ‘notes.txt’ file was last accessed.
+  id: totrans-140
   prefs: []
   type: TYPE_NORMAL
+  zh: 此信息存储在inode中。要访问它，请使用 stat 调用。例如，要找出我的“notes.txt”文件最后访问的时间。
 - en: '[PRE10]'
+  id: totrans-141
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: There are actually three versions of ;
+  id: totrans-142
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上存在三种版本的 ；
 - en: '[PRE11]'
+  id: totrans-143
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: For example, a program can use to learn about file metadata if it already has
     a file descriptor associated with that file.
+  id: totrans-144
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如，如果程序已经与该文件关联了一个文件描述符，则可以使用 来了解文件元数据。
 - en: '[PRE12]'
+  id: totrans-145
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: is almost the same as but handles symbolic links differently. From the man page.
+  id: totrans-146
   prefs: []
   type: TYPE_NORMAL
+  zh: 几乎与相同，但处理符号链接的方式不同。从 man 页面。
 - en: lstat() is identical to stat(), except that if pathname is a symbolic link,
     then it returns information about the link itself, not the file that it refers
     to.
+  id: totrans-147
   prefs:
   - PREF_BQ
   type: TYPE_NORMAL
+  zh: lstat() 函数与 stat() 函数相同，区别在于如果路径名是一个符号链接，则它返回关于链接本身的信息，而不是它所指向的文件。
 - en: 'The stat functions make use of . From the man page:'
+  id: totrans-148
   prefs: []
   type: TYPE_NORMAL
+  zh: stat 函数使用 。从 man 页面：
 - en: '[PRE13]'
+  id: totrans-149
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: The field can be used to distinguish between regular files and directories.
     To accomplish this, use the macros, and .
+  id: totrans-150
   prefs: []
   type: TYPE_NORMAL
+  zh: 该字段可以用来区分常规文件和目录。为此，使用宏和 。
 - en: '[PRE14]'
+  id: totrans-151
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE14]'
 - en: Permissions and bits
+  id: totrans-152
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 权限和位
 - en: 'Permissions are a key part of the way UNIX systems provide security in a filesystem.
     You may have noticed that the field in contains more than the file type. It also
     contains the mode, a description detailing what a user can and can’t do with a
@@ -781,35 +1102,54 @@
     to read privileges, the middle one to write privileges and the final byte to execute
     privileges. They are always presented as *User*, *Group*, *Other* (*UGO*). Below
     are some common examples. Here are the bit conventions:'
+  id: totrans-153
   prefs: []
   type: TYPE_NORMAL
+  zh: 权限是 UNIX 系统在文件系统中提供安全性的关键部分。你可能已经注意到，该字段包含的不仅仅是文件类型。它还包括模式，这是一个详细说明用户可以使用给定文件做什么和不能做什么的描述。任何文件通常都有三组权限。对于用户、组和其他（不属于前两类用户的所有用户）。对于这三类中的每一类，我们需要跟踪用户是否被允许读取文件、向文件写入和执行文件。由于有三类和三种权限，权限通常表示为一个三位八进制数。对于每一位，最低有效位对应于读取权限，中间位对应于写入权限，最后一位对应于执行权限。它们总是以
+    *用户*、*组*、*其他*（UGO）的形式呈现。以下是一些常见示例。以下是位约定：
 - en: means that the set of people can read
+  id: totrans-154
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 表示一组人可以读取
 - en: means that the set of people can write
+  id: totrans-155
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 表示一组人可以写入
 - en: means that the set of people can execute
+  id: totrans-156
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 表示一组人可以执行
 - en: Permissions Table
+  id: totrans-157
   prefs: []
   type: TYPE_NORMAL
+  zh: 权限表
 - en: '| Octal Code | User | Group | Others |'
+  id: totrans-158
   prefs: []
   type: TYPE_TB
+  zh: '| 八进制代码 | 用户 | 组 | 其他 |'
 - en: '| --- | --- | --- | --- |'
+  id: totrans-159
   prefs: []
   type: TYPE_TB
+  zh: '| --- | --- | --- | --- |'
 - en: '| 755 |  |  |  |'
+  id: totrans-160
   prefs: []
   type: TYPE_TB
+  zh: '| 755 |  |  |  |'
 - en: '| 644 |  |  |  |'
+  id: totrans-161
   prefs: []
   type: TYPE_TB
+  zh: '| 644 |  |  |  |'
 - en: It is worth noting that the bits have a slightly different meaning for directories.
     Write access to a directory that will allow a program to create or delete new
     files or directories inside. You can think about this as having write access to
@@ -819,18 +1159,26 @@
     Without the execute bit, it any attempt create or remove files or directories
     will fail since you cannot access them. You can, however, list the contents of
     the directory.
+  id: totrans-162
   prefs: []
   type: TYPE_NORMAL
+  zh: 值得注意的是，对于目录，位具有略微不同的含义。对目录的写入访问将允许程序在目录内部创建或删除新文件或目录。你可以将其视为对目录条目（dirent）映射的写入访问。对目录的读取访问将允许程序列出目录的内容。这是对目录条目（dirent）映射的读取访问。执行将允许程序使用
+    cd 进入目录。如果没有执行位，则任何创建或删除文件或目录的尝试都将失败，因为你无法访问它们。然而，你可以列出目录的内容。
 - en: There are several command line utilities for interacting with a file’s mode.
     changes the type of the file. takes a number and a file and changes the permission
     bits. However, before we can discuss chmod in detail, we must also understand
     the user ID () and group id () as well.
+  id: totrans-163
   prefs: []
   type: TYPE_NORMAL
+  zh: 有几个命令行实用程序可以与文件的模式交互。更改文件类型。接受一个数字和一个文件，并更改权限位。然而，在我们详细讨论chmod之前，我们还必须了解用户ID
+    () 和组ID ()。
 - en: User ID / Group ID
+  id: totrans-164
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 用户ID / 组ID
 - en: Every user in a UNIX system has a user ID. This is a unique number that can
     identify a user. Similarly, users can be added to collections called groups, and
     every group also has a unique identifying number. Groups have a variety of uses
@@ -841,488 +1189,707 @@
     file, upon creation, an owner, the creator of the file. This owner’s user ID ()
     can be found inside the file of a with a call to . Similarly, the group ID ()
     is set as well.
+  id: totrans-165
   prefs: []
   type: TYPE_NORMAL
+  zh: UNIX系统中的每个用户都有一个用户ID。这是一个可以识别用户的唯一数字。同样，用户可以被添加到称为组的集合中，每个组也有一个唯一的识别号。组在UNIX系统中有很多用途。它们可以分配能力
+    - 一种描述用户对系统控制级别的方式。例如，你可能遇到的一个组是组，一组被信任的用户，他们被允许使用命令来临时获得更高的权限。我们将在本章中更多地讨论如何工作。每个文件在创建时都有一个所有者，即文件的创建者。这个所有者的用户ID
+    () 可以通过在文件系统中使用系统调用 . 来找到。同样，组ID () 也会被设置。
 - en: Every process can determine its and with and . When a process tries to open
     a file with a specific mode, it’s and are compared with the and of the file. If
     the s match, then the process’s request to open the file will be compared with
     the bits on the user field of the file’s permissions. If the s match, then the
     process’s request will be compared with the group field of the permissions. If
     none of the IDs match, then the other field will apply.
+  id: totrans-166
   prefs: []
   type: TYPE_NORMAL
+  zh: 每个进程都可以使用和确定其和 . 当一个进程尝试以特定模式打开文件时，它的和与文件的和进行比较。如果匹配，则进程打开文件的请求将与文件权限的用户字段上的位进行比较。如果匹配，则进程的请求将与权限的组字段进行比较。如果没有任何ID匹配，则将应用其他字段。
 - en: Reading / Changing file permissions
+  id: totrans-167
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 读取/更改文件权限
 - en: Before we discuss how to change permission bits, we should be able to read them.
     In C, the family of library calls can be used. To read permission bits from the
     command line, use . Note, the permissions will output in the format ‘trwxrwxrwx’.
     The first character indicates the type of file type. Possible values for the first
     character include but aren’t limited to.
+  id: totrans-168
   prefs: []
   type: TYPE_NORMAL
+  zh: 在我们讨论如何更改权限位之前，我们应该能够读取它们。在C中，可以使用库调用系列。要从命令行读取权限位，请使用 . 注意，权限将以格式‘trwxrwxrwx’输出。第一个字符表示文件类型。第一个字符的可能值包括但不限于。
 - en: (-) regular file
+  id: totrans-169
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (-) 普通文件
 - en: (d) directory
+  id: totrans-170
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (d) 目录
 - en: (c) character device file
+  id: totrans-171
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (c) 字符设备文件
 - en: (l) symbolic link
+  id: totrans-172
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (l) 符号链接
 - en: (p) named pipe (also called FIFO)
+  id: totrans-173
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (p) 命名管道（也称为FIFO）
 - en: (b) block device
+  id: totrans-174
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (b) 块设备
 - en: (s) socket
+  id: totrans-175
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: (s) 套接字
 - en: Alternatively, use the program which presents all the information that one could
     retrieve from the library call.
+  id: totrans-176
   prefs: []
   type: TYPE_NORMAL
+  zh: 或者，使用程序，它展示了从库调用中可以检索到的所有信息。
 - en: To change the permission bits, there is a system call, . To simplify our examples,
     we will be using the command line utility of the same name short of “change mode”.
     There are two common ways to use , with either an octal value or with a symbolic
     string.
+  id: totrans-177
   prefs: []
   type: TYPE_NORMAL
+  zh: 要更改权限位，有一个系统调用，. 为了简化我们的示例，我们将使用同名的命令行实用程序，简称为“更改模式”。使用有两种常见方式，要么是八进制值，要么是符号字符串。
 - en: '[PRE15]'
+  id: totrans-178
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE15]'
 - en: 'The base-8 (‘octal’) digits describe the permissions for each role: The user
     who owns the file, the group and everyone else. The octal number is the sum of
     three values given to the three types of permission: read(4), write(2), execute(1)'
+  id: totrans-179
   prefs: []
   type: TYPE_NORMAL
+  zh: 八进制（‘八进制’）数字描述了每个角色的权限：拥有文件的用户，组以及其他人。八进制数是分配给三种类型权限的三个值的总和：读（4）、写（2）、执行（1）
 - en: 'Example:'
+  id: totrans-180
   prefs: []
   type: TYPE_NORMAL
+  zh: 示例：
 - en: r + w + x = digit * user has 4+2+1, full permission
+  id: totrans-181
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: r + w + x = 数字 * 用户有 4+2+1，完全权限
 - en: group has 4+0+1, read and execute permission
+  id: totrans-182
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 组有 4+0+1，读和执行权限
 - en: all users have 4+0+1, read and execute permission
+  id: totrans-183
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 所有用户都有 4+0+1，读和执行权限
 - en: Understanding the ‘umask’
+  id: totrans-184
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 理解‘umask’
 - en: The umask *subtracts* (reduces) permission bits from and is used when new files
     and new directories are created by open, mkdir etc. By default, the umask is set
     to (octal), which means that group and other privileges will be exclusively readable.
     Each process has a current umask value. When forking, the child inherits the parent’s
     umask value.
+  id: totrans-185
   prefs: []
   type: TYPE_NORMAL
+  zh: umask *减去*（减少）权限位，并在使用open、mkdir等创建新文件和新目录时使用。默认情况下，umask设置为（八进制），这意味着组和其他权限将仅限于可读。每个进程都有一个当前的umask值。当进行fork时，子进程会继承父进程的umask值。
 - en: For example, by setting the umask to in the shell, ensures that future file
     and directory creation will only be accessible to the current user,
+  id: totrans-186
   prefs: []
   type: TYPE_NORMAL
+  zh: 例如，通过在shell中设置umask，确保未来创建的文件和目录只能被当前用户访问，
 - en: '[PRE16]'
+  id: totrans-187
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE16]'
 - en: 'As a code example, suppose a new file is created with and mode bits (write
     and read bits for user, group and other):'
+  id: totrans-188
   prefs: []
   type: TYPE_NORMAL
+  zh: 作为一个代码示例，假设创建了一个新文件，其权限位为（用户、组和其他的读写位）：
 - en: '[PRE17]'
+  id: totrans-189
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE17]'
 - en: If umask is octal , then the permissions of the created file will be & ~ for
     example.
+  id: totrans-190
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果umask是八进制，那么创建的文件的权限将是 & ~，例如。
 - en: '[PRE18]'
+  id: totrans-191
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE18]'
 - en: The ‘setuid’ bit
+  id: totrans-192
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: “setuid”位
 - en: You may have noticed an additional bit that files with execute permission may
     have set. This bit is the bit. It indicated that when run, the program will set
     the uid of the user to that of the owner of the file. Similar, there is a bit
     which sets the gid of the executor to the gid of the owner. The canonical example
     of a program with set is .
+  id: totrans-193
   prefs: []
   type: TYPE_NORMAL
+  zh: 你可能已经注意到，具有执行权限的文件可能设置了额外的位。这个位是粘性位。它表示当运行程序时，程序将用户的uid设置为文件所有者的uid。类似地，还有一个位将执行者的gid设置为所有者的gid。具有set的程序的经典示例是。
 - en: 'is usually a program that is owned by the root user - a user that has all capabilities.
     By using , an otherwise unprivileged user can gain access to most parts of the
     system. This is useful for running programs that may require elevated privileges,
     such as using to change ownership of a file, or to use to mount or unmount filesystems
     (an action we will discuss later in this chapter). Here are some examples:'
+  id: totrans-194
   prefs: []
   type: TYPE_NORMAL
+  zh: 通常是由root用户拥有的程序 - 拥有所有权限的用户。通过使用，一个原本无特权的用户可以访问系统的绝大部分。这对于运行可能需要提升权限的程序很有用，例如使用来更改文件的所有权，或者使用来挂载或卸载文件系统（我们将在本章后面讨论这一动作）。以下是一些示例：
 - en: '[PRE19]'
+  id: totrans-195
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE19]'
 - en: When executing a process with the setuid bit, it is still possible to determine
     a user’s original uid with . The real action of the bit is to set the effective
     user ID () which can be determined with . The actions of and are described below.
+  id: totrans-196
   prefs: []
   type: TYPE_NORMAL
+  zh: 当以设置了setuid位的进程执行时，仍然可以使用来确定用户的原始uid。位的确切动作是设置有效用户ID（），这可以通过来确定。和的动作描述如下。
 - en: returns the real user id (zero if logged in as root)
+  id: totrans-197
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 返回真实用户ID（如果以root登录，则为零）
 - en: returns the effective user id (zero if acting as root, e.g. due to the setuid
     flag set on a program)
+  id: totrans-198
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 返回有效用户ID（如果以root身份操作，则为零，例如由于程序上设置了setuid标志）
 - en: These functions can allow one to write a program that can only be run by a privileged
     user by checking or go a step further and ensure that the only user who can run
     the code is root by using .
+  id: totrans-199
   prefs: []
   type: TYPE_NORMAL
+  zh: 这些函数可以允许编写一个只能由特权用户运行的程序，通过检查或更进一步，确保唯一可以运行代码的用户是root，使用。
 - en: The ‘sticky’ bit
+  id: totrans-200
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 粘性位
 - en: Sticky bits as we use them today serve a different purpose from initial introduction.
     Sticky bits were a bit that could be set on an executable file that would allow
     a program’s text segment to remain in swap even after the end of the program’s
     execution. This made subsequent executions of the same program faster. Today,
     this behavior is no longer supported and the sticky bit only holds meaning when
     set on a directory,
+  id: totrans-201
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们今天使用的粘性位与最初的引入目的不同。粘性位是可以设置在可执行文件上的位，允许程序文本段在程序执行结束后仍然保留在交换空间中。这使得相同程序的后续执行更快。今天，这种行为不再被支持，粘性位仅在设置为目录时才有意义，
 - en: When a directory’s sticky bit is set only the file’s owner, the directory’s
     owner, and the root user can rename or delete the file. This is useful when multiple
     users have write access to a common directory. A common use of the sticky bit
     is for the shared and writable directory where many users’ files may be stored,
     but users should not be able to access files belonging to other users.
+  id: totrans-202
   prefs: []
   type: TYPE_NORMAL
+  zh: 当目录的粘性位被设置时，只有文件的所有者、目录的所有者和root用户可以重命名或删除文件。这在多个用户对公共目录有写访问权限时很有用。粘性位的一个常见用途是共享和可写目录，其中可能存储了许多用户的文件，但用户不应能够访问其他用户的所有文件。
 - en: To set the sticky bit, use .
+  id: totrans-203
   prefs: []
   type: TYPE_NORMAL
+  zh: 要设置粘性位，使用。
 - en: '[PRE20]'
+  id: totrans-204
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE20]'
 - en: Note that in the example above, the username is prepended to the prompt, and
     the command is used to switch users.
+  id: totrans-205
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意，在上面的例子中，用户名被添加到提示符前面，并使用命令来切换用户。
 - en: Virtual filesystems and other filesystems
+  id: totrans-206
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 虚拟文件系统和其他文件系统
 - en: POSIX systems, such as Linux and Mac OS X (which is based on BSD) include several
     virtual filesystems that are mounted (available) as part of the file-system. Files
     inside these virtual filesystems may be generated dynamically or stored in ram.
     Linux provides 3 main virtual filesystems.
+  id: totrans-207
   prefs: []
   type: TYPE_NORMAL
+  zh: POSIX 系统，如 Linux 和 Mac OS X（基于 BSD），包括几个作为文件系统一部分挂载（可用）的虚拟文件系统。这些虚拟文件系统中的文件可能是动态生成的或存储在内存中。Linux
+    提供了 3 个主要的虚拟文件系统。
 - en: Virtual Filesystem list
+  id: totrans-208
   prefs: []
   type: TYPE_NORMAL
+  zh: 虚拟文件系统列表
 - en: '| Device | Use Case |'
+  id: totrans-209
   prefs: []
   type: TYPE_TB
+  zh: '| 设备 | 用例 |'
 - en: '| --- | --- |'
+  id: totrans-210
   prefs: []
   type: TYPE_TB
+  zh: '| --- | --- |'
 - en: '|  | A list of physical and virtual devices (for example network card, cdrom,
     random number generator |'
+  id: totrans-211
   prefs: []
   type: TYPE_TB
+  zh: '|  | 物理和虚拟设备列表（例如网卡、光盘、随机数发生器）'
 - en: '|  | A list of resources used by each process and (by tradition) set of system
     information |'
+  id: totrans-212
   prefs: []
   type: TYPE_TB
+  zh: '|  | 每个进程使用的资源列表和（传统上）系统信息集'
 - en: '|  | An organized list of internal kernel entities |'
+  id: totrans-213
   prefs: []
   type: TYPE_TB
+  zh: '|  | 内核内部实体的有序列表'
 - en: If we want a continuous stream of 0s, we can run .
+  id: totrans-214
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果我们想要一个连续的 0 流，我们可以运行 。
 - en: Another example is the file , a great place to store bits that you never need
     to read. Bytes sent to are never stored and simply discarded. A common use of
     is to discard standard output. For example,
+  id: totrans-215
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个例子是文件 ，一个存储你永远不会需要读取的位的好地方。发送到 的字节永远不会存储，只是简单地丢弃。 的一个常见用途是丢弃标准输出。例如，
 - en: '[PRE21]'
+  id: totrans-216
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE21]'
 - en: Managing files and filesystems
+  id: totrans-217
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 管理文件和文件系统
 - en: Given the multitude of operations that are available to you from the filesystem,
     let’s explore some tools and techniques that can be used to manage files and filesystems.
+  id: totrans-218
   prefs: []
   type: TYPE_NORMAL
+  zh: 考虑到您可以从文件系统执行的大量操作，让我们探索一些可以用来管理文件和文件系统的工具和技术。
 - en: One example is creating a secure directory. Suppose you created your own directory
     in /tmp and then set the permissions so that only you can use the directory (see
     below). Is this secure?
+  id: totrans-219
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个例子是创建一个安全的目录。假设你在 /tmp 中创建了自己的目录，然后设置了权限，使得只有你可以使用该目录（见下文）。这是安全的吗？
 - en: '[PRE22]'
+  id: totrans-220
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE22]'
 - en: There is a window of opportunity between when the directory is created and when
     it’s permissions are changed. This leads to several vulnerabilities that are based
     on a race condition.
+  id: totrans-221
   prefs: []
   type: TYPE_NORMAL
+  zh: 在创建目录和更改其权限之间有一个机会窗口。这导致基于竞争条件的好几个漏洞。
 - en: Another user replaces with a hard link to an existing file or directory owned
     by the second user, then they would be able to read and control the contents of
     the directory. Oh no - our secrets are no longer secret!
+  id: totrans-222
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个用户用指向第二个用户拥有的现有文件或目录的硬链接替换，然后他们就能够读取和控制目录的内容。哦不——我们的秘密不再是秘密了！
 - en: However in this specific example, the directory has the sticky bit set, so only
     the owner may delete the directory, and the simple attack scenario described above
     is impossible. This does not mean that creating the directory and then later making
     the directory private is secure! A better version is to atomically create the
     directory with the correct permissions from its inception.
+  id: totrans-223
   prefs: []
   type: TYPE_NORMAL
+  zh: 然而，在这个特定例子中，目录设置了粘滞位，所以只有所有者才能删除目录，上述简单攻击场景是不可能的。这并不意味着创建目录然后后来将其设置为私有就是安全的！更好的版本是从一开始就原子性地创建具有正确权限的目录。
 - en: '[PRE23]'
+  id: totrans-224
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE23]'
 - en: Obtaining Random Data
+  id: totrans-225
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 获取随机数据
 - en: is a file that contains a random number generator where the entropy is determined
     from environmental noise. Random will block/wait until enough entropy is collected
     from the environment.
+  id: totrans-226
   prefs: []
   type: TYPE_NORMAL
+  zh: 是一个包含随机数发生器的文件，其熵由环境噪声确定。 随机会阻塞/等待直到从环境中收集到足够的熵。
 - en: is like random, but differs in the fact that it allows for repetition (lower
     entropy threshold), thus won’t block.
+  id: totrans-227
   prefs: []
   type: TYPE_NORMAL
+  zh: 它像随机一样，但不同之处在于它允许重复（较低的熵阈值），因此不会阻塞。
 - en: One can think of both of these as streams of characters from which a program
     can read as opposed to files with a start and end. To touch on a misconception,
     most of the time one should be using . The only specific use case of is when one
     needs cryptographically secure data on bootup and the system should block. Otherwise,
     there are the following reasons.
+  id: totrans-228
   prefs: []
   type: TYPE_NORMAL
+  zh: 可以将这两个都视为程序可以从中读取字符流，而不是具有起始和结束位置的文件。为了触及一个误解，大多数时候应该使用 .。唯一的特定用例是当需要在启动时需要加密安全的数据并且系统应该阻止时。否则，有以下原因。
 - en: Empirically, they both produce numbers that look random enough.
+  id: totrans-229
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 实际上，它们都产生了看起来足够随机的数字。
 - en: may block at an inconvenient time. If one is programming a service for high
     scalability and relies on , an attacker can reliably exhaust the entropy pool
     and cause the service to block.
+  id: totrans-230
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 可能在不方便的时候阻塞。如果一个服务正在编程一个高可扩展性的服务并依赖于，攻击者可以可靠地耗尽熵池并导致服务阻塞。
 - en: Manual page authors pose a hypothetical attack where an attacker exhausts the
     entropy pool and guesses the seeding bits, but that attack has yet to be implemented.
+  id: totrans-231
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 手册页作者提出了一个假设攻击，其中攻击者耗尽熵池并猜测种子位，但这种攻击尚未实现。
 - en: Some operating system don’t have a true like MacOS.
+  id: totrans-232
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 一些操作系统没有真正的类似MacOS的`cp`命令。
 - en: Security experts will talk about Computational Security vs Information Theoretic
     security, more on this article [Urandom Myths](https://www.2uo.de/myths-about-urandom).
     Most encryption is computationally secure, which means is as well.
+  id: totrans-233
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 安全专家会讨论计算安全与信息论安全，更多内容请参阅这篇文章[关于Urandom的神话](https://www.2uo.de/myths-about-urandom)。大多数加密都是计算安全的，这意味着也是如此。
 - en: Copying Files
+  id: totrans-234
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 复制文件
 - en: Use the versatile command. For example, the following command copies 1 MiB of
     data from the file to the file . The data is copied as 1024 blocks of block size
     1024 bytes.
+  id: totrans-235
   prefs: []
   type: TYPE_NORMAL
+  zh: 使用通用的命令。例如，以下命令从文件复制1 MiB的数据到文件。数据以1024个大小为1024字节的块复制。
 - en: '[PRE24]'
+  id: totrans-236
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE24]'
 - en: Both the input and output files in the example above are virtual - they don’t
     exist on a disk. This means the speed of the transfer is unaffected by hardware
     power.
+  id: totrans-237
   prefs: []
   type: TYPE_NORMAL
+  zh: 上面示例中的输入和输出文件都是虚拟的——它们不存在于磁盘上。这意味着传输速度不受硬件性能的影响。
 - en: is also commonly used to make a copy of a disk or an entire filesystem to create
     images that can either be burned on to other disks or to distribute data to other
     users.
+  id: totrans-238
   prefs: []
   type: TYPE_NORMAL
+  zh: 也常用于复制磁盘或整个文件系统以创建可以烧录到其他磁盘或分发给其他用户的镜像。
 - en: Updating Modification Time
+  id: totrans-239
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 更新修改时间
 - en: 'The executable creates a file if it is non-existant and also updates the file’s
     last modified time to be the current time. For example, we can make a new private
     file with the current time:'
+  id: totrans-240
   prefs: []
   type: TYPE_NORMAL
+  zh: 可执行文件如果不存在则创建文件，并更新文件的最后修改时间为当前时间。例如，我们可以使用当前时间创建一个新的私有文件：
 - en: '[PRE25]'
+  id: totrans-241
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE25]'
 - en: An example use of touch is to force make to recompile a file that is unchanged
     after modifying the compiler options inside the makefile. Remember that make is
     ‘lazy’ - it will compare the modified time of the source file with the corresponding
     output file to see if the file needs to be recompiled.
+  id: totrans-242
   prefs: []
   type: TYPE_NORMAL
+  zh: '`touch`的一个示例用法是强制`make`重新编译在`makefile`内部修改编译选项后未更改的文件。记住，`make`是“懒惰”的——它会比较源文件的修改时间与相应的输出文件，以查看文件是否需要重新编译。'
 - en: '[PRE26]'
+  id: totrans-243
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE26]'
 - en: Managing Filesystems
+  id: totrans-244
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 管理文件系统
 - en: To manage filesystems on your machine, use . Using mount without any options
     generates a list (one filesystem per line) of mounted filesystems including networked,
     virtual and local (spinning disk / SSD-based) filesystems. Here is a typical output
     of mount
+  id: totrans-245
   prefs: []
   type: TYPE_NORMAL
+  zh: 要管理机器上的文件系统，使用`mount`。使用不带任何选项的`mount`会生成一个挂载的文件系统列表（每行一个文件系统），包括网络、虚拟和本地（旋转磁盘/基于SSD）文件系统。以下是`mount`的典型输出。
 - en: '[PRE27]'
+  id: totrans-246
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE27]'
 - en: Notice that each line includes the filesystem type source of the filesystem
     and mount point. To reduce this output, we can pipe it into and only see lines
     that match a regular expression.
+  id: totrans-247
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意，每一行都包括文件系统的类型、源和挂载点。为了减少输出，我们可以将其管道输入到`grep`，只查看匹配正则表达式的行。
 - en: '[PRE28]'
+  id: totrans-248
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE28]'
 - en: Filesystem Mounting
+  id: totrans-249
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 文件系统挂载
 - en: Suppose you had downloaded a bootable Linux disk image from the [arch linux
     download page](https://www.archlinux.org/download/)
+  id: totrans-250
   prefs: []
   type: TYPE_NORMAL
+  zh: 假设您已从[arch linux下载页面](https://www.archlinux.org/download/)下载了一个可启动的Linux磁盘镜像。
 - en: '[PRE29]'
+  id: totrans-251
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE29]'
 - en: 'Before putting the filesystem on a CD, we can mount the file as a filesystem
     and explore its contents. Note: mount requires root access, so let’s run it using
     sudo'
+  id: totrans-252
   prefs: []
   type: TYPE_NORMAL
+  zh: 在将文件系统放在CD上之前，我们可以将文件挂载为文件系统并探索其内容。注意：`mount`需要root权限，所以让我们使用`sudo`来运行它。
 - en: '[PRE30]'
+  id: totrans-253
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE30]'
 - en: Before the mount command, the arch directory is new and obviously empty. After
     mounting, the contents of will be drawn from the files and directories stored
     in the filesystem stored inside the file. The option is required because we want
     to mount a regular file, not a block device such as a physical disk.
+  id: totrans-254
   prefs: []
   type: TYPE_NORMAL
+  zh: 在`mount`命令之前，`arch`目录是新的，显然是空的。挂载后，内容将从存储在文件系统内部的文件和目录中抽取。这个选项是必需的，因为我们想要挂载一个常规文件，而不是像物理磁盘这样的块设备。
 - en: The loop option wraps the original file as a block device. In this example,
     we will find out below that the file system is provided under . We can check the
     filesystem type and mount options by running the mount command without any parameters.
     We will pipe the output into so that we only see the relevant output line(s) that
     contain ‘arch’.
+  id: totrans-255
   prefs: []
   type: TYPE_NORMAL
+  zh: 循环选项将原始文件包装为块设备。在本例中，我们将在下面发现文件系统是在提供的。我们可以通过运行不带任何参数的mount命令来检查文件系统类型和挂载选项。我们将输出通过管道传输到，以便我们只看到包含‘arch’的相关输出行。
 - en: '[PRE31]'
+  id: totrans-256
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE31]'
 - en: The iso9660 filesystem is a read-only filesystem originally designed for optical
     storage media (i.e. CDRoms). Attempting to change the contents of the filesystem
     will fail
+  id: totrans-257
   prefs: []
   type: TYPE_NORMAL
+  zh: iso9660文件系统是一个最初为光盘存储媒体（即CDRoms）设计的只读文件系统。尝试更改文件系统的内容将失败
 - en: '[PRE32]'
+  id: totrans-258
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE32]'
 - en: Memory Mapped IO
+  id: totrans-259
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 内存映射I/O
 - en: While we traditionally think of reading and writing from a file as an operation
     that happens by using the and calls, there is an alternative, mapping a file into
     memory using . can also be used for IPC, and you can see more about as a system
     call that enables shared memory in the IPC chapter. In this chapter, we’ll briefly
     explore as a filesystem operation.
+  id: totrans-260
   prefs: []
   type: TYPE_NORMAL
+  zh: 虽然我们传统上认为从文件中读取和写入是一个通过使用和调用来发生的操作，但有一个替代方案，即使用映射文件到内存。这也可以用于IPC，你可以在IPC章节中了解更多关于作为启用共享内存的系统调用的信息。在本章中，我们将简要探讨作为文件系统操作的使用。
 - en: takes a file and maps its contents into memory. This allows a user to treat
     the entire file as a buffer in memory for easier semantics while programming,
     and to avoid having to read a file as discrete chunks explicitly.
+  id: totrans-261
   prefs: []
   type: TYPE_NORMAL
+  zh: 将文件的内容映射到内存中。这使用户可以将整个文件作为内存中的缓冲区来处理，以便在编程时更容易理解语义，并避免显式地按离散块读取文件。
 - en: Not all filesystems support using for IO. Those that do have varying behavior.
     Some will simply implement as a wrapper around and . Others will add additional
     optimizations by taking advantage of the kernel’s page cache. Of course, such
     optimization can be used in the implementation of and as well, so often using
     has identical performance.
+  id: totrans-262
   prefs: []
   type: TYPE_NORMAL
+  zh: 并非所有文件系统都支持使用它进行I/O操作。那些支持使用的文件系统行为各异。有些只是将和作为包装器来实现。而有些则会通过利用内核的页面缓存来添加额外的优化。当然，这种优化也可以用于和的实现，因此通常使用它们的性能是相同的。
 - en: is used to perform some operations such as loading libraries and processes into
     memory. If many programs only need read-access to the same file, then the same
     physical memory can be shared between multiple processes. This is used for common
     libraries like the C standard library.
+  id: totrans-263
   prefs: []
   type: TYPE_NORMAL
+  zh: 用于执行一些操作，如将库和进程加载到内存中。如果许多程序只需要对同一文件进行读取访问，则可以在多个进程之间共享相同的物理内存。这用于常见的库，如C标准库。
 - en: The process to map a file into memory is as follows.
+  id: totrans-264
   prefs: []
   type: TYPE_NORMAL
+  zh: 将文件映射到内存的过程如下。
 - en: requires a file descriptor, so we need to the file first
+  id: totrans-265
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 需要一个文件描述符，因此我们需要先打开文件
 - en: We seek to our desired size and write one byte to ensure that the file is sufficient
     length
+  id: totrans-266
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 我们寻找所需的大小，并写入一个字节以确保文件长度足够。
 - en: When finished call munmap to unmap the file from memory.
+  id: totrans-267
   prefs:
   - PREF_OL
   type: TYPE_NORMAL
+  zh: 完成后，调用munmap从内存中取消映射文件。
 - en: Here is a quick example.
+  id: totrans-268
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里有一个快速示例。
 - en: '[PRE33]'
+  id: totrans-269
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE33]'
 - en: The careful reader may notice that our integers were written in least-significant-byte
     format because that is the endianness of the CPU that we ran this example on.
     We also allocated a file that is one byte too many! The options specify the virtual
     memory protection. The option (not used here) can be set to allow CPU execution
     of instructions in memory.
+  id: totrans-270
   prefs: []
   type: TYPE_NORMAL
+  zh: 仔细的读者可能会注意到，我们使用的是最低有效字节格式来编写整数，因为这是我们运行此示例的CPU的字节序。我们还分配了一个比一个字节多的文件！选项指定了虚拟内存保护。选项（在此未使用）可以设置为允许CPU执行内存中的指令。
 - en: Reliable Single Disk Filesystems
+  id: totrans-271
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 可靠的单硬盘文件系统
 - en: Most filesystems cache significant amounts of disk data in physical memory.
     Linux, in this respect, is extreme. All unused memory is used as a giant disk
     cache. The disk cache can have a significant impact on overall system performance
     because disk I/O is slow. This is especially true for random access requests on
     spinning disks where the disk read-write latency is dominated by the seek time
     required to move the read-write disk head to the correct position.
+  id: totrans-272
   prefs: []
   type: TYPE_NORMAL
+  zh: 大多数文件系统都会在物理内存中缓存大量的磁盘数据。在这方面，Linux是极端的。所有未使用的内存都用作巨大的磁盘缓存。磁盘缓存可以对整体系统性能产生重大影响，因为磁盘I/O速度慢。这对于旋转磁盘上的随机访问请求尤其如此，其中磁盘读写延迟主要由将读写磁盘头移动到正确位置所需的寻址时间决定。
 - en: For efficiency, the kernel caches recently used disk blocks. For writing, we
     have to choose a trade-off between performance and reliability. Disk writes can
     also be cached (“Write-back cache”) where modified disk blocks are stored in memory
@@ -1333,16 +1900,20 @@
     based on the physical position of each disk block. Note, this is a simplified
     description because solid state drives (SSDs) can be used as a secondary write-back
     cache.
+  id: totrans-273
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了效率，内核缓存最近使用的磁盘块。对于写入，我们必须在性能和可靠性之间做出权衡。磁盘写入也可以被缓存（“写回缓存”），修改后的磁盘块存储在内存中，直到被移除。或者，可以采用“写入通过缓存”策略，其中磁盘写入立即发送到磁盘。后者更安全，因为文件系统修改迅速存储到持久介质中，但比写回缓存慢。如果写入被缓存，则可以根据每个磁盘块的物理位置延迟和高效地调度。注意，这是一个简化的描述，因为固态驱动器（SSD）可以用作二级写回缓存。
 - en: Both solid state disks (SSD) and spinning disks have improved performance when
     reading or writing sequential data. Thus, operating systems can often use a read-ahead
     strategy to amortize the read-request costs and request several contiguous disk
     blocks per request. By issuing an I/O request for the next disk block before the
     user application requires the next disk block, the apparent disk I/O latency can
     be reduced.
+  id: totrans-274
   prefs: []
   type: TYPE_NORMAL
+  zh: 固态硬盘（SSD）和旋转硬盘在读取或写入顺序数据时都提高了性能。因此，操作系统通常可以使用预读策略来分摊读取请求的成本，并请求每个请求的几个连续磁盘块。通过在用户应用程序需要下一个磁盘块之前发出对下一个磁盘块的I/O请求，可以减少明显的磁盘I/O延迟。
 - en: If your data is important and needs to be force written to disk, call to request
     that a filesystem’s changes be written (flushed) to disk. However, operating systems
     may ignore this request. Even if the data is evicted from the kernel buffers,
@@ -1350,8 +1921,11 @@
     changing the physical media. Note, you can also request that all changes associated
     with a particular file descriptor are flushed to disk using . There is a fiery
     debate about this call being useless, initiated by PostgresQL’s team [https://lwn.net/Articles/752063/](https://lwn.net/Articles/752063/)
+  id: totrans-275
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你的数据很重要，需要强制写入磁盘，可以调用请求将文件系统的更改写入（刷新）到磁盘。然而，操作系统可能会忽略这个请求。即使数据被从内核缓冲区中移除，磁盘固件可能会使用内部磁盘缓存，或者可能尚未完成对物理介质的更改。注意，你也可以请求使用
+    . 将与特定文件描述符相关联的所有更改刷新到磁盘。关于这个调用是否无用的争论很激烈，由PostgreSQL团队发起 [https://lwn.net/Articles/752063/](https://lwn.net/Articles/752063/)
 - en: If your operating system fails in the middle of an operation, most modern file
     systems do something called **journaling** to work around this. What the file
     system does is before it completes a potentially expensive operation, is that
@@ -1359,20 +1933,27 @@
     failure, one can step through the journal and see which files are corrupt and
     fix them. This is a way to salvage hard disks in cases there is critical data
     and there is no apparent backup.
+  id: totrans-276
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果你的操作系统在操作过程中失败，大多数现代文件系统会采取一种称为**日志记录**的措施来解决这个问题。文件系统所做的是，在它完成一个可能昂贵的操作之前，将它的操作记录下来。在发生崩溃或故障的情况下，可以逐步检查日志，查看哪些文件已损坏并修复它们。这是一种在存在关键数据且没有明显备份的情况下挽救硬盘的方法。
 - en: Even though it is unlikely for your computer, programming for data centers means
     that disks fail every few seconds. Disk failures are measured using “Mean-Time-To-Failure
     (MTTF)”. For large arrays, the mean failure time can be surprisingly short. If
     the MTTF(single disk) = 30,000 hours, then the MTTF(1000 disks)= 30000/1000=30
     hours or about a day and a half! That’s also assuming that the failures between
     the disks are independent, which they often aren’t.
+  id: totrans-277
   prefs: []
   type: TYPE_NORMAL
+  zh: 即使你的计算机不太可能发生这种情况，为数据中心编程意味着磁盘每几秒钟就会失败。磁盘故障使用“平均故障时间（MTTF）”来衡量。对于大型阵列，平均故障时间可能出人意料地短。如果MTTF（单个磁盘）=
+    30,000小时，那么MTTF（1000个磁盘）= 30,000/1000=30小时，大约是一天半！这也假设磁盘之间的故障是独立的，而它们通常不是。
 - en: RAID - Redundant Array of Inexpensive Disks
+  id: totrans-278
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: RAID - 红undant Array of Inexpensive Disks
 - en: One way to protect against this is to store the data twice! This is the main
     principle of a “RAID-1” disk array. By duplicating the writes to a disk with writes
     to another backup disk, there are exactly two copies of the data. If one disk
@@ -1381,88 +1962,118 @@
     twice as slow because now two write commands need to be issued for every disk
     block write. Compared to using a single disk, the cost of storage per byte has
     doubled.
+  id: totrans-279
   prefs: []
   type: TYPE_NORMAL
+  zh: 防止这种情况的一种方法是将数据存储两次！这是“RAID-1”磁盘阵列的主要原则。通过将写入磁盘的数据与写入另一个备份磁盘的数据进行复制，数据恰好有两个副本。如果一个磁盘发生故障，另一个磁盘将作为唯一的副本，直到可以重新克隆。读取数据更快，因为可以从任一磁盘请求数据，但写入可能慢两倍，因为现在每个磁盘块写入都需要发出两个写入命令。与使用单个磁盘相比，每字节的存储成本翻倍。
 - en: Another common RAID scheme is RAID-0, meaning that a file could be split up
     among two disks, but if any disk fails then the files are irrecoverable. This
     has the benefit of halving write times because one part of the file could be writing
     to hard disk one and another part to hard disk two.
+  id: totrans-280
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个常见的RAID方案是RAID-0，这意味着文件可以在两个磁盘之间分割，但如果任何磁盘发生故障，文件将无法恢复。这的好处是写入时间减半，因为文件的一部分可以写入硬盘一，另一部分写入硬盘二。
 - en: It is also common to combine these systems. If you have a lot of hard disks,
     consider RAID-10\. This is where you have two systems of RAID-1, but the systems
     are hooked up in RAID-0 to each other. This means you would get roughly the same
     speed from the slowdowns but now any one disk can fail and you can recover that
     disk. If two disks from opposing raid partitions fail, there is a chance that
     you can recover though we don’t could on it most of the time.
+  id: totrans-281
   prefs: []
   type: TYPE_NORMAL
+  zh: 也常见将这些系统结合起来。如果你有很多硬盘，可以考虑RAID-10。这是有两个RAID-1系统，但系统通过RAID-0相互连接。这意味着你会从减速中获得大致相同的速度，但现在任何一块磁盘都可以失败，你可以恢复那块磁盘。如果来自对立RAID分区的两块磁盘发生故障，有恢复的机会，尽管我们大多数时候并不指望它。
 - en: Higher Levels of RAID
+  id: totrans-282
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 更高的RAID级别
 - en: RAID-3 uses parity codes instead of mirroring the data. For each N-bits written,
     we will write one extra bit, the ‘Parity bit’ that ensures the total number of
     1s written is even. The parity bit is written to an additional disk. If any disk
     including the parity disk is lost, then its contents can still be computed using
     the contents of the other disks.
+  id: totrans-283
   prefs: []
   type: TYPE_NORMAL
+  zh: RAID-3使用奇偶校验码而不是镜像数据。对于每个写入的N位，我们将写入一个额外的位，即“奇偶校验位”，确保写入的1的总数是偶数。奇偶校验位写入到额外的磁盘。如果包括奇偶校验磁盘在内的任何磁盘丢失，则可以使用其他磁盘的内容计算其内容。
 - en: One disadvantage of RAID-3 is that whenever a disk block is written, the parity
     block will always be written too. This means that there is effectively a bottleneck
     in a separate disk. In practice, this is more likely to cause a failure because
     one disk is being used 100% of the time and once that disk fails then the other
     disks are more prone to failure.
+  id: totrans-284
   prefs: []
   type: TYPE_NORMAL
+  zh: RAID-3的一个缺点是，每当写入磁盘块时，奇偶校验块也总是会被写入。这意味着实际上有一个瓶颈在单独的磁盘上。在实践中，这更有可能导致故障，因为一个磁盘被100%使用，一旦该磁盘发生故障，其他磁盘就更容易发生故障。
 - en: A single disk failure is recoverable because there is sufficient data to rebuild
     the array from the remaining disks. Data-loss will occur when two disks are unusable
     because there is no longer sufficient data to rebuild the array. We can calculate
     the probability of a two disk failure based on the repair time which factors both
     the time to insert a new disk and the time required to rebuild the entire contents
     of the array.
+  id: totrans-285
   prefs: []
   type: TYPE_NORMAL
+  zh: 单个磁盘故障是可恢复的，因为剩余的磁盘中有足够的数据可以重建阵列。当两个磁盘无法使用时，将发生数据丢失，因为不再有足够的数据来重建阵列。我们可以根据修复时间来计算两个磁盘故障的概率，修复时间考虑了插入新磁盘的时间和重建整个阵列内容所需的时间。
 - en: '[PRE34]'
+  id: totrans-286
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE34]'
 - en: Using typical numbers (MTTR=1day, MTTF=1000days, N-1 = 9, p=0.009)
+  id: totrans-287
   prefs: []
   type: TYPE_NORMAL
+  zh: 使用典型数字（MTTR=1天，MTTF=1000天，N-1=9，p=0.009）
 - en: There is a 1% chance that another drive will fail during the rebuild process
     (at that point you had better hope you still have an accessible backup of your
     original data. In practice, the probability of a second failure during the repair
     process is likely higher because rebuilding the array is I/O-intensive (and on
     top of normal I/O request activity). This higher I/O load will also stress the
     disk array.
+  id: totrans-288
   prefs: []
   type: TYPE_NORMAL
+  zh: 在重建过程中，有1%的概率另一个驱动器会失败（此时你最好希望你的原始数据仍然有一个可访问的备份。在实践中，修复过程中第二次故障的概率可能更高，因为重建阵列是I/O密集型的（并且还在正常的I/O请求活动之上）。这种更高的I/O负载也会对磁盘阵列造成压力。
 - en: RAID-5 is similar to RAID-3 except that the check block (parity information)
     is assigned to different disks for different blocks. The check-block is ‘rotated’
     through the disk array. RAID-5 provides better read and write performance than
     RAID-3 because there is no longer the bottleneck of the single parity disk. The
     one drawback is that you need more disks to have this setup, and there are more
     complicated algorithms that need to be used.
+  id: totrans-289
   prefs: []
   type: TYPE_NORMAL
+  zh: RAID-5与RAID-3类似，但校验块（奇偶校验信息）分配给不同磁盘的不同块。校验块在磁盘阵列中“旋转”。RAID-5比RAID-3提供了更好的读写性能，因为没有单校验磁盘的瓶颈。唯一的缺点是，你需要更多的磁盘来设置这个环境，并且需要使用更复杂的算法。
 - en: Failure is common. Google reports 2-10% of disks fail per year. Multiplying
     that by 60,000+ disks in a single warehouse. Services must survive single disk,
     rack of servers, or whole data center failures.
+  id: totrans-290
   prefs: []
   type: TYPE_NORMAL
+  zh: 失败是常见的。谷歌报告称，每年有2-10%的磁盘会损坏。在一个仓库中，有60,000多个磁盘，这个数字乘以去，服务必须能够承受单个磁盘、服务器机架或整个数据中心故障。
 - en: Solutions
+  id: totrans-291
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 解决方案
 - en: 'Simple redundancy (2 or 3 copies of each file) e.g., Google GFS (2001). More
     efficient redundancy (analogous to RAID 3++) e.g., [Google Colossus filesystem](http://goo.gl/LwFIy)
     (~2010): customizable replication including Reed-Solomon codes with 1.5x redundancy'
+  id: totrans-292
   prefs: []
   type: TYPE_NORMAL
+  zh: 简单冗余（每个文件的2或3个副本），例如，谷歌GFS（2001）。更高效的冗余（类似于RAID 3++），例如，[谷歌Colossus文件系统](http://goo.gl/LwFIy)（约2010年）：可定制的复制，包括具有1.5倍冗余的里德-所罗门码
 - en: Simple Filesystem Model
+  id: totrans-293
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 简单的文件系统模型
 - en: Software developers need to implement filesystems all the time. If that is surprising
     to you, we encourage you to take a look at Hadoop, GlusterFS, Qumulo, etc. Filesystems
     are hot areas of research as of 2018 because people have realized that the software
@@ -1471,8 +2082,10 @@
     all the time. As such, you may end up designing a filesystem yourself someday.
     In this section, we will go over one of a fake filesystems and “walk through”
     some examples of how things work.
+  id: totrans-294
   prefs: []
   type: TYPE_NORMAL
+  zh: 软件开发者需要不断实现文件系统。如果你对此感到惊讶，我们鼓励你看看Hadoop、GlusterFS、Qumulo等。截至2018年，文件系统是研究的热点领域，因为人们已经意识到我们设计的软件模型没有充分利用我们当前的硬件。此外，我们用于存储信息的硬件也在不断改进。因此，你可能会有一天自己设计文件系统。在本节中，我们将介绍一个假想的文件系统，并“走过”一些工作原理的例子。
 - en: So, what does our hypothetical filesystem look like? We will base it off of
     the , a simple filesystem that happens to be the first filesystem that Linux ran
     on. It is laid out sequentially on disk, and the first section is the superblock.
@@ -1487,65 +2100,99 @@
     to the next from the perspective of the hardware components of the disk. Thinking
     about the disk as an array of data blocks is simply something we do so that we
     have a way to describe where files live on disk.
+  id: totrans-295
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么，我们的假设文件系统看起来是什么样子呢？我们将基于它，这是一个简单的文件系统，碰巧是Linux运行的第一个文件系统。它在磁盘上顺序排列，第一部分是超级块。超级块存储有关整个文件系统的关键元数据。由于我们希望在了解磁盘上的其他数据之前能够读取此块，因此它需要位于一个已知的位置，因此磁盘的开始是一个不错的选择。在超级块之后，我们将保留一个记录哪些inode正在使用的映射。如果第n个inode（inode根为<semantics><mn>0</mn><annotation
+    encoding="application/x-tex">0</annotation></semantics>）正在使用，则第n位被设置。同样，我们存储一个记录哪些数据块正在使用的映射。最后，我们有一个inode数组，然后是磁盘的其余部分
+    - 隐式地划分为数据块。从磁盘的硬件组件的角度来看，一个数据块可能和下一个数据块相同。将磁盘视为数据块的数组只是我们为了有一个描述文件在磁盘上位置的方法而做的事情。
 - en: Below, we have an example of how an inode that describes a file may look. Note
     that for the sake of simplicity, we have drawn arrows mapping data block numbers
     in the inode to their locations on disk. These aren’t pointers so much as indices
     into an array.
+  id: totrans-296
   prefs: []
   type: TYPE_NORMAL
+  zh: 下面是一个描述文件的inode可能看起来怎样的例子。请注意，为了简化，我们画了箭头，将inode中的数据块编号映射到磁盘上的位置。这些不是指针，更多的是数组中的索引。
 - en: '![Sample file filling up](../media/file43.png)'
+  id: totrans-297
   prefs: []
   type: TYPE_IMG
+  zh: '![样本文件填充](../media/file43.png)'
 - en: Sample file filling up
+  id: totrans-298
   prefs: []
   type: TYPE_NORMAL
+  zh: 样本文件填充
 - en: We will assume that a data block is 4 KiB.
+  id: totrans-299
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们将假设数据块的大小为4 KiB。
 - en: Note that a file will fill up each of its data blocks completely before requesting
     an additional data block. We will refer to this property as the file being *compact*.
     The file presented above is interesting since it uses all of its direct blocks,
     one of the entries for its indirect block and partially uses another indirect
     block.
+  id: totrans-300
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意，文件在请求额外的数据块之前，会完全填满其数据块。我们将把这个特性称为文件是*紧凑的*。上面展示的文件很有趣，因为它使用了所有的直接块，间接块中的一个条目，以及部分使用了另一个间接块。
 - en: The following subsections will all refer to the file presented above.
+  id: totrans-301
   prefs: []
   type: TYPE_NORMAL
+  zh: 以下小节将全部参考上面展示的文件。
 - en: File Size vs Space on Disk
+  id: totrans-302
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 文件大小与磁盘空间
 - en: Our file’s size must be stored in the inode. The filesystem isn’t aware of the
     actual contents of what is in a file - that data is considered the user’s and
     should only be manipulated by the user. However, we can compute upper and lower
     bounds on the filesize by only looking at how many blocks the file uses.
+  id: totrans-303
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们文件的大小必须存储在inode中。文件系统不知道文件实际内容的细节——这些数据被认为是用户的，并且只能由用户操作。然而，我们可以通过查看文件使用的块的数量来计算文件大小的上下限。
 - en: There are two full direct blocks, which together store <semantics><mrow><mn>2</mn><mo>*</mo><mi>s</mi><mi>i</mi><mi>z</mi><mi>e</mi><mi>o</mi><mi>f</mi><mo
     stretchy="false" form="prefix">(</mo><mi>d</mi><mi>a</mi><mi>t</mi><mi>a</mi><mi>_</mi><mi>b</mi><mi>l</mi><mi>o</mi><mi>c</mi><mi>k</mi><mo
     stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn><mo>*</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>=</mo><mn>8</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
     encoding="application/x-tex">2*sizeof(data\_block)=2*4KiB=8KiB</annotation></semantics>.
+  id: totrans-304
   prefs: []
   type: TYPE_NORMAL
+  zh: 有两个完整的直接块，它们共同存储 <semantics><mrow><mn>2</mn><mo>*</mo><mi>s</mi><mi>i</mi><mi>z</mi><mi>e</mi><mi>o</mi><mi>f</mi><mo
+    stretchy="false" form="prefix">(</mo><mi>d</mi><mi>a</mi><mi>t</mi><mi>a</mi><mi>_</mi><mi>b</mi><mi>l</mi><mi>o</mi><mi>c</mi><mi>k</mi><mo
+    stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn><mo>*</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>=</mo><mn>8</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">2*sizeof(data\_block)=2*4KiB=8KiB</annotation></semantics>.
 - en: There are two used blocks referenced by the indirect block, which can store
     up to <semantics><mrow><mn>8</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
     encoding="application/x-tex">8KiB</annotation></semantics> as calculated above.
+  id: totrans-305
   prefs: []
   type: TYPE_NORMAL
+  zh: 间接块引用了两个已使用的块，根据上述计算，可以存储高达 <semantics><mrow><mn>8</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">8KiB</annotation></semantics>。
 - en: We can now add these values to get an upper bound on the file size of <semantics><mrow><mn>16</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
     encoding="application/x-tex">16KiB</annotation></semantics>.
+  id: totrans-306
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们现在可以将这些值相加，以得到文件大小的上限，即 <semantics><mrow><mn>16</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">16KiB</annotation></semantics>.
 - en: What about a lower bound? We know that we must use the two direct blocks, one
     block referenced by the indirect block and at least 1 byte of a second block referenced
     by the indirect block. With this information, we can work out the lower bound
     to be <semantics><mrow><mn>2</mn><mo>*</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>12</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>1</mn><mi>B</mi></mrow><annotation
     encoding="application/x-tex">2*4KiB+4KiB+1=12KiB+1B</annotation></semantics>.
+  id: totrans-307
   prefs: []
   type: TYPE_NORMAL
+  zh: 那么下限是多少呢？我们知道我们必须使用两个直接块，一个由间接块引用的块，以及至少1字节由间接块引用的第二个块。有了这些信息，我们可以计算出下限为 <semantics><mrow><mn>2</mn><mo>*</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>12</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>1</mn><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">2*4KiB+4KiB+1=12KiB+1B</annotation></semantics>.
 - en: Note that our calculations so far have been to determine how much data the user
     is storing on disk. What about the *overhead* of storing this data incurred while
     using this filesystem? You’ll notice that we use an indirect block to store the
@@ -1556,12 +2203,20 @@
     stretchy="false" form="prefix">(</mo><mi>i</mi><mi>n</mi><mi>d</mi><mi>i</mi><mi>r</mi><mi>e</mi><mi>c</mi><mi>t</mi><mi>_</mi><mi>b</mi><mi>l</mi><mi>o</mi><mi>c</mi><mi>k</mi><mo
     stretchy="false" form="postfix">)</mo><mo>=</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo
     stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">sizeof(indirect\_block)=4KiB)</annotation></semantics>.
+  id: totrans-308
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意，到目前为止，我们的计算是为了确定用户在磁盘上存储了多少数据。那么，使用该文件系统存储这些数据所产生 *开销* 呢？你会注意到我们使用间接块来存储超出两个直接块使用的磁盘块号。在我们上面的计算中，我们忽略了这块。这将作为文件的开销来计算，因此，在磁盘上存储此文件的总开销是
+    <semantics><mrow><mi>s</mi><mi>i</mi><mi>z</mi><mi>e</mi><mi>o</mi><mi>f</mi><mo
+    stretchy="false" form="prefix">(</mo><mi>i</mi><mi>n</mi><mi>d</mi><mi>i</mi><mi>r</mi><mi>e</mi><mi>c</mi><mi>t</mi><mi>_</mi><mi>b</mi><mi>l</mi><mi>o</mi><mi>c</mi><mi>k</mi><mo
+    stretchy="false" form="postfix">)</mo><mo>=</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo
+    stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">sizeof(indirect\_block)=4KiB)</annotation></semantics>。
 - en: Thinking about overhead, a related calculation could be to determine the max/min
     disk usage per file in this filesystem.
+  id: totrans-309
   prefs: []
   type: TYPE_NORMAL
+  zh: 考虑到开销，一个相关的计算可以是确定该文件系统中每个文件的最大/最小磁盘占用。
 - en: Trivially a file of size <semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics>
     has no associated data blocks and takes up no space on disk (ignoring the space
     required for the inode since these are located in a fixed size array somewhere
@@ -1575,8 +2230,18 @@
     encoding="application/x-tex">1B</annotation></semantics>, despite that <semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
     encoding="application/x-tex">4KiB</annotation></semantics> of the disk is used
     – there is a distinction between file size and disk usage because of overhead!
+  id: totrans-310
   prefs: []
   type: TYPE_NORMAL
+  zh: 显然，大小为 <semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics>
+    的文件没有关联的数据块，并且在磁盘上不占用任何空间（忽略inode所需的空间，因为这些位于磁盘上的某个固定大小的数组中）。那么，最小非空文件占用的磁盘空间是多少呢？也就是说，考虑一个大小为
+    <semantics><mrow><mn>1</mn><mi>B</mi></mrow><annotation encoding="application/x-tex">1B</annotation></semantics>
+    的文件。请注意，当用户写入第一个字节时，会分配一个数据块。由于每个数据块的大小是 <semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">4KiB</annotation></semantics>，我们发现 <semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">4KiB</annotation></semantics> 是非空文件的最小磁盘占用。在这里，我们观察到文件大小将是
+    <semantics><mrow><mn>1</mn><mi>B</mi></mrow><annotation encoding="application/x-tex">1B</annotation></semantics>，尽管使用了
+    <semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation encoding="application/x-tex">4KiB</annotation></semantics>
+    的磁盘空间——文件大小和磁盘占用之间的区别是由于开销！
 - en: Finding maximum is slightly more involved. As we saw earlier in this chapter,
     a filesystem with this structure can have <semantics><mn>1024</mn><annotation
     encoding="application/x-tex">1024</annotation></semantics> data block numbers
@@ -1587,8 +2252,14 @@
     encoding="application/x-tex">4KiB</annotation></semantics> of overhead will be
     used to account for the indirect block, so the total disk usage will be <semantics><mrow><mn>4</mn><mi>M</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>12</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
     encoding="application/x-tex">4MiB + 12KiB</annotation></semantics>.
+  id: totrans-311
   prefs: []
   type: TYPE_NORMAL
+  zh: 寻找最大值稍微复杂一些。正如我们在本章前面看到的，具有这种结构的文件系统可以在一个间接块中有<semantics><mn>1024</mn><annotation
+    encoding="application/x-tex">1024</annotation></semantics>个数据块号。这意味着最大文件大小可以是<semantics><mrow><mn>2</mn><mo>*</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>1024</mn><mo>*</mo><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mo>=</mo><mn>4</mn><mi>M</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>8</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">2*4KiB + 1024*4KiB = 4MiB + 8KiB</annotation></semantics>（在考虑直接块之后）。然而，在磁盘上我们也会存储间接块本身。这意味着还需要额外的<semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">4KiB</annotation></semantics>开销来处理间接块，所以总磁盘使用量将是<semantics><mrow><mn>4</mn><mi>M</mi><mi>i</mi><mi>B</mi><mo>+</mo><mn>12</mn><mi>K</mi><mi>i</mi><mi>B</mi></mrow><annotation
+    encoding="application/x-tex">4MiB + 12KiB</annotation></semantics>。
 - en: Note that when only using direct blocks, completely filling up a direct block
     implies that our filesize and our disk usage are the same thing! While it would
     seem like we always want this ideal scenario, it puts a restrictive limit on the
@@ -1598,12 +2269,16 @@
     you will have to evaluate for yourself. Alternatively always trying to split your
     data up into chunks that never use indirect blocks is may exhaust the limited
     pool of available inodes.
+  id: totrans-312
   prefs: []
   type: TYPE_NORMAL
+  zh: 注意，当只使用直接块时，完全填满一个直接块意味着我们的文件大小和磁盘使用量是同一件事！虽然这似乎是我们总是想要的理想情况，但它对最大文件大小施加了限制性限制。通过增加直接块的数量来尝试解决这个问题似乎很有希望，但请注意，这需要增加inode的大小并减少存储用户数据的空间量——这是一个你必须自己评估的权衡。或者，始终尝试将数据分成永远不会使用间接块的块，可能会耗尽有限的inode池。
 - en: Performing Reads
+  id: totrans-313
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 执行读取操作
 - en: 'Performing reads tend to be pretty easy in our filesystem because our files
     are compact. Let’s say that we want to read the entirety of this particular file.
     What we’d start by doing is go to the inode’s direct struct and find the first
@@ -1615,24 +2290,34 @@
     our particular example, the first four bytes evaluate to the integer 5, meaning
     that our data continues on the 5th data block from the beginning. We do the same
     for data block #4 and we stop after because we exceed the size of the inode'
+  id: totrans-314
   prefs: []
   type: TYPE_NORMAL
+  zh: 在我们的文件系统中执行读取操作通常相当简单，因为我们的文件很紧凑。假设我们想要读取这个特定文件的全部内容。我们首先会去inode的直接结构中找到第一个直接数据块号。在我们的例子中，它是#7。然后我们从所有数据块的*开始*位置找到第7个数据块。然后我们读取所有这些字节。对于所有的直接节点，我们都会做同样的事情。接下来我们做什么？我们转到间接块并读取间接块。我们知道间接块中的每4个字节要么是一个哨兵节点（-1），要么是另一个数据块的编号。在我们的特定例子中，前四个字节计算出的整数是5，这意味着我们的数据从开始的第5个数据块继续。我们对数据块#4也做同样的处理，然后停止，因为我们已经超过了inode的大小。
 - en: 'Now, let’s think about the edge cases. How would a program start the read starting
     at an arbitrary offset of <semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics>
     bytes given that block sizes are <semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mi>s</mi></mrow><annotation
     encoding="application/x-tex">4 KiBs</annotation></semantics>. How many indirect
     blocks should there be if the filesystem is correct? (Hint: *think about using
     the size of the inode*)'
+  id: totrans-315
   prefs: []
   type: TYPE_NORMAL
+  zh: 现在，让我们考虑边缘情况。给定块大小为<semantics><mrow><mn>4</mn><mi>K</mi><mi>i</mi><mi>B</mi><mi>s</mi></mrow><annotation
+    encoding="application/x-tex">4 KiBs</annotation></semantics>，程序如何从任意偏移量<semantics><mi>n</mi><annotation
+    encoding="application/x-tex">n</annotation></semantics>字节开始读取？如果文件系统是正确的，应该有多少个间接块？（提示：*考虑使用inode的大小*）
 - en: Performing Writes
+  id: totrans-316
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 执行写入操作
 - en: Writing to files
+  id: totrans-317
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 写入文件
 - en: Performing writes fall into two categories, writes to files and writes to directories.
     First we’ll focus on files and assume that we are writing a byte to the <semantics><mn>6</mn><annotation
     encoding="application/x-tex">6</annotation></semantics>th KiB of our file. To
@@ -1644,29 +2329,44 @@
     data block and perform our write at the <semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics>KiB
     offset from this block because we skipped the first four kibibytes of the file
     in block 7\. We perform our write and go on our merry way.
+  id: totrans-318
   prefs: []
   type: TYPE_NORMAL
+  zh: 执行写入操作分为两类，写入文件和写入目录。首先，我们将关注文件，并假设我们要向文件的<semantics><mn>6</mn><annotation encoding="application/x-tex">6</annotation></semantics>th
+    KiB写入一个字节。要在特定偏移量处对文件执行写入操作，首先文件系统必须到达从该偏移量开始的数据块。在这个特定的例子中，我们必须到达第2个或索引编号为1的inode来执行我们的写入。我们再次从这个inode中获取这个数字，到达数据块的根，到达<semantics><mn>5</mn><annotation
+    encoding="application/x-tex">5</annotation></semantics>th数据块，并从这个块的<semantics><mn>2</mn><annotation
+    encoding="application/x-tex">2</annotation></semantics>KiB偏移量处执行写入操作，因为我们跳过了块7中的前四个kibibytes的文件。我们执行写入操作，然后继续我们的快乐之旅。
 - en: Some questions to consider.
+  id: totrans-319
   prefs: []
   type: TYPE_NORMAL
+  zh: 一些需要考虑的问题。
 - en: How would a program perform a write go across data block boundaries?
+  id: totrans-320
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 程序如何跨数据块边界执行写入操作？
 - en: How would a program perform a write after adding the offset would extend the
     length of the file?
+  id: totrans-321
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在添加偏移量后，如果会扩展文件长度，程序将如何执行写入操作？
 - en: How would a program perform a write where the offset is greater than the length
     of the original file?
+  id: totrans-322
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果偏移量大于原始文件长度，程序将如何执行写入操作？
 - en: Writing to directories
+  id: totrans-323
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 写入目录
 - en: Performing a write to a directory implies that an inode needs to be added to
     a directory. If we pretend that the example above is a directory. We know that
     we will be adding at most one directory entry at a time. Meaning that we have
@@ -1675,140 +2375,206 @@
     number of the last data block as we did above, go to where the data ends, and
     write one directory entry. Don’t forget to update the size of the directory so
     that the next creation doesn’t overwrite your file!
+  id: totrans-324
   prefs: []
   type: TYPE_NORMAL
+  zh: 向目录写入意味着需要在目录中添加一个inode。如果我们假设上面的例子是一个目录。我们知道我们每次最多只能添加一个目录条目。这意味着我们必须在我们的数据块中有足够的空间来容纳一个目录条目。幸运的是，我们拥有的最后一个数据块有足够的空闲空间。这意味着我们需要找到最后一个数据块的编号，就像上面做的那样，到达数据结束的地方，并写入一个目录条目。别忘了更新目录的大小，这样下一次创建就不会覆盖你的文件！
 - en: 'Some more questions:'
+  id: totrans-325
   prefs: []
   type: TYPE_NORMAL
+  zh: 一些更多的问题：
 - en: How would would a program perform a write when the last data block is already
     full?
+  id: totrans-326
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当最后一个数据块已经满时，程序将如何执行写入操作？
 - en: How about when all the direct blocks have been filled up and the inode doesn’t
     have an indirect block?
+  id: totrans-327
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当所有直接块都已填满且inode没有间接块时怎么办？
 - en: What about when the first indirect entry (#4) is full?
+  id: totrans-328
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当第一个间接条目（#4）已满时怎么办？
 - en: Adding Deletes
+  id: totrans-329
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 添加删除
 - en: If the inode is a file, then remove the directory entry in the parent directory
     by marking it as invalid (maybe making it point to inode -1) and skip it in your
     reads. A filesystem decreases the hard link count of the inode and if the count
     reaches zero, free the inode in the inode map and free all associated data blocks
     so they are reclaimed by the filesystem. In many operating systems, several fields
     in the inode get overwritten.
+  id: totrans-330
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果inode是一个文件，那么通过将其标记为无效（可能使其指向inode -1）来在父目录中删除目录条目，并在读取时跳过它。文件系统会减少inode的硬链接计数，如果计数达到零，则在inode映射中释放inode，并释放所有相关数据块，以便它们被文件系统回收。在许多操作系统中，inode中的几个字段会被覆盖。
 - en: If the inode is a directory, the filesystem checks if it is empty. If not, then
     the kernel will most likely mark an error.
+  id: totrans-331
   prefs: []
   type: TYPE_NORMAL
+  zh: 如果inode是一个目录，文件系统会检查它是否为空。如果不为空，那么内核很可能会标记一个错误。
 - en: Be sure to check out the appendix for modern and cutting edge filesystems.
+  id: totrans-332
   prefs: []
   type: TYPE_NORMAL
+  zh: 一定要查看附录，了解现代和前沿的文件系统。
 - en: Topics
+  id: totrans-333
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 主题
 - en: Superblock
+  id: totrans-334
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 超块
 - en: Data Block
+  id: totrans-335
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 数据块
 - en: Inode
+  id: totrans-336
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: Inode
 - en: Relative Path
+  id: totrans-337
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 相对路径
 - en: File Metadata
+  id: totrans-338
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 文件元数据
 - en: Hard and Soft Links
+  id: totrans-339
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 硬链接和软链接
 - en: Permission Bits
+  id: totrans-340
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限位
 - en: Mode bits
+  id: totrans-341
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限位
 - en: Working with Directories
+  id: totrans-342
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 与目录一起工作
 - en: Virtual File System
+  id: totrans-343
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 虚拟文件系统
 - en: Reliable File Systems
+  id: totrans-344
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 可靠的文件系统
 - en: RAID
+  id: totrans-345
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 磁盘阵列（RAID）
 - en: Questions
+  id: totrans-346
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 问题
 - en: How big can files be on a file system with 15 Direct blocks, 2 double, 3 triple
     indirect, 4kb blocks and 4byte entries? (Assume enough infinite blocks)
+  id: totrans-347
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在一个有15个直接块、2个双间接块、3个三间接块、4kb块和4字节条目的文件系统中，文件能有多大？（假设有足够的无限块）
 - en: What is a superblock? Inode? Data block?
+  id: totrans-348
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 超块是什么？inode？数据块？
 - en: How do we simplify /
+  id: totrans-349
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 我们如何简化/
 - en: In ext2, what is stored in an inode, and what is stored in a directory entry?
+  id: totrans-350
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在ext2中，inode中存储了什么，目录条目中存储了什么？
 - en: What are /sys, /proc, /dev/random, and /dev/urandom?
+  id: totrans-351
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: /sys、/proc、/dev/random和/dev/urandom是什么？
 - en: What are the permission bits?
+  id: totrans-352
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 权限位是什么？
 - en: How does one use chmod to set user/group/owner read/write/execute permissions?
+  id: totrans-353
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如何使用chmod设置用户/组/所有者读/写/执行权限？
 - en: What does the “dd” command do?
+  id: totrans-354
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “dd”命令的作用是什么？
 - en: What is the difference between a hard link and a symbolic link? Does the file
     need to exist?
+  id: totrans-355
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 硬链接和软链接有什么区别？文件需要存在吗？
 - en: “ls -l” shows the size of each file in a directory. Is the size stored in the
     directory or in the file’s inode?
+  id: totrans-356
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: “ls -l”显示目录中每个文件的大小。这个大小是存储在目录中还是在文件的inode中？

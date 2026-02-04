@@ -1,7 +1,9 @@
 - en: Threads
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 线程
 - en: A thread is short for ‘thread-of-execution’. It represents the sequence of instructions
     that the CPU has and will execute. To remember how to return from function calls,
     and to store the values of automatic variables and parameters a thread uses a
@@ -14,67 +16,97 @@
     Processes or threads are preferred to forking for a lot of scenarios because there
     is a lot less overhead creating them. But in some cases, notably python uses this,
     multiprocessing is the way to make your code faster.
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 线程是“执行线程”的简称。它代表了CPU将要执行的指令序列。为了记住如何从函数调用中返回，以及存储自动变量和参数的值，线程使用一个栈。几乎有点奇怪的是，线程是一个进程，这意味着创建线程类似于进程，但是没有复制，也就是说没有写时复制。这允许进程共享相同的地址空间、变量、堆、文件描述符等。创建线程的实际系统调用类似于。它是。我们不会深入细节，但你可以阅读[man手册](http://man7.org/linux/man-pages/man2/clone.2.html)，记住这超出了本课程的直接范围。LWP（轻量级进程）或线程在许多场景下比fork更受欢迎，因为创建它们的开销要小得多。但在某些情况下，特别是Python使用这种情况，多进程是使你的代码更快的方法。
 - en: Processes vs threads
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 进程与线程的比较
 - en: 'Creating separate processes is useful when:'
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 创建单独的进程有用的情况：
 - en: When more security is desired. For example, Chrome browser uses different processes
     for different tabs.
+  id: totrans-4
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当需要更多安全性时。例如，Chrome浏览器为不同的标签页使用不同的进程。
 - en: When running an existing and complete program then a new process is required,
     for example starting ‘gcc‘.
+  id: totrans-5
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当运行现有且完整的程序时需要创建新进程，例如启动‘gcc’。
 - en: When you are running into synchronization primitives and each process is operating
     on something in the system.
+  id: totrans-6
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当你在遇到同步原语，并且每个进程都在操作系统中的某个东西时。
 - en: When you have too many threads – the kernel tries to schedule all the threads
     near each other which could cause more harm than good.
+  id: totrans-7
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当你有太多线程时——内核试图将所有线程调度到彼此附近，这可能会造成比好处更多的伤害。
 - en: When you don’t want to worry about race conditions
+  id: totrans-8
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当你不想担心竞态条件时
 - en: When the amount of communication is minimal enough that simple IPC needs to
     be used.
+  id: totrans-9
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当通信量足够小，以至于只需要简单的IPC（进程间通信）时。
 - en: 'On the other hand, creating threads is more useful when:'
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一方面，创建线程更有用，当：
 - en: You want to leverage the power of a multi-core system to do one task
+  id: totrans-11
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 你想利用多核系统的力量来完成一项任务
 - en: When you can’t deal with the overhead of processes
+  id: totrans-12
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当你无法处理进程的开销时
 - en: When you want communication between the processes simplified
+  id: totrans-13
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当你想要简化进程间的通信时
 - en: When you want to threads to be part of the same process
+  id: totrans-14
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当你希望线程成为同一进程的一部分时
 - en: Thread Internals
+  id: totrans-15
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 线程内部结构
 - en: Your main function and other functions has automatic variables. We will store
     them in memory using a stack and keep track of how large the stack is by using
     a simple pointer (the “stack pointer”). If the thread calls another function,
@@ -84,37 +116,53 @@
     on the stack! This is why returning from a function is quick. It’s easy to ‘free’
     the memory used by automatic variables because the program needs to change the
     stack pointer.
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 你的主函数和其他函数有自动变量。我们将使用栈在内存中存储它们，并通过使用简单的指针（“栈指针”）来跟踪栈的大小。如果线程调用另一个函数，我们将移动我们的栈指针，以便有更多空间用于参数和自动变量。一旦从函数返回，我们可以将栈指针移回到其先前值。我们保留旧栈指针值的副本——在栈上！这就是为什么从函数返回是快速的原因。因为程序需要改变栈指针，所以自动变量占用的内存很容易“释放”。
 - en: In a multi-threaded program, there are multiple stacks but only one address
     space. The pthread library allocates some stack space and uses the function call
     to start the thread at that stack address.
+  id: totrans-17
   prefs: []
   type: TYPE_NORMAL
+  zh: 在多线程程序中，有多个栈，但只有一个地址空间。pthread库分配一些栈空间，并使用函数调用在栈地址处启动线程。
 - en: '![Thread stack visualization](../media/file16.png)'
+  id: totrans-18
   prefs: []
   type: TYPE_IMG
+  zh: '![线程栈可视化](../media/file16.png)'
 - en: Thread stack visualization
+  id: totrans-19
   prefs: []
   type: TYPE_NORMAL
+  zh: 线程栈可视化
 - en: A program can have more than one thread running inside a process. The programget
     the first thread for free! It runs the code you write inside ‘main’. If a program
     need more threads, it can call to create a new thread using the pthread library.
     You’ll need to pass a pointer to a function so that the thread knows where to
     start.
+  id: totrans-20
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个程序可以在一个进程中运行多个线程。程序会免费获得第一个线程！它运行你写在‘main’中的代码。如果程序需要更多线程，它可以调用以使用pthread库创建新线程。您需要传递一个指向函数的指针，以便线程知道从哪里开始。
 - en: The threads all live inside the same virtual memory because they are part of
     the same process. Thus they can all see the heap, the global variables, and the
     program code.
+  id: totrans-21
   prefs: []
   type: TYPE_NORMAL
+  zh: 由于线程都是同一进程的一部分，它们都生活在相同的虚拟内存中。因此，它们都可以看到堆、全局变量和程序代码。
 - en: '![Threads pointing to the same place in the heap](../media/file17.png)'
+  id: totrans-22
   prefs: []
   type: TYPE_IMG
+  zh: '![堆中指向同一位置的线程](../media/file17.png)'
 - en: Threads pointing to the same place in the heap
+  id: totrans-23
   prefs: []
   type: TYPE_NORMAL
+  zh: 堆中指向同一位置的线程
 - en: Thus, a program can have two (or more) CPUs working on your program at the same
     time and inside the same process. It’s up to the operating system to assign the
     threads to CPUs. If a program has more active threads than CPUs, the kernel will
@@ -122,62 +170,90 @@
     to do and then will automatically switch the CPU to work on another thread. For
     example, one CPU might be processing the game AI while another thread is computing
     the graphics output.
+  id: totrans-24
   prefs: []
   type: TYPE_NORMAL
+  zh: 因此，一个程序可以在同一进程中同时由两个（或更多）CPU工作，并且它们可以同时工作。操作系统负责将线程分配给CPU。如果一个程序的活动线程比CPU多，内核将分配一个线程给CPU进行短暂的处理，或者直到它没有更多事情可做，然后自动将CPU切换到处理另一个线程。例如，一个CPU可能正在处理游戏AI，而另一个线程正在计算图形输出。
 - en: Simple Usage
+  id: totrans-25
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 简单用法
 - en: 'To use pthreads, include and compile and link with or compiler option. This
     option tells the compiler that your program requires threading support. To create
     a thread, use the function . This function takes four arguments:'
+  id: totrans-26
   prefs: []
   type: TYPE_NORMAL
+  zh: 要使用pthread，需要包含并编译和链接或编译器选项。此选项告诉编译器，您的程序需要线程支持。要创建线程，请使用函数。此函数接受四个参数：
 - en: '[PRE0]'
+  id: totrans-27
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: The first is a pointer to a variable that will hold the id of the newly created
     thread.
+  id: totrans-28
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 第一个是指向将持有新创建的线程ID的变量的指针。
 - en: The second is a pointer to attributes that we can use to tweak and tune some
     of the advanced features of pthreads.
+  id: totrans-29
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 第二个是指向我们可以用来调整和调整pthread一些高级功能的属性的指针。
 - en: The third is a pointer to a function that we want to run
+  id: totrans-30
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 第三是我们要运行的函数的指针
 - en: Fourth is a pointer that will be given to our function
+  id: totrans-31
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 第四是传递给我们的函数的指针
 - en: The argument is difficult to read! It means a pointer that takes a pointer and
     returns a pointer. It looks like a function declaration except that the name of
     the function is wrapped with
+  id: totrans-32
   prefs: []
   type: TYPE_NORMAL
+  zh: 参数难以阅读！这意味着一个接受指针并返回指针的指针。它看起来像函数声明，除了函数名被括号包围。
 - en: '[PRE1]'
+  id: totrans-33
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE1]'
 - en: In the above example, the result will be because the busy function returned
     . We need to pass the address-of result because will be writing into the contents
     of our pointer.
+  id: totrans-34
   prefs: []
   type: TYPE_NORMAL
+  zh: 在上述示例中，结果将是，因为繁忙的函数返回了。我们需要传递结果地址，因为我们将写入指针的内容。
 - en: In the man pages, it warns that programmers should use as an opaque type and
     not look at the internals. We do ignore that often, though.
+  id: totrans-35
   prefs: []
   type: TYPE_NORMAL
+  zh: 在手册页中，它警告程序员应该使用作为不透明类型，并且不要查看内部结构。尽管如此，我们经常忽略这一点。
 - en: Pthread Functions
+  id: totrans-36
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Pthread函数
 - en: 'Here are some common pthread functions:'
+  id: totrans-37
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里有一些常见的pthread函数：
 - en: creates a new thread. Every thread gets a new stack. If a program calls twice,
     Your process will contain three stacks - one for each thread. The first thread
     is created when the process start, the other two after the create. Actually, there
@@ -185,17 +261,22 @@
     that each thread requires a stack because the stack contains automatic variables
     and the old CPU PC register, so that it can go back to executing the calling function
     after the function is finished.
+  id: totrans-38
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 创建一个新线程。每个线程都会得到一个新的栈。如果程序两次调用，则您的进程将包含三个栈 - 每个线程一个。第一个线程是在进程启动时创建的，其他两个是在创建后。实际上，可能还有更多的栈，但让我们保持简单。重要的思想是每个线程都需要一个栈，因为栈包含自动变量和旧的CPU
+    PC寄存器，这样它就可以在函数完成后返回调用函数。
 - en: stops a thread. Note the thread may still continue. For example, it can be terminated
     when the thread makes an operating system call (e.g. ). In practice, is rarely
     used because a thread won’t clean up open resources like files. An alternative
     implementation is to use a boolean (int) variable whose value is used to inform
     other threads that they should finish and clean up.
+  id: totrans-39
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 停止一个线程。注意，线程可能仍然继续。例如，当线程执行操作系统调用（例如）时，它可能被终止。在实际应用中，很少使用，因为线程不会清理像文件这样的打开资源。另一种实现方法是使用一个布尔（int）变量，其值用于通知其他线程它们应该完成并清理。
 - en: stops the calling thread meaning the thread never returns after calling . The
     pthread library will automatically finish the process if no other threads are
     running. is equivalent to returning from the thread’s function; both finish the
@@ -206,13 +287,18 @@
     exit value. This is equivalent to in the main method. All threads inside the process
     are stopped. Note the version creates thread zombies; however, this is not a long-running
     process, so we don’t care.
+  id: totrans-40
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 停止调用线程，意味着线程在调用后永远不会返回。如果没有其他线程正在运行，pthread 库将自动完成进程。这等价于从线程函数返回；两者都结束线程并设置线程的返回值（void
+    指针）。在线程中调用是简单程序确保所有线程完成的一种常见方式。例如，在以下程序中，线程可能没有时间开始。另一方面，退出整个进程并设置进程的退出值。这等价于在主方法中。进程内的所有线程都将停止。注意，版本会创建线程僵尸；然而，这不是一个长时间运行的进程，所以我们并不关心。
 - en: '[PRE2]'
+  id: totrans-41
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE2]'
 - en: waits for a thread to finish and records its return value. Finished threads
     will continue to consume resources. Eventually, if enough threads are created,
     will fail. In practice, this is only an issue for long-running processes but is
@@ -220,200 +306,292 @@
     freed when the process exits. This is equivalent to turning your children into
     zombies, so keep this in mind for long-running processes. In the exit example,
     we could also wait on all the threads.
+  id: totrans-42
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 等待线程完成并记录其返回值。已完成的线程将继续消耗资源。最终，如果创建了足够的线程，将会失败。在实际应用中，这仅是长时间运行进程的问题，但对于简单、短暂的生命周期进程来说并不是问题，因为所有线程资源在进程退出时都会自动释放。这相当于让你的孩子变成僵尸，所以对于长时间运行的进程要记住这一点。在退出示例中，我们也可以等待所有线程。
 - en: '[PRE3]'
+  id: totrans-43
   prefs:
   - PREF_IND
   type: TYPE_PRE
+  zh: '[PRE3]'
 - en: 'There are many ways to exit threads. Here is a non-complete list:'
+  id: totrans-44
   prefs: []
   type: TYPE_NORMAL
+  zh: 有许多退出线程的方法。以下是一个不完整的列表：
 - en: Returning from the thread function
+  id: totrans-45
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从线程函数返回
 - en: Calling
+  id: totrans-46
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 调用
 - en: Canceling the thread with
+  id: totrans-47
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用
 - en: Terminating the process through a signal.
+  id: totrans-48
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 通过信号终止进程。
 - en: calling or
+  id: totrans-49
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 调用或
 - en: Returning from
+  id: totrans-50
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从
 - en: Executing another program
+  id: totrans-51
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 执行另一个程序
 - en: Unplugging your computer
+  id: totrans-52
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 断开电脑的电源
 - en: Some undefined behavior can terminate your threads, it is undefined behavior
+  id: totrans-53
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些未定义的行为可以终止你的线程，这是未定义的行为
 - en: Race Conditions
+  id: totrans-54
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 竞争条件
 - en: Race conditions are whenever the outcome of a program is determined by its sequence
     of events determined by the processor. This means that the execution of the code
     is non-deterministic. Meaning that the same program can run multiple times and
     depending on how the kernel schedules the threads could produce inaccurate results.
     The following is the canonical race condition.
+  id: totrans-55
   prefs: []
   type: TYPE_NORMAL
+  zh: 竞争条件是指程序的结果由处理器根据其事件序列确定。这意味着代码的执行是非确定性的。这意味着相同的程序可以运行多次，并且根据内核如何调度线程，可能会产生不准确的结果。以下是一个典型的竞争条件。
 - en: '[PRE4]'
+  id: totrans-56
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE4]'
 - en: Breaking down the assembly there are many different accesses of the code. We
     will assume that data is stored in the register. The code to increment is the
     following with no optimization (assume int_ptr contains eax).
+  id: totrans-57
   prefs: []
   type: TYPE_NORMAL
+  zh: 分析汇编代码，有许多不同的代码访问方式。我们将假设数据存储在寄存器中。以下是不进行优化的增量代码（假设 int_ptr 包含 eax）。
 - en: '[PRE5]'
+  id: totrans-58
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE5]'
 - en: Consider this access pattern.
+  id: totrans-59
   prefs: []
   type: TYPE_NORMAL
+  zh: 考虑这种访问模式。
 - en: '![Thread access - not a race condition](../media/file18.png)'
+  id: totrans-60
   prefs: []
   type: TYPE_IMG
+  zh: '![线程访问 - 不是竞争条件](../media/file18.png)'
 - en: Thread access - not a race condition
+  id: totrans-61
   prefs: []
   type: TYPE_NORMAL
+  zh: 线程访问 - 不是竞争条件
 - en: This access pattern will cause the variable to be 4\. The problem is when the
     instructions are executed in parallel.
+  id: totrans-62
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种访问模式将导致变量变为4。问题是当指令并行执行时。
 - en: '![Thread access - race condition](../media/file19.png)'
+  id: totrans-63
   prefs: []
   type: TYPE_IMG
+  zh: '![线程访问 - 竞争条件](../media/file19.png)'
 - en: Thread access - race condition
+  id: totrans-64
   prefs: []
   type: TYPE_NORMAL
+  zh: 线程访问 - 竞争条件
 - en: This access pattern will cause the variable to be 2\. This is undefined behavior
     and a race condition. What we want is one thread to access the part of the code
     at a time.
+  id: totrans-65
   prefs: []
   type: TYPE_NORMAL
+  zh: 这种访问模式将导致变量被2\. 这是一种未定义的行为和竞态条件。我们希望一次只有一个线程访问代码的一部分。
 - en: But when compiled with , assembly output is a single instruction.
+  id: totrans-66
   prefs: []
   type: TYPE_NORMAL
+  zh: 但当用编译时，汇编输出是一个单条指令。
 - en: '[PRE6]'
+  id: totrans-67
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE6]'
 - en: Shouldn’t that fix it? It is a single assembly instruction so no interleaving?
     It doesn’t fix the problems that the *hardware itself* may experience a race condition
     because we as programmers didn’t tell the hardware to check for it. The easiest
     way is to add the *lock* prefix (Guide [2011](ch018.xhtml#ref-guide2011intel),
     1120).
+  id: totrans-68
   prefs: []
   type: TYPE_NORMAL
+  zh: 难道这不能解决问题吗？这只是一个汇编指令，所以没有交错？它不能解决硬件本身可能遇到的竞态条件问题，因为我们作为程序员没有告诉硬件去检查它。最简单的方法是添加*lock*前缀（指南[2011](ch018.xhtml#ref-guide2011intel)，1120）。
 - en: But we don’t want to be coding in assembly! We need to come up with a software
     solution to this problem.
+  id: totrans-69
   prefs: []
   type: TYPE_NORMAL
+  zh: 但我们不想在汇编语言中编码！我们需要为这个问题想出一个软件解决方案。
 - en: A day at the races
+  id: totrans-70
   prefs:
   - PREF_H4
   type: TYPE_NORMAL
+  zh: 赛马日
 - en: Here is another small race condition. The following code is supposed to start
     ten threads with the integers 0 through 9 inclusive. However, when run prints
     out ! Or seldom does it print out what we expect. Can you see why?
+  id: totrans-71
   prefs: []
   type: TYPE_NORMAL
+  zh: 这里还有一个小的竞态条件。以下代码本应启动十个线程，整数从0到9。然而，当运行时打印出！或者很少打印出我们期望的内容。你能看出为什么吗？
 - en: '[PRE7]'
+  id: totrans-72
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE7]'
 - en: The above code suffers from a - the value of i is changing. The new threads
     start later in the example output the last thread starts after the loop has finished.
     To overcome this race-condition, we will give each thread a pointer to its own
     data area. For example, for each thread we may want to store the id, a starting
     value and an output value. We will instead treat i as a pointer and cast it by
     value.
+  id: totrans-73
   prefs: []
   type: TYPE_NORMAL
+  zh: 上述代码受到一个-的影响，i的值正在改变。新线程在示例输出中开始得晚，最后一个线程在循环结束后开始。为了克服这个竞态条件，我们将为每个线程提供一个指向其自己的数据区域的指针。例如，对于每个线程，我们可能想要存储id、起始值和输出值。我们将把i视为一个指针，并通过值进行转换。
 - en: '[PRE8]'
+  id: totrans-74
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE8]'
 - en: Race conditions aren’t in our code. They can be in provided code Some functions
     like , , , not thread-safe. Let’s look at a simple function that is also not ‘thread-safe’.
     The result buffer could be stored in global memory. This is good in a single-threaded
     program. We wouldn’t want to return a pointer to an invalid address on the stack,
     but there’s only one result buffer in the entire memory. If two threads were to
     use it at the same time, one would corrupt the other.
+  id: totrans-75
   prefs: []
   type: TYPE_NORMAL
+  zh: 竞态条件不在我们的代码中。它们可能存在于提供的代码中。一些函数如， ， ，不是线程安全的。让我们看看一个也是不“线程安全”的简单函数。结果缓冲区可以存储在全局内存中。在单线程程序中这是好的。我们不想返回一个指向栈上无效地址的指针，但在整个内存中只有一个结果缓冲区。如果两个线程同时使用它，一个会破坏另一个。
 - en: '[PRE9]'
+  id: totrans-76
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE9]'
 - en: There are ways around this like using synchronization locks, but first let’s
     do this by design. How would you fix the function above? You can change any of
     the parameters and any return types. Here is one valid solution.
+  id: totrans-77
   prefs: []
   type: TYPE_NORMAL
+  zh: 有一些方法可以解决这个问题，比如使用同步锁，但首先让我们通过设计来做这件事。你会如何修复上面的函数？你可以更改任何参数和任何返回类型。这里有一个有效的解决方案。
 - en: '[PRE10]'
+  id: totrans-78
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE10]'
 - en: Instead of making the function responsible for the memory, we made the caller
     responsible! A lot of programs, and hopefully your programs, have minimal communication
     needed. Often a malloc call is less work than locking a mutex or sending a message
     to another thread.
+  id: totrans-79
   prefs: []
   type: TYPE_NORMAL
+  zh: 我们不是让函数负责内存，而是让调用者负责！许多程序，包括希望你的程序，需要的通信量最小。通常malloc调用比锁定互斥锁或向另一个线程发送消息要少。
 - en: Don’t Cross the Streams
+  id: totrans-80
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 不要跨界
 - en: A program can fork inside a process with multiple threads! However, the child
     process only has a single thread, which is a clone of the thread that called .
     We can see this as a simple example, where the background threads never print
     out a second message in the child process.
+  id: totrans-81
   prefs: []
   type: TYPE_NORMAL
+  zh: 一个程序可以在一个多线程进程中fork！然而，子进程只有一个线程，它是调用进程的线程的克隆。我们可以将这视为一个简单示例，其中后台线程永远不会在子进程中打印第二条消息。
 - en: '[PRE11]'
+  id: totrans-82
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE11]'
 - en: '[PRE12]'
+  id: totrans-83
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE12]'
 - en: In practice, creating threads before forking can lead to unexpected errors because
     (as demonstrated above) the other threads are immediately terminated when forking.
     Another thread might have locked a mutex like by calling malloc and never unlock
     it again. Advanced users may find useful however we suggest a program avoid creating
     threads before forking unless you fully understand the limitations and difficulties
     of this approach.
+  id: totrans-84
   prefs: []
   type: TYPE_NORMAL
+  zh: 实际上，在分叉之前创建线程可能导致意外的错误，因为（如上所示）在分叉时其他线程会立即终止。另一个线程可能通过调用malloc锁定互斥锁，然后永远不会解锁它。然而，高级用户可能会发现这很有用，但我们建议程序在充分理解这种方法局限性和困难的情况下避免在分叉之前创建线程。
 - en: Embarrassingly Parallel Problems
+  id: totrans-85
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 令人尴尬的并行问题
 - en: The study of parallel algorithms has exploded over the past few years. An embarrassingly
     parallel problem is any problem that needs little effort to turn parallel. A lot
     of them have some synchronization concepts with them but not always. You already
     know a parallelizable algorithm, Merge Sort!
+  id: totrans-86
   prefs: []
   type: TYPE_NORMAL
+  zh: 近年来，并行算法的研究已经激增。任何只需稍加努力就能实现并行的难题都可以称为令人尴尬的并行问题。其中许多问题与某些同步概念相关，但并非总是如此。你已经知道一个可并行化的算法，即归并排序！
 - en: '[PRE13]'
+  id: totrans-87
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE13]'
 - en: With your new understanding of threads, all you need to do is create a thread
     for the left half, and one for the right half. Given that your CPU has multiple
     real cores, you will see a speedup following [Amdahl’s Law](https://en.wikipedia.org/wiki/Amdahl's_law).
@@ -422,8 +600,13 @@
     stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo
     stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log^3(n))</annotation></semantics>
     running time because we have the analysis assumes that we have a lot of cores.
+  id: totrans-88
   prefs: []
   type: TYPE_NORMAL
+  zh: 在你对线程有了新的理解之后，你所需要做的就是为左半部分创建一个线程，为右半部分创建一个线程。鉴于你的CPU有多个真实核心，你将看到根据[Amdahl定律](https://en.wikipedia.org/wiki/Amdahl's_law)的速度提升。在这里，时间复杂度分析也变得很有趣。并行算法以<semantics><mrow><mi>O</mi><mo
+    stretchy="false" form="prefix">(</mo><msup><mo>log</mo><mn>3</mn></msup><mo stretchy="false"
+    form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false"
+    form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log^3(n))</annotation></semantics>的运行时间运行，因为我们假设我们有很多核心。
 - en: In practice though, we typically do two changes. One, once the array gets small
     enough, we ditch the Parallel Merge Sort algorithm and do conventional sort that
     works fast on small arrays, usually cache coherency rules at this level. The other
@@ -431,109 +614,159 @@
     we typically keep a worker pool. You won’t see the speedup right away because
     of things like cache coherency and scheduling extra threads. Over the bigger pieces
     of code, though, you will start to see speedups.
+  id: totrans-89
   prefs: []
   type: TYPE_NORMAL
+  zh: 然而，在实践中，我们通常进行两个更改。一是，一旦数组足够小，我们就放弃并行归并排序算法，并使用在小型数组上运行快速的常规排序，通常在这个级别上遵循缓存一致性规则。另一件事是我们知道CPU没有无限的核心。为了解决这个问题，我们通常保持一个工作池。由于缓存一致性、调度额外线程等问题，你不会立即看到速度提升。然而，在更大的代码片段上，你将开始看到速度提升。
 - en: Another embarrassingly parallel problem is parallel map. Say we want to apply
     a function to an entire array, one element at a time.
+  id: totrans-90
   prefs: []
   type: TYPE_NORMAL
+  zh: 另一个令人尴尬的并行问题是并行映射。假设我们想要逐个元素将一个函数应用于整个数组。
 - en: '[PRE14]'
+  id: totrans-91
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE14]'
 - en: Since none of the elements depend on any other element, how would you go about
     parallelizing this? What do you think would be the best way to split up the work
     between threads.
+  id: totrans-92
   prefs: []
   type: TYPE_NORMAL
+  zh: 由于没有任何元素依赖于其他元素，你将如何进行并行化？你认为将工作分配给线程的最佳方式是什么？
 - en: Check out thread scheduling in the appendix for more ways to schedule.
+  id: totrans-93
   prefs: []
   type: TYPE_NORMAL
+  zh: 在附录中查看线程调度以获取更多调度方法。
 - en: Other Problems
+  id: totrans-94
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 其他问题
 - en: From [Wikipedia](https://en.wikipedia.org/wiki/Embarrassingly_parallel)
+  id: totrans-95
   prefs: []
   type: TYPE_NORMAL
+  zh: 来自[Wikipedia](https://en.wikipedia.org/wiki/Embarrassingly_parallel)
 - en: Serving static files on a web server to multiple users at once.
+  id: totrans-96
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在Web服务器上同时为多个用户提供静态文件。
 - en: The Mandelbrot set, Perlin noise, and similar images, where each point is calculated
     independently.
+  id: totrans-97
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 曼德布罗特集、Perlin噪声和类似图像，其中每个点都是独立计算的。
 - en: Rendering of computer graphics. In computer animation, each frame may be rendered
     independently (see parallel rendering).
+  id: totrans-98
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 计算机图形的渲染。在计算机动画中，每一帧可以独立渲染（参见并行渲染）。
 - en: Brute-force searches in cryptography.
+  id: totrans-99
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 密码学中的暴力搜索。
 - en: Notable real-world examples include distributed.net and proof-of-work systems
     used in cryptocurrency.
+  id: totrans-100
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 举世瞩目的实际例子包括分布式.net和加密货币中使用的证明工作系统。
 - en: BLAST searches in bioinformatics for multiple queries (but not for individual
     large queries)
+  id: totrans-101
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 生物信息学中的BLAST搜索，用于多个查询（但不用于单个大型查询）
 - en: Large scale facial recognition systems that compare thousands of arbitrary acquired
     faces (e.g., a security or surveillance video via closed-circuit television) with
     a similarly large number of previously stored faces (e.g., a rogues gallery or
     similar watch list).
+  id: totrans-102
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 比较数千个任意获取的面（例如，通过闭路电视的安全或监控视频）与大量先前存储的面（例如，流氓画廊或类似的观察名单）的大规模人脸识别系统。
 - en: Computer simulations comparing many independent scenarios, such as climate models.
+  id: totrans-103
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 比较许多独立场景的计算机模拟，例如气候模型。
 - en: Evolutionary computation meta-heuristics such as genetic algorithms.
+  id: totrans-104
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 遗传算法等进化计算元启发式算法。
 - en: Ensemble calculations of numerical weather prediction.
+  id: totrans-105
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 数值天气预报的集成计算。
 - en: Event simulation and reconstruction in particle physics.
+  id: totrans-106
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 粒子物理学中的事件模拟和重建。
 - en: The marching squares algorithm
+  id: totrans-107
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 行军方阵算法
 - en: Sieving step of the quadratic sieve and the number field sieve.
+  id: totrans-108
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 二次筛法和数域筛法的筛选步骤。
 - en: Tree growth step of the random forest machine learning technique.
+  id: totrans-109
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 随机森林机器学习技术的树增长步骤。
 - en: Discrete Fourier Transform where each harmonic is independently calculated.
+  id: totrans-110
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个谐波独立计算的离散傅里叶变换。
 - en: 'Advanced: Lightweight Processes?'
+  id: totrans-111
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 高级：轻量级进程？
 - en: In the beginning of the chapter, we mentioned that threads are processes. What
     do we mean by that? You can create a thread like a process. Take a look at the
     example code below.
+  id: totrans-112
   prefs: []
   type: TYPE_NORMAL
+  zh: 在本章的开头，我们提到线程是进程。我们这是什么意思？你可以像创建进程一样创建一个线程。看看下面的示例代码。
 - en: '[PRE15]'
+  id: totrans-113
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE15]'
 - en: It seems pretty simple right? Why not use this functionality? First, there is
     a decent bit of boilerplate code. In addition, pthreads are part of the POSIX
     standard and have defined functionality. Pthreads let a program set various attributes
@@ -542,130 +775,192 @@
     some functionality. clone can do some neat things like keeping different parts
     of your heap the same while creating copies of other pages. A program has finer
     control of scheduling because it is a process with the same mappings.
+  id: totrans-114
   prefs: []
   type: TYPE_NORMAL
+  zh: 这看起来很简单，不是吗？为什么不用这个功能？首先，有一大堆样板代码。此外，pthread是POSIX标准的一部分，并具有定义的功能。Pthreads允许程序设置各种属性——一些类似于clone的选项——以自定义你的线程。但如我们之前提到的，出于可移植性的原因，随着每个抽象层次的增加，我们都会失去一些功能。clone可以做一些很酷的事情，比如在创建其他页面的副本时保持堆的不同部分相同。程序对调度的控制更精细，因为它是一个具有相同映射的进程。
 - en: At no time in this course should you be using clone. But in the future, know
     that it is a perfectly viable alternative to fork. You have to be careful and
     research edge cases.
+  id: totrans-115
   prefs: []
   type: TYPE_NORMAL
+  zh: 在本课程中，任何时候都不应该使用clone。但将来，要知道它是一个完美的fork替代方案。你必须小心并研究边缘情况。
 - en: Further Reading
+  id: totrans-116
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 进一步阅读
 - en: 'Guiding questions:'
+  id: totrans-117
   prefs: []
   type: TYPE_NORMAL
+  zh: 指导问题：
 - en: What is the first argument to pthread create?
+  id: totrans-118
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: pthread create的第一个参数是什么？
 - en: What is the start routing in pthread create? How about arg?
+  id: totrans-119
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: pthread create中的起始路由是什么？arg又是如何？
 - en: Why might pthread create fail?
+  id: totrans-120
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么pthread create可能会失败？
 - en: What are a few things that threads share in a process? What are a few things
     that threads have different?
+  id: totrans-121
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在一个进程中，线程共享哪些东西？线程有什么不同之处？
 - en: How can a thread uniquely identify itself?
+  id: totrans-122
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 线程如何唯一地识别自己？
 - en: What are some examples of non thread safe library functions? Why might they
     not be thread safe?
+  id: totrans-123
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 一些非线程安全库函数的例子是什么？为什么它们可能不是线程安全的？
 - en: How can a program stop a thread?
+  id: totrans-124
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 程序如何停止一个线程？
 - en: How can a program get back a thread’s "return value"?
+  id: totrans-125
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 程序如何获取线程的“返回值”？
 - en: '[man page](http://man7.org/linux/man-pages/man3/pthread_create.3.html)'
+  id: totrans-126
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[手册页面](http://man7.org/linux/man-pages/man3/pthread_create.3.html)'
 - en: '[pthread reference guide](http://man7.org/linux/man-pages/man7/pthreads.7.html)'
+  id: totrans-127
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[pthread参考指南](http://man7.org/linux/man-pages/man7/pthreads.7.html)'
 - en: '[Concise third party sample code explaining create, join and exit](http://www.thegeekstuff.com/2012/04/terminate-c-thread/)'
+  id: totrans-128
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: '[简洁的第三方示例代码解释创建、连接和退出](http://www.thegeekstuff.com/2012/04/terminate-c-thread/)'
 - en: Topics
+  id: totrans-129
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 主题
 - en: pthread life-cycle
+  id: totrans-130
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: pthread生命周期
 - en: Each thread has a stack
+  id: totrans-131
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个线程都有一个堆栈
 - en: Capturing return values from a thread
+  id: totrans-132
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 从线程捕获返回值
 - en: Using
+  id: totrans-133
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用
 - en: Using
+  id: totrans-134
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用
 - en: Using
+  id: totrans-135
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 使用
 - en: Under what conditions will a process exit
+  id: totrans-136
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 在什么条件下进程会退出
 - en: Questions
+  id: totrans-137
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 问题
 - en: What happens when a pthread gets created?
+  id: totrans-138
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 当pthread被创建时会发生什么？
 - en: Where is each thread’s stack?
+  id: totrans-139
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 每个线程的堆栈在哪里？
 - en: How does a program get a return value given a ? What are the ways a thread can
     set that return value? What happens if a program discards the return value?
+  id: totrans-140
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 程序在给定的情况下如何获取返回值？线程可以设置该返回值的方式有哪些？如果程序丢弃了返回值，会发生什么？
 - en: Why is important (think stack space, registers, return values)?
+  id: totrans-141
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 为什么这很重要（考虑栈空间、寄存器、返回值）？
 - en: What does do if it is not the last thread? What other functions are called when
     after calling pthread_exit?
+  id: totrans-142
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 如果它不是最后一个线程，会怎么办？在调用pthread_exit之后，还会调用哪些其他函数？
 - en: Give me three conditions under which a multi-threaded process will exit. Are
     there any more?
+  id: totrans-143
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 请给出三个多线程进程退出的条件。还有其他条件吗？
 - en: What is an embarrassingly parallel problem?
+  id: totrans-144
   prefs:
   - PREF_UL
   type: TYPE_NORMAL
+  zh: 什么是令人尴尬的并行问题？

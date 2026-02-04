@@ -1,35 +1,49 @@
 - en: Honors topics
+  id: totrans-0
   prefs:
   - PREF_H1
   type: TYPE_NORMAL
+  zh: 荣誉主题
 - en: This chapter contains the contents of some of the honors lectures (CS 296-41).
     These topics are aimed at students who want to dive deeper into the topics of
     CS 341.
+  id: totrans-1
   prefs: []
   type: TYPE_NORMAL
+  zh: 本章包含了一些荣誉讲座的内容（CS 296-41）。这些主题针对希望深入了解 CS 341 主题的学生。
 - en: The Linux Kernel
+  id: totrans-2
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: Linux 内核
 - en: Throughout the course of CS 341, you become familiar with system calls - the
     userspace interface to interacting with the kernel. How does this kernel actually
     work? What is a kernel? In this section, we will explore these questions in more
     detail and shed some light on various black boxes that you have encountered in
     this course. We will mostly be focusing on the Linux kernel in this chapter, so
     please assume that all examples pertain to the Linux kernel unless otherwise specified.
+  id: totrans-3
   prefs: []
   type: TYPE_NORMAL
+  zh: 在 CS 341 的整个过程中，你将熟悉系统调用 - 与内核交互的用户空间接口。这个内核实际上是如何工作的？什么是内核？在本节中，我们将更详细地探讨这些问题，并为你在这个课程中遇到的各种黑盒提供一些启示。在本章中，我们将主要关注
+    Linux 内核，所以请假设除非另有说明，所有示例都适用于 Linux 内核。
 - en: What kinds of kernels are there?
+  id: totrans-4
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 有哪些类型的内核？
 - en: As it stands, most of you are probably familiar with the Linux kernel, at least
     in terms of interacting with it via system calls. Some of you may also have explored
     the Windows kernel, which we won’t talk about too much in this chapter. or , the
     UNIX-like kernel for macOS (a derivative of BSD). Those of you who might have
     done a bit more digging might have also encountered projects such a or .
+  id: totrans-5
   prefs: []
   type: TYPE_NORMAL
+  zh: 如此看来，你们大多数人可能对 Linux 内核很熟悉，至少是通过系统调用来与之交互。有些人可能也探索过 Windows 内核，我们将在本章中不会过多讨论。或者，macOS（BSD
+    的衍生品）的类 UNIX 内核。那些可能做过更多挖掘的人可能也遇到过类似的项目，例如 或 。
 - en: Kernels can generally be classified into one of two categories, a monolithic
     kernel or a micro-kernel. A monolithic kernel is essentially a kernel and all
     of it’s associated services as a single program. A micro-kernel on the other hand
@@ -41,42 +55,60 @@
     programs that can interact with the kernel by some form of IPC, typically RPC.
     As a result of this design, micro-kernels have traditionally been slower than
     monolithic kernels due to the IPC overhead.
+  id: totrans-6
   prefs: []
   type: TYPE_NORMAL
+  zh: 内核通常可以分为两大类，单内核或微内核。单内核基本上是一个内核及其所有相关服务作为一个单一程序。另一方面，微内核旨在有一个*主要*组件，它提供内核所需的最基本功能。这包括设置重要的设备驱动程序、根文件系统、分页或其他对实现其他高级功能至关重要的功能。然后，高级功能（如网络堆栈、其他文件系统和非关键设备驱动程序）作为可以与内核通过某种形式的
+    IPC（通常为 RPC）交互的独立程序实现。由于这种设计，微内核传统上比单内核慢，这是由于 IPC 开销。
 - en: We will devote our discussion from here onwards to focusing on monolithic kernels
     and unless specified otherwise, **specifically** the Linux kernel.
+  id: totrans-7
   prefs: []
   type: TYPE_NORMAL
+  zh: 从现在开始，我们将专注于讨论单内核，除非另有说明，**特别**是 Linux 内核。
 - en: System Calls Demystified
+  id: totrans-8
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 系统调用揭秘
 - en: System Calls use an instruction that can be run by a program operating in userspace
     that *traps* to the kernel (by use of a signal) to complete the call. This includes
     actions such as writing data to disk, interacting directly with hardware in general
     or operations related to gaining or relinquishing privileges (e.g. becoming the
     root user and gaining all capabilities).
+  id: totrans-9
   prefs: []
   type: TYPE_NORMAL
+  zh: 系统调用使用一个可以在用户空间运行的程序执行的指令，该指令会将控制权传递给内核（通过使用信号），以完成调用。这包括将数据写入磁盘、直接与硬件交互（通常）或与获取或放弃特权相关的操作（例如，成为
+    root 用户并获取所有能力）。
 - en: 'In order to fulfill a user’s request, the kernel will rely on . Kernel calls
     are essentially the "public" functions of the kernel - functions implemented by
     other developers for use in other parts of the kernel. Here is a snippet for a
     kernel call man page:'
+  id: totrans-10
   prefs: []
   type: TYPE_NORMAL
+  zh: 为了满足用户的需求，内核将依赖于 . 内核调用本质上内核的“公共”函数 - 由其他开发者为在其他内核部分中使用而实现的函数。以下是一个内核调用手册页的片段：
 - en: '[PRE0]'
+  id: totrans-11
   prefs: []
   type: TYPE_PRE
+  zh: '[PRE0]'
 - en: You’ll note that some flags are marked as potentially causing sleeps. This tells
     us whetherwe can use those flags in special scenarios, like interrupt contexts,
     where speed is of the essence, and operations that may block or wait for another
     process may never complete.
+  id: totrans-12
   prefs: []
   type: TYPE_NORMAL
+  zh: 你会注意到一些标志被标记为可能引起休眠。这告诉我们是否可以在特殊场景中使用这些标志，比如中断上下文，在这些场景中速度至关重要，可能阻塞或等待其他进程的操作可能永远不会完成。
 - en: Containerization
+  id: totrans-13
   prefs:
   - PREF_H2
   type: TYPE_NORMAL
+  zh: 容器化
 - en: As we enter an era of unprecedented scale with around 20 billion devices connected
     to the internet in 2018, we need technologies that help us develop and maintain
     software capable of scaling upwards. Additionally, as software increases in complexity,
@@ -87,29 +119,42 @@
     that are impossible to resolve and other such environmental nightmares that have
     become all to common today. While these seem like disjoint problems at first,
     all of these and more can be solved by throwing at the problem.
+  id: totrans-14
   prefs: []
   type: TYPE_NORMAL
+  zh: 随着我们进入一个前所未有的规模时代，到2018年，大约有200亿个设备连接到互联网，我们需要帮助我们在可扩展性方面开发和维护软件的技术。此外，随着软件的复杂性增加，设计安全软件变得更加困难，我们发现我们在开发应用程序时面临新的约束。似乎这还不够，简化软件分发和开发的努力，如包管理器系统，常常会导致自己的头痛，导致损坏的包、无法解决的依赖关系以及其他成为今天非常普遍的环境噩梦。虽然这些最初看起来像是相互独立的问题，但所有这些问题以及更多的问题都可以通过向问题投掷来解决。
 - en: What is a container?
+  id: totrans-15
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 什么是容器？
 - en: A container is almost like a virtual machine. In some senses, containers are
     to virtual machines as threads are to processes. A container is a lightweight
     environment that shares resources and a kernel with a host machine, while isolating
     itself from other containers or processes on the host. You may have encountered
     containers while working with technologies such as , perhaps the most well-known
     implementation of containers out there.
+  id: totrans-16
   prefs: []
   type: TYPE_NORMAL
+  zh: 容器几乎就像是一个虚拟机。在某些方面，容器与虚拟机的关系就像线程与进程的关系。容器是一个轻量级的环境，它与主机机器共享资源和内核，同时将自己与其他容器或主机上的进程隔离开来。你可能在工作过程中遇到过容器，比如
+    ，可能是最著名的容器实现之一。
 - en: Linux Namespaces
+  id: totrans-17
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: Linux 命名空间
 - en: Building a container from scratch
+  id: totrans-18
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 从零开始构建容器
 - en: 'Containers in the wild: Software distribution is a Snap'
+  id: totrans-19
   prefs:
   - PREF_H3
   type: TYPE_NORMAL
+  zh: 野外的容器：软件分发变得简单快捷
