@@ -1,6 +1,6 @@
-![](img/2ec7b272d235d77fe2ae88cbbd11cc0c_0.png)
-
 # 课程 P49：类型检查方法调用 🧪
+
+![](img/2ec7b272d235d77fe2ae88cbbd11cc0c_0.png)
 
 ![](img/2ec7b272d235d77fe2ae88cbbd11cc0c_2.png)
 

@@ -1,6 +1,6 @@
-![](img/7e4571b4f5f14519ce13fa30a5f89f0d_0.png)
-
 # 课程 P80：活跃度分析 🔍
+
+![](img/7e4571b4f5f14519ce13fa30a5f89f0d_0.png)
 
 ![](img/7e4571b4f5f14519ce13fa30a5f89f0d_2.png)
 

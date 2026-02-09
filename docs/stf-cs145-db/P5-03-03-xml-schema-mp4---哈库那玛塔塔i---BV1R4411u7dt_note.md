@@ -1,6 +1,6 @@
-![](img/0fd308dae54064fed2fcaebfb7bf7c02_1.png)
-
 # 课程 P5：XML Schema 入门教程 🗂️
+
+![](img/0fd308dae54064fed2fcaebfb7bf7c02_1.png)
 
 在本课程中，我们将学习 XML Schema（XSD），这是一种用于定义和验证 XML 文档结构和内容的强大语言。我们将了解其核心概念、基本语法，并通过示例演示其关键特性。
 

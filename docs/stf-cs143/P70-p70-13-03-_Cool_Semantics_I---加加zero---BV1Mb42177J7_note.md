@@ -1,6 +1,6 @@
-![](img/405beea43acd7403c0f39350b1d82837_0.png)
-
 # 课程 P70：Cool 语言操作语义详解 🧠
+
+![](img/405beea43acd7403c0f39350b1d82837_0.png)
 
 ![](img/405beea43acd7403c0f39350b1d82837_2.png)
 

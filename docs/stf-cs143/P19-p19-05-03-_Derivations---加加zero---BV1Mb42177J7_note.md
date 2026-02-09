@@ -1,6 +1,6 @@
-![](img/b9d6e8e5d5ebb2e99841f0b77aa7d0ea_0.png)
-
 # 编译原理 P19：推导与解析树 🌳
+
+![](img/b9d6e8e5d5ebb2e99841f0b77aa7d0ea_0.png)
 
 ![](img/b9d6e8e5d5ebb2e99841f0b77aa7d0ea_2.png)
 

@@ -1,6 +1,6 @@
-![](img/746d46bbfd5ded222258e39f095632e4_1.png)
-
 # 课程 P71：NAT 操作详解与行为规范 📡
+
+![](img/746d46bbfd5ded222258e39f095632e4_1.png)
 
 ![](img/746d46bbfd5ded222258e39f095632e4_3.png)
 

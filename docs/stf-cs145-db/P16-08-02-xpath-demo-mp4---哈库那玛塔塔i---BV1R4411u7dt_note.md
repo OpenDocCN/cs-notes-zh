@@ -1,6 +1,6 @@
-![](img/a3f43e46c606e8e4248c1148c66b1de1_1.png)
-
 # 课程 P16：XPath 查询实战教程 📚
+
+![](img/a3f43e46c606e8e4248c1148c66b1de1_1.png)
 
 ![](img/a3f43e46c606e8e4248c1148c66b1de1_3.png)
 

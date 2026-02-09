@@ -1,8 +1,8 @@
+# 课程三：C语言入门 - 基础篇 🚀
+
 ![](img/accff86ef85fbe5cdf56d9fe0496ac57_0.png)
 
 ![](img/accff86ef85fbe5cdf56d9fe0496ac57_2.png)
-
-# 课程三：C语言入门 - 基础篇 🚀
 
 ![](img/accff86ef85fbe5cdf56d9fe0496ac57_4.png)
 

@@ -1,6 +1,6 @@
-![](img/40e9a0d6692ba4cf6ccdb8d95f2b268f_0.png)
-
 # 课程 P51：自类型 (Self Type) 🧬
+
+![](img/40e9a0d6692ba4cf6ccdb8d95f2b268f_0.png)
 
 ![](img/40e9a0d6692ba4cf6ccdb8d95f2b268f_2.png)
 

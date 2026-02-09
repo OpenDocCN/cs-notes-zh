@@ -1,6 +1,6 @@
-![](img/93aae4725b814f060581b4dd04cff423_1.png)
-
 # 课程 P3：Lecture 3 - GFS 🗂️
+
+![](img/93aae4725b814f060581b4dd04cff423_1.png)
 
 ![](img/93aae4725b814f060581b4dd04cff423_3.png)
 

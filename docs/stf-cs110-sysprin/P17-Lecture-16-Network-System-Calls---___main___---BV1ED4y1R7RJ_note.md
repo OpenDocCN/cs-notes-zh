@@ -1,6 +1,6 @@
-![](img/1175ce1bb2aa4c74fdf727bbf8d79962_1.png)
-
 # 网络系统调用教程 P17：第16讲 🌐
+
+![](img/1175ce1bb2aa4c74fdf727bbf8d79962_1.png)
 
 ![](img/1175ce1bb2aa4c74fdf727bbf8d79962_3.png)
 

@@ -1,6 +1,6 @@
-![](img/b17bfb079039a891e4b53e4d5e7fbc52_1.png)
-
 # 🧠 课程 P16：内存管理（四）需求分页策略
+
+![](img/b17bfb079039a891e4b53e4d5e7fbc52_1.png)
 
 ![](img/b17bfb079039a891e4b53e4d5e7fbc52_3.png)
 

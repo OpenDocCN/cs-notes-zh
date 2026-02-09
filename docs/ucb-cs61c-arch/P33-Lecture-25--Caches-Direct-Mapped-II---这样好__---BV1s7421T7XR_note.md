@@ -1,3 +1,5 @@
+# 🧠 课程 P33：第 25 讲 - 直接映射缓存 II
+
 ![](img/e09edc0d20eca58ee1642b3606bac569_0.png)
 
 ![](img/e09edc0d20eca58ee1642b3606bac569_2.png)
@@ -5,8 +7,6 @@
 ![](img/e09edc0d20eca58ee1642b3606bac569_4.png)
 
 ![](img/e09edc0d20eca58ee1642b3606bac569_6.png)
-
-# 🧠 课程 P33：第 25 讲 - 直接映射缓存 II
 
 ![](img/e09edc0d20eca58ee1642b3606bac569_8.png)
 

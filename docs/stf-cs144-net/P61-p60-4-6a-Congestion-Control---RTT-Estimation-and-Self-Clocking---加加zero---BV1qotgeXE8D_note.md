@@ -1,6 +1,6 @@
-![](img/0fbdc1feba2d29043deae9fd1f8d9e51_1.png)
-
 # 课程 P61：TCP Tahoe 的 RTT 估计与自时钟机制 ⏱️
+
+![](img/0fbdc1feba2d29043deae9fd1f8d9e51_1.png)
 
 ![](img/0fbdc1feba2d29043deae9fd1f8d9e51_3.png)
 

@@ -1,6 +1,6 @@
-![](img/da2b355a1b244dd0d9e1cd44f03f14a8_0.png)
-
 # 课程 P47：类型环境 🧭
+
+![](img/da2b355a1b244dd0d9e1cd44f03f14a8_0.png)
 
 ![](img/da2b355a1b244dd0d9e1cd44f03f14a8_2.png)
 

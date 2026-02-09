@@ -1,6 +1,6 @@
-![](img/a5823530e230b7c3ee90fda214e7fefe_1.png)
-
 # 课程 P22：第 23 讲 - RCU 🧠
+
+![](img/a5823530e230b7c3ee90fda214e7fefe_1.png)
 
 ## 概述
 

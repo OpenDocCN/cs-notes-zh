@@ -1,6 +1,6 @@
-![](img/c1d034800c0af807ae950952e8100bcc_0.png)
-
 # 课程 P41：类型检查的实现 🧠
+
+![](img/c1d034800c0af807ae950952e8100bcc_0.png)
 
 ![](img/c1d034800c0af807ae950952e8100bcc_2.png)
 

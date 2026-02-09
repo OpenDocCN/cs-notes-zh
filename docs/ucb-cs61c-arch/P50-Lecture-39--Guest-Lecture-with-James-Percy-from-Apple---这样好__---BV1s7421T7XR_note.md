@@ -1,8 +1,8 @@
+# 课程 P50：第39讲 - 与苹果公司 James Percy 的客座讲座 🎤
+
 ![](img/413aad228c85794bf8548e968cbfc806_0.png)
 
 ![](img/413aad228c85794bf8548e968cbfc806_2.png)
-
-# 课程 P50：第39讲 - 与苹果公司 James Percy 的客座讲座 🎤
 
 ![](img/413aad228c85794bf8548e968cbfc806_4.png)
 

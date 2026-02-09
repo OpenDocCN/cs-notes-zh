@@ -1,6 +1,6 @@
-![](img/1f36551c3375db9362f0825eb07efd6a_0.png)
-
 # 课程 P90：Java 语言概览与历史 🚀
+
+![](img/1f36551c3375db9362f0825eb07efd6a_0.png)
 
 ![](img/1f36551c3375db9362f0825eb07efd6a_2.png)
 

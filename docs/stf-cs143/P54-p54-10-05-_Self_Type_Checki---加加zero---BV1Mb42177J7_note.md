@@ -1,6 +1,6 @@
-![](img/52a00ac9ed08d35df8545b4dd0dc4246_0.png)
-
 # 课程 P54：自类型检查规则详解 🧩
+
+![](img/52a00ac9ed08d35df8545b4dd0dc4246_0.png)
 
 ![](img/52a00ac9ed08d35df8545b4dd0dc4246_2.png)
 

@@ -1,6 +1,6 @@
-![](img/ab0ee62acff36dabdf90dbc454449f00_0.png)
-
 # 课程 P44：第33讲：虚拟内存 II：缺页、多级页表、中断/异常 🧠💾
+
+![](img/ab0ee62acff36dabdf90dbc454449f00_0.png)
 
 ![](img/ab0ee62acff36dabdf90dbc454449f00_2.png)
 

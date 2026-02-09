@@ -1,6 +1,6 @@
-![](img/b722cc16ca1d3c2df0cf7fd1160cee9b_0.png)
-
 # 计算机网络课程 P31：TCP连接关闭的有限状态机详解 🔄
+
+![](img/b722cc16ca1d3c2df0cf7fd1160cee9b_0.png)
 
 ![](img/b722cc16ca1d3c2df0cf7fd1160cee9b_2.png)
 

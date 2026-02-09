@@ -1,8 +1,8 @@
+# 课程 P18：上下文无关文法入门 🧩
+
 ![](img/1e5ce4c8992dfbc38a70ebd7283d1697_0.png)
 
 ![](img/1e5ce4c8992dfbc38a70ebd7283d1697_2.png)
-
-# 课程 P18：上下文无关文法入门 🧩
 
 ![](img/1e5ce4c8992dfbc38a70ebd7283d1697_3.png)
 

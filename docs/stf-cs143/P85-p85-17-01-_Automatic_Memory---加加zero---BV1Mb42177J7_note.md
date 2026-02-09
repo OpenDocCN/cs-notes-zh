@@ -1,6 +1,6 @@
-![](img/b3dbe3c5a90889f5a01c28bfb795b0b5_0.png)
-
 # 课程 P85：自动内存管理概述 🧠
+
+![](img/b3dbe3c5a90889f5a01c28bfb795b0b5_0.png)
 
 ![](img/b3dbe3c5a90889f5a01c28bfb795b0b5_2.png)
 

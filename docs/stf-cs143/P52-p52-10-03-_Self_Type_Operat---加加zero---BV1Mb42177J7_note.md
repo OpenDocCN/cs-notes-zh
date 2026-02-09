@@ -1,6 +1,6 @@
-![](img/acaf2a699bc453ed5ca36d97fb9a6480_0.png)
-
 # 课程 P52：Self 类型操作详解 🧩
+
+![](img/acaf2a699bc453ed5ca36d97fb9a6480_0.png)
 
 ![](img/acaf2a699bc453ed5ca36d97fb9a6480_2.png)
 

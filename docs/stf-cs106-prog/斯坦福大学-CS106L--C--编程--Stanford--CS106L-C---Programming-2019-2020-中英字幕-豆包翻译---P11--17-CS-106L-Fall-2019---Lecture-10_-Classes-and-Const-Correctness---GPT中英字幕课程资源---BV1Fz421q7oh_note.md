@@ -1,6 +1,6 @@
-![](img/918ecf73de3563c49c625cc13afa9fce_1.png)
-
 # 斯坦福大学《CS106L：C++编程》课程笔记 - 第10讲：类与常量正确性 🧱
+
+![](img/918ecf73de3563c49c625cc13afa9fce_1.png)
 
 ![](img/918ecf73de3563c49c625cc13afa9fce_3.png)
 

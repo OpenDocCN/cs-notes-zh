@@ -1,6 +1,6 @@
-![](img/d35af73ff360a5f3025348a9f8f06dcf_0.png)
-
 # 课程 P24：递归下降解析算法详解 🧠
+
+![](img/d35af73ff360a5f3025348a9f8f06dcf_0.png)
 
 ![](img/d35af73ff360a5f3025348a9f8f06dcf_2.png)
 

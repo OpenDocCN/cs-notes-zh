@@ -1,6 +1,6 @@
-![](img/7965704d71d9db93d38e04f1b91c10e2_1.png)
-
 # 计算机网络课程 P59：TCP Tahoe 拥塞控制 🚦
+
+![](img/7965704d71d9db93d38e04f1b91c10e2_1.png)
 
 ![](img/7965704d71d9db93d38e04f1b91c10e2_3.png)
 

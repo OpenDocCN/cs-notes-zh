@@ -1,6 +1,6 @@
-![](img/812eabf981ee557eb661b648da462612_1.png)
-
 # 课程 P54：TCP 拥塞控制基础 2 🚦
+
+![](img/812eabf981ee557eb661b648da462612_1.png)
 
 ![](img/812eabf981ee557eb661b648da462612_3.png)
 

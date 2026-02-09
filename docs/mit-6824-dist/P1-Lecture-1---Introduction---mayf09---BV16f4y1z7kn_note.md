@@ -1,8 +1,8 @@
+# 课程 P1：分布式系统导论 🚀
+
 ![](img/a8a316345ffe3a265147d0d4ccc47d2b_1.png)
 
 ![](img/a8a316345ffe3a265147d0d4ccc47d2b_3.png)
-
-# 课程 P1：分布式系统导论 🚀
 
 ![](img/a8a316345ffe3a265147d0d4ccc47d2b_5.png)
 

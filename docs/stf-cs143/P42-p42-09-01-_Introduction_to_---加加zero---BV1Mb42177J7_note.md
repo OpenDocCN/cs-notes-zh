@@ -1,6 +1,6 @@
-![](img/dcd33b95e608a3d8bb1a0cdfce19017e_0.png)
-
 # 编译器原理课程 P42：语义分析入门 🧠
+
+![](img/dcd33b95e608a3d8bb1a0cdfce19017e_0.png)
 
 ![](img/dcd33b95e608a3d8bb1a0cdfce19017e_2.png)
 

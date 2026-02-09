@@ -1,6 +1,6 @@
-![](img/0d2f85fcf8143e61221db4908e1d113e_0.png)
-
 # 课程P81：寄存器分配基础 🧠
+
+![](img/0d2f85fcf8143e61221db4908e1d113e_0.png)
 
 ![](img/0d2f85fcf8143e61221db4908e1d113e_2.png)
 

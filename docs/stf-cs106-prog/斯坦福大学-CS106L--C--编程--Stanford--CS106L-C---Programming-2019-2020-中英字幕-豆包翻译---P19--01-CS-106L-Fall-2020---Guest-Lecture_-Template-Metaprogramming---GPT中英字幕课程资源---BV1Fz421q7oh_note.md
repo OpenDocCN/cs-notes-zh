@@ -1,10 +1,10 @@
+# 课程19：模板元编程入门 🧠
+
 ![](img/0bffc65abfa4751bc254b22eb1eeaefd_0.png)
 
 ![](img/0bffc65abfa4751bc254b22eb1eeaefd_2.png)
 
 ![](img/0bffc65abfa4751bc254b22eb1eeaefd_4.png)
-
-# 课程19：模板元编程入门 🧠
 
 ![](img/0bffc65abfa4751bc254b22eb1eeaefd_6.png)
 

@@ -1,6 +1,6 @@
-![](img/bf8c88bb2b20666aeaf2faafaa24b186_0.png)
-
 # 课程 P77：全局常量传播详解 🧮
+
+![](img/bf8c88bb2b20666aeaf2faafaa24b186_0.png)
 
 ![](img/bf8c88bb2b20666aeaf2faafaa24b186_2.png)
 

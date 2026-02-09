@@ -1,6 +1,6 @@
-![](img/80370513bb189525cc4ec31ccae1e213_0.png)
-
 # 课程 P65：代码生成基础 🧩
+
+![](img/80370513bb189525cc4ec31ccae1e213_0.png)
 
 ![](img/80370513bb189525cc4ec31ccae1e213_2.png)
 

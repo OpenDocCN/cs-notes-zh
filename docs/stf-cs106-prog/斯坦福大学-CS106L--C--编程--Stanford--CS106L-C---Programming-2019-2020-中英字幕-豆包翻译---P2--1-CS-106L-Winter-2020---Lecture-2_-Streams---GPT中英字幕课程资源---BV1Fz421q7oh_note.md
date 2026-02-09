@@ -1,10 +1,10 @@
+# 斯坦福大学《CS106L：C++编程》课程笔记 - 第2讲：流 (Streams) 📚
+
 ![](img/9fab00c46a74e6ad5591779d88bfd206_0.png)
 
 ![](img/9fab00c46a74e6ad5591779d88bfd206_1.png)
 
 ![](img/9fab00c46a74e6ad5591779d88bfd206_2.png)
-
-# 斯坦福大学《CS106L：C++编程》课程笔记 - 第2讲：流 (Streams) 📚
 
 ![](img/9fab00c46a74e6ad5591779d88bfd206_3.png)
 

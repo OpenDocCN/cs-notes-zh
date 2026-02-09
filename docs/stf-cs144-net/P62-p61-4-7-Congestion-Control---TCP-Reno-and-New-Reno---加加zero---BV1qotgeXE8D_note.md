@@ -1,6 +1,6 @@
-![](img/03fa7517eade8154b5d78d984f3da76a_1.png)
-
 # 课程 P62：TCP 拥塞控制 - Reno 与 New Reno 🚦
+
+![](img/03fa7517eade8154b5d78d984f3da76a_1.png)
 
 ![](img/03fa7517eade8154b5d78d984f3da76a_3.png)
 

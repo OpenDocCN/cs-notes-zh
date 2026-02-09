@@ -1,6 +1,6 @@
-![](img/186d56cf3cf36e03a3d35caf5aa63c69_1.png)
-
 # 课程8：竞争条件、死锁与数据完整性 🧩
+
+![](img/186d56cf3cf36e03a3d35caf5aa63c69_1.png)
 
 ![](img/186d56cf3cf36e03a3d35caf5aa63c69_3.png)
 

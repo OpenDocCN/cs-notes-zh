@@ -1,6 +1,6 @@
-![](img/a94abeb85355b2398cb0ce5d0e9938b1_0.png)
-
 # 编译原理课程 P8：词法分析中的前瞻问题 🔍
+
+![](img/a94abeb85355b2398cb0ce5d0e9938b1_0.png)
 
 ![](img/a94abeb85355b2398cb0ce5d0e9938b1_2.png)
 

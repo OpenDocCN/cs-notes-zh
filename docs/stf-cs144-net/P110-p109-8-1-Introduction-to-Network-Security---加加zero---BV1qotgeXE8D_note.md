@@ -1,6 +1,6 @@
-![](img/ea8c43ba78f675f9c727a42c34d4b408_1.png)
-
 # 课程 P110：网络安全入门 🔐
+
+![](img/ea8c43ba78f675f9c727a42c34d4b408_1.png)
 
 ![](img/ea8c43ba78f675f9c727a42c34d4b408_3.png)
 

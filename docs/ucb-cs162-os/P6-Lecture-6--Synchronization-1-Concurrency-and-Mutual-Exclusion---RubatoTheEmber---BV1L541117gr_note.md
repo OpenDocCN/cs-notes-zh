@@ -1,6 +1,6 @@
-![](img/92632d7d853797ca01f9a2ab7bcecff1_1.png)
-
 # 操作系统课程 P6：第六讲：同步 1 并发与互斥 🧵
+
+![](img/92632d7d853797ca01f9a2ab7bcecff1_1.png)
 
 ![](img/92632d7d853797ca01f9a2ab7bcecff1_3.png)
 

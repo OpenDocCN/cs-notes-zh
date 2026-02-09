@@ -1,6 +1,6 @@
-![](img/520ebfff5c4dc5248a9c0481f7d19e4b_0.png)
-
 # 课程P96：Java语言的其他主题 🧩
+
+![](img/520ebfff5c4dc5248a9c0481f7d19e4b_0.png)
 
 ![](img/520ebfff5c4dc5248a9c0481f7d19e4b_2.png)
 

@@ -1,8 +1,8 @@
+# 课程 P30：第23讲：RISC-V 五级流水线 III - 冒险处理 🚧
+
 ![](img/0967f31ff5224396c692e8fbbdc5f20c_0.png)
 
 ![](img/0967f31ff5224396c692e8fbbdc5f20c_2.png)
-
-# 课程 P30：第23讲：RISC-V 五级流水线 III - 冒险处理 🚧
 
 ![](img/0967f31ff5224396c692e8fbbdc5f20c_4.png)
 

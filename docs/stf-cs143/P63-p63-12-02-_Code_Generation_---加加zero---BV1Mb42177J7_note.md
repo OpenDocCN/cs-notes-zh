@@ -1,6 +1,6 @@
-![](img/8fbf7409f8462efcbe74293ff1264ff2_0.png)
-
 # 课程 P63：代码生成基础 🧠
+
+![](img/8fbf7409f8462efcbe74293ff1264ff2_0.png)
 
 ![](img/8fbf7409f8462efcbe74293ff1264ff2_2.png)
 

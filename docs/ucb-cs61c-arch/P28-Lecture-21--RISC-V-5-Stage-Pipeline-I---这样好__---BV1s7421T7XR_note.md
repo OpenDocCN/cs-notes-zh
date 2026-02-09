@@ -1,3 +1,5 @@
+# 课程 P28：第21讲 - RISC-V 五级流水线 I 🚀
+
 ![](img/ec4a5cd07c1d687808d1979566f0bbf9_0.png)
 
 ![](img/ec4a5cd07c1d687808d1979566f0bbf9_2.png)
@@ -5,8 +7,6 @@
 ![](img/ec4a5cd07c1d687808d1979566f0bbf9_4.png)
 
 ![](img/ec4a5cd07c1d687808d1979566f0bbf9_6.png)
-
-# 课程 P28：第21讲 - RISC-V 五级流水线 I 🚀
 
 ![](img/ec4a5cd07c1d687808d1979566f0bbf9_8.png)
 

@@ -1,6 +1,6 @@
-![](img/5dcaeac41a1e6919ba119d5aa2a171ac_1.png)
-
 # 网络地址转换（NAT）类型详解 🧩
+
+![](img/5dcaeac41a1e6919ba119d5aa2a171ac_1.png)
 
 ![](img/5dcaeac41a1e6919ba119d5aa2a171ac_3.png)
 

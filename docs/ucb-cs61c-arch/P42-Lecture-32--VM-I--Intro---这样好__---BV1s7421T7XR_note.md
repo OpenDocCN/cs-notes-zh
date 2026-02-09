@@ -1,8 +1,8 @@
+# 课程 P42：第 32 讲 - 虚拟内存 I：简介 🧠💾
+
 ![](img/0c47edde43d181ad94ddd132116fb822_0.png)
 
 ![](img/0c47edde43d181ad94ddd132116fb822_2.png)
-
-# 课程 P42：第 32 讲 - 虚拟内存 I：简介 🧠💾
 
 ![](img/0c47edde43d181ad94ddd132116fb822_4.png)
 

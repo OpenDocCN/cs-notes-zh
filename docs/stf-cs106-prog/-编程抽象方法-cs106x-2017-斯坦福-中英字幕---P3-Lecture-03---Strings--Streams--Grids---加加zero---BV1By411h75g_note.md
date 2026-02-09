@@ -1,6 +1,6 @@
-![](img/f2627df11c3090d02a6ac56b95d6e7fd_1.png)
-
 # 课程03：字符串、流与网格 🧵📁
+
+![](img/f2627df11c3090d02a6ac56b95d6e7fd_1.png)
 
 ![](img/f2627df11c3090d02a6ac56b95d6e7fd_3.png)
 

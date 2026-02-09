@@ -1,6 +1,6 @@
-![](img/08eba474bdfebc298520b33e3a538b8e_0.png)
-
 # 📘 课程名称：CS 106a Java教程 - 第15讲：布尔逻辑与数组进阶
+
+![](img/08eba474bdfebc298520b33e3a538b8e_0.png)
 
 ![](img/08eba474bdfebc298520b33e3a538b8e_2.png)
 

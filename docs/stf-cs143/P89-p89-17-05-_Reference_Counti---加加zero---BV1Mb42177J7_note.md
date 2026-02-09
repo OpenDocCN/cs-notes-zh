@@ -1,8 +1,8 @@
+# 课程 P89：引用计数垃圾回收 🧮
+
 ![](img/7ccd6a3756bec42a183c4fb37a8c4109_0.png)
 
 ![](img/7ccd6a3756bec42a183c4fb37a8c4109_2.png)
-
-# 课程 P89：引用计数垃圾回收 🧮
 
 ![](img/7ccd6a3756bec42a183c4fb37a8c4109_4.png)
 

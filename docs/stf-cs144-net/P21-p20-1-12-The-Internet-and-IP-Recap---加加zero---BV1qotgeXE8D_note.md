@@ -1,6 +1,6 @@
-![](img/140aee6f71744eaed2dd828baae54bb1_0.png)
-
 # 课程 P21：互联网与IP协议回顾 🌐
+
+![](img/140aee6f71744eaed2dd828baae54bb1_0.png)
 
 ![](img/140aee6f71744eaed2dd828baae54bb1_2.png)
 

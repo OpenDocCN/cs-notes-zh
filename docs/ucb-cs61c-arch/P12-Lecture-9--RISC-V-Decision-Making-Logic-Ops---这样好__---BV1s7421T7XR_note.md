@@ -1,6 +1,6 @@
-![](img/5ad044ae1b4be1f8ef4ab13152829c1b_0.png)
-
 # 课程 P12：Lecture 9： RISC-V 决策与逻辑运算 🧠💡
+
+![](img/5ad044ae1b4be1f8ef4ab13152829c1b_0.png)
 
 ![](img/5ad044ae1b4be1f8ef4ab13152829c1b_2.png)
 

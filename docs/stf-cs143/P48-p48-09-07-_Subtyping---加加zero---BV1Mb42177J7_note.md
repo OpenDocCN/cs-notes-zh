@@ -1,6 +1,6 @@
-![](img/50bc253544f22551c6d192afcbe651bb_0.png)
-
 # 课程 P48：子类型化 🧬
+
+![](img/50bc253544f22551c6d192afcbe651bb_0.png)
 
 ![](img/50bc253544f22551c6d192afcbe651bb_2.png)
 

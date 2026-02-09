@@ -1,6 +1,6 @@
-![](img/f966dd7181233ee31acc169f04ddee9c_1.png)
-
 # 网络安全课程 P117：拒绝服务攻击 (DoS/DDoS) 🛡️
+
+![](img/f966dd7181233ee31acc169f04ddee9c_1.png)
 
 ![](img/f966dd7181233ee31acc169f04ddee9c_3.png)
 

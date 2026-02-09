@@ -1,6 +1,6 @@
-![](img/d3bcfa786646957a0fcdd6cb3f71d15b_1.png)
-
 # 课程 P60：TCP RTT 估计与自我时钟机制 🕐
+
+![](img/d3bcfa786646957a0fcdd6cb3f71d15b_1.png)
 
 ![](img/d3bcfa786646957a0fcdd6cb3f71d15b_3.png)
 

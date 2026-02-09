@@ -1,6 +1,6 @@
-![](img/f6c4cf6f6acdc9fbdb98280ebf30c638_1.png)
-
 # 🧠 操作系统课程 P10：调度概念与经典策略
+
+![](img/f6c4cf6f6acdc9fbdb98280ebf30c638_1.png)
 
 ![](img/f6c4cf6f6acdc9fbdb98280ebf30c638_3.png)
 

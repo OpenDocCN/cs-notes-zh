@@ -1,6 +1,6 @@
-![](img/f0745d9b679e70a58cf34ae09fdb34b6_0.png)
-
 # 课程27：缓存 - 组相联与缓存性能 🧠💾
+
+![](img/f0745d9b679e70a58cf34ae09fdb34b6_0.png)
 
 ![](img/f0745d9b679e70a58cf34ae09fdb34b6_2.png)
 

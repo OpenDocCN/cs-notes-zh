@@ -1,6 +1,6 @@
-![](img/beb13ea5c1cb9a7741a87d161f9b26b2_0.png)
-
 # 编译器设计课程 P44：符号表 🗂️
+
+![](img/beb13ea5c1cb9a7741a87d161f9b26b2_0.png)
 
 ![](img/beb13ea5c1cb9a7741a87d161f9b26b2_2.png)
 

@@ -1,6 +1,6 @@
-![](img/b7f7f95dfb31e6967bb48ac551b7f059_1.png)
-
 # Cool 语言教程 P6：一个综合示例 🧩
+
+![](img/b7f7f95dfb31e6967bb48ac551b7f059_1.png)
 
 ![](img/b7f7f95dfb31e6967bb48ac551b7f059_3.png)
 

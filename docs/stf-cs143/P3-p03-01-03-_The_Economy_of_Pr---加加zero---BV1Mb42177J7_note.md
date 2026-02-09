@@ -1,8 +1,8 @@
+# 编程语言经济学 📈 P3
+
 ![](img/c2f9b3503602ccfa04e9db5d1fb3a576_0.png)
 
 ![](img/c2f9b3503602ccfa04e9db5d1fb3a576_2.png)
-
-# 编程语言经济学 📈 P3
 
 ![](img/c2f9b3503602ccfa04e9db5d1fb3a576_3.png)
 

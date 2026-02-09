@@ -1,6 +1,6 @@
-![](img/08eac33950f7757e6b018dbb68a571e1_0.png)
-
 # 课程 P45：Lecture 34： VM III： TLB 🧠💾
+
+![](img/08eac33950f7757e6b018dbb68a571e1_0.png)
 
 ![](img/08eac33950f7757e6b018dbb68a571e1_2.png)
 

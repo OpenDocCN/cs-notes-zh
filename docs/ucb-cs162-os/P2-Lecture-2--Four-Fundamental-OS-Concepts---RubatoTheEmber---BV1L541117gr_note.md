@@ -1,8 +1,8 @@
+# 操作系统基础：第二讲 - 四个核心概念 🧠
+
 ![](img/80deaa59936768fb1fcdc3b7bf8785ea_1.png)
 
 ![](img/80deaa59936768fb1fcdc3b7bf8785ea_3.png)
-
-# 操作系统基础：第二讲 - 四个核心概念 🧠
 
 ![](img/80deaa59936768fb1fcdc3b7bf8785ea_5.png)
 

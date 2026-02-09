@@ -1,6 +1,6 @@
-![](img/6ff230fdb1e6accc51c91482e0891119_1.png)
-
 # 课程09：递归回溯（二）与迷宫求解 🧩
+
+![](img/6ff230fdb1e6accc51c91482e0891119_1.png)
 
 ![](img/6ff230fdb1e6accc51c91482e0891119_3.png)
 

@@ -1,8 +1,8 @@
+# 🚀 课程 P29：Lecture 22： RISC-V 五级流水线 II - 冒险
+
 ![](img/fa4fcf60c72d4fc40e1f0efbfb6e3287_0.png)
 
 ![](img/fa4fcf60c72d4fc40e1f0efbfb6e3287_2.png)
-
-# 🚀 课程 P29：Lecture 22： RISC-V 五级流水线 II - 冒险
 
 ![](img/fa4fcf60c72d4fc40e1f0efbfb6e3287_4.png)
 

@@ -1,6 +1,6 @@
-![](img/4e14881ad2e138a5f6c64f7d5ff9681d_0.png)
-
 # 课程 P23：递归下降解析算法 🧠
+
+![](img/4e14881ad2e138a5f6c64f7d5ff9681d_0.png)
 
 ![](img/4e14881ad2e138a5f6c64f7d5ff9681d_2.png)
 

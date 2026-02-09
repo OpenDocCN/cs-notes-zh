@@ -1,6 +1,6 @@
-![](img/bca459e3ec5f8f18d2409acbb904c678_0.png)
-
 # 编译原理课程 P37：SLR 解析算法详解 🧩
+
+![](img/bca459e3ec5f8f18d2409acbb904c678_0.png)
 
 ![](img/bca459e3ec5f8f18d2409acbb904c678_2.png)
 

@@ -1,6 +1,6 @@
-![](img/0cec979bba8b4299e5a5a331df65fdc1_0.png)
-
 # 编译器原理 P46：类型检查入门 🧠
+
+![](img/0cec979bba8b4299e5a5a331df65fdc1_0.png)
 
 ![](img/0cec979bba8b4299e5a5a331df65fdc1_2.png)
 

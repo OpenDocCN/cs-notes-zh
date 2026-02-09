@@ -1,6 +1,6 @@
-![](img/a6a8b4fec2e38ec74d4c9ce6a0059e4a_0.png)
-
 # 课程 P21：第22讲 - Meltdown 攻击详解 🧨
+
+![](img/a6a8b4fec2e38ec74d4c9ce6a0059e4a_0.png)
 
 ![](img/a6a8b4fec2e38ec74d4c9ce6a0059e4a_2.png)
 

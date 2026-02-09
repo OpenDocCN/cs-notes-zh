@@ -1,6 +1,6 @@
-![](img/f50c184769ea64a2b64fcd4bbac6e714_1.png)
-
 # 🕸️ 课程 P16：第15讲 网络与客户端
+
+![](img/f50c184769ea64a2b64fcd4bbac6e714_1.png)
 
 ![](img/f50c184769ea64a2b64fcd4bbac6e714_3.png)
 

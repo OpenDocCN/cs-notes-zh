@@ -1,6 +1,6 @@
-![](img/65cde3ea2a06440d50b8a7aca51197c0_0.png)
-
 # 🧠 课程 P25：第19讲 - RISC-V 单周期数据通路 II
+
+![](img/65cde3ea2a06440d50b8a7aca51197c0_0.png)
 
 在本节课中，我们将继续学习如何构建一个RISC-V单周期CPU的数据通路。我们将重点关注如何实现加载（Load）、存储（Store）、分支（Branch）和跳转（Jump）等指令，并理解即时数生成（Immediate Generation）模块的工作原理。
 

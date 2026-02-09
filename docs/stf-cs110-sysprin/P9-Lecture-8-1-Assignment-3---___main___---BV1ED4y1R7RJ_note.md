@@ -1,8 +1,8 @@
+# 课程 P9：作业 3 详解 - 多进程编程实战 🚀
+
 ![](img/4aaf83bd6fe015b6bc46385fddf81dff_1.png)
 
 ![](img/4aaf83bd6fe015b6bc46385fddf81dff_2.png)
-
-# 课程 P9：作业 3 详解 - 多进程编程实战 🚀
 
 ![](img/4aaf83bd6fe015b6bc46385fddf81dff_4.png)
 

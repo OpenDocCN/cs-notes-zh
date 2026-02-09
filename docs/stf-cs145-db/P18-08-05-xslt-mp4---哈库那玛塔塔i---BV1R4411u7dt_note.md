@@ -1,6 +1,6 @@
-![](img/ddea30cfec8b93a1142e2df3d1091acb_1.png)
-
 # 课程 P18：XSLT 查询语言入门教程 📖
+
+![](img/ddea30cfec8b93a1142e2df3d1091acb_1.png)
 
 在本课程中，我们将学习如何使用 XSLT（可扩展样式表语言转换）来查询和转换 XML 数据。XSLT 是一种基于模板匹配和转换的查询语言，其工作方式与 SQL、XPath 或 XQuery 有显著不同。
 

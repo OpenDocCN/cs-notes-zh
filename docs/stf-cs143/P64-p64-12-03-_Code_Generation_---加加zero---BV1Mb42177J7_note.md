@@ -1,6 +1,6 @@
-![](img/eaedb8ccd78218006ca61156c1c288b5_0.png)
-
 # 编译器构建课程 P64：简单语言的代码生成（续）🚀
+
+![](img/eaedb8ccd78218006ca61156c1c288b5_0.png)
 
 ![](img/eaedb8ccd78218006ca61156c1c288b5_2.png)
 

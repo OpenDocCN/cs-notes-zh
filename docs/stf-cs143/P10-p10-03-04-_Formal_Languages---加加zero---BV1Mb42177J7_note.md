@@ -1,6 +1,6 @@
-![](img/0947a3dfdbc506d99738775da4b76de5_0.png)
-
 # 课程 P10：形式语言基础 📚
+
+![](img/0947a3dfdbc506d99738775da4b76de5_0.png)
 
 ![](img/0947a3dfdbc506d99738775da4b76de5_2.png)
 

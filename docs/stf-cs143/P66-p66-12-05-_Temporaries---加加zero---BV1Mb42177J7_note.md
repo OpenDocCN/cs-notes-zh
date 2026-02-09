@@ -1,6 +1,6 @@
-![](img/96096fdf2dcca767b5775da9b4c72c79_0.png)
-
 # 课程 P66：临时变量管理优化 🧠
+
+![](img/96096fdf2dcca767b5775da9b4c72c79_0.png)
 
 ![](img/96096fdf2dcca767b5775da9b4c72c79_2.png)
 

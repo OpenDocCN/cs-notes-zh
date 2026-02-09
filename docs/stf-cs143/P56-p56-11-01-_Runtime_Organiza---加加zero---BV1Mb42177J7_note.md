@@ -1,6 +1,6 @@
-![](img/7af9c6c94efb575aafd2e6364d2af361_0.png)
-
 # 课程 P56：运行时组织基础 🧠
+
+![](img/7af9c6c94efb575aafd2e6364d2af361_0.png)
 
 ![](img/7af9c6c94efb575aafd2e6364d2af361_2.png)
 

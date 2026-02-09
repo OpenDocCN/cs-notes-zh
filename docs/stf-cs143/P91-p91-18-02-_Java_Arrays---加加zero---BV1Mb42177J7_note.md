@@ -1,6 +1,6 @@
-![](img/59138dd2f6b7a4589d5741bae3838a3f_0.png)
-
 # 课程 P91：Java 数组与子类型 🧩
+
+![](img/59138dd2f6b7a4589d5741bae3838a3f_0.png)
 
 ![](img/59138dd2f6b7a4589d5741bae3838a3f_2.png)
 

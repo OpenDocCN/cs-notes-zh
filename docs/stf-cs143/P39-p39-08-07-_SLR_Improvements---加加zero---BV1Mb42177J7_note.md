@@ -1,6 +1,6 @@
-![](img/3b9b7f55bc9e4f1c75165fac5b19208a_0.png)
-
 # 编译原理课程 P39：SLR解析算法改进与完整实现 🚀
+
+![](img/3b9b7f55bc9e4f1c75165fac5b19208a_0.png)
 
 ![](img/3b9b7f55bc9e4f1c75165fac5b19208a_2.png)
 

@@ -1,3 +1,5 @@
+# 课程 P19：第18讲 MapReduce 🗺️➡️📊
+
 ![](img/a7a304e14cd2dd38cb9686e50bf4fc64_1.png)
 
 ![](img/a7a304e14cd2dd38cb9686e50bf4fc64_3.png)
@@ -5,8 +7,6 @@
 ![](img/a7a304e14cd2dd38cb9686e50bf4fc64_5.png)
 
 ![](img/a7a304e14cd2dd38cb9686e50bf4fc64_6.png)
-
-# 课程 P19：第18讲 MapReduce 🗺️➡️📊
 
 在本节课中，我们将学习 MapReduce 算法的核心概念、工作原理，并通过一个具体的单词计数示例来理解其处理流程。我们还将了解如何将其应用于分布式计算环境，并初步探讨相关编程作业的框架。
 

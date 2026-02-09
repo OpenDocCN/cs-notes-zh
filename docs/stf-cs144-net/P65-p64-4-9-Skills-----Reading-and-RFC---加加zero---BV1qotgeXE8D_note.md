@@ -1,6 +1,6 @@
-![](img/f5e27335cbae3390b330be5c85c07856_1.png)
-
 # 课程P65：RFC阅读指南 📖
+
+![](img/f5e27335cbae3390b330be5c85c07856_1.png)
 
 ![](img/f5e27335cbae3390b330be5c85c07856_3.png)
 

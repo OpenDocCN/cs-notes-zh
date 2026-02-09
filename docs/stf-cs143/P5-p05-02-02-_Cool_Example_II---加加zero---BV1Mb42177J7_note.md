@@ -1,6 +1,6 @@
-![](img/fe6b97fb827ac57c0b910dbce7886ef9_1.png)
-
 # Cool编程教程 P5：阶乘函数实现 🧮
+
+![](img/fe6b97fb827ac57c0b910dbce7886ef9_1.png)
 
 ![](img/fe6b97fb827ac57c0b910dbce7886ef9_3.png)
 

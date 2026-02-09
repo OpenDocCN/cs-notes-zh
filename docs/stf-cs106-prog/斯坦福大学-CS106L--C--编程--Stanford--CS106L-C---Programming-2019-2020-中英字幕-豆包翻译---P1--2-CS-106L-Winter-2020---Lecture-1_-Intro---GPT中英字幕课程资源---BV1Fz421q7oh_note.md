@@ -1,3 +1,5 @@
+# 课程1：C++编程入门与课程概述 🚀
+
 ![](img/294bf5f05c7ec16b3c084ae475eb7714_1.png)
 
 ![](img/294bf5f05c7ec16b3c084ae475eb7714_2.png)
@@ -9,8 +11,6 @@
 ![](img/294bf5f05c7ec16b3c084ae475eb7714_7.png)
 
 ![](img/294bf5f05c7ec16b3c084ae475eb7714_9.png)
-
-# 课程1：C++编程入门与课程概述 🚀
 
 ![](img/294bf5f05c7ec16b3c084ae475eb7714_11.png)
 

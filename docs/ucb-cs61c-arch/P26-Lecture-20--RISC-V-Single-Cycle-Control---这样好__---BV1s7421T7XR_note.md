@@ -1,10 +1,10 @@
+# 课程 P26：第20讲 - RISC-V 单周期控制 🎛️
+
 ![](img/d6daca577d9bcbb77229c0d1be50d29d_0.png)
 
 ![](img/d6daca577d9bcbb77229c0d1be50d29d_2.png)
 
 ![](img/d6daca577d9bcbb77229c0d1be50d29d_4.png)
-
-# 课程 P26：第20讲 - RISC-V 单周期控制 🎛️
 
 ![](img/d6daca577d9bcbb77229c0d1be50d29d_6.png)
 

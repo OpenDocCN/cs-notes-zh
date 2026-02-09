@@ -1,6 +1,6 @@
-![](img/888f4959ddbb2f061b653e72a9b8e495_1.png)
-
 # CS162 第三讲：进程、系统调用与Fork 🧠
+
+![](img/888f4959ddbb2f061b653e72a9b8e495_1.png)
 
 ![](img/888f4959ddbb2f061b653e72a9b8e495_3.png)
 

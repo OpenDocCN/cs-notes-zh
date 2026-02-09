@@ -1,6 +1,6 @@
-![](img/0baa47cd25b412e1958ee25cc838876a_1.png)
-
 # 课程09：字符串（Strings）📝
+
+![](img/0baa47cd25b412e1958ee25cc838876a_1.png)
 
 ![](img/0baa47cd25b412e1958ee25cc838876a_3.png)
 

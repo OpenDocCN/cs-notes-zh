@@ -1,6 +1,6 @@
-![](img/cc8ec640334d32b094d4214d0c7add9e_0.png)
-
 # 编译器实现 P7：词法分析入门 🧩
+
+![](img/cc8ec640334d32b094d4214d0c7add9e_0.png)
 
 ![](img/cc8ec640334d32b094d4214d0c7add9e_2.png)
 

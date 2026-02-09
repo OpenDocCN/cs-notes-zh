@@ -1,8 +1,8 @@
+# 课程 P57：多流情况下的AIMD算法 🚦
+
 ![](img/7bfc4f744e76574e5b1b5a6a9013232b_0.png)
 
 ![](img/7bfc4f744e76574e5b1b5a6a9013232b_2.png)
-
-# 课程 P57：多流情况下的AIMD算法 🚦
 
 ![](img/7bfc4f744e76574e5b1b5a6a9013232b_4.png)
 

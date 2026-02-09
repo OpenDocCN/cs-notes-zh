@@ -1,6 +1,6 @@
-![](img/85f374742b322b2010aae91dcc01ca3c_0.png)
-
 # 课程 P12：使用正则表达式构建词法规范 🧩
+
+![](img/85f374742b322b2010aae91dcc01ca3c_0.png)
 
 ![](img/85f374742b322b2010aae91dcc01ca3c_2.png)
 

@@ -1,6 +1,6 @@
-![](img/4e81241db8a3440b8052841f4dbb2c15_0.png)
-
 # 课程 P95：Java 线程入门 🧵
+
+![](img/4e81241db8a3440b8052841f4dbb2c15_0.png)
 
 ![](img/4e81241db8a3440b8052841f4dbb2c15_2.png)
 

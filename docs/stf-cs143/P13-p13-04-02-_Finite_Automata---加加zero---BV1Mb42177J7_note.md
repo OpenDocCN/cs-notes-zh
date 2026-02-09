@@ -1,6 +1,6 @@
-![](img/7a44d9ddea5bb4f8023d629817c876d4_0.png)
-
 # 课程 P13：有限自动机 🧠
+
+![](img/7a44d9ddea5bb4f8023d629817c876d4_0.png)
 
 ![](img/7a44d9ddea5bb4f8023d629817c876d4_2.png)
 

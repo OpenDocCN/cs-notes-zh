@@ -1,6 +1,6 @@
-![](img/da741dc1bf43bb59db32d73201d5416a_1.png)
-
 # 数据库系统原理 P14：07-02-功能依赖 🧩
+
+![](img/da741dc1bf43bb59db32d73201d5416a_1.png)
 
 ![](img/da741dc1bf43bb59db32d73201d5416a_3.png)
 

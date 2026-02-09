@@ -1,6 +1,6 @@
-![](img/a7eeeec50d3cceee472b6258f408ec35_0.png)
-
 # 课程 02：编程 Karel 🧑‍💻
+
+![](img/a7eeeec50d3cceee472b6258f408ec35_0.png)
 
 ![](img/a7eeeec50d3cceee472b6258f408ec35_2.png)
 

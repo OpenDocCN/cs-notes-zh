@@ -1,6 +1,6 @@
-![](img/073b7f2be6df5be9db5b3a0a6ea28633_0.png)
-
 # 课程 P37：传输层协议回顾 📚
+
+![](img/073b7f2be6df5be9db5b3a0a6ea28633_0.png)
 
 ![](img/073b7f2be6df5be9db5b3a0a6ea28633_2.png)
 

@@ -1,6 +1,6 @@
-![](img/259b552cb9ceb55af8d4ec21787bd7b1_0.png)
-
 # 课程 P53：自类型 (`Self`) 的使用规则 🧩
+
+![](img/259b552cb9ceb55af8d4ec21787bd7b1_0.png)
 
 ![](img/259b552cb9ceb55af8d4ec21787bd7b1_2.png)
 

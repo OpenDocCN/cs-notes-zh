@@ -1,6 +1,6 @@
-![](img/d8edbe02474433b5a65cc49b9a5d1f0f_1.png)
-
 # 计算机网络课程 P46：分组交换 - 交换与转发实践 (1) 🔄
+
+![](img/d8edbe02474433b5a65cc49b9a5d1f0f_1.png)
 
 ![](img/d8edbe02474433b5a65cc49b9a5d1f0f_3.png)
 

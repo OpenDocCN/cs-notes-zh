@@ -1,6 +1,6 @@
-![](img/0ee8a30e35eb9a642d5cf5c05531f857_0.png)
-
 # 课程 P61：代码生成与堆栈机 🧱
+
+![](img/0ee8a30e35eb9a642d5cf5c05531f857_0.png)
 
 ![](img/0ee8a30e35eb9a642d5cf5c05531f857_2.png)
 

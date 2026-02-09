@@ -1,6 +1,6 @@
-![](img/4f9af09e4b5315e96fb436e8acc65c2e_0.png)
-
 # 课程 P72：中间代码简介 🧩
+
+![](img/4f9af09e4b5315e96fb436e8acc65c2e_0.png)
 
 ![](img/4f9af09e4b5315e96fb436e8acc65c2e_2.png)
 

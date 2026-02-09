@@ -1,6 +1,6 @@
-![](img/36def6d6b9866c9c33a169a2bce65f2c_1.png)
-
 # 课程22：数据复制和分布式事务 I 🧩
+
+![](img/36def6d6b9866c9c33a169a2bce65f2c_1.png)
 
 ![](img/36def6d6b9866c9c33a169a2bce65f2c_3.png)
 

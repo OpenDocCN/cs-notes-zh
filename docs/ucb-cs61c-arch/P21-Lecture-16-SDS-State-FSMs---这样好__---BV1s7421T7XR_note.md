@@ -1,3 +1,5 @@
+# 课程 P21：第16讲 SDS状态与有限状态机 🧠
+
 ![](img/e5b0af1fbde738bee5694c53ec1e75d7_0.png)
 
 ![](img/e5b0af1fbde738bee5694c53ec1e75d7_2.png)
@@ -9,8 +11,6 @@
 ![](img/e5b0af1fbde738bee5694c53ec1e75d7_8.png)
 
 ![](img/e5b0af1fbde738bee5694c53ec1e75d7_10.png)
-
-# 课程 P21：第16讲 SDS状态与有限状态机 🧠
 
 ![](img/e5b0af1fbde738bee5694c53ec1e75d7_12.png)
 
