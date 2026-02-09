@@ -1,6 +1,6 @@
-![](img/c0effd29450517245d7361ccd7a64fe5_0.png)
-
 # 课程16：游戏引擎Gameplay玩法系统：基础AI (Part 2) 🧠
+
+![](img/c0effd29450517245d7361ccd7a64fe5_0.png)
 
 ![](img/c0effd29450517245d7361ccd7a64fe5_0.png)
 

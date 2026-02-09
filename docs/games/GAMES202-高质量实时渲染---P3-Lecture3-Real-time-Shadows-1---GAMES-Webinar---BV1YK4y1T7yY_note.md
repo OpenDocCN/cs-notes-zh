@@ -1,6 +1,6 @@
-![](img/a1a058647a6902f87c7fc2d74fc14a94_1.png)
-
 # GAMES202-高质量实时渲染 - P3：Lecture3 实时阴影 1 🎮
+
+![](img/a1a058647a6902f87c7fc2d74fc14a94_1.png)
 
 在本节课中，我们将学习实时渲染中阴影技术的基础知识。我们将从经典的Shadow Mapping技术开始，回顾其原理与问题，并深入探讨其背后的数学基础。最后，我们将介绍现代实时渲染中生成软阴影的主流方法——PCSS（Percentage Closer Soft Shadows）。
 

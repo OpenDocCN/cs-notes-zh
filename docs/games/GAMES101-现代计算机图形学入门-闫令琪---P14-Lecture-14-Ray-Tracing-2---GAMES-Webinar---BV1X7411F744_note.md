@@ -1,6 +1,6 @@
-![](img/ed97fe687ecca23030aa458d5ccf3d2a_0.png)
-
 # GAMES101-现代计算机图形学入门-闫令琪 - P14：Lecture 14 光线追踪 2 🚀
+
+![](img/ed97fe687ecca23030aa458d5ccf3d2a_0.png)
 
 ![](img/ed97fe687ecca23030aa458d5ccf3d2a_0.png)
 

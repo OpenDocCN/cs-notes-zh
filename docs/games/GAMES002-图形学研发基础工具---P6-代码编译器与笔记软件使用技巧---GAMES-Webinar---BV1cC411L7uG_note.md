@@ -1,8 +1,8 @@
+# GAMES002-图形学研发基础工具 - P6：代码编译器与笔记软件使用技巧 📝💻
+
 ![](img/2ee207ee34ca6bea7cfaec27b01e3c77_0.png)
 
 ![](img/2ee207ee34ca6bea7cfaec27b01e3c77_2.png)
-
-# GAMES002-图形学研发基础工具 - P6：代码编译器与笔记软件使用技巧 📝💻
 
 在本节课中，我们将学习两类在图形学研发中至关重要的工具：代码编辑器和文档写作工具。我们将详细介绍 Vim、Visual Studio Code、Markdown 和 LaTeX 的核心概念与基本使用方法，帮助你提升开发与写作效率。
 

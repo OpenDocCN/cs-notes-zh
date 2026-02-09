@@ -1,6 +1,6 @@
-![](img/77ec56eb2839180024d812bbea79def6_1.png)
-
 # 课程22：GPU驱动的几何管线 - Nanite (Part 1) 🚀
+
+![](img/77ec56eb2839180024d812bbea79def6_1.png)
 
 在本节课中，我们将要学习现代游戏引擎中一项革命性的技术——**Nanite**。Nanite 是一种能够近乎无限地渲染高精度几何细节的虚拟化几何管线。为了理解它的精妙之处，我们需要先回顾其技术根源。本节课我们将首先介绍两项关键技术：**Cluster-Based Rendering** 和 **Visibility Buffer**，它们是理解 Nanite 工作原理的重要基石。
 

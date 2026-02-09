@@ -1,10 +1,10 @@
-![](img/cc822ac7b957dfe639cb014f1c1adaf8_0.png)
-
 # GAMES002-图形学研发基础工具 - P1：Linux + Shell 🐧
 
 ![](img/cc822ac7b957dfe639cb014f1c1adaf8_0.png)
 
 ## 概述
+
+![](img/cc822ac7b957dfe639cb014f1c1adaf8_0.png)
 
 在本节课中，我们将要学习Linux操作系统和Shell的基础知识。这是图形学乃至整个计算机领域研发的重要基础工具。课程将从科研实践的意义引入，然后详细介绍Linux系统的概念、访问方式、Shell的基本操作、文件权限管理、包管理以及Shell脚本编写等内容。
 

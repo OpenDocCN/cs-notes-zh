@@ -1,6 +1,6 @@
-![](img/d909da0042f4b8bf9a8b0da377ba0479_0.png)
-
 # GAMES101-现代计算机图形学入门-闫令琪 - P7：Lecture 07 Shading 1 (Illumination, Shading and Graphics Pipeline) 🎨
+
+![](img/d909da0042f4b8bf9a8b0da377ba0479_0.png)
 
 在本节课中，我们将要学习图形学中的着色基础。我们将从光栅化的最后一个环节——深度测试开始，然后进入着色的核心概念，包括光照模型和图形管线的基本流程。课程内容将分为深度缓存算法和着色模型（以漫反射为例）两部分进行讲解。
 

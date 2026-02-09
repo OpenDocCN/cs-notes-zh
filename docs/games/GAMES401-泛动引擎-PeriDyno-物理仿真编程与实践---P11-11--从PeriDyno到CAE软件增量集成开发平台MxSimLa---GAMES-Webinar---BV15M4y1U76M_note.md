@@ -1,6 +1,6 @@
-![](img/49eca7ba8e49727428b0d9b55db80448_0.png)
-
 # GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P11：从PeriDyno到CAE软件增量集成开发平台MxSimLab 🚀
+
+![](img/49eca7ba8e49727428b0d9b55db80448_0.png)
 
 在本节课中，我们将学习如何从一个物理仿真引擎（PeriDyno）出发，构建一个面向CAE（计算机辅助工程）软件的增量集成开发平台——MxSimLab。我们将首先回顾有限元分析的基本方法，然后介绍从PeriDyno到MxSimLab的开发工作，最后通过软件演示展示其核心功能与应用。
 

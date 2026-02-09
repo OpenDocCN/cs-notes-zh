@@ -1,10 +1,10 @@
-![](img/d56be7a995132f5163a102a2693f91a7_0.png)
-
 # 20.现代游戏引擎架构：面向数据编程与任务系统 (Part 2) ｜ GAMES104-现代游戏引擎：从入门到实践 - P1 - GAMES-Webinar - BV1Md4y1G7zp
 
 ![](img/d56be7a995132f5163a102a2693f91a7_0.png)
 
 ## 概述
+
+![](img/d56be7a995132f5163a102a2693f91a7_0.png)
 
 在本节课中，我们将深入探讨现代游戏引擎架构中的面向数据编程（Data-Oriented Programming，简称DOP）和任务系统。我们将分析面向对象编程（Object-Oriented Programming，简称OOP）的局限性，并介绍DOP如何解决这些问题。
 

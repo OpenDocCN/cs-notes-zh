@@ -1,8 +1,8 @@
+# GAMES203：三维重建和理解 - P2：Lecture 2 点云注册 📍
+
 ![](img/b6403ebeba3672da95c0c90918f11d9e_1.png)
 
 ![](img/b6403ebeba3672da95c0c90918f11d9e_3.png)
-
-# GAMES203：三维重建和理解 - P2：Lecture 2 点云注册 📍
 
 ![](img/b6403ebeba3672da95c0c90918f11d9e_5.png)
 

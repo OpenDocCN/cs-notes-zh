@@ -1,8 +1,8 @@
+# 02.色彩和人的视觉系统(I) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1ff4y1d7kq
+
 ![](img/0dc9160a1afde48a63d5946987a8ba4d_1.png)
 
 ![](img/0dc9160a1afde48a63d5946987a8ba4d_3.png)
-
-# 02.色彩和人的视觉系统(I) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1ff4y1d7kq
 
 ## 概述
 

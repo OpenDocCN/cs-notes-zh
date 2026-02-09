@@ -1,6 +1,6 @@
-![](img/e4b79b1c08d99d4d7b35f4048b5b3299_0.png)
-
 # GAMES002-图形学研发基础工具 - P2：Windows + CMD + PowerShell 🖥️
+
+![](img/e4b79b1c08d99d4d7b35f4048b5b3299_0.png)
 
 在本节课中，我们将要学习Windows操作系统及其两个常用的命令行工具：CMD和PowerShell。我们将了解Windows的基本概念、CMD和PowerShell的核心区别与使用方法，并通过实例演示帮助初学者快速上手。
 

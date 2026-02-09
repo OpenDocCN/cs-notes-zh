@@ -1,3 +1,5 @@
+# GAMES102：几何建模与处理 - P4：三次样条函数 🧮
+
 ![](img/0d8a7a55b67596f71c6a639ebbb7f541_0.png)
 
 ![](img/0d8a7a55b67596f71c6a639ebbb7f541_2.png)
@@ -5,8 +7,6 @@
 ![](img/0d8a7a55b67596f71c6a639ebbb7f541_4.png)
 
 ![](img/0d8a7a55b67596f71c6a639ebbb7f541_5.png)
-
-# GAMES102：几何建模与处理 - P4：三次样条函数 🧮
 
 ![](img/0d8a7a55b67596f71c6a639ebbb7f541_7.png)
 

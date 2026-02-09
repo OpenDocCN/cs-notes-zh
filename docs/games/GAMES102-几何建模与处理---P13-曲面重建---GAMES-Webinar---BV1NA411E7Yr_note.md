@@ -1,3 +1,5 @@
+# GAMES102：几何建模与处理 - P13：曲面重建 🧩
+
 ![](img/7366bae8e489dd4e4935000a8cec27fc_1.png)
 
 ![](img/7366bae8e489dd4e4935000a8cec27fc_3.png)
@@ -13,8 +15,6 @@
 ![](img/7366bae8e489dd4e4935000a8cec27fc_13.png)
 
 ![](img/7366bae8e489dd4e4935000a8cec27fc_15.png)
-
-# GAMES102：几何建模与处理 - P13：曲面重建 🧩
 
 ![](img/7366bae8e489dd4e4935000a8cec27fc_17.png)
 

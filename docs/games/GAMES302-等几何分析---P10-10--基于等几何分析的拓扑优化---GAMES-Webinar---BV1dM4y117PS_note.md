@@ -1,10 +1,10 @@
-![](img/d9f7aa7f524ce60d7afb67c10f022f0d_1.png)
-
 # GAMES302-等几何分析 - P10：10. 基于等几何分析的拓扑优化 🏗️
 
-![](img/d9f7aa7f524ce60d7afb67c10f022f0d_3.png)
+![](img/d9f7aa7f524ce60d7afb67c10f022f0d_1.png)
 
 ## 概述
+
+![](img/d9f7aa7f524ce60d7afb67c10f022f0d_3.png)
 
 ![](img/d9f7aa7f524ce60d7afb67c10f022f0d_5.png)
 

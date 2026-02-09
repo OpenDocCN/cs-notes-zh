@@ -1,8 +1,8 @@
+# GAMES301-曲面参数化 - P2：Lecture 02 面向离散网格的参数化概述 📐
+
 ![](img/b6abd4be51a5ae12e3e76b6ebc26dd80_0.png)
 
 ![](img/b6abd4be51a5ae12e3e76b6ebc26dd80_2.png)
-
-# GAMES301-曲面参数化 - P2：Lecture 02 面向离散网格的参数化概述 📐
 
 ## 概述
 

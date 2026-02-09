@@ -1,6 +1,6 @@
-![](img/29472abf3a4481d74adb0b471403db10_1.png)
-
 # GAMES106-现代图形绘制流水线原理与实践 - P12：12 流水线LOD技术 🎯
+
+![](img/29472abf3a4481d74adb0b471403db10_1.png)
 
 ![](img/29472abf3a4481d74adb0b471403db10_3.png)
 

@@ -1,6 +1,6 @@
-![](img/1bbbc668d05881508124198bac788aba_0.png)
-
 # GAMES302-等几何分析 - P4：等几何分析中的计算域参数化 I 🎯
+
+![](img/1bbbc668d05881508124198bac788aba_0.png)
 
 ![](img/1bbbc668d05881508124198bac788aba_2.png)
 

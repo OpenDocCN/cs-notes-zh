@@ -1,6 +1,6 @@
-![](img/ec208b9ff15331ad81e283da48805fc7_0.png)
-
 # 游戏中地形大气和云的渲染(下) ｜ GAMES104-现代游戏引擎：从入门到实践 - P1：GAMES104_Lecture06_Part2 - GAMES-Webinar - BV1i3411T7QL
+
+![](img/ec208b9ff15331ad81e283da48805fc7_0.png)
 
 ## 概述
 

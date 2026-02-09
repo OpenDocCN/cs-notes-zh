@@ -1,6 +1,6 @@
-![](img/ecae866eb2b35f258c5858a79e28f9dc_0.png)
-
 # GAMES204-计算成像 课程笔记 P1：智能光学仪器中的感知与计算 👁️‍🗨️💡
+
+![](img/ecae866eb2b35f258c5858a79e28f9dc_0.png)
 
 ![](img/ecae866eb2b35f258c5858a79e28f9dc_2.png)
 

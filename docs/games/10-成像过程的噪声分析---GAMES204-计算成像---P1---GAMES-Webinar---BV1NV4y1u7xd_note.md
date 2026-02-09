@@ -1,6 +1,6 @@
-![](img/d378ef95a056aa07fd0aad384c93a204_0.png)
-
 # 10. 成像过程的噪声分析 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1NV4y1u7xd
+
+![](img/d378ef95a056aa07fd0aad384c93a204_0.png)
 
 ![](img/d378ef95a056aa07fd0aad384c93a204_2.png)
 

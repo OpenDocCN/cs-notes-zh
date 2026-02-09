@@ -1,6 +1,6 @@
-![](img/4b4d557df182e68e9aae2e05ee86634a_0.png)
-
 # GAMES203：三维重建和理解 - P13：Lecture 13 混合三维表示 🧩
+
+![](img/4b4d557df182e68e9aae2e05ee86634a_0.png)
 
 ![](img/4b4d557df182e68e9aae2e05ee86634a_2.png)
 

@@ -1,6 +1,6 @@
-![](img/e2f523a6c97e94145cc3d57e4df9ff22_0.png)
-
 # GAMES103-基于物理的计算机动画入门 - P11：Lecture 11 不可压缩流体动力学与欧拉流体 🧊💨
+
+![](img/e2f523a6c97e94145cc3d57e4df9ff22_0.png)
 
 ![](img/e2f523a6c97e94145cc3d57e4df9ff22_0.png)
 

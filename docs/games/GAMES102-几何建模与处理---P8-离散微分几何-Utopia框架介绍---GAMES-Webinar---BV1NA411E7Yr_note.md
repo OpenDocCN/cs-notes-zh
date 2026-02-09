@@ -1,10 +1,10 @@
+# GAMES102：几何建模与处理 - P8：离散微分几何与Utopia框架介绍 📐
+
 ![](img/d4185f64a49599b0e4f858aaabb3a4b5_0.png)
 
 ![](img/d4185f64a49599b0e4f858aaabb3a4b5_2.png)
 
 ![](img/d4185f64a49599b0e4f858aaabb3a4b5_4.png)
-
-# GAMES102：几何建模与处理 - P8：离散微分几何与Utopia框架介绍 📐
 
 ![](img/d4185f64a49599b0e4f858aaabb3a4b5_0.png)
 

@@ -1,10 +1,12 @@
+# 18. 时域调制、飞行时间法 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1se4y1g7zt
+
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_0.png)
 
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_2.png)
 
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_4.png)
 
-# 18. 时域调制、飞行时间法 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1se4y1g7zt
+## 概述
 
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_6.png)
 
@@ -13,8 +15,6 @@
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_10.png)
 
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_12.png)
-
-## 概述
 
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_14.png)
 

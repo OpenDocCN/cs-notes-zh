@@ -1,10 +1,10 @@
+# GAMES103-基于物理的计算机动画入门 - P7：Lecture 07 其他约束方法与有限元方法 I 🧵⚙️
+
 ![](img/8af3c57967e7f1d7e37b672333651468_0.png)
 
 ![](img/8af3c57967e7f1d7e37b672333651468_2.png)
 
 ![](img/8af3c57967e7f1d7e37b672333651468_3.png)
-
-# GAMES103-基于物理的计算机动画入门 - P7：Lecture 07 其他约束方法与有限元方法 I 🧵⚙️
 
 在本节课中，我们将学习两种基于约束的高级模拟方法：Projective Dynamics 和 Constrained Dynamics，并初步了解有限元方法（FEM）的基本概念和线性三角形单元的力计算。
 

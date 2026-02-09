@@ -1,6 +1,6 @@
-![](img/f3f449e5ba4d61aeed946d01ee5ad914_0.png)
-
 # GAMES302-等几何分析 - P2：曲线曲面曲体的建模基础 📐
+
+![](img/f3f449e5ba4d61aeed946d01ee5ad914_0.png)
 
 ![](img/f3f449e5ba4d61aeed946d01ee5ad914_2.png)
 

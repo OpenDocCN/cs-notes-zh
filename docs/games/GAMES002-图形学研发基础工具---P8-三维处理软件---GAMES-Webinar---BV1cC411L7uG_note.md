@@ -1,10 +1,10 @@
+# GAMES002-图形学研发基础工具 - P8：三维处理软件 - GAMES-Webinar - BV1cC411L7uG
+
 ![](img/e525e3a5baf2f4ab54c3b6c12027c2fc_1.png)
 
 ![](img/e525e3a5baf2f4ab54c3b6c12027c2fc_3.png)
 
 ![](img/e525e3a5baf2f4ab54c3b6c12027c2fc_5.png)
-
-# GAMES002-图形学研发基础工具 - P8：三维处理软件 - GAMES-Webinar - BV1cC411L7uG
 
 大家好，今天是我们Games002课程的倒数第二节课。
 

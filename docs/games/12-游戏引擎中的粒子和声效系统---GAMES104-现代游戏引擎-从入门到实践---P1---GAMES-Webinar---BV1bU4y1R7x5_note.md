@@ -1,6 +1,6 @@
-![](img/6ce3b1e3c21696e3795fb72df33ddc26_0.png)
-
 # 课程12：游戏引擎中的粒子和声效系统 🎮 | GAMES104-现代游戏引擎：从入门到实践
+
+![](img/6ce3b1e3c21696e3795fb72df33ddc26_0.png)
 
 ![](img/6ce3b1e3c21696e3795fb72df33ddc26_0.png)
 

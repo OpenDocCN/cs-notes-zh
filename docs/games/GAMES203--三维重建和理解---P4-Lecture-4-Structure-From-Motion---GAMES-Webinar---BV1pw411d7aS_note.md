@@ -1,6 +1,6 @@
-![](img/33217b811ad54c2601acdb4f3b66753a_0.png)
-
 # GAMES203：三维重建和理解 - P4：Lecture 4 运动恢复结构 (Structure From Motion) 📸
+
+![](img/33217b811ad54c2601acdb4f3b66753a_0.png)
 
 ![](img/33217b811ad54c2601acdb4f3b66753a_0.png)
 

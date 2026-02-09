@@ -1,10 +1,10 @@
-![](img/a90f0abe78d74cf5f8c1d0a03ca886cf_1.png)
-
 # 19.时域调制 (II) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1d8411V7ZT
 
-![](img/a90f0abe78d74cf5f8c1d0a03ca886cf_3.png)
+![](img/a90f0abe78d74cf5f8c1d0a03ca886cf_1.png)
 
 ## 概述
+
+![](img/a90f0abe78d74cf5f8c1d0a03ca886cf_3.png)
 
 在本节课中，我们将学习非视域成像技术，这是一种能够捕捉隐藏在障碍物后面的物体图像的技术。我们将探讨非视域成像的原理、挑战和实现方法。
 

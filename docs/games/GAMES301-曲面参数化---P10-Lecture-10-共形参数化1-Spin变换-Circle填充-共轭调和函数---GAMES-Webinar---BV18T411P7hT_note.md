@@ -1,6 +1,6 @@
-![](img/cf5969acff52fd07c13141af89f380af_0.png)
-
 # GAMES301-曲面参数化 - P10：共形参数化1 - 微分性质与离散算法 🌀
+
+![](img/cf5969acff52fd07c13141af89f380af_0.png)
 
 ![](img/cf5969acff52fd07c13141af89f380af_2.png)
 

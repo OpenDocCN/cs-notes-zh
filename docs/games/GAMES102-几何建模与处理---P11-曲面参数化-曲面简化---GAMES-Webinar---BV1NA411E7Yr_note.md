@@ -1,10 +1,10 @@
+# GAMES102：几何建模与处理 - P11：曲面参数化与曲面简化 🧩
+
 ![](img/cbc5a8f5e828af1dcee755948fe9213e_1.png)
 
 ![](img/cbc5a8f5e828af1dcee755948fe9213e_3.png)
 
 ![](img/cbc5a8f5e828af1dcee755948fe9213e_5.png)
-
-# GAMES102：几何建模与处理 - P11：曲面参数化与曲面简化 🧩
 
 ![](img/cbc5a8f5e828af1dcee755948fe9213e_7.png)
 

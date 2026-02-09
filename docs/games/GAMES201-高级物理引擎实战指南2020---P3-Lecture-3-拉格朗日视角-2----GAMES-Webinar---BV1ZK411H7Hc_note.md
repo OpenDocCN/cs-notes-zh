@@ -1,8 +1,8 @@
+# GAMES201：高级物理引擎实战指南2020 - P3：Lecture 3 拉格朗日视角（2） 🧮
+
 ![](img/77a6008ce0e4cbc90fade4ce72ba0e46_1.png)
 
 ![](img/77a6008ce0e4cbc90fade4ce72ba0e46_3.png)
-
-# GAMES201：高级物理引擎实战指南2020 - P3：Lecture 3 拉格朗日视角（2） 🧮
 
 ![](img/77a6008ce0e4cbc90fade4ce72ba0e46_5.png)
 

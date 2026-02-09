@@ -1,6 +1,6 @@
-![](img/38f2e25ae223d12d3c0c7e7893b9577a_0.png)
-
 # GAMES001-图形学中的数学 - P3：计算几何 - GAMES-Webinar - BV1MF4m1V7e3
+
+![](img/38f2e25ae223d12d3c0c7e7893b9577a_0.png)
 
 ## 计算几何概述
 

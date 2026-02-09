@@ -1,6 +1,6 @@
-![](img/32ea15be47704fb560dbd46560c965d8_0.png)
-
 # GAMES105-计算机角色动画基础 - P8：Lecture07 蒙皮技术 🎭
+
+![](img/32ea15be47704fb560dbd46560c965d8_0.png)
 
 ## 概述
 

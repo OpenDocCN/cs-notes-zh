@@ -1,10 +1,10 @@
-![](img/8ee15ef43c2c8f3d32316f9e4b5e8bd9_0.png)
-
 # 11.计算工具箱：成像梯度与处理 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV14B4y177Mv
 
-![](img/8ee15ef43c2c8f3d32316f9e4b5e8bd9_2.png)
+![](img/8ee15ef43c2c8f3d32316f9e4b5e8bd9_0.png)
 
 ## 概述
+
+![](img/8ee15ef43c2c8f3d32316f9e4b5e8bd9_2.png)
 
 在本节课中，我们将学习成像梯度及其在图像处理中的应用。我们将探讨图像梯度的计算方法、性质以及其在图像融合、图像编辑等领域的应用。
 

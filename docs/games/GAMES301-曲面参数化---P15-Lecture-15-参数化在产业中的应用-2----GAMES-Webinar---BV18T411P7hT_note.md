@@ -1,8 +1,8 @@
+# GAMES301-曲面参数化 - P15：Lecture 15 参数化在产业中的应用(2) 🏭
+
 ![](img/ea9f435f7adb61075948c10ac4ad12fe_0.png)
 
 ![](img/ea9f435f7adb61075948c10ac4ad12fe_2.png)
-
-# GAMES301-曲面参数化 - P15：Lecture 15 参数化在产业中的应用(2) 🏭
 
 ![](img/ea9f435f7adb61075948c10ac4ad12fe_4.png)
 

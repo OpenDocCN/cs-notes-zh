@@ -1,6 +1,6 @@
-![](img/44b2a171145c2d16c438339d528e1cab_0.png)
-
 # 课程17：游戏引擎Gameplay玩法系统：高级AI (Part 1) 🤖
+
+![](img/44b2a171145c2d16c438339d528e1cab_0.png)
 
 ![](img/44b2a171145c2d16c438339d528e1cab_0.png)
 

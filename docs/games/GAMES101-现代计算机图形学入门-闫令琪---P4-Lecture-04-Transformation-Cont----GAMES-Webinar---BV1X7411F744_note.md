@@ -1,6 +1,6 @@
-![](img/e00f79cb0a1373ea966a697860057dc6_0.png)
-
 # GAMES101-现代计算机图形学入门-闫令琪 - P4：Lecture 04 变换（续）🚀
+
+![](img/e00f79cb0a1373ea966a697860057dc6_0.png)
 
 ![](img/e00f79cb0a1373ea966a697860057dc6_0.png)
 

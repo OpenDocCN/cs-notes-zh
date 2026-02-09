@@ -1,8 +1,8 @@
+# GAMES101-现代计算机图形学入门-闫令琪 - P1：Lecture 01 Overview of Computer Graphics - GAMES-Webinar - BV1X7411F744
+
 ![](img/937c12d97b1cf053de560c9f0c5c70df_0.png)
 
 ![](img/937c12d97b1cf053de560c9f0c5c70df_2.png)
-
-# GAMES101-现代计算机图形学入门-闫令琪 - P1：Lecture 01 Overview of Computer Graphics - GAMES-Webinar - BV1X7411F744
 
 ## 概述
 

@@ -1,10 +1,10 @@
+# GAMES201：高级物理引擎实战指南2020 - P2：Lecture 2 拉格朗日视角（1）🚀
+
 ![](img/d04ab0506a9353b8b06d1e6fd43594d2_0.png)
 
 ![](img/d04ab0506a9353b8b06d1e6fd43594d2_2.png)
 
 ![](img/d04ab0506a9353b8b06d1e6fd43594d2_4.png)
-
-# GAMES201：高级物理引擎实战指南2020 - P2：Lecture 2 拉格朗日视角（1）🚀
 
 ![](img/d04ab0506a9353b8b06d1e6fd43594d2_6.png)
 

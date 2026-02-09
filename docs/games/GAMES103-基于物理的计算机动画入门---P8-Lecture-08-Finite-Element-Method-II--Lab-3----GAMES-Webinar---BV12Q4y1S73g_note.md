@@ -1,6 +1,6 @@
-![](img/5bc90e468d9b6b2f277c79542d262c4f_0.png)
-
 # GAMES103-基于物理的计算机动画入门 - P8：Lecture 08 有限元方法 II (Lab 3) 🏗️
+
+![](img/5bc90e468d9b6b2f277c79542d262c4f_0.png)
 
 ## 概述
 

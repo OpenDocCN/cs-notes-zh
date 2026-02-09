@@ -1,8 +1,8 @@
+# GAMES202-高质量实时渲染 - P1：Lecture1 - 课程介绍与概述 🎮
+
 ![](img/0b6dd739848a816b5d8f7bf718723fe9_0.png)
 
 ![](img/0b6dd739848a816b5d8f7bf718723fe9_2.png)
-
-# GAMES202-高质量实时渲染 - P1：Lecture1 - 课程介绍与概述 🎮
 
 ![](img/0b6dd739848a816b5d8f7bf718723fe9_4.png)
 

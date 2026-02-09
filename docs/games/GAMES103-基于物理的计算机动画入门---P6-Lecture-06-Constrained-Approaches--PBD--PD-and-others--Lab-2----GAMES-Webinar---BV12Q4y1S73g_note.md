@@ -1,6 +1,6 @@
-![](img/7c513136c2a0bbb7c5feecad74cc65cd_0.png)
-
 # GAMES103-基于物理的计算机动画入门 - P6：Lecture 06 约束方法：PBD、PD及其他 (Lab 2) 📐
+
+![](img/7c513136c2a0bbb7c5feecad74cc65cd_0.png)
 
 ![](img/7c513136c2a0bbb7c5feecad74cc65cd_0.png)
 
