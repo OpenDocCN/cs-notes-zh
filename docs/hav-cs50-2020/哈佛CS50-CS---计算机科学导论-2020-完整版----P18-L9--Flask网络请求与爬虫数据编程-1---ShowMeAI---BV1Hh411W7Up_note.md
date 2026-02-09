@@ -1,0 +1,580 @@
+# 🚀 哈佛CS50课程笔记｜计算机科学导论(2020·完整版) - P18：L9- Flask网络请求与爬虫数据编程 1
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_0.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_1.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_3.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_5.png)
+
+在本节课中，我们将要学习如何将之前学过的Python、SQL等知识结合起来，构建动态的Web应用程序。我们将重点介绍Flask框架，它可以帮助我们轻松处理网络请求、路由和动态生成网页内容。
+
+---
+
+## 📚 概述：从静态网站到动态Web应用
+
+上一周我们介绍了JavaScript，它允许我们在浏览器（客户端）进行编程。本周我们将重新引入服务器端组件，将浏览器（客户端）与Web服务器（后端）连接起来，构建完整的Web应用程序。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_9.png)
+
+为了达到这个目标，我们先回顾一下上周的内容。上周我们使用了一个简单的`http-server`程序来提供静态网页，这些网页不会改变，也不接受用户输入。服务器监听80或443端口，当浏览器连接时，它会根据URL和参数提供相应的HTML、CSS或JavaScript文件。
+
+然而，像Google搜索这样的功能，需要服务器动态生成内容。例如，URL `http://www.google.com/search?q=cats` 中，服务器需要解析路径 `/search` 和参数 `q=cats`，然后动态生成搜索结果页面。
+
+---
+
+## 🛠️ 引入Flask框架
+
+今天我们将介绍一个名为Flask的库，它也被称为一个框架。框架不仅提供函数库，还规定了组织代码和文件的方式，使Web开发更加高效。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_11.png)
+
+Flask存在的意义在于，它帮助我们解析复杂的HTTP请求，提取URL中的路由和参数，让我们可以专注于业务逻辑，而不是底层的文本解析工作。
+
+### Flask应用程序的基本结构
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_13.png)
+
+一个典型的Flask应用程序会包含以下文件和文件夹：
+
+*   **`app.py`**： 这是我们的主程序文件，我们将在这里编写大部分Python代码（控制器）。
+*   **`requirements.txt`**： 一个文本文件，列出了应用程序所需的其他库。
+*   **`static/` 文件夹**： 存放静态文件，如GIF、JPEG、CSS、JavaScript文件。
+*   **`templates/` 文件夹**： 存放HTML模板文件（视图）。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_15.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_17.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_18.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_20.png)
+
+Flask实现了**MVC（模型-视图-控制器）**设计模式：
+*   **控制器 (Controller)**： 在`app.py`中编写的逻辑代码，控制应用程序流程。
+*   **视图 (View)**： 在`templates/`文件夹中的HTML模板，负责用户界面。
+*   **模型 (Model)**： 指应用程序使用的数据，例如SQL数据库或CSV文件。
+
+---
+
+## 🧪 编写第一个Flask应用
+
+让我们通过一个简单的“Hello World”示例来开始。首先，我们创建一个名为`hello`的目录，并在其中创建`application.py`文件。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_22.png)
+
+以下是`application.py`的初始代码：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_24.png)
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_26.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_28.png)
+
+@app.route("/")
+def index():
+    return "Hello, world!"
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_30.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_32.png)
+
+这段代码做了以下几件事：
+1.  从`flask`库导入`Flask`类。
+2.  创建一个Flask应用实例，`__name__`是一个特殊变量，表示当前文件的名称。
+3.  使用`@app.route(“/”)`装饰器定义了一个路由。当用户访问网站的根路径（`/`）时，将调用下面的`index`函数。
+4.  `index`函数返回字符串“Hello, world!”。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_34.png)
+
+在终端中，进入`hello`目录，运行命令`flask run`启动服务器。访问输出的URL，你将在浏览器中看到“Hello, world!”。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_36.png)
+
+---
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_38.png)
+
+## 🌐 处理用户输入：从URL获取参数
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_40.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_42.png)
+
+仅仅显示静态文本并不有趣。Web应用的核心之一是处理用户输入。最常见的方式之一是通过URL参数获取输入。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_44.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_46.png)
+
+让我们修改应用，使其能够通过URL参数接收一个名字并问候用户。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_48.png)
+
+首先，更新`application.py`：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_50.png)
+
+```python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_52.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_54.png)
+
+@app.route("/")
+def index():
+    # 从URL参数中获取‘name’的值，如果没有则使用默认值‘world’
+    name = request.args.get("name", "world")
+    # 将name变量传递给模板
+    return render_template("index.html", name=name)
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_56.png)
+
+在这段代码中：
+*   我们导入了`request`对象，用于访问HTTP请求数据。
+*   `request.args.get(“name”, “world”)` 从URL的查询字符串（如 `?name=David`）中获取名为`name`的参数。如果参数不存在，则使用默认值`”world”`。
+*   我们使用`render_template`函数来渲染一个HTML模板，并将`name`变量传递给它。
+
+接下来，我们需要创建模板。在`hello`目录下创建一个`templates`文件夹，并在其中创建`index.html`文件：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello</title>
+</head>
+<body>
+    <p>Hello, {{ name }}!</p>
+</body>
+</html>
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_58.png)
+
+注意模板中的 `{{ name }}`。这是Jinja2模板引擎的语法，Flask使用它来动态插入变量值。这里的`name`就是我们通过`render_template`传递的变量。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_60.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_62.png)
+
+现在，重启Flask服务器并访问你的URL。尝试访问 `http://你的URL/?name=David`，页面将显示“Hello, David!”。如果不提供`name`参数，则显示“Hello, world!”。
+
+---
+
+## 📝 使用表单提交数据
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_64.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_66.png)
+
+要求用户在URL中手动输入参数并不友好。通常，我们使用HTML表单来收集用户输入。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_68.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_70.png)
+
+我们将创建两个页面：一个显示表单，另一个显示问候结果。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_72.png)
+
+首先，创建`index.html`作为表单页：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_74.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_76.png)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Greet Form</title>
+</head>
+<body>
+    <h1>Greet Form</h1>
+    <form action="/greet" method="get">
+        <input type="text" name="name" placeholder="Enter your name" autocomplete="off" autofocus>
+        <input type="submit" value="Greet">
+    </form>
+</body>
+</html>
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_78.png)
+
+这个表单使用`GET`方法，将数据提交到`/greet`路由。`name`输入框用于接收用户的名字。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_80.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_82.png)
+
+然后，创建`greet.html`作为结果页：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Greeting</title>
+</head>
+<body>
+    <p>Hello, {{ name }}!</p>
+</body>
+</html>
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_84.png)
+
+现在，更新`application.py`来处理这两个路由：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_86.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_88.png)
+
+```python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    # 渲染包含表单的页面
+    return render_template("index.html")
+
+@app.route("/greet")
+def greet():
+    # 从表单提交的GET参数中获取名字
+    name = request.args.get("name", "world")
+    # 渲染问候页面
+    return render_template("greet.html", name=name)
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_90.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_92.png)
+
+访问根路径`/`，你会看到一个表单。输入名字并提交，你将被带到`/greet`页面并看到个性化的问候。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_94.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_96.png)
+
+---
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_98.png)
+
+## 🔒 使用POST方法提升隐私与安全
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_100.png)
+
+使用`GET`方法提交表单有一个问题：所有输入的数据都会显示在URL中（例如`/greet?name=David`）。这可能会泄露隐私，也不适合提交敏感信息（如密码）。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_102.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_104.png)
+
+更好的方法是使用`POST`方法，它将数据放在HTTP请求体中，而不是URL里。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_106.png)
+
+修改`index.html`中的表单，将方法改为`POST`：
+
+```html
+<form action="/greet" method="post">
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_108.png)
+
+然后，更新`application.py`中的`/greet`路由，使其支持`POST`方法，并从`request.form`中获取数据：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_110.png)
+
+```python
+@app.route("/greet", methods=["POST"])
+def greet():
+    # 从表单提交的POST数据中获取名字
+    name = request.form.get("name", "world")
+    return render_template("greet.html", name=name)
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_112.png)
+
+现在，当你提交表单时，名字不会再出现在URL中，提高了隐私性。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_114.png)
+
+---
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_116.png)
+
+## 🧩 使用模板继承避免代码重复
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_118.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_120.png)
+
+观察`index.html`和`greet.html`，你会发现它们有大量重复的HTML样板代码（如`<html>`, `<head>`, `<body>`标签）。在多个文件中维护这些重复内容非常繁琐。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_122.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_124.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_126.png)
+
+Flask的模板继承功能可以解决这个问题。我们可以创建一个基础布局模板，让其他模板继承它。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_128.png)
+
+创建一个`layout.html`作为基础模板：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    {% block body %}
+    {% endblock %}
+</body>
+</html>
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_130.png)
+
+`{% block body %}` 定义了一个可替换的块。子模板可以在这个位置插入自己的内容。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_132.png)
+
+然后，简化`index.html`和`greet.html`：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_134.png)
+
+**index.html:**
+```html
+{% extends “layout.html” %}
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_136.png)
+
+{% block title %}Greet Form{% endblock %}
+
+{% block body %}
+    <h1>Greet Form</h1>
+    <form action=“/greet” method=“post”>
+        <input type=“text” name=“name” placeholder=“Enter your name” autocomplete=“off” autofocus>
+        <input type=“submit” value=“Greet”>
+    </form>
+{% endblock %}
+```
+
+**greet.html:**
+```html
+{% extends “layout.html” %}
+
+{% block title %}Greeting{% endblock %}
+
+{% block body %}
+    <p>Hello, {{ name }}!</p>
+{% endblock %}
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_138.png)
+
+`{% extends “layout.html” %}` 告诉Flask这个模板继承自`layout.html`。`{% block body %}` 中的内容将被插入到基础模板的相应块中。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_140.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_142.png)
+
+这样，公共的HTML结构只需在`layout.html`中维护一次，极大地提高了代码的可维护性。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_144.png)
+
+---
+
+## 🏀 实战项目：新生运动注册系统
+
+作为综合练习，我们将构建一个简单的新生运动注册系统。这个系统将收集学生的姓名和他们选择的运动。
+
+### 项目结构设置
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_154.png)
+
+1.  创建一个新目录`frosh_ims`。
+2.  在其中创建`application.py`、`templates`文件夹以及`layout.html`。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_156.png)
+
+**layout.html** (添加了移动设备友好的标签):
+```html
+<!DOCTYPE html>
+<html lang=“en”>
+<head>
+    <meta charset=“UTF-8”>
+    <meta name=“viewport” content=“width=device-width, initial-scale=1.0”>
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    {% block body %}
+    {% endblock %}
+</body>
+</html>
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_158.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_160.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_162.png)
+
+### 创建注册表单
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_164.png)
+
+创建`index.html`，包含姓名输入和运动选择菜单：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_166.png)
+
+```html
+{% extends “layout.html” %}
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_168.png)
+
+{% block title %}Frosh IMs{% endblock %}
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_170.png)
+
+{% block body %}
+    <h1>Register for Frosh IMs</h1>
+    <form action=“/register” method=“post”>
+        <input type=“text” name=“name” placeholder=“Name” autocomplete=“off” autofocus>
+        <br>
+        <select name=“sport”>
+            <option value=“” disabled selected>Sport</option>
+            <option value=“Dodgeball”>Dodgeball</option>
+            <option value=“Flag Football”>Flag Football</option>
+            <option value=“Soccer”>Soccer</option>
+            <option value=“Volleyball”>Volleyball</option>
+            <option value=“Ultimate Frisbee”>Ultimate Frisbee</option>
+        </select>
+        <br>
+        <input type=“submit” value=“Register”>
+    </form>
+{% endblock %}
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_172.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_174.png)
+
+### 实现注册逻辑
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_176.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_178.png)
+
+在`application.py`中，我们定义路由并处理表单提交：
+
+```python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_180.png)
+
+# 定义支持的运动列表
+SPORTS = [
+    “Dodgeball”,
+    “Flag Football”,
+    “Soccer”,
+    “Volleyball”,
+    “Ultimate Frisbee”
+]
+
+@app.route(“/”)
+def index():
+    # 将运动列表传递给模板
+    return render_template(“index.html”, sports=SPORTS)
+
+@app.route(“/register”, methods=[“POST”])
+def register():
+    # 验证表单提交
+    name = request.form.get(“name”)
+    sport = request.form.get(“sport”)
+    if not name or sport not in SPORTS:
+        # 如果验证失败，返回错误页面
+        return render_template(“failure.html”)
+    # 验证成功，返回成功页面
+    return render_template(“success.html”)
+```
+
+注意，我们在服务器端（控制器）定义了运动列表`SPORTS`，并在两个地方使用它：
+1.  传递给`index.html`模板，用于动态生成下拉选项。
+2.  在`register`函数中，验证用户提交的`sport`是否在合法列表中。**永远不要信任用户输入**，必须在服务器端进行验证。
+
+创建`success.html`和`failure.html`模板来显示结果。
+
+### 动态生成表单选项与防御性编程
+
+为了更优雅地生成运动选项并避免在HTML中硬编码，我们可以更新`index.html`，使用Jinja2的循环：
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_188.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_190.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_192.png)
+
+```html
+<select name=“sport”>
+    <option value=“” disabled selected>Sport</option>
+    {% for sport in sports %}
+        <option value=“{{ sport }}”>{{ sport }}</option>
+    {% endfor %}
+</select>
+```
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_194.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_196.png)
+
+这样，运动列表完全由后端的`SPORTS`变量控制，前端自动同步。如果有人试图通过浏览器开发者工具修改HTML并提交一个不在列表中的运动（如“Tennis”），我们的服务器端验证 `sport not in SPORTS` 会将其拦截，返回失败页面，从而保证了系统的安全性。
+
+---
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_198.png)
+
+## 📖 总结
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_200.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_202.png)
+
+本节课中我们一起学习了Web编程的核心概念，并使用Flask框架进行了实践。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_204.png)
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_206.png)
+
+我们了解到：
+1.  **Flask框架** 简化了Web服务器开发，帮助我们处理路由、请求和响应。
+2.  **MVC模式** 为组织Web应用代码提供了清晰的架构（模型、视图、控制器）。
+3.  **处理用户输入** 可以通过URL参数（`GET`）或表单数据（`POST`）实现，其中`POST`方法更安全。
+4.  **Jinja2模板引擎** 允许我们动态生成HTML，并使用**模板继承**来消除重复代码，提升可维护性。
+5.  **服务器端验证** 至关重要。永远不要信任客户端提交的数据，必须在后端对输入进行严格的检查和验证。
+
+![](img/2e1c64054c5bb6f34a42fe4a910f0e3a_208.png)
+
+通过构建“新生运动注册系统”，我们将这些概念综合运用，创建了一个具备基本交互和数据验证功能的动态Web应用程序。这为我们后续学习更复杂的数据库集成和网络爬虫等内容打下了坚实的基础。

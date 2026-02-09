@@ -1,0 +1,398 @@
+# 🕸️ 哈佛CS50｜计算机科学导论 P19：L9 - Flask网络请求与爬虫数据编程 2
+
+![](img/42fc978d86c319937be2311efcbd6801_1.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_3.png)
+
+在本节课中，我们将学习如何构建一个功能完整的Web应用。我们将使用Flask框架处理用户注册、数据存储、会话管理以及前后端交互。课程将涵盖从简单的表单验证到使用数据库持久化数据，再到利用Cookies和会话实现用户状态跟踪，最后通过Ajax技术实现动态的前端交互。
+
+---
+
+![](img/42fc978d86c319937be2311efcbd6801_5.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_7.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_9.png)
+
+## 📝 构建动态注册系统
+
+![](img/42fc978d86c319937be2311efcbd6801_11.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_13.png)
+
+上一节我们创建了一个动态的用户界面，但用户点击后信息就丢失了。为了建立一个真正有效的注册系统，我们需要记住哪些用户已经注册。
+
+![](img/42fc978d86c319937be2311efcbd6801_15.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_17.png)
+
+我们可以使用Python的数据结构（如列表、字典、集合）在内存中存储数据。让我们从一个简单的字典开始，存储注册者的信息。
+
+![](img/42fc978d86c319937be2311efcbd6801_19.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_21.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_23.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_25.png)
+
+在 `application.py` 中，我们添加一个全局变量来存储注册者信息：
+
+![](img/42fc978d86c319937be2311efcbd6801_27.png)
+
+```python
+registrants = {}
+```
+
+![](img/42fc978d86c319937be2311efcbd6801_29.png)
+
+这个字典将存储键值对，其中键是用户的名字，值是他们选择的运动。
+
+![](img/42fc978d86c319937be2311efcbd6801_31.png)
+
+---
+
+![](img/42fc978d86c319937be2311efcbd6801_33.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_35.png)
+
+## 🔍 改进表单验证与错误处理
+
+目前，我们只是简单地检查用户是否提供了姓名和运动。我们需要更健壮的错误处理，以便向用户提供清晰的反馈。
+
+以下是改进后的验证逻辑：
+
+![](img/42fc978d86c319937be2311efcbd6801_41.png)
+
+```python
+name = request.form.get("name")
+sport = request.form.get("sport")
+
+if not name:
+    return render_template("error.html", message="缺少姓名")
+if not sport:
+    return render_template("error.html", message="缺少运动")
+if sport not in SPORTS:
+    return render_template("error.html", message="无效运动")
+```
+
+我们创建了一个新的模板 `error.html` 来显示特定的错误信息，这比通用的“未注册”提示更有帮助。
+
+---
+
+![](img/42fc978d86c319937be2311efcbd6801_51.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_53.png)
+
+## 💾 在内存中存储注册数据
+
+验证通过后，我们将用户信息存储到全局的 `registrants` 字典中：
+
+![](img/42fc978d86c319937be2311efcbd6801_55.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_57.png)
+
+```python
+registrants[name] = sport
+```
+
+然后，我们可以渲染一个成功页面，或者更好的是，将用户重定向到一个展示所有注册者的页面。
+
+---
+
+## 📊 创建注册者列表页面
+
+为了展示所有已注册的用户，我们创建一个新的路由 `/registrants` 和一个对应的模板 `registrants.html`。
+
+![](img/42fc978d86c319937be2311efcbd6801_59.png)
+
+在 `registrants.html` 中，我们使用HTML表格来动态展示数据：
+
+![](img/42fc978d86c319937be2311efcbd6801_61.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_63.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_65.png)
+
+```html
+<table>
+    <thead>
+        <tr>
+            <th>姓名</th>
+            <th>运动</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for name in registrants %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>{{ registrants[name] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+```
+
+在 `application.py` 的 `/registrants` 路由中，我们将 `registrants` 字典传递给模板进行渲染。
+
+---
+
+## 🚨 内存存储的局限性
+
+使用全局变量存储数据有一个明显的缺点：一旦服务器重启或停止，所有数据都会丢失。这不是一个持久的解决方案。
+
+为了解决这个问题，我们需要将数据存储到更持久的地方，比如文件或数据库。
+
+![](img/42fc978d86c319937be2311efcbd6801_73.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_75.png)
+
+---
+
+## 🗃️ 使用SQLite数据库持久化数据
+
+我们将使用SQLite数据库来替代内存中的字典，以实现数据的持久化存储。
+
+![](img/42fc978d86c319937be2311efcbd6801_77.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_79.png)
+
+首先，我们创建一个数据库表：
+
+![](img/42fc978d86c319937be2311efcbd6801_81.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_83.png)
+
+```sql
+CREATE TABLE registrants (id INTEGER, name TEXT NOT NULL, sport TEXT NOT NULL, PRIMARY KEY(id));
+```
+
+然后，在 `application.py` 中，我们使用SQL语句来插入和查询数据：
+
+![](img/42fc978d86c319937be2311efcbd6801_85.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_87.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_89.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_91.png)
+
+```python
+# 插入数据
+db.execute("INSERT INTO registrants (name, sport) VALUES(?, ?)", name, sport)
+
+![](img/42fc978d86c319937be2311efcbd6801_93.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_95.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_97.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_99.png)
+
+# 查询数据
+registrants = db.execute("SELECT * FROM registrants")
+```
+
+![](img/42fc978d86c319937be2311efcbd6801_101.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_103.png)
+
+在模板中，我们遍历从数据库查询返回的行（每行是一个字典）来展示数据。
+
+![](img/42fc978d86c319937be2311efcbd6801_105.png)
+
+---
+
+![](img/42fc978d86c319937be2311efcbd6801_107.png)
+
+## 📧 发送确认电子邮件
+
+![](img/42fc978d86c319937be2311efcbd6801_109.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_111.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_113.png)
+
+作为功能的补充，我们可以实现注册后自动发送确认邮件的功能。这需要配置Flask-Mail扩展。
+
+![](img/42fc978d86c319937be2311efcbd6801_115.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_117.png)
+
+首先，进行必要的配置（注意：敏感信息如密码应从环境变量读取）：
+
+```python
+app.config["MAIL_DEFAULT_SENDER"] = os.environ["MAIL_DEFAULT_SENDER"]
+app.config["MAIL_PASSWORD"] = os.environ["MAIL_PASSWORD"]
+# ... 其他配置
+```
+
+![](img/42fc978d86c319937be2311efcbd6801_119.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_121.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_123.png)
+
+然后，在用户注册成功后，创建并发送邮件：
+
+```python
+message = Message("你已注册", recipients=[email])
+mail.send(message)
+```
+
+---
+
+![](img/42fc978d86c319937be2311efcbd6801_131.png)
+
+## 🍪 理解Cookies与用户会话
+
+![](img/42fc978d86c319937be2311efcbd6801_133.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_135.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_137.png)
+
+HTTP协议本身是无状态的。为了让服务器记住用户（例如，保持登录状态），我们使用Cookies和会话（Session）。
+
+![](img/42fc978d86c319937be2311efcbd6801_139.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_141.png)
+
+**Cookie** 是服务器发送到用户浏览器并保存在本地的一小块数据。浏览器会在后续的请求中携带这个Cookie，从而让服务器识别用户。
+
+![](img/42fc978d86c319937be2311efcbd6801_143.png)
+
+**会话** 是在服务器端存储用户状态的一种机制，通常依赖于Cookie中的一个唯一会话ID。
+
+---
+
+## 🔐 使用Flask实现登录/注销
+
+我们创建一个简单的登录系统来演示会话的使用。
+
+![](img/42fc978d86c319937be2311efcbd6801_145.png)
+
+首先，配置Flask以使用服务器端会话存储：
+
+![](img/42fc978d86c319937be2311efcbd6801_147.png)
+
+```python
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+```
+
+![](img/42fc978d86c319937be2311efcbd6801_149.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_151.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_153.png)
+
+在登录路由中，我们将用户名存入会话：
+
+![](img/42fc978d86c319937be2311efcbd6801_155.png)
+
+```python
+session["name"] = request.form.get("name")
+```
+
+![](img/42fc978d86c319937be2311efcbd6801_157.png)
+
+在首页，我们检查会话中是否有用户名，以决定显示“已登录”还是“未登录”状态。
+
+注销功能通过清除会话中的用户名来实现：
+
+```python
+session["name"] = None
+```
+
+![](img/42fc978d86c319937be2311efcbd6801_159.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_161.png)
+
+---
+
+![](img/42fc978d86c319937be2311efcbd6801_163.png)
+
+## 🛒 实现购物车功能
+
+利用会话，我们可以轻松实现像购物车这样的用户特定功能。
+
+我们可以在会话中存储一个列表来表示用户的购物车：
+
+```python
+if "cart" not in session:
+    session["cart"] = []
+
+session["cart"].append(item_id)
+```
+
+每个用户的会话是独立的，因此他们的购物车内容互不影响。
+
+![](img/42fc978d86c319937be2311efcbd6801_167.png)
+
+---
+
+![](img/42fc978d86c319937be2311efcbd6801_169.png)
+
+## 🔄 前后端交互与Ajax
+
+现代Web应用追求动态的用户体验。我们可以使用Ajax技术，让前端JavaScript与后端API异步通信，无需刷新整个页面。
+
+![](img/42fc978d86c319937be2311efcbd6801_171.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_173.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_175.png)
+
+我们创建一个搜索功能作为示例。后端提供一个返回JSON格式数据的API端点：
+
+![](img/42fc978d86c319937be2311efcbd6801_177.png)
+
+```python
+@app.route("/search")
+def search():
+    q = request.args.get("q")
+    shows = db.execute("SELECT * FROM shows WHERE title LIKE ?", "%" + q + "%")
+    return jsonify(shows)
+```
+
+前端使用JavaScript（借助jQuery库）来获取数据并动态更新页面：
+
+![](img/42fc978d86c319937be2311efcbd6801_179.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_181.png)
+
+```javascript
+$.get(`/search?q=${input.value}`, function(shows) {
+    let html = '';
+    for (let show of shows) {
+        html += `<li>${show.title}</li>`;
+    }
+    document.querySelector('ul').innerHTML = html;
+});
+```
+
+用户在输入框中每输入一个字符，都会触发一次Ajax请求，并立即更新搜索结果列表，实现了类似自动补全的效果。
+
+---
+
+## 🎯 课程总结
+
+![](img/42fc978d86c319937be2311efcbd6801_183.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_185.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_187.png)
+
+本节课中，我们一起学习了如何构建一个功能完整的Web应用。
+
+![](img/42fc978d86c319937be2311efcbd6801_189.png)
+
+我们从处理表单和内存存储开始，逐步过渡到使用SQLite数据库进行数据持久化。我们探讨了如何通过Cookies和会话来管理用户状态，并以此实现了登录系统和购物车功能。最后，我们结合前端JavaScript与后端Python API，使用Ajax技术创建了动态、无需刷新页面的用户体验。
+
+![](img/42fc978d86c319937be2311efcbd6801_191.png)
+
+![](img/42fc978d86c319937be2311efcbd6801_193.png)
+
+这些核心概念——请求处理、数据存储、状态管理和前后端异步通信——是构建现代交互式Web应用的基石。

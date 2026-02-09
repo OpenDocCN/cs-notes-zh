@@ -1,0 +1,461 @@
+# 🐍 课程13：Python从语法到应用实战 2
+
+在本节课中，我们将学习如何将之前用C语言编写的程序翻译成Python代码。我们将从简单的条件判断开始，逐步深入到循环、函数、数据结构（如列表和字典）以及文件操作。通过对比C和Python的语法差异，你将更深入地理解Python的简洁性和强大功能。课程最后，我们还将探索一些使用Python库实现的酷炫应用，如语音合成、面部识别和二维码生成。
+
+## 条件判断的翻译
+
+上一节我们回顾了Python的基本语法，本节中我们来看看如何将C语言中的条件判断结构翻译成Python。
+
+首先，我们打开一个来自第一周的C程序 `conditions.c`。这个程序的目的是获取用户输入的两个整数 `x` 和 `y`，然后比较它们的大小并打印相应的信息。
+
+以下是将其翻译成Python代码的步骤：
+
+1.  导入必要的库。
+2.  获取用户输入。
+3.  使用 `if-elif-else` 结构进行比较。
+
+![](img/ba5c84256d1c630ab124e64119667f77_1.png)
+
+```python
+# 导入cs50库以使用get_int函数
+from cs50 import get_int
+
+![](img/ba5c84256d1c630ab124e64119667f77_3.png)
+
+# 获取用户输入
+x = get_int("x: ")
+y = get_int("y: ")
+
+![](img/ba5c84256d1c630ab124e64119667f77_5.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_7.png)
+
+# 条件判断
+if x < y:
+    print("x is less than y")
+elif x > y:
+    print("x is greater than y")
+else:
+    print("x is equal to y")
+```
+
+**注意**：在导入库时，可以选择只导入特定函数（`from cs50 import get_int`），也可以导入整个库并指定命名空间（`import cs50`）。后者在避免函数名冲突时很有用。
+
+## 处理用户同意输入
+
+接下来，我们翻译一个询问用户是否同意的程序。在C语言中，我们需要检查用户输入的是“y”、“Y”、“n”还是“N”。在Python中，我们可以更简洁地处理字符串比较，并利用列表和 `in` 关键字来简化大小写检查。
+
+以下是实现该功能的Python代码：
+
+```python
+from cs50 import get_string
+
+s = get_string("Do you agree? ")
+
+# 将输入转换为小写，然后检查是否在同意列表中
+if s.lower() in ["y", "yes"]:
+    print("Agreed.")
+elif s.lower() in ["n", "no"]:
+    print("Not agreed.")
+```
+
+**核心概念**：Python中没有单独的字符（`char`）类型，所有文本都是字符串。使用 `字符串.lower()` 方法可以忽略大小写差异。`元素 in 列表` 语法用于检查元素是否存在于列表中。
+
+## 循环结构：打印“Meow”
+
+现在，我们来看看循环结构。在C语言中，我们使用 `for` 循环来重复执行操作。在Python中，`for` 循环的语法更加简洁。
+
+![](img/ba5c84256d1c630ab124e64119667f77_13.png)
+
+假设我们要打印三次“Meow”，在Python中可以这样实现：
+
+![](img/ba5c84256d1c630ab124e64119667f77_15.png)
+
+```python
+for i in range(3):
+    print("meow")
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_17.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_19.png)
+
+如果我们想将打印“Meow”的功能抽象成一个函数，并在主函数中调用它三次，代码结构如下：
+
+```python
+def main():
+    for i in range(3):
+        meow()
+
+def meow():
+    print("meow")
+
+![](img/ba5c84256d1c630ab124e64119667f77_21.png)
+
+# 调用主函数
+if __name__ == "__main__":
+    main()
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_23.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_25.png)
+
+**重要**：在Python中，函数必须在其被调用之前定义。常见的做法是定义一个 `main()` 函数，并在脚本末尾通过 `if __name__ == "__main__":` 来调用它。这确保了代码的结构清晰，并且只有在直接运行该脚本时才会执行 `main()` 函数。
+
+![](img/ba5c84256d1c630ab124e64119667f77_27.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_29.png)
+
+## 模拟 Do-While 循环
+
+Python没有直接的 `do-while` 循环结构，但我们可以使用 `while True` 循环配合 `break` 语句来模拟其行为。
+
+![](img/ba5c84256d1c630ab124e64119667f77_31.png)
+
+以下是一个获取正整数的程序，它要求用户至少输入一次，直到输入为正数为止：
+
+```python
+from cs50 import get_int
+
+![](img/ba5c84256d1c630ab124e64119667f77_33.png)
+
+def main():
+    i = get_positive_int()
+    print(i)
+
+def get_positive_int():
+    while True:
+        n = get_int("Positive Integer: ")
+        if n > 0:
+            break
+    return n
+
+if __name__ == "__main__":
+    main()
+```
+
+**代码解释**：`while True:` 创建一个无限循环。在循环内部，我们获取用户输入。如果输入满足条件（`n > 0`），则使用 `break` 语句跳出循环，并返回该值。
+
+## 打印图案与字符串控制
+
+![](img/ba5c84256d1c630ab124e64119667f77_35.png)
+
+在打印水平图案时，我们需要控制 `print` 函数是否自动换行。`print` 函数有一个名为 `end` 的参数，默认值为 `\n`（换行）。我们可以通过修改 `end` 参数来改变结束符。
+
+![](img/ba5c84256d1c630ab124e64119667f77_37.png)
+
+例如，要在一行中打印四个问号，可以这样做：
+
+![](img/ba5c84256d1c630ab124e64119667f77_39.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_41.png)
+
+```python
+for i in range(4):
+    print("?", end="")
+print()  # 打印一个换行，使提示符出现在下一行
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_43.png)
+
+更简洁的方法是使用字符串乘法：
+
+```python
+print("?" * 4)
+```
+
+要打印一个3x3的网格，可以使用嵌套循环，并注意内层循环不换行，外层循环换行：
+
+```python
+for i in range(3):
+    for j in range(3):
+        print("#", end="")
+    print()
+```
+
+## 列表与平均值计算
+
+Python的列表（`list`）比C语言的数组更强大，它可以动态增长和缩小。我们可以轻松地使用列表来存储和计算一组数字的平均值。
+
+以下是计算一组分数平均值的示例：
+
+```python
+# 定义一个分数列表
+scores = [72, 73, 33]
+
+# 计算平均值
+average = sum(scores) / len(scores)
+print(f"Average: {average}")
+```
+
+我们也可以动态地从用户那里获取分数并添加到列表中：
+
+![](img/ba5c84256d1c630ab124e64119667f77_45.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_47.png)
+
+```python
+from cs50 import get_int
+
+scores = []
+for i in range(3):
+    score = get_int("Score: ")
+    scores.append(score)  # 使用append方法添加元素到列表末尾
+
+![](img/ba5c84256d1c630ab124e64119667f77_49.png)
+
+average = sum(scores) / len(scores)
+print(f"Average: {average}")
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_51.png)
+
+## 字典：电话簿示例
+
+![](img/ba5c84256d1c630ab124e64119667f77_53.png)
+
+字典（`dict`）是Python中非常强大的数据结构，它存储键值对，允许我们通过键快速查找对应的值。
+
+![](img/ba5c84256d1c630ab124e64119667f77_55.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_57.png)
+
+以下是一个简单的电话簿程序：
+
+![](img/ba5c84256d1c630ab124e64119667f77_59.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_61.png)
+
+```python
+from cs50 import get_string
+
+# 定义一个字典，名字是键，电话号码是值
+people = {
+    "Brian": "+1-617-495-1000",
+    "David": "+1-949-468-2750"
+}
+
+name = get_string("Name: ")
+
+# 检查名字是否在字典的键中
+if name in people:
+    number = people[name]  # 通过键获取值
+    print(f"Number: {number}")
+else:
+    print("Not found")
+```
+
+**核心概念**：字典使用花括号 `{}` 定义，键值对用冒号 `:` 分隔。`键 in 字典` 用于检查键是否存在。使用 `字典[键]` 可以访问对应的值。字典在底层通常使用哈希表实现，提供了高效的查找性能。
+
+![](img/ba5c84256d1c630ab124e64119667f77_63.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_65.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_67.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_69.png)
+
+## 命令行参数
+
+![](img/ba5c84256d1c630ab124e64119667f77_71.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_73.png)
+
+在Python中，我们可以通过 `sys` 模块访问命令行参数，类似于C语言中的 `argc` 和 `argv`。
+
+以下是一个处理命令行参数的程序：
+
+```python
+import sys
+
+# sys.argv 是一个包含命令行参数的列表
+# sys.argv[0] 是脚本的名称
+if len(sys.argv) == 2:
+    print(f"hello, {sys.argv[1]}")
+else:
+    print("hello, world")
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_75.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_77.png)
+
+要遍历所有命令行参数，可以这样做：
+
+![](img/ba5c84256d1c630ab124e64119667f77_79.png)
+
+```python
+import sys
+
+![](img/ba5c84256d1c630ab124e64119667f77_81.png)
+
+for arg in sys.argv:
+    print(arg)
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_83.png)
+
+## 文件操作：读写CSV
+
+![](img/ba5c84256d1c630ab124e64119667f77_85.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_87.png)
+
+Python的 `csv` 库使得读写CSV文件变得非常简单。CSV（逗号分隔值）是一种常见的电子表格文件格式。
+
+![](img/ba5c84256d1c630ab124e64119667f77_89.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_91.png)
+
+以下是一个将姓名和电话号码写入CSV文件的示例：
+
+![](img/ba5c84256d1c630ab124e64119667f77_93.png)
+
+```python
+import csv
+from cs50 import get_string
+
+![](img/ba5c84256d1c630ab124e64119667f77_95.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_97.png)
+
+# 以追加模式打开文件
+with open("phonebook.csv", "a") as file:
+    writer = csv.writer(file)
+    name = get_string("Name: ")
+    number = get_string("Number: ")
+    writer.writerow([name, number])  # 写入一行数据
+# 文件会在with块结束后自动关闭
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_99.png)
+
+要读取CSV文件并处理数据，例如统计不同选项的数量，可以这样做：
+
+```python
+import csv
+
+houses = {
+    "Gryffindor": 0,
+    "Hufflepuff": 0,
+    "Ravenclaw": 0,
+    "Slytherin": 0
+}
+
+with open("Sorting Hat Responses.csv", "r") as file:
+    reader = csv.reader(file)
+    next(reader)  # 跳过标题行
+    for row in reader:
+        house = row[1]  # 假设房屋信息在第二列
+        houses[house] += 1
+
+for house in houses:
+    count = houses[house]
+    print(f"{house}: {count}")
+```
+
+## 使用外部库实现高级功能
+
+![](img/ba5c84256d1c630ab124e64119667f77_103.png)
+
+Python拥有丰富的第三方库，可以轻松实现复杂的功能，而无需从头编写所有代码。
+
+![](img/ba5c84256d1c630ab124e64119667f77_105.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_107.png)
+
+**语音合成示例**：
+
+![](img/ba5c84256d1c630ab124e64119667f77_109.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_111.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_113.png)
+
+```python
+import pyttsx3
+
+![](img/ba5c84256d1c630ab124e64119667f77_115.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_117.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_119.png)
+
+engine = pyttsx3.init()
+engine.say("hello, world")
+engine.runAndWait()
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_121.png)
+
+**面部识别示例**（需要安装 `face_recognition` 库）：
+
+```python
+import face_recognition
+from PIL import Image
+
+![](img/ba5c84256d1c630ab124e64119667f77_123.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_125.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_127.png)
+
+# 加载图片并识别人脸
+image = face_recognition.load_image_file("office.jpg")
+face_locations = face_recognition.face_locations(image)
+
+# 处理每个识别到的人脸
+for face_location in face_locations:
+    top, right, bottom, left = face_location
+    face_image = image[top:bottom, left:right]
+    pil_image = Image.fromarray(face_image)
+    pil_image.show()
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_129.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_131.png)
+
+**生成二维码示例**：
+
+```python
+import qrcode
+
+# 创建二维码
+img = qrcode.make("https://www.example.com")
+img.save("qr.png")
+```
+
+![](img/ba5c84256d1c630ab124e64119667f77_133.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_135.png)
+
+**语音识别示例**：
+
+```python
+import speech_recognition as sr
+
+![](img/ba5c84256d1c630ab124e64119667f77_137.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_139.png)
+
+recognizer = sr.Recognizer()
+with sr.Microphone() as source:
+    print("Say something:")
+    audio = recognizer.listen(source)
+
+try:
+    words = recognizer.recognize_google(audio)
+    print(f"You said: {words}")
+except sr.UnknownValueError:
+    print("Could not understand audio")
+```
+
+## 总结
+
+![](img/ba5c84256d1c630ab124e64119667f77_141.png)
+
+![](img/ba5c84256d1c630ab124e64119667f77_143.png)
+
+本节课中我们一起学习了如何将C语言的核心编程概念转化为Python代码。我们涵盖了条件判断、循环、函数、列表、字典、命令行参数和文件操作。通过对比，我们看到了Python语法更加简洁、接近自然语言，并且拥有强大的内置数据结构和丰富的第三方库，使得实现复杂功能变得更加容易。从基础的数据处理到高级的图像和语音识别，Python为我们提供了构建现代应用程序的强大工具集。

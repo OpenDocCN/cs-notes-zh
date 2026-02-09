@@ -1,0 +1,167 @@
+# 哈佛 CS50-WEB ｜ 基于 Python / JavaScript 的 Web 编程 (2020·完整版) - P12：L4- 数据库、SQL 与集成 1 (数据表与 SQL) 📊
+
+![](img/a0f15bc3e6e547ec0a3492b79f92e8c7_0.png)
+
+![](img/a0f15bc3e6e547ec0a3492b79f92e8c7_2.png)
+
+![](img/a0f15bc3e6e547ec0a3492b79f92e8c7_0.png)
+
+在本节课中，我们将要学习数据库的基础知识，特别是关系型数据库和 SQL 语言。我们将了解如何创建数据表、插入数据、查询数据以及更新和删除数据。这些是构建动态 Web 应用程序，尤其是使用 Django 框架时，存储和管理数据的核心技能。
+
+上一节我们介绍了 Django 框架，它使我们能够构建动态生成 HTML 的 Web 应用程序。本节中我们来看看如何让这些应用程序与数据库交互，以持久化存储数据。
+
+## 数据库与 SQL 简介 🗃️
+
+数据库是存储和组织数据的系统。关系型数据库将数据存储在由行和列组成的表中。SQL 是一种用于与关系数据库管理系统交互的标准化语言。
+
+我们将以一个航空公司的航班管理系统为例，来理解这些概念。这个系统需要跟踪航班及其乘客信息。
+
+## 数据表的结构 📋
+
+在关系数据库中，数据存储在表中。每个表有行和列。列定义了数据的字段和类型，而行则代表一条条具体的记录。
+
+例如，一个 `flights` 表可能包含以下列：
+*   `id`: 唯一标识每个航班的数字。
+*   `origin`: 航班起飞机场的城市名。
+*   `destination`: 航班降落机场的城市名。
+*   `duration`: 航班的飞行时长（分钟）。
+
+## SQL 数据类型 🔢
+
+就像 Python 有整数、字符串等类型一样，SQL 也为数据定义了类型。不同的数据库管理系统支持的类型略有不同。
+
+以下是 SQLite 支持的一些基本类型：
+*   `TEXT`: 用于存储文本字符串。
+*   `INTEGER`: 用于存储整数。
+*   `REAL`: 用于存储浮点数。
+*   `NUMERIC`: 一种更通用的数字类型。
+*   `BLOB`: 用于存储二进制大对象（如图片、文件）。
+
+其他数据库如 MySQL 则有更丰富的类型，如 `VARCHAR(n)`（可变长度字符串）和不同精度的数字类型（如 `INT`, `BIGINT`, `FLOAT`, `DOUBLE`）。
+
+## 创建数据表 (CREATE TABLE) 🛠️
+
+创建表需要使用 `CREATE TABLE` 命令，它定义了表的结构。
+
+以下是创建 `flights` 表的 SQL 语句：
+
+```sql
+CREATE TABLE flights (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    origin TEXT NOT NULL,
+    destination TEXT NOT NULL,
+    duration INTEGER NOT NULL
+);
+```
+
+让我们分解这个命令：
+*   `CREATE TABLE flights`: 创建一个名为 `flights` 的新表。
+*   括号内是列的列表，每列用逗号分隔。
+*   `id INTEGER PRIMARY KEY AUTOINCREMENT`: 创建一个名为 `id` 的整数列。`PRIMARY KEY` 表示它是唯一标识每行的主键。`AUTOINCREMENT` 表示每次插入新行时，数据库会自动为其分配一个递增值。
+*   `origin TEXT NOT NULL`: 创建一个名为 `origin` 的文本列。`NOT NULL` 是一个约束，确保该列不能为空。
+*   `destination` 和 `duration` 列的定义方式类似。
+
+可以为列添加其他约束，例如 `UNIQUE`（值必须唯一）、`DEFAULT`（设置默认值）或 `CHECK`（确保值满足特定条件）。
+
+## 插入数据 (INSERT) ➕
+
+创建表后，我们需要使用 `INSERT` 命令向表中添加数据。
+
+以下是如何向 `flights` 表插入一行数据：
+
+```sql
+INSERT INTO flights (origin, destination, duration)
+VALUES ('New York', 'London', 415);
+```
+
+这个命令的含义是：
+*   `INSERT INTO flights`: 指定要向 `flights` 表插入数据。
+*   `(origin, destination, duration)`: 列出我们要提供值的列名。注意，我们没有包含 `id`，因为它会自动生成。
+*   `VALUES ('New York', 'London', 415)`: 提供与列名顺序对应的具体值。
+
+## 查询数据 (SELECT) 🔍
+
+`SELECT` 命令用于从数据库中检索数据，而不会修改它。
+
+最简单的查询是获取表中的所有数据：
+
+```sql
+SELECT * FROM flights;
+```
+`*` 是一个通配符，表示“所有列”。
+
+我们也可以只选择特定的列：
+
+```sql
+SELECT origin, destination FROM flights;
+```
+
+通常，我们不想获取所有行，而是根据条件进行过滤。这需要使用 `WHERE` 子句：
+
+```sql
+SELECT * FROM flights WHERE id = 3;
+SELECT * FROM flights WHERE origin = ‘New York’;
+SELECT * FROM flights WHERE duration > 500 AND destination = ‘Paris’;
+SELECT * FROM flights WHERE origin IN (‘New York’, ‘Lima’);
+SELECT * FROM flights WHERE origin LIKE ‘%a%’;
+```
+
+`WHERE` 子句支持各种比较运算符（`=`, `>`, `<`, `>=`, `<=`, `!=`）和逻辑运算符（`AND`, `OR`, `NOT`）。`IN` 用于检查值是否在列表中，`LIKE` 用于模式匹配（`%` 代表任意数量的字符）。
+
+`SELECT` 查询还可以使用函数和子句进行更复杂的操作：
+*   `LIMIT`: 限制返回的行数。
+*   `ORDER BY`: 按指定列对结果排序。
+*   `GROUP BY`: 将行分组，通常与聚合函数（如 `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`）一起使用。
+    ```sql
+    SELECT origin, COUNT(*) FROM flights GROUP BY origin;
+    SELECT origin, COUNT(*) FROM flights GROUP BY origin HAVING COUNT(*) > 1;
+    ```
+
+## 更新数据 (UPDATE) ✏️
+
+要修改表中已有的数据，我们使用 `UPDATE` 命令。
+
+以下是将所有从纽约飞往伦敦的航班时长更新为 430 分钟的语句：
+
+```sql
+UPDATE flights
+SET duration = 430
+WHERE origin = ‘New York’
+AND destination = ‘London’;
+```
+
+`SET` 子句指定要修改的列和新值。`WHERE` 子句精确指定要更新哪些行，这非常重要，否则会更新表中的所有行。
+
+## 删除数据 (DELETE) 🗑️
+
+要从表中移除数据，使用 `DELETE` 命令。
+
+以下是删除所有目的地为东京的航班的语句：
+
+```sql
+DELETE FROM flights WHERE destination = ‘Tokyo’;
+```
+
+同样，`WHERE` 子句至关重要，它指定了要删除哪些行。没有 `WHERE` 子句的 `DELETE` 命令将清空整个表。
+
+## 在 SQLite 中实践 🖥️
+
+SQLite 是一个轻量级的数据库，它将整个数据库存储在一个文件中，非常适合学习和开发。
+
+以下是在命令行中使用 SQLite 的简单示例：
+1.  创建一个数据库文件：`sqlite3 flights.db`
+2.  在 SQLite 提示符下，运行 `CREATE TABLE` 语句来创建表。
+3.  运行 `.tables` 命令查看所有表。
+4.  运行 `INSERT` 语句添加数据。
+5.  运行 `SELECT` 语句查询数据。可以使用 `.mode column` 和 `.headers on` 让输出更美观。
+
+## 总结 📝
+
+本节课中我们一起学习了数据库和 SQL 的基础知识。我们了解了关系型数据库如何通过表来组织数据，并学习了使用 SQL 执行核心操作：
+*   使用 `CREATE TABLE` 定义表结构。
+*   使用 `INSERT` 向表中添加新数据。
+*   使用 `SELECT` 和 `WHERE` 子句查询和过滤数据。
+*   使用 `UPDATE` 修改现有数据。
+*   使用 `DELETE` 移除数据。
+
+这些是直接与数据库交互的基础。在接下来的课程中，我们将看到 Django 如何提供一个抽象层（称为模型），让我们用 Python 代码来执行这些操作，而无需编写大量的原始 SQL，从而使 Web 开发更加高效和安全。

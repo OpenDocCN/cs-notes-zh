@@ -1,0 +1,690 @@
+# 🕸️ 课程名称：CS50 计算机科学导论 - P16：L8- 网络编程全指南（网络协议、HTML、CSS、JavaScript）
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_0.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_1.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_3.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_5.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_7.png)
+
+在本节课中，我们将要学习网络编程的基础知识，包括互联网的工作原理、核心协议（如TCP/IP和HTTP），以及用于构建网页的三种核心语言：HTML、CSS和JavaScript。我们将从底层的数据传输机制开始，逐步过渡到如何创建美观且交互性强的网页。
+
+## 🌐 互联网与网络协议
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_9.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_11.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_13.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_15.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_17.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_19.png)
+
+上一节我们介绍了命令行程序，本节中我们来看看图形化的网页世界。为了理解网页如何运作，我们首先需要了解其运行的基础设施——互联网。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_21.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_23.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_25.png)
+
+互联网本质上是一个**网络的网络**，由全球范围内相互连接的计算机（路由器）构成。数据通过这些路由器从一点传输到另一点，路径可能动态变化。
+
+为了让这些计算机能够通信，人类制定了标准化的**协议**。协议是一套约定，规定了计算机之间交换信息的格式和顺序。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_27.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_29.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_31.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_33.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_35.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_37.png)
+
+### 核心协议：TCP/IP
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_39.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_41.png)
+
+在互联网中，两个最关键的协议是**TCP**（传输控制协议）和**IP**（互联网协议），它们通常被合称为 **TCP/IP**。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_43.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_45.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_47.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_49.png)
+
+*   **IP协议**负责**寻址**。它为互联网上的每台设备分配一个唯一的**IP地址**（例如 `192.168.1.1`），就像信封上的收件人地址。当数据需要发送时，发送方会在“数据包”（可以理解为数字信封）上写上目标IP地址。
+*   **TCP协议**负责**可靠传输**和**多路复用**。它确保数据包完整、有序地到达目的地，如果中途丢失会重新发送。同时，它使用**端口号**（如 `80` 用于网页，`443` 用于安全网页）来让一台服务器同时处理多种服务（如网页、邮件）。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_51.png)
+
+为了将人类友好的域名（如 `harvard.edu`）转换为机器使用的IP地址，我们使用 **DNS**（域名系统）。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_53.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_55.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_57.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_59.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_61.png)
+
+**数据传输模拟**：
+想象用户A（浏览器）向服务器B请求一张猫的图片：
+1.  A通过DNS查找B的IP地址。
+2.  A创建一个数据包，外部写上B的IP地址和端口号`80`，内部写上请求内容（如“GET /cat.jpg”）。
+3.  数据包经过多个路由器转发，最终到达B。
+4.  B处理请求，将图片数据分割成多个数据包（每个都有序列号），按相同路径发回给A。
+5.  A根据序列号重新组装数据包，得到完整图片。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_63.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_65.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_67.png)
+
+## 🌍 万维网与HTTP协议
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_69.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_71.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_73.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_75.png)
+
+互联网是底层管道，而**万维网**（Web）是运行在其上的一个最流行的应用。它使用 **HTTP**（超文本传输协议）来规范浏览器和服务器之间“信封”**内部**的内容。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_77.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_79.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_81.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_83.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_85.png)
+
+### HTTP请求与响应
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_87.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_89.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_91.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_93.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_95.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_97.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_99.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_101.png)
+
+当你在浏览器地址栏输入一个URL并按下回车时，浏览器会向服务器发送一个**HTTP请求**。服务器处理后会返回一个**HTTP响应**。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_103.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_105.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_107.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_109.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_111.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_113.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_115.png)
+
+一个典型的HTTP请求格式如下：
+```http
+GET /index.html HTTP/1.1
+Host: www.example.com
+```
+其中 `GET` 是**方法**（动词），表示请求获取资源。`POST` 是另一个常用方法，用于提交数据（如表单），其数据不会显示在URL中，相对更安全。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_117.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_119.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_121.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_123.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_125.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_127.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_129.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_131.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_133.png)
+
+服务器的响应以**状态码**开头：
+*   **200 OK**：请求成功。
+*   **301 Moved Permanently**：资源已永久重定向到新URL。
+*   **404 Not Found**：请求的资源未找到。
+*   **500 Internal Server Error**：服务器内部错误。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_135.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_136.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_138.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_140.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_142.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_144.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_146.png)
+
+一个响应示例如下：
+```http
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_148.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_150.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_152.png)
+
+<!DOCTYPE html><html>...</html>
+```
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_154.png)
+
+### 查看网络请求
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_156.png)
+
+现代浏览器的**开发者工具**（如Chrome的“Network”标签）允许你实时查看浏览器发送和接收的所有HTTP请求与响应，包括头信息和状态码，是调试和理解网络通信的利器。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_158.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_160.png)
+
+## 📄 网页结构：HTML
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_162.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_164.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_166.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_168.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_170.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_172.png)
+
+现在我们知道如何请求和接收数据了。当请求一个网页时，服务器返回的通常是 **HTML**（超文本标记语言）文档。HTML不是编程语言，而是一种**标记语言**，用于定义网页的结构和内容。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_174.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_176.png)
+
+### HTML基础：标签与属性
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_178.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_180.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_182.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_184.png)
+
+HTML由**标签**（元素）构成，标签通常成对出现（开始标签和结束标签），并可以拥有**属性**来提供额外信息。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_186.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_188.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_190.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_192.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_194.png)
+
+以下是一个最简单的HTML页面：
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Hello, Title</title>
+</head>
+<body>
+    Hello, Body
+</body>
+</html>
+```
+*   `<!DOCTYPE html>` 声明文档类型为HTML5。
+*   `<html>` 是根元素，`lang="en"` 属性表示页面语言为英语。
+*   `<head>` 包含元信息，如标题 `<title>`（显示在浏览器标签页上）。
+*   `<body>` 包含页面的主体内容，即用户看到的区域。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_196.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_198.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_200.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_202.png)
+
+浏览器会解析HTML文档，在内存中构建一个树形结构，称为 **DOM**（文档对象模型）。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_204.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_206.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_208.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_210.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_212.png)
+
+### 常用HTML标签
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_214.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_216.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_218.png)
+
+以下是构建网页内容的一些基本标签：
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_220.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_222.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_224.png)
+
+*   **标题**：`<h1>` 到 `<h6>`，表示不同级别的标题。
+*   **段落**：`<p>` 定义一个段落。
+*   **列表**：
+    *   无序列表 `<ul>`，列表项 `<li>`。
+    *   有序列表 `<ol>`，列表项 `<li>`。
+*   **图像**：`<img src="image.jpg" alt="描述文字">`。`src` 指定图片来源，`alt` 提供替代文本（对可访问性至关重要）。
+*   **链接**：`<a href="https://example.com">可点击文本</a>`。`href` 指定链接目标。
+*   **表格**：`<table>` 定义表格，`<tr>` 定义行，`<td>` 定义单元格。
+*   **表单**：`<form action="/search" method="get">` 用于收集用户输入。包含输入框 `<input type="text">` 和提交按钮 `<input type="submit">`。提交后，数据会以 `?key=value` 形式附加到URL（GET方法）或放在请求体中（POST方法）。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_226.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_228.png)
+
+## 🎨 网页样式：CSS
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_230.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_232.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_234.png)
+
+HTML定义了网页的骨架，而 **CSS**（层叠样式表）则负责为其添加样式，控制布局、颜色、字体等视觉效果，实现美观的界面。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_236.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_238.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_240.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_242.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_244.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_246.png)
+
+### 应用CSS的三种方式
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_248.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_250.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_252.png)
+
+1.  **内联样式**：直接在HTML标签的 `style` 属性中编写。
+    ```html
+    <p style="color: red; text-align: center;">红色居中的段落</p>
+    ```
+2.  **内部样式表**：在HTML的 `<head>` 中使用 `<style>` 标签定义。
+    ```html
+    <style>
+        p {
+            color: blue;
+        }
+    </style>
+    ```
+3.  **外部样式表**（推荐）：将CSS规则写入单独的 `.css` 文件，然后在HTML中通过 `<link>` 标签引入。这实现了内容与样式的分离，便于维护和协作。
+    ```html
+    <link rel="stylesheet" href="styles.css">
+    ```
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_254.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_256.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_258.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_260.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_262.png)
+
+### CSS选择器与属性
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_264.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_266.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_268.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_270.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_272.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_274.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_276.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_278.png)
+
+CSS通过**选择器**来定位要样式化的HTML元素，然后为其设置**属性**。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_280.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_282.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_284.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_286.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_288.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_290.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_292.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_294.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_296.png)
+
+*   **元素选择器**：直接使用标签名。
+    ```css
+    p { color: green; }
+    ```
+*   **类选择器**：使用点号 `.` 开头，对应HTML标签的 `class` 属性。可重复使用。
+    ```css
+    .center { text-align: center; }
+    .large { font-size: large; }
+    ```
+    ```html
+    <p class="center large">既居中又大的段落</p>
+    ```
+*   **ID选择器**：使用井号 `#` 开头，对应HTML标签的 `id` 属性。应确保唯一。
+    ```css
+    #header { background-color: gray; }
+    ```
+*   **伪类选择器**：用于定义元素的特殊状态，如鼠标悬停。
+    ```css
+    a:hover { text-decoration: underline; }
+    ```
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_298.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_300.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_302.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_304.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_306.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_308.png)
+
+CSS属性示例：`color`（文字颜色），`background-color`（背景色），`font-size`（字体大小），`text-align`（对齐方式）。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_310.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_312.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_314.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_316.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_318.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_320.png)
+
+## ⚡ 网页交互：JavaScript
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_322.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_324.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_326.png)
+
+HTML和CSS创造了静态的页面，而 **JavaScript** 是一种真正的**编程语言**，它运行在用户的浏览器（客户端）中，使得网页能够动态响应用户操作，变得交互式。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_328.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_330.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_332.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_334.png)
+
+### JavaScript基础语法
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_336.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_338.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_340.png)
+
+JavaScript的语法与C和Python有相似之处。
+```javascript
+// 变量声明
+let counter = 0;
+counter++; // 自增
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_342.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_344.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_346.png)
+
+// 条件判断
+if (x < y) {
+    // 执行代码
+} else {
+    // 执行其他代码
+}
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_348.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_350.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_352.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_354.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_356.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_358.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_360.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_362.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_364.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_366.png)
+
+// 循环
+for (let i = 0; i < 3; i++) {
+    console.log(i);
+}
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_368.png)
+
+// 函数定义
+function greet(name) {
+    alert('Hello, ' + name);
+}
+```
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_370.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_372.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_374.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_376.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_378.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_380.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_382.png)
+
+### 操作DOM与处理事件
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_384.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_386.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_388.png)
+
+JavaScript的强大之处在于它能通过 **DOM API** 与HTML文档交互。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_390.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_392.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_394.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_396.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_398.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_400.png)
+
+*   **选择元素**：使用 `document.querySelector()` 或 `document.getElementById()`。
+    ```javascript
+    let nameInput = document.querySelector('#name'); // 选择id为‘name’的元素
+    ```
+*   **读取/修改内容**：通过元素的属性，如 `.value`（表单值）、`.innerHTML`（HTML内容）、`.style`（CSS样式）。
+    ```javascript
+    let userName = nameInput.value; // 获取输入框的值
+    nameInput.style.color = 'red'; // 将输入框文字改为红色
+    ```
+*   **事件处理**：让代码响应用户行为，如点击、输入、提交表单。
+    ```javascript
+    let form = document.querySelector('form');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // 阻止表单默认提交行为
+        let name = document.querySelector('#name').value;
+        alert('Hello, ' + name);
+    });
+    ```
+    代码监听了表单的 `submit` 事件，当用户提交时，会执行我们定义的函数（这里是一个匿名函数）。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_402.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_404.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_406.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_408.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_410.png)
+
+### 更多可能性
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_412.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_414.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_416.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_418.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_420.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_422.png)
+
+通过JavaScript，你可以实现：
+*   动态更新页面内容，无需重新加载（如自动完成搜索建议）。
+*   制作动画和视觉效果。
+*   与服务器进行异步通信（AJAX），获取新数据。
+*   访问浏览器提供的API，如获取地理位置。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_424.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_426.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_428.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_430.png)
+
+## 🎯 总结
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_432.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_434.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_436.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_438.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_440.png)
+
+本节课中我们一起学习了网络编程的完整基础链条：
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_442.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_444.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_446.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_448.png)
+
+1.  **基础设施**：理解了互联网作为网络之网，以及 **TCP/IP** 协议如何实现数据的可靠寻址和传输。
+2.  **应用协议**：掌握了 **HTTP** 协议如何规范浏览器与服务器之间的通信，包括请求/响应模型和状态码。
+3.  **网页结构**：学习了使用 **HTML** 标签和属性来构建网页的语义化结构。
+4.  **网页样式**：探索了如何使用 **CSS** 选择器和属性来美化HTML元素，实现视觉设计。
+5.  **网页交互**：引入了 **JavaScript**，了解了其如何操作DOM、处理事件，从而为网页添加动态行为和复杂功能。
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_450.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_452.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_454.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_456.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_458.png)
+
+![](img/ada90f1c39922f956d79e8b087ef9d26_462.png)
+
+这三种语言（HTML、CSS、JS）各司其职，共同构成了现代网页开发的基石。从下周开始，我们将学习如何将这些前端技术与后端的Python服务器结合起来，构建功能完整的Web应用程序。
