@@ -19,7 +19,7 @@
 +   [斯坦福 CS106A/B/L/X 编程入门笔记](docs/stf-cs106-prog/README.md)
 +   [斯坦福 CS110 计算机系统原理笔记](docs/stf-cs110-sysprin/README.md)
 +   [操作系统讲座笔记（斯坦福 CS140）](docs/stf-cs140/README.md)
-+   [斯坦福 CS143 编译原理中文笔记](docs/stf-cs143/README.md)
++   [斯坦福 CS143 编译原理中文笔记](docs/stf-cs143-cmpl/README.md)
 +   [斯坦福 CS144 计算机网络笔记](docs/stf-cs144-net/README.md)
 +   [Stanford CS145 Database Introduction Notes](docs/stf-cs145-db/README.md)
 +   [CS240h：Haskell 中的功能系统](docs/stf-cs240h/README.md)
