@@ -1,4 +1,4 @@
-# 课程 P15：从NFA到DFA的转换 🧩
+# 15：从NFA到DFA的转换 🧩
 
 ![](img/53ee70d3e73b8f5ddf183e5b66dc06f3_0.png)
 

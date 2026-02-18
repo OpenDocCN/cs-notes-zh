@@ -1,4 +1,4 @@
-# 课程 P27：预测解析（Predictive Parsing） 🧠
+# 27：预测解析（Predictive Parsing） 🧠
 
 ![](img/dabd743375f0ce30c65d64db88f90f9d_0.png)
 

@@ -1,4 +1,4 @@
-# 课程 P36：有效项（Valid Items） 🧩
+# 36：有效项（Valid Items） 🧩
 
 ![](img/8b7802cb750b290213df8129f5e06c7e_0.png)
 

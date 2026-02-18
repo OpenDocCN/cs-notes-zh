@@ -1,4 +1,4 @@
-# 课程 P28：构建LL(1)解析表 - 计算First集合 🔍
+# 28：构建LL(1)解析表 - 计算First集合 🔍
 
 ![](img/28d6acdd720e03ab9383bdae3ce84c5e_0.png)
 

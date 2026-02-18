@@ -1,4 +1,4 @@
-# 课程 P92：Java 异常处理 🚨
+# 92：Java 异常处理 🚨
 
 ![](img/ec5254b919f82bf8d5a0bcb2c73e378c_0.png)
 
