@@ -1,4 +1,4 @@
-# 课程 P47：第36讲 📚 MapReduce、Spark、阿姆达尔定律与数据级并行
+# 47：第36讲 📚 MapReduce、Spark、阿姆达尔定律与数据级并行
 
 ![](img/4d74245e78099c0169d1d6ad549d1205_0.png)
 

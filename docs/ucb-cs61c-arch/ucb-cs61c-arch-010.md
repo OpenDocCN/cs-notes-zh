@@ -1,4 +1,4 @@
-# 课程 P10：Lecture 8：RISC-V 数据传输 🚚
+# 10：Lecture 8：RISC-V 数据传输 🚚
 
 ![](img/cd22410fbe1e54e4d33b72c88791e6a8_0.png)
 

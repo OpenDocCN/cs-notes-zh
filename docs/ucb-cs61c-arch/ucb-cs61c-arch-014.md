@@ -1,4 +1,4 @@
-# 课程 P14：Lecture 11： RISC-V 指令格式 I 🧩
+# 14：Lecture 11： RISC-V 指令格式 I 🧩
 
 ![](img/f04679a9ba7f69dd99e186b31a53ed3b_1.png)
 

@@ -1,4 +1,4 @@
-# 课程 P16：第12讲：RISC-V 指令格式 II 🧩
+# 16：第12讲：RISC-V 指令格式 II 🧩
 
 ![](img/9d6aefab06daa349d5110ad0290fcd18_0.png)
 

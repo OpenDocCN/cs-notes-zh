@@ -1,4 +1,4 @@
-# 课程 P24：第18讲 - RISC-V 单周期数据通路 I 🧠
+# 24：第18讲 - RISC-V 单周期数据通路 I 🧠
 
 ![](img/3c5dbac18c72a5b3cb44e1e02a09fdef_0.png)
 

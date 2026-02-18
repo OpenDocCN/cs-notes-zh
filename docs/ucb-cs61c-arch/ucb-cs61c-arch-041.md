@@ -1,4 +1,4 @@
-# 课程 P41：Lecture 31： 并行性 III： 缓存一致性、性能 🚀
+# 41：Lecture 31： 并行性 III： 缓存一致性、性能 🚀
 
 ![](img/fdf02a2b9e8cb96d1791f372a399f305_0.png)
 

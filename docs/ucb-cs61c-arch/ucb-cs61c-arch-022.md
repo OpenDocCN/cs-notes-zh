@@ -1,4 +1,4 @@
-# 课程 P22：Lecture 17：组合逻辑块 🧩
+# 22：Lecture 17：组合逻辑块 🧩
 
 ![](img/20c495857631be128dfb4c88e5bc2b58_0.png)
 

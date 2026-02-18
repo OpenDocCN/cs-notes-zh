@@ -1,4 +1,4 @@
-# 课程 P45：Lecture 34： VM III： TLB 🧠💾
+# 45：Lecture 34： VM III： TLB 🧠💾
 
 ![](img/08eac33950f7757e6b018dbb68a571e1_0.png)
 
