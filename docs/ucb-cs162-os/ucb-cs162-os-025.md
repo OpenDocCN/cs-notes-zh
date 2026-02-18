@@ -1,4 +1,4 @@
-# 课程 P25：RPC、NFS 和 AFS 🖥️🌐
+# 25：RPC、NFS 和 AFS 🖥️🌐
 
 ![](img/ab8e9f1efbbf4b73bb263d21f10f9285_1.png)
 
