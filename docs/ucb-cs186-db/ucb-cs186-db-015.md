@@ -1,4 +1,4 @@
-# 15：第15讲 事务与并发 II 📚
+# 15：事务与并发 II 📚
 
 ![](img/eae5e6a7bf6abaacd589335a2e1dca71_1.png)
 
