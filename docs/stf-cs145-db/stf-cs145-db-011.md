@@ -1,4 +1,4 @@
-# SQL 课程 P11：空值处理 🧩
+# SQL 11：空值处理 🧩
 
 ![](img/5e50f96d0199e8a9a2d0dbbbc2ad71bf_1.png)
 

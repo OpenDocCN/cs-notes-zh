@@ -1,4 +1,4 @@
-# 课程 P5：XML Schema 入门教程 🗂️
+# 5：XML Schema 入门教程 🗂️
 
 ![](img/0fd308dae54064fed2fcaebfb7bf7c02_1.png)
 

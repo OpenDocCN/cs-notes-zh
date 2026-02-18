@@ -1,4 +1,4 @@
-# 课程 P17：XQuery 入门教程 🧩
+# 17：XQuery 入门教程 🧩
 
 ![](img/ebfd479f6b6b62d703890d11d2da0056_1.png)
 

@@ -1,4 +1,4 @@
-# 课程 P6：JSON 简介 📖
+# 6：JSON 简介 📖
 
 在本课程中，我们将学习 JSON（JavaScript Object Notation）的基础知识。我们将了解 JSON 是什么、它的基本结构，并将其与关系数据模型和 XML 进行比较，以便更好地理解其特性和适用场景。
 

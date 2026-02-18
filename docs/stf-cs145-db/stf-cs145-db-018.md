@@ -1,4 +1,4 @@
-# 课程 P18：XSLT 查询语言入门教程 📖
+# 18：XSLT 查询语言入门教程 📖
 
 ![](img/ddea30cfec8b93a1142e2df3d1091acb_1.png)
 

@@ -1,4 +1,4 @@
-# 📘 课程 P28：XML 查询与 XSLT 实践教程
+# 28：XML 查询与 XSLT 实践教程 📘
 
 ![](img/efd01bb0d4d6e4eea8c18808748a281d_1.png)
 

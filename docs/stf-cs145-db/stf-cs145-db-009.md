@@ -1,4 +1,4 @@
-# SQL教程 P9：06-05-在FROM和SELECT子句中使用子查询 🧩
+# 9：06-05-在FROM和SELECT子句中使用子查询 🧩
 
 ![](img/7b5613e8e603a195cba10b0a69c34cff_1.png)
 

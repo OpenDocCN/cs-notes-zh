@@ -1,1 +1,1 @@
-# Stanford CS145 Database Introduction Notes
+# 斯坦福 CS145 数据库导论笔记
