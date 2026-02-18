@@ -1,4 +1,4 @@
-# 课程 P2：SQL I (续) + SQL II 🗃️
+# 2：SQL I (续) + SQL II 🗃️
 
 ![](img/380d25af24e3d95ef6c48696115a9d08_0.png)
 

@@ -1,4 +1,4 @@
-# 课程 P24：第24讲 NoSQL I - 动机与数据模型 🗄️
+# 24：第24讲 NoSQL I - 动机与数据模型 🗄️
 
 ![](img/4969c3b6bdb2795df8c30a9a8a3dbbc9_1.png)
 

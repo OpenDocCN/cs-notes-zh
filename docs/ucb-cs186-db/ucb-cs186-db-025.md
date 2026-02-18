@@ -1,4 +1,4 @@
-# 课程 P25：NoSQL II - MongoDB 查询语言 🗄️
+# 25：NoSQL II - MongoDB 查询语言 🗄️
 
 ![](img/5219991661bf799fd6abc2f5dd000729_0.png)
 

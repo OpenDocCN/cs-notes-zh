@@ -1,4 +1,4 @@
-# 课程 P18：恢复 II（续） - 深入理解ARIES算法 🔄
+# 18：恢复 II（续） - 深入理解ARIES算法 🔄
 
 ![](img/22ca6ca36a6a8b7349b9ccabcf4bad76_1.png)
 

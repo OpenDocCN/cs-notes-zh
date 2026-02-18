@@ -1,4 +1,4 @@
-# 课程26：MapReduce与Spark 🚀
+# 26：MapReduce与Spark 🚀
 
 ![](img/6d4c543a780a1110056670881d1fd061_0.png)
 
