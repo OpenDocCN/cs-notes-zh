@@ -1,4 +1,4 @@
-# CS110 课程笔记 P6：execvp, pipe, dup2, signals 🚀
+# 6：execvp, pipe, dup2, signals 🚀
 
 在本节课中，我们将要学习多进程编程中的几个核心概念：如何使用 `execvp` 运行新程序，如何通过 `pipe` 和 `dup2` 在进程间建立通信管道，以及如何利用 `signals` 处理进程间的事件通知。这些是构建更复杂程序（如你自己的shell）的基础。
 

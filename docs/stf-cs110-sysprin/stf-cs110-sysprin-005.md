@@ -1,4 +1,4 @@
-# 课程 P5：第五讲 - Fork、Waitpid 与 Execvp 🚀
+# 5：第五讲 - Fork、Waitpid 与 Execvp 🚀
 
 ![](img/12985c8e5f99b7c7460e806495676228_1.png)
 

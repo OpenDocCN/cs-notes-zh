@@ -1,4 +1,4 @@
-# 课程3：Unix v6 文件系统 📂
+# 3：Unix v6 文件系统 📂
 
 ![](img/ab730a8becfb15893f836f4928a920c1_1.png)
 

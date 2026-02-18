@@ -1,1 +1,1 @@
-# Stanford CS110 Computer Systems Principles Notes
+# 斯坦福 CS110 计算机系统原理笔记

@@ -1,4 +1,4 @@
-# 课程 P19：第18讲 MapReduce 🗺️➡️📊
+# 19：第18讲 MapReduce 🗺️➡️📊
 
 ![](img/a7a304e14cd2dd38cb9686e50bf4fc64_1.png)
 
