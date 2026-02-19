@@ -1,5 +1,5 @@
 +   [函数式编程讲义（芝加哥 CS223）](docs/chcg-cs223/README.md)
-+   [数据结构与函数式编程讲义（康奈尔大学 CS3110）](docs/crnl-cs3110/README.md)
++   [康奈尔 CS3110 数据结构与函数式编程讲义](docs/crnl-cs3110-dsat-fp/README.md)
 +   [计算机科学领域指南](docs/cs-fld-gd/README.md)
 +   [GAMES 图形学系列笔记](docs/games/README.md)
 +   [哈佛 CS50 中文官方笔记](docs/hav-cs50/README.md)
