@@ -1,4 +1,4 @@
-# 计算机思维导论-Julia：L16：优化 🎯
+# L16：优化 🎯
 
 ![](img/b49bb114fe01a85fbec5f7f04e6ffa62_1.png)
 
