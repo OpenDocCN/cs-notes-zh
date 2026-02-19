@@ -1,4 +1,4 @@
-+   [函数式编程讲义（芝加哥 CS223）](README.md)
++   [芝加哥 CS223 函数式编程讲义](README.md)
 +   [课程概述](chcg-cs223_01.md)
 +   [Elm 中的 ML 入门](chcg-cs223_02.md)
 +   [Elm 中的 FRP 简介](chcg-cs223_03.md)

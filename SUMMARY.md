@@ -1,4 +1,3 @@
-+   [函数式编程讲义（芝加哥 CS223）](docs/chcg-cs223/README.md)
 +   [康奈尔 CS3110 数据结构与函数式编程讲义](docs/crnl-cs3110-dsat-fp/README.md)
 +   [计算机科学领域指南](docs/cs-fld-gd/README.md)
 +   [GAMES 图形学系列笔记](docs/games/README.md)
@@ -31,6 +30,7 @@
 +   [UCB CS186 数据库导论笔记](docs/ucb-cs186-db/README.md)
 +   [UCB CS61AS 使用 Racket 进行 SICP 学习](docs/ucb-cs61as/README.md)
 +   [UCB CS61c 组成原理中文笔记](docs/ucb-cs61c-arch/README.md)
++   [芝加哥 CS223 函数式编程讲义](docs/uchic-cs223-fp/README.md)
 +   [UIUC CS225 数据结构中文笔记](docs/uiuc-cs225-dast/README.md)
 +   [UIUC CS241：众包系统编程书](docs/uiuc-cs241-notes/README.md)
 +   [UIUC CS341 系统编程中文讲义](docs/uiuc-cs341/README.md)
