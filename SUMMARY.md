@@ -8,6 +8,7 @@
 +   [MIT 18.S191 计算机思维导论笔记](docs/mit-18s191-intro/README.md)
 +   [MIT 6.005 软件构建讲义](docs/mit-6005-swbd/README.md)
 +   [MIT 6.042J 计算机科学的数学基础笔记](docs/mit-6042j-mcs/README.md)
++   [MIT 6.046J 数据结构与算法设计笔记](docs/mit-6046j-dsal/README.md)
 +   [MIT 6.824 2025 分布式系统工程笔记](docs/mit-6824-dist-2015sp/README.md)
 +   [MIT 6.824 2021 分布式系统笔记](docs/mit-6824-dist-2021/README.md)
 +   [MIT 6.858 计算机系统安全讲义 2014 秋季](docs/mit-6858-comp-sec/README.md)
