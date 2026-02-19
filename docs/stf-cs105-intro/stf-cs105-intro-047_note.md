@@ -1,4 +1,4 @@
-# 计算机科学导论：L16.1：Python 介绍：与 Python Shell 交互 🐍
+# L16.1：Python 介绍：与 Python Shell 交互 🐍
 
 ![](img/67cb42410e2fa7c1b3fc2fc667f4b3af_1.png)
 

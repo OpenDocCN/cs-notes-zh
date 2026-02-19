@@ -1,4 +1,4 @@
-# 计算机科学导论：L16.2：Python 介绍：我们的第一个 Python程序 🐍
+# L16.2：Python 介绍：我们的第一个 Python程序 🐍
 
 ![](img/1e56225584b4fc49f9911359f77fde5d_0.png)
 
