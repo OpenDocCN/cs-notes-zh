@@ -1,4 +1,4 @@
-+   [编程实践教程（KAIST CS109）](README.md)
++   [KAIST CS109 编程实践教程](README.md)
 +   [命令行](kaist-cs109_01.md)
 +   [Kotlin 简介](kaist-cs109_02.md)
 +   [增量测试](kaist-cs109_03.md)
