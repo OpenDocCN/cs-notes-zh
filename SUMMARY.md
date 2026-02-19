@@ -24,7 +24,7 @@
 +   [斯坦福 CS143 编译原理中文笔记](docs/stf-cs143-cmpl/README.md)
 +   [斯坦福 CS144 计算机网络笔记](docs/stf-cs144-net/README.md)
 +   [斯坦福 CS145 数据库导论笔记](docs/stf-cs145-db/README.md)
-+   [CS240h：Haskell 中的功能系统](docs/stf-cs240h/README.md)
++   [斯坦福 CS240h：Haskell 中的功能系统](docs/stf-cs240h-hskl/README.md)
 +   [UCB CS162 操作系统笔记](docs/ucb-cs162-os/README.md)
 +   [UCB CS170 算法笔记](docs/ucb-cs170-algo/README.md)
 +   [UCB CS186 数据库导论笔记](docs/ucb-cs186-db/README.md)

@@ -1,4 +1,4 @@
-+   [CS240h：Haskell 中的功能系统](README.md)
++   [斯坦福 CS240h：Haskell 中的功能系统](README.md)
 +   [你好，世界](stf-cs240h_01.md)
 +   [异常。](stf-cs240h_02.md)
 +   [幻影](stf-cs240h_03.md)

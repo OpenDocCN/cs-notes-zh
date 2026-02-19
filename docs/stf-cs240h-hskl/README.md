@@ -1,4 +1,4 @@
-# CS240h：Haskell 中的功能系统
+# 斯坦福 CS240h：Haskell 中的功能系统
 
 +   我是 David Mazières
 
