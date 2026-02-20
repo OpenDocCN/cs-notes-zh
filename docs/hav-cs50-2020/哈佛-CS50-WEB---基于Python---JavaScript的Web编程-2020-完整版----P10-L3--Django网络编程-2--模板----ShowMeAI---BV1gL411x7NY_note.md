@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程(2020·完整版) - P10：L3- Django网络编程 2 (模板) 🧩
+# 哈佛 CS50-WEB 10：L3- Django网络编程 2 (模板) 🧩
 
 ## 概述
 

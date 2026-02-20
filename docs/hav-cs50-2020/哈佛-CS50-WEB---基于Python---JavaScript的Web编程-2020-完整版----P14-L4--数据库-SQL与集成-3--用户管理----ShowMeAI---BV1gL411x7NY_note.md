@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程(2020·完整版) - P14：L4- 数据库、SQL与集成 3 (用户管理) 🧑‍💻
+# 哈佛 CS50-WEB 14：L4- 数据库、SQL与集成 3 (用户管理) 🧑‍💻
 
 ![](img/8f4f652fb6c250bb6b9ef00f83c3cad9_1.png)
 

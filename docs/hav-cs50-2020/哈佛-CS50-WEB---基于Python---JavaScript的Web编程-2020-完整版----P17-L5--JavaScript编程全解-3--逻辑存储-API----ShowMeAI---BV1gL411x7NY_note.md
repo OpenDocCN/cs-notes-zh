@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程(2020·完整版) - P17：L5- JavaScript编程全解 3 (逻辑存储，API) 📚
+# 哈佛 CS50-WEB 17：L5- JavaScript编程全解 3 (逻辑存储，API) 📚
 
 ![](img/dc59dd7877c6ec784380fe9b1020ccd4_1.png)
 

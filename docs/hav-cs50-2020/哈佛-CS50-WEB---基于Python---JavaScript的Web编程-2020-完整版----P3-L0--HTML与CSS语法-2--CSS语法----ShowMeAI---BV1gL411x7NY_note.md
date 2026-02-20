@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于 Python ／ JavaScript 的 Web 编程（2020·完整版） - P3：L0- HTML 与 CSS 语法 2 (CSS 语法) 🎨
+# 哈佛 CS50-WEB 3：L0- HTML 与 CSS 语法 2 (CSS 语法) 🎨
 
 ![](img/5b25f9189e795f9881b6a35947d0e23f_1.png)
 

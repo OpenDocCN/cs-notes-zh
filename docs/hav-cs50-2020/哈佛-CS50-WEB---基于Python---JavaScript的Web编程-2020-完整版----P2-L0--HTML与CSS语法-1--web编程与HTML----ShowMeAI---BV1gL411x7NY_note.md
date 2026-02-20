@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程(2020·完整版) - P2：L0- HTML与CSS语法 1 (web编程与HTML) 📚
+# 哈佛 CS50-WEB 2：L0- HTML与CSS语法 1 (web编程与HTML) 📚
 
 ![](img/7be82e6347afae50c0689d25a513a49f_0.png)
 

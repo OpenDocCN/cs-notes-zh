@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python／JavaScript的Web编程(2020·完整版) - P6：L1 - GitHub操作 2 (GitHub冲突处理与分支) 🧩
+# 哈佛 CS50-WEB 6：L1 - GitHub操作 2 (GitHub冲突处理与分支) 🧩
 
 ![](img/2a88354eae8a6e05db15c15713ce6e45_1.png)
 

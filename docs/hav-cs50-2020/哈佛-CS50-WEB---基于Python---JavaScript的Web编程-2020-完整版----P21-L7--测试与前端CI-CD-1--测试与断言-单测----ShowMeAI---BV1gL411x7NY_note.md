@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python／JavaScript的Web编程(2020·完整版) - P21：L7- 测试与前端CI/CD 1 (测试与断言，单测) 🧪
+# 哈佛 CS50-WEB 21：L7- 测试与前端CI/CD 1 (测试与断言，单测) 🧪
 
 ![](img/e83f06e692087eac7272eb66f5d44ede_0.png)
 

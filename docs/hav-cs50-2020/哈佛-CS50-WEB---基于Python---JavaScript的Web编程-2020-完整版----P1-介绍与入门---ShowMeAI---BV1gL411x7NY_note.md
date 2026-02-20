@@ -1,4 +1,4 @@
-# 🚀 哈佛CS50-WEB ｜ 基于Python／JavaScript的Web编程(2020·完整版) - P1：介绍与入门
+# 🚀 哈佛CS50-WEB1：介绍与入门
 
 ![](img/a4885bec1cc37e89a9a2eb2681c8c8dc_0.png)
 

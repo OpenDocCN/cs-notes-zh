@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程 - P7：L2- Python编程语言全解 1 (变量，字符串格式化，条件与循环) 🐍
+# 哈佛 CS50-WEB 7：L2- Python编程语言全解 1 (变量，字符串格式化，条件与循环) 🐍
 
 ![](img/7197b85a91b83e27dfb773cad9c71625_0.png)
 

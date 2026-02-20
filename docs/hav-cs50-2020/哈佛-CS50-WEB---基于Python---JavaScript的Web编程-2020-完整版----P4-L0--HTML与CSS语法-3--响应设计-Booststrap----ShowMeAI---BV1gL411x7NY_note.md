@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程(2020·完整版) - P4：L0- HTML与CSS语法 3 (响应设计，Bootstrap) 📱
+# 哈佛 CS50-WEB 4：L0- HTML与CSS语法 3 (响应设计，Bootstrap) 📱
 
 ![](img/d15ab487c4bc1743a9156bbc67f2189c_1.png)
 

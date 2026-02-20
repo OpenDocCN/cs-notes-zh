@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程(2020·完整版) - P22：L7- 测试与前端CI/CD 2 (selenium，CI/CD) 🧪
+# 哈佛 CS50-WEB 22：L7- 测试与前端CI/CD 2 (selenium，CI/CD) 🧪
 
 在本节课中，我们将要学习如何为Web应用程序编写自动化测试，特别是使用Django的测试框架和Selenium进行浏览器端测试。我们还将探讨持续集成（CI）和持续交付/部署（CD）的核心概念，了解它们如何帮助团队更高效、更可靠地开发和发布软件。
 

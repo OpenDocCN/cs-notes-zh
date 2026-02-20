@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python / JavaScript的Web编程(2020·完整版) - P20：L6- Web用户接口与交互 3 (React) 🧩
+# 哈佛 CS50-WEB 20：L6- Web用户接口与交互 3 (React) 🧩
 
 ![](img/5d53683b6a69413d33c6e42e94e87297_1.png)
 

@@ -1,4 +1,4 @@
-# 哈佛 CS50-WEB ｜ 基于Python／JavaScript的Web编程(2020·完整版) - P23：L7- 测试与前端CI/CD 3 (GitHub Actions与Docker应用) 🚀
+# 哈佛 CS50-WEB 23：L7- 测试与前端CI/CD 3 (GitHub Actions与Docker应用) 🚀
 
 ## 概述
 
