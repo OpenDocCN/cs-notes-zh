@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P6：Lecture 06 约束方法：PBD、PD及其他 (Lab 2) 📐
+# GAMES103-基于物理的计算机动画入门---P6-Lecture-06-Constrained-Approaches--PBD--PD-and-others--Lab-2----GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/7c513136c2a0bbb7c5feecad74cc65cd_0.png)
 

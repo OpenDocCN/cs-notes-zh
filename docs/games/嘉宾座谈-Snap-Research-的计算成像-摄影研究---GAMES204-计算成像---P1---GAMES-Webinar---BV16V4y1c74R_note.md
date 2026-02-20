@@ -1,4 +1,4 @@
-# GAMES204-计算成像 课程笔记 P1：Snap Research 的计算成像与摄影研究 👨‍🔬
+# 嘉宾座谈-Snap-Research-的计算成像-摄影研究---GAMES204-计算成像---P1---GAMES-Webinar---BV16V4y1c74R_note
 
 在本节课中，我们将学习 Snap Research 在计算成像和计算摄影领域的研究工作。课程内容涵盖团队介绍、公司产品背景以及多个前沿研究项目的核心思想与成果。
 

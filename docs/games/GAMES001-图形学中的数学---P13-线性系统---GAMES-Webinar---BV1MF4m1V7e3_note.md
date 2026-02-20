@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P13：线性系统 - GAMES-Webinar - BV1MF4m1V7e3
+# GAMES001-图形学中的数学---P13-线性系统---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/dcecde4e6e654e8b450bc8c8c71b6cbe_0.png)
 

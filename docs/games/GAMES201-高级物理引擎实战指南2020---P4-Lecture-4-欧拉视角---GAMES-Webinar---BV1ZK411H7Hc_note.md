@@ -1,4 +1,4 @@
-# GAMES201：高级物理引擎实战指南2020 - P4：Lecture 4 欧拉视角 🔄
+# GAMES201-高级物理引擎实战指南2020---P4-Lecture-4-欧拉视角---GAMES-Webinar---BV1ZK411H7Hc_note
 
 ![](img/c6d91a5052cb15af085edc0958df24f9_0.png)
 

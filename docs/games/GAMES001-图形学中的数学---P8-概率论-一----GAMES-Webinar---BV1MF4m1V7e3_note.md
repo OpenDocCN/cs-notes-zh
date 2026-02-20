@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P8：概率论（一） 📊
+# GAMES001-图形学中的数学---P8-概率论-一----GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/d33b8ccc3d5f0c753a8f253fc090c6b4_0.png)
 

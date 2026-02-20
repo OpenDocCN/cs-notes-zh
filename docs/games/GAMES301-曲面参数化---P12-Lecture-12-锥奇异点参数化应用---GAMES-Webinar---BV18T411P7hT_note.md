@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P12：Lecture 12 锥奇异点参数化应用 📐
+# GAMES301-曲面参数化---P12-Lecture-12-锥奇异点参数化应用---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/2a76e9662dc8e27bca50900de5099ad2_0.png)
 

@@ -1,4 +1,4 @@
-# 13. 计算工具箱：图像模糊 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1qe4y1v75r
+# 13-计算工具箱-图像模糊---GAMES204-计算成像---P1---GAMES-Webinar---BV1qe4y1v75r_note
 
 ![](img/f9c3fcb6147e51d6f29efd4f9913e8be_0.png)
 

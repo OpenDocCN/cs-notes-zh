@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P10：Lecture 10 表面波（实验四） 🌊
+# GAMES103-基于物理的计算机动画入门---P10-Lecture-10-Surface-Waves--Lab-4----GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/0bbffc89557c994fb814abda28dacfef_0.png)
 

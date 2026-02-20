@@ -1,4 +1,4 @@
-# 课程21：动态全局光照与Lumen (Part 2) 🎮
+# 21-动态全局光照和Lumen--Part-2----GAMES104-现代游戏引擎-从入门到实践---P1---GAMES-Webinar---BV1Ya411g7Th_note
 
 ![](img/2c089e22d95bb29a198901b3b1fb54d1_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P13：Lecture 13 混合三维表示 🧩
+# GAMES203--三维重建和理解---P13-Lecture-13-Hybrid-3D-Representations---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/4b4d557df182e68e9aae2e05ee86634a_0.png)
 

@@ -1,4 +1,4 @@
-# 07.VR/AR主流显示技术概要 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV18g411r7Fn
+# 07-VR-AR主流显示技术概要---GAMES204-计算成像---P1---GAMES-Webinar---BV18g411r7Fn_note
 
 ![](img/5513d9c88ad4224343a533354d093593_0.png)
 

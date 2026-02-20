@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P8：Lecture07 蒙皮技术 🎭
+# GAMES105-计算机角色动画基础---P8-Lecture07-Skinning---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/32ea15be47704fb560dbd46560c965d8_0.png)
 

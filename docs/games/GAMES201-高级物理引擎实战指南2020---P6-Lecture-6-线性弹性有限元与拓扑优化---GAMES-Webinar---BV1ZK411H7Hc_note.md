@@ -1,4 +1,4 @@
-# GAMES201：高级物理引擎实战指南2020 - P6：Lecture 6 线性弹性有限元与拓扑优化 🧮
+# GAMES201-高级物理引擎实战指南2020---P6-Lecture-6-线性弹性有限元与拓扑优化---GAMES-Webinar---BV1ZK411H7Hc_note
 
 ![](img/e0e16c5517cedbcf8e20727ae642cb7c_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P13：Lecture 13 参数化应用3-曲面对应与高阶多项式映射 🎯
+# GAMES301-曲面参数化---P13-Lecture-13-参数化应用3-曲面对应与高阶多项式映射---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/cd41db3638e69039ad3cc93192ab8b6d_0.png)
 

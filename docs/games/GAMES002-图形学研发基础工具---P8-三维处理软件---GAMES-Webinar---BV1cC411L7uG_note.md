@@ -1,4 +1,4 @@
-# GAMES002-图形学研发基础工具 - P8：三维处理软件 - GAMES-Webinar - BV1cC411L7uG
+# GAMES002-图形学研发基础工具---P8-三维处理软件---GAMES-Webinar---BV1cC411L7uG_note
 
 ![](img/e525e3a5baf2f4ab54c3b6c12027c2fc_1.png)
 

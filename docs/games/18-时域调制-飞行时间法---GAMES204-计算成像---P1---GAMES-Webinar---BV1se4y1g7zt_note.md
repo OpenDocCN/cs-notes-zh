@@ -1,4 +1,4 @@
-# 18. 时域调制、飞行时间法 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1se4y1g7zt
+# 18-时域调制-飞行时间法---GAMES204-计算成像---P1---GAMES-Webinar---BV1se4y1g7zt_note
 
 ![](img/fd48853c6b7a3557584f10f0b92b0ecc_0.png)
 

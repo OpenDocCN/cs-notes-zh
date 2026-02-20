@@ -1,4 +1,4 @@
-# 课程06：游戏中地形、大气和云的渲染（上） 🌍☁️
+# 06-游戏中地形大气和云的渲染-上----GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture6_Part1---GAMES-Webinar---BV1au411y7Fq_note
 
 ![](img/d98e24e2146331c40bca55b6d357537e_1.png)
 

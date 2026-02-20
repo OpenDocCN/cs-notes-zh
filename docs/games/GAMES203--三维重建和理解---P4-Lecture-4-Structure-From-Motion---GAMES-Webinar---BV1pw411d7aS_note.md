@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P4：Lecture 4 运动恢复结构 (Structure From Motion) 📸
+# GAMES203--三维重建和理解---P4-Lecture-4-Structure-From-Motion---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/33217b811ad54c2601acdb4f3b66753a_0.png)
 

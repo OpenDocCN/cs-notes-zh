@@ -1,4 +1,4 @@
-# GAMES003-科研基本素养 - P2：L02-如何选择科研课题 🎯
+# GAMES003-科研基本素养---P2-L02-如何选择科研课题---GAMES-Webinar---BV1RitTezEa9_note
 
 ![](img/747ef0c4d275024b74688006e2cee4a1_0.png)
 

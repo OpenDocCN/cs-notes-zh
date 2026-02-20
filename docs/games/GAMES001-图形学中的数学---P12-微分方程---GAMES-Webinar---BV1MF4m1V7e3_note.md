@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P12：微分方程 🧮
+# GAMES001-图形学中的数学---P12-微分方程---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/786d04a80212f8deec990bdae26acdb1_0.png)
 

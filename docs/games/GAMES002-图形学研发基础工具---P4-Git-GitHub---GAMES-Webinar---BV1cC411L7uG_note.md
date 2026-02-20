@@ -1,4 +1,4 @@
-# GAMES002-图形学研发基础工具 - P4：Git+GitHub - GAMES-Webinar - BV1cC411L7uG
+# GAMES002-图形学研发基础工具---P4-Git-GitHub---GAMES-Webinar---BV1cC411L7uG_note
 
 ![](img/1356cb8aa28b8e43bd0241364f4a9615_0.png)
 

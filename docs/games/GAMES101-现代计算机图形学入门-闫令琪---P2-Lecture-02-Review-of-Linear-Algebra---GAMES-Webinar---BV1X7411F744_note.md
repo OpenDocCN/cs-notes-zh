@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P2：Lecture 02 Review of Linear Algebra - GAMES-Webinar - BV1X7411F744
+# GAMES101-现代计算机图形学入门-闫令琪---P2-Lecture-02-Review-of-Linear-Algebra---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/a84b9c961ed23333177ff44003fc8e19_0.png)
 

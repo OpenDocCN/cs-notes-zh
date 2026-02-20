@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P6：近场动力学（Peridynamics）并行编程与实践 🧵
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P6-6--近场动力学-Peridynamics-并行编程与实践---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/c289e823a19418c6d43cc214a3d8a1aa_1.png)
 

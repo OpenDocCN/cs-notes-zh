@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P6：插值与拟合 📈
+# GAMES001-图形学中的数学---P6-插值-拟合---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/72df9b1d8c5233ee758623a4d11f9a23_0.png)
 

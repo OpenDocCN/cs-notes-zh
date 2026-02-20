@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P2：Lecture02 数学基础 📐
+# GAMES105-计算机角色动画基础---P2-Lecture02-Math-Background---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/93c1acd1a9835a677edb70eb6debc925_0.png)
 

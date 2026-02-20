@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P19：相机、透镜与光场 📷
+# GAMES101-现代计算机图形学入门-闫令琪---P19-Lecture-19-Cameras--Lenses-and-Light-Fields---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/bd795d9bb508844c45d788ab493a4d1c_0.png)
 

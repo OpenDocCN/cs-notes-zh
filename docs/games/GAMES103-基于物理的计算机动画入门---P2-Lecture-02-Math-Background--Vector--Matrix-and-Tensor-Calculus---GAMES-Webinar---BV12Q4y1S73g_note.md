@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P2：Lecture 02 数学基础：矢量、矩阵与张量微积分 🧮
+# GAMES103-基于物理的计算机动画入门---P2-Lecture-02-Math-Background--Vector--Matrix-and-Tensor-Calculus---GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/f64d68cfdfda43ce248ae0a771043770_0.png)
 

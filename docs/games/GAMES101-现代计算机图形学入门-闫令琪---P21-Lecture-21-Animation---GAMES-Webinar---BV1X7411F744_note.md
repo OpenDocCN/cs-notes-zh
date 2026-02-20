@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-第21讲：动画入门 🎬
+# GAMES101-现代计算机图形学入门-闫令琪---P21-Lecture-21-Animation---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/67c59d3a9154dfaefe30bbafed3093fa_0.png)
 

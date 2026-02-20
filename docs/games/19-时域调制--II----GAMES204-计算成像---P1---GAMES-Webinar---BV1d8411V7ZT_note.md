@@ -1,4 +1,4 @@
-# 19.时域调制 (II) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1d8411V7ZT
+# 19-时域调制--II----GAMES204-计算成像---P1---GAMES-Webinar---BV1d8411V7ZT_note
 
 ![](img/a90f0abe78d74cf5f8c1d0a03ca886cf_1.png)
 

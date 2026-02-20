@@ -1,4 +1,4 @@
-# 课程06：高动态范围成像与手机摄影 📱 | GAMES204-计算成像
+# 06-高动态范围成像与手机摄影---GAMES204-计算成像---P1---GAMES-Webinar---BV1KS4y147tp_note
 
 ![](img/ef7e5af1c8e371afb7d8f4581bbd4156_0.png)
 

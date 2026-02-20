@@ -1,4 +1,4 @@
-# 课程05：渲染中光和材质的数学魔法 🔮 | GAMES104-现代游戏引擎：从入门到实践
+# 05-渲染中光和材质的数学魔法---GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture5-change---GAMES-Webinar---BV1J3411n7WT_note
 
 ![](img/862e721166dd26c028fd68d2f1a429a3_0.png)
 

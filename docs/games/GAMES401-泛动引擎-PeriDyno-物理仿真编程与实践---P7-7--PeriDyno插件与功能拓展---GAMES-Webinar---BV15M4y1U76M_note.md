@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P7：插件与功能拓展 🧩
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P7-7--PeriDyno插件与功能拓展---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/a7353a8fe01a4d4e85be5c8f65818da4_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES302-等几何分析 - P4：等几何分析中的计算域参数化 I 🎯
+# GAMES302-等几何分析---P4-4--等几何分析中的计算域参数化-I---GAMES-Webinar---BV1dM4y117PS_note
 
 ![](img/1bbbc668d05881508124198bac788aba_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES002-图形学研发基础工具 - P5：编译工具和包管理环境 🛠️
+# GAMES002-图形学研发基础工具---P5-编译工具和包管理环境---GAMES-Webinar---BV1cC411L7uG_note
 
 ![](img/dc4d384c90960476ff4c33fac7f6cbf8_1.png)
 

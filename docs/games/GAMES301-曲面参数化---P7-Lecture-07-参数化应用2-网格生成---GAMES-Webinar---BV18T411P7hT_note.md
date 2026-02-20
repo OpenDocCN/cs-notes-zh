@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P7：Lecture 07 参数化应用2-网格生成 🧠
+# GAMES301-曲面参数化---P7-Lecture-07-参数化应用2-网格生成---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/ee8b5223c114ef4f4eddef2b1cc940d5_0.png)
 

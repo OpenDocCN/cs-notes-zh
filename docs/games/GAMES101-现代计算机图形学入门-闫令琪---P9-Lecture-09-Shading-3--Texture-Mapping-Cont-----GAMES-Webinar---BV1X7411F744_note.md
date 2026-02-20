@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-第九讲：着色（三）纹理映射（续）📐
+# GAMES101-现代计算机图形学入门-闫令琪---P9-Lecture-09-Shading-3--Texture-Mapping-Cont-----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/5be1398b5ff5229267d27d5e0347268c_0.png)
 

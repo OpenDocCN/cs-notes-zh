@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P8：Lecture 08 无翻转光滑映射 🧭
+# GAMES301-曲面参数化---P8-Lecture-08-无翻转光滑映射---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/5842c86f4fd7ee348602e9a80f6fd2cb_0.png)
 

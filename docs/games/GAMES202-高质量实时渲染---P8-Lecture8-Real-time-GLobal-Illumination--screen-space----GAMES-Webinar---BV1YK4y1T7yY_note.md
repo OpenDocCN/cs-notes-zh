@@ -1,4 +1,4 @@
-# GAMES202-高质量实时渲染 - 课程8：实时全局光照（屏幕空间方法） 🌟
+# GAMES202-高质量实时渲染---P8-Lecture8-Real-time-GLobal-Illumination--screen-space----GAMES-Webinar---BV1YK4y1T7yY_note
 
 ![](img/207472ef60549b393cd17be823de8e23_0.png)
 

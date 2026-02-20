@@ -1,4 +1,4 @@
-# 15. 逆问题建模与ADMM算法求解 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1j8411Y7zY
+# 15-逆问题建模与ADMM算法求解---GAMES204-计算成像---P1---GAMES-Webinar---BV1j8411Y7zY_note
 
 ![](img/2b351383309c037603bf015432b58676_0.png)
 

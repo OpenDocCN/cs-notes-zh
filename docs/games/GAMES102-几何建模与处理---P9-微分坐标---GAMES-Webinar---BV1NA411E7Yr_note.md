@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P9：微分坐标 📐
+# GAMES102-几何建模与处理---P9-微分坐标---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/f7a007474d09cc323264b272f2f53de2_0.png)
 

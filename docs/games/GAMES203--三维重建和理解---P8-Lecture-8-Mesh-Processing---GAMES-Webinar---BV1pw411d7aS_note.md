@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P8：Lecture 8 网格处理 🧠
+# GAMES203--三维重建和理解---P8-Lecture-8-Mesh-Processing---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/65e7226142cf35338dc070f32c259cd9_0.png)
 

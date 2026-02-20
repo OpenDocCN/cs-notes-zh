@@ -1,4 +1,4 @@
-# GAMES002-图形学研发基础工具 - P6：代码编译器与笔记软件使用技巧 📝💻
+# GAMES002-图形学研发基础工具---P6-代码编译器与笔记软件使用技巧---GAMES-Webinar---BV1cC411L7uG_note
 
 ![](img/2ee207ee34ca6bea7cfaec27b01e3c77_0.png)
 

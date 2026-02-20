@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P1：课程介绍 📚
+# GAMES102-几何建模与处理---P1-课程介绍---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/9f32c95cf9f74dd930f0156da1f09270_0.png)
 

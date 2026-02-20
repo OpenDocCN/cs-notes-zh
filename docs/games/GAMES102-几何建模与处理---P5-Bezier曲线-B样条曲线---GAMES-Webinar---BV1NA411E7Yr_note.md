@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P5：Bezier曲线与B样条曲线 🧮
+# GAMES102-几何建模与处理---P5-Bezier曲线-B样条曲线---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/e0be837432e0c1a1eaac9ad8f19c686e_0.png)
 

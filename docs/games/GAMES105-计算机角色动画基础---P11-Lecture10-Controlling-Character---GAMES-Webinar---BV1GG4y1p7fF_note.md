@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P11：Lecture10 角色控制 🎮
+# GAMES105-计算机角色动画基础---P11-Lecture10-Controlling-Character---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/43c831823c6750d86cdcd3652b7f20dc_0.png)
 

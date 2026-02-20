@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P9：9. 工程CAE仿真连续介质力学基础 🧮
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P9-9--工程CAE仿真连续介质力学基础---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/fe4db5dd0a91a12b012dc4713d3a8db6_1.png)
 

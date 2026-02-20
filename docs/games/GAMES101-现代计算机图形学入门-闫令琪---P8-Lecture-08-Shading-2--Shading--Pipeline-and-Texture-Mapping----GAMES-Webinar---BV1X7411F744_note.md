@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-第八课：着色2（着色、管线与纹理映射）🎨
+# GAMES101-现代计算机图形学入门-闫令琪---P8-Lecture-08-Shading-2--Shading--Pipeline-and-Texture-Mapping----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/9f104bbd50a0d7c5e600ed7a64f4daa8_0.png)
 

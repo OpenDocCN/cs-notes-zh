@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P7：Lecture06 基于学习的角色动画（续）🎬
+# GAMES105-计算机角色动画基础---P7-Lecture06--Learning-based-Character-Animation--cont-----GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/be3993f0bc98fbf4f90faec416bd4dda_0.png)
 

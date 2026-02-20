@@ -1,4 +1,4 @@
-# 🎬 课程09：高级动画技术：动画树、IK和表情动画
+# 09-高级动画技术-动画树-IK和表情动画---GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture-09---GAMES-Webinar---BV1pY411F7pA_note
 
 ![](img/579682927c87cfffa2e456d758bb95f8_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES106-现代图形绘制流水线原理与实践 - P5：5. 多频率着色 🎨
+# GAMES106-现代图形绘制流水线原理与实践---P5-5--多概率着色---GAMES-Webinar---BV1Uo4y1J7ie_note
 
 ![](img/af8a876aa9e24e27281939b3c451a487_1.png)
 

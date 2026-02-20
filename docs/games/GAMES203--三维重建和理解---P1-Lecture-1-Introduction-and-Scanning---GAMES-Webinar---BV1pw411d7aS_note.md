@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P1：Lecture 1 课程介绍与三维扫描 📚
+# GAMES203--三维重建和理解---P1-Lecture-1-Introduction-and-Scanning---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/de41558ad79774739b995a77d8d00aaa_0.png)
 

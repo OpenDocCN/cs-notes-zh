@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - 第五讲：数据驱动的角色动画 📊
+# GAMES105-计算机角色动画基础---P5-Lecture05-Data-driven-Character-Animation---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/c0feffbbc6f466415ea735f02495849e_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P15：光线追踪3 - 光线传播与全局光照 🌟
+# GAMES101-现代计算机图形学入门-闫令琪---P15-Lecture-15-Ray-Tracing-3---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/c3fa60f2ca7a456934572da7d8e65199_0.png)
 

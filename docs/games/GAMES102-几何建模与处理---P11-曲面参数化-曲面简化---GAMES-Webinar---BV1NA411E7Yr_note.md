@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P11：曲面参数化与曲面简化 🧩
+# GAMES102-几何建模与处理---P11-曲面参数化-曲面简化---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/cbc5a8f5e828af1dcee755948fe9213e_1.png)
 

@@ -1,4 +1,4 @@
-# GAMES201：高级物理引擎实战指南2020 - P1：Lecture 1 课程介绍 🚀
+# GAMES201-高级物理引擎实战指南2020---P1-Lecture-1-课程介绍---GAMES-Webinar---BV1ZK411H7Hc_note
 
 ![](img/93c403cfd927f2ac75e2d90b2e44b11a_0.png)
 

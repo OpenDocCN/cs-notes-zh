@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P1：Lecture01 角色动画导论 🎬
+# GAMES105-计算机角色动画基础---P1-Lecture01-Introduction-to-Character-Animation---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/6540777dc3e0d44a1b6805b6e593341b_0.png)
 

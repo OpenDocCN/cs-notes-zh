@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P5：Lecture 05 基于物理的布料模拟 🧵
+# GAMES103-基于物理的计算机动画入门---P5-Lecture-05-Physics-based-Cloth-Simulation---GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/57c26c060291dc1ec67eb096761880f6_0.png)
 

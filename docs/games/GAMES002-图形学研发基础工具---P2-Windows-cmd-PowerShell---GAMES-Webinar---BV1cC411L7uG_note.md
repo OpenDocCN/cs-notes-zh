@@ -1,4 +1,4 @@
-# GAMES002-图形学研发基础工具 - P2：Windows + CMD + PowerShell 🖥️
+# GAMES002-图形学研发基础工具---P2-Windows-cmd-PowerShell---GAMES-Webinar---BV1cC411L7uG_note
 
 ![](img/e4b79b1c08d99d4d7b35f4048b5b3299_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-第18课：高级渲染专题 🚀
+# GAMES101-现代计算机图形学入门-闫令琪---P18-Lecture-18-Advanced-Topics-in-Rendering---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/2dd42143ab7e939d07b9ebb80e9c8596_0.png)
 

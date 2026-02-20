@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P2：Lecture 2 点云注册 📍
+# GAMES203--三维重建和理解---P2-Lecture-2-Registration---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/b6403ebeba3672da95c0c90918f11d9e_1.png)
 

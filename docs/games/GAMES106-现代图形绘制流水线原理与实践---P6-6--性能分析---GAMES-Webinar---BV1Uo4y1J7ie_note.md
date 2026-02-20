@@ -1,4 +1,4 @@
-# GAMES106-现代图形绘制流水线原理与实践 - P6：性能分析 🚀
+# GAMES106-现代图形绘制流水线原理与实践---P6-6--性能分析---GAMES-Webinar---BV1Uo4y1J7ie_note
 
 ![](img/e021816c5503e5353a0cb4e14c79cb4d_0.png)
 

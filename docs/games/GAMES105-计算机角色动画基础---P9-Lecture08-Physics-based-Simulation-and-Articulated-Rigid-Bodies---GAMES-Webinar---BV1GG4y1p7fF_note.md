@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P9：Lecture08 基于物理的仿真与铰接刚体 🎮
+# GAMES105-计算机角色动画基础---P9-Lecture08-Physics-based-Simulation-and-Articulated-Rigid-Bodies---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/91df290441f495547bce725de1c8b068_1.png)
 

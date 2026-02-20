@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P4：角色运动学（续）与关键帧动画 🎬
+# GAMES105-计算机角色动画基础---P4-Lecture04-Character-Kinematics--cont-----Keyframe-Animation---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/fcdcd4528bc0f38310b570f74d418942_1.png)
 

@@ -1,4 +1,4 @@
-# 课程10：游戏引擎中物理系统的基础理论和算法 🎮 | GAMES104-现代游戏引擎：从入门到实践
+# 10-游戏引擎中物理系统的基础理论和算法---GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture10---GAMES-Webinar---BV16U4y117VU_note
 
 ![](img/ee9b7ce357ef0d9317f4b48b34e4f48f_1.png)
 

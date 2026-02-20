@@ -1,4 +1,4 @@
-# 课程22：GPU驱动的几何管线 - Nanite (Part 2) 🎮
+# 22-GPU驱动的几何管线-nanite--Part-2----GAMES104-现代游戏引擎-从入门到实践---P1---GAMES-Webinar---BV17G4y1x7VX_note
 
 ![](img/206ab40e2e5d59e0e96f8e8aca346ad1_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P5：主成分分析与奇异值分解 🧮
+# GAMES001-图形学中的数学---P5-主成分分析与奇异值分解---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/bb977eb198a22aec81d6d71d60cb6fd1_0.png)
 

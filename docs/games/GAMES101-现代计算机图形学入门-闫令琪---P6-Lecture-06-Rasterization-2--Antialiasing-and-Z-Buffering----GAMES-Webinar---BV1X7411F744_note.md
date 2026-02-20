@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P6：Lecture 06 光栅化2（反走样与深度缓冲）📐
+# GAMES101-现代计算机图形学入门-闫令琪---P6-Lecture-06-Rasterization-2--Antialiasing-and-Z-Buffering----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/041d4c039572f99703a5b2331d3b7d9e_0.png)
 

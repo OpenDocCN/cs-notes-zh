@@ -1,4 +1,4 @@
-# GAMES106-现代图形绘制流水线原理与实践 - P11：11. 着色器优化 🚀
+# GAMES106-现代图形绘制流水线原理与实践---P11-11--着色器优化---GAMES-Webinar---BV1Uo4y1J7ie_note
 
 ![](img/041b77d77ded4e45bd8606a7e736dcad_0.png)
 

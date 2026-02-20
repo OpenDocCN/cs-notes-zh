@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P4：三次样条函数 🧮
+# GAMES102-几何建模与处理---P4-三次样条函数---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/0d8a7a55b67596f71c6a639ebbb7f541_0.png)
 

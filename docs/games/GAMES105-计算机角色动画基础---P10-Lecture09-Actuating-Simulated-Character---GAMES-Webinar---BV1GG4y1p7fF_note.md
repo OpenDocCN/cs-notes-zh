@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P10：Lecture09 驱动仿真角色 🎮
+# GAMES105-计算机角色动画基础---P10-Lecture09-Actuating-Simulated-Character---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/559ddb23b7001d593c16ac7be5faf51d_0.png)
 

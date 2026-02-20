@@ -1,4 +1,4 @@
-# GAMES202-高质量实时渲染 - P3：Lecture3 实时阴影 1 🎮
+# GAMES202-高质量实时渲染---P3-Lecture3-Real-time-Shadows-1---GAMES-Webinar---BV1YK4y1T7yY_note
 
 ![](img/a1a058647a6902f87c7fc2d74fc14a94_1.png)
 

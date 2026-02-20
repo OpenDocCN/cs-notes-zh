@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P4：旋转变换 🌀
+# GAMES001-图形学中的数学---P4-旋转变换---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/88e61ffa86f5b02f5dec97a407b62f08_0.png)
 

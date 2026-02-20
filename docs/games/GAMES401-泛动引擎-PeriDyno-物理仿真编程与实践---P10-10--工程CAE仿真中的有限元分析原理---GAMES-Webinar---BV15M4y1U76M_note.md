@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P10：工程CAE仿真中的有限元分析原理 📚
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P10-10--工程CAE仿真中的有限元分析原理---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/7860fe384ffaf1b7186acb10e9c5e237_0.png)
 

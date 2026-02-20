@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P10：共形参数化1 - 微分性质与离散算法 🌀
+# GAMES301-曲面参数化---P10-Lecture-10-共形参数化1-Spin变换-Circle填充-共轭调和函数---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/cf5969acff52fd07c13141af89f380af_0.png)
 

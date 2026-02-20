@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P9：Lecture 09 基于调和映射的高质量形变 🎨
+# GAMES301-曲面参数化---P9-Lecture-09-基于调和映射的高质量形变---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/018e28f263ea78acd29b571874678a1f_0.png)
 

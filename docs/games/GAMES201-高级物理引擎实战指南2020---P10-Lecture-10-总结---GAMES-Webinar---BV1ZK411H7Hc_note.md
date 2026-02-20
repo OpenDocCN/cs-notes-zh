@@ -1,4 +1,4 @@
-# GAMES201：高级物理引擎实战指南2020 - P10：Lecture 10 总结 🎓
+# GAMES201-高级物理引擎实战指南2020---P10-Lecture-10-总结---GAMES-Webinar---BV1ZK411H7Hc_note
 
 ![](img/548e6245ad55bc04a0d5b9ec8f03a053_0.png)
 

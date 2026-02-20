@@ -1,4 +1,4 @@
-# GAMES002-图形学研发基础工具 - P1：Linux + Shell 🐧
+# GAMES002-图形学研发基础工具---P1-Linux---shell---GAMES-Webinar---BV1cC411L7uG_note
 
 ![](img/cc822ac7b957dfe639cb014f1c1adaf8_0.png)
 

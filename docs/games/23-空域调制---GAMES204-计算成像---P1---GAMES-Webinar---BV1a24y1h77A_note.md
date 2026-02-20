@@ -1,4 +1,4 @@
-# 23.空域调制 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1a24y1h77A
+# 23-空域调制---GAMES204-计算成像---P1---GAMES-Webinar---BV1a24y1h77A_note
 
 ![](img/77b37c1db0df2fbbfaa424ddd90ff65e_0.png)
 

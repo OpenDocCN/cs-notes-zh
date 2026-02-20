@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P1：Lecture 01 曲面参数化介绍 📖
+# GAMES301-曲面参数化---P1-Lecture-01-曲面参数化介绍---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/47f2e892620e9783d9881b791e1c2583_0.png)
 

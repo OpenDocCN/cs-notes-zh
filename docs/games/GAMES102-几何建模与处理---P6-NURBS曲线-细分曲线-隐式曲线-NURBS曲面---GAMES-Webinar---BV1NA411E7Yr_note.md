@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P6：NURBS曲线、细分曲线、隐式曲线与NURBS曲面 📐
+# GAMES102-几何建模与处理---P6-NURBS曲线-细分曲线-隐式曲线-NURBS曲面---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/8228633b83ec1193dbb1520218030ed4_0.png)
 

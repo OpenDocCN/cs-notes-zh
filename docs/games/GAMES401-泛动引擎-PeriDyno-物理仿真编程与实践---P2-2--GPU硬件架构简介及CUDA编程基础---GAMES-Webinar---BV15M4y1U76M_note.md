@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P2：GPU硬件架构简介及CUDA编程基础 🚀
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P2-2--GPU硬件架构简介及CUDA编程基础---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/a414f255a026686496f88d6c66318b99_1.png)
 

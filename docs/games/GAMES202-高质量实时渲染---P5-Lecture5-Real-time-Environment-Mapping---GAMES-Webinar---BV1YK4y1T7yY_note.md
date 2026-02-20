@@ -1,4 +1,4 @@
-# GAMES202-高质量实时渲染 - 第五讲：实时环境光照映射 📚
+# GAMES202-高质量实时渲染---P5-Lecture5-Real-time-Environment-Mapping---GAMES-Webinar---BV1YK4y1T7yY_note
 
 ![](img/b6958ea09175ce46c2eab9da316efc9f_0.png)
 

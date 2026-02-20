@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P4：Lecture 04 刚体接触 (Lab 1) 🐇💥
+# GAMES103-基于物理的计算机动画入门---P4-Lecture-04-Rigid-Body-Contacts--Lab-1----GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/3dff7177b881358285eb01e074118fe9_0.png)
 

@@ -1,4 +1,4 @@
-# 22.时域调制 (V) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1cg411s7Cp
+# 22-时域调制--V----GAMES204-计算成像---P1---GAMES-Webinar---BV1cg411s7Cp_note
 
 ![](img/6b41c060b94e612718044632b49f3254_0.png)
 

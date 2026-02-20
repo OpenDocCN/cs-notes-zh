@@ -1,4 +1,4 @@
-# GAMES202-高质量实时渲染 - 第九讲：实时全局光照（屏幕空间方法续）🌐
+# GAMES202-高质量实时渲染---P9-Lecture9-Real-time-GLobal-Illumination--screen-space-cont-----GAMES-Webinar---BV1YK4y1T7yY_note
 
 ![](img/0dc3035f30b9f8c2f74a96141d7bcb66_0.png)
 

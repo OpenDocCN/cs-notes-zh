@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P17：Lecture 17 材质与外观 🎨
+# GAMES101-现代计算机图形学入门-闫令琪---P17-Lecture-17-Materials-and-Appearances---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/bac631c01f5526242f2e176b807d8732_0.png)
 

@@ -1,4 +1,4 @@
-# 课程15：游戏引擎的Gameplay玩法系统基础 🎮 | GAMES104-现代游戏引擎：从入门到实践
+# 15-游戏引擎的Gameplay玩法系统基础---GAMES104-现代游戏引擎-从入门到实践---P1---GAMES-Webinar---BV1u34y1H7jd_note
 
 ![](img/2413668a12ee31a860023b9d8a8262e6_0.png)
 

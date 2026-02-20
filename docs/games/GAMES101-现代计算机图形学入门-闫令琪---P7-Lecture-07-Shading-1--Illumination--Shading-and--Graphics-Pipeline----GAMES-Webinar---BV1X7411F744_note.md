@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P7：Lecture 07 Shading 1 (Illumination, Shading and Graphics Pipeline) 🎨
+# GAMES101-现代计算机图形学入门-闫令琪---P7-Lecture-07-Shading-1--Illumination--Shading-and--Graphics-Pipeline----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/d909da0042f4b8bf9a8b0da377ba0479_0.png)
 

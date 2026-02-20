@@ -1,4 +1,4 @@
-# 11.计算工具箱：成像梯度与处理 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV14B4y177Mv
+# 11-计算工具箱-成像梯度与处理---GAMES204-计算成像---P1---GAMES-Webinar---BV14B4y177Mv_note
 
 ![](img/8ee15ef43c2c8f3d32316f9e4b5e8bd9_0.png)
 

@@ -1,4 +1,4 @@
-# 01.计算成像导论 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV11N4y1g7Z8
+# 01-计算成像导论---GAMES204-计算成像---P1---GAMES-Webinar---BV11N4y1g7Z8_note
 
 ![](img/5c04f9e26ed701e263ba7dce03f862cf_0.png)
 

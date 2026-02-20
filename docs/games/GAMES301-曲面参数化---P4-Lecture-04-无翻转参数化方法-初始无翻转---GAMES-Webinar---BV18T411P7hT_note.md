@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P4：Lecture 04 无翻转参数化方法-初始无翻转 🧭
+# GAMES301-曲面参数化---P4-Lecture-04-无翻转参数化方法-初始无翻转---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/219fe4cf5336812b883da6ba04b5d1db_0.png)
 

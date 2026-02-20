@@ -1,4 +1,4 @@
-# 16. 计算照明 (I) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1HP4y1U7QV
+# 16-计算照明--I----GAMES204-计算成像---P1---GAMES-Webinar---BV1HP4y1U7QV_note
 
 ![](img/38242983abc059f8eb8e79c3ed20a485_1.png)
 

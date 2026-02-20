@@ -1,4 +1,4 @@
-# 📘 GAMES001-图形学中的数学 - P2：线性代数基础（二）
+# GAMES001-图形学中的数学---P2-线性代数基础-二----GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/b4144e82d090a595b572947a0887bcfa_1.png)
 

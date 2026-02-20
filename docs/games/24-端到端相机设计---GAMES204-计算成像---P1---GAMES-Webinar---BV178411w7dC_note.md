@@ -1,4 +1,4 @@
-# 24.端到端相机设计 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV178411w7dC
+# 24-端到端相机设计---GAMES204-计算成像---P1---GAMES-Webinar---BV178411w7dC_note
 
 ![](img/6034687229b283f337c58019ef84dd38_0.png)
 

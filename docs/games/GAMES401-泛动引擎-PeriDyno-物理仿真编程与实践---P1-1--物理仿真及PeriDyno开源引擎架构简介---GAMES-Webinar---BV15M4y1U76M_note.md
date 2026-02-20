@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P1：物理仿真及PeriDyno开源引擎架构简介 🚀
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P1-1--物理仿真及PeriDyno开源引擎架构简介---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/aaaefbf2efbb53e09751d053216a6b5a_1.png)
 

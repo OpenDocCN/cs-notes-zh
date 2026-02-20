@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P12：Lecture11 学习行走 🚶‍♂️
+# GAMES105-计算机角色动画基础---P12-Lecture11-Learning-to-Walk---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/e6de1502f075fd810028023da58fdbd9_0.png)
 

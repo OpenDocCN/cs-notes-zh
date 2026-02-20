@@ -1,4 +1,4 @@
-# GAMES302-等几何分析 - P7：基于等几何分析的线弹性问题求解及GIFT方法 🧮
+# GAMES302-等几何分析---P7-7--基于等几何分析的线弹性问题求解及GIFT方法---GAMES-Webinar---BV1dM4y117PS_note
 
 ![](img/5d459bfbf5a25dd335c28d9e5c3735b8_1.png)
 

@@ -1,4 +1,4 @@
-# GAMES202-高质量实时渲染 - P2：Lecture2 CG基础回顾 🎮
+# GAMES202-高质量实时渲染---P2-Lecture2-Recap-of-CG-Basics---GAMES-Webinar---BV1YK4y1T7yY_note
 
 ![](img/0d58a8c29783fcce5ddad5b755e51885_0.png)
 

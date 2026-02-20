@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P10：几何深度学习 I 🧠
+# GAMES203--三维重建和理解---P10-Lecture-10-Geometric-Deep-Learning-I---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/0bf2ba395a44e377788931d34cf6c596_0.png)
 

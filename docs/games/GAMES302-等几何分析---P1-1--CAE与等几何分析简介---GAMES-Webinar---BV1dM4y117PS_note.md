@@ -1,4 +1,4 @@
-# GAMES302-等几何分析 - P1：1. CAE与等几何分析简介 🎯
+# GAMES302-等几何分析---P1-1--CAE与等几何分析简介---GAMES-Webinar---BV1dM4y117PS_note
 
 ![](img/c7b296413e171cb3dc66188f3c047b8d_0.png)
 

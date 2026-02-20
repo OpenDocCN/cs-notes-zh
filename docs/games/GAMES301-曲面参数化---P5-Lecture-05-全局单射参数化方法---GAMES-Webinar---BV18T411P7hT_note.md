@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P5：Lecture 05 全局单射参数化方法 🧩
+# GAMES301-曲面参数化---P5-Lecture-05-全局单射参数化方法---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/1750888e2a8242397b254e0dbfefc194_0.png)
 

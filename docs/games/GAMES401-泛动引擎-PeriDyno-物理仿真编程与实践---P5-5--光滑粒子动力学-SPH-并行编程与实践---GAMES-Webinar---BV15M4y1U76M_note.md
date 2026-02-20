@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P5：光滑粒子动力学(SPH)并行编程与实践 🧪
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P5-5--光滑粒子动力学-SPH-并行编程与实践---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/a5bf203f686f32c97bb0c2b313f68576_1.png)
 

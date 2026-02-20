@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P3：参数曲线拟合 📈
+# GAMES102-几何建模与处理---P3-参数曲线拟合---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/7389f51b7bfb00ed9b7b624668d7606f_0.png)
 

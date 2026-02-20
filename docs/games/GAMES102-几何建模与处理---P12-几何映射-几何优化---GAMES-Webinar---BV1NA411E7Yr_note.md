@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P12：几何映射与几何优化 🗺️⚙️
+# GAMES102-几何建模与处理---P12-几何映射-几何优化---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/32fe858b9af8e9af270f6a683380ba7e_1.png)
 

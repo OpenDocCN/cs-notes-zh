@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P11：古典微分几何 📐
+# GAMES001-图形学中的数学---P11-古典微分几何---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/685660650d7290568b783d1d6daac4c9_0.png)
 

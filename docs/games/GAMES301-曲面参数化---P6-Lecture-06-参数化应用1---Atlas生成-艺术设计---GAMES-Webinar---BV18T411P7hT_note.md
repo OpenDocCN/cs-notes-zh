@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P6：Lecture 06 参数化应用1 – Atlas生成、艺术设计 🗺️🎨
+# GAMES301-曲面参数化---P6-Lecture-06-参数化应用1---Atlas生成-艺术设计---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/b7787baf30510448273130a211b35a33_0.png)
 

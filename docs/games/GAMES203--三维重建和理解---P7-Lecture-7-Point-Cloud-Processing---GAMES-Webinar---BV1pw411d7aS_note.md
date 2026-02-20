@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P7：点云处理基础 🧩
+# GAMES203--三维重建和理解---P7-Lecture-7-Point-Cloud-Processing---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/a301b69d9c981a4ad8ea50b31977a526_0.png)
 

@@ -1,4 +1,4 @@
-# 🎮 课程19：网络游戏的进阶架构 (Part 2)
+# 19-网络游戏的进阶架构--Part-2----GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture19-Part02-3---GAMES-Webinar---BV1RG411t7TP_note
 
 ![](img/745d6753a6eead77d38133242198ae79_0.png)
 

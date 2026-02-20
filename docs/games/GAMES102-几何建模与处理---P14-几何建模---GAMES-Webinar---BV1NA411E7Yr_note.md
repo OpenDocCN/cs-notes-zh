@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P14：几何建模 🛠️
+# GAMES102-几何建模与处理---P14-几何建模---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/e633dbd87368a33494468d6923291677_0.png)
 

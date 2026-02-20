@@ -1,4 +1,4 @@
-# GAMES202-高质量实时渲染 - P7：Lecture7 实时全局光照（三维空间） 🌐
+# GAMES202-高质量实时渲染---P7-Lecture7-Real-time-GLobal-Illumination--in-3D----GAMES-Webinar---BV1YK4y1T7yY_note
 
 ![](img/e0fc219514f71e371666f21025917acb_0.png)
 

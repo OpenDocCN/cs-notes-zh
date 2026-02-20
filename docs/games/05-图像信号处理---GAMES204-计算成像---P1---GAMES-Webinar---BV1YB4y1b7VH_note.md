@@ -1,4 +1,4 @@
-# 📸 课程05：图像信号处理基础 | GAMES204-计算成像
+# 05-图像信号处理---GAMES204-计算成像---P1---GAMES-Webinar---BV1YB4y1b7VH_note
 
 ![](img/80dac4d1dad5f5d4ca8872d341094062_0.png)
 

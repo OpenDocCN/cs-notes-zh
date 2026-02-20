@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P12：Lecture 12 SPH和基于位置的流体 🧪
+# GAMES103-基于物理的计算机动画入门---P12-Lecture-12-SPH-and-Position-Based-Fluids---GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/8a5e14cdd71732c77973780b0899ede0_0.png)
 

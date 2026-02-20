@@ -1,4 +1,4 @@
-# 20.时域调制 (III) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1T8411V7ne
+# 20-时域调制--III----GAMES204-计算成像---P1---GAMES-Webinar---BV1T8411V7ne_note
 
 ![](img/02bd7ff6e742058ead3f6334f8743103_0.png)
 

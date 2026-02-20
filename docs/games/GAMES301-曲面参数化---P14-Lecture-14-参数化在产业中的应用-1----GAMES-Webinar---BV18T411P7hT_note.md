@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P14：参数化在产业中的应用(1) 🎮
+# GAMES301-曲面参数化---P14-Lecture-14-参数化在产业中的应用-1----GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/9fd3067eb452e24ff7ebdacba53b9fa4_0.png)
 

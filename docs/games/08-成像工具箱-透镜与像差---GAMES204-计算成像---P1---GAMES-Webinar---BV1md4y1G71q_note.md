@@ -1,4 +1,4 @@
-# 08. 成像工具箱：透镜与像差 ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1md4y1G71q
+# 08-成像工具箱-透镜与像差---GAMES204-计算成像---P1---GAMES-Webinar---BV1md4y1G71q_note
 
 ![](img/e049bdbdc0872fd3c5c41a6651528763_0.png)
 

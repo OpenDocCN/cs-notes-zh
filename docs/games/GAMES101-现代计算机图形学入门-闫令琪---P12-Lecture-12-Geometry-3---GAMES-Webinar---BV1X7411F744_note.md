@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P12：几何（三）与阴影映射 🎯
+# GAMES101-现代计算机图形学入门-闫令琪---P12-Lecture-12-Geometry-3---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/ca2cd01372c35e73288b4a447b1b08d6_1.png)
 

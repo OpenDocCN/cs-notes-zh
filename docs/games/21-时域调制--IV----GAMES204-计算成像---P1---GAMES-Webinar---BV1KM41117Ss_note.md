@@ -1,4 +1,4 @@
-# 21.时域调制 (IV) ｜ GAMES204-计算成像 - P1 - GAMES-Webinar - BV1KM41117Ss 🎥
+# 21-时域调制--IV----GAMES204-计算成像---P1---GAMES-Webinar---BV1KM41117Ss_note
 
 ![](img/468e637de1c362ff611deb21631576ac_0.png)
 

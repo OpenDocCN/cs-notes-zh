@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P1：Lecture 01 课程介绍 🎬
+# GAMES103-基于物理的计算机动画入门---P1-Lecture-01-Intro-to-Physics-Based-Animation---GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/447852504d67eea817fbb890cb3a6fcc_0.png)
 

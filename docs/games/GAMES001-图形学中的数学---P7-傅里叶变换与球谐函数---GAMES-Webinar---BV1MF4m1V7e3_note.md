@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P7：傅里叶变换与球谐函数 🎯
+# GAMES001-图形学中的数学---P7-傅里叶变换与球谐函数---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/93f8fb7b4ed12f39bfd2768880f1cadb_1.png)
 

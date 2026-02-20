@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-第22讲：动画（续）🎬
+# GAMES101-现代计算机图形学入门-闫令琪---P22-Lecture-22-Animation-Cont----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/be04e58d40286e1b1563949dc8737fc5_0.png)
 

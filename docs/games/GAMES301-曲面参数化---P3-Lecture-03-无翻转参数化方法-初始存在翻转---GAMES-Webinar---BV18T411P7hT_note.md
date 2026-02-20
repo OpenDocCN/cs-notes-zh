@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P3：Lecture 03 无翻转参数化方法-初始存在翻转 🧩
+# GAMES301-曲面参数化---P3-Lecture-03-无翻转参数化方法-初始存在翻转---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/b22bc20fa76eabdd5a3676b86d78be32_0.png)
 

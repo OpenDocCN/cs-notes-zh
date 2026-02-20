@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P8：Lecture 08 有限元方法 II (Lab 3) 🏗️
+# GAMES103-基于物理的计算机动画入门---P8-Lecture-08-Finite-Element-Method-II--Lab-3----GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/5bc90e468d9b6b2f277c79542d262c4f_0.png)
 

@@ -1,4 +1,4 @@
-# 📸 课程04：相机系统 | GAMES204-计算成像
+# 04-相机系统---GAMES204-计算成像---P1---GAMES-Webinar---BV1gG4y1i7m5_note
 
 ![](img/043da9315d3f1041ee6f7a6f98ebc7ff_1.png)
 

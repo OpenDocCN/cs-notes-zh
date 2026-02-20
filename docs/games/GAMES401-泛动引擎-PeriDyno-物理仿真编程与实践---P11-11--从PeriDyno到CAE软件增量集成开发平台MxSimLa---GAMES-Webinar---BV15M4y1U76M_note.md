@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P11：从PeriDyno到CAE软件增量集成开发平台MxSimLab 🚀
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P11-11--从PeriDyno到CAE软件增量集成开发平台MxSimLa---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/49eca7ba8e49727428b0d9b55db80448_0.png)
 

@@ -1,4 +1,4 @@
-# 🎮 课程11：物理系统的高级应用 | GAMES104-现代游戏引擎：从入门到实践
+# 11-物理系统-高级应用---GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture11---GAMES-Webinar---BV1Ya411j7ds_note
 
 ![](img/f5141702e41b7f038210a7fe029718e4_0.png)
 

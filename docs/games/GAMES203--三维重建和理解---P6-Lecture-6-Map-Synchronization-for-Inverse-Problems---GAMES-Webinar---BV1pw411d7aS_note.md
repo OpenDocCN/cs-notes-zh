@@ -1,4 +1,4 @@
-# GAMES203：三维重建和理解 - P6：Lecture 6 逆问题中的图同步 🧩
+# GAMES203--三维重建和理解---P6-Lecture-6-Map-Synchronization-for-Inverse-Problems---GAMES-Webinar---BV1pw411d7aS_note
 
 ![](img/a022892c1d437b05b6d5d07c65448ad1_1.png)
 

@@ -1,4 +1,4 @@
-# GAMES301-曲面参数化 - P11：Lecture 11 共形参数化2-离散共形等价类、Möbius变换与曲率流 📐
+# GAMES301-曲面参数化---P11-Lecture-11-共形参数化2-离散共形等价类-Mo-bius变换-曲率流---GAMES-Webinar---BV18T411P7hT_note
 
 ![](img/ef3c9fb819945ae787e42da8161edab1_0.png)
 

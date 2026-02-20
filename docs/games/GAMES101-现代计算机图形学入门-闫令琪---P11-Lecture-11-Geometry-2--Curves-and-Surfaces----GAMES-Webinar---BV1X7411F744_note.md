@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P11：几何 2 (曲线与曲面) 📐
+# GAMES101-现代计算机图形学入门-闫令琪---P11-Lecture-11-Geometry-2--Curves-and-Surfaces----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/f7886a1948ecb93daf49df83a66459fe_0.png)
 

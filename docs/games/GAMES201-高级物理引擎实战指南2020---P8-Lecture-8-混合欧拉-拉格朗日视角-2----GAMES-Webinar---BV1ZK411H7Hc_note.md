@@ -1,4 +1,4 @@
-# GAMES201：高级物理引擎实战指南2020 - P8：Lecture 8 混合欧拉-拉格朗日视角（2） 🧪
+# GAMES201-高级物理引擎实战指南2020---P8-Lecture-8-混合欧拉-拉格朗日视角-2----GAMES-Webinar---BV1ZK411H7Hc_note
 
 ![](img/9a0352a90e96208720958d240fef9ef7_0.png)
 

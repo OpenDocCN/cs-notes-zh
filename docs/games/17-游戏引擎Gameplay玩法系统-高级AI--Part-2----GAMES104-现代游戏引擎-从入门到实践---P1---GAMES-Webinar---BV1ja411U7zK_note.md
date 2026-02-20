@@ -1,4 +1,4 @@
-# 课程17：游戏引擎Gameplay玩法系统：高级AI (Part 2) 🤖
+# 17-游戏引擎Gameplay玩法系统-高级AI--Part-2----GAMES104-现代游戏引擎-从入门到实践---P1---GAMES-Webinar---BV1ja411U7zK_note
 
 ![](img/28d166d0f77d4f56f59045824c216e45_0.png)
 

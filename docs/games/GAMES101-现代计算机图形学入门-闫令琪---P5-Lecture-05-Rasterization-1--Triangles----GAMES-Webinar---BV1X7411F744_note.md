@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-05：光栅化（三角形）📐
+# GAMES101-现代计算机图形学入门-闫令琪---P5-Lecture-05-Rasterization-1--Triangles----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/95189f28a920e0b224f844dd4b057418_0.png)
 

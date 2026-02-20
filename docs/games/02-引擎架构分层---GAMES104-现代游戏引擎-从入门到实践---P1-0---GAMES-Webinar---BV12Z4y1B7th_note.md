@@ -1,4 +1,4 @@
-# GAMES104-现代游戏引擎：从入门到实践 - P1：0 - GAMES-Webinar - BV12Z4y1B7th
+# 02-引擎架构分层---GAMES104-现代游戏引擎-从入门到实践---P1-0---GAMES-Webinar---BV12Z4y1B7th_note
 
 ![](img/5c49e9752698e56d267bfaec1d1f433a_0.png)
 

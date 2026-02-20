@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P10：场论初步 - GAMES-Webinar - BV1MF4m1V7e3
+# GAMES001-图形学中的数学---P10-场论初步---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/380946b35847df540656d0e2970d3578_0.png)
 

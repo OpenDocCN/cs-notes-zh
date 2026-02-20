@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P14：生成模型的案例分析 - GAMES-Webinar - BV1MF4m1V7e3
+# GAMES001-图形学中的数学---P14-生成模型的案例分析---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/816f05c1547221c722334871f47a15fb_0.png)
 

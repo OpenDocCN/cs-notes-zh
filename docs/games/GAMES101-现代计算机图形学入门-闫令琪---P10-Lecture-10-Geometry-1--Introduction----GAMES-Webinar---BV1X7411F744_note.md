@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P10：几何1（引言）📐
+# GAMES101-现代计算机图形学入门-闫令琪---P10-Lecture-10-Geometry-1--Introduction----GAMES-Webinar---BV1X7411F744_note
 
 ![](img/80115f3c2b2329a73a2f7448ce19a1c4_0.png)
 

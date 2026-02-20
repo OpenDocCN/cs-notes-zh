@@ -1,4 +1,4 @@
-# GAMES302-等几何分析 - P9：基于等几何分析的形状优化 🛠️
+# GAMES302-等几何分析---P9-9--基于等几何分析的形状优化---GAMES-Webinar---BV1dM4y117PS_note
 
 ![](img/48701676dac66e59ec6cc3049555ffaa_1.png)
 

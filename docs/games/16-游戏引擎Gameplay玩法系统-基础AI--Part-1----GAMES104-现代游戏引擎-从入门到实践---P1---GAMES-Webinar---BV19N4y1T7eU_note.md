@@ -1,4 +1,4 @@
-# 课程16：游戏引擎Gameplay玩法系统：基础AI (Part 1) 🧠
+# 16-游戏引擎Gameplay玩法系统-基础AI--Part-1----GAMES104-现代游戏引擎-从入门到实践---P1---GAMES-Webinar---BV19N4y1T7eU_note
 
 ![](img/0bd18e49fbc4748b36bd3efa6f3a50fa_0.png)
 

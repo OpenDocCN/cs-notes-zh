@@ -1,4 +1,4 @@
-# GAMES003-科研基本素养 - P1：L01-课程内容概览&建立领域视野 🎯
+# GAMES003-科研基本素养---P1-L01-课程内容概览-建立领域视野---GAMES-Webinar---BV1RitTezEa9_note
 
 ![](img/02f7789c168705a9326fb6548aecf151_0.png)
 

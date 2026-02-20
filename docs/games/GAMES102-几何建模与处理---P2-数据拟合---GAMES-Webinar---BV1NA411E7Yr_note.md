@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P2：数据拟合 📊
+# GAMES102-几何建模与处理---P2-数据拟合---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/caa603be1dc2db8ef373a3d00b731652_0.png)
 

@@ -1,4 +1,4 @@
-# 🎮 课程07：游戏中的渲染管线、后处理与其他一切 | GAMES104-现代游戏引擎：从入门到实践
+# 07-游戏中渲染管线-后处理和其他的一切---GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture7-整段---GAMES-Webinar---BV1kY411P7QM_note
 
 ![](img/bc4c0e713e1a2bd176fc21af2ac3c862_0.png)
 

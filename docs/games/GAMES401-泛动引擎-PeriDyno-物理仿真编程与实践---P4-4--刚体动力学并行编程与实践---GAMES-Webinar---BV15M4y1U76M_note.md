@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P4：刚体动力学并行编程与实践 🧱
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P4-4--刚体动力学并行编程与实践---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/505e4fcf8c0d2f4bf82f91a397cce06f_1.png)
 

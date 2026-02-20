@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P3：计算机图形学常用几何工具及数学原理 📐
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P3-3--计算机图形学常用几何工具及数学原理---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/5575232c48126af6375bca201651ce6b_1.png)
 

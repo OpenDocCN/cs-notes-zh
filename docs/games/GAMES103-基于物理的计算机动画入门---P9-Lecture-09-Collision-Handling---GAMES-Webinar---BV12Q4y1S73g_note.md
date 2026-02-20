@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P9：Lecture 09 碰撞处理 🎯
+# GAMES103-基于物理的计算机动画入门---P9-Lecture-09-Collision-Handling---GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/7930117ea6da4da8c29c948b0571272a_0.png)
 

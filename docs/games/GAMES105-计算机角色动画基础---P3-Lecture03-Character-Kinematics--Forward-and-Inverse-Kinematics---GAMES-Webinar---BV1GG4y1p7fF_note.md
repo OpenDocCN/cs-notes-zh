@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P3：Lecture03 角色运动学：前向与逆向运动学 🦾
+# GAMES105-计算机角色动画基础---P3-Lecture03-Character-Kinematics--Forward-and-Inverse-Kinematics---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/b9a5d1a5f710d5d52b6a50495680116b_0.png)
 

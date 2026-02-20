@@ -1,4 +1,4 @@
-# GAMES401-泛动引擎(PeriDyno)物理仿真编程与实践 - P8：Vulkan编程原理及通用并行计算 🚀
+# GAMES401-泛动引擎-PeriDyno-物理仿真编程与实践---P8-8--Vulkan编程原理及通用并行计算---GAMES-Webinar---BV15M4y1U76M_note
 
 ![](img/2b41ed1fb0d8c4ed3a6198eba0898af1_0.png)
 

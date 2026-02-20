@@ -1,4 +1,4 @@
-# GAMES102：几何建模与处理 - P7：曲线光顺与离散曲线三角网格 🧵
+# GAMES102-几何建模与处理---P7-曲线光顺--离散曲线--三角网格---GAMES-Webinar---BV1NA411E7Yr_note
 
 ![](img/1f691bc258cfb13550e2040aec7b099e_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES001-图形学中的数学 - P15：优化基础 🧮
+# GAMES001-图形学中的数学---P15-优化基础---GAMES-Webinar---BV1MF4m1V7e3_note
 
 ![](img/4ae339f9961879938f7f6313db1d8a11_0.png)
 

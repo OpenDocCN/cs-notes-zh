@@ -1,4 +1,4 @@
-# GAMES105-计算机角色动画基础 - P13：Lecture12 最优控制与强化学习 🎯🤖
+# GAMES105-计算机角色动画基础---P13-Lecture12-Optimal-Control-and-Reinforcement-Learning---GAMES-Webinar---BV1GG4y1p7fF_note
 
 ![](img/9525736aa8675317cde84a56c1c65ec6_0.png)
 

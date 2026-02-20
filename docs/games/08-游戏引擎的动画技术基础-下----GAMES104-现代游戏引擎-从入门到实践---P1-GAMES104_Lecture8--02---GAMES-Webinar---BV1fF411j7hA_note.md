@@ -1,4 +1,4 @@
-# 08.游戏引擎的动画技术基础(下) ｜ GAMES104-现代游戏引擎：从入门到实践 - P1：GAMES104_Lecture8 -02 - GAMES-Webinar - BV1fF411j7hA
+# 08-游戏引擎的动画技术基础-下----GAMES104-现代游戏引擎-从入门到实践---P1-GAMES104_Lecture8--02---GAMES-Webinar---BV1fF411j7hA_note
 
 ![](img/6ce26b272577f375fdddcd900a974e90_0.png)
 

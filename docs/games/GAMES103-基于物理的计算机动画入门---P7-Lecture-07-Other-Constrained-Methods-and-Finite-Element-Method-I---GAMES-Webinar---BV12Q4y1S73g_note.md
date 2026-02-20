@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P7：Lecture 07 其他约束方法与有限元方法 I 🧵⚙️
+# GAMES103-基于物理的计算机动画入门---P7-Lecture-07-Other-Constrained-Methods-and-Finite-Element-Method-I---GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/8af3c57967e7f1d7e37b672333651468_0.png)
 

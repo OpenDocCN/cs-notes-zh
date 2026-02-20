@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P20：颜色与感知 👁️🎨
+# GAMES101-现代计算机图形学入门-闫令琪---P20-Lecture-20-Color-and-Perception---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/33ea817b9741d85b41304e7d9ce2283e_0.png)
 

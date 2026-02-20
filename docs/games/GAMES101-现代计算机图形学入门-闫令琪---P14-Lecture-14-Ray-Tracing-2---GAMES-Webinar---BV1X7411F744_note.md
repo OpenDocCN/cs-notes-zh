@@ -1,4 +1,4 @@
-# GAMES101-现代计算机图形学入门-闫令琪 - P14：Lecture 14 光线追踪 2 🚀
+# GAMES101-现代计算机图形学入门-闫令琪---P14-Lecture-14-Ray-Tracing-2---GAMES-Webinar---BV1X7411F744_note
 
 ![](img/ed97fe687ecca23030aa458d5ccf3d2a_0.png)
 

@@ -1,4 +1,4 @@
-# GAMES103-基于物理的计算机动画入门 - P3：Lecture 03 刚体动力学 🚀
+# GAMES103-基于物理的计算机动画入门---P3-Lecture-03-Rigid-Body-Dynamics---GAMES-Webinar---BV12Q4y1S73g_note
 
 ![](img/be6bc707f5a2cd64955ba53ff6447e2b_0.png)
 

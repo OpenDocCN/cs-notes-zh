@@ -1,4 +1,4 @@
-# GAMES302-等几何分析 - P5：5. 等几何分析中的计算域参数化 II 🧩
+# GAMES302-等几何分析---P5-5--等几何分析中的计算域参数化-II---GAMES-Webinar---BV1dM4y117PS_note
 
 ![](img/3702e3db8d80c84df204c2f4b2d8ce18_0.png)
 
