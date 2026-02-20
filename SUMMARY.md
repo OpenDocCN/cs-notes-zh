@@ -1,6 +1,7 @@
 +   [辛辛那提 MATH1071 离散数学笔记](docs/ccnt-math1701-disc/README.md)
 +   [CMU 14-740 计算机网络笔记](docs/cmu-14740-net/README.md)
 +   [CMU 15-445 数据库导论笔记](docs/cmu-15445-db/README.md)
++   [CMU 15-462 计算机图形学笔记](docs/cmu-15462-cg/README.md)
 +   [CMU 15-721 数据库进阶笔记](docs/cmu-15721-middb/README.md)
 +   [康奈尔 CS3110 数据结构与函数式编程讲义](docs/crnl-cs3110-dsat-fp/README.md)
 +   [计算机科学领域指南](docs/cs-fld-gd/README.md)
