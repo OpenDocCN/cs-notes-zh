@@ -1,0 +1,207 @@
+# 计算机网络基础：HW2：Argus 工具使用教程 🛠️
+
+在本节课中，我们将学习如何使用 Argus 网络流量分析工具来完成第二次作业。我们将介绍工具的基本概念、核心命令、常用选项以及如何组合使用它们来分析网络流数据。
+
+## 概述
+
+本次作业要求你使用 Argus 客户端工具来分析一个预先捕获的网络流数据集。你将在 Andrew Unix 机器上工作，访问存储在 AFS 上的数据和工具。本教程旨在为你提供一个起点，帮助你熟悉 Argus 的基本操作。
+
+## 访问数据与工具
+
+在开始之前，你需要登录到 Andrew 机器，并确保可以访问 Argus 工具和数据集。你可能需要运行一个 `export` 命令来设置环境变量，或者修改你的 `.bashrc` 文件以永久生效。
+
+一个基本的检查方法是运行 `ra --help`，如果命令能正常工作，说明你的环境已就绪。
+
+## 核心 Argus 命令
+
+Argus 套件包含多个命令，以下是本次作业中最常用的几个：
+
+*   **`ra`**: 读取和输出流记录的主要命令。
+*   **`racluster`**: 对流记录进行聚合和聚类分析。
+*   **`rabins`**: 将流数据分到不同的“桶”中进行统计。
+*   **`rasort`**: 对流记录进行排序。
+*   **`racount`**: 对流记录进行计数。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_1.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_3.png)
+
+这些命令共享许多相同的选项和标志。要深入了解每个命令，官方文档是你的最佳资源。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_5.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_7.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_9.png)
+
+## 官方文档：你的最佳伙伴 📚
+
+我们强烈建议你将官方手册页作为解决问题的首要参考资料。手册中包含了所有命令、选项和过滤表达式的完整说明，并附有实用的示例。
+
+特别是 **过滤表达式** 部分，你将在几乎每个问题中频繁使用它。在尝试解答具体问题之前，先通读这部分文档，了解过滤表达式的功能和用法，会事半功倍。
+
+## 常用命令选项演示
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_11.png)
+
+让我们通过一些例子来了解几个最常用的选项。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_13.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_15.png)
+
+### 基本输出与标签 (`-l`)
+
+`ra` 命令可以读取流文件并输出内容。`-l` 选项用于控制输出的标签格式。
+
+```bash
+ra -r /path/to/data/file -l0 | head -5
+```
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_17.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_19.png)
+
+*   `-l0`: 只在输出顶部显示列标题。
+*   `-l1`: 为每一行记录都显示列标题。
+*   `-l2`: 每隔一行显示列标题。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_21.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_23.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_24.png)
+
+`-l0` 是最常用的格式，特别是在需要截取输出截图时。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_26.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_27.png)
+
+### 显示端口号 (`-n`)
+
+默认情况下，Argus 会将知名端口（如80、53）显示为服务名称（如 `http`， `domain`）。使用 `-n` 选项可以强制显示数字形式的端口号。
+
+```bash
+ra -r /path/to/data/file -n | head -5
+```
+
+### 获取聚合统计信息 (`-a`)
+
+在处理大量数据时，手动计数是不现实的。`-a` 选项可以在输出末尾提供记录的聚合统计信息，告诉你过滤后得到了多少条记录。
+
+```bash
+ra -r /path/to/data/file -a
+```
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_29.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_31.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_33.png)
+
+## 使用过滤表达式
+
+过滤表达式是 Argus 工具的核心功能，用于筛选出你感兴趣的特定流。表达式跟在命令和选项之后。
+
+### 基本过滤
+
+例如，筛选出所有 ICMP 协议的数据流：
+
+```bash
+ra -r /path/to/data/file icmp
+```
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_35.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_37.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_39.png)
+
+### 组合过滤
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_41.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_42.png)
+
+你可以使用 `and`、`or` 等逻辑运算符组合多个条件。例如，找出目标端口为 80 的 TCP 流：
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_44.png)
+
+```bash
+ra -r /path/to/data/file tcp and dst port 80
+```
+
+## 聚合模式 (`-m`)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_46.png)
+
+`-m` 选项用于指定聚合对象，这对于按特定字段（如源IP、协议、端口）对流量进行汇总分析非常有用。你需要查阅手册中关于“聚合对象”的部分，了解所有可用的选项。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_48.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_50.png)
+
+例如，按源IP地址进行聚类，并只显示源IP、源端口、目标IP、目标端口这几列：
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_52.png)
+
+```bash
+racluster -r /path/to/data/file -m saddr -s saddr sport daddr dport
+```
+
+*   `-m saddr`: 按源地址字段进行聚类。
+*   `-s saddr sport daddr dport`: 只输出指定的列。
+
+## 输出重定向与管道操作
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_54.png)
+
+### 输出到文件
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_56.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_58.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_60.png)
+
+你可以将命令结果保存到文件中，以便后续分析或下载到本地。
+
+```bash
+ra -r /path/to/data/file tcp and dst port 80 > tcp_80_flows.txt
+```
+也可以输出为 CSV 格式：
+```bash
+ra -r /path/to/data/file -c -s saddr daddr bytes > flows.csv
+```
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_62.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_64.png)
+
+### 管道连接命令
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_66.png)
+
+你可以将一个 Argus 命令的输出作为另一个命令的输入，这是进行复杂分析的关键。
+
+基本语法是：`[第一个ra命令] | [第二个ra命令]`。有时在管道前使用 `-w -` 来保持 Argus 记录格式。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_68.png)
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_70.png)
+
+```bash
+ra -r /path/to/data/file host 192.168.1.100 | rasort -m proto
+```
+这个例子先筛选出涉及特定主机的所有流，然后将结果按协议进行排序和聚合。
+
+## 总结
+
+本节课我们一起学习了 Argus 网络流量分析工具的基础知识。我们介绍了如何访问环境和数据，了解了 `ra`、`racluster` 等核心命令，并演示了 `-l`、`-n`、`-a`、`-m`、`-s` 等关键选项的用法。我们重点讲解了强大的过滤表达式和通过管道组合命令的技巧。
+
+记住，**官方文档**是完成本作业最重要的资源。在开始解题前，请花时间熟悉它。对于作业中的第九个问题（通常要求创造性地使用工具），深入理解这些功能将尤为重要。
+
+![](img/0a4bfe5e8b8ab67673da9328dbd8e7c3_72.png)
+
+如果你在过程中遇到问题，请善用 Piazza 论坛与同学交流，或参加助教的办公室时间。祝你顺利完成作业！
