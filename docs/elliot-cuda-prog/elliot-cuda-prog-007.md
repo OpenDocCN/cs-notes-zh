@@ -1,4 +1,4 @@
-# CUDA编程课程：6：CUDA API 🚀
+# 6：CUDA API 🚀
 
 ![](img/288c1b6f722131e86fcef560de496a90_0.png)
 

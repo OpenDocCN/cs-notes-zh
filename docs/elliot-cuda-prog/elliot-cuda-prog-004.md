@@ -1,4 +1,4 @@
-# CUDA编程课程：3：C/C++ 语言回顾
+# 3：C/C++ 语言回顾
 
 ![](img/f91eaaaa20eab9bb9bb5b79d7c4bc048_0.png)
 

@@ -1,4 +1,4 @@
-# CUDA编程：P10：PyTorch扩展
+# 10：PyTorch扩展
 
 ![](img/dd25078a2fc15d30f8e1481cd2cfe1e3_0.png)
 

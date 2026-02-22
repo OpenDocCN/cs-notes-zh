@@ -1,4 +1,4 @@
-# CUDA编程：8：Triton入门 🚀
+# 8：Triton入门 🚀
 
 ![](img/4d8567e259dcd64e302123211680bc64_0.png)
 
