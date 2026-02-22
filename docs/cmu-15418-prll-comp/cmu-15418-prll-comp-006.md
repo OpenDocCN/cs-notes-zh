@@ -1,4 +1,4 @@
-# 并行计算机架构与编程：P6：Lecture 6 - 1-29-18
+# 6：Lecture 6 - 1-29-18
 
 ![](img/e22fdecf509df9b151d53f2831ba8a8c_1.png)
 
