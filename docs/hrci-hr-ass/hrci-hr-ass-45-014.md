@@ -1,4 +1,4 @@
-# HRCI4-5：道德准则 📜
+# 14：道德准则 📜
 
 ![](img/6fb2275eb4e4ed6aae8c4cface06a16f_0.png)
 

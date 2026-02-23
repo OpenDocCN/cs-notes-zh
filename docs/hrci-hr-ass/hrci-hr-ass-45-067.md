@@ -1,4 +1,4 @@
-# 4-5：SMART目标法 🎯
+# 67：SMART目标法 🎯
 
 ![](img/e19896d1cafe550a34dc1cb5cebf84af_0.png)
 
