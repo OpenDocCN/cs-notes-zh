@@ -1,4 +1,4 @@
-# Python数据结构与流程控制：P66：31_03_data-structures：Python数据结构、条件与循环
+# Python数据结构与流程控制：66：31_03_data-structures：ython数据结构、条件与循环
 
 ## 概述
 

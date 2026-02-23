@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P39：0_01_威胁情报概述
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P39：0_01_威胁情报概述
 
 ## 概述
 

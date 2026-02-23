@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜P66：27_03_cross-site-scripting-effective-defenses
+# 课程6：《网络威胁情报课程（IBM）》：66：27_03_cross-site-scripting-effective-defenses
 
 ## 概述 📋
 

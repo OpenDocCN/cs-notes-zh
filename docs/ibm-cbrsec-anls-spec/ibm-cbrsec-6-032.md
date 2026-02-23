@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜P32：31_QRadar SIEM行业示例
+# 课程6：《网络威胁情报课程（IBM）》：32：31_QRadar SIEM行业示例
 
 ![](img/0e1a7fcc14d7398f08d861af39c6f0ce_1.png)
 

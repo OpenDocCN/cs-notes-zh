@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程7：《网络安全顶级项目：入侵响应案例研究》｜ibm-cybersecurity-breach-case-studies｜ - P23：1_04_nist-incident-response-lifecycle.en_subtitled - GPT中英字幕课程资源 - BV1MN41167mY
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P23：1_04_nist-incident-response-lifecycle.en_subtitled - GPT中英字幕课程资源 - BV1MN41167mY
 
 ## 📚 课程概述
 

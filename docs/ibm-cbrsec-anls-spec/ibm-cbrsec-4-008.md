@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜network-security-database-vulnerabilities｜ - P8：7_局域网简介.zh
+# 课程4：《网络安全与数据库漏洞》：8：7_局域网简介.zh
 
 ![](img/e0193026b54b3f150c740671c2d5f4f1_0.png)
 

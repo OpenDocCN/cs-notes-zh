@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P58：19_04_security-patterns.en_subtitled - GPT中英字幕课程资源 - BV1jN411679K
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P58：19_04_security-patterns.en_subtitled - GPT中英字幕课程资源 - BV1jN411679K
 
 ## 网络安全架构概念：19_04：安全模式 🛡️
 

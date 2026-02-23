@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜network-security-database-vulnerabilities｜ - P18：17_IP寻址二进制基础
+# 课程4：《网络安全与数据库漏洞》：18：17_IP寻址二进制基础
 
 ![](img/f3eed74cda3265d14ca480741d5f5475_0.png)
 

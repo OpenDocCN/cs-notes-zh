@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P31：30_SIEM解决方案供应商
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P31：30_SIEM解决方案供应商
 
 你好，我是Jude Lancaster。今天，我们将讨论市场上不同的SIEM解决方案，关注其中的几家供应商。
 

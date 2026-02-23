@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜network-security-database-vulnerabilities｜ - P69：10_01_网络路由基础介绍
+# 课程4：《网络安全与数据库漏洞》：69：10_01_网络路由基础介绍
 
 ![](img/afd38f2ac34728f068eacb6d644dd3ef_0.png)
 

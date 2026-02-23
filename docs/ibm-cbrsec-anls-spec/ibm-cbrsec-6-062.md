@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P62：23_01_devsecops-overview.en_subtitled
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P62：23_01_devsecops-overview.en_subtitled
 
 ![](img/78d0163f647aafec9751a978dacc237d_1.png)
 

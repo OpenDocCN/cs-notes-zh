@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜P82：23_01_dns-and-dhcp｜DNS与DHCP协议详解
+# 课程4：《网络安全与数据库漏洞》：82：23_01_dns-and-dhcp｜DNS与DHCP协议详解
 
 ![](img/61a0f40fdd039cec430ad008707dff45_0.png)
 

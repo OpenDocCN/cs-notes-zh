@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜network-security-database-vulnerabilities｜ - P24：23_DNS和DHCP
+# 课程4：《网络安全与数据库漏洞》：24：23_DNS和DHCP
 
 ![](img/88a8ea73277673fd63235e2e515b2853_0.png)
 

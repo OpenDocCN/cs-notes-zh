@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程7：《网络安全顶级项目：入侵响应案例研究》｜ibm-cybersecurity-breach-case-studies｜ - P19：18_勒索软件实例.zh
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P19：18_勒索软件实例.zh
 
 ![](img/66f363c515c26be9c424e46c2949fc84_1.png)
 

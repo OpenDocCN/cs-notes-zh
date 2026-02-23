@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程3：《网络安全合规框架与系统管理》：P28：Active Directory的功能 🔐
+# 课程3：《网络安全合规框架与系统管理》：28：Active Directory的功能 🔐
 
 ![](img/8df0ba59d5dd75ac8d0964ca377d9cba_0.png)
 

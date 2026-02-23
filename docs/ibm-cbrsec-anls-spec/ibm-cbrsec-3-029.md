@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程3：《网络安全合规框架与系统管理》：P29：Active Directory账户与安全注意事项 🔐
+# 课程3：《网络安全合规框架与系统管理》：29：Active Directory账户与安全注意事项 🔐
 
 ![](img/063207ed4d2449d7ad29a48b4ad7feeb_0.png)
 

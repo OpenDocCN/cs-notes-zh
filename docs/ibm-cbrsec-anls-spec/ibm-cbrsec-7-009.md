@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程7：《网络安全顶级项目：入侵响应案例研究》｜ibm-cybersecurity-breach-case-studies｜ - P9：8_网络钓鱼电子邮件研究.zh
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P9：8_网络钓鱼电子邮件研究.zh
 
 ## 📧 课程概述：网络钓鱼电子邮件研究
 

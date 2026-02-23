@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P44：5_01_什么是数据安全与保护
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P44：5_01_什么是数据安全与保护
 
 你好，我是路易斯·福阿，我将为你讲解数据安全与保护。
 

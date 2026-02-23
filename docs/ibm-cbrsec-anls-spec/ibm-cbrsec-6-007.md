@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P7：6_数据安全十大挑战.zh
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P7：6_数据安全十大挑战.zh
 
 ![](img/c01ea457974d6120523994776dcd73b0_1.png)
 

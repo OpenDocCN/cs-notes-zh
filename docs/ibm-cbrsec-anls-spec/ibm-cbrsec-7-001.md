@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程7：《网络安全顶级项目：入侵响应案例研究》｜ibm-cybersecurity-breach-case-studies｜ - P1：0_NIST事件响应生命周期团队.zh
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P1：0_NIST事件响应生命周期团队.zh
 
 ![](img/d7ed9ecaf9adc3d0ce5c95a976c70b57_1.png)
 

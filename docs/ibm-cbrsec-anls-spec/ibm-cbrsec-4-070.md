@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜P70：11_02_layer-2-and-layer-3-network-addressing
+# 课程4：《网络安全与数据库漏洞》：70：11_02_layer-2-and-layer-3-network-addressing
 
 ![](img/c06172d4ea78be2b403f923b0c863ef0_0.png)
 

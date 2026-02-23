@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程3：《网络安全合规框架与系统管理》：P82：27_01_Active Directory特性
+# 课程3：《网络安全合规框架与系统管理》：82：27_01_Active Directory特性
 
 ![](img/fa432b9e247fad677d069a4659a6e41e_0.png)
 

@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜P100：41_05_securing-data-sources-by-type
+# 课程4：《网络安全与数据库漏洞》：100：41_05_securing-data-sources-by-type
 
 ![](img/3ba357c7c60a13495ae709a2bcbf26ec_0.png)
 

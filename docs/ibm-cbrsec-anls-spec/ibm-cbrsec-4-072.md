@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜network-security-database-vulnerabilities｜ - P72：13_04_路由器和路由表-第一部分
+# 课程4：《网络安全与数据库漏洞》：72：13_04_路由器和路由表-第一部分
 
 ![](img/898e90baaaae9f3c196ba4d1943b2998_0.png)
 

@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P11：10_关键数据保护能力
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P11：10_关键数据保护能力
 
 ![](img/2e248a209e29ce28cfd9019a659d3a38_1.png)
 

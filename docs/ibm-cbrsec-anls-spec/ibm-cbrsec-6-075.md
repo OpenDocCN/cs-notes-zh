@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜ibm-cyber-threat-intelligence｜ - P75：36_02_soc-cyber-threat-hunting.en_subtitled
+# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P75：36_02_soc-cyber-threat-hunting.en_subtitled
 
 ![](img/0ab5daee2dc5ecf7169e3d7bc46dc54e_1.png)
 

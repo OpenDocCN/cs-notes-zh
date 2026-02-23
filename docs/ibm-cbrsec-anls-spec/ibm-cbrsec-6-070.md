@@ -1,4 +1,4 @@
-# IBM网络安全分析师专业证书课程6：《网络威胁情报课程（IBM）》｜P70：31_01_qradar-siem-an-industry-example｜
+# 课程6：《网络威胁情报课程（IBM）》：70：31_01_qradar-siem-an-industry-example｜
 
 ## 🎯 概述
 在本节课中，我们将以IBM的QRadar为例，了解一个行业级SIEM（安全信息与事件管理）平台的核心功能。我们将从安全分析师的角度，探讨QRadar如何帮助企业应对现代安全挑战。
