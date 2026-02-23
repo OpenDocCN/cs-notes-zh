@@ -19,6 +19,7 @@
 +   [GAMES 图形学系列笔记](docs/games/README.md)
 +   [哈佛 CS50 中文官方笔记](docs/hav-cs50/README.md)
 +   [哈佛 CS50 计算机科学导论笔记](docs/hav-cs50-2020/README.md)
++   [HRCI 人力资源助理笔记](docs/hrci-hr-ass/README.md)
 +   [IBM 网络安全分析师专项笔记](docs/ibm-cbrsec-anls-spec/README.md)
 +   [KAIST CS109 编程实践教程](docs/kaist-cs109-prog-prac/README.md)
 +   [MIT 18.S191 计算机思维导论笔记](docs/mit-18s191-intro/README.md)
