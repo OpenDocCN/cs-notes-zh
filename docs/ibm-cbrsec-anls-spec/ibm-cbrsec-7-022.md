@@ -1,4 +1,4 @@
-# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P22：0_03_nist-incident-response-lifecycle-teams.en_subtitled
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：22：0_03_nist-incident-response-lifecycle-teams.en_subtitled
 
 ![](img/39a354e7a58b12d81b33197815800086_1.png)
 

@@ -1,4 +1,4 @@
-# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P12：11_POS违规概述
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：12：11_POS违规概述
 
 ![](img/2b5bd2c90c5d26d52e6062e75f94c6cc_1.png)
 

@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P71：32_01_user-behavior-analytics.en_subtitled
+# 课程6：《网络威胁情报课程（IBM）》：71：32_01_user-behavior-analytics.en_subtitled
 
 ![](img/39d8692baba7cc9d5f0241f951f1513e_1.png)
 

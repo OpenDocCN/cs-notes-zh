@@ -1,4 +1,4 @@
-# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P29：7_01_phishing-scams-overview.en_subtitled - GPT中英字幕课程资源 - BV1MN41167mY
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：29：7_01_phishing-scams-overview.en_subtitled - GPT中英字幕课程资源 - BV1MN41167mY
 
 ## 钓鱼攻击概述 🎣
 

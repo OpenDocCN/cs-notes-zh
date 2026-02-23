@@ -1,4 +1,4 @@
-# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P36：14_01_3rd-party-breach-overview.en_subtitled
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：36：14_01_3rd-party-breach-overview.en_subtitled
 
 ## 📚 课程概述
 

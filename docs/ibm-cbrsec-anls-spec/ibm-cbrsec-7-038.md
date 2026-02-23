@@ -1,4 +1,4 @@
-# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P38：16_01_3rd-party-breach-quest-diagnostics.en_subtitled
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：38：16_01_3rd-party-breach-quest-diagnostics.en_subtitled
 
 ## 🏥 第三方数据泄露案例研究：Quest Diagnostics
 

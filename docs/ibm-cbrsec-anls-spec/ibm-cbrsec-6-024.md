@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》： P24：23_DevSecOps概述
+# 课程6：《网络威胁情报课程（IBM）》：24：23_DevSecOps概述
 
 ![](img/b59be7bbeb55741d646811c9be417370_1.png)
 

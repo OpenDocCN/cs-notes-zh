@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P49：10_06_关键数据保护能力
+# 课程6：《网络威胁情报课程（IBM）》：49：10_06_关键数据保护能力
 
 ![](img/c4d3a6a93d656423addb52bb5cff5348_1.png)
 

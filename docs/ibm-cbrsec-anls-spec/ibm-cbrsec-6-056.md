@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P56：17_02_high-level-architectural-models.en_subtitled
+# 课程6：《网络威胁情报课程（IBM）》：56：17_02_high-level-architectural-models.en_subtitled
 
 ## 网络安全架构概念：17_02：高层架构模型 🏗️
 

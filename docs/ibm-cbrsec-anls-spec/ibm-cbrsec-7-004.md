@@ -1,4 +1,4 @@
-# 课程7：《网络安全顶级项目：入侵响应案例研究》：ibm-cybersecurity-breach-case-studies｜ - P4：3_什么是数据泄露 🛡️
+# 课程7：《网络安全顶级项目：入侵响应案例研究》：4：3_什么是数据泄露 🛡️
 
 ![](img/dfd4b7fbadbaf2af168cbba4969db728_1.png)
 

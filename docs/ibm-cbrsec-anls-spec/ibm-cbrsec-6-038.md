@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P38：37_网络威胁狩猎行业示例.zh
+# 课程6：《网络威胁情报课程（IBM）》：38：37_网络威胁狩猎行业示例.zh
 
 ![](img/be925af9c87daf4a56a50a76699f07ea_1.png)
 

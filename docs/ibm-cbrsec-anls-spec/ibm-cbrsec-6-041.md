@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P41：2_05_威胁情报平台
+# 课程6：《网络威胁情报课程（IBM）》：41：2_05_威胁情报平台
 
 ![](img/79b856a8a4eca4ab9aaed95d7a6e42f9_1.png)
 

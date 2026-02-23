@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P3：2_威胁情报平台.zh
+# 课程6：《网络威胁情报课程（IBM）》：3：2_威胁情报平台.zh
 
 ![](img/828d95e61fdb3944c33e46f83cf5835f_1.png)
 

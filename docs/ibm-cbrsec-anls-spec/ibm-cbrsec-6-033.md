@@ -1,4 +1,4 @@
-# 课程6：《网络威胁情报课程（IBM）》：ibm-cyber-threat-intelligence｜ - P33：32_用户行为分析
+# 课程6：《网络威胁情报课程（IBM）》：33：32_用户行为分析
 
 ![](img/5fb92ad6bb8ca35684359ce97bea51fc_1.png)
 
