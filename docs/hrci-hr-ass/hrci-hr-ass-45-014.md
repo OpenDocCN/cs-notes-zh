@@ -1,4 +1,4 @@
-# HRCI人力资源助理（员工关系、合规）：4-5：道德准则 📜
+# HRCI4-5：道德准则 📜
 
 ![](img/6fb2275eb4e4ed6aae8c4cface06a16f_0.png)
 

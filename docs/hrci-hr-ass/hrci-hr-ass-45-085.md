@@ -1,4 +1,4 @@
-# HRCI人力资源助理课程：P85：2_讲师介绍：Rachel
+# 85：2_讲师介绍：Rachel
 
 ![](img/430938044abf434fcc3f66ccca74b471_0.png)
 

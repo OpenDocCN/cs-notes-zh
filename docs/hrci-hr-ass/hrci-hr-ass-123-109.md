@@ -1,4 +1,4 @@
-# HRCI《人力资源助理》课程：第42课：设定SMART目标 🎯
+# 109：设定SMART目标 🎯
 
 ![](img/3cece6263b789e2fa0fc84a9f8b6ef10_0.png)
 

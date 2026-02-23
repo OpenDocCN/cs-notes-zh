@@ -1,4 +1,4 @@
-# HRCI人力资源助理课程：P3：讲师介绍
+# 3：讲师介绍
 
 ![](img/b0dbfa0cfb5c6313111dab6ff4b3a4ba_0.png)
 

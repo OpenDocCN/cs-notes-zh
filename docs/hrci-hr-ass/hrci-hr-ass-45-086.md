@@ -1,4 +1,4 @@
-# HRCI人力资源助理课程：P86：3_讲师介绍：Michelle.zh_en
+# 86：3_讲师介绍：Michelle.zh_en
 
 ![](img/0e8b12a540ff3d8637a3d30698c72c5f_0.png)
 
