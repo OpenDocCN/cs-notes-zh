@@ -1,4 +1,4 @@
-# xv6 操作系统内核：08：RISC-V 页表
+# 08：RISC-V 页表
 
 ![](img/f39da02346c55ba4763f6ae664a7a7cd_0.png)
 

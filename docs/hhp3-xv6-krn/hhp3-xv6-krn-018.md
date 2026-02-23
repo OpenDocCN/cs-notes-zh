@@ -1,4 +1,4 @@
-# xv6 操作系统内核：18：uart.c 与 console.c 详解 🖥️
+# 18：uart.c 与 console.c 详解 🖥️
 
 ![](img/9d532f9a7d6978d199dcb694aa7da97b_0.png)
 

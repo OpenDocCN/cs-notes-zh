@@ -1,4 +1,4 @@
-# XV6 操作系统内核：31：Inodes 详解 🗂️
+# 31：Inodes 详解 🗂️
 
 ![](img/d4bb997f8b5f85a7b57b01018fb882d7_0.png)
 

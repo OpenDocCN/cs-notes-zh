@@ -1,4 +1,4 @@
-# xv6 操作系统内核：24：Exit、Wait、Kill 系统调用 🖥️
+# 24：Exit、Wait、Kill 系统调用 🖥️
 
 ![](img/2533fe612f7ae6b7164b9fd4e47dfe9f_0.png)
 

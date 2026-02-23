@@ -1,4 +1,4 @@
-# xv6 操作系统内核：25：休眠锁（Sleeplocks）
+# 25：休眠锁（Sleeplocks）
 
 ![](img/a77f8de350785fd55f92ac3a26cc229a_0.png)
 

@@ -1,4 +1,4 @@
-# xv6 操作系统内核：17：sleep() 与 wakeup() 函数详解 🧠
+# 17：sleep() 与 wakeup() 函数详解 🧠
 
 ![](img/517c35e4232493292bb1b5f3bd171b7f_0.png)
 
