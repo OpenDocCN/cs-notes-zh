@@ -1,0 +1,55 @@
+# IBM网络安全分析师专业证书课程4：《网络安全与数据库漏洞》｜network-security-database-vulnerabilities｜ - P41：40_漏洞评估测试报告剖析.zh - GPT中英字幕课程资源 - BV1RN411q7PY
+
+![](img/79e95cd807ef285f3529520b4fce72b9_0.png)
+
+Yes。In this video， you will learn to describe what a vulnerability assessment test report contains and how to read it。
+
+
+
+![](img/79e95cd807ef285f3529520b4fce72b9_2.png)
+
+We talked a little bit about vulnerability assessments here's an example。
+
+ vulnerability assessment from a recent assessment test that was done。So， you'll see。
+
+This test passing 36% total reflected here by this little dot。 And really。
+
+ this would be a chart over time。 You run it again and again and again。
+
+ and you really want to see this with an upward trend。
+
+ Now it might be that you have an operating system update or a new version of a database and you see a dip because some additional。
+
+Vulnerabilities have been released for that new operating system version or database version。
+
+ But on the whole， you would like to see a， everyone would like to see an upward trend here in this assessment result history。
+
+ And now this is incredibly low 36%。 It's actually。Quite normal to see that for some databases。
+
+ if the only thing you've done is simply installed the operating system。
+
+ installed the database software and done absolutely taken zero steps。
+
+ no steps whatsoever towards hardening the operating system or the database itself。
+
+And that's typically why you would be in the 30s or 40s。 Youll just see an example of。
+
+Different results known as critical categorized as critical， major， minor， cautionary。
+
+ or informational。Here you see the external references was STig released by the Department of Defense。
+
+You see test checks the value of failed login attempts， parameter for each， so for this one。
+
+ the failed login attempt value limits the number of failed login allowed before the account is locked。
+
+ so simply how to define your threshold of value， I think this particular one suggests three or five。
+
+ something like that。I can't remember off top of my head and the recommendation to fix it is simply failed login attempts is not set high number failed login attempts can unauthorized users trying to gain unauthorized access and while we've all forgotten the password once twice。
+
+ the best practice is to limit the amount of retriries that anyone has when they do forget their password that way you're stopping someone from simply staying there and trying again and again and again to access the system with your credentials。
+
+ which is one of the many many different vulnerability test to check。
+
+
+
+![](img/79e95cd807ef285f3529520b4fce72b9_4.png)
