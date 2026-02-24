@@ -1,4 +1,4 @@
-# 56：在Windows上使用Bash 🖥️
+# 入门 56：在Windows上使用Bash 🖥️
 
 ![](img/10617bd121415f9ebd62d20d6587a2a4_1.png)
 

@@ -1,4 +1,4 @@
-# 123：创建数据库客户端 🛠️
+# Python 123：创建数据库客户端 🛠️
 
 在本节课中，我们将学习如何为Little Lemon餐厅创建一个数据库客户端。我们将通过Python应用程序与MySQL数据库进行交互。具体任务包括：检查Python版本、安装合适的集成开发环境（IDE），以及将Python连接到Little Lemon的MySQL数据库。
 

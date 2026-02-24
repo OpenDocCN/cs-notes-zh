@@ -1,4 +1,4 @@
-# 97：MySQL Workbench简介 🛠️
+# Python 97：MySQL Workbench简介 🛠️
 
 在本节课中，我们将学习MySQL Workbench这一数据库建模与管理工具。我们将了解其核心功能、安装步骤，并学习如何创建数据库连接和用户，为后续的数据库设计与管理工作打下基础。
 

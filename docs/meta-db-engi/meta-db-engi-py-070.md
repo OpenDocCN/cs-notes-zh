@@ -1,4 +1,4 @@
-# 70：MySQL Python连接 🔗
+# Python 70：MySQL Python连接 🔗
 
 在本节课中，我们将要学习如何建立Python应用程序与MySQL数据库之间的连接。你将了解连接的基本原理、核心组件以及一个典型的数据查询流程是如何工作的。
 
@@ -76,7 +76,7 @@
 以下是执行查询的核心代码步骤：
 
 ```python
-# 1. 建立数据库连接
+# Python 1. 建立数据库连接
 connection = mysql.connector.connect(host='localhost', database='little_lemon', user='user', password='password')
 
 ![](img/8a96b62a7a0e2d19f7b9ce71f350760b_20.png)
@@ -87,15 +87,15 @@ connection = mysql.connector.connect(host='localhost', database='little_lemon', 
 
 ![](img/8a96b62a7a0e2d19f7b9ce71f350760b_23.png)
 
-# 2. 创建游标对象
+# Python 2. 创建游标对象
 cursor = connection.cursor()
 
-# 3. 使用游标执行SQL查询
+# Python 3. 使用游标执行SQL查询
 cursor.execute("SELECT booking_time FROM bookings WHERE guest_name = 'John Doe'")
 
 ![](img/8a96b62a7a0e2d19f7b9ce71f350760b_25.png)
 
-# 4. 获取查询结果
+# Python 4. 获取查询结果
 records = cursor.fetchall()
 ```
 

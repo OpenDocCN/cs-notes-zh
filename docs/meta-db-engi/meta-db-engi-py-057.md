@@ -1,4 +1,4 @@
-# 57：机器学习、深度学习与AI核心概念及Python库 🧠
+# Python 57：机器学习、深度学习与AI核心概念及Python库 🧠
 
 ![](img/067ce0d7c15e940bae24bf1afd53f9d8_1.png)
 

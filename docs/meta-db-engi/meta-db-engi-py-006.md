@@ -1,4 +1,4 @@
-# 6：Mac环境检查 🍎
+# Python 6：Mac环境检查 🍎
 
 在本节课中，我们将学习如何在Mac操作系统上，为Visual Studio Code（VS Code）设置正确的Python解释器，并验证其是否能正常运行Python脚本。这是开始Python开发前的重要一步。
 

@@ -1,4 +1,4 @@
-# 79：使用Python对MySQL数据库中的数据进行过滤和排序 🔍
+# Python 79：使用Python对MySQL数据库中的数据进行过滤和排序 🔍
 
 在本节课中，我们将学习如何使用Python对MySQL数据库中的数据进行过滤和排序。当查询数据库记录时，查询结果可能包含数百、数千甚至数百万条数据。然而，我们通常只需要其中的一小部分。通过应用过滤和排序技术，我们可以精确地定位所需的数据。
 
@@ -72,7 +72,7 @@ ORDER BY bill_amount ASC;
 ```python
 import mysql.connector
 
-# 1. 建立连接
+# Python 1. 建立连接
 connection = mysql.connector.connect(
     host='localhost',
     user='your_username',
@@ -80,13 +80,13 @@ connection = mysql.connector.connect(
     database='little_lemon_db'
 )
 
-# 2. 获取游标
+# Python 2. 获取游标
 cursor = connection.cursor()
 
-# 3. 执行查询
+# Python 3. 执行查询
 cursor.execute(mysql_query)
 
-# 4. 获取所有结果
+# Python 4. 获取所有结果
 results = cursor.fetchall()
 
 # 打印结果

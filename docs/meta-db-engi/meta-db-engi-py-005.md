@@ -1,4 +1,4 @@
-# 5：Windows环境检查与Python配置 🖥️
+# Python 5：Windows环境检查与Python配置 🖥️
 
 在本节课中，我们将学习如何在Windows操作系统上，为Visual Studio Code（VS Code）集成开发环境配置正确的Python解释器。这是开始Python开发前至关重要的一步，确保你的代码能够被正确执行。
 

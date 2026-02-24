@@ -1,4 +1,4 @@
-# 26：*args 与 **kwargs
+# Python 26：*args 与 **kwargs
 
 ![](img/7005d108a5cfcb08f5f3e035d95240ed_1.png)
 
