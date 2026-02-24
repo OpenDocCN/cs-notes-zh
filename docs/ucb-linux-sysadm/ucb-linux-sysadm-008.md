@@ -1,4 +1,4 @@
-# Linux系统管理实践课程：8：版本控制（Git）与备份
+# 8：版本控制（Git）与备份
 
 ![](img/936786b73c3e45fcfdddc2c6c51fef1b_0.png)
 
