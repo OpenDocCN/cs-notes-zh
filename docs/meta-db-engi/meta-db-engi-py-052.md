@@ -1,4 +1,4 @@
-# Python编程基础：P52：编写导入语句
+# 52：编写导入语句
 
 ![](img/0fba8ea37b4d52affdabf2a063a7bc86_0.png)
 

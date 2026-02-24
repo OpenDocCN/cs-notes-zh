@@ -1,4 +1,4 @@
-# 数据库工程师课程：P94：MySQL ALTER TABLE 语句详解 🛠️
+# 94：MySQL ALTER TABLE 语句详解 🛠️
 
 在本节课中，我们将学习如何使用 MySQL 的 `ALTER TABLE` 语句来修改现有的数据库表。我们将通过一个实际案例，学习如何添加、删除和修改表中的列与约束。
 

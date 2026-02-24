@@ -1,4 +1,4 @@
-# 数据库工程师：P22：INSERT INTO SELECT语句
+# 22：INSERT INTO SELECT语句
 
 在本节课中，我们将要学习如何使用 `INSERT INTO SELECT` 语句，从一个或多个表中查询数据，并将结果插入到另一个目标表中。这是一种高效的数据迁移和填充方法。
 

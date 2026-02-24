@@ -1,4 +1,4 @@
-# 数据库工程师课程：P131：在MySQL中模拟全外连接 🧩
+# 131：在MySQL中模拟全外连接 🧩
 
 在本节课中，我们将学习如何在MySQL中模拟“全外连接”（Full Outer Join）。全外连接是一种能够同时返回两个表中所有记录（包括匹配和不匹配的记录）的查询方式。由于MySQL本身不直接支持`FULL OUTER JOIN`语法，我们将通过组合`LEFT JOIN`、`RIGHT JOIN`和`UNION`（或`UNION ALL`）操作符来实现相同的效果。
 

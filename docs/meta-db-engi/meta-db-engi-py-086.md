@@ -1,4 +1,4 @@
-# 数据库工程师：P86：使用Python访问存储过程 📖
+# 86：使用Python访问存储过程 📖
 
 在本节课中，我们将学习如何使用Python来调用MySQL数据库中的存储过程。我们将通过一个为“小柠檬”餐厅筛选符合赠券条件的顾客的实际案例，来演示从创建存储过程到在Python中执行并获取结果的全过程。
 
@@ -93,7 +93,7 @@ dataset = results.fetchall()
 for record in dataset:
     print(record)
 # 或者通过索引访问
-# print(dataset[0])
+# rint(dataset[0])
 ```
 
 根据案例，查询结果显示有一位顾客在“小柠檬”消费了50美元或以上，符合获得赠券的条件。
