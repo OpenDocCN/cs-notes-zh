@@ -1,4 +1,4 @@
-# Meta后端开发课程：P62：使用Pipenv创建Django项目 🐍
+# 62：使用Pipenv创建Django项目 🐍
 
 在本节课中，我们将学习如何使用Pipenv工具来创建一个Django项目，并配置虚拟环境。我们还将了解如何在Visual Studio Code的集成终端中使用这个虚拟环境。
 

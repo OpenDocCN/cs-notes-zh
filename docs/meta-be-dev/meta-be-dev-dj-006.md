@@ -1,4 +1,4 @@
-# Django后端开发：P6：Django Admin与Manage.py命令详解 🛠️
+# 6：Django Admin与Manage.py命令详解 🛠️
 
 在本节课中，我们将要学习Django框架中两个核心的命令行工具：`django-admin` 和 `manage.py`。你将了解它们的功能、区别以及如何在项目开发中正确使用它们来执行管理任务。
 

@@ -1,4 +1,4 @@
-# Django后端开发：P39：设置MySQL连接 🗄️
+# 39：设置MySQL连接 🗄️
 
 在本节课中，我们将学习如何在Django项目中安装和配置MySQL数据库。你将了解MySQL的特点、安装步骤、数据库连接器的配置，以及如何将MySQL与Django的ORM（对象关系映射器）集成。
 
