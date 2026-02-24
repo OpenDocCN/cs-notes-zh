@@ -1,4 +1,4 @@
-# 前端开发：P41：设置 VS 代码 🛠️
+# 41：设置 VS 代码 🛠️
 
 在本节课中，我们将学习如何为 JavaScript 开发设置必要的软件环境。具体来说，我们将安装 Visual Studio Code 编辑器、Node.js 运行时以及一个名为 Code Runner 的扩展。完成设置后，你将能够创建并运行一个简单的 JavaScript 文件。
 

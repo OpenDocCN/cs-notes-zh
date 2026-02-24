@@ -1,4 +1,4 @@
-# React 前端开发：P71：在 JSX 中动态操作子组件 🧩
+# 71：在 JSX 中动态操作子组件 🧩
 
 在本节课中，我们将要学习 React 中两个强大的顶层 API：`React.cloneElement` 和 `React.Children.map`。它们允许你动态地操作和转换组件的子元素，从而创建出更灵活、更智能的组件设计模式。
 

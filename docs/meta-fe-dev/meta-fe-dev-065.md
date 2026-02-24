@@ -1,4 +1,4 @@
-# React Hooks 教程：P65：什么是 useReducer，它与 useState 有何不同 🧩
+# 65：什么是 useReducer，它与 useState 有何不同 🧩
 
 在本节课中，我们将要学习 `useReducer` Hook，了解它的工作原理，并探讨它与我们熟悉的 `useState` Hook 有何不同。我们将通过一个为“小柠檬”餐厅构建费用追踪应用的实例，来直观地理解 `useReducer` 如何管理更复杂的状态逻辑。
 

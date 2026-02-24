@@ -1,4 +1,4 @@
-# React 状态管理：第15章：修改 useState 钩子 🛠️
+# 57：修改 useState 钩子 🛠️
 
 在本节课中，我们将学习如何修改和使用 React 的 `useState` 钩子。我们将通过一个为 Little Lemon 餐厅构建的库存追踪应用实例，来复习 `useState` 钩子的调用方式、返回值以及如何用它来更新状态。
 

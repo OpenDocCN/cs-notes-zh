@@ -1,4 +1,4 @@
-# React 核心概念：第11章：Props 与 State 详解 🧩
+# 53：Props 与 State 详解 🧩
 
 ![](img/40371164cb824da28d92d6800811c1c1_0.png)
 

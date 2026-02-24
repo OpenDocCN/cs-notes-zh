@@ -1,4 +1,4 @@
-# React 状态管理：P26：React 状态管理
+# 26：React 状态管理
 
 在本节课中，我们将要学习如何管理跨多个组件层级的状态。你将理解如何使用 Context API 来更高效地管理状态，并学会使用 `useContext` 和 `useReducer` 这两个钩子进行基本的状态管理。
 

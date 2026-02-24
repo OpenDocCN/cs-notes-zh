@@ -1,4 +1,4 @@
-# 前端开发：P44：设置 VS Code（可选）🛠️
+# 44：设置 VS Code（可选）🛠️
 
 在本节课中，我们将学习如何为JavaScript开发设置必要的软件环境。具体来说，我们将安装Visual Studio Code编辑器、Node.js运行时以及一个名为Code Runner的扩展插件。完成设置后，你将能够创建并运行一个简单的JavaScript文件。
 

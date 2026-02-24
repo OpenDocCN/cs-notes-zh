@@ -1,4 +1,4 @@
-# React 组件 Props 原则：P9：组件 Props 原则
+# 9：组件 Props 原则
 
 在本节课中，我们将要学习 React 中一个核心概念：Props。Props 是组件之间传递数据的主要方式，理解它们的工作原理对于构建动态和可复用的 React 应用至关重要。
 
@@ -36,7 +36,7 @@ console.log(fruit.type); // 输出：apple
 
 在 React 中，您可以使用类似的技术，通过属性对象（简称 props）将数据从一个组件传递到另一个组件。
 
-## Props 的核心概念
+## rops 的核心概念
 
 Props 允许您将数据从一个组件传递到另一个组件。将 props 视为组件可以接受的参数会很有帮助，它们使用 JSX 语法传递，很像 HTML 属性。在函数内部，您使用关键字 `props`。
 
@@ -79,7 +79,7 @@ function App(props) {
 
 ![](img/567c6b6e645653c91aa8100448faa589_5.png)
 
-## Props 的数据类型
+## rops 的数据类型
 
 因为 props 本质上是一个 JavaScript 对象，所以它可以接受多种数据类型，从简单的类型（如字符串和整数）到更复杂的类型（如函数、数组和对象）。
 
@@ -109,7 +109,7 @@ function App(props) {
 
 ![](img/567c6b6e645653c91aa8100448faa589_11.png)
 
-## Props 的局限性
+## rops 的局限性
 
 ![](img/567c6b6e645653c91aa8100448faa589_13.png)
 
