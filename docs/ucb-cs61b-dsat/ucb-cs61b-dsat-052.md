@@ -1,4 +1,4 @@
-# Lab 9：HashMap 实现指南 🗺️
+# 52：HashMap 实现指南 🗺️
 
 ![](img/a42668a33018e05b954d48bc76623d58_0.png)
 
