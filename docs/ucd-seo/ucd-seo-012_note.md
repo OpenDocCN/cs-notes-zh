@@ -1,4 +1,4 @@
-# SEO算法详解：012：Panda算法更新 🐼
+# 012：Panda算法更新 🐼
 
 ![](img/fb07c1cf394705d347e40bfca75af934_0.png)
 

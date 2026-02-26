@@ -1,4 +1,4 @@
-# 搜索引擎优化（谷歌、SEO基础、优化网站、进阶、毕业项目）：046：robots.txt协议详解 🕷️
+# 046：robots.txt协议详解 🕷️
 
 ![](img/2cb9d91793a37fbca90bf0d7afe5dff9_0.png)
 
