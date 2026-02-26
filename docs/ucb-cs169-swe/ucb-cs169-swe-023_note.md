@@ -1,4 +1,4 @@
-# 软件工程：23：JavaScript 与 DOM 基础 🚀
+# 023：JavaScript 与 DOM 基础 🚀
 
 ![](img/dbabc14e86ad2eaae2c47ab7d7cf2ce3_1.png)
 

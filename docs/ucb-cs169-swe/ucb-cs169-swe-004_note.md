@@ -1,4 +1,4 @@
-# 软件工程：004：Ruby基础与REST API入门 🚀
+# 004：Ruby基础与REST API入门 🚀
 
 ![](img/188385e4e33c07762ebb26c392632fa9_1.png)
 

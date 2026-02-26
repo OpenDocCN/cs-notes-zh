@@ -1,4 +1,4 @@
-# 软件工程：008：Active Record、调试与表单
+# 008：Active Record、调试与表单
 
 ![](img/86cb942435ae961db453f2835d86dae0_0.png)
 

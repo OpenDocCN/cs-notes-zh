@@ -1,4 +1,4 @@
-# 内存安全：075：ASLR概述
+# 075：ASLR概述
 
 ![](img/319e964ac94f1f60c6a11dbedb57d376_1.png)
 

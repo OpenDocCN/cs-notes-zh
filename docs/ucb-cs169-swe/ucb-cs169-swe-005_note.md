@@ -1,4 +1,4 @@
-# 软件工程：005：REST API、HTML/CSS 与调试入门
+# 005：REST API、HTML/CSS 与调试入门
 
 ![](img/1e7c3161193cc64b8615fdf052c0b2d3_0.png)
 

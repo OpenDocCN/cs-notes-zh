@@ -1,4 +1,4 @@
-# 密码学课程：147：ElGamal 加密方案 🧮
+# 147：ElGamal 加密方案 🧮
 
 ![](img/6d1d8e7f689dc45cfed110ad0fa3743e_0.png)
 

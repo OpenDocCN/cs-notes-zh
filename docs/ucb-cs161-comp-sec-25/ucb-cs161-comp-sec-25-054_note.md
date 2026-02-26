@@ -1,4 +1,4 @@
-# 内存安全：054：printf 漏洞利用的深远影响 🎯
+# 054：printf 漏洞利用的深远影响 🎯
 
 ![](img/e396eca8aea57ba6f75c458aa29dff5a_0.png)
 

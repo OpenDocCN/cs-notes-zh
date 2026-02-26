@@ -1,4 +1,4 @@
-# 软件工程：第10讲：故事点、速度与Cucumber测试
+# 010：故事点、速度与Cucumber测试
 
 ![](img/efdf1bf07734ddf3689d6364b4d2b742_1.png)
 

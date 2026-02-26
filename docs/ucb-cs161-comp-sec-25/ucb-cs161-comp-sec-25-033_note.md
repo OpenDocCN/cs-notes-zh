@@ -1,4 +1,4 @@
-# 内存安全漏洞利用：033：编写更长的Shellcode
+# 033：编写更长的Shellcode
 
 ![](img/f602e9db58fcc5b0cdf2a98fcd64f1fb_0.png)
 

@@ -1,4 +1,4 @@
-# 内存安全3：045：基础printf漏洞利用
+# 045：基础printf漏洞利用
 
 ![](img/d3200ac9f5b81d849cea185bd307db9e_0.png)
 

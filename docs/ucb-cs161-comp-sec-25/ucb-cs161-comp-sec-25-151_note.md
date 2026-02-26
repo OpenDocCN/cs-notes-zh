@@ -1,4 +1,4 @@
-# 密码学6：7：RSA安全性与OAEP填充
+# 151：RSA安全性与OAEP填充
 
 ![](img/8fb0ba1f86af81b79c453f27b27089c9_0.png)
 

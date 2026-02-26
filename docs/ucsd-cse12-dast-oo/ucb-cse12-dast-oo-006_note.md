@@ -1,4 +1,4 @@
-# CSE 12：006：JUnit测试与ArrayList入门 🚀
+# 006：JUnit测试与ArrayList入门 🚀
 
 ![](img/253527d56d3dc0912d3d0a3c6c99d698_0.png)
 

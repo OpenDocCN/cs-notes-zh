@@ -1,4 +1,4 @@
-# 软件工程：011：BDD、Cucumber与客户会议
+# 011：BDD、Cucumber与客户会议
 
 ![](img/ce3ffcd033543aed7b196740c40d342f_0.png)
 

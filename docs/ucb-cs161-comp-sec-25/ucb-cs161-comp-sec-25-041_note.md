@@ -1,4 +1,4 @@
-# 内存安全3：041：printf参数不匹配漏洞详解
+# 041：printf参数不匹配漏洞详解
 
 ![](img/5efd8479d83c53fd62b8435bdecf3a4e_0.png)
 

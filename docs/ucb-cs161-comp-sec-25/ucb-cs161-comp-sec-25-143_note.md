@@ -1,4 +1,4 @@
-# 密码学5：14：Diffie-Hellman中间人攻击 👥🔓
+# 143：Diffie-Hellman中间人攻击 👥🔓
 
 ![](img/4299744c05517c6286e7e951185876a2_0.png)
 

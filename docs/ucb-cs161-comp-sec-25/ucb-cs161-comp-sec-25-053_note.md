@@ -1,4 +1,4 @@
-# 内存安全3：053：printf 漏洞防御 🛡️
+# 053：printf 漏洞防御 🛡️
 
 ![](img/edb74c9aaf896bf7912d5b737b5f4220_0.png)
 

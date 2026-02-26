@@ -1,4 +1,4 @@
-# 软件工程：007：MVC 与 Rails 入门 🚀
+# 007：MVC 与 Rails 入门 🚀
 
 ![](img/7c327a4e1df9b91adc1eb6bb87843859_1.png)
 

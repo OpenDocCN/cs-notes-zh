@@ -1,4 +1,4 @@
-# 内存安全3：047：利用%n的基本printf漏洞
+# 047：利用%n的基本printf漏洞
 
 ![](img/dc98c0f6ccfaebc9b939510a6ab53d50_0.png)
 

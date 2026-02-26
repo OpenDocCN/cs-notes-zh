@@ -1,4 +1,4 @@
-# 内存安全漏洞：057：Off-by-One漏洞利用详解 🎯
+# 057：Off-by-One漏洞利用详解 🎯
 
 ![](img/a5b9ec8b2bd9fa67234d058ea1bf8161_0.png)
 

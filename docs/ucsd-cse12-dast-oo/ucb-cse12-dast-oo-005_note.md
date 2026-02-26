@@ -1,4 +1,4 @@
-# CSE 12 - 基础数据结构与面向对象设计：005：Java集合、异常与JUnit测试入门
+# 005：Java集合、异常与JUnit测试入门
 
 ![](img/a6ae58fe820288ff02cd4b2a5c333f8b_0.png)
 
