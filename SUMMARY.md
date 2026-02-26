@@ -58,6 +58,7 @@
 +   [UCB CS162 操作系统笔记](docs/ucb-cs162-os/README.md)
 +   [UCB CS164 编程语言与编译器笔记](docs/ucb-cs164-pl-cmpl/README.md)
 +   [UCB CS168 互联网导论笔记](docs/ucb-cs168-net-intro/README.md)
++   [UCB CS169 软件工程笔记](docs/ucb-cs169-swe/README.md)
 +   [UCB CS170 算法笔记](docs/ucb-cs170-algo/README.md)
 +   [UCB CS186 数据库导论笔记](docs/ucb-cs186-db/README.md)
 +   [UCB CS270 组合算法笔记](docs/ucb-cs270-comb-algo/README.md)
