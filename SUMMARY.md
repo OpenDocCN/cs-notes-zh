@@ -65,6 +65,7 @@
 +   [UCB CS61B 数据结构笔记](docs/ucb-cs61b-dsat/README.md)
 +   [UCB CS61c 组成原理中文笔记](docs/ucb-cs61c-arch/README.md)
 +   [UCB Linux 系统管理笔记](docs/ucb-linux-sysadm/README.md)
++   [UCD 搜索引擎优化笔记](docs/ucd-seo/README.md)
 +   [芝加哥 CS223 函数式编程讲义](docs/uchic-cs223-fp/README.md)
 +   [UIUC CS225 数据结构中文笔记](docs/uiuc-cs225-dast/README.md)
 +   [UIUC CS241：众包系统编程书](docs/uiuc-cs241-notes/README.md)
