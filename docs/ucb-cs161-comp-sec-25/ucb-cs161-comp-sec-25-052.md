@@ -1,0 +1,40 @@
+# 052：-MemSafety3, Video 13- Harder printf Vulnerability - Modifications.zh_en - GPT中英字幕课程资源 - BV1VhEhzMEPL
+
+Okay， so with our exploit completed， I'm going to leave you with a couple of questions that you can ponder on your own time。
+
+ So let's say that I want to change what my exploit is doing。
+
+ Maybe my target address is no longer deadbe。 Maybe I want to write to a different address like B FFF 1。
+
+2，3，4。 So a question for you is how would you modify this exploit to write to a different address So instead of writing to deadbe。
+
+ I want to write somewhere else。 what part of this input would you change to write to a different address And another question for you is what if I wanted to write。
+
+Fewer character a lower number or a higher number into memory。 So instead of the target number 100。
+
+ what if the target number that I wanted to write into memory was 89。
+
+ What part of this exploit would you change so that the target number written is no longer 100。
+
+ but 89。 So that's something you can ponder。 I'll spoil it at the end of this video。
+
+ But you can think about it。Okay hopefully you thought about it。
+
+ but just to quickly spoil the answers。 If you want to write to a different address。
+
+ you would change in this part of the input。 So instead of dead beef appearing in this memory box。
+
+ you get a different address to appear and the same thing would happen when we see the percent and that would still correspond to arc4 because of the way I laid this out I would go here read a different address and I would write to a different place in memory And what if I wanted to change the target number Well in that case I want fewer bytes to be printed because I want to change 100 to 89。
+
+ So I'd have to change this 94 to a lower number so that the total number of bytes printed is 89。
+
+ and that's what this bottom row of the table is showing。
+
+ So in total there's a lot of juggling that has to be done。
+
+ Print have thinks in two different context。 It thinks about the argument on the stack corresponding to the percent。
+
+ and that is where I put where I want to write and it also thinks about the number of bytes printed that's how I control what I want to write and getting them both right at the same time。
+
+It will take some trial in there， but that's how you get it done。
+
