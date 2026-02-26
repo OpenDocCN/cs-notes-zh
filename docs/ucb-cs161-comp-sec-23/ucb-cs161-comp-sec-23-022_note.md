@@ -1,4 +1,4 @@
-# CS161：计算机安全：022：DNSSEC
+# 022：DNSSEC
 
 ![](img/82d2df7f47e22d165c245fad27d5d270_0.png)
 

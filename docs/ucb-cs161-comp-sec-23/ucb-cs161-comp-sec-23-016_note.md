@@ -1,4 +1,4 @@
-# 计算机安全：016：SQL注入与验证码
+# 016：SQL注入与验证码
 
 ![](img/1993cff87a35f6dd2f2eff4cf6cdfeb8_0.png)
 

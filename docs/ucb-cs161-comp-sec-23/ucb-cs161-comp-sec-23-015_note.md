@@ -1,4 +1,4 @@
-# 计算机安全：015：XSS与UI攻击
+# 015：XSS与UI攻击
 
 ![](img/ea705ced7f80c3eeada0aa9394669cbf_1.png)
 

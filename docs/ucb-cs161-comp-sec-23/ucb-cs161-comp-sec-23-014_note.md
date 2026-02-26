@@ -1,4 +1,4 @@
-# 计算机安全：014：Cookies 与 CSRF 🍪
+# 014：Cookies 与 CSRF 🍪
 
 ![](img/3d6d31b1db9e129f95909bb119cc6a8e_1.png)
 
