@@ -1,4 +1,4 @@
-# 数据结构：019：Y-Fast Tries 与 Fusion Trees
+# 019：Y-Fast Tries 与 Fusion Trees
 
 ![](img/ea74d004d522f56304f0f74cf161641e_0.png)
 

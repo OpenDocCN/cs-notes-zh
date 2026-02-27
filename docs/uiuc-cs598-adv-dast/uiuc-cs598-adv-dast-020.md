@@ -1,4 +1,4 @@
-# 数据结构与算法：020：Fusion Tree 详解 🧠
+# 020：Fusion Tree 详解 🧠
 
 ![](img/c5f98fac3481d78191a09971a62989e2_0.png)
 

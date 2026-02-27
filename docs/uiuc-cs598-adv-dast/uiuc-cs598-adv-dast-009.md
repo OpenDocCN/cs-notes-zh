@@ -1,4 +1,4 @@
-# 动态森林数据结构：009：ST-trees
+# 009：ST-trees
 
 ![](img/90273a93c4dc96860fc94e50fcdb48c5_0.png)
 

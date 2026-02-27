@@ -1,4 +1,4 @@
-# 整数数据结构：018：van Emde Boas树与x-fast tries
+# 018：van Emde Boas树与x-fast tries
 
 ![](img/0df55d705678db173ce9b7df1d4e36db_1.png)
 
