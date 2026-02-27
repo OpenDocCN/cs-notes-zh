@@ -1,869 +1,124 @@
-# 008： Euler tour trees and ST-trees.zh_en -BV1kWFGzsEmN_p8-
-
-So what I want to talk about。
+# 动态树结构：008：欧拉回路树与ST树
 
 ![](img/810fdc0c89c758c5874a2670c6db65ac_1.png)
 
-Today。Um。Is about。An application of。B binaryary search trees， this is the sort of。Dynamic forest。
-
-Daage structure。Okay， so the idea here is。That I'm going to。Maintain a collection of trees。
-
- if you like for simplicity， just imagine at least at the beginning that there's only one tree。
-
- but the idea right。I maintain a。Collection。Of。This joint。Trees。And I want。To。Support。
-
-The following operations。Now this is。は。Kind of a representative list of operations more than a definitive list。
-
-They like most data structures， there are lots of minor variations， lots of extensions。
-
- so bear with me here。
-
 ![](img/810fdc0c89c758c5874a2670c6db65ac_3.png)
-
-咁。I'm going to imagine that。呃。There are values or。
 
 ![](img/810fdc0c89c758c5874a2670c6db65ac_5.png)
 
-Weais。At the nodes， so every vertex of these trees has some number associated with it。
+在本节课中，我们将要学习如何利用平衡二叉搜索树来维护一个动态变化的森林（即树的集合）。我们将重点介绍两种核心数据结构：用于处理子树操作的**欧拉回路树**，以及用于处理路径操作的**ST树**。这两种结构都能在**对数级**的摊销时间内支持对树的动态修改和查询。
 
-Whose semantics we don't care about。there are variants of this where you actually want the weights to be on the edges instead of the nodes。
+---
 
- again， minor variations。Okay， so what kinds of things do we want to be able to do Well。
+## 欧拉回路树
 
- the the there are some structural operations。That we want。
+上一节我们介绍了动态森林的基本操作需求，本节中我们来看看如何利用**欧拉回路**的概念来支持子树操作。
 
-So one is we want to be able to cut an edge。Okay， so UV is。An edge in。Some tree。
+### 核心思想：将树转化为序列
 
-We also want to be able to add edges， but only when they link trees together。Okayus， so link。
+欧拉回路树的核心思想是，将待表示的树 `T`（我们称之为**表示树**）通过一次欧拉遍历转化为一个序列。想象你从树中任意一点出发，左手始终触摸着树，沿着边走，每经过一个节点就记录下来。这样你会得到一个访问序列，其中每个节点会出现多次（次数等于其度数）。为了便于处理，我们将这个环形序列在某处断开，形成一个线性序列。
 
-U V under the assumption that Uv is not。An edge。In any tree。
+这个线性化的欧拉序列有一个关键性质：**表示树中的任意子树，对应欧拉序列中的一个（或至多两个）连续区间**。例如，当你进入一个子树时，你会遍历完整个子树再离开，因此在序列中，该子树的所有节点访问记录是连续的。
 
-And these two operations are obviously in verses of each other。So if you want。
+### 数据结构：平衡二叉搜索树
 
- you can imagine that I start with。A forest consisting of just end nodes each in its own tree。
+我们并不直接存储表示树 `T` 的图结构。相反，我们构建一棵**平衡二叉搜索树**（例如伸展树或红黑树），其**中序遍历顺序**恰好就是这个欧拉序列。树中节点的**键值**是其在序列中的位置。
 
- there are no edges at all， and I can assemble my tree using link queries or link operations。
+以下是构建欧拉回路树的关键步骤：
 
-or I start with a single tree and I want to reorganize it into a different tree。
+1.  对表示树 `T` 进行欧拉遍历，得到序列 `S`。
+2.  以 `S` 中元素的顺序作为键，构建一棵平衡二叉搜索树 `ET(T)`。对 `ET(T)` 进行中序遍历，即可还原序列 `S`。
 
- so I cut all the edges away and relink what I want。Um。
+### 支持操作：子树查询与更新
 
-If these were the only operations that I need to perform。
+通过上述表示，子树操作被转化为对序列 `ET(T)` 的**区间操作**。
 
-I can perform them in constant time by saying， yes or whatever。Because remember。
+#### 子树查询
 
- you don't have access to the underlying。Structure here， so it's like cut this edge。Think the edge。
+假设我们需要查询以边 `(U, V)` 指向的、包含 `V` 的子树中节点的权重和（或最大值等）。这对应于在欧拉序列中找到代表该子树的区间 `[l, r]`。
 
- okay。You have to ask me questions about the tree in order to actually。
+**实现方式**：
+*   如果我们使用静态的、完全平衡的二叉搜索树，可以将查询区间分解为 `O(log n)` 个**规范区间**（即树中某些子树对应的区间）。我们只需合并这些子树根节点上预计算好的聚合信息（如和、最大值）。
+*   如果我们使用**伸展树**，过程更直接：我们将区间端点 `l` 和 `r` 对应的节点**伸展**到根附近。操作完成后，与这两个节点相关的子树结构会包含整个查询区间，我们可以直接从相关节点获取聚合信息。
 
-Turn this into a meaningful data structure problem so there are。啊。2。😔，Ways that you can imagine。嗯。
+为了支持查询，每个树节点需要维护其子树（在二叉搜索树中的子树）的聚合信息，例如：
+*   `sum`: 子树中所有权重之和。
+*   `min`: 子树中所有权重的最小值。
+*   `size`: 子树中节点个数（用于支持区间加法等更新）。
 
-Asking questions about the tree and。Updating the values that are stored in the trees。
+这些信息可以在树旋转时用常数时间更新。
 
-One of these is in the language of rooted trees that you。
+#### 子树更新
 
- you pointed a note and you asked questions about all of its descendants。
+当我们需要对子树中所有节点的权重进行批量更新时（例如全部加 `7`），显式地修改每个节点需要 `O(n)` 时间，不可接受。
 
-So these are our subre operations now in general。I'm not imagining that these trees are rooted。
+**解决方案是惰性更新**：
+*   每个树节点额外维护一个 `delta` 值，表示“应已加到其所有后代节点但尚未实际执行的增量”。
+*   当需要对一个区间执行“全部加 `7`”操作时，我们只需在代表该区间的 `O(log n)` 个规范区间的根节点上，将其 `delta` 值增加 `7`。
+*   在后续任何需要**访问**某个节点 `v` 的操作（如查询、伸展）之前，我们必须先将 `v` 节点上累积的 `delta` **下推**给它的两个子节点，并更新 `v` 自身的聚合信息。这保证了任何时候我们读取到的信息都是正确的。
 
-So these are just。Connected acyclic。Graphs。Floodating around。You know。
+通过这种方式，**区间更新**和**区间查询**的时间复杂度相同，均为 `O(log n)`（摊销时间，若使用伸展树）。
 
- I'm not assuming that they're binary， I'm not assuming that the degree is bounded。
+### 结构操作：连接与断开
 
- anything like that。So when I say a subt， the way that I specify that essentially by indicating an edge and one of the endpoints of that edge。
+`Link`（连接）和 `Cut`（断开）操作可以通过对欧拉回路序列进行拆分和拼接来实现。
 
- or if you prefer I I，Give you two vertices that are connected by an edge。
+*   **断开 `Cut(U, V)`**：在欧拉序列中，边 `(U, V)` 对应两段相邻的访问记录 `..., U, V, ...` 和 `..., V, U, ...`。断开操作相当于将环形序列在 `U, V` 和 `V, U` 之间切开，并重新连接形成两个独立的序列。这可以通过几次二叉搜索树的**拆分**和**拼接**操作完成。
+*   **连接 `Link(U, V)`**：这是断开操作的逆过程。假设 `U` 和 `V` 属于不同的树，连接操作将两个欧拉序列合并为一个。这同样可以通过几次二叉搜索树的拆分和拼接操作完成。
 
- but the order that I give you those two vertices matters。So this is specifying this subte。
+由于伸展树能高效支持拆分和拼接（每次操作摊销 `O(log n)` 时间），因此 `Link` 和 `Cut` 操作也能在 `O(log n)` 摊销时间内完成。
 
-So I could ask， for example。Some subree。Well， let me。Let redo this。呃。Subre， sum of。Uv。Or。Subre Max。
+---
 
-Of U questions like this。That our。Decomposable in exactly the same sense that we talked about with the Bentley Sas thing。
+## ST树（用于路径操作）
 
-So I need to be able to。Internally， my data structure is going to represent that subte as a collection of disjoint chunks of my data structure。
+上一节我们学习了处理子树操作的欧拉回路树，本节中我们来看看处理路径操作的**ST树**。路径操作关心的是树上两个节点之间唯一路径上的信息。
 
- I need to be able to answer these questions about each of those chunks and assemble the answers together。
+### 核心思想：偏好路径分解
 
-Okay sos and Mac are reasonable proxies for this more general class of queries。But then I also need。
+ST树的核心思想是将表示树 `T`（现在假设已指定一个根节点）动态地分解为若干条**偏好路径**。
 
-To be able to。Change the values。So for example， I could say set the values of everything in the subtree。
+*   每个非叶子节点可以指定其一个子节点为**偏好孩子**。连接节点与其偏好孩子的边称为**偏好边**。
+*   连续的偏好边形成一条**偏好路径**。这样，整棵树被划分成若干条从某个节点向下延伸的路径。
+*   “偏好”的定义是动态的：**最近被访问过的节点所在的子节点，成为其父节点的偏好孩子**。一个特殊的操作 `Access(v)` 会将从根到节点 `v` 的整条路径变为一条偏好路径。
 
-To be 5。Or I could say。Subre add。UV7， so add seven to the value of every node in the subre。
+### 数据结构：路径的集合
 
- multiply every value in the subre by negative three。Okay， so again。
+ST树并不显式存储整个树形结构，而是：
+*   为**每一条偏好路径**维护一棵**平衡二叉搜索树**（通常也用伸展树），树中节点按路径从上到下的顺序存储。
+*   每条偏好路径对应的二叉搜索树的**根节点**，存储一个**路径父指针**，指向该路径最顶端节点在表示树 `T` 中的父节点。通过这个指针，所有路径树被连接成一个整体。
 
- the precise vocabulary is going to vary from one。One application to the next。
+### 关键操作：Access
 
- but this is a reasonable proxy for the vocabulary that you might want to support。嗯。The third thing。
+几乎所有其他操作（路径查询、路径更新、换根等）都建立在 `Access(v)` 操作之上。`Access(v)` 的目标是：**将从根到 `v` 的路径变为一条连续的偏好路径**。
 
-The third class of operations that I want to perform。Our path operations。
+**实现过程简述**：
+1.  从节点 `v` 开始，沿着路径父指针向上走，直到根路径。
+2.  在向上走的过程中，我们需要不断改变边的偏好状态：
+    *   **取消偏好**：当需要将当前路径与上方路径合并时，需要先断开当前路径顶端的偏好边。这对应在伸展树中进行一次**拆分**操作。
+    *   **建立偏好**：然后将当前路径连接到上方路径。这对应在伸展树中进行一次**拼接**操作。
+3.  这些拆分和拼接操作都是在伸展树上进行的，每次耗时摊销 `O(log n)`。
 
- and in the in the context of rooted trees， you can think about this as pointing to a node and asking about its ancestors。
+### 支持操作：路径查询与更新
 
-Not its descendants。So again， I'm going to be given two nodes。UV， and I'm asking about。呃。
+执行 `Access(v)` 后，从根到 `v` 的路径已经成为一条偏好路径，并存储在一棵伸展树中。此时：
+*   **路径查询**（如求路径上节点的权重和）：我们可以像在欧拉回路树中处理区间查询一样，在这棵代表路径的伸展树上进行查询。
+*   **路径更新**（如给路径上所有节点加一个值）：同样，我们可以使用**惰性更新**技术在这棵伸展树上进行区间更新。
 
-Assuming you and V are in the same tree。I'm asking about the unique path through that tree from U to V。
+为了支持这些操作，伸展树的每个节点也需要维护聚合信息（如 `sum`, `min`, `size`）以及惰性标记（如 `delta`）。
 
-And then I can ask， you know， the same。The same kinds of questions。I want the sum of the weights。
+### 时间复杂度分析
 
-On the path or I want the max of the weights on the path or I want to set all the weights on the path to some particular value or I want to add all you know。
+一次 `Access(v)` 操作可能会改变 `O(k)` 条边的偏好状态，其中 `k` 是路径上原本非偏好的边数。每次改变需要 `O(log n)` 的伸展树操作时间。通过精妙的摊还分析（例如使用势能法），可以证明**任意连续 `m` 次操作的总时间是 `O((m + n) log n)`**，因此单次操作的**摊销时间复杂度是 `O(log n)`**。
 
-Some number to all the weights on the path。Okay， again， these are just。Um。Representative。
+---
 
-Not exhaustedive。And then。呃。There are onts where。These trees actually are rooted。Um。
+## 总结
 
- and I want to be able to point it a note and say， who's your root just kind of。
-
-Along the same lines as the Union find problem that you might have seen in a data structures course。
-
- so you're maintaining a collection of sets。And you're allowed to ask what set does this item belong to and merge the two union。
-
- the two sets pointed to by these two nodes， there's a standard thing using up trees and linking making the smaller tree。
-
- a child of the larger tree and doing path compressions that leads to like inverse acrament bounds。
-
-The difference between that problem and this one is it part， I'm allowed to point to an edge and say。
-
- this splits this set into two parts。So it's union Fs， union find split。Probably。
-
- not just Union find。But I might want。To sort of add。Let's just call it。
-
- I'm going to call it find root。But。Really， I should think of this as which find the tree that in my collection that contains the s snow。
-
-系。嗯。Um。And so this is the vocabulary of stuff。That I want to be able to support。
-
-So does everybody kind of understand the universe that we're working in here？Yeah对。
-
-That please sound you to。Is that just because we're treating rope we're using that didn't determine which direction to go to some of your edges that's right so。
-
-The way that I specify a subt， if the tree were rooted。
-
- I could point to a node and say all of its descendants。But I'm not assuming the tree has a root。
-
-So in order to specify a subt。I pointed a root that I pointed an edge that splits the terrain into two parts。
-
- but then I need to indicate which part I want to operate on。
-
-So the order U to V just means I'm pretend to delete the edgeUV and then operate on the sub root to V。
-
-And again， here， subtree does mean one component of what you get when you delete an edge from the tree。
-
- not an arbitrary connected subgraph。が。All right。So。I'm going to start。
-
-By only thinking about subre operations。嗯。Because that is the sort of simpler subset of these to solve。
-
-And then I'll just。Show as we get there how to get to like cut in link operations as well。
-
- and then I'll probably only have time to sort of start describing the solution for path operations。
-
-And then finally， defining a single data structure that supports both of these。
-
-I'm going to wave my hands furiously， probably on Tuesday， there is a single data structure。Called a。
-
-Self adjusting top tree。As the name might suggest under the hood。
-
- its bunch of s trees glued together。But that data structure status can answer all of these operations。
-
-In log n amortize time where n is the total number of nodes in the universe。Okay， so。
-
-The eventual goal here。嗯。Is。Every operation。Yun。Log in。Amortized。Time。
-
-All with a single data structure。系。I'm probably not going to be able to describe that single data structure that handles everything。
-
- I will describe a data structure that handles structural and sub stuff today and I'll start structural and path stuff。
-
-So if you like， you can just have a single data structure that has a sub data structure on the left and a path data structure on the right and you maintain both。
-
-But there is a single data structure that actually just doesn't need two parts like that。Okay。
-
-So this。Is what are called oil or tor trees。The one for path operations originally these were called link cut trees more recently they。
-
-They're usually called ST trees after their discoverers， Denny Slater and Bob Taargen。
-
-Who you met before when we talked about S trees。嗯。So。U。Let's go ahead and get started talking about。
-
-Um。Orer to trees。This is from。Heninger。In king。And。Sometime in mid late '80s。Just say 88 dish。Good。
-
-So again， I want to make this clear， I'm making no assumptions at all about the shape of the underlying tree。
-
-And so one of the things that all of these data structures have in common is I'm going to represent。
-
-An arbitrary。Ci。T using a balanced。Bineary。Tree。Which I'll call ET of T for Ouler tour。And。
-
-This makes the language that I use to talk about these things。Fairly confusing。
-
-So I'm going to try very hard to always when I talk about T。
-
- I'm always referring to the abstract tree that the user is operating on。
-
-I'll call that the represented tree and when I want to talk about the data structure。
-
- I'll always explicitly refer to the Euler tree of T， the Euler tour tree of T。
-
-The representation of T。Okay。One of the interesting things about this data structure is。
-
-I'm not actually storing。The represented tree explicitly anywhere as a standard graph data structure。
-
- if you want to keep track of that yourself， great。Knock yourself out。So when I say cut and link。
-
-I am not taking into account。The time， for example。
-
- to locate an edge in the adjacency with data structure and delete it。
-
-That's not part of the game here， my goal is only to support those operations。
-
-So if you want to do other stuff with the explicit representation of the represented treat T。
-
- that's your business。Okay。So。We giveive a very。Small。Example here。Okay， so here's a tree。
-
- got nine nodes。I'm going to， first of all。U。To find an oiler tour of T。
-
- this is exactly the same as the Euler tours that we used when we were talking about range minimum inqueries。
-
-Intuitively， you think of this tree as a maze， you start somewhere。
-
- it doesn't really matter where next to one of the nodes， you stick your left hand out。
-
-Touch the node and then you walk around the tree， keeping your left hand on。The tree。
-
-And then you write down every time you touch a node， you write that down。Okay， so this is A， C，A， B。
-
- A， D， I。Df。E cetera。Now， ultimately， this is a。It's a cycle。So I necessarily， well， not necessarily。
-
- but I am in fact， going to break that cycle somewhere。
-
-So that I can just think of it as a simple sequence， but I always keep in the back of my head。
-
- actually， the next thing after the last element of the sequence is the first element of the sequence。
-
-U now。One of the。Interesting properties of this。Is that subtes？Of tea become。Contiguous。Interralvals。
-
-In the oil tour。Okay， so for example， I've got this， if I look at this subte。That shows up。As。
-
-This interval。So at some point， the euler tour crosses over the edge that leads into the subt。
-
- it does an euler tour of that subt and then it goes out。Now， it's possible， for example。
-
- if I had cut the edge D F and I want the sub on the side with containing D， that interval might。
-
-Overl the place where I cut the cycle in order to represent it as just a regular sequence。
-
- so in once I've cut it open this interval might turn into two intervals。Um， but that's okay。
-
- that that's a that's a kind of minor inconvenience。系。So the Ouler。Tour。ree。Is a balanced。Bineary。
-
-Search。3ree。😔，Storing the Euler tour。Of T in tour。Order。Okay。
-
- so I'm not using the values in the nodes to set up a search tree。
-
- I'm not using the names of the nodes to set up a search tree。
-
- I'm using the positions of the symbols in this sequence。😡，As my keys to set up a search tree。
-
-Okay so somewhere in this tree， there might be in the Euler tour tree。I might decide， okay。
-
- this is going to be one of my subtes， I'm going to root it at a and then over on the side。
-
- I don't know C， and then A， and then B and then A， and then over on this side， oh I。Di。😔，F。第。系い。
-
-Okay。So。If I do an in order traversal of the oilluor tree， I recover。The oiluler tour。
-
-Of the representativeatory。Starting at my arbitrary break point and ending at my arbitrary break point。
-
-Right。嗯。Does makes sense。か。So great。So this， this sort of reveals how I might do these sort of structural operations。
-
- So if I want to cut。An edge between U and V。I'm isolating。
-
- I'm breaking the original representative tree into two subtes。
-
-One containing U and the other one containing V。So this is taking the Euler tour。Again， is a。
-
- is a cycle。And I look at。First and last occurrences of U and V so somewhere in here。
-
- I'll visit U and then V and somewhere else， I'll visit V and then U。In the Oer tour。
-
-And so I'm now splitting that。Into。Two Ouler tours。One containing U and the other containing V。
-
-So this is going to be implemented as。You know。呃。Split the oiler tour。
-
-But because I am linearizing this circular sequence， this may require me。
-
-I cut out an interval in the middle of that linear I sequence。
-
- but then I have to reattach the ends together。To recover the oul tour of the other component。
-
- so this is actually a actually let me。Be careful here， this is a BST split。
-
-Actually two BST splits plus BST concatet。Okay so remember。
-
- splitting a binary search tree means you get a particular key and you divide the binary search tree into one binary search tree containing all keys less than that and the other containing all search keys bigger than that。
-
-😡，A concatetnation is you take two trees where the key in the left tree。
-
- every key in the left tree is smaller than every key in the right tree。
-
- and you concatenate them together into a single binary search tree。Now， this circularity。
-
-Kind of messes a little bit。Because with this intuition， because there isn't actually a linear order。
-
- there's just the linear order that we've imposed by。
-
- you know you know binary search store sequences， so there's some sequence。
-
-That I've obtained by cutting the Ouler tour。For convenience。
-
-And so when I split my linear I sequence into three parts。
-
- I glued the first part and the last part together in the wrong order。
-
-Because that's what I actually need to do to make the successor of the last element be the first element。
-
-嗯。So the semantics are a little bit subtle。But if you just think of it as you would normally think of it for binary your search trees。
-
-And do those operations it works。Okay。嗯。Similarly， if I want to link UV。This is joining。2。😔。
-
-Toiler chores。And this becomes。呃。I think it's one。BST split。And two PST concas。
-
- you literally just run the cut algorithm backwards in time。嗯。😊，So under the hood。
-
- I need to be able to represent。He's not just using a binary search tree。
-
-But this balanced binary research tree needs to。Support fast。Split。And conco。
-
-And we've been down this road before， we talked about tango trees。
-
-Each of the path trees in a tango tree needed to be able to support efficient splits and concatenations。
-
-Again， tango trees did this with red black trees， the initial presentation of oiler trees also used red black trees。
-
-But the analysis is really much simpler if I just use。USpplay trees。He。
-
- because now you've already seen the analysis that the cost of splitting or concatenating。
-
-In Sp trees is login for each operation， and so cut and link。
-
-mAre each a constant number of displays in a constant number of sp trees。
-
-And so the overall amortized cost is only going to be wellgged。Okay。Yeah。对，邮件你会。不同。这是。Okay。
-
- this is a good question， suppose for this is not part of the standard vocabulary。
-
- but it's a reasonable question。I want to point to a node and ask where is this in the Eer tourre is this the 17th node in the Euler chore okay first of all that question only makes sense if I establish where the oiler tree starts so from the user's point of view the question is what's the distance between this node and that node？
-
-😡，And if the trees have those nodes have high degree。
-
- you have to specify which occurrence of those nodes you care about。So it makes sense。
-
- each node occurs in the oil tree multiple times。嗯。But then what you're asking is。U。Okay。
-
- I've got this。Balanced binary search tree that's maintaining the sequence。
-
- I'm pointing to two elements in that sequence and asking how many things are in between here and there。
-
-So if I maintain within the S tree， the size of every subt。
-
-Then I could display this node and then display that node。
-
- and then all the nodes that are in between are collected into one sub and I look at its size。
-
-So this is asking。Not a standard question iss actually getting pretty close to what we the kinds of things we want to do with the weights and values The idea is I'm now using this representation s tree。
-
-The same way I would to answer range queries。Given these two values。
-
- what's the sum of the values between them？Given these two search keys。
-
- what's the maximum value between them， given these two search keys。
-
- what's the number of nodes in between them？And those are things that we kind of already know how to do。
-
-Withhi plas。O。So。So let's see。Subree。Quries。Well， these， like I said， these turn into。
-
-Interval queries。In the Euler tour。哎。😊，U，And so I'm going to imagine for the moment that the oiluler T tree really is。
-
-A perfectly balanced tree whenever I want to ask about an interval。
-
-What the way that I would do this is exactly the same way as the binary tree solution to the range minimum query problem。
-
- every node in my Euler tour tree。Stores。The sum and min。Of。Nodes。In its。Subree。
-
-And this is the subtree of the tree， the oiluler tour tree， not subtree of the represented tree。Okay。
-
- so this node V is going to store the sum of all values in that part of the slide tree。
-
-And it's going to sort of the men of all values in that part of the sp tree。系。Now。
-
- when I need to do a。Interral query。One way to think about what's happening。
-
-I think a good way of thinking about what's happening。
-
-Regardless of what balance binary research tree you actually want to use is you break the query interval up。
-
-Into。A collection of canonical intervals。If I use a perfectly balanced binary tree。
-
- I can do this in a way that each of those canonical intervals has length that's a power of two。
-
-And therere at most two roots of those canonical subtrees at each level of the tree that make up the answer to my query。
-
-Okay， so if I only to use， you know， an。Arbitrary。Balance binary search tree。
-
- you can imagine decompose。The query。Interval。Into log n。Canonical intervals。
-
-Look at the values at those roots and combine them either if you're doing some， you add them。
-
- if you're doing min， you take them in。系。So we did this， remember。
-
- way back at the beginning with range minimum queries where I had a perfectly balanced tree over the array and every node stored the minimum of the portion of the array that its subtre covered and when I wanted to answer a query。
-
- this is exactly the strategy that I used。On the other hand， if I'm using splay trees。
-
-There's an arguably easier way。Which is okay I find the tree。
-
- here's one node u and one node v representing the endpoints of my interval。
-
- so here I would display U and then display V and then the tree would end up looking like，This。
-
-Or possibly its mirror image。And then I just look at this note here。Now。
-
-I'm brushing under the rug in order for this to work。
-
- when I spray the values that I store in the nodes of the or t tree have to be maintained。
-
- but this is actually relatively easy when I do a rotation。so I had some value a here。
-
-Some value B here and say， well， actually， let me。Let me be more explicit here。Some。Here。
-
- let's say sum is a min is B， some is C， min is D， some is E min is F So here this is going to be。
-
- you know， sum is C plus E min is the minimum of D and F here the sum is a plus C plus E here。
-
- the minimum is。The minimum of B， D and F。When I rotate。
-
-The values attached to the roots of these three subtes are the same。
-
- they're not going to change at all。 so now I need to recalculate。The some and men。啊。In。These。
-
-Two nodes。But that only takes constant time。The sum is the sum of the two children and the men is the men of my two children if the node itself is storing a value。
-
- then the sum is the sum of my two children plus my value。
-
- the min is the minimum of my two children and my value。Whatever。
-
- it's still constant upon so rotations。When I'm using rotations to reshape the tree when I'm sing。
-
-I'm also as I rotate updating this summary information in the Oer。
-
-So that guarantees when I'm done with display， the value at that node is in fact。The correct value。
-
-Does that make sense？So again， a query， whether you're looking for some or min or some other combination of the weights。
-
-That decomposes nicely。You're either turning it into login just lookups in a static tree or you're doing splaying and using rotations to update the summary information。
-
- but then everything boils down to the cost of a constant number of displays。
-
-the same reason exactlyactly when I when I do a cut。
-
-Then I do displays and then I remove one of the links from a node to its child。
-
- well the node whose child I remove now its values are invalid and I have to recalculate。But again。
-
- constant time。When I join a node to another node as a new child， again。
-
- that parent values need to be updated， but that's easy to do in constanttantine。Yeah。
-
-Yeah that's right that's another way of imagining how these sub periodsies work。
-
-Is I literally just cut subre off into a separate tree。
-
-And then ask what is the min value that I store at the root of the euler to tree of that fragment。
-
- and then I do a join to reconnect the trees。This has a slight advantage of not needing quite so much point of arithmetic。
-
- but the differences is are minor。Okay。But。So the punchline。嗯。Is I can do。Subre queries。Yin。Login。
-
-Amortize time。That becomes worse case time if I'm doing using red black trees instead of sp trees。F。
-
-Okay， now the more interesting question。Is now how do I do subary updates？Updates。嗯。😊，So。
-
-I want to say， for example， add seven to every node in this subt of my representative tree T。😡，Again。
-
- this is going to turn。Into。Enroll updates。In the Oeratory tree of tea。Either one or two。
-
- depending on how the query subtuary interacts with the artificial endpoint that I put on the Oer tour。
-
-So the real question is how do I do interval updates in an oiler to a tree？
-
-Now notice if I have a tree with n nodes in it， its Euler tree also has n nodes in it。
-
- and if I say just add five to everything in this tree， this is a valid subtree update。😡。
-
-This is asking me in display tree that I'm using to represent the tree T to add five to the value of every node。
-
-😡，And there are a linear number of nodes。And so if I really do this explicitly。
-
- I would have to take linear time。It's completely inescapable。
-
-So the way I'm going to do it is I'm going to lie。Okay， the I'm going to use。Lazy updates。Okay， so。
-
-In addition to。The actual sum and the actual men of the descendants。At every node。
-
- I'm going we do store。A summary of the updates that I was supposed to have already done to my subre。
-
-Okay so if I imagine that I'm just doing ads。Right， each。Noode。Stores。Say V dot Delta。This is。What。
-
-Should。Have。Already been added。To these descendants。If I want to do set all the values to something。
-
-Then I would also store。You know and V dot value。This is， you know。
-
- this is the value that just overwrites。Let's see sub tree。Value。
-
-This is the value that just overwrites everything in the sub if it has a value at all。Um。
-
- and if I wanted to say multiply everything in this subt by a particular value。
-
- I would sort that multiplier in the node as well。诶。
-
-So how do I add five to every node in a balanced binary tree。
-
- I write five at the root and I walk away。Now， how do I now make sure that my later queries give the correct values？
-
-Okay， so。Later。Whenever。We touch。V for any。Reason。We first。Clear。3。And so that means， for example。
-
-If I start here， let's say delta equals five some equals seven min equals three here。
-
- I'll just write you sum is。F years。Some is three here min is three here， min is seven。Okay。
-
- and I don't know what's going on over there。What I will do is say， hey， I'm about to touch V。Qu。
-
- quick before mom comes， clean up the room。And so you take this mess delta that you've been hanging on and you brush it into the rug。
-
- you pass it down to your kids。Okay， so this now becomes here's V， but now sum is 12 and min is。8。
-
-And down in my kids， I've added， oh， yeah， Delta is five。And the rest of the information is the same。
-
-And now I can look at the。Yeah。Those is them not being applied for every single order。That's correct。
-
-And the way that I add five to every single node in my subt is I add five to myself。
-
- and then I tell my kids， add five to everything in your subtree。
-
- add five to everything in your subtree， but being my kids， they're also lazy。方。
-
-This is the thing when I walk down the tree for purposes of doing the play。
-
- I'm cleaning up in front of me。So the semantics are as far as the query algorithm knows。
-
- I actually did update everything。Because the result of cleaning the node is put this node in the state。
-
- assuming all ancestors have already been cleaned， put this node in exactly the state it would be if I had actually done the explicit updates。
-
-So as far as the query algorithms are concerned， yeah， I updated everything。Mom comes in。
-
- doesn't see any clothes on the bed。As long as she doesn't look under the bed， everything's great。
-
-Okay。And so this means that again， we can treat interval updates very much in the same way that we treated interval queries。
-
-😡，If we're using a really balanced tree， we break the update interval into a logarith number of。Of。
-
-Canonical intervals， this involves sort of searching down and clearing things from the root down to those root。
-
- down to those nodes， and then I attach a delta or update the delta on each of those log n nodes。
-
-If I'm actually doing something with a tree。Then I splay， and as I s， I'm cleaning up。
-
-So that display everything along the path from the root to U is clean。
-
- everything along the path from the root to V is clean。
-
- and so when I actually get U and V to the root， their values are correct。
-
-So the time to do the update lazily。It's the same as the time to do a query。This means， yeah。
-
-The update。Update algorithm。It's essentially the same as the query algorithm。嗯。啊。Clean as we go。
-
- right， So this again， takes log n。Amortized time。Even though doing it explicitly would take linear time。
-
-嗯哼。😊，volume。嗯。B。There seven plus delta finds the total number of trees in that no it's in that subre。
-
-I'm sorry， to say that again。saying the sum 12， which you add five for every。Note in that sub tree。
-
-Oh， you're right， you're right。Yes， the min goes up by five。
-
- but the sum should go up by five times the number of descendants。Right。
-
- so this is not going to be 12。 This is going to be。You know，7 plus five times the number of。
-
-Descendants， so this means if I really want to do it this way。
-
- I also need to maintain the size of every node。The size of every subre， so this would now become。呃。
-
-57。Yes， you're right。Thank you。So everything that I haven't written in red hasn't changed。Yes。担保。
-
-Okay， so a set operation。You say， a， now I need to define。The set value， the set。
-
-Desendants value at this node。That overrides Delta completely。And then if later I do an in add。
-
- I then't set Delta on top of that。Then later I do a set， I reset the value in clear delta。
-
-And then when I actually do the push， I do the set first and then I do the deelta second。I mean。
-
- you can ask similar questions about， suppose I have both a multiplier and an adder。
-
-Attach to each node， just do the bookkeeping very carefully。All right。
-
- so there's a famous interview stupid interview question。How do you invert binary retreat？
-
-And you say there's no such thing as inverting a binary tree， okay。
-
- what does that actually mean how do you take a binary tree and negate all of its keys so you want to reverse the in order traersal of the tree。
-
-The answer is you set the inverted bit at the root and you walk away。And then later。
-
- whenever you need to touch any node for any reason， you can go， wait， wait， wait， oh。
-
- the bit is set， okay， swap my children， clear my bit， toggle my children's bits。
-
- okay now you can touch the node。And so whatever you could do with the binary tree before。
-
-Still works as though you actually inverted the binary tree。But you inverted it in constant time。
-
-That's the right answer to that stupid interview question。And that trick actually comes up。
-
-In ster ins。Data structure。The actual actually gets used。So this is the Ouler to tree。
-
-So the key insights here are by recording。An oiler tour of the tree I can translate。
-
-Some trees into intervals。And I already know how to do integral stuff in binary trees。
-
-So I build a binary balanced binary tree over that oiler tour。And then the second。The second insight。
-
-Is that when I want to do updates， I can do them lazily just by recording a bit of extra information at each node in those balanced binary search trees and propagating it forward only went just before I actually need the information to be accurate。
-
-All make sense。Yeah。什么是有。Almost like coworker worker。
-
-s does almost like tree structure each to one beam of the yeah， yeah， that's right， that's right。
-
- we're linearizing the tree。Right。Am。Unfortunately， for path trees。Or sorryrry， for path operations。
-
-啊。Paath stuff。St trees。This is。Slater， he was his PhD student， Tjn。83。
-
-So here things are a bit more complicated。Um because。
-
-It's really not reasonable to expect that I can linearize a tree in a way that an arbitrary path。
-
-Would show up as a contiguous interval。In that linearization。
-
- so that's not the strategy that we're going to use。What we're going to use instead。
-
-Is the notion of preferred children？That decompose the represented tree into paths。
-
-And then I'm going to store each of those pods in a balanced binary search tree。Okay， so。啊。Pick。Any。
-
-It's convenience to pick a leaf。To be the root， we can change this later。Okay。
-
- so I'm going to imagine actually I don't need degree one， just pick any node to be the root。Okay。
-
-So I'm going to have to draw a fairly。啊。Complicated example in order to show off what I want to do。
-
-Again， I'm not assuming that these rooted trees are binary。
-
- They don't have necessarily have logarithmic depth。 There's nothing， no other。
-
-No other constraints whatsoever on the tree。Um。So。Every node。Except the leaves。Has a。Preferred。Child。
-
-But I should say。Every node of the tree。Can。😔，Have。A preferred child。
-
-So it has a pointer in the record for the node。If you want to think of it that way。
-
- that could be null or could point to one of its children。Right。And the semantics are。
-
-If I look at a particular node V。Preferred child of V is the。Child。Containing。'm sorry。The most。
-
-Recently。Accessed。Noode。In the subre rooted at V。Now there's one corner case that I have to consider here if the last node that was accessed in the subre rooted V was V itself。
-
-But in that case， V does not have a preferred child。It's like， no， it stopped at me。
-
- don I don't like any of my kids。Okay。Um， or the itself。If V was。That node， you know。Sorry。
-
- the language is a bit awkward here， but hopefully the meaning is somewhat clear。
-
-And so the preferred。Children。Define a decomposition。Of。
-
-try to make this again a little bit more interesting。A decomposition of the。The tree into。Pas。
-
- in fact， a partition of the vertices of the tree into paths。
-
-OkayNow the word access here is a technical term， all of the other operations are going to be built on top of a subroutine called access where I point to a node and say access this。
-
-い。后在他。That means。That。呃。This node。Is the most recently accessed node out of these four nodes？😡。
-
-But this node。Is the most recently accessed out of these two？
-
-So maybe I access this one and then later I access this one。And then later。
-
- still I accessed this one and this one， so that that's why there's no preferred edges going down into that sub yeah。
-
-要北。Or you can start with the preferred children said arbitrarily。你家你个意后你系冇我做度。
-
-They have a bunch of single same。Yes， that's right。
-
- you could start with no preferred all the preferred pointers being null。
-
- then my partition into pads is my partition into n pads of length zero。Yeah。还是。M play。
-
- there is more information。You have them such an all by people because I'm like you could。
-
-I just like extract how many queries or like like the query history just went true。No， even， I mean。
-
- no matter how you start， you can't recover the query history from the tree because I can access this node then that one and this one and that one and this one then that one。
-
-After the first two， you've lost your memory。 So if you want to maintain your history。
-
- just write it down。when we talk about persistent data structures， I'll come back to this。
-
-So you can actually keep in。Almost any pointer based data structure satisfying the few axioms。
-
-You can overlay the point of manipulations。with some other structures so that it keeps track of that history in a way that allows you to access past versions of the data structure as if they were the current version of the data structure。
-
-This is roughly speaking how Gi workss。嗯。Okay， so I've got this lovely partition into preferred paths again。
-
-This is not necessarily ever explicitly stored in memory。 This is just the design。
-
- the abstract design that the data structure is based around。 so it's probably a little bit。😡。
-
-Easier to imagine that this is an explicit data structure where every node has an explicit pointer。
-
-But really， it's all going to be implicit in the ST treatment in the end。嗯。嗯。Then the actual ST tree。
-
-Stores。Each。Preferred。Paath。In a balanced binary tree， but let's just simplify and say Sp tree。
-
-In path。Order。Okay， so。If， for example， this is U VW and X。There is a splay tree somewhere。That。
-
-Sttores those four nodes。In the left to right order。UvWX。
-
-One way to think of this is that I'm using the depth of the node in the represented tree。
-
-As my search key in this display tree。This is different from what we did with tango trees。
-
-With tango trees。The nodes。The thing we were representing was in fact a binary search tree。
-
-'s a perfectly balanced binary search tree， and so it made sense to use the sortdid order of the values stored in those nodes as the keys in the components play trees that were building the tango tree out of。
-
-😡，That's not what we're doing here。The represented tree is not a balanced binary。
-
- it's not a binary search tree， it doesn't have log in depth， it doesn't have keys at the notes。
-
- it has values， but we don't know what they mean。So instead。
-
- I'm ordering the nodes along that path and using that order。
-
-To determine how those nodes are arranged。In my balanced binary tree， or in this case。
-
- explicitly S tree。系。No。嗯。Lets let me expand on this a little bit further。
-
-I need to make these circles bigger so we can actually see inside them。Okay， so here。
-
- say I've got three nodes。R， S and T。So somewhere else。In my data structure。
-
-There's going to be another sp tree storing that path。Again， as a balanced。Bineinary tree。
-
-But now every one of these preferred pads has a root， it has a shallowest node。
-
-And the parent edge coming out of that node， shallowest node is not a preferred edge。Of its parent。
-
-So I am the shallowest node in my preferred path， precisely when I am not a preferred child。Okay。
-
- but there's still parent information that I need to represent in the S3 itself。
-
- and so this path RST is going to remember it。The parentro of its root。
-
-So that tree that stores RST is going to have a pointer。To the note you。From。The root of the tree。
-
-Okay， so again， this is。One preferred path， this is another preferred path and there is a pointer。
-
-Going from one path tree to the correct node in the other。
-
- but it's always coming from the root of the path tree， not from。😡。
-
-The node that is the root of the path。系。So let me write this down。嗯。Every path。ree。啊。Has。A。
-
-Parent pointer。From。The root。Of the past tree。To the parent。Of the root。Of the path。In tea。嗯。Now。
-
- one of the things this means is that。You know， one node。In this slater charge tree for T can be。
-
-Sorry。Can be a path。Parent。Of lots。Of path trees。So it's important to point out。
-
-These pointers only go one way。😡，There is a path parent pointer from S to U。
-
- but U does not store any information about。The path trees of which it is the parent。
-
-Because I could have a billion things all pointing to you。But I don't you doesn't care。
-
-And so the part of the justification for why I can get away with this is ultimately when I'm accessing nodes in the slider tarent tree。
-
- I'm going to start at the bottom and work my way up。
-
-I never need to start at the root of the whole Euler to tree and work my way down。
-
-So it's still a tree， it's still a rooted tree。But so in the end。S T of T is a。Collection。
-
-Of display trees。1。For each。Preferred path。In tea。Connected。Into a global tree。
-
-By these path parentt pointers。嗯。No。嗯。Let me， I need to look at my notes to make， you know。
-
- you can look at the clock right there in front of you in the upper left corner of the screen and you can see that we have。
-
-Four minutes。So I want to be a little bit careful here about what I actually。
-
-What can I actually talk about？Okay， so。Let me at least try to start here。So when we access a node。
-
-The path from the root of T down to that node by our definitions needs to become a preferred path。
-
-Every edge on that path needs to become preferred， any other edges hanging off that path that were preferred need to be not preferred。
-
-Okay， so when I access anode V， I make。The entire path。In tea from。The root。To V， a。Preferred path。
-
-So this means that I need to be able to support two relatively simple operations。Make。An edge。
-
-Referred。And make。An edge。Not preferred。OkaySo when I make an edge not preferred。
-
- I'm taking this sequence of nodes in the path。And I'm breaking it into two。Smaller paths。
-
-So making an edge not preferred。This is a split。The display tree。Of some path。
-
-Now I need to do some other pointer manipulation， whatever that edge that I removed， I need to like。
-
- oh， find the root of this thing down this lower subpath and make it point end to the lower end point of this upper subpath that can all be done by doing play tree operations。
-
-So symmetrically making an edge preferred， this is concat display trees。
-
-Of the two paths now when I make an edge preferred I have to do that after I made when I when I say make the edge from U to V preferred。
-
- I can only do that if U doesn't already have a preferred child so typically these operations happen in pairs where first I disown one of my children and then I adopt one of my children。
-
-😡，So again， these operations boil down to splits and concatenations of spplay trees。
-
- and so each one of these things takes amortized time logarithmic in the length of that path。系。
-
-So one sort of high level analysis。嗯。The amortized time is K log n。Where。
-
-K is the number of edges that I need to change。Which is you know within a factor of two of the number of non。
-
-Preferred。Edges。On the path。To V。So what I will talk about on Tuesday is。First of all。
-
- at least in an K can be arbitrarily large。If my initial tree is just a path and none of my children are preferred。
-
- and then I access the leaf。I need to add n minus one preferred child pointers。
-
- and so I need to do n minus1 sptre concatenations。But in a sufficiently long sequence of updates。
-
-So one is in an amortized。Sinceense。K is only log n。And two， in fact， the overall amortized time。
-
-Is only login。Okay， that's where we're going to start on Tuesday， but for now we're out of time。
-
-So happy to answer questions up front afterwards， thank you。So know。
-
- for first class is actually easier than we did with pengo tree。
-
- right because like we're guaranteed that a one。
+本节课中我们一起学习了两种强大的动态树数据结构：
+1.  **欧拉回路树**：通过将树的欧拉遍历序列存储在平衡二叉搜索树中，高效支持**子树**的查询、更新以及树的**连接**与**断开**操作。核心技巧是利用序列的区间特性以及惰性更新。
+2.  **ST树**：通过动态维护**偏好路径**，并将每条路径存储在平衡二叉搜索树中，高效支持**路径**的查询、更新以及核心的 `Access` 操作。其效率依赖于伸展树的灵活性和精妙的摊还分析。
 
 ![](img/810fdc0c89c758c5874a2670c6db65ac_7.png)
+
+最终，存在一种称为**自调整拓扑树**的统一数据结构，它融合了二者的思想，能够同时支持所有类型的操作（子树、路径、结构修改），且每个操作均在 `O(log n)` 摊销时间内完成。欧拉回路树和ST树是理解这个统一结构的重要基础。

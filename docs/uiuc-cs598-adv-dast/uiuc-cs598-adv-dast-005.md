@@ -1,1007 +1,145 @@
-# 005： Packed-memory arrays, splay trees.zh_en -BV1kWFGzsEmN_p5-
+# 数据结构与算法：005：紧凑内存数组与伸展树
 
 ![](img/8bb876ef3c53f577423e47310b87da26_0.png)
 
-Just a couple of administrative things。U。People have still been trying to get into the class。U。
-
-If you are still trying to get into the class and you haven't been able to register yet。
-
-Please come talk to me after classes that I know who you are。I'm happy to。
-
-Send an email to the academic office。mSupporting a petition to add。
-
- even though the a deadline was yesterday to add late， provided you've turned in homework zero。
-
-So at this point， homework zero， the grade scope closes down。
-
-Submissions for homework zero tonight at nine， a week after the original deadline。
-
- if you've done homework zero， I'm happy to advocate for you being able to add the class late。U。
-
-But we should take care of that this week because as the semester gets going。
-
- this gets more and more uncomfortable for everybody。嗯。呃。I will。Post solutions。
-
-Two homework zero tomorrow。So you can actually see what I was looking for。
-
- but I'm actually going to describe some results related to the。Rotation and swapping question。
-
-over the weekend， I discovered a paper that implies an answer to the question that several people have asked me。
-
- is N logN the best you can do？And the answer is yes。And log n is the best you can do。
-
-And the proof of that。Is by a happy coincidence actually somewhat related to the topic of the lecture today。
-
- So I'm going to spend a little bit of time talking about it。
-
- I'm not going to go into complete detail， partly because。
-
-There are some details of the proof that I don't completely understand myself yet， because this is。
-
-I got really lucky finding the paper。And I haven't had a chance to completely internalize it yet。嗯。
-
-So what I want to start with。
-
 ![](img/8bb876ef3c53f577423e47310b87da26_2.png)
 
-Today， well， first， let me make sure people have any questions。
-
-
+在本节课中，我们将学习两种重要的数据结构：紧凑内存数组和伸展树。紧凑内存数组是一种在连续内存块中高效维护序列的数据结构，支持插入、删除和扫描操作。伸展树是一种自调整的二叉搜索树，虽然没有最坏情况的时间保证，但在平摊分析下表现出色，并且具有一些近乎神奇的最优性特性。
 
 ![](img/8bb876ef3c53f577423e47310b87da26_4.png)
 
-Okay。So what I want to start with is。Sort of the details that I didn't get to talk about last time of the packC memory array problem。
+## 紧凑内存数组
 
-Okay， so。The idea is that I want to store。Sequ of n items。In a contiguous block。Of size order N。
+上一节我们介绍了课程的一些管理事项。本节中，我们来看看紧凑内存数组的具体细节。
 
-So just。An arrayray。And I want to be able to support the following operations I want。You know。
+紧凑内存数组的目标是存储一个包含 `n` 个项目的序列，并将其保存在一个大小为 `O(N)` 的连续内存块（即数组）中。它需要支持以下操作：
+*   `insert_after(x, y)`：将 `y` 紧接在 `x` 之后插入。
+*   `delete(x)`：从序列中移除 `x`。
+*   `scan(x, k)`：如果 `k` 为正数，则扫描 `x` 之后的 `k` 个项目；如果 `k` 为负数，则扫描 `x` 之前的 `k` 个项目。
 
- insert after。So insert after X Y puts。Y immediately after X。U。Delete X removes x from the sequence。
+我们假设在给出序列中的某个项目时，我们实际上获得了指向该项目在数组中记录的指针。`scan` 操作的目标是达到每个报告元素的基本常数时间。
 
-嗯。Let's say scan X k will scan the next k items following x if k is positive in the previous minus k items if k is negative and。
+有人可能会问，为什么不能简单地使用双向链表来实现所有操作的常数时间？一个更清晰的答案是，我们希望支持“前序查询”。通过比较两个项目在数组中的地址，我们可以快速判断 `x` 是否在 `y` 之前。这在动态分配内存的链表中很难高效实现。
 
-啊。I'll add one。To sort of remove one of the question to take care of one of the questions that someone asked me after class yesterday so the idea is I want to be able to do these as as quickly as possible This one in particular I want to be able to handle。
+### 核心策略
 
-In basically constant time per element reported， and in all of these。
+基本思想是在数组元素之间保持常数大小的间隙。间隙不能太大，否则扫描数组获取数据的时间会变长；间隙也不能太小，否则插入新元素时，在狭小空间内挤压会创建更小的间隙。因此，元素大致均匀地分布在数组中。
 
- when I'm given an item in that's already in the sequence。
+当执行插入操作时，可能会导致局部区域过于密集；当执行删除操作时，可能会导致局部区域过于稀疏。在这两种情况下，我们都会执行局部重建。这里的“重建”比替罪羊树中的重建更简单：我们取数组的一部分，并将其中的元素均匀地重新分布，以消除过大的间隙或过密的区域。
 
- I'm assuming I'm actually given a pointer directly to the record of that item in the sequence。
+### 密度阈值与层次结构
 
-If you're uncomfortable with that assumption， you can imagine there's a hash table off to the side that remembers the address of every element in the array。
+为了实现高效的平摊分析，我们定义一些密度阈值。在顶层，定义 `low_0` 和 `high_0`（`0 < low_0 < high_0 <= 1`），它们代表整个数组允许被占用的比例。如果数组中的元素数量低于 `low_0 * size`，我们将重建一个大小为原来一半的新数据结构。如果元素数量超过 `high_0 * size`，我们将数组大小加倍并重新分布所有元素。
 
-系。So somebody asked a quite reasonable question， why can't I do insert after and delete and scan all in constant time or constant time per output。
+为了更精细地控制重建，我们递归地将数组分解为块。为简化分析，我们假设数组长度是2的幂。我们将数组划分为大小为 `log n` 的叶块，而不是一直递归到大小为1的块。这样，树的深度为 `log(n/log n)`。
 
- just using a AE linked list， why do I need to use an array？😡。
+对于每一层 `k`，我们定义更严格的密度阈值 `low_k` 和 `high_k`。这些阈值构成一个等差数列：`low_k` 从 `low_0` 到 `low_L` 逐渐收紧（允许的密度范围变小），`high_k` 从 `high_0` 到 `high_L` 也逐渐收紧。
 
-And my somewhat unsatisfactory answer was， well， this is done in the service of some other algorithm。
+### 插入算法
 
- some larger data structure， in particular it involves external memory。
+以下是插入算法 `insert_after(x, y)` 的步骤：
+1.  找到包含新元素 `y` 的叶块 `B_L`（`y` 紧接在 `x` 之后，可能位于 `x` 所在叶块或下一个叶块）。
+2.  将 `y` 插入到该叶块中。
+3.  从层级 `L`（叶块）向上遍历到层级 `0`（根块）：
+    *   如果当前块 `B_k` 的密度超过 `high_k`，则重建（均匀分布）块 `B_k` 并返回。
+    *   否则，继续检查父块。
+4.  如果一直检查到根块都 overcrowded，则重建整个数据结构（并可能扩大数组）。
 
- disc swapping and dynamic memory management in that context is really nasty and every time you follow a pointer you have to get a new page。
-
- but I think a cleaner answer is I want to be able to support this is before query。
-
-And the way that I'm going to do that。Is。That you know every element in the data structure without loss of generality can record its own address in the array。
-
- and then when I want to know whether x is before y or not，I just say， well。
-
- is x's address in the array earlier than y is address in the array？
-
-And that's not something I can do with a doubly linked list。
-
- because when I dynamically allocate memory， it comes from the sky。
-
- and I have no control over what sort of addresses I get。And in particular。
-
- when I start moving things around。Keeping track of everything is just a nightmare。
-
-I want to support these ordering queries quickly。And in particular， I'm just as a design decision。
-
- I'm going to implement those ordering queries by comparing the addresses in my array of the two things that I'm comparing。
-
-嗯。嗯。So。The basic idea is。That I want to keep。嗯。Constant sized。Gaps。Between。Elements。
-
-And I want these gaps to both be not too large。Because the larger those gaps are the longer it's going to take me to scan through the array to actually pick up the data。
-
-But also not too small because if things are small。
-
- then I'm going to have a hard time if I need to squeeze something into a small gap。
-
- it creates even smaller gaps。So very， very roughly things are going to be spread out。
-
-Not necessarily， you know。Exactly evenly because of the various updates， but more or less evenly。
-
-So think in your head， the distance between any two items in the array is， I don't know。
-
- somewhere in general， somewhere between 4 and 20。Right。
-
-And so this means this literally is just a for loop。To do the scan。
-
- I just jump in and I scan for it until I've seen K things。系。Now。When I insert。I can get sort of。
-
-Things that are locally too dense。And when I delete。I can get things that are。Lally to sparse。
-
-So in each of these cases。I'm going to do a local rebuild。And rebuild in this sense。
-
-Is quite a bit simpler than rebuild for a scapegoat tree。
-
- where I need to build a perfectly balanced tree。 What a rebuild means。
-
-Is that I take some chunk of the array， and I just evenly spread out。The elements of that array。
-
-So I just either。Close up very large gaps or ease up on very crowded hotspots。
-
- so this is the overall strategy。Getting this to work。Quickly is。
-
-Is the challenge and whether this is where the details come in。
-
-So they're very clear about what the problem is and with the high level strategy。O。
-
-So I'm going to define。Some。S called density thresholds。Okay， so。Um at。Sort of the top level。
-
-I'm going to define。Let's call it low sub zero。Which is going to be positive。But less than high zero。
-
- which is less than or equal to one。This is the fraction of the entire array that is allowed to be occupied。
-
-If the array ever has fewer than low zero times the size of the array elements in it。
-
-Then I'm going to rebuild a brand new data structure half as big。
-
-If the data structure ever actually becomes。Has。High zero times the size of the array things in it。
-
-Then I'm going to double。The size of the array and spread everything out。
-
-And I'm kind of making an assumption here， it may be that I should really put a half here in between if I'm literally going to be having and doubling。
-
-Um， just to make sure that when I take a full array and I double its size。
-
- now it's density as a half and that doesn't trigger another rebuild in the opposite direction。Okay。
-
-This is not really a critical that one half is it really critical。
-
- you can just use a different strategy for maintaining the array。
-
- don't grow by a factor  two grow by a factor of 1。1 instead。So these are things that you can tune。
-
-I'm also going to。呃。Imagine。A recursive decomposition of the array。
-
-Into what you might think of as a balanced binary tree。But this is。Not really the data structure。
-
- the data structure is just the array。 I don't have explicit pointers with left the nodes with left children and right children。
-
- Everything can be done implicitly using index arithmetic。But so the idea is I will have， you know。
-
- here's a block of size n， which it's easiest for purposes of analysis just to assume that the array has a length that's a power of two。
-
-This is going to be you know， level zero， but in at least for purposes of analysis， you can imagine。
-
-The level zero block， which is the whole array is divided into two equal size level one blocks。
-
- and those are divided into level。Level two blocks。And so on， so at level log n。You have individual。
-
-Elements。对。Actually， though。To make the。It actually simplifies the analysis and it simplifies the data structure a bit if I don't recurse all the way down to blocks of size one。
-
-Instead， I'm going to use a version of the indirect trick that you saw when we did range minimum queries。
-
- which is I'm going to divide space into blocks of size log n。
-
-And I'm going to treat those as the leaves of my tree。So instead of。Log in depth。
-
-I'm going to have log of and over log n depth。It's a minus a log log doesn't really make that much difference。
-
-嗯。But。At the bottom level。I'm going to stop when I have。Blocks of length login。
-
-And this is going to happen at level， I'll just call this capital L log of n over log n。咁。I'm。
-
-Being very fast and loose here， you should imagine putting floors and ceilings in there is necessary。
-
-To make this all work out as integers。Okay。Now。The basic idea of how I want to schedule rebuilds is similar in spirit to what I wanted to do with scapegoat trees。
-
- small pieces of the data structure are cheaper to rebuild and so I want to trigger rebuilds more often。
-
- larger pieces of the data structure are more expensive to rebalance。
-
- and so I want to make sure that I rebalance those less often。
-
-So what I'm actually going to do is I'm going to define even smaller。嗯。Narrower。Density thresholds。
-
-Okay， so move zero。High， zero。This is one， this is just about it away from zero。系。So， there is a。
-
-Narrower set of densities that I'm going to allow for the lowest level blocks。
-
- the smallest blocks of size and log n。Then I allow a wider range of densities that I allow at the root and more generally I'm going to define for every level k。
-
-We could define this as let's see， low zero plus。K over L times。L L， I think this is right。
-
-Minus load zero。This is a complicated way of saying that the lower density thresholds define an arithmetic sequence so the lower thresholds are evenly distributed between low zero。
-
- which is the most has the most freedom and low L， which has the least freedom and similarly。
-
-Hi of k is high of zero minus。K over L。Times。High 0 minus。IL did I get this right。Well。
-
- I changed that plus into a minus and I reversed the sense of the minus。
-
- so I didn't need to do either of those things， but I did both so they cancel out。But again。
-
- the idea is。That the high density thresholds are also going to be evenly distributed across the levels。
-
-系。All right， so what is the the， for example， the insertion algorithm？All， so I insert after。X Y。
-
- okay。They find。The leaf block。That。Contains。The new element Y。Meaning it's in the right range， yeah。
-
-me say x here， we mean like a literal pointer to that Yeah。
-
- x means there's a literal pointer to an item named x in the array。Yeah。
-
- finding excess constant time， right？So it could be that。For example。
-
- x is in the middle of a leaf block， and then y is's just going to go right there。
-
- It could be that x is at the right end of the leaf block。
-
- and so y needs to go into the next leaf block。Okay， eitherith of those circumstances is fine。
-
- so I'm finding the leaf block that contains why and then。There will be room to add why because the。
-
-As long as the density isn't exactly one， so maybe I should insist that this is strictly less than one。
-
- so I'm going to go ahead and insert why。Into。That。Block。And I'll call this block B of L。Okay。啊。
-
-Now at this point， it's possible that Babbel is overcrowded。So I might need to retrigger a rebuild。
-
- but I want to make sure that that I do as much as I can while I'm rebuilding without violating my constraints。
-
- so we'll say here is，For K equals L。Down to。0。If。The density。Of block K is。Greater than I sub K。啊。
-
-Well， actually。I think the right way to do it is like this。If this is small。Rebuild。
-
-Be sub K and return。Okay， so。In particular， if I insert into a leaf block and the leaf block is already reasonably sparse。
-
-Fine， I spend log n time rebuilding this rebalancing this small block of size login。Then I'm done。
-
-Otherwise is this leaf block is over overcrowded， go up to the parent if that leaf block if that next block is overcrowded。
-
- go up to its parent， if that block is overcrowded。
-
- go up to its parent and so on eventually I find a block that is not overcrowded。And then， I rebuild。
-
-Everything and if I get all the way to the top。Of course， I rebuild the entire data structure。
-
-if every ancestor of that leaf block is overcrowded， then in particular。
-
- the whole data structure must be overcrowded， so I just rebuil it。嗯。so。Cost to。Rebuild。And in fact。
-
-This probably means。Double it in size。The cost to rebalance any block is proportional to the length of the block。
-
- and because these density thresholds are fixed constant。
-
- that's also proportional to the number of items in the block。OkaySo the actual cost here。Is。诶。
-
-N over2 to the K。Okay， so the case level block。So I've numbered it from bottom up。
-
-This is some power of two。Why did I say end there？嗯。The size of this block is some power of two。
-
- which is for the moment， just call it two to the R。So u。At the bottom。
-
- because I started lose the power of two， and I recursively divided by half going down。Okay。
-
-So then the question is， you know。I'd like to charge that time。2。Previous insertions。Into that block。
-
- wherever that block level R is， right， maybe I insert y here and the block that I decide that I need to rebuild is this one。
-
-Then I need to。Pay a little bit extra whenever I insert into that red block to pay for the next rebuild of that red block。
-
-Just like in scapegoat trees， every time I insert into a subtree below a node。
-
- I give that node a little bit of money to pay for eventually in the future rebuilding the subte hanging under that node。
-
-You a question。See this question。So the ideas is。If it's overcrowded， look at the parent。
-
- if that's overcrowded， look at the grandparent。I go up until I find something that's not overcrowded。
-
- and that's the thing I rebuildilt。Yes， every time you insert something。
-
- you are going to rebuild something， most of the time we hope that's going to be one leaf node and that's only going to take log end time。
-
-Okay， so I'm going to sort of set that login aside， that's not the interesting part。
-
-Here play this week dorm summer。ざいますそだま。Yes， so the easy way to do this is every block stores。
-
- how many things are in that block。The more interesting way to do this is I know I'm going to rebuild something。
-
- so I literally just scan to the left and right。Figuring out on the fly how big these parent blocks are。
-
-And so the time that I need to count how many things are in the block is dominated by the time that I need to rebuild that block。
-
- so I don't actually need to store anything but if you want to imagine that I'm storing things to keep things simple。
-
- that's great。It's exactly the same as escapescape。Yeah。Do you have a question？
-
-When I'm rebuilding the entire data structure， I'm taking this array of size power of two and turning it into an array of size the next power of two。
-
-And then evenly distributing all the data。When I'm rebuilding locally， I'm not changing any size。
-
- it's only the global rebuild that changes the size of the。
-
-So the interesting part of the analysis is what happens when I do local stuff。
-
- The global rebuilds are just like an analysis of dynamic arrays。Right。
-
- I need to insert end things into data structure before it gets。Once if it has size N。
-
- I need to insert in more things into it before it needs to double and that。
-
-That's the complete analysis。It's the local stuff that's more interesting。Right。嗯。Okay， so if I have。
-
-A block。Now。That I want to rebuild。Because it got too full or because the reason that I need to rebuild it is one of its children got too big Okay。
-
- so here is you know this is a block of size2 to the R one of its。Kids。Is too dense。Okay。
-
- so the child has size 2 to the R minus1。that means that the number of items。In this block。
-
-
+重建一个大小为 `2^r` 的块的成本与其大小成正比，即 `O(2^r)`。
 
 ![](img/8bb876ef3c53f577423e47310b87da26_6.png)
 
-嗯。Is at least。
-
 ![](img/8bb876ef3c53f577423e47310b87da26_8.png)
 
-In fact， it's strictly greater。Dan。Hi， sub。K plus1 times2 to the r minus1。Right， because this is。
+### 平摊分析
 
-Level K。This is。Level a plus one。嗯。But。Last time it was rebuilt。The last time it was rebuilt。
+分析的关键在于，一个块需要重建之前，必须有一定数量的插入操作发生在这个块内。具体来说，如果一个层级为 `k` 的块因为其子块过密而需要重建，那么自上次重建以来，插入到该块中的项目数至少为 `(high_{k+1} - high_k) * (块大小)`。
 
-The number of items。Was。Less than。Hi times j times2 to the r minus1 for some。
+由于密度阈值是等差数列，相邻层级的阈值差为 `(high_L - high_0) / L`，这是一个 `O(1/L)` 的量级。因此，每次插入操作需要为该块平摊支付 `O(L)` 的成本，即 `O(log n)`。
 
-J less than or equal to k。Now， the last time it was rebuilt， it could have either been。
+然而，每次插入操作会影响从叶块到根块的整条路径上的所有 `O(log n)` 个块。因此，每次插入的总平摊成本为 `O(log^2 n)`。删除操作有对称的分析。
 
- it was rebuilt directly。Or its parent was rebuil， or its grandparent was rebuilt。
+这个 `O(log^2 n)` 的平摊成本实际上是最优的，即使只支持地址比较的“前序查询”，在仅使用线性空间且希望插入和删除达到常数时间的情况下，也无法超越这个界限。
 
- or its great grandparent was rebuilt all the way up， that maybe the whole structure was rebuilt。
+### 权衡与变体
 
-Although actually I think。I should say this， maybe that was actually the thing that was rebuilt。嗯。
+通过允许使用比线性更多的空间，可以在插入/删除时间和扫描时间之间进行权衡。例如，如果只关心“前序查询”的标签维护，使用替罪羊树并利用搜索路径作为比特串标签可能是更合适的选择。
 
-So when I rebuild a block， it's because ignoring the global rebuild， when I rebuild a block。
+## 伸展树
 
- it's because at that point， I know that that block of rebuilding is not overcrowded。
+接下来，我们讨论另一种平衡二叉搜索树数据结构——伸展树。它没有良好的最坏情况时间保证，但在平摊时间上具有非常好的保证。
 
- I just know one of its children is overcrowded。So when I spread everything out。Evenly。
-
-That ensures that my that the children， grandchildren， great grandchildren all have the same density。
-
-Which is less than this high threshold for the block that I'm rebuilding。嗯。嗯。And no， I think。Yeah。
-
- that needs to be。Less than or equal to k， okay？嗯。So this is at most。Hi of K times2 to the R -1 so。
-
-The number of insertions。Since the last rebuild。The number of insertions into this crowded block。
-
-Is at least。H k plus 1 minus high k times the size of the plot。改。But。So that means that。啊。
-
-The amortized cost。The amortized cost。Of each insertion。Um is。Hi of k plus1 minus high of k。All。
-
- because。Sorry， one over thatt。So if every insertion pays this reciprocal of the difference in the two adjacent densities。
-
-Into a bank account for that block。Then after this many insertions。
-
-There's enough money in the B's bank account to pay to rebalance the block。Yeah。百子。Yes， you're right。
-
- there's some constant factors in here that I'm being a little careless with。Okay。嗯。
-
-But now let's think about what that。That that difference is so this is。
-
-Hi of L minus high of0 divided by L。Because the difference between two adjacent density thresholds is always the same。
-
- I set up the density thresholds to be this nice arimetic sequence so's。
-
-One elf of the difference between the up level density threshold and the bottom level density threshold。
-
-嗯。It occurs to me that I probably got my indices a bit messed up。
-
-I may need to say high of k minus high of k plus1。Um，Yes。Sorry。I need to do a little bit of。
-
-Fixing off by one errors here。Because the density thresholds。Get。啊。
-
-The trigger for rebuilding a small block。Is smaller than the trigger for rebuilding a large block。
-
-But high zero and high L are constants。So this is。Ororder L。Which is。Order。Well again。
-
-So every time I insert a new item。I have to pay an amortized cost of login to every block at every level that contains that new item。
-
-Okay， so the。啊。Total。Amortized。Time。To insert。Is big O of log squared n。Right so this log n is just。
-
- I pick one block at some level in the hierarchy and I say every time I insert into this block anywhere below。
-
-Anywhere inside。I need to spend login to pay for the eventual rebuild of this block。
-
-But every time I insert， I'm inserting into a hierarchical path of log n different blocks。
-
-And so the overall amortized time to do that insertion is log squared n。
-
- and there's a symmetric analysis。For deletion。so this is different than what we got with scapegoat trees。
-
- with scapegoat trees， somehow we got away with saying， oh， here's this tree of size k。
-
- I need to do omega of K insertions before I rebuilt。Now it's， well。
-
- here's this block of size 2 to the R， I need to do at least2 to the R over log n insertions。
-
-Before I rebuilt。And so we get this extra log factor in the amortized cost。
-
-This is actually the best that one can hope for。嗯。Even if。
-
-You don't have to do the scans if you only need to answer the before。
-
- if you only need to keep addresses and be able to compare the addresses to decide before after using you know if you want to use a linear amount of space and you want to do insertions and deletions in constant time。
-
- provably you cannot beat log squaredd。So this relatively simple data structure is actually optimal。
-
-Thanks。Okay。Often。Let me see if I can spell optimum a little bit more readably。All right。
-
-So this is just， you know another another example， the sort of local global rebuild。
-
- local rebalance idea there are other variants of this where maybe I'm allowed to have slightly more than linear space and so you're willing to trade off。
-
-Do a little bit of trading off between the insertion and deletion time and the scanning time。
-
-So if you give yourself a little bit more space， insertions and diletions get cheaper。
-
- but scanning gets more expensive。If all you care about is doing。Labeling， so I want to insert。
-
- delete and and is before， I can give myself something like end of the fifth space。
-
-And then now I'm back basically to doing scapegoat treats exactly， and the analysis。
-
- the whole analysis completely mirrors the scapegoat tree analysis exactly。
-
-But in order to do that with space， I really have to give myself。
-
-A fairly significant polynomial overhead in space。And the scanning time goes up by。
-
-One less factor of n than that overhead。So if I give myself end to the fifth space。
-
- then I'm going to need about end of the fourth time per item to scan。Just not great。
-
-So I really don't want to do this if I'm scanning， but if I just care about labeling。
-
- this is reasonably efficient and in fact arguably the right thing to do for labeling is not to build this data structure at all。
-
- but literally to build a scapegoat tree and just use the search path。
-
- a bit of one for the left bit of zero for the right and let that path determine the label as a string of bits。
-
-Or build some other binary research tree。Okay， so any questions about。Pact memory array。All right。So。
-
-The next data structure I want to talk about。Is another balanced binary tree data structure that doesn't have any good guarantees on worst case time？
-
-But has。Somewhat magically good。Guarantees in terms of amortize time and that's the so called display tree。
-
- So this was。嗯。I think sometime around 83。This is Danny Slater's work as a PhD student as when he's a student of Bob Tarjn。
-
-Um。You might notice some of the same names coming up over and over again， in particular。
-
- you'll see Tant's name a lot。嗯。呃。So。Almost all data structure work before Charn was about binary search trees。
-
-Tarent did everything else。It's fair to say Bob Tarjn invented the late 20th centuryy data structure。
-
-And he won a Tring award for it， so you'll see his name a lot。
-
- I hear another name tossed around more recently。Maybe a bit of an exaggeration still but。
-
-We'll see some of his stuff when we start talking about hashing。
-
-I guess I should say Bob Tarjn invented the late 20th century pointer based to data structure。嗯。Okay。
-
- so what's a s tree。 Well， the idea that slater and Taent had was。What's？
-
-Imagine a binary tree that can fix itself whenever it discovers that something is too deep。
-
- it does some rotations in the tree to make it shallower。
-
- and they actually started by doing an analysis of something called the move to front heuristic。嗯。
-
-For linked lists。So the idea here is whenever I search for something in the linked list。
-
-I'm going to optimistically conjecture that things that I look for now。
-
- I'm more likely to be looking for in the future， and so what I'll do when I find something in the linked list is I'll bubble it up to the top of the linked list and put it there。
-
-And this move to front heuristic actually works。Pretty well。It doesn't necessarily give you faster。
-
- amortized or worse case bounds， but what it does do is it gets within a constant factor of the best you could hope for。
-
- even if you knew in advance all the things you were going to search for。
-
-And you just had a model that says， the only thing you're allowed to do is move things around in the linked list。
-
-so a self-adjusting linked list structure it says， oh。
-
- I'm going to look for three then I'm going to look for one then I'm going to look for three。
-
- four and then I'm going to look for one， then I'm going to look for five then nine， okay。
-
- so in advance when I look for three， I'm going to make sure that I put one at the top and then I look for one and make sure I put four at the top。
-
-So move to front gets within a factor of two。Of the best clairvoyant。Self adjusting linkedlist。
-
-So this is something called competitive analysis。呃。Analysis you compare。The time。
-
-For the online maintenance of the data structure。To the best。Offline。Algorithm。嗯。
-
-So because data structures can't predict the future。
-
-I would never expect these two times to be the same。But the idea here is it's like， well。
-
- if I use move to front， I'm within a factor of two， the best I could hope。
-
- or even if I could see it in the future。so this was。
-
- you know a nice idea that they developed and so they tried to do the same thing with binary search trees they said okay。
-
- great， let's look at a binary search tree and every time we find an item in the tree，See here。
-
-I'm going to do rotations。To bring that。Item back up to the root。That was the first thing they tried。
-
- Unfortunately， this doesn't work。Is actually turns out to be quite bad and the reason that it's bad is if you just look at an example。
-
-Where the tree starts out as just。A linked list。And I always search。For this node on the far left。
-
-So what happens after one？Move to front。Is I get a tree that looks like this。
-
-And then after two moved to fronts。It'll look like this。And then after three moved to Frances。
-
-
+伸展树由 Daniel Sleator 和 Robert Tarjan 在1983年左右提出。其核心思想是：每次访问（查找、插入、删除）一个节点后，通过一系列旋转将该节点移动到树的根节点，从而在局部调整树的结构，使其在未来对相同或附近节点的访问更快。
 
 ![](img/8bb876ef3c53f577423e47310b87da26_10.png)
 
 ![](img/8bb876ef3c53f577423e47310b87da26_11.png)
 
-It'll look like that and so on so。From a distance， what it looks like is happening is just the list is kind of rolling over。
+### 从“移至前端”启发法到伸展
 
-So the tree is always a linked list。The route starts at position one。
+最初，他们尝试了类似链表“移至前端”启发法的策略：每次查找一个节点后，通过单次旋转将其移动到根节点。然而，这在最坏情况下会导致 `Θ(n)` 的平摊搜索时间（例如，在一条链上反复查找最深节点）。
 
- and then it kind of goes to one end of the list and it goes to the second thing。
-
- the right most thing in the list and the third， right most thing in the list and the fourth right most thing in the list and so on。
-
-So after I've looked， I've done N searches。The tree is back in exactly the form。
-
-That it was at the beginning。And most of those searches， I need to scan most of the data。Okay so。
-
-Move to front。In a binary tree。You get a theta of n even amortized search time。In the worst case。
-
-So this initial attempt。Like， okay， that didn't work。Can we do something else？
-
-And the idea that they eventually hit on。WasI'm going to do two rotations at a time。Okay， so。
-
-I'm gonna to。To。Break things down into two cases。Okay。
-
- so here's the node that I'm actually searching for。Again。
-
- I'm going to do local rearrangement of that node， its parent and now it's grandparent remember。
-
- a rotation just changes the local neighborhood of a node in its parent。And。
-
-It turns out that the right way to do this。Do this with two rotations First。
-
- I'll rotate that node up。And see is this right？No， that's not what I wanted。First。
-
- I'll rotate the node up， and then I'll rotate the same node up again。
-
-Which seems like I'm arguing against what I just said， but hang on for the other case。Okay。
-
- then here's now the node that I just rotated up， I rotate it up again。OkayAnd after two rotations。
-
- I've kind of。Very， very locally rebalanced this part of the tree。So this is fine， this is okay。系。
-
-The place where we get into trouble。Is when a node is kind of on the same side。Of its parent and。
-
-It's grandparent。So in this case， I'm first going to rotate the parent。
-
-And that's going to reshape the tree like this。And then I will do a rotation at the node itself。Okay。
-
-So this first case is called a。Zigzag。The slater intent called the second case is zig zig。
-
-I prefer to call the roller coaster。Okay。So the idea then is instead of doing one rotation at a time to move a node up to the root。
-
-😡，I'll do a double rotations。Falling into one of these two cases。Until the node hits the route。
-
- now if the node is one step away from the root， then I'll do a single rotation。嗯m。Now。
-
- why should I believe that this is going to be better？嗯。So it turns out。That at a very high level。
-
- what's going on is if I look at the search path。So display。Is。A。Double rotations。
-
-Plus at most one single rotation。To move。A node。To the root。
-
-
+改进的策略是进行双旋转。具体分为两种情况：
+1.  **之字形**：当节点 `x`、其父节点 `p` 和祖父节点 `g` 不处于同一条直线上时（例如，`x` 是 `p` 的右子节点，而 `p` 是 `g` 的左子节点）。首先旋转 `x` 和 `p`，然后再旋转 `x` 和新的父节点。
+2.  **一字形**：当节点 `x`、其父节点 `p` 和祖父节点 `g` 处于同一条直线上时（例如，三者都是左子节点）。首先旋转 `p` 和 `g`，然后再旋转 `x` 和 `p`。
 
 ![](img/8bb876ef3c53f577423e47310b87da26_13.png)
 
-If I have a。Sorry。Notability can't access my microphone。
-
-
-
 ![](img/8bb876ef3c53f577423e47310b87da26_15.png)
 
-All right， sounds going to be a bit weird。So I'm going to unplug， I think this microphone is。嗯。
+如果节点离根只有一步，则执行一次单旋转。通过这一系列操作将节点 `x` 移动到根的过程称为“伸展”。
 
-And hope that my laptop microphone picks up my voice so I think this is run out of charge。嗯。Okay。
+### 伸展操作的直观效果
 
-So if I look at what happens when I rotate。A long list like this。
+伸展操作的效果是压缩搜索路径。经过伸展后，原搜索路径上的节点深度大致减半（加减一个常数）。虽然某些不在路径上的节点深度可能略有增加，但总体而言，树的结构变得更加平衡。这种“昂贵的操作能显著改善数据结构状态”的特性是良好平摊性能的关键。
 
-What the end result of slaying the bottom note of this list looks like。Is this。Okay， so。
+### 基本操作实现
 
-The nodes on that list， morally speaking， got compressed by factor two。
+*   **查找**：找到节点 `x` 后，立即对其进行伸展。如果查找失败，则对查找过程中访问的最后一个节点（即前驱或后继）进行伸展。
+*   **插入**：首先像在普通BST中一样插入新节点 `x`，然后对 `x` 进行伸展。
+*   **删除**：
+    1.  对要删除的节点 `x` 进行伸展，使其成为根。
+    2.  删除根节点 `x`，得到左子树 `T_L` 和右子树 `T_R`。
+    3.  在 `T_L` 中找到最大节点（即 `x` 的前驱）`w`，对 `w` 进行伸展，使其成为 `T_L` 的根（此时 `w` 无右子树）。
+    4.  将 `T_R` 作为 `w` 的右子树连接起来。
 
-Everything on the search path got half as far away is now half as far away from the root as it used to be maybe plus one or two。
+所有操作的成本都与从根到目标节点的路径长度加上伸展该节点的成本成正比，因此分析的关键在于理解单次伸展的平摊成本。
 
-Okay similarly， if I look at the other extreme case where I just have a zigzag back and forth。
+### 平摊分析：势能法
 
-Then after I display that to the root。I'm going to get。
+我们使用势能法进行分析。定义：
+*   节点 `v` 的**大小** `size(v)`：以 `v` 为根的子树中的节点总数。
+*   节点 `v` 的**秩** `rank(v)`：`log₂(size(v))`。可以直观理解为该子树理想平衡时的深度。
+*   树 `T` 的**势能** `Φ(T)`：所有节点 `v` 的 `rank(v)` 之和。
 
-The just the search path is going to be reconfigured like this。
+势能总是在 `Θ(n)`（完美平衡树）和 `Θ(n log n)`（一条链）之间。
 
- but again this path of whatever length it is gets changed into two paths of half。So again。
+Sleator 和 Tarjan 证明的**访问引理**指出：
+*   在节点 `x` 处的一次**双旋转**的平摊成本最多为 `1 + 3 * rank'(x) - 3 * rank(x)`，其中 `rank'(x)` 和 `rank(x)` 分别是旋转后和旋转前 `x` 的秩。
+*   在节点 `x` 处的一次**单旋转**的平摊成本最多为 `3 * rank'(x) - 3 * rank(x)`。
 
- everything on the search path gets roughly its depth divided by two。Ma plus one。
+由于在一次伸展中，除了最后一步可能是单旋转外，其余都是双旋转，且中间步骤的秩变化会抵消，因此将节点 `x` 伸展到根的**总平摊成本**最多为 `1 + 3 * rank(root) - 3 * rank(x)`。伸展后 `x` 成为根，`rank(root) = log₂(n)`，所以平摊成本为 `O(log n)`。
 
-So there's this compression of the search path， so even if you start with something really unbalanced。
+### 伸展树的魔力：静态最优性与其他性质
 
- searching for the deepest thing makes a lot of progress towards making your dream shallow again。
-
-Okay right， so。Nodes。On the search path。Have。There。对。And maybe plus plus or minus a small constant。
-
-And moreover， all of the descendants of nodes on that search path also have theirducts go down。
-
-Except for the few nodes that got slightly bigger， so some nodes will get deeper by one or two。
-
- but never more than that。😡，So if I start with something really deep， in fact。
-
- the entire tree in some sense is kind of being squashed and it grows a little。
-
-Which is kind of the effect that you want in and then the amortized calledta structure。
-
- you want really expensive operations to be cheap。But common data structures can make do a little bit of damage as long as they get do a lot of damage at。
-
-嗯。So the。Um。Once I've got this intuitive idea， now implementing standard standard operations whenever I search。
-
-whenever I search for X， I immediately， you know， as soon as I find it。
-
- I display X if I didn't find X， if it's an unsuccessful search。
-
-Then I'll display whatever the last note I found was。
-
- which is either going to be the predecesor successor of it。
-
-So I'm readjusting the data structure every single time I search。When I insert X， then again。
-
- I'm going to display it。When I want to to a delete。
-
-Now things are more interesting because deletion is always harder than insertion。
-
- or at least usually， so I'm going to do deletion using two ss。Okay so the idea is。
-
-Here's my tree and here's the item that I want to delete the first thing I'm going to do is split it up to the root。
-
-This is going to create。It's going to put x at the root and then there'll be a subte on the left and a subte on the right at this point I can throw this note away。
-
-Now I need to reconnect those two trees， and so what I'm going to do is find the predecessor of X。
-
- which is the rightmost node in the left subtree。Before I deleted X。
-
- and then I'm going to display that node up to the root of the left subt。And when I've done that。
-
-The less subt is now going to look like this。The I mean。
-
- W was the node with the largest key in that tree， but it's also the root。
-
-So it doesn't have anything hanging off to the right and meanwhile。
-
- this right subre is just sort of hanging there。And so the last step is to reconnect。系。😊，So。U。
-
-Spplay X。Deelete X。Splay。Prodecessor of X。Reconnect。And so the cost of doing any of these operations。
-
- any standard。Finallyary search operation is。Within a constant factor。
-
- the cost of walking down to some node and then sing it back up to the root。
-
-And the part where I'm walking down to the node， well that's the cost is proportional to the length of that path。
-
- the cost to explain the node is also proportional to the length of that path。
-
- so for purposes of analysis it suffices to just pay attention to displays。Okay。
-
- I just need to figure out what is the amortized cost to doing the single spliting。
-
-And that will tell me they amortize the time to do search insertions and deletions。Okay。
-
- so the question is。What？Is the。Amortized。Number of rotations。For each。Spplay。
-
-Now I'm deliberately defining time to be number of rotations。
-
-Everything else is going to be within a constant factor of that。
-
-So I'm just going to define rotation to take time one and other point of manipulations I need to imagine。
-
-Um。So I mean， the worst case number of rotations is exactly the depth of node that I'm explaining。
-
-But when I say amortized， I mean over a whole long sequence of ss。
-
-Average the total number of rotations over the number of place。Um。So。I hear rumors。
-
-That there might be a kind of。Charging argument way to do this where I say oh yeah every time I do a rotation I need to charge to something else I've never been able to make the charging stuff work out so instead i'm going to sort of use the。
-
-嗯。The atomic bomb of amortized analysis is something called the potential。So I want you to imagine。
-
- put yourself imagine for the moment I realize this is going to be uncomfortable。
-
- but imagine for the moment that you're a physicist。Now。
-
-There's this this notion of conservation of energy， but if I put work into the lifting this chair。
-
- this chair is now here， I've done work to lift this chair， this chair is storing potential energy。
-
-And it took work to lift it six feet off the ground， it takes no work at all。😡。
-
-To make it go 60 towards the ground because I'm spending the potential energy that I built up in the chair when I lifted it up。
-
-Okay so the idea is the data structure。Definines。A potential。Jod， in you know。
-
- borrowing again from physics， I'll use this capital letter fee to represent the potential。
-
-And then the amortized cost。The amortized。Time for an operation is the actual time。
-
-But if the potential went down。That means I've spent kinetic energy that I saved up earlier。
-
- so it's minus。The decrease in the potential。Or said differently， plus the increase in the potential。
-
-So this is plus。The potential after the operation minus the potential before the operation。Now。
-
- in order for this to work out， I need the potential to always be non negative。
-
- and ideally I would start with an entity data structure that has potential zero。
-
-And then if I do a summation of all the amortized timess。Those differences would cancel out。
-
-So the total amortized time。Ends up being the total。Actual time。Plus。The final potential。Minus。
-
-The initial potential。嗯。And hopefully the final potential is actually。Positive。
-
- let's see how let me make sure that I've got this right。嗯。Because it's easy for me to get confused。
-
-Yeah，'s。Plus after minus before。So。Total actual。Equals。Total amortized minus。Final。我。In it。
-
-If I've got the u。If I've got my inequalities correct。
-
- that should be less than so sum of all the advertise time balance。
-
-Is going to be an upper bound on the total actual time。Yeah， good。
-
-Final in general is going to be large and it is generally going to is usually going to be small。
-
- so I'm subtracting something off there so moving ball the correct direction。Okay。
-
-So I needed to define this this potential function。
-
- and so i'm going to do this in a couple of stages， so I'm going to first。
-
-Define the size of a node to be the number of nodes in the subte。roototed at V。
-
- and I'm going to define the rank of a node to be log based two of the size。
-
-An intuitive way of thinking about the rank is if this node could make a wish about the shape of its subt。
-
- it would wish for the subt to be perfectly balanced and that would be death。嗯。And then finally。
-
- the potential for the tree is the sum over all nodes V of the rank of that node V。Now。
-
- a couple of things to check。If it's perfectly balanced。Then the potential is theta of n。And。
-
-If it's perfectly unbalanced。Should the pass。Then the potential is theta of n log n。Okay。
-
- so the event is always somewhere between these two extremes。
-
-I'll let you verify these two calculations yourself if it's not a particularly difficult calculation。
-
-Okay。So why do I care about this？啊。So slater ints analysis boils down to something they call the excess。
-
-One吗。Which says。嗯。Spplays are made up of single rotations and double rotations， so I need to。嗯。
-
-Figure out the amortized cost。Of a single rotation and I need at the root and I need to figure out the amplace cost of a double rotation。
-
-Okay， so。嗯。The amortized cost。Of a double。Rotation。At X。Is at most。1 plus。Three times。The new rank。
-
-Of x minus3 times the old rank of x。Okay， so。Rannk punt， this is after。And rank。
-
-That just means before。And similarly， the amortized cost。Of a single。Rotation。At X。Is at most？Well。
-
- the same thing but without the plus one。嗯。你好。I will confess。对。
-
-Despite knowing about this data structure for a couple of decades。
-
-And despite reading the original papers and reading follow up papers and lecturing about this stuff multiple times。
-
- I still have no idea。Where the central function came from？I know that it works。
-
-I just don't have any intuition about why would you try this so other than Bob tararrgn is smarter than me。
-
-😡，Which is true。But that's not a particularly satisfying answer so if you're looking for intuition about what why。
-
-Why I should believe that this particular potential function works， I actually can't help you。
-
- I don't know。But the actual proof of the access dilemma is really just algebra。
-
-It's really algebra with some careful pace analysis。
-
-I don't want to walk through it because watching other people do algebra is boring。😡。
-
-But the details are in the notes。I'm holding up a piece of paper， this top two thirds of the paper。
-
- this is the case of a zigzag， this is the case of a roller coaster。😡，Down here。
-
- there's a few lines on the previous page for single Ro。
-
-So it's all completely elementary in the sense that you understand the definitions and you remember that the difference of logs is the log of a ratio and you remember that logs。
-
- the log function is concave and a few things like that， it's really straightforward， but again。
-
- I really don't have any intuition in why it works。But it does。And so what this implies。
-
-Is that the amortized cost。Of displaying acts。Is at most。Oh， sorry。
-
-It's the single rotation that gets the plus one。So it's one plus。
-
-The three times the new rank of x after display - three times the rank of x。Before the。
-
-All the other differences three minus the rank minus three minus the old rank， those all cancel out。
-
-So the new rank after the first double rotation is the same as the old rank before the second double petition。
-
- so the plus three rank and minus three rank canceled even this nice very simple simple form on the other hand。
-
- after you s X the new rank。Is log of the new size。
-
- but the new size is n because x is literally at the root。😡。
-
-Right so this is at most one plus three log n and less than or equal to。
-
- I don't know what the rank was before， but it was positive。
-
-So just dropping it gives me a another amount。Okay， and so here we are， this is log in。嗯。
-
-So in an at sense。This self adjusting binary search tree。Autoomatically gives you。
-
-Loarithmic amortize time to do insertions， deletions and queries。But it knows time。
-
-Are you guaranteed that the trees balanced？That's level one metric。
-
-Now we're going to get to level two magic。Which is actually。Now， what I'm going to do。
-
-I'm going to assign for purposes of analysis， not in the actual data structure。😡。
-
-
+访问引理的证明可以推广到节点带权的情况。我们为每个节点 `x` 分配一个正权重 `w(x)`，并重新定义 `size(v)` 为子树中节点的权重和，`rank(v) = log₂(size(v))`。访问引理依然成立。
 
 ![](img/8bb876ef3c53f577423e47310b87da26_17.png)
 
-I'm going to assign a weight。2。Every node。
-
 ![](img/8bb876ef3c53f577423e47310b87da26_19.png)
 
-诶。😊，And then I'm going to actually， you know， instead of the number of nodes。
+通过巧妙设置权重，我们可以证明伸展树自动具备一些最优性：
+*   **静态最优性**：假设每个节点 `x` 被访问的频率为 `t(x)`。令所有权重 `w(x) = t(x)`。那么访问节点 `x` 的平摊成本为 `O(log(W / w(x)))`，其中 `W` 是所有权重之和。这正是以频率 `t(x)` 构建的最优静态二叉搜索树所期望的搜索成本（信息论下界）。伸展树在**不预先知道频率分布**的情况下，自动趋近于此最优结构。
+*   **静态手指性质**：如果始终从某个固定“手指”节点开始搜索，则搜索到节点 `x` 的平摊成本为 `O(log(distance(finger, x)))`，其中距离是按关键字排序的秩差。
 
- I'm going to have the total weight。Of the sub rootedvy。Okay。
+这些性质表明，伸展树不仅能自动平衡，还能自动适应不同的访问模式，达到近乎最优的性能。
 
- so that note over there I really like for some reason so I'm just going to give it a weight of 100 these other nodes don't really care the weight needs to be positive。
+### 动态最优性猜想
 
- but there's no other restrictions that I don't really like the note I'm going to give it a weight of one end。
+一个尚未解决的重要开放问题是**动态最优性猜想**：伸展树在平摊意义上是否在常数因子内逼近最优的离线二叉搜索树算法？即，即使对手知道所有未来的操作序列并可以离线最优地调整树，伸展树的总成本是否也在最优成本的常数倍之内？这是数据结构领域一个著名的难题。
 
-This note， oh， I really like this， I'm going to get a away of in。And every node gets away。系。
-
-TheX limit吗。He's still true。The proof works with no modifications at all。
-
-But now the conclusion is a bit different because now the conclusion is it's three times the sum of the weights of the vertices。
-
-It's the total weight of everything in the tree and now。
-
-I can start playing games with the weights to model different situations where I might want to use the tree in different ways if I want all。
-
- if I set all the weights to be one， this is the settingturn where it's like ah。
-
-Every note's the same in my eyes。I just want the worsting time to be as good as possible， okay。
-
- amortize log。But let me propose another scenario。Where。So this is called static Opity。
-
-Different nodes。Have different frequencies that they're searched for。
-
-So if I'm going to look for three much more often than I'm going to look for 89。
-
-So intuitively in a static data structure， you want the node Storing three to be closer to the root。
-
-And then story in '89 to be further from the， you don't want the trade to be perfectly bad。
-
-You wanted the bias to put more common things near the root。Well。Under this。Circumstance。
-
-What you can do is following so static optimality， the idea is suppose each。Noode。X is accessed。
-
-Meaneting I do a search or an insertion or deletion on this with this note is the target T of x times。
-
-Okay， so I'm going to set for purposes of analysis the weight of x to Vt of x。
-
-And then what the accesslemma implies is that the amortized cost。Of accessing。
-
- which really means splaying X。Is big O of。Log of the sum of all。
-
- is this the total number of accesses？Minus the log of T of x。 And this is optimal。
-
-For any distribution of teas。😡，So pick your favorite number of times you want to access this node and number of times you want to access that node and number of times you want to access that node。
-
- go back to 374 and do the dynamic programming algorithm that generates the best possible binary search tree for that set of frequencies of nodes。
-
-😡，This will be the search time。Itll be the difference。
-
- it would be basically log of the fraction of searches that go to that particular note。
-
-So this is the best you can do information theoretically。
-
-And this is what sries give you now I want to emphasize here。
-
- I did not change the data structure at all。😡，This happened automatically。
-
-So the search tree is automatically adjusting for different frequencies of searches while at the same time pretending to be perfectly balanced。
-
-哎。There are a couple of others， for example， if I keep one finger on the data structure somewhere。
-
- it is static binary your search tree， I could either search by walking down from the root or search by walking up and then down from my finger。
-
-And if you do this correctly， the time for a search。
-
-Is proportional to the log of the distance from my finger to my target in rank space。
-
- so if I my finger on something that's close in rank。
-
-To the target thing I'm looking for instead of paying log n。
-
- I'm only paying log with that small vista。Or do the trees organize correctly？
-
-If I set the weight of a node to be one over the square of the distant difference in rank takes a little bit of magic here。
-
- you automatically get the right thing， you automatically get log of the distance to the finger。😡。
-
-Again， I've not modified the data structure， I didn't need to specify the thing in advance。
-
- I didn't in fact have to do the same analysis for different figures all at the same time。
-
- and it always works。😡，So there are a bunch of theorems like this that basically say。Yeah。
-
- there are circumstances where you want to do something more interesting than just perfectly balanced to binary trade。
-
-And most of those， we can prove that slave trees just do go automatically。
-
-Now there is one thing that we can't do。It's still open and it goes back to the move to front tourististic。
-
-The move to front Heuristic was in a factor of two of this is the best you could do。
-
- even if you could see in the future by rearranging the linkedlist。
-
-So we'd love to be able to say display train is within a constant factor， the total cost。
-
-Of the best possible self adjusting binary our tree， even if it can seem in the future。
-
-We don't know that that's called the dynamic optimality conjecture。
-
- it's probably the biggest open problem in data structures curves。
-
-And what I want to talk about on Thursday is。What we know about this。So we do know some things。
-
-There is a very real sense in which we are off by one and therefore know nothing。
-
-But we're close in one sense and far away in another， subtle， it's much harder than it sounds。
-
-But there's some really cool stuff here， so I'm going to talk about that on Thursday。
-
-I'm happy to answer questions， but we are out of time so thank you for your patience。
-
- I'll see you later。
+## 总结
 
 ![](img/8bb876ef3c53f577423e47310b87da26_21.png)
+
+本节课中我们一起学习了两种重要的数据结构。紧凑内存数组展示了如何通过局部重建和层次化密度阈值，在连续数组中高效维护动态序列，达到 `O(log² n)` 的平摊操作时间，并且这个界是最优的。伸展树则展示了一种巧妙的自调整二叉搜索树，通过将访问节点移动到根部的伸展操作，在平摊分析下获得了 `O(log n)` 的性能，并且自动具备静态最优性等令人惊叹的特性。最后，我们提到了动态最优性猜想这一未解决的挑战。

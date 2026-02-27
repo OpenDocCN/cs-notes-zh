@@ -1,1023 +1,139 @@
-# 010： Multiple-source shortest paths.zh_en -BV1kWFGzsEmN_p10-
+# 动态数据结构与算法：010：多源最短路径
 
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_0.png)
 
-engng。Just want to remind everyone that there'll be no lectures next Tuesday or Thursday because I will be in Pittsburgh。
+在本节课中，我们将学习如何利用动态森林数据结构，高效地解决平面图上的多源最短路径问题。我们将从回顾动态森林和平面图的基本概念开始，逐步构建出解决该问题的完整算法框架。
 
-And also no office hours next Friday。So I am having office hours。This Friday。
+## 动态森林数据结构回顾
 
- that would be a good time to come talk with me。If you have。Questions about the paper chase。
-
-I have a little bit more time after class today than I do on Tuesday。
-
- so I can also stick around and answer questions after the lecture。嗯。Okay， so。What？We。
-
-Talked about in the last couple of lectures。Is this a couple of data structures to maintain dynamic forests？
-
-So the idea is that I want my data structure to represent。Collection of vertex dis trees。
-
-I want to be able to connect these trees with new edges。
-
- I want to be able to take edges out to break trees into smaller trees。
-
-And I want to be able to ask questions about。And update information in。Subrees。
-
- if you imagine that every one of these trees has a root。hen I might ask， you， point a node and say。
-
-how the maximum value among all the nodes in your better descendants。Or about pads。
-
- I pointed anode and asked， tell me the maximum value among all of your ancestors。嗯。And so we had。
-
-One data structure。Based on oiler tours。That did subre stuff。We had another。嗯。呃。
-
-Data structure based on。Keeping a decomposition of each tree into vertex disjoint pads and representing each of those pads in a balanced binary search tree that could effectively deal with。
-
-Path queries and path updates。Um the。I'm not going to talk about this in any detail。But sort of the。
-
-State of the art。In dynamic forest data structures is something called a self adjusting top tree。
-
- this can handle both。So it can handle both subt operations， either queries or updates。
-
- and it can handle path operations， either queries or updates。And。At a very， very， very high level。
-
-The way self adjusting top trees are organized。Is。I。Simplified the tree。
-
- I imagine simplifying the tree by getting rid of vertices that have either degree one or degree two。
-
-And I do this over and over and over again， and this history of the way that I simplify my tree。
-
-Is easy to encode in a tree data structure where different levels of the tree correspond to different levels of resolution for the simplification of the tree so the two operations。
-
-That。嗯。You can imagine。One is called。A rake。This is a ra operation is the way you get rid of leaves。
-
-So the way that self-adjusting top trees are presented。
-
- you imagine that there's a cyclic order to the edges incident to each vertex。
-
- which is what you would normally get if you'd say drew the tree in the plane。
-
-Right the coordinates of the vertices would naturally define a counterclockwise order at each of the vertices。
-
- so what a ra operation does。Is it merges。An edge leading to a degree one vertex。Into the vertex。
-
- the next edge andcyclic order。So the result of this rake operation。Would be。Everything that's not。系。
-
-So this is break。So that edge kind of just got absorbed into here。
-
-The other operation is called compress。And here is you're getting rid of。A degree two vertex。
-
-So I'm compressing。This vertex away。And what the end result of that will be is I replace my path of length two with a path of length one。
-
-So the idea is you choose an independent set of edges in your tree and that can either be raed or compressed and you perform those operations。
-
-And this simplifies the tree， if you keep a record of all this simplification。
-
- you get this hierarchy of smaller and smaller trees eventually leading up to just a single edge。
-
-The history of that simplification is called a top tree。Top here is short for topology。
-
-But what it effectively means is， so I want you to imagine if I'm just the tree that I'm representing is just a long path of degree two vertices。
-
-What this would mean。Is you know， so any long path。You would essentially have a tree。
-
-That sort of encodes these edges being merged together。
-
-And this is exactly a balanced binary tree over the path in the same sense that S trees。
-
-Represent paths by balanced binary research streets。
-
-An in order traversal of that binary tree is the same as a left to right traversal of the path。U。
-
-For rakes。What you should imagine is。You've got。Sorry。You've got something。Really bush。
-
-
+上一节我们介绍了用于维护动态森林的几种数据结构。本节中，我们来看看这些结构如何应用于具体问题。
 
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_2.png)
 
-No， I want this to be black。I don want this to work。Um， that。
-
-
-
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_4.png)
 
-You know， a high degree vertex。嗯。With lots of degree1 vertices。And again。
+动态森林数据结构的核心目标是维护一个由多棵树组成的集合，并支持以下操作：
+*   连接两棵树（通过添加边）。
+*   将一棵树分割成更小的树（通过删除边）。
+*   查询和更新子树或路径上的信息。
 
- when you when you say the at the first level， I take these。
+我们讨论过两种主要的数据结构：
+1.  基于欧拉环游的数据结构，擅长处理子树操作。
+2.  基于路径分解（使用平衡二叉搜索树，如伸展树）的数据结构，擅长处理路径操作。
 
-Edges and I rake them to their their neighbors is essentially merging these pairs of edges into a single edge and so again i'm representing。
+目前，该领域最先进的结构是**自调整Top树**。它能够同时高效地处理子树和路径的查询与更新操作。
 
-The history of all of the rakes I can represent as。A binary search tree where again。
+自调整Top树的核心思想是通过两种操作反复简化树的结构：
+*   **Rake（耙）操作**：合并一个连接到度为1的顶点的边。
+*   **Compress（压缩）操作**：消去一个度为2的顶点。
 
- the in order traversal of that binary tree is the same as the cyclic order of those leaves。
+通过记录这些简化操作的历史，形成一个层次化的树状数据结构（即Top树）。本质上，它内部将用于处理子树操作的“Rake树”和处理路径操作的“Compress树”交织在一起。所有操作均能在 **O(log n)** 的摊还时间内完成。
 
-And so ultimately， what a top tree is。Is a collection of rake trees and compressed trees。
+需要注意的是，这些数据结构较为复杂，在实践中，只有当树的规模达到数万顶点时，其对数级优势才能抵消较大的常数开销。但从理论角度看，这是理想的结果。
 
-That are all glued together kind of in an alternating fashion into a large rooted tree data structure。
+## 平面图基础与多源最短路径问题
 
- self adjustings that's a mnemonic for the fact that the way that you collapse these things either by raking or compressing。
+现在，我们将理论应用于一个具体问题：**平面图上的多源最短路径问题**。这是由Philip Klein在2005年提出的。
 
-You've got choices， and so which binary tree you use to represent a collection of rakes versus or a collection of compresses。
+### 平面图与对偶图
 
- you can change by doing rotations and then under the hood。
+首先，我们需要了解平面图的一些基本性质。
 
- this is actually composed out of a bunch of s trees。First which are self adjust。
-
-But there's structures internally that represent。The rake trees kind of help you take care of subtre things。
-
-And the compressed trees help you take care of path things so it all gets glued together into a single data structure。
-
-That's as much as I want to talk about top trees。The the paper is actually fairly approachable if you're sort of comfortable with。
-
-If you're already comfortable with ST trees， then reading the， it's a very well written paper。
-
- I think， so it's worth looking at if you're curious about the details。U。But the point is。
-
-All of the operations that I talked about over the last two lectures。
-
- this one data structure can handle in log n amortize time。Now。
-
- one of the unfortunate things about this is this is a fairly complicated data structure。
-
- all of these， man， oilerture is not so bad。But all of these are fairly complicated things。And。
-
-They really only actually start to make sense when you have trees that have at least a few tens of thousands。
-
-Of vertices。So there are experimental results that say， you know， in practice。
-
-Just if you want to know what's in this tree， just traverse the tree。
-
- if you want to know what's on the path， just traverse the path。
-
-And unless you're doing very large graphs。Very large trees。
-
-Brte force linear time with a small constant in the O is going to beat these logarithmic things with fairly large constants in the amtd Big O。
-
-But from a theoretical standpoint。This is what you want。诶。
-
-I'm going to take my fake practitioner hat off now and just be a theoretician。Um so。
-
-First application that I want to talk about， that's probably going to take me entire lecture。Is。Di。😔。
-
-Multiple source。Shortest path problem。And this is specifically for planar graphs。
-
-Now this is going to require。A little bit of a tangent。
-
-Because I need to tell you a few things about planar graphs。
-
-I'm also going to have to remind you a little bit about how shortest path algorithms work in the sort of generic sense。
-
-嗯。But I think if you've had 374 or 473， especially if you've taken it from me。
-
-This this should just be reviewed， but the planar graph stuff people have seen in some detail。
-
- but not not necessarily things I need to show so let's just start with some basic definitions。Um so。
-
-APar graph。Means that it's possible to represent the graph。By。
-
-Having the vertices be distinct points in the plane。And the edges being line segments。
-
-Connecting those points and these are all。Interior disjoint。So for example， if I wanted to draw。
-
-Graph of the cube。I can do it like this。Okay。I deliberately skewed it。Doesn't have to be skewed。
-
-So this is a graph that has eight vertices and 12 edges。
-
- it's a planar graph because I can draw it in the plane without any of the edges crossing except edges that share endpoints obviously intersected those endpoints。
-
-So interior dis jointt just means they don't cross like this。
-
- I don't have a vertex in the middle of an edge anywhere， things like that。嗯。No。U。
-
-I'm going to play a little bit fast and loose here by not really distinguishing between the planar graph and its embedding in the plane。
-
- so technically a planar graph is just something that has a planer drawing like this。U。
-
-But it turns out if the graph is sufficiently interconnected， if it's three connecteded。
-
- then the embedding is in a formal sense unique， so I'm not really going to distinguish between the drawing and the graph itself。
-
-For this lecture。Right， so。Drawing。Divdes。The plane up into regions。U that are。Called the faces。
-
-Of the graph G。系。In particular， there is assuming I've really embedded this。
-
-In the plane and not on the sphere， there is one face。One face called the outer face。
-
-That is unbounded， goes out to infinity。Every other face is the interior of a polygon。
-
-The outer face is the exterior of a polygon。Tologically， it's a disc。He。Now。
-
-Every planer embedding like this。You could define another graph called the dual graph。
-
-Which is usually denoted G star。So it has vertices V star and edges e star。
-
-These star are the dual vertices。Are the faces of the original graphs？And。Well。
-
- E star is actually the same as E， so what I mean is in the dual graph， there is a vertex。
-
-For each face。Including the outer face。And if two faces share an edge in G。
-
-Then they are connected by an edge in G prime。So。Here are the edges。Of the。嗯。
-
-The dual graph now I am not drawing these edges as as straight line segments。So there's a theorem。
-
- which I won't prove。That says， if you can draw a graph。A simple graph using in the plane。
-
- using curves as edges， then you can also draw it。Using straight line segments as suchs。
-
- you just might need to move the vertices around。去。If you're used to thinking about ponic solids。
-
-The if G is the graph of the cube， then G star is the graph of a regular octahedron。
-
- so the duel of a six sided die is an eight sided die。嗯。So this is another。Plan your graph。
-
- it also splits up the plane into regions， so the dual graph has faces and every one of those faces contains exactly one vertex。
-
-Of the original graph G。So the duall faces。Are the vertices of my original graph。
-
-And the dual of the duel of G。Is not necessarily the same drawing but a topologically equivalent drawing of the original graph G duality is an in it's like you know。
-
-The original graph is normal Spock。The dual graph is evil Spock with a beard。嗯。
-
-Most of you weren't alive when that happened， so there's probably some some next generation or deep space9 equivalent of parallel universes。
-
-嗯。But these things go back and forth。And there's a very real sense that if you have an appropriate data structure for G。
-
- that can be interpreted as an appropriate data structure for G star。Okay。
-
- so just a little bit about。嗯。How these things are actually represented。
-
-So the formal mathematical buzzword here is rotation system。
-
- the idea is that I keep the cyclic order。Of edges。Incident。To each。Vertex。嗯。
-
-In terms of data structures， remember the textbook standard data structure for representing any graph is something called an adjacency list。
-
- you have an array with one entry per vertex that contains a pointer to a linked list of that vertices neighbors。
-
-That vertex his neighbors。In a normal adjacency list， the ordering within the list doesn't matter。
-
-If it does matter， you've given yourself a rotation system。
-
-And so when you're representing the planar graph， you actually do care about the order that things show up around a vertex。
-
- So if again I。Draw myself as。A simple planar graph。And I name a label these vertices。
-
-For indexing purposes， then my rotation system。Or my adjacency list， so vertex one would have a list。
-
-呃。Traditionally， this is done clockwise order， two， two， and then three， and then seven。
-
- and then this is a circular list so have a pointer back here。And this is encoding the fact that 237。
-
- those are my neighbors in clockwise order around one。
-
-And I record that information for every vertex Now the interesting thing is this is actually enough information for me to be able to trace out the edges and vertices around any face。
-
-OkaySo the idea is。Suppose I start walking， you know， actually， again， traditionally。
-
- I want to walk counterclockwise around this face in the middle。嗯。
-
-Then one way I can imagine doing this is to find the next edge in counterclockwise order around that face。
-
- I look at the next edge in clockwise order around three， the head。
-
-But then I make sure that it points outward instead of inward。Okay， so。I'll define。
-
-Really what I'm doing。Is each of these records in the the incident。
-
- the adjacency list data structure corresponds to。An edge and a direction for that edge。
-
-So I have some kind of。Permutation。That this is a。Per mutation。Of。The darts。
-
- which are just directed edges。Um， whichch is typically， I think the standard is clockwise around。
-
-The head of the dark。So these things that this is a little bit backwards from the way data structures are normally described。
-
- but the math works out better that the things that are in one's adjacency list，Represent the。
-
-E just incident to vertex 1， but all directed into vertex1。诶y。So the cycles of this vertex。
-
- this dart permutation are the vertices， there's one cycle for each vertex。I also need to store。
-
-Another permutation called Rev， this connects the record corresponding to the edge from A to B to the record for the directed edge going from B to A。
-
-So somewhere in the adjacency list。For vertex2。And so this would point， for example， to。I don't know。
-
- four and then one。And then。8。Again， going clockwise， and then this is the cycle。
-
-I would see I would have you know reversal pointers going back and forth between these two records sorry let me write this in a way that is actually slightly more readable one。
-
-Right，Reersal is。Another permutation of the arts。But it has order too。
-
- so if I reverse reverse a dart， I get the original dart back always。
-
- and the reversal of a dart is never equal to the dart itself。A。
-
-Then if you look at what happens when you compose these two permutations。
-
-So if I look at the reversal applied to the next。Reersal of next of a dart。Again。
-
- this is a permutation of the darts。And this is counterclockwise around。The face。To the left。
-
-Of the darts。This is formalizing what I said earlier。
-
-So if you have this adjacency list where the order matters and you've got these reversal pointers going back and forth。
-
-You can put a thin veneer of object oriented gobbledigu on top of it。
-
-And get access to this permutation， which encodes another adjacency list for dual graph。
-
-Instead of having explicit pointers， I now have to chase two pointers inside my next dual next method。
-
- but all the information is already there， I don't need any new data structure。
-
-So whenever you have a plan your graph。That's actually embedded in the plane where you know these permutations。
-
- you also have a data structure for its dual。I don't need to keep those separate。Okay。
-
- so the rotation system is technically this pair of permutations next in Rev。
-
- The rotation system for the duall is just revv next and Rev。All right。So。
-
-Data structures for planar graphs， it's the data structure you already know for graphs。
-
-It's just that it has more interesting properties if you do it carefully。嗯。So。I think probably。
-
-The most。Useful structural property。Of planar graphs。Has to do with spanning trees。Now。
-
- remember the goal here is I'm going to be talking about shortest paths。
-
-Something about shortest pads in planar graphs。If I fix a source vertex and I look at all the shortest pads going out to all of the other vertices。
-
- assuming the weights don't have any coincidences in them。
-
- those shortest pads are going to be organized into a spanning tree of the graph。
-
-so understanding how。Planar graphs behave with spanning trees is kind of。
-
-
+一个**平面图**是指可以画在平面上，使得其边仅在端点处相交的图。这样的画法将平面分割成若干区域，称为**面**，其中有一个无界的**外面**。
 
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_6.png)
 
-It's kind of crucial here。 So let me pick my， you know， favorite。
-
-
-
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_8.png)
 
-Spanning tree for this graph。I don't really have a favorite spanning tree， but you know。
+对于任一平面嵌入，可以定义其**对偶图 G\***：
+*   **顶点**：原图G的每个面对应G\*中的一个顶点。
+*   **边**：若原图G中两个面共享一条边，则在G\*中对应的两个顶点之间连一条边。
 
- this one looks。This one looks okay。So I've highlighted the edges of the spanning tree in blue。Okay。
+对偶图本身也是平面图，并且**对偶的对偶**拓扑等价于原图。
 
- so。Let T be any。Spanning tree。Of my planer Gffji。Okay。Now。
+在数据结构中，平面图通常用**旋转系统**表示。它不仅记录每个顶点的邻接表，还记录邻接边围绕该顶点的**循环顺序**。通过结合“下一个边”和“反向边”两个置换，我们可以从原图的表示中高效地推导出对偶图的结构，而无需额外存储。
 
-Let's look at the edges that are not in that spanning tree。And remember。
+### 树-余树分解
 
- every edge and G for every edge and G， there's a corresponding edge。In the dual Gji star。Okay。
+平面图一个非常有用且关键的性质是**树-余树分解**。
 
- so I'm going to let C star be the dual edges。Mean dual edges of G star。呃。hoz。Corresponding edges。
+设T是平面图G的一棵**生成树**。考虑所有**不在T中**的边，这些边在对偶图G\*中对应的边集C\*，恰好构成G\*的一棵**生成树**。
 
-In G R。Not。In tea。Okay。So remember the dual graph has a vertex for every face。
+这个分解是**对称**的：你也可以从对偶图的一棵生成树开始，得到原图的一棵生成树。这个性质源于拓扑学中的乔丹曲线定理。
 
-And now put the vertex for the outer face here and the edges I'm interested in are the ones that are not highlighted in blue。
+在本算法中，原图的生成树T将是我们的**最短路径树**。而对偶图的生成树C\*将帮助我们高效地定位需要更新的边。
 
- I'm not going to draw all of the edges in again， I'm only going to draw in the edges that I care about。
+### 最短路径算法回顾
 
-Well， I've got an edge here， and I've got an edge here， and I've got an edge here。
+回顾最短路径算法的通用框架（如Ford提出的松弛操作）：
+*   每个顶点v维护一个距离估计值 `d[v]`，初始时源点s为0，其他为无穷大。
+*   一条边 `(u, v)` 是**紧绷的**，如果 `d[u] + w(u, v) < d[v]`。
+*   **松弛**一条紧绷边 `(u, v)`：设置 `d[v] = d[u] + w(u, v)`，并更新v的前驱指针为u。
+*   算法不断松弛紧绷边，直到没有紧绷边为止。此时，`d[v]` 即为从s到v的真正最短距离，所有前驱指针构成一棵以s为根的**最短路径树**。
 
-And I've got an edge here。And I've got an edge here。What is that？What is that green graph？
+Dijkstra和Bellman-Ford算法都是这一框架的具体调度策略。
 
-It's a span tree。So it's a tree。It only uses edges in the dual graph。
+### 多源最短路径问题定义
 
-And it connects every vertex in the dual graph。So C star。This is。A spanning tree。Of Google graph。
+**问题**：给定一个平面图G，预处理该图，以支持高效的**距离查询**：查询从**外面**上任意顶点u到图中任意顶点v的最短距离。
 
-So this partition of the edges into a primal spanning tree and a dual spanning tree is called a tree co tree。
+一种朴素的方法是对外面上的每个顶点运行一次Dijkstra算法。如果外面有O(n)个顶点，总时间将是 **O(n² log n)**。
 
-Decomposition。U I'll write it as you know t comma C or sometimes C disin union t or you know。
+Klein算法的目标是**在O(n log n)时间内完成预处理**，并支持**O(log n)时间的查询**。这看似不可思议，因为可能存在O(n²)对不同的距离。关键在于，算法并不显式存储所有距离，而是通过维护结构变化的历史来支持快速查询。
 
- if I want to emphasize that this is a partition of the edges。
+### 算法核心思想：连续移动源点
 
- but really I want to think of this as as。Just the two parts of the。Two subsets of edges。
+算法的核心洞察是：当源点沿着外面连续移动时，最短路径树的变化是**稀疏且结构化的**。
 
-One is a primal span tree， the other is a dual spinning tree。This。
-
-Prefix Co is a pretty standard thing to attach to something that indicates that it's in the duel。
-
-So a co tree is a tree in the dual graph。A co cycle is a cycle in the dual graph。
-
- a co path is a path in the dual graph， a co flow is a flow in the dual graph。Um。So notice。
-
- I said you can pick any spanning tree you want。I could also say， because dualities and invol。
-
- the duall of the dues， the original graph， I could also start with any spanning tray I wanted of the dual graph。
-
-And the edges in the original graph that that spanning tree doesn't hit is a spanning tree of the primal。
-
-U。啊。The proof that this always works。嗯。Is essentially this。
-
-Lovely theorem in topology called the Jordan Curf Theorem。
-
-which says that if I have a closed curve in the plane。
-
- it that closed curve partitions the plane into a bounded part on the inside and an unbounded part on the outside。
-
-Um， so。The reason that。C star， that green thing is connected is because the3 T doesn't have any cycles。
-
-If T had any cycles， then by the Jordan curve theorem。
-
- there'd be some faces on the inside and some faces on the outside。
-
- and they wouldn't be connected in the dual subgraph。Conversely。
-
-The dual subgraph is connected or sorry is acyclic because the original tree is connected。
-
-If the original tree were disconnected， then there'd be a way of connecting a cycle of faces that separate one part of the original blue subgraph from the other。
-
-嗯。So another way that this is sometimes。phhrased is that there's a classical theorem by Whitney。
-
-That says。You knowCs in G correspond by duality to minimal edge cuts。In G star。
-
-Minimal by inclusion subsets of the edges， so if you delete those edges， the graph is disconnected。
-
-An edge cut is any collection of edges whose deletion disconnects the graph。
-
-I need minimal in there for technical reasons。系。So being acyclic in the primal is the same as being connected in the dual。
-
- being connected in the primal， the same as being acyclical in the dual。
-
-So he gets this lovely symmetric thing。Now， ultimately， what I'm going to be doing。Is。
-
-That blue spanning tree。Is going to be a shortest path tree？
-
-But I'm going to be making changes to the weights of some edges。
-
-And when I make changes to the weights of those edges。
-
- every so often I need to change the shortest path tree。
-
-But I need to figure out where I need to change the shortest path tree。 And to do that。
-
- I'm going to use a data structure。That is built on top of that dual spanning tree。
-
-And I'm also going to be using a dynamic forest data structure for， in fact， both of those trees。
-
- each of those trees is going to be stored in its own dynamic forest data structure。
-
-Most of what's going to happen in the original spanning tree， the actual shortest path three。
-
-Is going to be subtree operations？Most of what's going to happen in the dual spanning tree is going to be path operations。
-
-And again， there's， again， some nice symmetry here that at least in some intuitive sense goes back to this duality between connectivity in acyclity or cuts and cycles。
-
-I don't have a good way of formalizing that， really。
-
-It's probably something about mattris and dual mattros。
-
- but it's nice and symmetric and that's one of the reasons why。I like this particular application。
-
-Okay。So。This isn't much fire hose as I want to point at you about planar graphs。
-
-If the only thing that you ever remember about planar graphs is this idea about tree co treaty compositions or what's sometimes called interdigitating trees。
-
-I'll consider that a win。The stuff about the data structures。That's useful to know。
-
-but is not really going to play as an important role in the application。
-
- the algorithm we're going to talk about as as this decomposition。Of questions。Okay。So。
-
-Quick reminder。Den。About how shortest path this works。And this is。Sort of a。
-
-A sort of generic way of thinking about shortest past that was first formalized by Lester Ford in the 1950s。
-
-Bard， you may know from。Belman Ford， that shortest path algorithm。
-
- or if you took 473 and you're seeing flows， Ford， Fkson， it's the same Ford。嗯。But the idea is。
-
-There's a sort of generic way about thinking about shortest path algorithms， so in the input。
-
-I'm going to imagine that I have a directed graph。know vertices and edges and every edge。Has。
-
-A weight。Or yeah， maybe if you want to think of it as length。
-
-That would be better because that's the right intuition to have in this context。Hey。
-
- every edge has a length。And the idea is。Among other things， my output。
-
-OhAnd I need a particular starting vertex S。The output is。D be。f。Every vertex v。This is the link。
-
-Of the shortest path。From S to B。And need to know this for every vertex state。哎。
-
-I'm going to assume to keep things simple that these edge lengths are all positive because。
-
-Can make things work with negative edges， but it gets more complicated so I don't want to go there。
-
-Um。So。In the middle of the algorithm， in the middle of every shortest path algorithm。U。So during。
-
-The algorithm。We we start， you know， D we're storing some value at。Each vertex。
-
- which is an overestimate。Of the true。Distance from S to B。It might be bigger， might be equal。
-
- it can't be smaller。At the very beginning of the algorithm。
-
- I set S dot disk to be zero because I know that the shortest path in S2 itself。😡。
-
-Doesn't traverse any edges and sum up the weights of zero edges， I get zero。
-
-The V dot disc for any other vertex initially is set to be infinity。I don't know anything。
-
- but I know that this is an overestimate。 So this is what I'm going to go with。And then。
-
-We'll save that in edge。Is tense。Yes。The distance。At the。Is the sorry。Notation， demons。
-
-If the distance currently stored at V。Is bigger than the distance currently stored at you。Plus。
-
- the length of the edge from U toV。So the idea here is， okay， here's my vertex U， here's my vertex v。
-
- vertex U thinks right now it's overestimate of the distance is5。
-
- here is an edge that has I link three and V thinks itss overestimate of the distance is 15。
-
-Clearly something is wrong。Right， because that five inside you， what that means is。
-
-That there is a path。Of link five。Going from S to U。
-
-And that 15 means there is a path of length 15 going from S to V。But that latter path of length 15。
-
-Can't be the shortest path to be。Because there's a shorter one。
-
-Namely the one that goes through U and then crosses the edge from U to V。All right， so we relax。
-
-U to V。This I set V dot disk to be equal to U dot disk。Plus the length from U to V。
-
- and usually you also store you know， to be able to recover the structure of the tree for every vertex remembers its predecessor in a shortest path from S。
-
-So the predecessor of V used to be down here。This is the old predecessor of the。
-
-And now to relax that edge， I set this to be eight。
-
- I removed this predecessor and put it here instead。
-
-So now this edge joins the tree defined by the predecessor pointers。
-
- and that edge leaves the tree defined by the predecessor pointers。Okay。
-
- so in an sort of intermediate state。The predecessor pointers， if you follow them。
-
- all lead back to the source。And so assuming all the distance values are finite。
-
- so the predecessors are well defined， this means I have a graph。
-
-Of directed edges leading back to the source that has one edge for every vertex except s。
-
- so it has exactly v minus1 edges。And because everything connects to us， it's a connected graph。
-
-And a connected graph with v minus1 edges is a tree。So the predecessor pointers。嗯。
-
-The predecessor pointers define a tree。In fact， it's。Ignoring the business about infinities。You know。
-
- once I get to a finite state， these things define a tree and the main theorem is。When。Every。Edge。
-
- sorry。When I reach a state where no edge。Is tense。
-
-Then the distance value stored at each node V is equal to the true distance。From S to V。
-
-This is how Dxster's algorithm works。I set S to be zero。
-
- I set just to every other vertex to be infinity， and then I look for tense edges by looking on the frontier。
-
-I find a tense edge。 I relax it that that that new edge now becomes part of the growing tree。
-
- so Dysters just scheduling， looking for tense edges in a careful way。 Belman Ford does this。
-
-Belman Ford is literally look at every edge if it's tens to relax it。
-
- keep doing that until it settles down。嗯。U， so every。
-
-EveryEvery shortest path algorithm looks like this。
-
-So I'm going to exploit this structure in the algorithm that we're going to talk about。
-
- but I just need to remind you of this basic property of shortest paths， so any questions about this。
-
-Hopefully this is review。Okay。So。What is the MSSP problem， multiple source shortest path。
-
- this was defined by Philip Klein， I think it was 2005。So the idea is the following。
-
- I have a planar graph G。And I want to。Pre process。This。Planar graph。Gi。4。Distance queries。
-
-So I wanted to， you know find the distance from U to V where。You is on the outer face。
-
-And V is anywhere。Now， one way to do this is to run Dkester's algorithm at every vertex on the outer face。
-
-And well， now I've got all the distances in the table， I just look it up。So the naive algorithm。Is。
-
-I'll run Dtra。At。Every。😔，Outer。Vertex。This will give you an overall running time of n square log n in Nor worsts case diykstray Okay so any planar graph that has a linear n vertices also has order n edges so don't need to worry about keeping track of vertices and edges separately Dyketra's algorithm runs in。
-
-Edges log vertices time that's just n log n and I'm running this at every vertex of the outer face。
-
- but it could be all the vertices are on the outer face or could be a third of the vertices are on the outer face。
-
- so this is going to just end up being n log n times n。嗯。U。Klein's algorithm。啊。
-
-Runs an analog in time。And at first， you should not believe that this is possible。
-
-Because literally what I'm doing is I'm encoding what is potentially a quadratic number of distances。
-
-In the Zoo data structure。So I potentially have a linear number of vertices on the outer face but so U。
-
- there's omega n possibilities and by definition V， there are n possibilities。
-
- so there are omega of n squared in the worst case， different distances that I might need to look up。
-
-And somehow I am computing them all in in log N time。Each query takes。Um。Log end time。
-
-As opposed to the other way， if I denied the solution。
-
- I just build a big lookup table be it constant time。
-
-That makes me feel when I first saw this that made me feel a little bit better that it's not just an explicit encoding of all in square of those distances。
-
-But it still feels a bit weird because I。It still feels like I need。
-
-To do something to compute those n squared distances。So the way this algorithm works。
-
-And I'm specifically describing a slight reformulation of this。嗯。
-
-This took a while for the journal version to come out。嗯。So I'm going to imagine first。
-
- I'm going to pick some vertex s and I'm going to build。The shortest path tree。
-
-Rooted at us to the rest of the graph。嗯。But now what I want you to imagine is。This is just S1。
-
-Now later， I want to build。嗯。Shortest path three rooted at the next vertex on the outer face S2。
-
-I don't necessarily need to build S2 from scratch。It's possible。
-
- especially if this is a really big dense graph and the edge between S1 and S2 is really short that when I move the source for T from S1 to S2。
-
- most of the tree stays the same。And so what I'm actually interested in computing isn't。
-
-The shortest path three rooted at S2 completely from scratch。
-
- one way that you could think about this is I want to maintain the shortest path three。
-
-And do the necessary changes required to move the source vertex from S1 to S2。Or if you prefer。
-
- I want to know what the difference between those two trees are。Okay， so start。I， you know， compute。
-
-呃。Let's call this T1 is the。Shortest path three。Rooted at S1。 And then I want to compute。T1 minus T2。
-
- t3， minus T2， t4 minus t3 up until whatever the very last。You know。
-
- however women eat their k vertices on the boundary， on the outer face。
-
-So I'm not computing all of those shortest path trees。From scratch。Rather I'm computing。
-
- you can think of it as I'm computing a set of instructions that says， oh。
-
- you've already computed T1， great， here is how you would modify T1 to get T2。
-
-And those modifications are all going to be of the form， change this predecessor。
-
-Swap an edge into the tree， replacing an edge that used to be in the tree。
-
-Take tree take an edge out of the tree， put an edge back into the tree。Hey。
-
- what have we been talking about for the last two days。
-
- maintain a tree and do some information where I'm pulling edges in， taking edges out？
-
-This is a tailor made for dynamic forest data structure。系。So。The reason why this works。Is。You know。
-
- theorem。The a。Total number of pivots。ThisThis idea of relaxing an edge。
-
- removing an edge from Spanish tree and replacing it with a different edge。
-
- reconnecting those two trees， that's called a pivot。
-
-There's a theorem that says the total number of pivots is on the linear。
-
-And this is something specific about planar graphs。So this is not not true for general， I mean。
-
- you could define this whole multiple source shutters path problem for。
-
-Any graph at all where you have any cycle that you want to drag the source for sex around。
-
- but specifically when the graph is plainar and you're moving around the outer face。h。
-
- there's another， there's a proof using the Jordan Curf theorem that the total number of changes that you need to make to the tree is only order in。
-
-I want to hold off on proving that。Um， because。I want to focus on the data structure side of this rather than on this particular feature of the analysis。
-
- but if there's time or if you're curious， I can show you why this is true in a bit。嗯。All right。So。
-
-This means that now our goal。Is。Login。Per。对的。As I move the tree around and I discover， hey。
-
- here's an edge that should be in there that's not。The time to identify that edge。
-
- identify which edge it should replace and actually perform the necessary updates to my data structures。
-
-Should all be loin。And then because there， I only need to invoke that operation a linear number of times。
-
- the overall running time will be at Logan。But。All right。So。Here's how。I'm going to formulate this。嗯。
-
-I'm going to pick two consecutive， I'm going to try to avoid subscripts here。
-
- I'm going to pick two consecutive vertices on the outer boundary。
-
- and I'm going to imagine that the source vertex S is moving continuously from U to V。Okay。
-
- now at all times， I want to maintain。The shortest path tree rooted at us。Now。
-
- I'm describing a continuous process。That if I were really to do it precisely the way I described。
-
-Would mean some vertices have a distance value that is decreasing continuously。
-
- other vertices have a distance value that's increasing continuously。
-
- and so if I were really doing this continuously， I have to constantly be changing those distance values。
-
-So I'm not really going to do that， what I'm going to do instead is say at some point as I'm moving S from U to V。
-
-I will need to make a change to the source path tree。That will be a pivot。
-
-And then I'll update all of the data， all of the data stored in my data structures。
-
- to say as if I had done the continuous simulation up to exactly that pivot point。喂y。mAll right。
-
- so let me。I think this will start to become clear as I describe how this works。
-
-So with'mitting a few boundary cases for the moment。
-
-I'm imagining now my shortest path tree here is rooted at S， now S。
-
- because it's in the middle of that edge between U and V only has two outgoing edges。
-
- one going to U and one going to V， and so the shortest path3 is naturally going to divide into the part where the shortest paths go through U。
-
- the part where the shortest paths go through V。Now I'm going to color all of the part of。
-
-The shortest path tree that goes through V。In blue。
-
-And I'm going to color the part of including this edge here。
-
- and I'm going to color the part of the shortest path tree that goes through U red。
-
-And the reason why I choose these colors。Is。That。Um。As S moves。From。U to the。Distances。
-
-In these subre。Are decreasing。And distances。In use subte。Or。Increasing。Now， this is。Phenomenon。
-
- this familiar to people who have done any study of astronomy called the cosmic Redshift。
-
- the universe is expanding， the way we know that the universe is expanding is because we have some idea of what the spectrum of stars should look like。
-
- but the stars' spectrum is shifted to the red because those stars are moving away from us and so the wavelengths of light are being stretched。
-
-And red is at the higher wavelength end of the visible spectrum。
-
- things that are moving towards us have their light shifted to the blue end of the spectrum because moving toward us。
-
- the wavelengths are being compressed。So red is moving away from us， blue is moving towards us。
-
-So all of the things that are happening in the blue， all the vertices in the blue subt。
-
-Have their distances？Decreasing。And decreasing all at a constant rate。
-
- because the only thing that's changing in this picture is the position of S。
-
-So all of the blue vertices have distances， they're going down， but they're going down。
-
- let's say at unit speed。All of the vertices in the red subre， their distances are going up。
-
- but again， because the only thing that's changing is the length of this edge from U to S。
-
-All of those distances are going up at unit speed。
+具体来说，考虑外面上的两个相邻顶点U和V。我们关注将源点从U连续移动到V的过程。在此过程中，我们维护以当前源点S（位于边(U, V)上）为根的最短路径树。
 
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_10.png)
 
-No。Remember。This business about。
-
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_12.png)
 
-You know， if no edge is tense， then we've got the correct shortest path tree。
-
- but if we ever see a tense edge， we should pivot it into the tree。By relaxing that edge。
-
-But now the slack of an edge， how much room the opposite of tension。 So let me define so define。
-
-The slacklack。Of an edge from x to y this is。How much room it has to change before it becomes tense？
-
-So you can write this as。Why do dis？minus。😔，Exdoist。Minus length。From x to y， is that right？No。
-
- I've got this exactly backwards， sorry， plus plus minus。Okay。
-
-How much longer is the path that takes the current shortest path to x and then the edge from x to Y。
-
- how much longer is that path than my current shortest path to Y？
-
-As long as the slack is positive everywhere。The shortest path tree is correct。
-
-But slackcks are changing because distances are changing。And in particular， if I look at。
-
-An edge like this。It's called this X and this Y。X's distance is going up。
-
-Let make sure we've got this right。Sorry， I've swapped X and Y。Excuse me。So let me fix this。
-
-So here is x， x's distances going down。Why is distances going up？
-
-So the slack of this edge from x to Y is going down。 It's positive。At the beginning。
-
- because that's an edge that doesn't want to be in any of the shortest batteriesies when I started。
-
- but over time it's getting closer and closer and closer to being tense because its slack is decreasing。
-
-So。The slackck。From x to y is decreasing。If X is red。And why is blue？And symmetrically。
-
- it's increasing。If。X is blue。And Y is red， but I don't really care about slacks increasing because nothing interesting happens there。
-
-The problem is that if the Slack ever goes negative。That edge is now tense。
-
-And so that edge wants to pivot into the tree。Okay， so。Let's call this。嗯。
-
-You know an edge whose slack is decreasing， we'll call it active。
-
- it just means it's pointing from red to blue。Right， and so now our goal。Is find。And notice。
-
- I should also says。Because distances in the blue tree are going up， are going down at unit speed。
-
- distances in the red tree are going up。crap if I got into the red and blue backwards again。
-
-Have I got the red blue correct or not？Confusing myself here。Red is going up， red is getting longer。
-
- so no， I was right before， okay， I'm sorry。This is backwards， so this would be why。This should be X。
-
-And I'm worried about this edge going like that。So at some point because the distances in the blue part are going down。
-
- at some point it's going to be cheaper to run up the blue path to X and cross the green edge。
-
-Because that path is getting shorter than it is to run up the red path to why。Okay， so。
-
-It's decreasing if x is blue。NY is red and increasing otherwise one。Okay。
-
-All the blue distances are decreasing at unit speed。
-
-All of the red distances are increasing at unit speed。😡，So all of the active slacks。
-
-Are decreasing that speed two？They're all decreasing at exactly the same rate。
-
-So the goal here is to find the next。Active。Edge。That。Becomes。Tense。
-
-But that's the same as the active edge。With。Minimum。Slack。1。So if I can find the edge。
-
-From blue to red。That has the smallest possible slack。
-
-That's the edge that is going to become tense first as I move S from U towards V。
-
-So that is the edge that is the first one that's going to pivot in。
-
- so I will add Xy to the spanning tree， replacing whatever edge used to go into Y。
-
-I'll recolor all of the parts of the search tree that are hanging off of Y。
-
- so again in the interest of making this picture slightly more interesting。
-
- you should imagine that you know there's more stuff over here hanging off of Y when I do that pivot。
-
-All of that stuff hanging off of Y that's further away from the source。
-
-Is going to switch colors from red to blue。Okay。So。When。We。😔，Pivot。
-
-And when we relax the edgejectex to y all。The sorryrry。First of all， Y dot predecessor becomes X。
-
- but more interestingly， the sub tree。Rooted。At Y becomes blue。
-
-It's now all of that stuff is starting to decrease。Oh， yeah， sorry。Now。
-
- one of the things that this means is as you pivot things in。
-
-Parts of the tree that used to be red become blue。Which means once something pivots in， it's blue。
-
-The only things that can move it out are red。So you're actually going as long as you。
-
-Process things in the right order。You're actually going to execute precisely the minimum number of pivots you need。
-
-To get from the subte rooted at U to the subt rooted at V。
-
-Is it's sort a monotone process of initially the tree startss out almost entirely red and over time it evolves to the tree being almost entirely blue。
-
- but it involves in this nice，Moitone way， red becomes blue， never the other way around。
-
-Only politics were that simple。嗯。Okay so this means that you're actually executing the minimum number of pivots。
-
-Because。Um。Nothing ever backs up。None of these pivots are ever undone or redundant。Once you pivot。
-
- you've found an edge that's going to survive all the way till the root is V。O。So。
-
-Originally I said hey， we want to do some things with treeco treaty compositions。
-
- why do tree co treaty compositions all up here and this is how do I find。
-
-The active edge with minimum slack。And the way to think about this is to ask。Well。
-
-The active edges aren't in the shortest path tree， so they're in this complementary dual spanning tree。
-
- they're in the co tree。But where are they in the co tree？Well。嗯。
-
-There's this nice little dotted line here。That you can draw and eventually actually going。
-
- going sort of through S and around the other side。
-
- that this nice closed loop that separates the blue subtre from the red subree。But in particular。
-
- this path crosses over the edge UVV， I don't know， there's some dual vertex here， I'll call that a。
-
- some dual vertex here， I'll call that B。Look， I have a path。From A to B。
-
-That's actually going to show up as a path in the dual spanning tree。
-
-And it's the path connecting in the dual that's connecting the faces on either side of the edge UV that I'm dragging the source along。
-
- so it's a path where I know the endpoints。And so now when I'm the pivot finding the next pivot。
-
- I'm asking， hey， here's this tree， the dual spanning tree。Here are two endpoints。
-
-Find me the minimum slack of all edges along this path。Again。
-
- this is exactly what these dynamic forest data structures are built for。All。Active。Edges。啊。Have。
-
-Duals。On a known。Pass。In the complementaryary dual spanning tree。OkaySo finding the tensest edge。
-
- finding the edge that will become tense first。Is doing a Minpath query in this dual spanning tree。
-
-Okay so the whole process is going to look something like this。I'm going to say， okay， X。
-
- Y is the tensest。Active。Edge。This is。
+这棵树会自然地被分成两部分：
+*   **红色子树**：通过U到达的子树。随着S远离U，这部分中所有顶点的距离都在**增加**。
+*   **蓝色子树**：通过V到达的子树。随着S靠近V，这部分中所有顶点的距离都在**减少**。
+
+所有连接**蓝色顶点到红色顶点**的边（称为**活动边**）的**松弛量**（slack）都在以**恒定速率（2倍速）减少**。松弛量的定义是：`slack(x, y) = d[y] - d[x] - w(x, y)`，其中x是蓝点，y是红点。
+
+当一条活动边的松弛量减少到0时，它就变得紧绷，需要进行**枢轴旋转**：将这条边 `(x, y)` 加入最短路径树，替换掉原来进入y的树边。同时，以y为根的整个子树将从**红色变为蓝色**。
+
+一个关键定理（利用平面图和乔丹曲线定理证明）指出：在将源点沿整个外面移动一圈的过程中，**枢轴旋转的总次数是O(n)**。这意味着树的变化是稀疏的。
+
+### 算法流程与数据结构应用
+
+因此，算法流程如下：
+1.  初始化：计算以外面某个顶点为源的最短路径树T及其对偶生成树C\*。
+2.  依次处理外面的每条边 `(U, V)`，模拟将源点从U移动到V：
+    a. **找到下一个枢轴**：在所有活动边（即从蓝点到红点的边）中，找到**松弛量最小**的那条边 `(x, y)`。其松弛量决定了源点需要移动的“距离” `Δ = slack(x, y) / 2`。
+    b. **更新距离和松弛量**：
+        *   所有红点的距离 `+Δ`（子树更新，在T上操作）。
+        *   所有蓝点的距离 `-Δ`（子树更新，在T上操作）。
+        *   所有活动边的松弛量 `-2Δ`（路径更新，在C\*上操作）。
+    c. **执行枢轴旋转**：
+        *   在T中，连接 `(x, y)`，断开原先进入y的边（先Cut后Link）。
+        *   在C\*中，进行互补的操作：断开 `(x, y)` 的对偶边，连接刚被T踢出的边的对偶边。
+    d. 重复步骤a-c，直到源点到达V，此时最短路径树已更新为以V为根的树。
+3.  为支持查询，我们需要记录整个过程中每一刻的最短路径树状态。这可以通过**持久化数据结构**来实现，使得我们能在O(log n)时间内查询历史上任何源点对应的距离。
+
+**如何高效找到松弛量最小的活动边？**
+这正是对偶生成树C\*发挥作用的地方。可以证明，所有活动边的对偶边，恰好位于C\*中连接两个特定面（即边(U,V)两侧的面）的**路径**上。因此，“查找最小松弛量活动边”等价于在C\*的某条路径上进行**最小值查询**。这正是动态森林数据结构（如Top树）所擅长的**路径查询**操作。
 
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_14.png)
 
-A min path。
-
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_16.png)
 
-Quary。In Cstar。Okay， so and I look at the slack of XY。
+### 总结
 
- this is going to tell me how much I need to move so because everything is changing at speed2。
-
- the amount that I actually need to change the distance I need to move s is half of that。嗯。
-
-So what information now do I need to update so I need to add。Delta to all。Blue。Oh sorry， again。
-
-Go this backwards to all red distances。This is a。Subre。Update。In T。
-
- I also need to subtract Delta from all blue distances。That's another subree update。
-
-I need to subtract。Two times Dlta from all。Active。Slacks。This is a path。Update。
-
-Then I need to actually do the pivot， so this is a cut and a link。In tea。
-
- and this is also a cut and a link。In C Star。Um， the the actual。
-
- the actual pivot is remove this edge from that I'm eliminating from the shortest path tree and glue in its replacement。
-
-Remove that replacement edge from the dual spanning tree and glue in the edge I just kicked out。嗯。
-
-And so this is the process of identifying the next pivot and executing it。All right。
-
- so I guess I should say here， you know， relax。So this is。
-
-A path query and a path update in the complementaryary dual spanning tree and the structural changes in the complementaryary spanning tree。
-
- it's a subtree update and again structural changes in the primal spanning tree。And now at any time。
-
-I could ask， hey， what's the distance stored at this node？
-
-This is essentially like a path query where both ends of the path are the same or a subt query where both end the root of the subt doesn't have anything underneath it。
-
-So by navigating through the dynamic forest data structure for T。
-
- at any time I can retrieve shortest path distances。So altogether， this pivot takes me log in time。
-
-Right， so。Order， log in time。Per。Pivot。嗯。The only piece I haven't told you is。
-
-Like if I already know in advance what all of the distance queries are going to be。
-
- I could just answer them as they show up， you know as my source vertex happens to lie on the correct starting point for the distance query。
-
- I just look up in the tree what the distance is I'm looking it up in this dynamic forest structure so it still it takes me log in time。
-
-If I don't know them all in advance。Then I have to record the history of the evolution of the shortest path tree。
-
- the history of all these pivots into a so-called persistent data structure。
-
- but it's possible to do that in a way that I can access any previous version。
-
-And query that tree as if it were the current version。
-
-I'll talk about persistent data structures later in the semester。We're out of time。
-
-I'm happy to answer more questions。嗯。but that's what I got for pingraphs。Thank you。Yeah。
-
-
+本节课中我们一起学习了：
+1.  回顾了动态森林数据结构，特别是能同时处理子树和路径操作的自调整Top树。
+2.  介绍了平面图的基本概念，包括对偶图和关键的**树-余树分解**性质。
+3.  回顾了最短路径算法的通用松弛框架。
+4.  定义了**平面图多源最短路径问题**，并阐述了Klein算法的核心思想：通过连续移动源点，并利用最短路径树变化的稀疏性。
+5.  详细说明了算法流程，展示了如何将**子树更新**（在最短路径树T上）和**路径查询/更新**（在对偶生成树C\*上）完美地结合，通过动态森林数据结构在O(log n)时间内完成每次枢轴旋转。
+6.  由于总旋转次数为O(n)，因此总预处理时间为O(n log n)，并能支持O(log n)的查询时间。
 
 ![](img/94db031b59a1dbc7be24bb9b4535eec1_18.png)
 
-嗯。上班。
+该算法是动态图算法与计算几何图算法结合的一个优美范例，充分展示了数据结构在优化经典问题中的强大威力。
