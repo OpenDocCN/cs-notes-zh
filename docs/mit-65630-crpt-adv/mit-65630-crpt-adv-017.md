@@ -1,4 +1,4 @@
-# 密码学高级话题｜6.5630：第9讲：BARGs 蕴含 SNARGs 及与非信号 PCPs 的联系（第二部分）
+# 017：BARGs 蕴含 SNARGs 及与非信号 PCPs 的联系（第二部分）
 
 ![](img/26ee5353db30f4fe4d8e577d317b0f70_0.png)
 

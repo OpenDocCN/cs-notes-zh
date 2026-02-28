@@ -1,4 +1,4 @@
-# 密码学高级话题：9：BARGs 到 SNARGs 的构造与连接（第一部分）
+# 016：BARGs 到 SNARGs 的构造与连接（第一部分）
 
 ![](img/093088f648854fedd6c5b8dd8cebf641_0.png)
 

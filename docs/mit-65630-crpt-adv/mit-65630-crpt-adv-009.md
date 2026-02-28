@@ -1,4 +1,4 @@
-# 密码学高级话题｜6.5630：课程5：Kilian-Micali协议，第二部分
+# 009：Kilian-Micali协议，第二部分
 
 ![](img/077e0223a33d1995a8474ec65d045c3e_0.png)
 

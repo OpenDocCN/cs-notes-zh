@@ -1,4 +1,4 @@
-# 密码学高级话题｜6.5630：第5讲：Kilian-Micali协议，第一部分
+# 008：Kilian-Micali协议，第一部分
 
 ![](img/f0d882db04f44cebb49d1bb158b5e990_0.png)
 
