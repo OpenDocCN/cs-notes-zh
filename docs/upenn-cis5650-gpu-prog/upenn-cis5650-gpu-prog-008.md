@@ -1,4 +1,4 @@
-# GPU编程与架构：第5讲：CUDA性能优化 🚀
+# 008：CUDA性能优化 🚀
 
 ![](img/fcda9dbc0d287842e1efc1d8f2f7c16c_1.png)
 

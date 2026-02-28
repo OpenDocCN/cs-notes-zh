@@ -1,4 +1,4 @@
-# GPU编程和框架：3：WebGPU 入门教程 🚀
+# 013：WebGPU 入门教程 🚀
 
 ![](img/27abea06e675c0ec2dc4e187af5c1777_1.png)
 

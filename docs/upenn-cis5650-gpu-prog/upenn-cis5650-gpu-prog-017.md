@@ -1,4 +1,4 @@
-# GPU编程和框架：第11讲：Vulkan实验一与高斯溅射项目介绍
+# 017：Vulkan实验一与高斯溅射项目介绍
 
 ![](img/3a23afc523800bfaacb053f8b5862fcf_0.png)
 

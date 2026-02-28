@@ -1,4 +1,4 @@
-# GPU编程和框架：10：WebGPU计算与CUDA高级主题
+# 016：WebGPU计算与CUDA高级主题
 
 ![](img/c775c4a3fdaf91bfb870503831fce34a_1.png)
 

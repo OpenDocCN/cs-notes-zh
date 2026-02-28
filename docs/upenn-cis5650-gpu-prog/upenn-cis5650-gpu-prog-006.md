@@ -1,4 +1,4 @@
-# GPU编程和框架：课程编号：NVIDIA Nsight Graphics 工具介绍 🚀
+# 006：NVIDIA Nsight Graphics 工具介绍 🚀
 
 ![](img/496db206779fbd8c3e4f6920c270de8a_0.png)
 

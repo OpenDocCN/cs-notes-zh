@@ -1,4 +1,4 @@
-# GPU编程和框架：9：从CUDA到WebGPU的SAXPY计算教程 🚀
+# 014：从CUDA到WebGPU的SAXPY计算教程 🚀
 
 ![](img/20cb9720d4b8b89b9cfd6e59e05c448f_1.png)
 

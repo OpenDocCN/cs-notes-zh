@@ -1,4 +1,4 @@
-# GPU编程和架构：第5讲：GPU架构概述 🚀
+# 005：GPU架构概述 🚀
 
 ![](img/aa62caa0e4818d45a2e236d0a73eeaed_0.png)
 
