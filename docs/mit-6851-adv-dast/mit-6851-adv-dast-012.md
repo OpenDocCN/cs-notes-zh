@@ -1,4 +1,4 @@
-# 高级数据结构：12：Fusion Trees
+# 012：Fusion Trees
 
 ![](img/76569c16b61fefd4ed29628579450895_1.png)
 
