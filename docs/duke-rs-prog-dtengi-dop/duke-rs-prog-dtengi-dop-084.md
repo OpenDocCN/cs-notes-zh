@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：2-3：构建BigQuery到Colab的数据管道 📊
+# 084：构建BigQuery到Colab的数据管道 📊
 
 ![](img/d41d61ae5e7b12aae410d4fa00f39944_0.png)
 

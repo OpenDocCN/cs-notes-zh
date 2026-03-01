@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：51：使用Rust调用AWS S3存储 🚀
+# 051：使用Rust调用AWS S3存储 🚀
 
 ![](img/2e0ea2c22042911ff0f24fcba0949722_0.png)
 

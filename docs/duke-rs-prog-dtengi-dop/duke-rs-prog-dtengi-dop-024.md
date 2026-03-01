@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：24：使用Rust绘制简易ASCII图表 📊
+# 024：使用Rust绘制简易ASCII图表 📊
 
 ![](img/d0f6cf210883824ca2842ac7db04ff2b_0.png)
 

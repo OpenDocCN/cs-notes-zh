@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：30_02_07：连接Prometheus与Grafana 🚀
+# 119：连接Prometheus与Grafana 🚀
 
 ![](img/a6736d5debec587447a62ab15a5205e5_0.png)
 

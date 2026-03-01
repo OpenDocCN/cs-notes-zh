@@ -1,4 +1,4 @@
-# Rust编程：2-3：容器化Rust Actix微服务部署到AWS 🚀
+# 067：容器化Rust Actix微服务部署到AWS 🚀
 
 ![](img/1c3cab27cfc4d3b784002eaed0b15718_0.png)
 

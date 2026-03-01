@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：65：Cloud9集成CodeWhisperer教程 🚀
+# 065：Cloud9集成CodeWhisperer教程 🚀
 
 ![](img/45bd07ec892dfed492c4b7cc10b3fc33_0.png)
 

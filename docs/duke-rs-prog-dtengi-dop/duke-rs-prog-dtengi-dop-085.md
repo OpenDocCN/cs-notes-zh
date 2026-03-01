@@ -1,4 +1,4 @@
-# 数据工程与DevOps：2-3：使用BigQuery进行数据探索 🧭
+# 085：使用BigQuery进行数据探索 🧭
 
 ![](img/bfcaa920e46554256c90e8bcf710dacd_0.png)
 

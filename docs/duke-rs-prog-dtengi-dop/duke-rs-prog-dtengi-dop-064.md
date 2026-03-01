@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：64：在AWS CloudShell中快速原型化AI API 🚀
+# 064：在AWS CloudShell中快速原型化AI API 🚀
 
 ![](img/bd1f3424df73bd5690fad9eda7cad601_0.png)
 

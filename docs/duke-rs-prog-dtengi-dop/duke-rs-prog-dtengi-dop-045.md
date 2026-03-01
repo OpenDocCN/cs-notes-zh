@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：45：GPU并发压力测试 🚀
+# 045：GPU并发压力测试 🚀
 
 ![](img/fec38301b82dd373933cc18e71df7fb4_0.png)
 

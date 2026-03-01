@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：53：Google Colab平台介绍 🚀
+# 053：Google Colab平台介绍 🚀
 
 在本节课中，我们将学习如何使用Google Colab Notebook进行数据科学项目和作品集项目。我们将涵盖从创建笔记本、组织项目结构到分享和协作的完整流程。
 

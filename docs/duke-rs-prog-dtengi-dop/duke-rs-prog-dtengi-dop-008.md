@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：08：Rust与GitHub Actions持续集成 🚀
+# 008：Rust与GitHub Actions持续集成 🚀
 
 ![](img/2fc5fbde4de0e19b2b000631673653f9_0.png)
 

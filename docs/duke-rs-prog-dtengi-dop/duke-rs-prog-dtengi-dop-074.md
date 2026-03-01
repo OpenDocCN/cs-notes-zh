@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：74：GCP部署Rust微服务演示 🚀
+# 074：GCP部署Rust微服务演示 🚀
 
 ![](img/15ceb8e07cf2394b2553faa998b5cbd7_0.png)
 

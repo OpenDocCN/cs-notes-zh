@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：44：Python与Rust能效对比 💡⚡
+# 044：Python与Rust能效对比 💡⚡
 
 ![](img/f2fede0b85e654c1b23dc8ca4e59265c_0.png)
 

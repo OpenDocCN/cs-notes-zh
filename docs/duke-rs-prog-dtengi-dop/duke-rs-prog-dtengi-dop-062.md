@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：62：使用GCP Cloud Shell 🚀
+# 062：使用GCP Cloud Shell 🚀
 
 ![](img/d94d36944430edfacc592528289bb903_0.png)
 

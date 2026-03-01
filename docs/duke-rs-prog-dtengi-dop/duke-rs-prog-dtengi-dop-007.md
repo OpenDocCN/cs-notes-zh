@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：07：使用Google Bard提升生产力 🚀
+# 007：使用Google Bard提升生产力 🚀
 
 ![](img/ebd8cfdcee3a28cf4eb65e50ca9323d6_0.png)
 

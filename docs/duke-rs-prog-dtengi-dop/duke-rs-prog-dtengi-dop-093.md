@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：04_01_03：核心DevOps原则 🚀
+# 093：核心DevOps原则 🚀
 
 ![](img/b5a8fcb987d7341cf9336353421cebd2_0.png)
 

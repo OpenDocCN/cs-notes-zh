@@ -1,4 +1,4 @@
-# Rust编程：2-3：VecDeque水果沙拉演示 🍇
+# 012：VecDeque水果沙拉演示 🍇
 
 ![](img/902267d9911a8f398e8bf39816ad4cb1_0.png)
 

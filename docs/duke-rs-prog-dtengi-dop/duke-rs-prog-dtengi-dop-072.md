@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：72：使用Rust构建异步AWS Lambda S3容量计算器 🚀
+# 072：使用Rust构建异步AWS Lambda S3容量计算器 🚀
 
 ![](img/3acc61e54b11e2d53390ee81b046f510_0.png)
 

@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：28_02_05：配置ELK技术栈 🛠️
+# 117：配置ELK技术栈 🛠️
 
 在本节课中，我们将学习如何配置ELK技术栈（Elasticsearch、Logstash、Kibana）以收集、处理和可视化Nginx的日志。我们将从配置Filebeat开始，逐步设置Logstash管道，并最终在Kibana中查看日志数据。
 

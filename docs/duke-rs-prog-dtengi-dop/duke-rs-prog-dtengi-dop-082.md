@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：82_04_03_Rust SQLite与Hugging Face零样本分类器 🚀
+# 082：82_04_03_Rust SQLite与Hugging Face零样本分类器 🚀
 
 ![](img/81d8abcc7638610ad301b83de751ac32_0.png)
 

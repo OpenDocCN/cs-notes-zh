@@ -1,4 +1,4 @@
-# Rust编程：2-3：使用AWS Lambda与EFS部署ONNX模型推理服务 🚀
+# 078：使用AWS Lambda与EFS部署ONNX模型推理服务 🚀
 
 ![](img/bad4d7d40a9f9d22be5587fd249ed029_0.png)
 

@@ -1,4 +1,4 @@
-# Rust编程：2-3：PageRank算法实现教程 🏀
+# 021：PageRank算法实现教程 🏀
 
 ![](img/4196a6dd39db59222393c7712670cf4f_0.png)
 

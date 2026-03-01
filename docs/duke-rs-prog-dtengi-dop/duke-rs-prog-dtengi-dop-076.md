@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：76：Rust GPU与Hugging Face翻译器实战 🚀
+# 076：Rust GPU与Hugging Face翻译器实战 🚀
 
 ![](img/f19a5deb674e6fded74f183ad3bd02bb_0.png)
 

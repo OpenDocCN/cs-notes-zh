@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：3：Python与Rust的GCP入门
+# 061：Python与Rust的GCP入门
 
 ![](img/74c9f1d693ec3b729bef41d85bbf5cc8_0.png)
 

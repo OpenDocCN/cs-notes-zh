@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：04：GitHub Copilot与Rust生态系统介绍 🚀
+# 004：GitHub Copilot与Rust生态系统介绍 🚀
 
 ![](img/b89b95b1310f80bc067fa4675053ba95_0.png)
 

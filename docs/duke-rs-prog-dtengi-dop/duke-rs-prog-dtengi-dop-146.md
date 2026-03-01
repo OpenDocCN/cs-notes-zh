@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：1：什么是CI/CD 🚀
+# 146：什么是CI/CD 🚀
 
 ![](img/819cb26c3fb8e28c3c28ec0eaa30188c_0.png)
 

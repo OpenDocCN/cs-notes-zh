@@ -1,4 +1,4 @@
-# Rust 编程 2-3： 04： 使用 Rust 构建 AWS Step Functions 管道 🚀
+# 071： 使用 Rust 构建 AWS Step Functions 管道 🚀
 
 ![](img/9b0d183c17b776f304ae7b16807f4044_0.png)
 

@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：14_01_06_Rust与Python的对比使用 🦀 vs 🐍
+# 103：14_01_06_Rust与Python的对比使用 🦀 vs 🐍
 
 ![](img/3e937e6e71bd009bd1d3af2ebbcad753_0.png)
 

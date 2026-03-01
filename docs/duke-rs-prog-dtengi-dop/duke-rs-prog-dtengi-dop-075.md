@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：75：Hugging Face Hub平台介绍 🧠
+# 075：Hugging Face Hub平台介绍 🧠
 
 ![](img/d069af15d2ac8c4e882ccd3f4576bf98_0.png)
 

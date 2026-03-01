@@ -1,4 +1,4 @@
-# Rust编程：2-3：AWS CodeWhisperer Rust功能介绍 🚀
+# 006：AWS CodeWhisperer Rust功能介绍 🚀
 
 ![](img/5bf5fcfa13359bf495adf0d037ccfdf8_0.png)
 

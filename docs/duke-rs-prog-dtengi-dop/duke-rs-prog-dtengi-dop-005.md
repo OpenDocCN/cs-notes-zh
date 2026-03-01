@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：05：GCP BigQuery SQL提示工程 🚀
+# 005：GCP BigQuery SQL提示工程 🚀
 
 ![](img/b242b3f0e60a8669fae35d44174bc43a_0.png)
 

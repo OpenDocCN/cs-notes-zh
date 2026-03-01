@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：63：AWS CloudShell学习 🚀
+# 063：AWS CloudShell学习 🚀
 
 ![](img/84b7999a7bd5f3c62a978f0eac362292_0.png)
 

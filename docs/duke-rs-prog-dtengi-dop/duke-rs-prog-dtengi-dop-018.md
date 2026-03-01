@@ -1,4 +1,4 @@
-# Rust编程：2-3：使用HashSet存储唯一水果
+# 018：使用HashSet存储唯一水果
 
 ![](img/e950d94ddc1ded89371cbd3b8dcc97b0_0.png)
 

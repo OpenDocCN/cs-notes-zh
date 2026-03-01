@@ -1,4 +1,4 @@
-# Rust编程：2-3：在Rust应用中添加Prometheus监控端点
+# 118：在Rust应用中添加Prometheus监控端点
 
 ![](img/541f64ebca3375a4a2aeded698d2db00_0.png)
 

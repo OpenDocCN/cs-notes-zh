@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：P81：GCP数据库选型指南 🗄️
+# 081：GCP数据库选型指南 🗄️
 
 ![](img/06a8e35ff2e3500a6b6d52095e0aa5ad_0.png)
 

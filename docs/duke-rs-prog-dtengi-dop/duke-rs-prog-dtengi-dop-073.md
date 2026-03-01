@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：73：Distroless技术解析 🐳
+# 073：Distroless技术解析 🐳
 
 ![](img/dca4f5f64023eb7a977f0a10f11be1a5_0.png)
 

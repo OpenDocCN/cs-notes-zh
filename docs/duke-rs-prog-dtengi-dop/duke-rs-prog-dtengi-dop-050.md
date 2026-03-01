@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：50：AWS S3存储使用 🗂️
+# 050：AWS S3存储使用 🗂️
 
 ![](img/9bbcb6f9d4a3ee3d8f9e4de1150f6acb_0.png)
 

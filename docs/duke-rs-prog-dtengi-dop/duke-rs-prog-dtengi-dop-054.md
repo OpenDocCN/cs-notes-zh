@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：54：使用Bard增强笔记本开发 🚀
+# 054：使用Bard增强笔记本开发 🚀
 
 ![](img/cc72e72c0e254c6fdb9b315786fbe125_0.png)
 

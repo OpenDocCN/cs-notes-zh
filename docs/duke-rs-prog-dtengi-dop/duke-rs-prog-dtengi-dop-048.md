@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：48：使用Cargo Lambda与Rust 🚀
+# 048：使用Cargo Lambda与Rust 🚀
 
 ![](img/7d472d1f070a0a6d218a54838c9750ce_0.png)
 

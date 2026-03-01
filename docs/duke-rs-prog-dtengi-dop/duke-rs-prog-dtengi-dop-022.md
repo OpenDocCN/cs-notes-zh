@@ -1,4 +1,4 @@
-# Rust编程：2-3：使用Dijkstra算法寻找最短路径 🗺️
+# 022：使用Dijkstra算法寻找最短路径 🗺️
 
 ![](img/f69e804e4f353e71e8ca7902d8bb9314_0.png)
 

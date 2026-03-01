@@ -1,4 +1,4 @@
-# Rust编程2-3（数据工程、DevOps）：149：GitHub Actions简介 🚀
+# 149：GitHub Actions简介 🚀
 
 ![](img/1270e75197d783ec1dd5fcdb6dd54b7a_0.png)
 
