@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：equals方法实现
+# 158：equals方法实现
 
 ![](img/aae6f09287a05211fbf9f2911beb2f7e_0.png)
 

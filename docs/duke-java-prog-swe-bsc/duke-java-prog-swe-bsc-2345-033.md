@@ -1,4 +1,4 @@
-# Java编程基础：2-5：while循环编码 🧬
+# 033：while循环编码 🧬
 
 ![](img/a92070253f2c18c621e84f9c967acf9f_0.png)
 

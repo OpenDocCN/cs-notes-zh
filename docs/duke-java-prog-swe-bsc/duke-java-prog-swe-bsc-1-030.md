@@ -1,4 +1,4 @@
-# JavaScript交互入门：P30：Div按钮实现 🖱️
+# 030：Div按钮实现 🖱️
 
 ![](img/3a98326d3e725b0cbb6fdfac5e2bf0e1_0.png)
 

@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：`new`关键字详解 🧱
+# 015：`new`关键字详解 🧱
 
 ![](img/cfd01eb965b589baef3aefa5fa6cf39a_0.png)
 

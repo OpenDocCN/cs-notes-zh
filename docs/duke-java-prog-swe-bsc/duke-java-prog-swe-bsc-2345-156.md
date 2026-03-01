@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：WordGram类实现
+# 156：WordGram类实现
 
 ![](img/52e33d70cb34dff15b11aa4a2ec6e30f_0.png)
 

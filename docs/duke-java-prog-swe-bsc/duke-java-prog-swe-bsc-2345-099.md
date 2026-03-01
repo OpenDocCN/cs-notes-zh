@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：使用HashMap统计单词出现次数 📊
+# 099：使用HashMap统计单词出现次数 📊
 
 ![](img/5cdf7bebedbe945c6ddb4da5d89191ea_0.png)
 

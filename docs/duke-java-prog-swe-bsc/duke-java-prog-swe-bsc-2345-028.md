@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：Java数学运算
+# 028：Java数学运算
 
 ![](img/ff99254d88d28961aa155b3cc7c3ff6d_0.png)
 

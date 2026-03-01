@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：P32：使用HTML5画布 🎨
+# 032：使用HTML5画布 🎨
 
 ![](img/62ceb0681cde594e8d7b5bbf6315ca44_0.png)
 

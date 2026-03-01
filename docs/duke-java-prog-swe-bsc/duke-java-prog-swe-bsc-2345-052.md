@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：Java空值：无对象时的null 🧩
+# 052：无对象时的null 🧩
 
 ![](img/7fd6fae5b9b162b7d4ee817a288fe5b3_0.png)
 

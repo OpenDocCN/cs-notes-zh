@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：GladLib项目总结 🎯
+# 101：GladLib项目总结 🎯
 
 ![](img/28525adaba2f6ddcb70cb3fbe767ff9f_0.png)
 

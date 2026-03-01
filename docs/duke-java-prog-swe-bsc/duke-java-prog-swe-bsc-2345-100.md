@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：使用HashMap实现灵活设计
+# 100：使用HashMap实现灵活设计
 
 ![](img/cc6861699615ef9cdc5bebd18d094610_0.png)
 

@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：Comparator接口
+# 142：Comparator接口
 
 ![](img/1117d480df6f793e0f594fc9d4eee9a6_0.png)
 

@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：equals与hashCode方法
+# 157：equals与hashCode方法
 
 ![](img/8da2b6e6f213b2b12225188b78cb1b61_0.png)
 

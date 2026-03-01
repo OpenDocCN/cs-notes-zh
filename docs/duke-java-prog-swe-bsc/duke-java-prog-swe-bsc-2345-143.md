@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：基于距离的Comparator实现
+# 143：基于距离的Comparator实现
 
 ![](img/05a42f0b4bf2184267cdeaa2238b4f32_0.png)
 

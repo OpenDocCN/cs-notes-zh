@@ -1,4 +1,4 @@
-# Java编程基础：P07：使用BlueJ进行Java编程
+# 007：使用BlueJ进行Java编程
 
 ![](img/b84d2bf23167365e99ed9fb92f1283c9_0.png)
 

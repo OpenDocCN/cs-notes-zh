@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：GladLib程序解析与修改指南 🧩
+# 095：GladLib程序解析与修改指南 🧩
 
 ![](img/8d3411bb7cebbb18b0b370f873d23ee2_0.png)
 

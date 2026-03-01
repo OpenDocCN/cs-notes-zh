@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：StorageResource类编码 📦
+# 043：StorageResource类编码 📦
 
 ![](img/1d558972ae78d86fd7eec74b42e424e0_0.png)
 

@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：使用ArrayList统计唯一单词 📊
+# 092：使用ArrayList统计唯一单词 📊
 
 ![](img/6f8c46db361b2d6676416ac5d5af9ac8_0.png)
 

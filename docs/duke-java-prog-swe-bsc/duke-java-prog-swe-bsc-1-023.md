@@ -1,4 +1,4 @@
-# JavaScript编程入门：P23：DukeLearnToProgram环境介绍 🚀
+# 023：DukeLearnToProgram环境介绍 🚀
 
 在本节课中，我们将学习如何开始编写和运行JavaScript代码，并重点介绍杜克大学提供的DukeLearnToProgram编程环境。这个环境专为初学者设计，能帮助我们更轻松地编写、调试和理解代码。
 

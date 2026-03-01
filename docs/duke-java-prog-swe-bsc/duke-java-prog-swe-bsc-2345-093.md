@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：ArrayList的优势与问题
+# 093：ArrayList的优势与问题
 
 ![](img/543473c72978789fa404a8ad2b6a435e_0.png)
 

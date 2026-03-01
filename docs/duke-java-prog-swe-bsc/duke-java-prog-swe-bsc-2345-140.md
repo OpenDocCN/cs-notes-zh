@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：Comparable接口
+# 140：Comparable接口
 
 ![](img/77a693610d36b2136612c3e12bb914a8_0.png)
 

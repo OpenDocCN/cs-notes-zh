@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：StorageResource类 📦
+# 042：StorageResource类 📦
 
 ![](img/8ab4e0bb018dcd2e1350be392b657429_0.png)
 

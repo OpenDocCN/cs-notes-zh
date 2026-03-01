@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：带toString的LogEntry类
+# 104：带toString的LogEntry类
 
 在本节课中，我们将学习Java中一个非常重要的概念：`toString`方法。我们将通过一个`LogEntry`类的例子，了解如何自定义对象的字符串表示形式，以及Java如何自动调用这个方法。
 

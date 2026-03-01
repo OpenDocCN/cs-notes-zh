@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：HashMap数据结构详解 🗺️
+# 098：HashMap数据结构详解 🗺️
 
 ![](img/059b632286a2b89a47d1f7fbf22a971e_0.png)
 

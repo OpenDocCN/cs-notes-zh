@@ -1,4 +1,4 @@
-# Java编程和软件工程基础：2-5：ArrayList类总结 📚
+# 094：ArrayList类总结 📚
 
 ![](img/7c5d0b89b05bf4b6f03ab67d148bbb74_0.png)
 
