@@ -1,4 +1,4 @@
-# 移动机器人：方法与算法：19：SLAM I 🗺️
+# 019：SLAM I 🗺️
 
 ![](img/2179d03ef9e8cac9a781533e6bf0d0bc_0.png)
 

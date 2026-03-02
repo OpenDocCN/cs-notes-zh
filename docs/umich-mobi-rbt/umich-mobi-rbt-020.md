@@ -1,4 +1,4 @@
-# 移动机器人：方法与算法：20：SLAM II
+# 020：SLAM II
 
 ![](img/4de610c6b7f673d5f41955feaf1c8db4_0.png)
 

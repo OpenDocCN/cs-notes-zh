@@ -1,4 +1,4 @@
-# 移动机器人：方法与算法：Guest Lecture - 机器人3D感知中的等变学习
+# 025：Guest Lecture - 机器人3D感知中的等变学习
 
 ![](img/341d491193bced69bdabd83e2e7622b1_0.png)
 
