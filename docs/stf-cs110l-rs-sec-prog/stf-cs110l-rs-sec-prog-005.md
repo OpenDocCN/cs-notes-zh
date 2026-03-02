@@ -1,4 +1,4 @@
-# Rust安全编程：第5讲：Trait与泛型
+# 005：Trait与泛型
 
 ![](img/b826c7c0d862e7e0c0e8c8030c67db48_1.png)
 

@@ -1,4 +1,4 @@
-# Rust安全编程：第8讲：信号处理的陷阱与Google Chrome案例研究
+# 008：信号处理的陷阱与Google Chrome案例研究
 
 ![](img/14cbbbe339881052b6207b5da6debf13_1.png)
 
