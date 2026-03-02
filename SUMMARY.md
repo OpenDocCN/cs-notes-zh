@@ -1,5 +1,3 @@
-+   [加州理工量子计算笔记](docs/caltech-qcomp/README.md)
-+   [剑桥信息论、模式识别与神经网络笔记](docs/camb-infothr-pr-nn/README.md)
 +   [辛辛那提 MATH1071 离散数学笔记](docs/ccnt-math1701-disc/README.md)
 +   [CMU 08-763 技术高管的人机交互导论笔记](docs/cmu-08763-hci-intro/README.md)
 +   [CMU 14-740 计算机网络笔记](docs/cmu-14740-net/README.md)
@@ -30,7 +28,6 @@
 +   [IMPA 随机编程笔记](docs/impa-stch-prog/README.md)
 +   [KAIST CS109 编程实践教程](docs/kaist-cs109-prog-prac/README.md)
 +   [KAIST CS431 Rust 并发编程笔记](docs/kaist-cs431-rs-prll-prog/README.md)
-+   [Mathworks 工程与科学的图像处理笔记](docs/mathworks-engi-sci-imgproc/README.md)
 +   [Meta 后端开发笔记](docs/meta-be-dev/README.md)
 +   [Meta 数据库工程师笔记](docs/meta-db-engi/README.md)
 +   [Meta 前端开发笔记](docs/meta-fe-dev/README.md)
