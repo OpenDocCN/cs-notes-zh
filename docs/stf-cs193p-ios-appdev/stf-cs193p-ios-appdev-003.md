@@ -1,4 +1,4 @@
-# 斯坦福大学《SwiftUI的iOS应用开发｜CS193p Developing Applications for iOS using SwiftUI 2023》 p03 -03-Lecture 3 _ Stanford CS193p 2023.zh_en -BV1HyzNYdEiD_p3-
+# 003：斯坦福大学《SwiftUI的iOS应用开发｜CS193p Developing Applications for iOS using SwiftUI 2023》 p03 -03-Lecture 3 _ Stanford CS193p 2023.zh_en -BV1HyzNYdEiD_p3-
 
 ## 概述 📋
 

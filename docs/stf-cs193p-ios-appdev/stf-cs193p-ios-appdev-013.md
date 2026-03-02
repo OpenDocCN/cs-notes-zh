@@ -1,4 +1,4 @@
-# SwiftUI iOS应用开发：第13讲：模态视图、导航与多窗格界面
+# 013：模态视图、导航与多窗格界面
 
 在本节课中，我们将学习如何构建更复杂的用户界面，包括使用模态视图（如Sheet和Popover）来编辑数据，利用导航栈（NavigationStack）和导航链接（NavigationLink）实现界面间的层级跳转，以及创建适用于iPad的多窗格（NavigationSplitView）布局。这些是构建功能丰富、结构清晰的iOS应用的核心技能。
 
