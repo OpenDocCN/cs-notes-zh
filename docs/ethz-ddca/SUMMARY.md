@@ -1,4 +1,4 @@
-+   [ETHZ 计算机体系结构笔记](README.md)
++   [ETHZ 数字设计与计算机体系结构笔记](README.md)
 +   [1：引言、基础、晶体管、逻辑门 (Spring 2025)](ethz-comp-arch-001.md)
 +   [2：组合逻辑（2025年春季）🚀](ethz-comp-arch-002.md)
 +   [3：时序逻辑 (Spring 2025)](ethz-comp-arch-003.md)
