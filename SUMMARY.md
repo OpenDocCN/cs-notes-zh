@@ -63,6 +63,7 @@
 +   [斯坦福 CS145 数据库导论笔记](docs/stf-cs145-db/README.md)
 +   [斯坦福 CS193p IOS 应用开发笔记](docs/stf-cs193p-ios-appdev/README.md)
 +   [斯坦福 CS240h：Haskell 中的功能系统](docs/stf-cs240h-hskl/README.md)
++   [斯坦福 CS261 网络优化笔记](docs/stf-cs261-net-opti/README.md)
 +   [UCB CS10 计算之美与乐趣](docs/ucb-cs10-bty-joy-comp/README.md)
 +   [UCB CS149 嵌入式系统笔记](docs/ucb-cs149-embsys/README.md)
 +   [UCB CS162 操作系统笔记](docs/ucb-cs162-os/README.md)
