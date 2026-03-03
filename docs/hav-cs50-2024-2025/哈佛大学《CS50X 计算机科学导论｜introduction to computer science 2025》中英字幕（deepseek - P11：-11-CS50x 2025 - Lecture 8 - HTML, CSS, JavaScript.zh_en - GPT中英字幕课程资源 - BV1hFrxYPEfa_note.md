@@ -1,0 +1,661 @@
+# CS50X 计算机科学导论：第8讲：HTML、CSS、JavaScript
+
+![](img/7b7b72accfa61f099248c5172dbf9456_0.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_1.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_3.png)
+
+## 概述
+
+在本节课中，我们将学习网络编程的基础知识。我们将从互联网的工作原理开始，然后介绍三种核心技术：HTML（超文本标记语言）、CSS（层叠样式表）和JavaScript。通过这些技术，你将能够创建结构化的网页、美化其外观，并为其添加交互功能。
+
+---
+
+## 互联网基础
+
+上一节我们介绍了课程的整体目标，本节中我们来看看构成万维网基础的互联网本身。
+
+互联网可以被想象成一套允许数据从A点传输到B点的底层“管道”。世界各地的计算机通过有线或无线方式物理或虚拟地连接在一起，这些能够相互通信的计算机网络就构成了我们的互联网。
+
+### 路由器
+
+路由器是一种计算机（或服务器），其核心功能是将信息从一个点路由到另一个点。它们通常位于数据中心，通过软件决定接收到的信息（如电子邮件或网页）应该传向哪个方向。
+
+### TCP/IP 协议
+
+为了让计算机在互联网上通信，它们使用一套称为**协议**的约定。最重要的协议之一是 **TCP/IP**。
+
+*   **IP（互联网协议）**：负责为互联网上的每台计算机分配一个唯一的**IP地址**。一个典型的IPv4地址格式为：`X.X.X.X`，其中每个X是0到255之间的数字。这意味着IP地址总共有32位（4字节），理论上最多可以有约43亿个地址。
+*   **TCP（传输控制协议）**：建立在IP之上，解决几个关键问题：
+    1.  **保证交付**：通过为数据包添加序列号（如“1/4”、“2/4”），确保接收方能按顺序重组数据，并确认是否丢失任何部分。
+    2.  **多路复用**：通过**端口号**来区分不同的互联网服务。例如，Web流量通常使用端口80（HTTP）或443（HTTPS），电子邮件使用端口25。
+
+**TCP/IP 协同工作**：IP地址唯一标识计算机，而TCP通过序列号和端口号确保数据可靠地到达正确的应用程序。
+
+### DNS（域名系统）
+
+![](img/7b7b72accfa61f099248c5172dbf9456_5.png)
+
+人们通常使用域名（如 `google.com`）访问网站，而不是IP地址。**DNS服务器**的作用就是将用户友好的域名翻译成机器使用的IP地址。
+
+DNS服务器本质上维护着一个巨大的“字典”（键值对表），左边是域名，右边是对应的IP地址。这个过程是层次化的：如果你的本地DNS服务器不知道答案，它会去询问其他DNS服务器，最终可能查询到根域名服务器。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_7.png)
+
+### DHCP（动态主机配置协议）
+
+![](img/7b7b72accfa61f099248c5172dbf9456_9.png)
+
+**DHCP** 负责在设备（如你的笔记本电脑或手机）启动时，为其动态分配一个IP地址。这样，你就不需要手动配置网络设置。DHCP服务器还会告诉你的设备使用哪个DNS服务器，以及默认网关（路由器）的地址。
+
+---
+
+![](img/7b7b72accfa61f099248c5172dbf9456_11.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_12.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_14.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_15.png)
+
+## HTTP（超文本传输协议）
+
+![](img/7b7b72accfa61f099248c5172dbf9456_17.png)
+
+上一节我们了解了数据如何在互联网上传输，本节中我们来看看浏览器和服务器之间通信的具体协议：HTTP。
+
+HTTP是一种管理Web浏览器和Web服务器如何通信的协议。HTTPS是其安全版本，对数据进行加密。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_19.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_21.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_22.png)
+
+### URL（统一资源定位符）
+
+![](img/7b7b72accfa61f099248c5172dbf9456_24.png)
+
+URL是我们在网络上访问资源的地址。一个典型的URL格式如下：
+`https://www.example.com/folder/file.html`
+
+![](img/7b7b72accfa61f099248c5172dbf9456_26.png)
+
+*   `https://`：协议。
+*   `www.example.com`：完全限定域名（FQDN）。`www`是主机名，`example.com`是域名，`.com`是顶级域（TLD）。
+*   `/folder/file.html`：路径，指向服务器上的特定文件或目录。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_28.png)
+
+### HTTP 请求与响应
+
+![](img/7b7b72accfa61f099248c5172dbf9456_30.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_31.png)
+
+当你在浏览器中输入URL并按下回车时，浏览器会向服务器发送一个**HTTP请求**。最常见的请求方法是 **GET**（用于获取信息）和 **POST**（用于提交信息，如表单数据）。
+
+服务器会返回一个**HTTP响应**。响应中包含一个**状态码**，用于指示请求的结果。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_33.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_34.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_36.png)
+
+以下是常见的HTTP状态码：
+
+![](img/7b7b72accfa61f099248c5172dbf9456_38.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_39.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_40.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_42.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_43.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_44.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_45.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_47.png)
+
+*   **200 OK**：请求成功。
+*   **301 Moved Permanently**：资源已永久移动到新URL（重定向）。
+*   **404 Not Found**：请求的资源未找到。
+*   **500 Internal Server Error**：服务器内部错误。
+
+你可以使用命令行工具 `curl` 或浏览器的开发者工具（Network标签）来查看这些原始的HTTP请求和响应头信息。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_49.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_50.png)
+
+---
+
+![](img/7b7b72accfa61f099248c5172dbf9456_52.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_54.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_55.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_56.png)
+
+## HTML（超文本标记语言）
+
+上一节我们探讨了网络通信的协议，本节中我们将开始学习用于构建网页内容的语言：HTML。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_58.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_60.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_61.png)
+
+HTML不是编程语言，而是一种**标记语言**，用于定义网页的结构和内容。其基本构建块是**标签**和**属性**。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_63.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_64.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_65.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_67.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_69.png)
+
+### 基本结构
+
+![](img/7b7b72accfa61f099248c5172dbf9456_71.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_72.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_73.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_75.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_76.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_77.png)
+
+一个最简单的HTML文档如下所示：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Hello, title</title>
+</head>
+<body>
+    Hello, body
+</body>
+</html>
+```
+
+![](img/7b7b72accfa61f099248c5172dbf9456_79.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_81.png)
+
+*   `<!DOCTYPE html>`：文档类型声明，指定使用HTML5。
+*   `<html>`：根元素，包含整个页面。`lang="en"`属性指定页面语言为英语。
+*   `<head>`：头部，包含页面的元信息，如标题。
+*   `<title>`：定义浏览器标签页上显示的标题。
+*   `<body>`：主体，包含页面的所有可见内容。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_83.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_85.png)
+
+### 常用标签
+
+![](img/7b7b72accfa61f099248c5172dbf9456_87.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_89.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_90.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_91.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_92.png)
+
+HTML提供了多种标签来结构化内容：
+
+![](img/7b7b72accfa61f099248c5172dbf9456_94.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_95.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_96.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_98.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_99.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_101.png)
+
+*   **段落**：`<p>`标签定义段落。浏览器会忽略源代码中的额外空格和换行，必须用标签明确结构。
+*   **标题**：`<h1>`到`<h6>`标签定义不同级别的标题，`<h1>`最大最重要。
+*   **列表**：
+    *   无序列表（项目符号）：`<ul>` 包含多个 `<li>`。
+    *   有序列表（数字编号）：`<ol>` 包含多个 `<li>`。
+*   **表格**：`<table>` 定义表格，`<tr>` 定义行，`<td>` 定义单元格，`<th>` 定义表头单元格。
+*   **图像**：`<img>` 标签用于嵌入图像。它是一个空元素（没有闭合标签）。重要属性：
+    *   `src`：指定图像源文件路径。
+    *   `alt`：提供图像的替代文本，用于图像无法显示时或供屏幕阅读器使用。
+*   **链接**：`<a>` 标签创建超链接。`href` 属性指定链接的目标URL。
+*   **表单**：`<form>` 标签用于创建包含用户输入控件的表单。
+    *   `action`：指定表单数据提交到的URL。
+    *   `method`：指定提交方法（GET或POST）。
+    *   `<input>`：输入控件，`type` 属性决定其类型（如 `text`, `email`, `submit`），`name` 属性定义提交时的参数名。
+    *   表单提交时，输入框的 `name` 和 `value` 会以 `?name=value` 的形式附加到URL（GET方法）或包含在请求体中（POST方法）。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_103.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_104.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_106.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_107.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_108.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_109.png)
+
+### 文档对象模型（DOM）
+
+![](img/7b7b72accfa61f099248c5172dbf9456_111.png)
+
+浏览器在加载HTML后，会在内存中将其解析成一个树形结构，称为**文档对象模型（DOM）**。树中的每个节点对应一个HTML元素。JavaScript可以通过操作DOM来动态改变网页的内容和结构。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_113.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_114.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_116.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_117.png)
+
+你可以使用浏览器的“开发者工具”（Elements或检查器标签）来查看和实时编辑当前页面的DOM。
+
+---
+
+![](img/7b7b72accfa61f099248c5172dbf9456_119.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_121.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_122.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_123.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_124.png)
+
+## CSS（层叠样式表）
+
+![](img/7b7b72accfa61f099248c5172dbf9456_126.png)
+
+上一节我们学会了用HTML构建网页骨架，本节中我们来看看如何用CSS为这个骨架添加样式和外观。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_128.png)
+
+CSS用于描述HTML元素在屏幕上的呈现样式，如颜色、字体、间距和布局。其核心概念是**选择器**和**属性**。
+
+### 应用CSS的三种方式
+
+![](img/7b7b72accfa61f099248c5172dbf9456_130.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_132.png)
+
+1.  **内联样式**：直接在HTML元素的 `style` 属性中编写CSS。不推荐大量使用，因为混合了结构和样式。
+    ```html
+    <p style="color: blue; font-size: 20px;">This is a paragraph.</p>
+    ```
+2.  **内部样式表**：在HTML文档的 `<head>` 部分使用 `<style>` 标签包含CSS规则。
+    ```html
+    <head>
+        <style>
+            p {
+                color: blue;
+                font-size: 20px;
+            }
+        </style>
+    </head>
+    ```
+3.  **外部样式表**：将CSS规则保存在单独的 `.css` 文件中，然后在HTML中通过 `<link>` 标签引入。这是最佳实践，实现了内容与表现的分离。
+    ```html
+    <head>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    ```
+
+![](img/7b7b72accfa61f099248c5172dbf9456_134.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_135.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_137.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_138.png)
+
+### 选择器
+
+![](img/7b7b72accfa61f099248c5172dbf9456_140.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_142.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_143.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_144.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_145.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_146.png)
+
+选择器用于“选中”你想要样式化的HTML元素。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_148.png)
+
+*   **元素选择器**：根据标签名选择元素。
+    ```css
+    p { color: red; }
+    ```
+*   **类选择器**：根据元素的 `class` 属性选择元素。类名以点 `.` 开头。一个元素可以有多个类。
+    ```css
+    .centered { text-align: center; }
+    .large { font-size: 24px; }
+    ```
+    ```html
+    <p class="centered large">This paragraph is centered and large.</p>
+    ```
+*   **ID选择器**：根据元素的 `id` 属性选择元素。ID名以井号 `#` 开头。一个ID在页面中应该是唯一的。
+    ```css
+    #header { background-color: gray; }
+    ```
+
+### 常用属性
+
+![](img/7b7b72accfa61f099248c5172dbf9456_150.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_152.png)
+
+*   `color`：文本颜色。
+*   `font-size`：字体大小。
+*   `text-align`：文本对齐方式。
+*   `background-color`：背景颜色。
+*   `margin`, `padding`：外边距和内边距，控制元素周围的空间。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_154.png)
+
+### 框架（如Bootstrap）
+
+为了快速构建美观且响应式的网站，开发者常使用CSS框架，如 **Bootstrap**。这些框架提供了预定义的样式类和组件，你只需为HTML元素添加相应的类名即可应用一套成熟的样式。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_156.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_157.png)
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<table class="table table-striped">
+  <!-- 表格内容 -->
+</table>
+```
+
+![](img/7b7b72accfa61f099248c5172dbf9456_159.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_160.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_161.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_163.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_164.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_165.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_166.png)
+
+---
+
+![](img/7b7b72accfa61f099248c5172dbf9456_168.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_170.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_171.png)
+
+## JavaScript
+
+![](img/7b7b72accfa61f099248c5172dbf9456_173.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_174.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_176.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_177.png)
+
+上一节我们使用CSS美化了网页，本节中我们将引入第三种语言：JavaScript，它为网页带来真正的交互性和动态行为。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_179.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_181.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_182.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_183.png)
+
+JavaScript是一种**编程语言**，可以在浏览器中运行，用于操作DOM、处理用户交互、与服务器通信等。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_185.png)
+
+### 基本语法
+
+![](img/7b7b72accfa61f099248c5172dbf9456_187.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_189.png)
+
+JavaScript的语法在很多方面与C语言和Python相似。
+
+*   **变量**：使用 `let` 或 `const` 声明变量。
+    ```javascript
+    let counter = 0;
+    const pi = 3.14159;
+    ```
+*   **条件语句**：
+    ```javascript
+    if (x < y) {
+        // 执行某些操作
+    } else if (x > y) {
+        // 执行其他操作
+    } else {
+        // 执行另外的操作
+    }
+    ```
+*   **循环**：
+    ```javascript
+    for (let i = 0; i < 3; i++) {
+        console.log(i);
+    }
+    ```
+*   **函数**：
+    ```javascript
+    function greet(name) {
+        alert('Hello, ' + name);
+    }
+    // 匿名函数（函数表达式）
+    const myFunction = function() {
+        // 函数体
+    };
+    ```
+
+![](img/7b7b72accfa61f099248c5172dbf9456_191.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_192.png)
+
+### 在HTML中使用JavaScript
+
+*   **内部脚本**：在HTML中使用 `<script>` 标签。
+    ```html
+    <script>
+        // JavaScript 代码
+    </script>
+    ```
+*   **外部脚本**：通过 `<script>` 标签的 `src` 属性引入外部 `.js` 文件。
+    ```html
+    <script src="scripts.js"></script>
+    ```
+    通常将 `<script>` 标签放在 `<body>` 的末尾，或使用 `DOMContentLoaded` 事件确保HTML加载完毕后再执行脚本。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_194.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_195.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_196.png)
+
+### 事件处理
+
+![](img/7b7b72accfa61f099248c5172dbf9456_198.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_199.png)
+
+JavaScript的强大之处在于其**事件驱动**的特性。浏览器中会发生许多事件（如点击、按键、鼠标移动），你可以编写代码来“监听”这些事件并做出响应。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_201.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_203.png)
+
+```javascript
+// 1. 获取页面上的按钮元素
+const button = document.querySelector('#myButton');
+
+![](img/7b7b72accfa61f099248c5172dbf9456_205.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_206.png)
+
+// 2. 为按钮添加点击事件监听器
+button.addEventListener('click', function(event) {
+    // 3. 事件发生时执行的代码
+    alert('Button was clicked!');
+    // 阻止事件的默认行为（如表单提交）
+    event.preventDefault();
+});
+```
+
+### 操作DOM
+
+![](img/7b7b72accfa61f099248c5172dbf9456_208.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_209.png)
+
+JavaScript可以查询和修改DOM，从而动态更新网页内容。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_211.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_213.png)
+
+```javascript
+// 获取元素
+const heading = document.querySelector('h1');
+// 修改元素内容
+heading.innerHTML = 'New Heading Text';
+// 修改元素样式
+heading.style.color = 'red';
+```
+
+![](img/7b7b72accfa61f099248c5172dbf9456_214.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_215.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_217.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_219.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_220.png)
+
+### 示例：实时问候
+
+以下是一个结合了HTML表单和JavaScript的简单示例，实现用户输入名字后实时显示问候语。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_222.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_223.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_225.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_226.png)
+
+**HTML (index.html):**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Greeter</title>
+</head>
+<body>
+    <input type="text" id="nameInput" placeholder="Your name" autofocus>
+    <p id="greeting">Hello, whoever you are.</p>
+
+    <script src="script.js"></script>
+</body>
+</html>
+```
+
+![](img/7b7b72accfa61f099248c5172dbf9456_228.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_230.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_231.png)
+
+**JavaScript (script.js):**
+```javascript
+// 等待DOM完全加载后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取输入框和段落元素
+    const input = document.querySelector('#nameInput');
+    const greeting = document.querySelector('#greeting');
+
+    // 监听输入框的键盘抬起事件
+    input.addEventListener('keyup', function() {
+        if (input.value) {
+            // 如果有输入，更新问候语
+            greeting.innerHTML = `Hello, ${input.value}.`;
+        } else {
+            // 如果输入为空，恢复默认文本
+            greeting.innerHTML = 'Hello, whoever you are.';
+        }
+    });
+});
+```
+
+![](img/7b7b72accfa61f099248c5172dbf9456_232.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_233.png)
+
+---
+
+![](img/7b7b72accfa61f099248c5172dbf9456_235.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_237.png)
+
+## 总结
+
+![](img/7b7b72accfa61f099248c5172dbf9456_239.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_240.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_242.png)
+
+本节课中我们一起学习了网络编程的核心三要素：
+
+![](img/7b7b72accfa61f099248c5172dbf9456_244.png)
+
+1.  **HTML**：用于构建网页的**结构**和**内容**。我们学习了标签、属性以及如何创建文本、图像、链接和表单。
+2.  **CSS**：用于控制网页的**样式**和**外观**。我们学习了选择器、属性以及如何通过内部、外部或内联方式应用样式。
+3.  **JavaScript**：一种**编程语言**，用于为网页添加**交互性**和**动态行为**。我们学习了基本语法、如何操作DOM以及如何处理用户事件。
+
+![](img/7b7b72accfa61f099248c5172dbf9456_246.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_248.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_250.png)
+
+![](img/7b7b72accfa61f099248c5172dbf9456_251.png)
+
+通过结合使用这三种技术，你可以创建从简单的静态页面到复杂的交互式Web应用程序的一切内容。理解这些基础知识是迈向全栈Web开发的第一步。

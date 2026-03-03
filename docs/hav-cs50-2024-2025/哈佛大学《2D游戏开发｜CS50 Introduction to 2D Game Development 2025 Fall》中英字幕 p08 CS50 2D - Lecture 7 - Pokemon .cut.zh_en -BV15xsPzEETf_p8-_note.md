@@ -1,0 +1,332 @@
+# CS50 2D 游戏开发：第7讲：宝可梦 🎮
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_1.png)
+
+在本节课中，我们将学习如何构建一个类似《宝可梦》的回合制角色扮演游戏。我们将探讨状态栈、图形用户界面元素以及RPG的核心机制，如经验值和战斗系统。
+
+---
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_3.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_5.png)
+
+## 概述
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_7.png)
+
+上一讲我们探讨了《塞尔达传说》中的状态机和碰撞检测。本节中，我们将看看如何通过状态栈来管理更复杂的游戏流程，例如在探索世界和战斗场景之间切换。我们还将学习如何创建对话框、菜单和进度条等GUI组件，并最终实现一个简单的回合制战斗系统。
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_9.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_11.png)
+
+---
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_13.png)
+
+## 状态栈：超越状态机 🥞
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_15.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_17.png)
+
+到目前为止，我们使用状态机来管理游戏或实体的行为，但一次只能处于一个状态。然而，在许多游戏中，状态需要层叠。例如，在《宝可梦》中，你可以在世界地图（“野外状态”）中行走，然后随机遇到野生宝可梦，进入“战斗状态”。战斗结束后，你会回到之前在地图中的确切位置。这需要一种方法来“暂停”一个状态，并在其上叠加另一个状态。
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_19.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_21.png)
+
+解决方案是使用**状态栈**。我们可以将状态推入栈中或从栈中弹出。只有栈顶的状态会更新，但所有状态都会按顺序渲染，从而实现层叠效果（如暂停菜单覆盖在游戏画面上）。
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_23.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_24.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_25.png)
+
+以下是状态栈类的基本结构：
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_27.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_28.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_30.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_31.png)
+
+```lua
+StateStack = Class{}
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_33.png)
+
+function StateStack:init()
+    self.states = {}
+end
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_35.png)
+
+function StateStack:update(dt)
+    if #self.states > 0 then
+        self.states[#self.states]:update(dt)
+    end
+end
+
+function StateStack:render()
+    for i, state in ipairs(self.states) do
+        state:render()
+    end
+end
+
+function StateStack:push(state)
+    table.insert(self.states, state)
+    state:enter()
+end
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_37.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_39.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_40.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_41.png)
+
+function StateStack:pop()
+    self.states[#self.states]:exit()
+    table.remove(self.states)
+end
+```
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_43.png)
+
+在游戏中，我们可以这样使用：
+
+```lua
+-- 从开始画面切换到游戏画面
+gStateStack:push(StartState())
+-- 按下回车后
+gStateStack:pop() -- 移除StartState
+gStateStack:push(FadeInState({255, 255, 255}, 1,
+    function()
+        gStateStack:pop() -- 移除FadeInState
+        gStateStack:push(PlayState())
+        gStateStack:push(FadeOutState({255, 255, 255}, 1))
+    end
+))
+```
+
+---
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_45.png)
+
+## 图形用户界面组件 🖥️
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_47.png)
+
+《宝可梦》这类游戏有丰富的菜单和界面。让我们看看几个核心的GUI组件。
+
+### 面板
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_49.png)
+
+面板是一个带边框的矩形区域，可以作为其他UI元素的容器。
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_51.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_53.png)
+
+```lua
+Panel = Class{}
+
+function Panel:init(x, y, width, height)
+    self.x = x
+    self.y = y
+    self.width = width
+    self.height = height
+    self.visible = true
+end
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_55.png)
+
+function Panel:render()
+    if self.visible then
+        -- 绘制白色外边框
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.rectangle('fill', self.x, self.y, self.width, self.height, 3)
+        -- 绘制灰色内矩形
+        love.graphics.setColor(0.2, 0.2, 0.2, 1)
+        love.graphics.rectangle('fill', self.x + 2, self.y + 2, self.width - 4, self.height - 4, 3)
+    end
+end
+```
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_57.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_59.png)
+
+### 文本框
+
+文本框在面板内显示文本，并支持自动换行和分页。
+
+```lua
+TextBox = Class{}
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_61.png)
+
+function TextBox:init(def)
+    self.panel = Panel(def.x, def.y, def.width, def.height)
+    self.text = def.text
+    self.font = def.font or gFonts['small']
+    self.padding = 4
+    self.lineHeight = self.font:getHeight()
+    -- 计算每页能显示多少行文本
+    self.chunks = self.font:getWrap(self.text, self.width - 2 * self.padding)
+    self.currentChunk = 1
+end
+
+function TextBox:next()
+    if self.currentChunk < #self.chunks then
+        self.currentChunk = self.currentChunk + 1
+    else
+        self.closed = true
+    end
+end
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_63.png)
+
+function TextBox:render()
+    self.panel:render()
+    love.graphics.setFont(self.font)
+    love.graphics.setColor(1, 1, 1, 1)
+    -- 渲染当前页的文本行
+    local startY = self.panel.y + self.padding
+    for i, line in ipairs(self.chunks[self.currentChunk]) do
+        love.graphics.print(line, self.panel.x + self.padding, startY + (i-1) * (self.lineHeight + 2))
+    end
+end
+```
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_65.png)
+
+### 选择菜单
+
+选择菜单允许玩家在多个选项中进行选择，每个选项可以绑定一个回调函数。
+
+```lua
+Selection = Class{}
+
+function Selection:init(def)
+    self.items = def.items -- 例如：{{text='战斗', onSelect=func1}, {text='逃跑', onSelect=func2}}
+    self.x = def.x
+    self.y = def.y
+    self.currentSelection = 1
+end
+
+function Selection:update(dt)
+    if love.keyboard.wasPressed('up') then
+        self.currentSelection = math.max(1, self.currentSelection - 1)
+    elseif love.keyboard.wasPressed('down') then
+        self.currentSelection = math.min(#self.items, self.currentSelection + 1)
+    elseif love.keyboard.wasPressed('return') then
+        self.items[self.currentSelection].onSelect()
+    end
+end
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_67.png)
+
+function Selection:render()
+    for i, item in ipairs(self.items) do
+        local color = {1, 1, 1, 1}
+        if i == self.currentSelection then
+            color = {1, 1, 0, 1} -- 高亮当前选项
+            love.graphics.print('>', self.x - 10, self.y + (i-1) * 20) -- 绘制光标
+        end
+        love.graphics.setColor(color)
+        love.graphics.print(item.text, self.x, self.y + (i-1) * 20)
+    end
+end
+```
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_69.png)
+
+### 进度条
+
+进度条用于直观地显示生命值、经验值等数值。
+
+```lua
+ProgressBar = Class{}
+
+function ProgressBar:init(def)
+    self.x = def.x
+    self.y = def.y
+    self.width = def.width
+    self.height = def.height
+    self.value = def.value or 0
+    self.max = def.max or 1
+    self.color = def.color or {0, 1, 0, 1} -- 默认绿色
+end
+
+function ProgressBar:setValue(value)
+    self.value = math.min(self.max, math.max(0, value))
+    -- 可以在这里添加补间动画，让变化更平滑
+    Timer.tween(0.5, {
+        [self] = {value = self.value}
+    })
+end
+
+function ProgressBar:render()
+    -- 绘制背景
+    love.graphics.setColor(0.5, 0.5, 0.5, 1)
+    love.graphics.rectangle('fill', self.x, self.y, self.width, self.height, 3)
+    -- 绘制填充部分
+    love.graphics.setColor(self.color)
+    local renderWidth = (self.value / self.max) * (self.width - 4)
+    love.graphics.rectangle('fill', self.x + 2, self.y + 2, renderWidth, self.height - 4, 3)
+end
+```
+
+---
+
+## 回合制战斗系统 ⚔️
+
+《宝可梦》的核心是回合制战斗。每个回合，双方宝可梦根据速度决定攻击顺序，然后根据攻击力、防御力等属性计算伤害。
+
+### 攻击伤害计算
+
+一个简化的伤害计算公式如下：
+
+```lua
+local damage = math.max(1, attacker.attack - defender.defense)
+defender.hp = defender.hp - damage
+```
+
+在完整的实现中，我们还需要考虑宝可梦的等级、个体值等因素。
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_71.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_73.png)
+
+### 战斗流程状态
+
+战斗流程可以通过一系列状态来管理：
+
+1.  **BattleState**：初始化战斗，显示双方宝可梦。
+2.  **BattleMenuState**：显示玩家可选的行动菜单（战斗、逃跑等）。
+3.  **TakeTurnState**：处理攻击顺序、伤害计算和动画。
+4.  **BattleMessageState**：显示“XX 使用了冲击！”等文本信息。
+5.  **FaintState/VictoryState**：处理宝可梦倒下或战斗胜利后的逻辑。
+
+这些状态被推入状态栈中，并按顺序更新和渲染，共同构成了完整的战斗体验。
+
+---
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_75.png)
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_77.png)
+
+## 总结
+
+本节课中，我们一起学习了如何构建一个类似《宝可梦》的回合制RPG游戏。我们引入了**状态栈**的概念来管理复杂的、可层叠的游戏状态。我们创建了多种**GUI组件**，包括面板、文本框、选择菜单和进度条，它们是构建游戏界面的基础。最后，我们剖析了**回合制战斗系统**的核心机制，包括状态流转和简单的伤害计算。
+
+![](img/fe0c4a24495d61795a18b52c8dd90a46_79.png)
+
+通过这些知识，你现在已经掌握了开发2D角色扮演游戏所需的核心工具和模式。在问题集中，你将有机会实现捕捉宝可梦、查看宝可梦状态等更多功能。祝你编程愉快！
