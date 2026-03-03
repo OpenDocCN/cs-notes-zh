@@ -1,4 +1,4 @@
-# Django for Everybody：4：JSON聊天示例代码详解 🗨️
+# 039：JSON聊天示例代码详解 🗨️
 
 在本节课程中，我们将详细解析一个使用Fetch、Ajax和`setTimeout`的简单聊天应用示例代码。这个示例将多个浏览器端的JavaScript概念整合在一起，演示了如何实现异步通信。
 

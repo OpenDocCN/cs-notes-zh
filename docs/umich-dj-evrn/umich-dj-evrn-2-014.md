@@ -1,4 +1,4 @@
-# 密歇根大学《给所有人的Django课程》4：4：JavaScript语言特性 🧩
+# 014：JavaScript语言特性 🧩
 
 ![](img/f2a9d4f5f84eccf4d8fba9e78f43a8ff_1.png)
 

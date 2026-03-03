@@ -1,4 +1,4 @@
-# Django for Everybody：4：JSON - JavaScript对象表示法
+# 036：JSON - JavaScript对象表示法
 
 ## 概述
 

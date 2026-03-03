@@ -89,6 +89,7 @@
 +   [UIUC CS374 算法笔记](docs/uiuc-cs374-algo/README.md)
 +   [UIUC CS598 高级数据结构笔记](docs/uiuc-cs598-adv-dast/README.md)
 +   [密西根大学每个人的 C 语言笔记](docs/umich-c-evrn/README.md)
++   [密西根大学每个人的 Django 笔记](docs/umich-dj-evrn/README.md)
 +   [密西根大学 EECS281 数据结构算法笔记](docs/umich-eecs281-dast-algo/README.md)
 +   [密西根大学互联网历史、技术与安全笔记](docs/umich-inet-his-tech-sec/README.md)
 +   [UNSW COMP6080 前端笔记](docs/unsw-comp6080-fe/README.md)

@@ -1,4 +1,4 @@
-# Django for Everybody：4：使用Web Components创建自定义HTML标签 🏷️
+# 029：使用Web Components创建自定义HTML标签 🏷️
 
 ![](img/79c552fe4d5a2f07c4fbb87f68b35112_0.png)
 

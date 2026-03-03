@@ -1,4 +1,4 @@
-# Django for Everybody：4：浏览器中的JavaScript执行模型 🚀
+# 024：浏览器中的JavaScript执行模型 🚀
 
 在本节课中，我们将要学习JavaScript在浏览器环境中的独特执行模型。我们将探讨它与传统编程语言（如Python）的区别，并理解事件驱动、非阻塞执行等核心概念。
 

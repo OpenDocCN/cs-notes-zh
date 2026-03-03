@@ -1,4 +1,4 @@
-# Django for Everybody：4：Django中的所属行-owner.py文件 🔐
+# 006：Django中的所属行-owner.py文件 🔐
 
 ![](img/89c28e67cdf3f58cc5fa0f53318ad234_1.png)
 

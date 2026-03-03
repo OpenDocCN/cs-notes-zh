@@ -1,4 +1,4 @@
-# Django for Everybody：4：搜索功能与视图配置模式实战
+# 045：搜索功能与视图配置模式实战
 
 ![](img/c5006f2674aa806614f90e6a73a1b8ef_0.png)
 

@@ -1,4 +1,4 @@
-# Django for Everybody：4.7：JSON与Fetch API详解 🚀
+# 037：JSON与Fetch API详解 🚀
 
 ![](img/0a2da5b3a9bab334b6c99c11bfda74a1_1.png)
 

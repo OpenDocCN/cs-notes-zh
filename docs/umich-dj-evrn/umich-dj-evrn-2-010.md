@@ -1,4 +1,4 @@
-# Django for Everybody：4：部署Django应用
+# 010：部署Django应用
 
 ![](img/933c6d9730bf80687391d3d7f40dea69_0.png)
 

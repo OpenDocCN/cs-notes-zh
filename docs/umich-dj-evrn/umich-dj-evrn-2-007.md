@@ -1,4 +1,4 @@
-# Django for Everybody：4.7：Crispy表单实战演练 🎨
+# 007：Crispy表单实战演练 🎨
 
 ![](img/8c1e740bb129330042c5480311d819bc_1.png)
 

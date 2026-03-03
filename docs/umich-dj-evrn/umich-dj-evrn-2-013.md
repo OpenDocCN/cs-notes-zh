@@ -1,4 +1,4 @@
-# Django for Everybody：4：浏览器中的JavaScript
+# 013：浏览器中的JavaScript
 
 ![](img/ea98d59cb2a7caf22889410bfc6b296d_1.png)
 

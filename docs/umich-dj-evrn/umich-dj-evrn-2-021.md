@@ -1,4 +1,4 @@
-# Django for Everybody：4：论坛（Forums）示例代码实战 🧑‍💻
+# 021：论坛（Forums）示例代码实战 🧑‍💻
 
 ![](img/cdeb6312c6e58fb659b31ff94575e1ce_1.png)
 

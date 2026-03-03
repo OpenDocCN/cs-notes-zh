@@ -1,4 +1,4 @@
-# Django for Everybody：4：毕业典礼特邀演讲人-Curt Bonk博士 🎓
+# 047：毕业典礼特邀演讲人-Curt Bonk博士 🎓
 
 在本节课中，我们将学习Curt Bonk博士在Django课程毕业典礼上的演讲。他将分享关于成功完成在线课程以及规划未来学习路径的八个核心原则。
 

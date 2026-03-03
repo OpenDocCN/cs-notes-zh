@@ -1,4 +1,4 @@
-# Django for Everybody：4.7：收藏功能（Favs）示例代码实战 🚀
+# 042：收藏功能（Favs）示例代码实战 🚀
 
 ![](img/93f7b6f482b038f42d521918ac98ff02_1.png)
 

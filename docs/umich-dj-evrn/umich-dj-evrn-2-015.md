@@ -1,4 +1,4 @@
-# Django for Everybody：4：JavaScript函数与数组
+# 015：JavaScript函数与数组
 
 ![](img/cb3cf5088c1e40e258396cd03f3f8e34_1.png)
 

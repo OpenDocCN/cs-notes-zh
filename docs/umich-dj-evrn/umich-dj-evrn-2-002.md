@@ -1,4 +1,4 @@
-# Django for Everybody：4.2：市场平台初始设置与安装 🛠️
+# 002：市场平台初始设置与安装 🛠️
 
 ![](img/d3d2d5080524ffb4df2b6b165c3a69b5_0.png)
 

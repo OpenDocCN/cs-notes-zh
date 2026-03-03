@@ -1,4 +1,4 @@
-# Django for Everybody：4：社交登录代码实战 🚀
+# 041：社交登录代码实战 🚀
 
 在本教程中，我们将学习如何为Django应用集成社交登录功能，具体以GitHub登录为例。我们将使用名为`social-auth-app-django`的第三方库来实现此功能。
 

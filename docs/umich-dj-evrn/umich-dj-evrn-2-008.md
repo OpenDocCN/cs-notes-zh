@@ -1,4 +1,4 @@
-# Django for Everybody：4：我的文章（myarts）示例代码实战
+# 008：我的文章（myarts）示例代码实战
 
 ![](img/be22e7f381c283e91cf00876c37f4d57_0.png)
 

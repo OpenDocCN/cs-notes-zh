@@ -1,4 +1,4 @@
-# 密歇根大学《给所有人的Django课程4/共4（部署Django应用）》：28：使用Fetch进行JavaScript网络请求 🚀
+# 028：使用Fetch进行JavaScript网络请求 🚀
 
 在本节课中，我们将要学习JavaScript中的网络事件处理，特别是如何使用`fetch`函数进行异步网络请求。我们将了解为什么网络操作必须是异步的，以及如何使用Promise链式调用来处理请求和响应。
 

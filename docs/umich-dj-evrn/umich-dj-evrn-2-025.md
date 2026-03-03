@@ -1,4 +1,4 @@
-# Django for Everybody：4：使用JavaScript操作文档对象模型(DOM) 🧩
+# 025：使用JavaScript操作文档对象模型(DOM) 🧩
 
 ![](img/09e2e7a8a05dd9491cf5c68bc907669c_1.png)
 

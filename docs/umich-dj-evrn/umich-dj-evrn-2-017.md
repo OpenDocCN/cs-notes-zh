@@ -1,4 +1,4 @@
-# 密歇根大学《给所有人的Django课程》4/4（部署Django应用）：17：Brendan Eich讲述JavaScript的诞生故事
+# 017：Brendan Eich讲述JavaScript的诞生故事
 
 ## 概述
 在本节课中，我们将跟随JavaScript的创造者Brendan Eich的讲述，了解这门语言在1995年诞生时的背景、设计理念、面临的挑战以及它如何演变成今天Web开发的核心技术。我们将重点关注其设计中的关键决策和核心特性。

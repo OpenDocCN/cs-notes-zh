@@ -1,4 +1,4 @@
-# Django for Everybody：4：修改文档对象模型(DOM)的JavaScript技术
+# 026：修改文档对象模型(DOM)的JavaScript技术
 
 在本节课中，我们将学习如何使用JavaScript动态地修改网页的文档对象模型（DOM）。我们将从简单的元素内容修改开始，逐步深入到创建新元素、将其添加到DOM中，以及通过JavaScript控制CSS样式来实现元素的显示与隐藏。
 

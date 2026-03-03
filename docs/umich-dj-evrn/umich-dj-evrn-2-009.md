@@ -1,4 +1,4 @@
-# Django for Everybody：4.9：Bootstrap导航菜单实战教程 🧭
+# 009：Bootstrap导航菜单实战教程 🧭
 
 ![](img/cfb146335d3ed3fc5a988a44b5a69503_1.png)
 

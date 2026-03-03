@@ -1,4 +1,4 @@
-# Django for Everybody：4：JavaScript概述与发展历史 🚀
+# 012：JavaScript概述与发展历史 🚀
 
 ![](img/f53e0479d02ad9d99019d04daab0ae0b_0.png)
 
