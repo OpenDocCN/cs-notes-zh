@@ -1,0 +1,866 @@
+# CS50：第9讲：Flask 🚀
+
+在本节课中，我们将学习如何使用Flask框架构建动态Web应用程序。我们将从创建一个简单的“Hello, World”应用开始，逐步引入表单处理、模板渲染、数据库集成以及会话管理，最终构建一个功能完整的Web应用。
+
+## 概述
+
+本节课的目标是综合运用过去10周所学的知识，特别是将Python和SQL应用于Web编程。我们将使用Flask框架，它简化了处理HTTP请求、解析URL参数等常见任务，使我们能够专注于实现应用的核心逻辑。
+
+## 1. 从静态文件到动态应用
+
+![](img/24d6a1b78476760ca39336a72ded5f68_1.png)
+
+上一节我们介绍了如何使用静态HTML文件创建网页。本节中，我们来看看如何将静态内容转换为动态的Web应用。
+
+### 1.1 启动Flask服务器
+
+与上周运行`http-server`命令不同，今天我们将使用`flask run`命令来启动一个动态的Web应用服务器。默认情况下，Flask服务器运行在端口5000上。
+
+要使用Flask，我们需要在项目目录中创建两个核心文件：
+*   `app.py`：包含应用逻辑的Python文件。
+*   `requirements.txt`：列出项目依赖的库。
+
+在`requirements.txt`中，我们只需写入：
+```
+flask
+```
+然后可以通过`pip install -r requirements.txt`命令安装所有依赖。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_3.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_5.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_6.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_7.png)
+
+### 1.2 第一个Flask应用
+
+![](img/24d6a1b78476760ca39336a72ded5f68_8.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_9.png)
+
+在`app.py`中，我们可以编写一个最简单的Flask应用来返回“Hello, World”。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_11.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_12.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_13.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_15.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_16.png)
+
+```python
+from flask import Flask
+
+![](img/24d6a1b78476760ca39336a72ded5f68_18.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_19.png)
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "Hello, world"
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_21.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_23.png)
+
+这段代码的含义是：
+*   `from flask import Flask`：导入Flask库。
+*   `app = Flask(__name__)`：将当前文件转换为一个Flask应用实例。
+*   `@app.route("/")`：这是一个装饰器，它将下面的函数与URL路径`/`（即根路径）关联起来。
+*   `def index(): return "Hello, world"`：当用户访问根路径时，执行这个函数并返回字符串“Hello, world”。
+
+运行`flask run`后，访问`http://localhost:5000/`，浏览器将显示“Hello, world”。虽然浏览器渲染了它，但服务器实际发送的只是纯文本，没有HTML标签。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_25.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_26.png)
+
+### 1.3 返回HTML内容
+
+![](img/24d6a1b78476760ca39336a72ded5f68_28.png)
+
+我们可以让应用返回完整的HTML页面。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_30.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_31.png)
+
+```python
+from flask import Flask
+
+![](img/24d6a1b78476760ca39336a72ded5f68_33.png)
+
+app = Flask(__name__)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_35.png)
+
+@app.route("/")
+def index():
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <title>Hello</title>
+        </head>
+        <body>
+            Hello, world
+        </body>
+    </html>
+    """
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_37.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_38.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_40.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_41.png)
+
+现在，当用户访问根路径时，将收到一个完整的HTML文档。查看页面源代码可以确认这一点。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_43.png)
+
+## 2. 使用模板分离逻辑与展示
+
+上一节我们将HTML硬编码在Python代码中，这不利于维护。本节中，我们来看看如何使用模板将展示逻辑分离出来。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_45.png)
+
+### 2.1 引入`render_template`
+
+![](img/24d6a1b78476760ca39336a72ded5f68_47.png)
+
+Flask提供了一个`render_template`函数，用于渲染HTML模板文件。首先，我们需要导入它。
+
+```python
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_49.png)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_51.png)
+
+### 2.2 创建模板目录和文件
+
+![](img/24d6a1b78476760ca39336a72ded5f68_53.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_54.png)
+
+按照Flask的约定，模板文件应放在项目根目录下的`templates`文件夹中。因此，我们需要创建`templates/index.html`文件，并将HTML代码移入其中。
+
+**templates/index.html:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        Hello, world
+    </body>
+</html>
+```
+
+现在，应用逻辑（`app.py`）和页面布局（`index.html`）实现了分离，结构更加清晰。
+
+## 3. 处理用户输入与动态路由
+
+一个静态页面意义有限。本节中，我们来看看如何接收用户输入，并根据输入动态生成内容。
+
+### 3.1 从URL获取参数
+
+![](img/24d6a1b78476760ca39336a72ded5f68_56.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_57.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_58.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_60.png)
+
+在Web中，经常通过URL的查询字符串（`?key=value`）传递参数。例如，访问`/?name=David`，我们希望页面显示“Hello, David”。
+
+Flask通过全局变量`request`来访问请求信息。我们需要从`request.args`字典中获取参数。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_62.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_63.png)
+
+```python
+from flask import Flask, render_template, request
+
+![](img/24d6a1b78476760ca39336a72ded5f68_65.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_66.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_67.png)
+
+app = Flask(__name__)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_69.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_71.png)
+
+@app.route("/")
+def index():
+    name = request.args.get("name", "world")
+    return render_template("index.html", placeholder=name)
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_73.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_74.png)
+
+*   `request.args.get("name", "world")`：尝试从URL参数中获取`name`的值。如果不存在，则使用默认值`"world"`。
+*   `render_template("index.html", placeholder=name)`：将变量`name`的值传递给模板，在模板中它可以通过变量名`placeholder`访问。
+
+### 3.2 在模板中插入变量
+
+在模板文件`index.html`中，我们使用Jinja2模板语法（由Flask集成）来插入动态内容。变量被包裹在双花括号`{{ }}`中。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_76.png)
+
+**templates/index.html:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        Hello, {{ placeholder }}
+    </body>
+</html>
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_78.png)
+
+现在，访问`http://localhost:5000/?name=David`将显示“Hello, David”，访问`http://localhost:5000/`将显示“Hello, world”。
+
+## 4. 使用表单与多路由处理
+
+![](img/24d6a1b78476760ca39336a72ded5f68_80.png)
+
+让用户手动修改URL并不友好。本节中，我们来看看如何通过HTML表单来收集用户输入，并使用多个路由来处理不同的请求。
+
+### 4.1 创建表单页面
+
+我们创建一个新的模板`index.html`，其中包含一个表单。
+
+**templates/index.html:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        <form action="/greet" method="get">
+            <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+            <button type="submit">Greet</button>
+        </form>
+    </body>
+</html>
+```
+*   `action="/greet"`：指定表单提交的目标URL。
+*   `method="get"`：使用HTTP GET方法提交，参数会显示在URL中。
+
+### 4.2 创建处理表单的路由
+
+我们需要在`app.py`中定义一个新的路由`/greet`来处理表单提交。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_82.png)
+
+```python
+from flask import Flask, render_template, request
+
+![](img/24d6a1b78476760ca39336a72ded5f68_84.png)
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/greet")
+def greet():
+    name = request.args.get("name", "world")
+    return render_template("greet.html", name=name)
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_86.png)
+
+同时，创建对应的模板文件`greet.html`。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_88.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_90.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_91.png)
+
+**templates/greet.html:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        Hello, {{ name }}
+    </body>
+</html>
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_93.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_94.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_95.png)
+
+现在，用户可以在首页表单中输入名字，点击提交后，会被带到`/greet`页面并看到个性化的问候。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_97.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_98.png)
+
+## 5. 模板继承与代码复用
+
+![](img/24d6a1b78476760ca39336a72ded5f68_100.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_102.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_103.png)
+
+上一节我们创建了两个几乎相同的HTML模板，这导致了代码重复。本节中，我们来看看如何使用模板继承来消除冗余。
+
+### 5.1 创建基础布局模板
+
+我们将两个模板共有的HTML结构提取到一个基础模板`layout.html`中。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_105.png)
+
+**templates/layout.html:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Hello</title>
+    </head>
+    <body>
+        {% block body %}{% endblock %}
+    </body>
+</html>
+```
+*   `{% block body %}{% endblock %}`：定义了一个名为`body`的块（block），子模板可以在这个位置插入自己特有的内容。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_107.png)
+
+### 5.2 创建子模板
+
+![](img/24d6a1b78476760ca39336a72ded5f68_109.png)
+
+现在，我们可以重写`index.html`和`greet.html`，让它们继承自`layout.html`，并只定义自己的`body`块内容。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_111.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_112.png)
+
+**templates/index.html:**
+```html
+{% extends "layout.html" %}
+
+![](img/24d6a1b78476760ca39336a72ded5f68_114.png)
+
+{% block body %}
+    <form action="/greet" method="get">
+        <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+        <button type="submit">Greet</button>
+    </form>
+{% endblock %}
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_116.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_117.png)
+
+**templates/greet.html:**
+```html
+{% extends "layout.html" %}
+
+![](img/24d6a1b78476760ca39336a72ded5f68_119.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_120.png)
+
+{% block body %}
+    Hello, {{ name }}
+{% endblock %}
+```
+*   `{% extends "layout.html" %}`：声明此模板继承自`layout.html`。
+*   `{% block body %} ... {% endblock %}`：用具体内容填充父模板中定义的`body`块。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_122.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_123.png)
+
+这样，公共的HTML结构只需维护一份，极大地提高了代码的可维护性。
+
+## 6. 使用POST方法提升安全性
+
+上一节我们使用GET方法提交表单，参数暴露在URL中。本节中，我们来看看如何使用POST方法来提交数据，以提升安全性和隐私性。
+
+### 6.1 将表单方法改为POST
+
+![](img/24d6a1b78476760ca39336a72ded5f68_125.png)
+
+修改`index.html`中的表单，将`method`属性从`"get"`改为`"post"`。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_127.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_128.png)
+
+**templates/index.html:**
+```html
+{% extends "layout.html" %}
+
+![](img/24d6a1b78476760ca39336a72ded5f68_130.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_131.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_132.png)
+
+{% block body %}
+    <form action="/greet" method="post">
+        <input autocomplete="off" autofocus name="name" placeholder="Name" type="text">
+        <button type="submit">Greet</button>
+    </form>
+{% endblock %}
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_134.png)
+
+### 6.2 修改路由以支持POST
+
+![](img/24d6a1b78476760ca39336a72ded5f68_136.png)
+
+默认情况下，Flask路由只响应GET请求。我们需要显式声明路由支持POST方法，并且从`request.form`中获取数据（GET数据在`request.args`中）。
+
+```python
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_138.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_139.png)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/greet", methods=["POST"])
+def greet():
+    name = request.form.get("name", "world")
+    return render_template("greet.html", name=name)
+```
+*   `methods=["POST"]`：指定该路由只响应POST请求。
+*   `request.form.get("name", "world")`：从POST请求的表单数据中获取`name`参数。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_141.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_143.png)
+
+现在，提交表单时，URL中不会显示参数，数据在HTTP请求体内传输，更加安全。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_144.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_146.png)
+
+## 7. 构建一个注册网站示例
+
+掌握了基本概念后，本节中我们来看一个更复杂的实际示例：一个新生校内体育项目（Frosh IMs）的注册网站。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_148.png)
+
+### 7.1 项目结构
+
+![](img/24d6a1b78476760ca39336a72ded5f68_150.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_151.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_152.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_153.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_155.png)
+
+项目目录结构如下：
+```
+froshims/
+├── app.py
+├── requirements.txt
+├── froshims.db
+├── static/
+│   └── (图片等静态资源)
+└── templates/
+    ├── layout.html
+    ├── index.html
+    ├── error.html
+    ├── success.html
+    └── registrants.html
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_157.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_158.png)
+
+### 7.2 核心应用逻辑
+
+![](img/24d6a1b78476760ca39336a72ded5f68_160.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_162.png)
+
+以下是`app.py`的核心部分，展示了如何结合路由、表单处理、数据库操作和模板渲染。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_164.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_165.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_167.png)
+
+```python
+from flask import Flask, render_template, request, redirect
+from cs50 import SQL
+
+app = Flask(__name__)
+db = SQL("sqlite:///froshims.db")
+
+![](img/24d6a1b78476760ca39336a72ded5f68_169.png)
+
+# 定义支持的体育项目
+SPORTS = ["Basketball", "Soccer", "Ultimate Frisbee"]
+
+![](img/24d6a1b78476760ca39336a72ded5f68_171.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_172.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_174.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_176.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_177.png)
+
+@app.route("/")
+def index():
+    """显示注册表单"""
+    return render_template("index.html", sports=SPORTS)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_178.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_180.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_181.png)
+
+@app.route("/register", methods=["POST"])
+def register():
+    """处理注册表单提交"""
+    # 验证输入
+    name = request.form.get("name")
+    sport = request.form.get("sport")
+    if not name or not sport:
+        return render_template("error.html", message="Missing name or sport")
+    if sport not in SPORTS:
+        return render_template("error.html", message="Invalid sport")
+
+    # 将数据存入数据库
+    db.execute("INSERT INTO registrants (name, sport) VALUES(?, ?)", name, sport)
+
+    # 注册成功后重定向到参与者列表页
+    return redirect("/registrants")
+
+![](img/24d6a1b78476760ca39336a72ded5f68_183.png)
+
+@app.route("/registrants")
+def registrants():
+    """显示所有已注册的参与者"""
+    registrants = db.execute("SELECT * FROM registrants")
+    return render_template("registrants.html", registrants=registrants)
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_185.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_186.png)
+
+### 7.3 关键功能点解析
+
+以下是该示例实现的一些关键功能：
+
+![](img/24d6a1b78476760ca39336a72ded5f68_188.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_190.png)
+
+*   **动态生成表单选项**：在模板中使用Jinja2循环来生成体育项目下拉菜单或复选框，避免硬编码。
+    ```html
+    <select name="sport">
+        <option disabled selected>Sport</option>
+        {% for sport in sports %}
+            <option value="{{ sport }}">{{ sport }}</option>
+        {% endfor %}
+    </select>
+    ```
+*   **输入验证**：服务器端对用户提交的姓名和所选运动进行验证，防止无效或恶意数据。
+*   **数据库集成**：使用CS50 SQL库执行`INSERT`和`SELECT`操作，将数据持久化到SQLite数据库`froshims.db`中。
+*   **重定向**：使用`redirect`函数在`POST`请求处理后，将用户导航到另一个页面（如列表页），这是一种防止重复提交的常见模式（Post/Redirect/Get）。
+*   **删除功能**：在`registrants.html`中，为每个注册者添加一个删除按钮，表单中包含隐藏的`id`字段，提交到`/deregister`路由执行删除操作。
+    ```python
+    @app.route("/deregister", methods=["POST"])
+    def deregister():
+        id = request.form.get("id")
+        if id:
+            db.execute("DELETE FROM registrants WHERE id = ?", id)
+        return redirect("/registrants")
+    ```
+
+## 8. 会话管理与用户状态
+
+Web应用通常需要记住用户的状态，比如是否登录、购物车内容等。本节中，我们来看看如何使用会话来管理用户状态。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_192.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_193.png)
+
+### 8.1 什么是会话
+
+HTTP协议本身是无状态的。会话（Session）是一种机制，通过在服务器端存储数据，并在客户端浏览器设置一个唯一的Cookie（会话ID），来模拟一种持续的“状态”。Cookie就像游乐园的手环，是服务器识别用户的凭证。
+
+### 8.2 使用Flask-Session实现登录
+
+以下是一个简化版的登录系统示例：
+
+```python
+from flask import Flask, render_template, request, redirect, session
+from flask_session import Session
+
+app = Flask(__name__)
+# 配置会话，将数据存储在服务器端文件系统中
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+
+@app.route("/")
+def index():
+    """首页，根据登录状态显示不同内容"""
+    # 从会话中获取用户名
+    name = session.get("name")
+    return render_template("index.html", name=name)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_195.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_196.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_197.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_198.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_200.png)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """登录处理"""
+    if request.method == "POST":
+        # 用户提交登录表单，将用户名存入会话
+        session["name"] = request.form.get("name")
+        return redirect("/")
+    # 用户访问登录页面，显示登录表单
+    return render_template("login.html")
+
+![](img/24d6a1b78476760ca39336a72ded5f68_202.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_203.png)
+
+@app.route("/logout")
+def logout():
+    """登出处理"""
+    # 清除会话中的所有数据
+    session.clear()
+    return redirect("/")
+```
+
+**templates/index.html:**
+```html
+{% extends "layout.html" %}
+
+{% block body %}
+    {% if name %}
+        <h1>You are logged in as {{ name }}</h1>
+        <a href="/logout">Log Out</a>
+    {% else %}
+        <h1>You are not logged in.</h1>
+        <a href="/login">Log In</a>
+    {% endif %}
+{% endblock %}
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_205.png)
+
+### 8.3 使用会话实现购物车
+
+![](img/24d6a1b78476760ca39336a72ded5f68_207.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_208.png)
+
+会话也非常适合实现购物车功能。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_210.png)
+
+```python
+@app.route("/cart", methods=["GET", "POST"])
+def cart():
+    """购物车"""
+    # 确保会话中存在cart键，它是一个列表
+    if "cart" not in session:
+        session["cart"] = []
+
+    if request.method == "POST":
+        # 添加商品到购物车
+        id = request.form.get("id")
+        if id:
+            session["cart"].append(id)
+        return redirect("/cart")
+
+    # 显示购物车内容
+    books = []
+    if session["cart"]:
+        # 根据购物车中的ID列表查询数据库
+        books = db.execute("SELECT * FROM books WHERE id IN (?)", session["cart"])
+    return render_template("cart.html", books=books)
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_212.png)
+
+## 9. 构建API与JSON响应
+
+![](img/24d6a1b78476760ca39336a72ded5f68_214.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_216.png)
+
+除了返回完整的HTML页面，Web应用还可以提供API接口，返回结构化数据（如JSON），供其他应用或前端JavaScript使用。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_218.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_220.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_222.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_224.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_225.png)
+
+### 9.1 返回JSON数据
+
+![](img/24d6a1b78476760ca39336a72ded5f68_227.png)
+
+Flask提供了`jsonify`函数，可以轻松地将Python字典或列表转换为JSON响应。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_229.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_230.png)
+
+```python
+from flask import Flask, jsonify
+from cs50 import SQL
+
+![](img/24d6a1b78476760ca39336a72ded5f68_232.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_233.png)
+
+app = Flask(__name__)
+db = SQL("sqlite:///shows.db")
+
+@app.route("/search")
+def search():
+    """搜索电视节目API，返回JSON格式结果"""
+    q = request.args.get("q", "")
+    # 使用LIKE进行模糊查询
+    shows = db.execute("SELECT * FROM shows WHERE title LIKE ?", f"%{q}%")
+    # 将结果列表直接转换为JSON响应
+    return jsonify(shows)
+```
+
+![](img/24d6a1b78476760ca39336a72ded5f68_235.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_236.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_237.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_238.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_239.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_240.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_242.png)
+
+访问`/search?q=office`将返回一个JSON数组，其中包含所有标题包含“office”的节目信息。这种API可以被任何客户端（如浏览器中的JavaScript、移动应用、其他服务器）消费。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_243.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_244.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_246.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_247.png)
+
+### 9.2 MVC设计模式
+
+![](img/24d6a1b78476760ca39336a72ded5f68_249.png)
+
+在构建这些应用的过程中，我们实际上遵循了一种常见的软件架构模式——MVC（Model-View-Controller）：
+*   **模型（Model）**：负责数据和业务逻辑。在我们的例子中，是`froshims.db`数据库以及与之交互的SQL语句。
+*   **视图（View）**：负责用户界面展示。即`templates`目录下的所有HTML模板文件。
+*   **控制器（Controller）**：负责处理用户输入，协调模型和视图。即`app.py`中的路由函数。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_251.png)
+
+这种分离使得代码更易于组织、测试和维护。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_253.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_254.png)
+
+## 总结
+
+![](img/24d6a1b78476760ca39336a72ded5f68_256.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_257.png)
+
+本节课我们一起学习了使用Flask框架进行Web编程的核心概念。我们从创建一个简单的“Hello, World”应用开始，逐步引入了路由、模板、表单处理、数据库集成、会话管理和API构建。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_259.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_260.png)
+
+我们构建了Frosh IMs注册网站，涵盖了用户注册、数据验证、数据库CRUD操作、页面重定向等完整功能。我们还探讨了如何使用会话来管理用户登录状态和购物车，以及如何创建返回JSON数据的API接口。
+
+![](img/24d6a1b78476760ca39336a72ded5f68_262.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_264.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_265.png)
+
+![](img/24d6a1b78476760ca39336a72ded5f68_266.png)
+
+通过本节课，你已经掌握了构建动态、数据驱动的Web应用程序所需的基本工具和模式。这些知识为你完成课程最终项目，乃至未来的编程项目，奠定了坚实的基础。
