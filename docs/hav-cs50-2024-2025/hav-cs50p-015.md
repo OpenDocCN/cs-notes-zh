@@ -1,4 +1,4 @@
-# Python编程入门：P15：random模块 🎲
+# 015：random模块 🎲
 
 ![](img/d599875aee7f49738a513fca7cd6b5ba_0.png)
 

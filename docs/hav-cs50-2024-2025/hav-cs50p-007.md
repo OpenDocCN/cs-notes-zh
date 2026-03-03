@@ -1,4 +1,4 @@
-# Python编程入门：P7：-08-函数
+# 007：-08-函数
 
 ![](img/d7f070c46ed9ec03c97b0127abaff8af_0.png)
 

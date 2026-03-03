@@ -1,4 +1,4 @@
-# 哈佛大学《CS50 Scratch 编程》课程：第4讲：数值
+# 004：数值
 
 ![](img/daf7e752addae24d114c906c9e04fa1e_0.png)
 

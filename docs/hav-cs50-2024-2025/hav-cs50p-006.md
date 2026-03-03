@@ -1,4 +1,4 @@
-# Python编程入门：P6：-07-For循环
+# 006：-07-For循环
 
 ![](img/27e27eaa3403abf6d4c673e299ac34d9_0.png)
 

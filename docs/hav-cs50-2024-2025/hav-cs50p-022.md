@@ -1,4 +1,4 @@
-# Python编程入门：P22：While循环 🔄
+# 022：While循环 🔄
 
 ![](img/edb4e446c3609869d05ac1eb47a88aaf_0.png)
 

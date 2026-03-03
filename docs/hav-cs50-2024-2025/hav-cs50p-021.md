@@ -1,4 +1,4 @@
-# CS50P 编程入门：P21-P22：为 CS50 准备的 Visual Studio Code 🖥️
+# 021：为 CS50 准备的 Visual Studio Code 🖥️
 
 ![](img/3ffe26fbf1f7f94cd955971195b70ea3_0.png)
 
