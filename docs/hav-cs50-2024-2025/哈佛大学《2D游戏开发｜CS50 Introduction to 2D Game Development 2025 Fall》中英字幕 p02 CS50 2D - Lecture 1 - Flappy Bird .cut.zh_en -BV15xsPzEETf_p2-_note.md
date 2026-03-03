@@ -1,0 +1,765 @@
+# CS50 2D游戏开发：第1讲：Flappy Bird 🐦
+
+## 概述
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_1.png)
+
+在本节课中，我们将学习如何使用LÖVE2D框架，从零开始重新创建经典的移动游戏《Flappy Bird》。我们将从绘制静态背景开始，逐步添加动态元素，如重力、玩家控制、无限滚动的障碍物（管道）、碰撞检测，并最终实现一个完整的游戏状态机。通过这个过程，你将掌握2D游戏开发的核心概念，包括精灵渲染、视差滚动、程序化生成和状态管理。
+
+---
+
+## 1. 初始设置与静态背景 🖼️
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_3.png)
+
+上一节我们介绍了课程目标。本节中，我们来看看如何设置游戏窗口并绘制静态背景。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_5.png)
+
+首先，我们需要初始化游戏窗口并加载图像资源。在LÖVE2D中，`love.graphics.newImage`函数用于加载图像文件。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_7.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_8.png)
+
+```lua
+function love.load()
+    -- 设置窗口和虚拟分辨率
+    push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {...})
+
+    -- 加载背景和地面图像
+    background = love.graphics.newImage('background.png')
+    ground = love.graphics.newImage('ground.png')
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_10.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_11.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_13.png)
+
+加载图像后，我们可以在`love.draw`函数中绘制它们。所有图像默认以其左上角为原点进行绘制。
+
+```lua
+function love.draw()
+    push:start()
+    -- 在坐标(0, 0)处绘制背景，填满屏幕
+    love.graphics.draw(background, 0, 0)
+    -- 在地面绘制在屏幕底部（虚拟高度 - 地面图像高度）
+    love.graphics.draw(ground, 0, VIRTUAL_HEIGHT - 16)
+    push:finish()
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_15.png)
+
+运行此代码，你将看到一个静止的游戏场景，包含背景山脉和地面。
+
+---
+
+## 2. 实现视差滚动 🌄
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_17.png)
+
+上一节我们绘制了静态场景。本节中，我们来看看如何让背景和地面滚动起来，创造出玩家向前飞行的错觉，并利用视差效果模拟深度。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_19.png)
+
+视差是一种视觉现象，离观察者近的物体比远的物体移动得更快。在游戏中，我们可以通过以不同速度滚动图层来模拟这种效果。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_21.png)
+
+以下是实现无限循环滚动的核心逻辑：
+
+```lua
+-- 定义滚动速度和循环点
+local BACKGROUND_SCROLL_SPEED = 30
+local GROUND_SCROLL_SPEED = 60
+local BACKGROUND_LOOPING_POINT = 413
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_23.png)
+
+function love.update(dt)
+    -- 更新背景滚动位置，使用模运算实现循环
+    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
+    -- 更新地面滚动位置
+    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+end
+
+function love.draw()
+    -- 绘制背景，x坐标为负的滚动值，使其向左移动
+    love.graphics.draw(background, -backgroundScroll, 0)
+    -- 绘制地面，同样向左移动，但速度更快
+    love.graphics.draw(ground, -groundScroll, VIRTUAL_HEIGHT - 16)
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_25.png)
+
+通过让地面以两倍于背景的速度滚动，我们成功营造出了山脉在远处、地面在近处的深度感。模运算确保了纹理在移出屏幕后能无缝地重新开始，创造了无限延伸的世界假象。
+
+---
+
+## 3. 添加玩家角色（小鸟） 🐤
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_27.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_29.png)
+
+上一节我们实现了场景的滚动。本节中，我们引入游戏的主角——小鸟。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_31.png)
+
+我们将使用面向对象的方式创建一个`Bird`类，这样能更好地封装小鸟的数据和行为。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_33.png)
+
+首先，定义`Bird`类：
+
+```lua
+Bird = Class{}
+
+function Bird:init()
+    -- 加载小鸟图像
+    self.image = love.graphics.newImage('bird.png')
+    -- 获取图像的宽度和高度
+    self.width = self.image:getWidth()
+    self.height = self.image:getHeight()
+    -- 将小鸟定位在屏幕中央
+    self.x = VIRTUAL_WIDTH / 2 - self.width / 2
+    self.y = VIRTUAL_HEIGHT / 2 - self.height / 2
+end
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_35.png)
+
+function Bird:render()
+    -- 绘制小鸟
+    love.graphics.draw(self.image, self.x, self.y)
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_37.png)
+
+然后在主程序中创建小鸟实例并渲染它：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_39.png)
+
+```lua
+function love.load()
+    -- ... 其他加载代码 ...
+    bird = Bird()
+end
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_41.png)
+
+function love.draw()
+    -- ... 绘制背景和地面 ...
+    bird:render()
+end
+```
+
+现在，小鸟已经出现在屏幕中央，随着背景一起移动，但还没有任何物理交互。
+
+---
+
+## 4. 模拟重力与下落 ⬇️
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_43.png)
+
+上一节我们添加了静态的小鸟。本节中，我们为游戏引入第一个物理元素：重力。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_45.png)
+
+重力是一个持续的加速度，会使物体向下移动。我们将用一个常量来表示重力强度，并每帧更新小鸟的垂直速度(`dy`)和位置(`y`)。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_47.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_48.png)
+
+在`Bird`类中添加更新逻辑：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_50.png)
+
+```lua
+function Bird:init()
+    -- ... 之前的初始化代码 ...
+    self.dy = 0 -- 初始垂直速度为0
+end
+
+function Bird:update(dt)
+    -- 应用重力：增加向下的速度
+    self.dy = self.dy + GRAVITY * dt
+    -- 根据速度更新垂直位置
+    self.y = self.y + self.dy * dt
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_52.png)
+
+在主循环的`love.update`中调用小鸟的更新函数：
+
+```lua
+function love.update(dt)
+    -- ... 更新滚动 ...
+    bird:update(dt)
+end
+```
+
+运行游戏，你会看到小鸟从屏幕中央开始加速下落，最终掉出屏幕底部。这为我们的游戏建立了基本的物理规则。
+
+---
+
+## 5. 实现玩家控制与跳跃 ⬆️
+
+上一节小鸟只能下落。本节中，我们赋予玩家控制能力，让小鸟能够对抗重力向上跳跃。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_54.png)
+
+在Flappy Bird中，点击屏幕或按下空格键会给小鸟一个向上的瞬时冲量。我们通过直接将垂直速度设置为一个负值来实现跳跃。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_56.png)
+
+首先，我们需要一个方法来检测“单次按键”事件，而不是持续按下的状态。我们扩展LÖVE的键盘模块：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_58.png)
+
+```lua
+-- 在love.load中创建一个表来记录本帧按下的键
+love.keyboard.keysPressed = {}
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_59.png)
+
+function love.keypressed(key)
+    -- 当有键被按下时，在表中标记
+    love.keyboard.keysPressed[key] = true
+end
+
+function love.keyboard.wasPressed(key)
+    -- 检查某个键是否在本帧被按下过
+    return love.keyboard.keysPressed[key] or false
+end
+
+function love.update(dt)
+    -- 在每帧更新后，清空按键记录表，为下一帧做准备
+    love.keyboard.keysPressed = {}
+end
+```
+
+现在，在`Bird`类的更新函数中，我们可以检测空格键是否被按下，并触发跳跃：
+
+```lua
+function Bird:update(dt)
+    -- 应用重力
+    self.dy = self.dy + GRAVITY * dt
+
+    -- 如果检测到空格键被按下，执行跳跃
+    if love.keyboard.wasPressed('space') then
+        self.dy = -JUMP_VELOCITY -- 例如 -300，给一个向上的速度
+        -- 可以在这里添加跳跃音效
+    end
+
+    -- 更新位置
+    self.y = self.y + self.dy * dt
+end
+```
+
+跳跃速度(`JUMP_VELOCITY`)是一个负值，它会立即让小鸟向上运动。随后，重力会逐渐抵消这个速度，使小鸟达到最高点后再次下落。通过不断点击，玩家可以控制小鸟的高度，穿越障碍。
+
+---
+
+## 6. 生成无限滚动的障碍物（管道） 🚧
+
+上一节我们实现了可控制的小鸟。本节中，我们添加游戏的核心挑战：无限生成的管道障碍物。
+
+管道需要成对出现（上方和下方），中间留有缝隙让小鸟通过。我们将创建一个`Pipe`类和一个管理管道对的`PipePair`类。
+
+首先，创建单个`Pipe`类，它可以被配置为上管道或下管道：
+
+```lua
+Pipe = Class{}
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_61.png)
+
+function Pipe:init(orientation, y)
+    self.orientation = orientation -- 'top' 或 'bottom'
+    self.x = VIRTUAL_WIDTH -- 从屏幕右侧外开始
+    self.y = y
+    self.image = love.graphics.newImage('pipe.png')
+    self.width = self.image:getWidth()
+    self.height = self.image:getHeight()
+end
+
+function Pipe:update(dt)
+    -- 管道以恒定速度向左移动
+    self.x = self.x + PIPE_SCROLL_SPEED * dt
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_63.png)
+
+然后，创建`PipePair`类来管理一对管道：
+
+```lua
+PipePair = Class{}
+
+function PipePair:init(y)
+    self.x = VIRTUAL_WIDTH
+    -- 随机生成管道对的垂直位置，但基于上一对的位置微调，避免难度突变
+    self.y = y
+    -- 创建上下两个管道
+    self.pipes = {
+        ['top'] = Pipe('top', self.y),
+        ['bottom'] = Pipe('bottom', self.y + PIPE_HEIGHT + PIPE_GAP)
+    }
+    self.remove = false -- 标记是否应该被移除
+end
+
+function PipePair:update(dt)
+    -- 如果管道对移出屏幕左侧，标记为可移除
+    if self.x < -self.pipes['top'].width then
+        self.remove = true
+    end
+    self.x = self.x + PIPE_SCROLL_SPEED * dt
+    -- 更新两个管道的位置
+    self.pipes['top'].x = self.x
+    self.pipes['bottom'].x = self.x
+end
+```
+
+在主程序中，我们使用一个计时器定期生成新的管道对，并将其存储在一个表中。同时，我们需要遍历这个表来更新和渲染所有管道对，并移除那些已经移出屏幕的。
+
+```lua
+function love.load()
+    pipePairs = {}
+    spawnTimer = 0
+end
+
+function love.update(dt)
+    spawnTimer = spawnTimer + dt
+    -- 每2秒生成一对新管道
+    if spawnTimer > 2 then
+        table.insert(pipePairs, PipePair())
+        spawnTimer = 0
+    end
+
+    -- 更新所有管道对
+    for k, pair in pairs(pipePairs) do
+        pair:update(dt)
+        if pair.remove then
+            table.remove(pipePairs, k)
+        end
+    end
+end
+```
+
+现在，游戏中会不断有管道对从右侧出现并向左滚动，形成了无尽的障碍赛道。上方的管道需要被垂直翻转绘制，这可以通过在绘制时设置负的Y轴缩放因子来实现，同时调整绘制原点以使其正确显示。
+
+---
+
+## 7. 实现碰撞检测 💥
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_65.png)
+
+上一节管道已经出现，但小鸟可以穿过去。本节中，我们添加碰撞检测，让游戏具有挑战性。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_67.png)
+
+我们将使用**轴对齐边界框（AABB）**算法进行碰撞检测。这是2D游戏中最常用的碰撞检测方法，适用于所有矩形物体。
+
+在`Bird`类中添加一个碰撞检测函数：
+
+```lua
+function Bird:collides(pipe)
+    -- 为了增加游戏容错性，将小鸟的碰撞框稍微缩小一点
+    local birdLeft = self.x + 2
+    local birdRight = self.x + self.width - 4
+    local birdTop = self.y + 2
+    local birdBottom = self.y + self.height - 4
+
+    local pipeLeft = pipe.x
+    local pipeRight = pipe.x + pipe.width
+    local pipeTop = pipe.y
+    local pipeBottom = pipe.y + pipe.height
+
+    -- AABB碰撞检测：检查两个矩形在所有轴上是否都有重叠
+    return birdRight > pipeLeft and birdLeft < pipeRight and birdBottom > pipeTop and birdTop < pipeBottom
+end
+```
+
+在主更新循环中，遍历所有管道对中的每个管道，检查是否与小鸟发生碰撞：
+
+```lua
+function love.update(dt)
+    -- ... 更新小鸟和管道 ...
+
+    for k, pair in pairs(pipePairs) do
+        for l, pipe in pairs(pair.pipes) do
+            if bird:collides(pipe) then
+                -- 发生碰撞，游戏结束或进入得分状态
+                -- 例如：gsateMachine:change('score')
+            end
+        end
+    end
+end
+```
+
+此外，还需要检测小鸟是否撞到地面或飞出屏幕上边界。当碰撞发生时，游戏逻辑应该从“游玩状态”过渡到“得分展示状态”。
+
+---
+
+## 8. 构建游戏状态机 🎮
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_69.png)
+
+上一节游戏核心循环已经完成。本节中，我们引入一个更优雅的方式来管理游戏的不同阶段（如开始菜单、游玩中、游戏结束），即**状态机**。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_71.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_73.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_75.png)
+
+状态机将游戏逻辑划分为独立的状态（State），每个状态负责自己的更新、渲染和输入处理。这使代码更模块化，易于管理和扩展。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_77.png)
+
+我们创建一个`StateMachine`类来管理状态切换：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_79.png)
+
+```lua
+StateMachine = Class{}
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_81.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_83.png)
+
+function StateMachine:init(states)
+    self.states = states or {} -- 存储所有已注册的状态
+    self.current = nil -- 当前状态
+end
+
+function StateMachine:change(stateName, enterParams)
+    -- 确保当前状态存在，并调用其退出方法
+    if self.current and self.current.exit then
+        self.current:exit()
+    end
+    -- 根据状态名获取新的状态实例（调用其构造函数）
+    self.current = self.states[stateName]()
+    -- 调用新状态的进入方法，并传递参数
+    if self.current and self.current.enter then
+        self.current:enter(enterParams)
+    end
+end
+
+function StateMachine:update(dt)
+    if self.current and self.current.update then
+        self.current:update(dt)
+    end
+end
+
+function StateMachine:render()
+    if self.current and self.current.render then
+        self.current:render()
+    end
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_85.png)
+
+定义几个基础状态，例如`TitleScreenState`（标题界面）、`CountdownState`（倒计时）、`PlayState`（游玩）、`ScoreState`（得分）：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_87.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_89.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_90.png)
+
+```lua
+-- 示例：标题界面状态
+TitleScreenState = Class{}
+
+function TitleScreenState:update(dt)
+    if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+        gStateMachine:change('countdown') -- 切换到倒计时状态
+    end
+end
+
+function TitleScreenState:render()
+    love.graphics.setFont(flappyFont)
+    love.graphics.printf('CS50 Bird', 0, 64, VIRTUAL_WIDTH, 'center')
+    love.graphics.setFont(mediumFont)
+    love.graphics.printf('Press Enter', 0, 140, VIRTUAL_WIDTH, 'center')
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_92.png)
+
+在主程序中初始化状态机并注册状态：
+
+```lua
+function love.load()
+    gStateMachine = StateMachine({
+        ['title'] = function() return TitleScreenState() end,
+        ['countdown'] = function() return CountdownState() end,
+        ['play'] = function() return PlayState() end,
+        ['score'] = function() return ScoreState() end
+    })
+    gStateMachine:change('title') -- 初始状态为标题界面
+end
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_94.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_95.png)
+
+function love.update(dt)
+    -- 全局更新，如背景滚动
+    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
+    -- 将具体游戏逻辑更新委托给状态机
+    gStateMachine:update(dt)
+end
+
+function love.draw()
+    push:start()
+    -- 绘制全局背景
+    love.graphics.draw(background, -backgroundScroll, 0)
+    -- 将具体游戏渲染委托给状态机
+    gStateMachine:render()
+    push:finish()
+end
+```
+
+通过状态机，游戏流程变得清晰：标题 -> 倒计时 -> 游玩 ->（碰撞后）得分 -> 按回车键回到倒计时 -> 重新开始。每个状态都专注于自己的职责，代码结构更加整洁。
+
+---
+
+## 9. 计分与状态间通信 📊
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_97.png)
+
+上一节我们建立了状态机框架。本节中，我们实现游戏计分功能，并展示如何在状态之间传递数据（例如将游玩状态的得分传递给得分展示状态）。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_98.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_100.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_102.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_103.png)
+
+计分逻辑是：每当小鸟安全通过一对管道（即小鸟的X坐标超过管道对的X坐标加上其宽度），分数就增加1。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_105.png)
+
+在`PlayState`的更新函数中添加计分逻辑：
+
+```lua
+function PlayState:update(dt)
+    -- ... 更新小鸟和管道 ...
+
+    for k, pair in pairs(self.pipePairs) do
+        -- 如果这对管道尚未被计分，且小鸟已飞过它
+        if not pair.scored and pair.x + PIPE_WIDTH < self.bird.x then
+            self.score = self.score + 1
+            pair.scored = true -- 标记为已计分，防止重复加分
+            -- 播放得分音效
+            gSounds['score']:play()
+        end
+    end
+end
+```
+
+当小鸟发生碰撞，游戏需要从`PlayState`切换到`ScoreState`。此时，我们需要将`self.score`传递给`ScoreState`。这可以通过状态机的`change`方法的参数来实现。
+
+在`PlayState`中触发状态切换：
+
+```lua
+-- 检测到碰撞后
+gStateMachine:change('score', {
+    score = self.score -- 将当前分数作为参数传递
+})
+```
+
+在`ScoreState`中，通过`enter`方法接收这个参数：
+
+```lua
+function ScoreState:enter(params)
+    -- params 就是上面传递进来的表
+    self.score = params.score
+end
+
+function ScoreState:render()
+    love.graphics.setFont(flappyFont)
+    love.graphics.printf('Game Over!', 0, 64, VIRTUAL_WIDTH, 'center')
+    love.graphics.setFont(mediumFont)
+    love.graphics.printf('Score: ' .. self.score, 0, 140, VIRTUAL_WIDTH, 'center')
+    love.graphics.printf('Press Enter to Play Again', 0, 180, VIRTUAL_WIDTH, 'center')
+end
+```
+
+这样，得分状态就能正确显示玩家在上一轮游戏中获得的分数。状态间的数据传递使得各个模块既能保持独立，又能必要地协作。
+
+---
+
+## 10. 添加音效与音乐 🎵
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_107.png)
+
+上一节游戏功能已基本完整。本节中，我们通过添加音效和背景音乐来提升游戏体验。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_109.png)
+
+音效能极大地增强游戏的反馈感和沉浸感。我们将为跳跃、碰撞、得分等事件添加对应的音效，并添加循环播放的背景音乐。
+
+首先，在`love.load`中加载所有音频文件：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_111.png)
+
+```lua
+function love.load()
+    gSounds = {
+        ['jump'] = love.audio.newSource('sounds/jump.wav', 'static'),
+        ['explosion'] = love.audio.newSource('sounds/explosion.wav', 'static'),
+        ['hurt'] = love.audio.newSource('sounds/hurt.wav', 'static'),
+        ['score'] = love.audio.newSource('sounds/score.wav', 'static'),
+        ['music'] = love.audio.newSource('sounds/music.mp3', 'stream') -- 音乐文件较大，使用流式加载
+    }
+    -- 设置背景音乐循环播放
+    gSounds['music']:setLooping(true)
+    -- 开始播放背景音乐
+    gSounds['music']:play()
+end
+```
+
+然后在游戏中的相应事件处触发音效：
+
+```lua
+-- 在小鸟跳跃时
+function Bird:update(dt)
+    if love.keyboard.wasPressed('space') then
+        self.dy = -JUMP_VELOCITY
+        gSounds['jump']:play() -- 播放跳跃音效
+    end
+end
+
+-- 在碰撞发生时（PlayState中）
+if bird:collides(pipe) then
+    gSounds['explosion']:play()
+    gSounds['hurt']:play()
+    gStateMachine:change('score', {score = self.score})
+end
+
+-- 在得分时（PlayState中）
+if not pair.scored and pair.x + PIPE_WIDTH < self.bird.x then
+    self.score = self.score + 1
+    pair.scored = true
+    gSounds['score']:play() -- 播放得分音效
+end
+```
+
+背景音乐会自动循环，为整个游戏过程提供持续的听觉氛围。恰当的音效能让游戏感觉更加生动和富有响应性。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_113.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_115.png)
+
+---
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_117.png)
+
+## 11. 支持鼠标/触摸输入 👆
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_119.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_121.png)
+
+上一节我们添加了听觉反馈。本节中，我们让游戏支持鼠标点击（模拟移动设备的触摸输入），使其更接近原版Flappy Bird的操控方式。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_123.png)
+
+LÖVE2D提供了`love.mousepressed`回调函数来检测鼠标点击。我们可以采用与扩展键盘输入类似的方式，来检测“单次鼠标点击”事件。
+
+扩展鼠标输入检测：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_125.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_127.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_129.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_131.png)
+
+```lua
+-- 在love.load中
+love.mouse.buttonsPressed = {}
+
+function love.mousepressed(x, y, button)
+    love.mouse.buttonsPressed[button] = true
+end
+
+function love.mouse.wasPressed(button)
+    return love.mouse.buttonsPressed[button] or false
+end
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_133.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_135.png)
+
+function love.update(dt)
+    -- 每帧清空鼠标按键记录
+    love.mouse.buttonsPressed = {}
+end
+```
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_137.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_138.png)
+
+修改小鸟的跳跃控制逻辑，同时支持空格键和鼠标左键（按钮编号为1）：
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_140.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_142.png)
+
+```lua
+function Bird:update(dt)
+    -- 如果按下空格键或鼠标左键，则跳跃
+    if love.keyboard.wasPressed('space') or love.mouse.wasPressed(1) then
+        self.dy = -JUMP_VELOCITY
+        gSounds['jump']:play()
+    end
+    -- ... 应用重力和更新位置 ...
+end
+```
+
+现在，玩家既可以使用键盘空格键，也可以使用鼠标左键来控制小鸟跳跃。这为游戏提供了更多的输入选项，并模拟了移动设备上的触摸体验。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_144.png)
+
+---
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_146.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_147.png)
+
+## 总结
+
+本节课中，我们一起学习了如何使用LÖVE2D框架逐步构建一个完整的《Flappy Bird》游戏。我们从绘制静态背景开始，逐步添加了视差滚动、玩家控制的小鸟、程序化生成的无限管道、精确的碰撞检测、一个管理游戏流程的状态机、计分系统、音效以及鼠标输入支持。
+
+通过这个项目，你掌握了2D游戏开发的多个核心概念：
+*   **精灵与图像渲染**：使用`love.graphics.newImage`和`love.graphics.draw`。
+*   **视差滚动与无限循环**：通过不同速度的滚动和模运算创造深度感和无尽世界。
+*   **物理模拟**：简单的重力与速度模型。
+*   **输入处理**：扩展LÖVE API以支持单次按键/点击检测。
+*   **程序化生成**：随机但平滑地生成管道障碍物。
+*   **碰撞检测**：实现AABB算法并优化碰撞框以提高游戏公平性。
+*   **状态机**：构建一个优雅的系统来管理游戏的不同阶段（标题、游玩、得分等）。
+*   **音频**：添加音效和循环背景音乐以增强沉浸感。
+*   **面向对象编程**：使用类来组织代码，提高可读性和可维护性。
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_149.png)
+
+![](img/5e4c4e34f2136f2f0d887480ad975eeb_150.png)
+
+这些基础将为你后续学习更复杂的2D游戏开发技术打下坚实的基础。下一讲，我们将探索《Breakout》游戏，并学习精灵表、粒子系统、更高级的碰撞检测等新知识。

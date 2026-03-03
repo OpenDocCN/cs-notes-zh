@@ -1,0 +1,1070 @@
+# CS50X 计算机科学导论：第9讲：Flask 🚀
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_0.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_1.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_3.png)
+
+在本节课中，我们将学习如何使用 Python 的 Flask 框架进行 Web 编程。我们将结合之前学过的 Python、HTML、CSS、JavaScript 和 SQL 知识，构建动态的 Web 应用程序。通过本课程，你将能够创建自己的 Web 应用，不仅用于本周的问题集，还可以用于你的最终项目。
+
+## 概述 📋
+
+在本节课中，我们将学习如何使用 Flask 框架构建动态 Web 应用程序。我们将从简单的“Hello World”应用开始，逐步引入用户输入、表单处理、模板渲染、会话管理和数据库集成等高级功能。通过实际示例，你将掌握如何将前端与后端结合，创建功能完整的 Web 应用。
+
+---
+
+## 从静态内容到动态 Web 应用 🔄
+
+上一节我们介绍了如何使用 HTTP 服务器提供静态内容。本节中，我们将看看如何使用 Flask 框架生成动态内容。
+
+在上一周，我们通过 `http-server` 命令提供了静态的 HTML、CSS 和 JavaScript 文件。然而，这种方式只能提供预先写好的文件，无法根据用户输入动态生成内容。今天，我们将使用 Flask 框架，通过编写 Python 代码来动态生成 HTML。
+
+### 关键概念：路由和请求
+
+在 Web 编程中，**路由**（Route）指的是用户请求的路径。例如，在 URL `https://www.example.com/` 中，路径是 `/`。通过配置路由，我们可以指定当用户访问特定路径时，服务器应执行哪些代码。
+
+此外，用户可以通过 URL 传递输入。例如，在 Google 搜索中，URL 可能包含 `?q=cats` 这样的查询参数。在 Flask 中，我们可以轻松地解析这些参数并生成相应的响应。
+
+### 使用 Flask 运行 Web 服务器
+
+与 `http-server` 不同，Flask 不仅是一个库，还是一个命令行工具。通过运行 `flask run`，我们可以启动一个智能的 Web 服务器，它能够执行我们的 Python 代码并动态生成网页。
+
+以下是创建 Flask 应用所需的文件结构：
+- `app.py`：主应用程序文件，包含路由和业务逻辑。
+- `requirements.txt`：列出应用依赖的库。
+
+### 示例：最简单的 Flask 应用
+
+以下是一个简单的 Flask 应用示例，它在用户访问根路径时返回“Hello, World”：
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_5.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_6.png)
+
+@app.route("/")
+def index():
+    return "Hello, World"
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_8.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_9.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_10.png)
+
+在这个示例中：
+- 我们从 `flask` 库中导入 `Flask` 类。
+- 通过 `app = Flask(__name__)` 将当前文件转换为一个 Web 应用。
+- 使用 `@app.route("/")` 装饰器将根路径映射到 `index` 函数。
+- `index` 函数返回一个字符串，该字符串将作为响应发送给浏览器。
+
+### 运行 Flask 应用
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_12.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_13.png)
+
+要运行此应用，需要在终端中执行以下命令：
+```bash
+flask run
+```
+默认情况下，Flask 会在端口 5000 上启动服务器。访问 `http://localhost:5000` 即可看到“Hello, World”。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_15.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_16.png)
+
+---
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_17.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_18.png)
+
+## 动态生成 HTML 🎨
+
+上一节我们创建了一个简单的 Flask 应用，返回纯文本。本节中，我们将看看如何动态生成 HTML 内容。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_20.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_21.png)
+
+### 直接返回 HTML 字符串
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_23.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_24.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_25.png)
+
+最简单的方式是在 Python 代码中直接返回 HTML 字符串。例如：
+
+```python
+@app.route("/")
+def index():
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <title>Hello</title>
+        </head>
+        <body>
+            Hello, body
+        </body>
+    </html>
+    """
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_27.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_28.png)
+
+这种方式虽然可行，但代码难以维护，尤其是当 HTML 内容复杂时。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_30.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_31.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_32.png)
+
+### 使用模板渲染
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_34.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_35.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_36.png)
+
+更好的方式是将 HTML 代码放在单独的文件中，并使用 Flask 的 `render_template` 函数渲染。以下是具体步骤：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_38.png)
+
+1. 在项目目录中创建一个名为 `templates` 的文件夹。
+2. 在 `templates` 文件夹中创建 HTML 文件，例如 `index.html`。
+3. 在 `app.py` 中使用 `render_template` 渲染该文件。
+
+示例 `index.html`：
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        Hello, body
+    </body>
+</html>
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_40.png)
+
+更新 `app.py`：
+```python
+from flask import Flask, render_template
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_42.png)
+
+app = Flask(__name__)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_44.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_45.png)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+```
+
+### 模板的优势
+
+使用模板可以将 HTML 代码与 Python 逻辑分离，使代码更清晰、更易于维护。此外，模板还支持动态内容插入，我们将在下一节中详细介绍。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_47.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_48.png)
+
+---
+
+## 处理用户输入 📝
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_50.png)
+
+上一节我们学习了如何使用模板渲染 HTML。本节中，我们将看看如何处理用户输入，使应用更加动态。
+
+### 通过 URL 参数传递输入
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_52.png)
+
+用户可以通过 URL 参数传递输入。例如，访问 `http://localhost:5000/?name=David` 时，我们可以解析 `name` 参数并在页面中显示。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_53.png)
+
+在 Flask 中，可以使用 `request.args` 获取 URL 参数。以下是示例代码：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_55.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_56.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_57.png)
+
+```python
+from flask import Flask, render_template, request
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_59.png)
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    name = request.args.get("name", "World")
+    return render_template("index.html", name=name)
+```
+
+在模板 `index.html` 中，我们可以使用 `{{ name }}` 插入动态内容：
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        Hello, {{ name }}
+    </body>
+</html>
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_61.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_62.png)
+
+### 使用表单收集用户输入
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_64.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_65.png)
+
+虽然 URL 参数可以传递用户输入，但更常见的方式是通过表单。以下是一个简单的表单示例：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_67.png)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+    </head>
+    <body>
+        <form action="/greet" method="get">
+            <input type="text" name="name" placeholder="Name">
+            <button type="submit">Greet</button>
+        </form>
+    </body>
+</html>
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_68.png)
+
+当用户提交表单时，浏览器会将输入作为 URL 参数发送到 `/greet` 路径。我们可以在 Flask 中处理这个请求：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_70.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_71.png)
+
+```python
+@app.route("/greet")
+def greet():
+    name = request.args.get("name", "World")
+    return render_template("greet.html", name=name)
+```
+
+### 表单方法：GET 与 POST
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_73.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_74.png)
+
+表单可以使用 `GET` 或 `POST` 方法提交数据：
+- **GET**：数据通过 URL 参数传递，适合非敏感信息。
+- **POST**：数据通过请求体传递，适合敏感信息（如密码）。
+
+在 Flask 中，可以通过 `request.form` 获取 POST 请求的数据：
+
+```python
+@app.route("/greet", methods=["POST"])
+def greet():
+    name = request.form.get("name", "World")
+    return render_template("greet.html", name=name)
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_76.png)
+
+---
+
+## 模板继承与布局 🏗️
+
+上一节我们学习了如何处理用户输入。本节中，我们将看看如何使用模板继承来避免代码重复。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_78.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_79.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_81.png)
+
+### 模板继承的优势
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_83.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_84.png)
+
+在多个页面中，通常有许多共同的 HTML 结构（如头部、导航栏、页脚）。通过模板继承，我们可以将这些共同部分提取到一个基础模板中，其他模板只需定义差异部分。
+
+### 创建基础模板
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_86.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_87.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_88.png)
+
+首先，创建一个名为 `layout.html` 的基础模板：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        {% block body %}{% endblock %}
+    </body>
+</html>
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_90.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_92.png)
+
+### 继承基础模板
+
+在其他模板中，可以通过 `extends` 关键字继承基础模板，并填充 `block` 部分：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_94.png)
+
+```html
+{% extends "layout.html" %}
+
+{% block body %}
+    <h1>Hello, {{ name }}</h1>
+{% endblock %}
+```
+
+### 模板继承的好处
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_96.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_97.png)
+
+通过模板继承，我们可以：
+- 减少代码重复。
+- 提高代码的可维护性。
+- 确保所有页面具有一致的结构和样式。
+
+---
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_99.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_100.png)
+
+## 表单验证与错误处理 ⚠️
+
+上一节我们学习了如何使用模板继承。本节中，我们将看看如何对用户输入进行验证，并处理可能出现的错误。
+
+### 客户端验证
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_102.png)
+
+HTML5 提供了一些内置的验证功能，例如 `required` 属性可以确保用户必须填写某个字段：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_104.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_105.png)
+
+```html
+<input type="text" name="name" required>
+```
+
+然而，客户端验证容易被绕过（例如通过浏览器开发者工具）。因此，服务器端验证是必不可少的。
+
+### 服务器端验证
+
+在 Flask 中，我们可以通过编写逻辑来验证用户输入。例如，检查用户是否提供了有效的姓名和运动项目：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_107.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_108.png)
+
+```python
+@app.route("/register", methods=["POST"])
+def register():
+    name = request.form.get("name")
+    sport = request.form.get("sport")
+
+    if not name or not sport:
+        return render_template("error.html", message="Missing name or sport")
+    
+    if sport not in SPORTS:
+        return render_template("error.html", message="Invalid sport")
+    
+    return render_template("success.html")
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_110.png)
+
+### 错误页面
+
+为了提供更好的用户体验，可以创建专门的错误页面，显示具体的错误信息：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_112.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_113.png)
+
+```html
+{% extends "layout.html" %}
+
+{% block body %}
+    <h1>Error</h1>
+    <p>{{ message }}</p>
+    <img src="/static/cat.jpg" alt="Grumpy Cat">
+{% endblock %}
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_115.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_116.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_117.png)
+
+### 静态文件
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_119.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_120.png)
+
+错误页面中可能包含图片、CSS 或 JavaScript 文件。这些静态文件应放在 `static` 文件夹中，并通过 `/static/` 路径访问。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_122.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_123.png)
+
+---
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_125.png)
+
+## 数据持久化与数据库集成 💾
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_127.png)
+
+上一节我们学习了如何进行表单验证和错误处理。本节中，我们将看看如何将用户输入保存到数据库中，实现数据持久化。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_128.png)
+
+### 使用 SQLite 数据库
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_130.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_131.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_132.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_133.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_134.png)
+
+在 Flask 中，可以使用 SQLite 数据库存储数据。首先，需要导入 CS50 的 SQL 库并连接到数据库：
+
+```python
+from cs50 import SQL
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_136.png)
+
+db = SQL("sqlite:///froshims.db")
+```
+
+### 创建数据库表
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_138.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_139.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_140.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_142.png)
+
+假设我们有一个名为 `registrants` 的表，用于存储注册信息：
+
+```sql
+CREATE TABLE registrants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    sport TEXT NOT NULL
+);
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_144.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_145.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_146.png)
+
+### 插入数据
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_148.png)
+
+当用户提交注册表单时，可以将数据插入数据库：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_150.png)
+
+```python
+@app.route("/register", methods=["POST"])
+def register():
+    name = request.form.get("name")
+    sport = request.form.get("sport")
+
+    if not name or sport not in SPORTS:
+        return render_template("error.html", message="Invalid registration")
+    
+    db.execute("INSERT INTO registrants (name, sport) VALUES (?, ?)", name, sport)
+    return render_template("success.html")
+```
+
+### 查询数据
+
+要显示所有注册者，可以从数据库中查询数据并传递给模板：
+
+```python
+@app.route("/registrants")
+def registrants():
+    registrants = db.execute("SELECT * FROM registrants")
+    return render_template("registrants.html", registrants=registrants)
+```
+
+在模板中，可以遍历查询结果并显示：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_152.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_154.png)
+
+```html
+{% extends "layout.html" %}
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_156.png)
+
+{% block body %}
+    <h1>Registrants</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Sport</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registrant in registrants %}
+                <tr>
+                    <td>{{ registrant.name }}</td>
+                    <td>{{ registrant.sport }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_158.png)
+
+### 数据持久化的优势
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_160.png)
+
+通过将数据保存到数据库，即使服务器重启，数据也不会丢失。这确保了应用的可靠性和持久性。
+
+---
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_162.png)
+
+## 用户会话与登录功能 🔐
+
+上一节我们学习了如何将数据保存到数据库。本节中，我们将看看如何使用会话（Session）实现用户登录功能。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_164.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_165.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_166.png)
+
+### 什么是会话？
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_168.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_169.png)
+
+会话是一种在浏览器和服务器之间保持状态的技术。通过会话，服务器可以记住用户是否已登录，而无需用户每次请求都提供凭证。
+
+### 启用会话
+
+在 Flask 中，可以通过以下步骤启用会话：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_171.png)
+
+1. 导入 `session` 模块。
+2. 配置会话参数。
+3. 使用 `session` 对象存储用户信息。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_173.png)
+
+示例代码：
+
+```python
+from flask import Flask, render_template, request, redirect, session
+from flask_session import Session
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_175.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_176.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_177.png)
+
+app = Flask(__name__)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_179.png)
+
+### 实现登录功能
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_181.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_182.png)
+
+以下是一个简单的登录功能实现：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_184.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_185.png)
+
+1. 创建登录表单：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_187.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_188.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_189.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_190.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_191.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_192.png)
+
+```html
+{% extends "layout.html" %}
+
+{% block body %}
+    <form action="/login" method="post">
+        <input type="text" name="name" placeholder="Name">
+        <button type="submit">Log In</button>
+    </form>
+{% endblock %}
+```
+
+2. 处理登录请求：
+
+```python
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        session["name"] = request.form.get("name")
+        return redirect("/")
+    return render_template("login.html")
+```
+
+3. 在主页中检查用户是否登录：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_194.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_195.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_196.png)
+
+```python
+@app.route("/")
+def index():
+    name = session.get("name")
+    return render_template("index.html", name=name)
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_198.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_199.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_200.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_201.png)
+
+在模板中，可以根据用户是否登录显示不同的内容：
+
+```html
+{% extends "layout.html" %}
+
+{% block body %}
+    {% if name %}
+        <p>You are logged in as {{ name }}.</p>
+        <a href="/logout">Log Out</a>
+    {% else %}
+        <p>You are not logged in.</p>
+        <a href="/login">Log In</a>
+    {% endif %}
+{% endblock %}
+```
+
+4. 实现注销功能：
+
+```python
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+```
+
+### 会话的优势
+
+通过会话，我们可以：
+- 实现用户登录和注销功能。
+- 在不同页面之间保持用户状态。
+- 保护敏感路由，确保只有登录用户才能访问。
+
+---
+
+## 构建购物车应用 🛒
+
+上一节我们学习了如何使用会话实现登录功能。本节中，我们将看看如何构建一个购物车应用，进一步展示会话的用途。
+
+### 购物车功能概述
+
+购物车应用允许用户浏览商品，并将商品添加到购物车中。购物车的内容会保存在会话中，即使用户关闭浏览器，数据也不会丢失（取决于会话配置）。
+
+### 数据库设计
+
+假设我们有一个 `books` 表，存储商品信息：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_203.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_204.png)
+
+```sql
+CREATE TABLE books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL
+);
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_206.png)
+
+### 显示商品列表
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_208.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_209.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_210.png)
+
+首先，创建一个页面显示所有商品：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_212.png)
+
+```python
+@app.route("/")
+def index():
+    books = db.execute("SELECT * FROM books")
+    return render_template("books.html", books=books)
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_214.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_215.png)
+
+在模板中，为每本书显示一个“添加到购物车”按钮：
+
+```html
+{% extends "layout.html" %}
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_217.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_218.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_219.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_221.png)
+
+{% block body %}
+    <h1>Books</h1>
+    {% for book in books %}
+        <h2>{{ book.title }}</h2>
+        <form action="/cart" method="post">
+            <input type="hidden" name="id" value="{{ book.id }}">
+            <button type="submit">Add to Cart</button>
+        </form>
+    {% endfor %}
+{% endblock %}
+```
+
+### 处理购物车请求
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_223.png)
+
+当用户点击“添加到购物车”按钮时，将商品 ID 保存到会话中：
+
+```python
+@app.route("/cart", methods=["GET", "POST"])
+def cart():
+    if "cart" not in session:
+        session["cart"] = []
+    
+    if request.method == "POST":
+        book_id = request.form.get("id")
+        if book_id:
+            session["cart"].append(book_id)
+        return redirect("/cart")
+    
+    # 显示购物车内容
+    book_ids = session["cart"]
+    books = db.execute("SELECT * FROM books WHERE id IN (?)", book_ids)
+    return render_template("cart.html", books=books)
+```
+
+### 显示购物车内容
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_225.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_226.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_228.png)
+
+在购物车页面中，显示用户已添加的商品：
+
+```html
+{% extends "layout.html" %}
+
+{% block body %}
+    <h1>Cart</h1>
+    <ul>
+        {% for book in books %}
+            <li>{{ book.title }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+```
+
+### 购物车应用的优势
+
+通过会话管理购物车，我们可以：
+- 为用户提供个性化的购物体验。
+- 在不同页面之间保持购物车状态。
+- 轻松实现添加、删除商品等功能。
+
+---
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_230.png)
+
+## 构建搜索应用与 API 集成 🔍
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_231.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_232.png)
+
+上一节我们学习了如何构建购物车应用。本节中，我们将看看如何构建一个搜索应用，并集成 API 以实现动态内容加载。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_234.png)
+
+### 搜索功能概述
+
+搜索应用允许用户输入查询，并从数据库中检索匹配的结果。为了提高用户体验，我们可以使用 JavaScript 实现动态搜索，无需刷新整个页面。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_236.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_237.png)
+
+### 数据库设计
+
+假设我们有一个 `shows` 表，存储电视节目信息：
+
+```sql
+CREATE TABLE shows (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    year INTEGER,
+    episodes INTEGER
+);
+```
+
+### 基本搜索功能
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_239.png)
+
+首先，创建一个简单的搜索表单：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_241.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_242.png)
+
+```html
+{% extends "layout.html" %}
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_244.png)
+
+{% block body %}
+    <form action="/search" method="get">
+        <input type="search" name="q" placeholder="Query">
+        <button type="submit">Search</button>
+    </form>
+{% endblock %}
+```
+
+在 Flask 中处理搜索请求：
+
+```python
+@app.route("/search")
+def search():
+    query = request.args.get("q")
+    if query:
+        shows = db.execute("SELECT * FROM shows WHERE title LIKE ?", f"%{query}%")
+    else:
+        shows = []
+    return render_template("search.html", shows=shows)
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_246.png)
+
+在模板中显示搜索结果：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_248.png)
+
+```html
+{% extends "layout.html" %}
+
+{% block body %}
+    <ul>
+        {% for show in shows %}
+            <li>{{ show.title }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+```
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_250.png)
+
+### 动态搜索与 API 集成
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_252.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_253.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_254.png)
+
+为了提高用户体验，我们可以使用 JavaScript 实现动态搜索。首先，修改搜索表单，移除提交按钮，并添加 JavaScript 代码：
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_256.png)
+
+```html
+{% extends "layout.html" %}
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_258.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_259.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_260.png)
+
+{% block body %}
+    <input type="search" placeholder="Query" autocomplete="off" autofocus>
+    <ul></ul>
+
+    <script>
+        const input = document.querySelector("input");
+        input.addEventListener("input", async () => {
+            const response = await fetch(`/search?q=${input.value}`);
+            const shows = await response.json();
+            let html = "";
+            for (const show of shows) {
+                html += `<li>${show.title}</li>`;
+            }
+            document.querySelector("ul").innerHTML = html;
+        });
+    </script>
+{% endblock %}
+```
+
+在 Flask 中，修改搜索路由以返回 JSON 数据：
+
+```python
+from flask import jsonify
+
+@app.route("/search")
+def search():
+    query = request.args.get("q")
+    if query:
+        shows = db.execute("SELECT * FROM shows WHERE title LIKE ? LIMIT 50", f"%{query}%")
+    else:
+        shows = []
+    return jsonify(shows)
+```
+
+### API 集成的优势
+
+通过 API 集成，我们可以：
+- 实现动态内容加载，提升用户体验。
+- 将前端与后端分离，使代码更模块化。
+- 支持多种客户端（如 Web、移动应用）使用同一后端。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_262.png)
+
+---
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_264.png)
+
+## 总结 🎉
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_266.png)
+
+在本节课中，我们一起学习了如何使用 Flask 框架构建动态 Web 应用程序。我们从简单的“Hello World”应用开始，逐步引入了用户输入处理、模板渲染、表单验证、数据库集成、会话管理和 API 集成等高级功能。
+
+### 关键知识点回顾
+
+1. **Flask 基础**：通过 `Flask` 类创建 Web 应用，使用 `@app.route` 装饰器定义路由。
+2. **模板渲染**：使用 `render_template` 函数渲染 HTML 模板，并通过 `{{ variable }}` 插入动态内容。
+3. **用户输入处理**：通过 `request.args` 和 `request.form` 获取 GET 和 POST 请求中的数据。
+4. **表单验证**：结合客户端和服务器端验证，确保用户输入的合法性。
+5. **数据库集成**：使用 SQLite 数据库存储和查询数据，实现数据持久化。
+6. **会话管理**：通过 `session` 对象实现用户登录和状态保持。
+7. **API 集成**：使用 `jsonify` 函数返回 JSON 数据，支持动态内容加载。
+
+### 下一步建议
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_268.png)
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_269.png)
+
+- 尝试构建自己的 Web 应用，结合所学知识实现更多功能。
+- 探索其他 Flask 扩展，如 Flask-Login、Flask-WTF 等，以简化开发流程。
+- 学习前端框架（如 React、Vue.js），进一步提升用户体验。
+
+![](img/c0e4be0df203b599d64dc2c7b3218c55_271.png)
+
+通过本课程的学习，你已经掌握了构建完整 Web 应用所需的核心技能。希望你能将这些知识应用到实际项目中，创造出令人惊艳的作品！
