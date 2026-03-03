@@ -47,7 +47,7 @@
 +   [008：处理异常 🐍](hav-cs50p-008.md)
 +   [009：实例方法 🧩](hav-cs50p-009.md)
 +   [010：实例变量 📦](hav-cs50p-010.md)
-+   [输出：['Mario', 'Luigi', 'Princess']](hav-cs50p-011.md)
++   [011：-12-列表](hav-cs50p-011.md)
 +   [012：模式匹配](hav-cs50p-012.md)
 +   [013：-14-Pillow库基础教程](hav-cs50p-013.md)
 +   [014：pytest测试框架入门 🧪](hav-cs50p-014.md)
