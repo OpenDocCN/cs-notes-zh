@@ -1,4 +1,4 @@
-# CoreDumped【中英⚡图解操作系统原理｜Operating Systems Theory】 p01 P1 A PROGRAM is not a PROCESS. -BV19h48zoEeB_p1-
+# CoreDumped【中英⚡图解操作系统原理｜Operating Systems Theory】 p01 P1 A PROGRAM is not a PROCESS. [BV19h48zoEeB_p1]
 
 This video was sponsored by Brilliant。A question that arises in computer science is what to call all the activities performed by the CPU。
 
@@ -46,7 +46,7 @@ Now， if you carefully analyze this description， you'll notice that it can al
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_1.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_1.png)
 
 A program is that passive entity that resides in your storage。
 
@@ -54,9 +54,9 @@ A program is that passive entity that resides in your storage。
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_3.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_3.png)
 
-![](img/e933dfdccd295be86695900e28d4f204_4.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_4.png)
 
 As I've mentioned many times in the past to run a program， it first needs to be loaded into memory。
 
@@ -90,7 +90,7 @@ And please note that this is the memory layout of the process， not the process
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_6.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_6.png)
 
 The reason this definition is often considered informal is that the notion of what a process is is far too complex to be captured in just a few words。
 
@@ -100,15 +100,15 @@ We're not going to go into technical details in this video because there's a vid
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_8.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_8.png)
 
-![](img/e933dfdccd295be86695900e28d4f204_9.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_9.png)
 
 Consider that little program that comes with your operating system to open text files。
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_11.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_11.png)
 
 Now imagine we have two files to read if we open both files。
 
@@ -130,7 +130,7 @@ While the content of the text section in both processes memory is identical。
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_13.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_13.png)
 
 I want to send a special thanks to all of you because we finally surpassed 100。
 
@@ -138,7 +138,7 @@ I want to send a special thanks to all of you because we finally surpassed 100�
 
  I encourage you to do so。
 
-![](img/e933dfdccd295be86695900e28d4f204_15.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_15.png)
 
 In the same way， I encourage you to check out Brilliant。
 
@@ -146,7 +146,7 @@ Learning is always more effective when it's done intuitively。
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_17.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_17.png)
 
 With Brilliant， you have access to a variety of courses that help you learn by doing。
 
@@ -170,9 +170,9 @@ org/codumped， or by using the link in the description below。
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_19.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_19.png)
 
-![](img/e933dfdccd295be86695900e28d4f204_20.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_20.png)
 
 And now， back to the video， I emphasize that a program by itself is not a process。
 
@@ -184,7 +184,7 @@ Although two processes may be associated with the same program。
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_22.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_22.png)
 
 I know that having a notion of what a process is is not the same as being able to define it in technical terms。
 
@@ -224,4 +224,4 @@ And let's wrap it up for now compilers and interpreters deserve their own videos
 
 
 
-![](img/e933dfdccd295be86695900e28d4f204_24.png)
+![](img/dad846e8b48d900d0ed6f1e891e36a71_24.png)
