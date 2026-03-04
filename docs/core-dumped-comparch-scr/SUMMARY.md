@@ -1,0 +1,7 @@
++   [CoreDumped 从零开始的计算机组成笔记](README.md)
++   [001：晶体管如何运行代码？⚡](core-dumped-comparch-scr-001.md)
++   [002：晶体管如何存储数据 💾](core-dumped-comparch-scr-002.md)
++   [003：打造一个能运行程序的CPU 🧠](core-dumped-comparch-scr-003.md)
++   [004：动态随机存取存储器（DRAM）基础](core-dumped-comparch-scr-004.md)
++   [005：计算机处理器如何运行条件与循环 🖥️➡️🔄](core-dumped-comparch-scr-005.md)
++   [006：时钟如何驱动CPU“前进” ⏱️](core-dumped-comparch-scr-006.md)
