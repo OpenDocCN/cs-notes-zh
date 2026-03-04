@@ -1,4 +1,6 @@
++   [CCIE/CCNA/CCNP 笔记](docs/ccie-ccna-ccnp/README.md)
 +   [辛辛那提 MATH1071 离散数学笔记](docs/ccnt-math1701-disc/README.md)
++   [CKA/CKAD/CKS 笔记](docs/cka-ckad-cks/README.md)
 +   [CMU 08-763 技术高管的人机交互导论笔记](docs/cmu-08763-hci-intro/README.md)
 +   [CMU 14-740 计算机网络笔记](docs/cmu-14740-net/README.md)
 +   [CMU 15-150 函数式编程笔记](docs/cmu-15150-fp/README.md)
