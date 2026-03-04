@@ -1,0 +1,793 @@
+- en: P10：Sofia Heisler   No More Sad Pandas Optimizing Pandas Code for Speed and
+    Efficien - 哒哒哒儿尔 - BV1Ms411H7jG
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P10：索菲亚·海斯勒   不再悲伤的 pandas 优化 pandas 代码以提高速度和效率 - 哒哒哒儿尔 - BV1Ms411H7jG
+- en: \>\> Good afternoon everybody。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 大家下午好。'
+- en: '![](img/344784ece4961f2de8d0773170a4c965_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_1.png)'
+- en: '![](img/344784ece4961f2de8d0773170a4c965_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_2.png)'
+- en: Welcome to this afternoon session of PyCon 2017。 Please be seated。 This ride
+    will begin momentarily。 Thank you。 So first things first， if anyone has any noise
+    making， devices。 please make sure they do not make noise。 When they make noise
+    everyone stares at you。 With that said， I would like to introduce our next speaker。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欢迎来到 2017 年 PyCon 下午的会议。请就座。这个旅程将很快开始。谢谢。那么，首先，如果有人有任何发出噪音的设备，请确保它们不会发出噪音。当它们发出噪音时，大家都会盯着你看。说完这些，我想介绍我们的下一位演讲者。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_4.png)'
+  id: totrans-5
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_4.png)'
+- en: Thank you。 \>\> Thank you everybody and welcome。 My name is Sophia Heisler。
+    I am the lead data scientist at a startup called， Upside。 Today we will be talking
+    about optimizing pandas code for， speed and performance。 All of the code that
+    i will be talking about is going to be。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谢谢。>> 谢谢大家，欢迎。我叫索菲亚·海斯勒。我是一个名为 Upside 的初创公司的首席数据科学家。今天我们将讨论如何优化 pandas 代码以提高速度和性能。我将讨论的所有代码都将是。
+- en: up on the slides and I have done my best to make sure it is， visible to everybody。
+    If you want to download the slides， please go to the。 link and grab the slide
+    deck as well as the jupiter notebook。 that runs all of the code and the inputs
+    we will be talking， about。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我在幻灯片上尽力确保它对大家可见。如果你想下载幻灯片，请访问链接并获取幻灯片包以及运行我们将讨论的所有代码和输入的 Jupiter Notebook。
+- en: \>\> I have put this link on the bottom right-hand corner， over here。 If during
+    the presentation you say you really want to download， it because it is gotten
+    small。 You can't see anything。 Please go ahead。 First off， how many people here
+    use pandas？
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 我把这个链接放在右下角，过来这里。如果在演示中你说你真的想下载，那是因为它变小了。你看不见任何东西。请继续。首先，这里有多少人使用 pandas？'
+- en: Almost everybody。 Awesome。 For those of you who are less familiar with the library。
+    pandas is an open source library that offers data structure。 support and a fantastic
+    set of tools for data analysis。 In particular。 pandas is great for the analysis
+    of tabular data。 In other words。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 几乎每个人。太棒了。对于那些对这个库不太熟悉的人，pandas 是一个开源库，提供数据结构支持和一套出色的数据分析工具。特别是，pandas 非常适合表格数据的分析。换句话说。
+- en: data that is arranged in rows and columns。 Pandas provides a lot of the functionality
+    that until a few。 years ago was only available in more statistics oriented tools。
+    like R or stato or SAS or MATLAB for example。 A lot of these tools。 pandas is
+    now able to use the same， function， provide the same functionality within Python。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据以行和列的形式排列。Pandas 提供了很多功能，直到几年前这些功能仅在更注重统计的工具中可用，比如 R、Stata、SAS 或 MATLAB 等。这些工具的许多功能，pandas
+    现在能够在 Python 中使用。
+- en: As a result， pandas is used in just about everything from。 simple data manipulation
+    to pretty complex machine learning。 So why do I care to optimize my code？
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，pandas 被用于从简单的数据处理到相当复杂的机器学习几乎所有的事情。那么，为什么我关心优化我的代码呢？
+- en: Well， that actually kind of depends on your use case and。 maybe if you're doing
+    data science where your run times don't， matter and your data isn't huge。 Maybe
+    it doesn't actually matter all that much whether your code is。 running in a few
+    minutes or a few seconds， whatever。 You'll go get a cup of coffee， come back。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗯，这实际上取决于你的使用案例。如果你在做数据科学，而你的运行时间并不重要，数据也不大。也许你代码的运行是几分钟还是几秒钟并没有太大关系。你可以去喝杯咖啡，然后再回来。
+- en: and it's going to be， done。 But the bottom line is that pandas is capable of
+    providing a lot。 of efficiency because it's built on top of numpy and it has a。
+    lot of procedures built into it that are optimized in Python。 Which means that
+    it can be very fast when it's used correctly。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且它将会完成。但底线是，pandas 能够提供很多效率，因为它建立在 numpy 之上，并且内置了很多在 Python 中优化的过程。这意味着，当正确使用时，它可以非常快速。
+- en: And those optimizations that you can put into it can make the。 difference between
+    your code running in minutes or your code， running in literally milliseconds。
+    So before we start talking about how we would actually optimize， our code。 let's
+    talk about how do I know whether my code is。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以在其中添加的优化，可以使你的代码在分钟内运行或在毫秒内运行。在我们开始讨论如何实际优化代码之前，让我们先讨论一下如何知道我的代码是否有效。
+- en: slow and how do I know whether I'm making it faster。 In other words。 we're going
+    to talk a little bit about how you， would do benchmarking。 So to start。 we're
+    going to be looking at a bunch of examples， that are based on a data set that
+    I pulled down off of Expedia's。 developer website。 And it pretty much just contains
+    all of the hotels in New York。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我如何知道代码是否变慢，或者我是否在加快它。换句话说，我们将讨论如何进行基准测试。首先，我们将查看一系列基于我从Expedia开发者网站下载的数据集的示例。它基本上包含了纽约的所有酒店。
+- en: state that are sold by Expedia。 There's about 1600 of them。 Turns out there's
+    a lot of hotels in New York state。 And our data set is going to contain some information
+    with one， hotel per row， an ID for each hotel。 a name， an address， a， latitude
+    and longitude， and some information about the hotel such。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由Expedia销售的酒店大约有1600个。纽约州的酒店数量相当多。我们的数据集将包含一些信息，每行一个酒店，一个酒店的ID，一个名称，一个地址，以及经纬度和一些关于酒店的信息。
+- en: as the star rating and some high rates and low rates that are， calculated by
+    Expedia。 And to start。 we're just going to grab a function that we can， benchmark
+    from。 This is an example of a normalization function。 It's pretty straightforward。
+    What it's actually doing is not actually all of that relevant。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 星级评分和一些高低评分由Expedia计算得出。首先，我们将抓取一个可以基准测试的函数。这是一个标准化函数的示例。它相当简单。实际上，它所做的事情并没有那么相关。
+- en: for our purposes other than it's taking some means and some， standard deviations。
+    cutting off outliers and taking a log to， normalize。 What we care about is how
+    do we actually figure out how to time。 this function and which parts of it are
+    slower or faster than， others。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了计算一些均值和标准差，剔除离群值并取对数进行标准化外，我们关心的是如何实际测量这个函数的时间，以及它的哪些部分比其他部分慢或快。
+- en: So we're going to do that with something called magic commands。 So how many
+    of you guys have used magic commands in Jupyter？ Great。 So a lot。 So magic commands
+    are available through Jupyter notebooks to。 provide additional functionality on
+    top of Python code that may。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将通过一种叫做魔法命令的东西来做到这一点。那么有多少人使用过Jupyter中的魔法命令？很好。很多人。因此，魔法命令通过Jupyter笔记本提供额外的功能，增强Python代码的能力。
+- en: running that code or doing other things with that code extra， awesome and useful。
+    Magic commands you'll see start with a percentage sign。 The single percent sign
+    is just code that's executed on one line。 or double percentage that's executed
+    on an entire cell。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行那段代码或用那段代码做其他事情变得额外出色且有用。你会看到魔法命令以百分号开头。单个百分号是执行一行代码，而双百分号则是在整个单元格上执行。
+- en: And the first function that we're going to talk about is the， time it command。
+    So a time it command just reruns a function over and over and。 over again and
+    it shows the average and the standard deviation， of the runtime that it obtained。
+    As a result， what the time that it calculates can serve as a。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们要讨论的第一个函数是timeit命令。timeit命令会反复运行一个函数，并显示运行时间的平均值和标准差。因此，计算出的时间可以用作我们的用途。
+- en: benchmark for a bunch of further optimizations。 So let's look at an example。
+    So here we've done a time it of our normalized function。 I've fed my normalized
+    function the data frame that I created， my set of hotels。 And I've told it to
+    use the series high rate in order to， actually apply this function。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基准测试一系列进一步优化的机会。所以让我们来看一个例子。在这里，我们对我们的标准化函数进行了timeit测试。我将创建的数据框喂给了我的标准化函数，我的酒店集合，并告诉它使用高评分系列来实际应用这个函数。
+- en: And I've assigned the results to a new series within the data frame。 I've run
+    the time it and it's letting me know that the function， on average took 2。84 milliseconds
+    and it ran at seven， runs of 100 loops each。 So now that provides a baseline from
+    which I can go to figure out。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我已将结果分配给数据框内的新系列。我运行了timeit，并让我知道这个函数平均耗时2.84毫秒，并进行了七次，每次100次循环。所以现在这为我提供了一个基准，我可以在此基础上进行进一步的探索。
+- en: how to make this function run faster or slower and figure out。 whether I'm actually
+    succeeding at what I'm doing。 So the next thing I'm going to do is I'm going to
+    feed it through。 an extension called line profiler which gets abbreviated， as
+    percent LP run as a magic function。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如何让这个函数运行得更快或更慢，并弄清楚我是否真正成功了。因此，接下来我要做的是将它输入到一个叫做行分析器的扩展中，它被缩写为百分比LP运行，作为一个魔法函数。
+- en: And the line profiler will run through run my function line by line。 and give
+    me a bunch of useful statistics about what it's doing。 And in particular it's
+    going to tell me in that second column my。 hits is going to tell me how many times
+    my function has been， actually。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 行分析器将逐行运行我的函数，并给我提供一系列有用的统计数据，关于它所做的事情。特别是在第二列，它将告诉我我的命中次数，这将告诉我我的函数实际上被调用了多少次。
+- en: each line in my function has been rerun。 So if I'm running the function on a
+    bunch of loops I'll see a。 number greater than one here。 And in the next to the
+    last column it's going to tell me what。 percentage of the time each line actually
+    took。 So over here for example if you look。 let me see I don't have， my pointer
+    here， but if you look about four lines up from the。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我函数中的每一行都已重新运行。因此，如果我在多个循环中运行这个函数，我会看到这里的数字大于一。而在倒数第二列，它将告诉我每一行实际花费的时间的百分比。所以在这里，例如，如果你看一下，我看看我没有我的指针，但如果你看大约四行前。
+- en: bottom you'll see that my line 11 and 12 actually took， well。 close to 80% of
+    the time that this function was running for。 which means that if I were going
+    in and trying to optimize this。 function I would certainly look at those two lines
+    and try to。 start there because I would get the biggest bang for my buck， trying
+    to optimize those two。 So now that we sort of get the sense of how we're going
+    to go。 about trying to benchmark our functionality， let's talk about。 some of
+    the slower methodologies that I've seen used in pandas。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会看到我的第11行和第12行实际上花费了这个函数运行时间的近80%，这意味着如果我想要优化这个函数，我肯定会关注这两行，并试图从这里开始，因为优化这两行会带来最大的收益。因此，既然我们已经对如何基准测试我们的功能有了一定的了解，我们就来谈谈我在pandas中见过的一些较慢的方法。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_6.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_6.png)'
+- en: So we're going to start with a different practice function。 This is the haversign
+    or great circle distance function。 All this is basically doing is taking in two
+    sets of coordinates。 and is calculating a straight line distance between them
+    taking， in the curvature of the earth。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们将从一个不同的实践函数开始。这是哈弗辛或大圆距离函数。它的基本作用是接受两组坐标，并计算它们之间的直线距离，考虑地球的曲率。
+- en: Again， the details of the implementation aren't actually， all that important
+    for our purposes。 Other than to know that it's doing some addition， some subtraction。
+    and it's doing a bunch of signs and cosines and other trig to， actually calculate
+    the distances。 And it's returning the actual number of miles between two， coordinates。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次说明，实施的细节实际上对我们的目的并不是那么重要。只需要知道它正在进行一些加法和减法，并且它正在进行一系列正弦和余弦以及其他三角函数，来实际计算距离。它返回的是两个坐标之间的实际英里数。
+- en: So one thing that I see people do a lot actually as they start。 out in pandas
+    is start iterating through all of the rows to apply， a function。 Which kind of
+    makes sense， right， because you're working with a。 data frame that has a bunch
+    of rows and a bunch of columns and。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我看到很多人刚开始使用pandas时，常常会开始遍历所有行来应用一个函数。这听起来很合理，对吧，因为你在处理一个有很多行和很多列的数据框。
+- en: why can't I just loop through all of my rows just the same way。 that I would
+    loop through a list and actually figure out and。 actually apply the function to
+    each item on that list。 The thing is that pandas is actually built on NumPy which
+    is。 designed for vector manipulation which means that loops are， inherently inefficient。
+    That being said， pandas will give you methods to loop through。 row by row if that's
+    something you really want to do。 So for example。 it will provide you with an iterose
+    method or， iter tuples method which will give you essentially a set of。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我为什么不能像遍历列表那样遍历我的所有行，实际上找出并应用函数到列表中的每一项呢？问题是，pandas实际上是建立在NumPy之上的，而NumPy是为向量操作而设计的，这意味着循环本质上是低效的。不过，pandas会提供逐行遍历的方法，如果你真的想这样做。例如，它会为你提供一个iterrows方法或iter
+    tuples方法，这基本上会给你一组。
+- en: things to loop through but it will be quite slow。 So over here I've basically
+    created a new dictionary to fill。 a new dictionary to feed our mileage into and
+    I'm running， through my rows within data frame。 iterose command and I'm just，
+    feeding it a set of coordinates and I'm running it。 calculating the distance between
+    a particular set of coordinates。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有东西需要循环，但会非常慢。所以在这里，我基本上创建了一个新的字典来填充，将里程数据喂入一个新字典，我在数据框中运行 iterose 命令，给它一组坐标，计算特定坐标之间的距离。
+- en: and every single hotel in my data set。 If you're curious that particular set
+    of coordinates happens to。 be the Brooklyn super hero supply in New York， it's
+    a fantastic place you should go there。 So now at this point we know that our function
+    with iterose has， taken 184 milliseconds。 We don't actually know whether that's
+    slow or fast at this point。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我数据集中每一家酒店。如果你感兴趣，那组坐标恰好是纽约的布鲁克林超级英雄供应站，这是一个很棒的地方，你应该去那里。所以现在，我们知道使用 iterose
+    的函数花费了 184 毫秒。此时我们并不知道这到底是慢还是快。
+- en: but all we know is that it took less than a second。 I guess that's good。 But
+    we can try a different looping method。 A nicer way to have done this would have
+    been to use apply which。 applies a function along a specified axis which is to
+    say。 a set of rows or a set of columns and is a lot more efficient， than iterose。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们所知道的只是这用了不到一秒。我想这很好。但我们可以尝试一种不同的循环方法。更好的做法是使用 apply，它可以沿着指定的轴应用一个函数，也就是说，一组行或一组列，这比
+    iterose 要高效得多。
+- en: It's much more optimized even though it's still looping through， over and over
+    again。 Apply is best used only when there is no good way to actually， vectorize
+    your function。 So let's try looking at that。 So over here I'm essentially having
+    the function do the same。 saying it's applying the function to each individual
+    row and it's。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管它仍然在一遍又一遍地循环，但它的优化程度更高。apply 最好只在没有好的方法去真正向量化你的函数时使用。那么让我们来看看这个。因此在这里，我基本上让函数做相同的事情，应用函数到每一行。
+- en: comparing the distance from that hotel to a particular set of。 coordinates and
+    it's running it through a row by row。 But just by swapping out apply for iterose。
+    I've gotten my run time， down to 78 milliseconds。 And by comparison to the 184
+    milliseconds that we saw before。 that's a two and a half times improvement for
+    basically changing， nothing about my function。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 比较那家酒店与特定坐标集之间的距离，它是逐行运行的。但仅仅通过将 apply 替换为 iterose，我的运行时间就降到了 78 毫秒。而与我们之前看到的
+    184 毫秒相比，这基本上是提升了两倍半，几乎没有改变我的函数。
+- en: just changing the function that runs it。 And now if we look at the actual line
+    profiler we can see what it's。 doing。 Well apply is doing a lot of repetitive
+    steps where you see。 that hundred one thousand six hundred and thirty one hits。
+    That's the apply function hitting the each individual row and doing。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只是更改执行的函数。如果我们查看实际的行分析器，我们可以看到它正在做什么。apply 执行了很多重复的步骤，其中你会看到一千六百三十一次点击。这是 apply
+    函数对每一行进行处理。
+- en: the same set of things over and over and over again。 And if we could just get
+    rid of that repetition we could make it。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一遍又一遍地执行同一组操作。如果我们能够消除这种重复，我们就能让它。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_8.png)'
+  id: totrans-40
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_8.png)'
+- en: run a lot faster。 And that's what vectorization actually does for our functions。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行速度要快得多。这就是向量化实际上为我们的函数做的。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_10.png)'
+  id: totrans-42
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_10.png)'
+- en: So what is vectorization？ Well before we start talking about that let's take
+    a step back and just。 talk about what it is that makes pandas so great。 The basic
+    unit of pandas is an array。 So there's two sort of basic objects in pandas。 One
+    is a series which is a one dimensional array with access labels。 So a series would
+    be a column with some labels on it for example。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么什么是向量化呢？在我们开始讨论这个之前，让我们先回顾一下，使 pandas 如此优秀的原因。pandas 的基本单元是数组。所以在 pandas 中有两种基本对象。一种是系列，它是一维数组，带有访问标签。所以系列可以是一个带有一些标签的列，例如。
+- en: Or a data frame which is a two dimensional array with labeled axes。 In other
+    words that would be a table with column labels and row labels。 And vectorization
+    is the process of performing operations on arrays instead of scalars。 In other
+    words my vectorized operations are going to take my entire series and。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一种是数据框，它是一个带有标签轴的二维数组。换句话说，这就是一个带有列标签和行标签的表。向量化是对数组而不是标量执行操作的过程。换句话说，我的向量化操作将处理我的整个系列。
+- en: operation on the entire thing simultaneously instead of running through it one
+    single item at a time。 Why would I want to do that？ Well many pandas functions
+    are actually built to operate that way。 They're built to operate directly on arrays。
+    So the built in pandas some functions。 the string processing， they're all vectorized
+    functions。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同时对整个数据进行操作，而不是逐项处理。那我为什么要这么做呢？许多 Pandas 函数实际上都是为了以这种方式操作而构建的。它们被构建为直接在数组上操作。因此内置的
+    Pandas 一些函数、字符串处理，都是向量化函数。
+- en: And they are inherently because of the inherent pandas structure much faster
+    than regular looping。 operations or trying to operate on one piece of the data
+    frame at a time。 So let's look at how we would vectorize this function。 We actually
+    don't need to do much。 All we've done is we've said we're going to grab our have
+    or sign function。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且由于 Pandas 结构的固有特性，它们比常规循环操作或尝试一次操作数据框的一个部分要快得多。那么让我们看看如何对这个函数进行向量化。我们实际上不需要做太多。我们所做的只是说我们将抓取我们的
+    Heverson 函数。
+- en: We're still using the same set of coordinates。 But now instead of looping and
+    applying the function on one row at a time。 we're going to feed it the entire
+    vector latitude and longitude that we've grabbed from the data frame。 So at this
+    point my DF latitude and DF longitude are individual arrays。 They're the contents
+    of both of those columns whole。 And this brings our time down to actually 1。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们仍然使用相同的坐标集。但现在不再是逐行循环应用函数，而是将整个向量纬度和经度输入我们从数据框中抓取的内容。因此，此时我的 DF 纬度和 DF 经度是各自的数组。它们是这两列内容的整体。这使我们的时间实际降到了
+    1。
+- en: 8 milliseconds。 So if you recall in our previous looping runs we got it down
+    to something like 73 or something like that。 Now we are down to a tiny fraction
+    of that。 And in fact if we look at time it。 well the function is no longer looping。
+    It's doing exactly one hit to every single line that we're in the function。 And
+    that's what allows that huge increase in efficiency。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 8 毫秒。所以如果你回忆我们之前的循环运行，我们将其降到大约 73 毫秒。现在我们降到了其微小的一部分。事实上，如果我们看看时间，它。好吧，函数不再循环。它对函数中的每一行进行一次访问。这就是使效率大幅提升的原因。
+- en: And so now just to summarize with iteros we were starting out at 184 milliseconds。
+    With a vectorized implementation of the exact same function， we're down to 1。8
+    milliseconds。 which is a 43 times improvement over even looping with a ply。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以现在总结一下，使用 iteros 时，我们的起始时间为 184 毫秒。使用相同函数的向量化实现，我们降到了 1.8 毫秒。相比于使用 ply 循环，这是
+    43 倍的提升。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_12.png)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_12.png)'
+- en: So that's already pretty great， but could we make it even better？
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这已经相当不错，但我们能否做得更好？
+- en: Well the answer is actually yeah we can。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 答案实际上是，是的，我们可以。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_14.png)'
+  id: totrans-53
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_14.png)'
+- en: And we can do that by vectorizing with NumPy arrays instead of series。 So why
+    NumPy you might ask？
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以通过使用 NumPy 数组而不是系列进行向量化来实现。所以你可能会问，为什么选择 NumPy？
+- en: Well NumPy calls itself a fundamental package for scientific computing in Python。
+    NumPy operations are essentially executed and optimized pre-compiled code。 And
+    fundamental objects in NumPy are also arrays are called nd arrays。 And they are
+    highly efficient and they skip out on a lot of the overhead that gets incurred。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: NumPy 自称是 Python 中科学计算的基础包。NumPy 操作本质上是执行和优化的预编译代码。而 NumPy 中的基本对象也称为 nd 数组。这些数组非常高效，并且跳过了很多开销。
+- en: by operations on Pandas series in Python。 Pandas series are great for a lot
+    of things。 They provide their own indexes there。 They have a lot of functionality。
+    but they do have a lot of extra overhead that NumPy arrays， skip。 And so what
+    we can do is we can take again our old good old Heverson function and we're going。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过对 Python 中 Pandas 系列的操作。Pandas 系列在很多方面都很出色。它们提供自己的索引，并且功能丰富。但它们确实有很多 NumPy
+    数组所跳过的额外开销。因此，我们可以再次使用我们老牌的 Heverson 函数，并将其。
+- en: to convert our Pandas series back to NumPy arrays by applying this dot values
+    function， to them。 This is just the built-in Pandas method。 And now we are down
+    to actually 370 microseconds。 Which is to say we've effectively gotten up to a
+    500-fold improvement from our original。 version of the function by not changing
+    the function， essentially just changing the way。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过应用这个 dot values 函数将 Pandas 系列转换回 NumPy 数组。这只是 Pandas 的内置方法。现在我们的时间实际上降到了 370
+    微秒。这意味着我们在不改变函数的情况下，实际上实现了 500 倍的改进，仅仅是改变了方式。
+- en: that our inputs are read in。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的输入是读取的。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_16.png)'
+  id: totrans-59
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_16.png)'
+- en: So that probably is pretty great for what we're trying to do and for that particular
+    function。 But you might say， what if I actually really wanted to use a loop？
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这对于我们要做的事情以及那个特定的函数来说可能非常不错。但你可能会问，如果我真的想用循环呢？
+- en: And there might be a couple of reasons for why you might want to do that。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能有几个原因让你想这样做。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_18.png)'
+  id: totrans-62
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_18.png)'
+- en: And this Haversign function might not actually be the best example for that，
+    but there are。 other reasons。 So for example， maybe your function is really complex
+    and it doesn't yield itself easily to。 vectorization。 Maybe you're calling an
+    API and there is no way to vectorize this process。 Maybe you're trying to vectorize
+    your function would actually incur a lot of memory overhead。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个Haversign函数可能并不是最佳的示例，但还有其他原因。例如，可能你的函数真的很复杂，难以进行向量化。也许你在调用一个API，而这个过程根本无法向量化。又或者，你尝试向量化你的函数时，实际上会产生很大的内存开销。
+- en: For example， your data frame is huge and it contains a lot of really complex
+    float operations。 And it's too much for you to handle and so you're actually preferable
+    for you to loop。 even though it would be slower。 Or maybe you're just plain stubborn。
+    I don't know。 So one of the things that we could use to actually speed up loops
+    is Saison。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，你的数据框很大，包含很多复杂的浮点操作。这对你来说太多了，因此你实际上更倾向于使用循环，即使这样会更慢。或者你可能只是固执，我不知道。因此，我们可以用来加速循环的一件事是Saison。
+- en: So Saison language is a super set of Python that additionally supports calling
+    C functions。 and declaring C types。 And I think there is another Saison talk following
+    directly after this。 I'm sure they will know a lot more than I do about it。 But
+    this is my abbreviated version。 So almost any piece of Python code is also valid
+    Saison code。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Saison语言是Python的超集，此外还支持调用C函数和声明C类型。我想在此之后还有另一个Saison演讲。我相信他们会比我了解得多。但这是我的简化版本。因此，几乎任何Python代码也是有效的Saison代码。
+- en: And the Saison compiler will effectively convert Python code into C code。 which
+    will make equivalent， calls to the Python and C API。 So we're still using Jupyter
+    notebooks。 And I've pip installed the Saison extension。 I'm going to load my Saison
+    extension。 And then I'm going to open a new Saison cell。 I'm going to initialize
+    it as running in Saison。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Saison编译器将有效地把Python代码转换为C代码，这将对Python和C API进行等效调用。因此，我们仍在使用Jupyter笔记本。我已经通过pip安装了Saison扩展。我将加载我的Saison扩展，然后打开一个新的Saison单元。我将其初始化为在Saison中运行。
+- en: And I'm going to grab my entire Haversign function and pretty much just run
+    it through。 that Saison compiler。 I've not really made any real changes to it
+    other than to define it in my def as a CP。 def， which is a Saison Python function
+    instead of just a straight Python function。 So let's time this。 Once that's been
+    done， I can basically just run my function exactly the way I did before。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我将把整个Haversign函数抓取下来，几乎就是通过Saison编译器运行它。除了在我的def中将其定义为CP def外，我并没有做任何实质性的更改，CP
+    def是Saison Python函数，而不仅仅是普通的Python函数。现在我们来计时。一旦完成，我基本上可以像之前一样运行我的函数。
+- en: with an apply。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 带有一个apply。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_20.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_20.png)'
+- en: And I'm down to 76 milliseconds。 Well， unfortunately， that's actually not very
+    good。 It's about the same thing we were getting with Python。 And that's a little
+    bit disappointing because the Saison compiler was supposed to be doing。 a bunch
+    of work in the background to convert our code to C or Saison and try to optimize。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我现在的时间是76毫秒。很不幸，这实际上并不是很好。这大约和我们用Python时的效果相同。这有点令人失望，因为Saison编译器本应在后台做很多工作，将我们的代码转换为C或Saison并进行优化。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_22.png)'
+  id: totrans-71
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_22.png)'
+- en: it and make it run faster。 So what happened there？ Well。 if I add the -a option
+    to my Saison magic command， the Saison compiler will actually。 show me how much
+    of this function has been able to convert from Python to Saison。 And those yellow
+    bits is everything that it's still running in Python。 That's a lot of yellow。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后让它运行得更快。那么发生了什么呢？如果我在我的Saison魔法命令中添加-a选项，Saison编译器实际上会告诉我这个函数有多少部分能够从Python转换为Saison。而那些黄色部分就是仍在Python中运行的部分。黄色部分很多。
+- en: We did not do very well。 And that's exactly why we didn't cut any time off。
+    So let's see what we can actually do about that。 Well， for one thing。 we know
+    that as long as Saison is still using Python， we're not， going to improve the
+    time much。 So we need to make the function more Saison friendly。 And there's a
+    bunch of ways to do that。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的表现并不好。这正是我们没有节省任何时间的原因。那么我们到底能做些什么呢？嗯，首先，我们知道只要Saison仍在使用Python，我们的时间就不会有太大改善。因此，我们需要使这个函数更加Saison友好。这样做的方法有很多。
+- en: you know， anything ranging from taking the raw， function to converting it to
+    pure C。 But two of the things that we can do fairly easily。 is we can add explicit
+    strict typing to the function or we can replace our - or and or。 We can replace
+    our paison and NumPy libraries with C-specific math libraries。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你知道，从处理原始函数到将其转换为纯C，但我们可以相对容易地做两件事。我们可以为函数添加显式严格类型，或者替换我们的 - 或者和或者。我们可以将我们的paison和NumPy库替换为C特定的数学库。
+- en: So if you recall our function was using a whole bunch of NumPy math to calculate
+    a bunch。 of those trig formulas， we're going to take those out and we're going
+    to replace them。 with actual C math library。 So this is what our converted function
+    looks like now。 And you can see that I've basically taken all of the variables
+    that are declared within。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果你还记得我们的函数是使用一堆NumPy数学来计算一堆三角公式，我们将把这些去掉，替换为实际的C数学库。这就是我们转换后的函数现在的样子。你可以看到，我基本上已经把所有在这里声明的变量都提取出来了。
+- en: the function and I've added strict typing to them。 They're all floats。 It's
+    easy enough。 And I've imported the libc math to bring in a bunch of Saison and
+    cosine functions that。 we're going to be using to replace the NumPy library。 Other
+    than that。 the only thing I've really done is there was one function which was
+    a。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个函数我已经添加了严格类型。它们都是浮点数。这很简单。我已经导入了libc math，以引入一堆我们将要使用的Saison和余弦函数来替换NumPy库。除此之外，我真正做的唯一一件事是，有一个函数是。
+- en: degrees to radiance conversion that exists in NumPy but not in the original
+    C library。 I've just taken it out and rewritten it and defined it as a function，
+    separate function。 within here。 So now let's try running that。 So we're going
+    to time the Saisonized function。 again the actual apply statement looks exactly，
+    the same as before。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在NumPy中存在的度到弧度的转换在原始C库中不存在。我已经将其去掉并重新编写，将其定义为一个单独的函数。所以现在让我们尝试运行它。所以我们将对Saison化的函数进行计时，实际的apply语句看起来和之前完全一样。
+- en: And now we're actually down to 50 milliseconds which if your call is not nearly
+    as great as。 300 microseconds but you know it's an improvement。 We've gotten it
+    up to 1。6 times the previous version which was just running the Python。 function
+    with apply or running the rowwise function， Python function directly in the Saison。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们的时间实际上降到了50毫秒，虽然你的调用远不及300微秒，但你知道这也是一种改善。我们已经将其提升至之前版本的1.6倍，之前的版本只是直接在Saison中运行Python函数或apply。
+- en: compiler without doing anything。 And so at this point if you're really attached
+    to loops you can go into a lot more probably。 Saison optimizations but they'll
+    get a lot more complex or you can see if you can figure。 out a way to vectorize
+    your function which will give you a huge boost and improve in。 performance for
+    very little work。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 编译器没有做任何事情。因此在这一点上，如果你真的依赖于循环，你可能会进入更多的Saison优化，但它们会变得更加复杂，或者你可以看看是否可以找到一种方法来向量化你的函数，这将给你带来巨大的提升，并在非常少的工作中改善性能。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_24.png)'
+  id: totrans-80
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_24.png)'
+- en: And once if we actually look at our code at this point， well we see that there's
+    a hell。 of a lot more yellow and more white on the screen。 So our changes that
+    we made including the data typing and the conversion to a different。 library have
+    actually done a lot to help the function convert to actual Saison code and。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而一旦我们实际上查看此时的代码时，嗯，我们会发现屏幕上有很多更多的黄色和白色。因此，我们所做的更改，包括数据类型和转换到不同的库，实际上对函数转换为实际的Saison代码有很大帮助。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_26.png)'
+  id: totrans-82
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_26.png)'
+- en: run more efficiently。 Alright， so here we are， let's sum it up。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更有效地运行。好的，我们来总结一下。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_28.png)'
+  id: totrans-84
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_28.png)'
+- en: So again this is our scoreboard。 We started out with 184 milliseconds， we got
+    it down to 0。4 milliseconds， overall about， a 500 time improvement。 We started
+    out looping with iteros which you should pretty much almost never do。 We moved
+    to looping with apply which is a fairly efficient way to loop through things。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们的记分板。我们起初的时间是184毫秒，现在降低到0.4毫秒，整体提高了大约500倍。我们最初使用了几乎不应该使用的迭代器进行循环。后来我们改用了apply循环，这是一个相当高效的循环方式。
+- en: We tried looping with a function that got converted to Saison which gave us
+    some performance。 boost but not a whole lot。 And then we vectorized their function
+    with pandas and with NumPy arrays which gave huge。 boosts in performance。 So to
+    summarize， the general zen of pandas optimization is one。 avoid loops if you can。
+    If you must loop， use apply not iteration functions。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们尝试了使用一个被转换为Saison的函数进行循环，这给我们带来了性能提升，但并不显著。然后我们用pandas和NumPy数组对他们的函数进行了向量化，这带来了巨大的性能提升。总之，pandas优化的一般原则是：如果可以，避免循环。如果必须循环，请使用apply而不是迭代函数。
+- en: If you must apply use Saison to make it faster， vectorization is usually better
+    than scalar。 operations and vector operations on NumPy arrays are more efficient
+    than on native pandas， series。 And with that， just a couple of words of warning
+    to quote XKCD premature optimization is the。 root of all evil。 So before you start
+    optimizing your function。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你必须使用Saison来加快速度，通常向量化比标量操作更好。在NumPy数组上的向量操作比在原生pandas系列上的操作更高效。对此，我想引用XKCD的一个警告：过早优化是万恶之源。所以在你开始优化你的函数之前。
+- en: make sure that it is doing what you wanted， to be doing。 Otherwise you will
+    find yourself having spent a week on trying to make it run a few minutes。 faster
+    just to find that it actually wasn't running and doing things that you wanted
+    it。 to do at all。 You will regret it。 Another caveat that I should put in here。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确保它在做你想要的事情。否则你会发现自己花了一周的时间试图让它快几分钟，却发现它根本没有运行，做你想让它做的事情。你会后悔的。还有一个需要提及的警告。
+- en: all of this was done in Python 3。51， pandas。20。 So anything。 any of these results
+    will obviously vary depending on exactly how you are using， your functions。 the
+    system that you are running it on， the size of the data frame， the type。 of the
+    function that you are using。 And so take it with a grain of salt。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有这些都是在Python 3.51和pandas 20中完成的。所以任何这些结果显然会根据你使用函数的方式、运行系统、数据框的大小和你使用的函数类型而有所不同。因此，请持谨慎态度。
+- en: I can't promise you the exact same performance， performance boosts that we saw
+    in this particular。 data frame and this particular function for every single thing
+    that you might ever apply。 these methods to。 And that's pretty much it。 And since
+    I have a few more seconds。 I'm going to give a bonus pitch。 We are hiring and
+    check us out at upside。com。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我不能保证你在每一项你可能应用这些方法的事情上都能获得与我们在这个特定数据框和这个特定函数中看到的完全相同的性能提升。差不多就是这样。既然我还有几秒钟，我想顺便宣传一下。我们正在招聘，欢迎访问upside.com。
+- en: We are a fantastic small travel startup located in Washington， D。C。 and if you
+    are interested。 come talk to me。 Thank you very much。 [Applause]， \>\> Thank you，
+    Sophia。 Does anyone have any questions？ If you do， there are microphones in the
+    aisles。 So in your half a sign， scytheon example， your last yellow line was you
+    are using map。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们是一家位于华盛顿D.C.的优秀小型旅行初创公司，如果你感兴趣，请来找我。非常感谢。[掌声]，谢谢，Sophia。有人有问题吗？如果有，走道上有麦克风。所以在你的半个标志，scytheon示例中，你的最后一条黄色线是你在使用map。
+- en: and tuple unpacking。 It seems like if you just put four lines of just do the
+    computation。 you could have avoided， a complete round trip into Python land。 \>\>
+    You know， that's a fair point。 I actually did try doing that and it actually does
+    not improve performance。 But it was actually one of the things that I was going
+    to investigate was figuring out。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有元组解包。如果你只写四行代码来进行计算，你本可以避免完全回到Python环境中。你知道，这是一个公平的观点。实际上我也尝试过这样做，但实际上并没有提高性能。但这确实是我想要调查的事情之一。
+- en: how to actually make that run faster。 Because you're right， it does run as a
+    Python function。 But for the purposes of that function， doing it one way or another
+    didn't make a difference。 So I left it as it was。 \>\> Thank you。 \>\> For your
+    improvement for your scytheon。 did you test that with the vectorization to， see
+    if there was further improvement？ \>\> So not quite。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如何真正让它运行得更快。因为你是对的，它作为一个Python函数运行。但对于那个函数来说，以某种方式做和另一种方式做没有区别。所以我就保持原样。 \>\>
+    谢谢。 \>\> 对于你的scytheon改进，你是否测试过与向量化的结合，看看是否有进一步的改善？ \>\> 所以还不是完全。
+- en: Because once -- well， so if you were to run it on vectors， a lot of the actual
+    benefits。 of scytheon would basically just be the benefits that you get from the
+    direct vectorization。 And so yes， you could。 But at that point， you might as well
+    just run that function on vectors in its Python form。 And it will still be way
+    faster。 The combining the two doesn't actually give you much of a boost in performance
+    in that。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为一旦——好吧，如果你在向量上运行它，很多实际的好处。scytheon的好处基本上就是直接向量化带来的好处。所以，是的，你可以。但是到那时，你不如就直接在Python形式下对向量运行那个函数。那样仍然会快得多。将两者结合并没有在性能上给你带来太大提升。
+- en: case。 \>\> Thank you。 So this isn't exactly related to scytheon or pandas， but
+    you're using lambdas。 And I know -- I remember way back， West McKinney's advice
+    was not to use lambdas in apply。 Is that changed or --， \>\> So that is a great
+    question。 I don't know if I've ever heard not to use lambdas in apply。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 情况。 \>\> 谢谢。所以这并不完全与scytheon或pandas有关，但你在使用lambda。我知道——我记得很久以前，West McKinney的建议是不在apply中使用lambda。这个有变吗——
+    \>\> 这是个好问题。我不知道我是否听说过不在apply中使用lambda。
+- en: The reason that we use lambdas in this particular use case is because we're
+    trying to apply。 to a row。 And so we're trying to -- we need to give that object
+    a particular name。 If I were not applying it to a row， if I were just doing it
+    on a single series， I could do。 without it。 \>\> Do you know if that's faster？
+    \>\> That's a great question。 I don't think it would be。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在这个特定用例中使用lambda的原因是因为我们试图应用。到一行。所以我们需要给那个对象一个特定的名称。如果我不是应用于一行，而只是对一个单独的系列进行操作，我可以做到。没有它。
+    \>\> 你知道这样更快吗？ \>\> 这是个好问题。我认为不会。
+- en: but I haven't tested it， so I don't know。 \>\> All right。 Thank you。 \>\> Last
+    question。 \>\> So we use group by to group our regression models today。 And I
+    found that if you do like over more than four columns， it just is increasingly。
+    not performant at all。 Do you have any suggestions of other ways to do that that
+    would be more performant？
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我还没有测试过，所以我不知道。 \>\> 好的，谢谢。 \>\> 最后一个问题。 \>\> 所以我们今天使用分组来分组我们的回归模型。我发现如果你在四个以上的列上进行分组，性能就会逐渐下降。你有没有其他更高效的方法来做到这一点的建议？
+- en: \>\> For specifically group by -- you know， off the top of my head， I would
+    guess that。 maybe dealing with some of the data types and looking at the way that
+    your data types。 of the things that you're grouping by might affect it。 But the
+    honest answer is no。 I don't actually know。 \>\> Okay。 \>\> Okay。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 对于特定的分组——你知道，我猜测也许处理一些数据类型，以及查看你分组的对象的数据类型可能会影响它。但老实说，我不知道。 \>\> 好的。 \>\>
+    好的。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_30.png)'
+  id: totrans-99
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_30.png)'
+- en: That's all we have time for。 Please again， thanks， Sophia。 \>\> Thank you。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们所能用的时间。再次感谢，索非亚。 \>\> 谢谢。
+- en: '![](img/344784ece4961f2de8d0773170a4c965_32.png)'
+  id: totrans-101
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_32.png)'
+- en: '[ Applause ]， \>\> Thank you very much。 [BLANK_AUDIO]。'
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[ 掌声 ]， \>\> 非常感谢。 [空白音频]。'
+- en: '![](img/344784ece4961f2de8d0773170a4c965_34.png)'
+  id: totrans-103
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/344784ece4961f2de8d0773170a4c965_34.png)'

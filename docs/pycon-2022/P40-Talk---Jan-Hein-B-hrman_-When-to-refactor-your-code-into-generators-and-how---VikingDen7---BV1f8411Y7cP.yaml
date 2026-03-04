@@ -1,0 +1,584 @@
+- en: P40：Talk - Jan-Hein Bührman_ When to refactor your code into generators and
+    how - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P40：演讲 - Jan-Hein Bührman_ 何时将你的代码重构为生成器以及如何重构 - VikingDen7 - BV1f8411Y7cP
+- en: All right， let's start the third talk of the session。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，让我们开始这次会议的第三个演讲。
+- en: '![](img/33efdd09484518636e8cf628d585467b_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/33efdd09484518636e8cf628d585467b_1.png)'
+- en: We have Janhain Biermann here who is going to talk about when to refactor your
+    code into。 generators and how。 Thank you。 Thank you。 All right， let's start。 Well，
+    first of all。 it's great to be here。 I hope everybody is doing fine here at the
+    venue。 but also perhaps the viewers at home。 So let's start with my presentation
+    when to refactor your code into generators and how。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们请到了 Janhain Biermann，他将谈论何时将你的代码重构为生成器以及如何重构。谢谢你。谢谢。好的，让我们开始。首先，很高兴来到这里。我希望在场的每个人都很好，也希望在家里的观众们也一样。那么，让我们开始我的演示，讨论何时将你的代码重构为生成器以及如何重构。
+- en: All right， so the goals of this presentation are that I hope that after this
+    presentation。 you will be able to recognize certain loop constructs as candidates
+    for refactoring and。 know how to convert these constructs into more maintainable
+    and Python code by refactoring。 them into elegant pipelines of generators。 And
+    finally。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，这次演示的目标是希望在演示结束后，你能够识别出某些循环结构作为重构的候选，并且知道如何将这些结构重构为更可维护的 Python 代码，通过将它们转化为优雅的生成器管道。最后。
+- en: you will be more acquainted with the standard library editor tools， module。
+    and the more editor's package。 But first， let's introduce myself。 My name is Janhain
+    Biermann。 You see my email address and my Twitter handle over there。 As you can
+    see in the email address。 I'm working for Ordina already more than 10 years now。
+    Time flies when you're having fun。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你将更加熟悉标准库编辑器工具、模块以及更多编辑器的包。但首先，让我自我介绍一下。我叫 Janhain Biermann。你可以在那看到我的电子邮件地址和我的
+    Twitter 账号。如你所见，我的电子邮件地址显示我已经在 Ordina 工作超过 10 年。时间过得真快。
+- en: I witnessed and a long time ago， more than 30 years ago， I witnessed the first
+    baby steps。 of Python when I was working at the Dutch Institute for Mathematics
+    and Computer Science。 And during my career， I was working as a C++ developer with
+    IIT also management roles。 But I always kept an eye on Python and its developments
+    and how it progressed。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我见证了 Python 的第一个起步，这已经是 30 多年前的事了。当时我在荷兰数学与计算机科学研究所工作。在我的职业生涯中，我曾作为 C++ 开发者工作，也担任过管理角色。但我一直关注着
+    Python 及其发展，以及它的进步。
+- en: And while being a Java unit manager at my current company， I sparked the idea
+    for starting。 up a dedicated Python practice， the Ordina Python years。 And I think
+    it's quite special for a broad-spectrum IIT service provider to have a Python
+    dedicated。 unit within a very combined software ethics， software development ethics，
+    or software development。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我当前公司担任 Java 单元经理时，我萌发了建立专门的 Python 实践，即 Ordina Python 年的想法。我认为对于一个广泛领域的 IT
+    服务提供商来说，能够在一个非常综合的软件开发伦理中拥有一个专门的 Python 单元是相当特别的。
+- en: craftsmanship together with Python。 We like that combination。 And finally。 the
+    Ordina Python years are a participating sponsor of the BSF。 And the last four
+    years I'm working as a Python programmer as a happy Python coder。 All right。 so
+    the topic we'll be addressing is， first of all， I'm going to show you some。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 工艺与 Python 的结合。我们喜欢这种组合。最后，Ordina Python 年也是 BSF 的参与赞助商。在过去的四年中，我作为一个快乐的 Python
+    程序员从事 Python 编程。好的，所以我们将要讨论的主题是，首先，我要给你展示一些。
+- en: code with certain kind of loops， which have a certain pattern。 These loops have
+    similar codes。 but they vary in start， stop， and selection criteria。 And I'll
+    give a short， I don't know。 address the topic of refactoring and how you can recognize。
+    certain patterns of loop constructs for refactoring candidates。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码中有某种类型的循环，具有某种模式。这些循环有相似的代码，但它们在开始、停止和选择标准上有所不同。我将简要讨论重构的话题，以及你如何识别某些循环结构的模式作为重构候选。
+- en: Then I touch upon the topic of generators and I will introduce you to the earlier
+    mentioned。 etituz module in the two-specage。 So let's start。 So this is， I'm going
+    to tell you a story。 but it is a fictional story。 It's not a true story。 It's
+    a story that we're working in a team and we have a product owner who is representing。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，我将谈到生成器的话题，并向你介绍之前提到的 etituz 模块和两个规格。所以，让我们开始。这是一个故事，但它是虚构的故事，并不是真实的故事。这个故事讲述的是我们在一个团队中工作，我们有一个代表的产品负责人。
+- en: the Fibonacci sequence fan club。 And he would like you to make a function returning
+    a list of Fibonacci numbers which are less。 than a certain value。 So first of
+    all， who knows what a Fibonacci number is？ I see many ends。 perhaps not 100%，
+    but close to it。 So short， short introduction to Fibonacci numbers。 I would just
+    read it out。 In mathematics， the Fibonacci numbers form a sequence。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 斐波那契序列粉丝俱乐部。他希望你制作一个函数，返回小于某个值的斐波那契数列表。那么首先，谁知道什么是斐波那契数？我看到许多人，可能不是100%，但接近。简短地介绍一下斐波那契数。我只会读出来。在数学中，斐波那契数形成一个序列。
+- en: the Fibonacci sequence， in which， each number is the sum of the preceding two
+    ones。 So that's the essence of the Fibonacci sequence。 You start with two numbers。
+    Usually it's zero and one。 The next value is simply the addition of the previous
+    two。 So in this example， you see the first number is zero and one。 If you add
+    them together， one。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 斐波那契序列中的每个数字是前两个数字的和。所以这就是斐波那契序列的本质。你从两个数字开始。通常是零和一。下一个值只是前两个数字的相加。在这个例子中，你看到第一个数字是零和一。如果你将它们相加，就得到了一个。
+- en: zero plus one makes one。 So that's the reason why you see another one in the
+    sequence。 And then the next value is calculated by taking the two previous ones
+    of the next value， which。 are one plus one and that makes two， et cetera， et cetera。
+    One plus two makes three。 Two plus three makes five。 And then you get this sequence。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 零加一等于一。这就是你在序列中看到另一个一的原因。然后下一个值是通过取前两个值来计算的，它们是一个加一个，这样就得到了二，以此类推。一个加二等于三。二加三等于五。然后你得到了这个序列。
+- en: So that's the essence of the Fibonacci sequence。 So let's start coding that
+    in Python。 If you Google around a little bit， perhaps you end up with the tutorial
+    of Python itself。 where a variation of this function is actually written out。
+    Has another name。 It doesn't contain type annotations， but for the rest it's the
+    same。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这就是斐波那契序列的本质。那么让我们开始在Python中编写代码。如果你稍微谷歌一下，或许会找到Python本身的教程，其中实际上写出了这个函数的变体。另有一个名称。它没有包含类型注解，但其他方面是一样的。
+- en: Doesn't contain a doc string either。 But it works as follows。 You initialize
+    your function。 you initialize the result value as an empty list， and you， start
+    initializing the two。 what you could call the Fibonacci registers， A and B。 And。
+    you could view A as the current Fibonacci number and B as the next to come Fibonacci，
+    number。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也没有包含文档字符串。但它的工作原理如下。你初始化你的函数。你将结果值初始化为空列表，并开始初始化两个，可以称之为斐波那契寄存器的A和B。你可以将A视为当前的斐波那契数，B视为下一个即将到来的斐波那契数。
+- en: And as long as your current Fibonacci number is less than the threshold that
+    you have given。 as an argument， as a parameter to your function， then you enter
+    the loop， you append the current。 Fibonacci number to the list， you calculate
+    the two new registers。 And that is the new current Fibonacci number is the old
+    value of the， is the old next Fibonacci。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只要你当前的斐波那契数小于你作为参数传递给函数的阈值，你就进入循环，将当前的斐波那契数添加到列表中，计算两个新的寄存器。新的当前斐波那契数是旧值，也就是旧的下一个斐波那契数。
+- en: number。 So A becomes B。 And at the same time， that's nice from Python。 You can
+    make this kind of funny， how you call it， two-pole assignment。 You can calculate
+    a new next to come Fibonacci number by adding the old values of A and B。 together
+    and that's what you store in the B variable。 And as long as the condition holds。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以A变成了B。同时，这在Python中是很好的。你可以进行这种有趣的，怎么说呢，双重赋值。你可以通过将A和B的旧值相加来计算下一个即将到来的斐波那契数。这就是你存储在B变量中的内容。只要条件成立。
+- en: you just simply repeat that。 And then finally at the end， you return the resulting
+    list。 So looks great。 Seems to work。 Everything has been tested by the way。 So
+    this will be working。 And the product owner is happy with the results and he wants
+    more。 So he now asks us。 he also makes a function that returns the end Fibonacci
+    number counting， from zero。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你只需简单地重复这一过程。最后，你返回结果列表。所以看起来很好。似乎有效。顺便说一句，一切都经过了测试。所以这将会正常工作。产品负责人对结果很满意，并希望更多。所以他现在问我们。他还制作了一个函数，返回从零开始的最后一个斐波那契数。
+- en: So means that if you ask for Fibonacci number zero， then you get the first one。
+    If you ask for Fibonacci number one， you get the second one and so on and so on。
+    We programs like to index from zero one words。 So let's call that one。 Looks a
+    bit the same but also a bit different。 It doesn't return a list。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以意味着如果你请求斐波那契数零，你就会得到第一个。如果你请求斐波那契数一，你就会得到第二个，以此类推。我们喜欢从零开始索引。所以我们称之为一。看起来有点相似，但也有些不同。它不会返回一个列表。
+- en: It just returns one Fibonacci value。 But again， you have these A and B registers。
+    Works the same。 You make a counter but you don't need the counter-valuable。 You
+    only use it to iterate a certain time through this loop and you calculate the
+    Fibonacci number。 and when you have calculated that many n times， then you can
+    return the current Fibonacci number。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它只返回一个斐波那契值。但是，你仍然有这些 A 和 B 寄存器。工作方式相同。你可以设定一个计数器，但你不需要计数器的值。你只使用它来在这个循环中迭代特定的次数，然后计算斐波那契数。当你计算了这么多的
+    n 次后，你就可以返回当前的斐波那契数。
+- en: All right， so product owner now really gets enthusiastic and he says， okay，
+    well， can you。 now make also another function which provides the first n Fibonacci
+    numbers。 So not Fibonacci numbers up to n but the first n and perhaps also a function
+    that gives me。 the smallest Fibonacci number greater than or equal to a certain
+    value。 All right。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，产品负责人现在真的很热情，他说，好吧，你能否再制作一个函数，提供前 n 个斐波那契数。所以不是斐波那契数直到 n，而是前 n 个，或许还有一个函数给我最小的斐波那契数，大于或等于某个值。好的。
+- en: we start coding again。 So here's the first implementation。 Here we are returning
+    a list again。 You use this counter， what you have seen from the construct before
+    and you append the current。 Fibonacci value to the list， et cetera， et cetera
+    and then you return the result and the last， one。 smallest Fib greater equal n。
+    It's a bit different。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们再次开始编码。所以这是第一个实现。在这里我们再次返回一个列表。你使用这个计数器，你在之前的构造中看到过，然后将当前的斐波那契值附加到列表中，等等，然后返回结果，最后一个是最小的斐波那契数大于等于
+    n。这有点不同。
+- en: There you go into the loop and as long as the current Fibonacci number is less
+    than n。 you simply continue until you， that condition does no longer hold and
+    then you return the。 current value because that is then equal to n or greater
+    than n。 So now we have four function and in my original presentation we have a
+    five but makes the story。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后你进入循环，只要当前的斐波那契数小于 n，你就继续，直到这个条件不再成立，然后返回当前值，因为那时它等于或大于 n。所以现在我们有四个函数，在我最初的演示中有五个，但这让故事变得完整。
+- en: a bit boring perhaps and these line up nicely together in this matrix。 So here
+    you have the condensed form of these four functions together and I don't know
+    what。 you're thinking but I'm seeing a pattern。 A lot of people also are seeing
+    some sort of pattern or whatever。 You see the pattern explained over here because
+    for all those functions function starts with。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能有点无聊，这些行在这个矩阵中排得很整齐。所以这里你有这四个函数的简化形式，我不知道你在想什么，但我看到了一个模式。很多人也看到了一种模式或其他。你会在这里看到模式的解释，因为所有这些函数的函数都是以某种方式开始的。
+- en: a name except some parameter， a threshold or whatever or an index kind of value
+    and sometimes。 you need to initialize a container， a list in our case， then you
+    initialize these Fibonacci。 registers， the A and D B。 Then you go into some while
+    loop or a for loop with certain ending。 conditions and then you are in the loop
+    calculating the new values of the Fibonacci registers。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了一些参数、阈值或某种索引值，有时你需要初始化一个容器，在我们这个例子中是一个列表，然后初始化这些斐波那契寄存器，A 和 D B。接着你进入一个 while
+    循环或一个带有特定结束条件的 for 循环，然后在循环中计算斐波那契寄存器的新值。
+- en: And then at the end you return the current Fibonacci number or you're returning
+    the container。 where you're putting all the numbers。 So that's the pattern and
+    as， so there is a lot。 there is a bit of duplication in this， code right and you
+    don't like duplicate code because you might run the risk that you for。 one of
+    the four implementations you just missed it， missed it， did it wrong。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后在最后你返回当前的斐波那契数，或者返回一个你放置所有数字的容器。所以这就是模式，并且，确实有一些重复的代码，你可能不喜欢重复的代码，因为你可能会冒险在四个实现中的一个上出错。
+- en: So you want to try to factor out the common code which is present in these functions。
+    So how to get rid of the redundancy of this code and that's where this talk is
+    about。 Seems to be quite difficult but in general if you want to get rid of redundancy
+    you would。 refactor your code and extract that part。 So first the question， who
+    knows what refactoring is？
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你想尝试提取这些函数中存在的公共代码。那么如何消除这段代码的冗余呢？这就是这次讨论的内容。看起来很困难，但通常如果你想消除冗余，你会重构你的代码并提取那部分。所以首先，谁知道什么是重构？
+- en: Yeah， many ends。 Great， great， great。 Yeah so refactoring is about that you
+    restructure your code without changing the external behavior。 But you usually
+    do this to improve the design， the structure and the implementation of the。 code
+    but you make sure that the original functionality of the code remains the same。
+    And you do this for a reason because your code becomes more readable， less complex
+    and。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是的，很多结束。很好，很好，很好。是的，重构是指在不改变外部行为的情况下重新组织你的代码。但通常这样做是为了改善代码的设计、结构和实现，同时确保代码的原始功能保持不变。你这样做是有原因的，因为你的代码变得更加可读，复杂度降低。
+- en: better maintainable。 Alright， you try to extract these common parts。 You can
+    of course extract that single line， the A and B initialization， put that in a
+    function。 or something like that， it's quite useless， right？
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更易于维护。好吧，你想尝试提取这些公共部分。当然，你可以提取那一行，A和B的初始化，把它放到一个函数中。或者类似的东西，这没什么用，对吧？
+- en: You replace one line by another line so that doesn't seem to work。 You can replace
+    that other line where you're calculating the new Fibonacci registers which。 is
+    happening in the loop。 It doesn't look very sensible either。 So you're kind of
+    stuck。 how can you refactor it？ Perhaps you should combine the functionality of
+    all these functions into one super function。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你用一行替换另一行，所以这似乎不起作用。你可以替换那一行，计算新的斐波那契寄存器，这在循环中发生。这看起来也不太合理。所以你有点陷入困境。你如何重构它？也许你应该把所有这些函数的功能合并成一个超级函数。
+- en: which is able to do all these different kind of calculations depending on the
+    mode flag。 You could make an enum for example， designating the mode where the
+    function is running in。 We could try it first with just combining the first two
+    functions of this story and then。 not using an enum but just a boolean， designating
+    the mode of the function。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它能够根据模式标志进行各种不同类型的计算。你可以做一个枚举来指定函数运行的模式。我们可以先尝试将这个故事的前两个函数结合起来，然后不使用枚举，而是使用布尔值来指定函数的模式。
+- en: So I should have warned you， first you had to put on your paracensative sunglasses
+    on。 because this code really hurts， is hurting the eye。 I hope you'll agree。 It
+    starts already with the ugly type annotations。 I don't know。 everybody has seen
+    the keynote of a book as long and the ugly type annotations。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我应该提前警告你，首先你得戴上你的防护太阳镜，因为这段代码真让人痛苦，刺眼。我希望你会同意。从丑陋的类型注释开始。我不知道。每个人都看过一本书的主题演讲，长篇大论和丑陋的类型注释。
+- en: are also an indication of ugly codes。 In this case also it's a bit strange that
+    this function is either returning an int or。 a list of integers。 So it doesn't
+    make sense to explain。 this code is working by the way but it doesn't make， sense
+    to explain this code。 This is not the way to go。 It's also a bit of a contrived
+    example of course。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些也是丑陋代码的标志。在这种情况下，这个函数要么返回一个int，要么返回一个整数列表，这有点奇怪。所以解释这个代码没有意义。顺便说一下，这段代码确实在工作，但解释这段代码没有意义。这不是正确的做法。当然，这也是一个有些牵强的例子。
+- en: but it's just to demonstrate that， the resulting code is not quite maintainable
+    and this is not the way to go。 So again， how to reflect this？ Well， I think the
+    key thing is here that you have to take a step back。 You have to more conceptualize
+    the things that are happening in your code。 Perhaps fly on a higher altitude，
+    so to say。 And if you do that and you start thinking about what is this code actually
+    doing。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这只是为了说明，结果代码并不太易于维护，这不是正确的做法。那么，如何反映这一点呢？我认为关键是你需要退一步。你需要更概念化地思考你代码中发生的事情。可以说，从更高的高度俯瞰。如果你这样做，并开始思考这段代码实际上在做什么。
+- en: actually， it's doing two things or one thing which is common for all the code
+    and that is that。 a part of it is producing these Fibonacci numbers。 And the other
+    part of all this respective function is doing something else。 It's dealing with
+    ending a loop criteria or the way the values are collected in a container。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，它在做两件事情，或者说一件所有代码共有的事情，那就是。它的一部分在生成这些斐波那契数。另一部分则在做其他事情。它处理结束循环标准或值在容器中收集的方式。
+- en: or that you are working towards the final calculated Fibonacci number。 So that
+    is the separation that you can mentally make in this code。 So when you see that
+    you have some sort of， you have codes where you do things but you。 also have a
+    data producing part in that code， then you might be thinking of this refactoring。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者说你正在朝着最终计算的斐波那契数努力。所以这是你可以在这段代码中心理上分开的部分。因此，当你看到有某种，你有代码在做事情，但你。也有一个数据生成部分在那段代码中，那么你可能会考虑这个重构。
+- en: pattern because the data producing part is the part that you can actually quite
+    easily， isolate。 But how will you do this isolation？ Well， for that I need to
+    introduce another concept and that's our generator functions。 Yeah， generator
+    function。 When you call this function it creates an iterator， a generator iterator。
+    And if you code a function it's quite， it's just like you're coding a function
+    except。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 模式因为数据生成部分是你实际上可以很容易分离的部分。但你将如何进行这种分离？嗯，为此我需要介绍另一个概念，那就是我们的生成器函数。是的，生成器函数。当你调用这个函数时，它创建一个迭代器，一个生成器迭代器。如果你编写一个函数，它其实，就像你编写一个普通函数一样，除了。
+- en: in the simplest form it just doesn't contain any return statements。 It contains
+    yield expressions。 And if a function contains a yield expression then it automatically
+    becomes a function， a。 generator function。 And the yield expression is used to
+    give back a value to the caller but not all values。 only one value at a time。
+    So you can use for example such a function in a for loop or some other thing that
+    can。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在最简单的形式中，它不包含任何返回语句。它包含yield表达式。如果一个函数包含yield表达式，那么它自动变成一个函数，一个生成器函数。yield表达式用于将一个值返回给调用者，但不是所有值。一次只返回一个值。因此，你可以在for循环或其他可以使用的东西中使用这样的函数。
+- en: deal with iterators。 Well each time that the caller， the consuming party needs
+    another value。 the generator， well， it starts with the generator giving its first
+    value back， right？
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理迭代器。每次调用者，消费方需要另一个值时，生成器，嗯，它从生成器返回第一个值，对吗？
+- en: And then when it does so it saves its state and it passes control back to the
+    calling code。 to the consuming code。 And once the consuming party needs another
+    value then the generator is revived。 It starts with left off， it still has its
+    value， all the local variables still have their own。 value and it can produce
+    the next value and so on and so on until some end-incruent criteria。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，当它这样做时，它保存其状态并将控制权返回给调用代码。返回给消费代码。一旦消费方需要另一个值，生成器就会被唤醒。它从上次停止的地方开始，它仍然有它的值，所有局部变量仍然有各自的值，并且可以生成下一个值，如此继续，直到某个结束条件。
+- en: is met or something else or the consuming party doesn't need any more values
+    so that's。 how it sort of works。 So then the next question is how can you code
+    a generator function？
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 达成或其他事情发生，或者消费方不再需要任何值，所以这就是它的工作原理。那么下一个问题是，你如何编写一个生成器函数？
+- en: How can you code a generator function producing these Fibonacci numbers？
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你如何编写一个生成器函数来生成这些斐波那契数？
+- en: Well that's this lovely elegant piece of code I would say。 Let's call it the
+    Fibgen。 a Fibonacci generator and this function generates an endless sequence。
+    of Fibonacci numbers until your memory in your computer cannot cope with the ultra
+    large。 numbers that you're producing and you recognize some familiar parts in
+    this code I guess because。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗯，我会说这是段优雅的代码。我们称之为Fibgen，一个斐波那契生成器，这个函数生成无尽的斐波那契数列，直到你电脑的内存无法处理你生成的超大数字，我想你在这段代码中会认出一些熟悉的部分。
+- en: here you are again， before you enter the loop you're initialize your Fibonacci
+    registers。 A and B to the starting value 0 and 1 and then you enter an endless
+    loop， well through。 and there you yield this first Fibonacci number and then the
+    consuming party can do something。 with that number and then after that when the
+    consumer party wants another element then。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你再次回到这里，在进入循环之前初始化你的斐波那契寄存器A和B为起始值0和1，然后进入一个无尽的循环，嗯，通过。在那里你产出这个第一个斐波那契数，然后消费方可以对这个数字做些什么。之后当消费方想要另一个元素时。
+- en: your function generator function continues so you start calculating the next
+    values A。 and B with a familiar formula you go you loop again into the same loop
+    and you yield the。 next value and it stops again so that's how it works and in
+    my view what you see here。 is perhaps the most canonical code a representation
+    of the Fibonacci sequence when you would code。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的函数生成器函数继续运行，因此你开始使用熟悉的公式计算下一个值 A 和 B。你再次进入同一个循环并生成下一个值，然后又停止。因此，这就是它的工作方式。在我看来，你在这里看到的可能是斐波那契序列最经典的代码表示。
+- en: it in an imperative style you could also express it in a more recursive style
+    but if you express。 it in an imperative style it would look like this I would
+    say。 The next question is how can you use this this generator？
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以用一种命令式风格来表达它，也可以用更递归的风格来表达，但如果你用命令式风格表达，它看起来会像这样。我想说的下一个问题是，你如何使用这个生成器？
+- en: Well on the repo on the read evil print loop it would look like this for example
+    if you。 want to print the first 8 Fibonacci numbers then you can write this loop
+    what you do is。 you're using the zip function to zip together a counter a range
+    of 10 it will give you the。 values 0 to 9 you don't need those values they are
+    zipped and they end up in the score variable。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在代码库中的读取循环中，它将看起来像这样。例如，如果你想打印前 8 个斐波那契数，你可以写这个循环。你要做的是使用 **zip** 函数将计数器和范围
+    10 结合在一起，它将给你 0 到 9 的值。你不需要这些值，它们被打包并最终存储在 **score** 变量中。
+- en: and you call the Fibonacci generator and those values end up in the fib variable
+    in this loop。 and then you simply print this fib variable and then this is how
+    you can use this generator。 so you could say we're set we're ready and you have
+    a long break but perhaps there's。 a little bit more to it because we can go one
+    step further and that is by using some。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你调用斐波那契生成器，这些值会在这个循环中存储在 **fib** 变量中，然后你简单地打印这个 **fib** 变量，这就是你如何使用这个生成器。因此，你可以说我们准备好了，尽管你可能有一个较长的间歇，但也许还有一点更多的内容，因为我们可以更进一步。
+- en: beautiful building block that's provided by the Python standard library and
+    the is it。 tools module uses provides a lot of these nice building blocks here
+    it says the module。 standardized course set a course set of fast memory efficient
+    tools that are useful by。 themselves or in combination together they form an iterator
+    algebra I would say a pipeline。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 Python 标准库提供的美丽构建块，**it tools** 模块提供了很多这些漂亮的构建块。该模块标准化了一组快速且内存高效的工具，这些工具本身或结合在一起都很有用，它们形成了一个迭代器代数，我会说是一个管道。
+- en: of iterators making it possible to construct specialized tools succinctly and
+    efficiently。 in pure Python and there's another module which is called it's not
+    a module it's a package。 you can fetch it from pi pi pi pi the more it does a
+    package and the more it does package。 implements many of the documented recipes
+    which you can read in the in the it tools module。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 迭代器使得在纯 Python 中简洁而高效地构造专用工具成为可能。还有另一个模块，它不是一个模块，而是一个包。你可以从 pi pi pi pi 获取它，它的包实现了许多文档化的配方，你可以在
+    **it tools** 模块中阅读。
+- en: and a lot of more a lot more convenient helper routines so those tools to the
+    rescue in the。 sense that you can make things even more compact for example let's
+    start with the explanation。 of the take while function that you see here and the
+    take while takes a predicate function。 it's just a function returning a falsie
+    or a true V value and the function will be caught。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有很多更方便的辅助例程，所以这些工具可以救急。在这个意义上，你可以使事情变得更加紧凑，例如让我们开始解释这里的 **take while** 函数。**take
+    while** 接受一个谓词函数，这只是一个返回假值或真值的函数，该函数会被捕获。
+- en: with the current value that is given back by the by the iterable and in our
+    case the iterable。 is fibgen and if you you write a lambda expression you see
+    that's as long as the current number。 that is given back by the Fibonacci generator
+    is less than the the end parameter it returns。 to true V value in this case actually
+    it's actually just true and then the value is passed。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用由可迭代对象返回的当前值，在我们的案例中，可迭代对象是 **fibgen**。如果你编写一个 **lambda** 表达式，你会看到只要斐波那契生成器返回的当前数字小于结束参数，它就返回真值，在这个情况下实际上就是
+    **true**，然后这个值会被传递。
+- en: on by take while and as soon as the condition does not hold any longer than
+    the the the。 generator is shut off so to say and your set and all these values
+    that have been passed。 through also as an iterable from take while are collected
+    in a list by using the list。 constructor so this first function that we have written
+    can also be expressed in this。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在使用`take while`时，只要条件不再满足，生成器就会关闭，可以这样说，你传递的所有值也作为可迭代对象从`take while`收集到一个列表中，使用`list`构造函数，因此我们编写的第一个函数也可以这样表达。
+- en: way using the eta tools same for the second function here we are going to use
+    the islice。 function from the data tools module and there is in two forms to sim
+    and the islice function。 is just like you would like to use slicing with lists
+    right you you remember this syntax。 with the square brackets and the columns where
+    you can provide a start a stop and a step。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`eta tools`的方式，与第二个功能一样，这里我们将使用`islice`函数，来自数据工具模块，`islice`函数有两种形式，就像你想要用列表切片一样，对吧？你还记得用方括号和冒号的语法，你可以提供起始、停止和步进。
+- en: value well the islice is the equivalent of that but then for iterators except
+    that you。 cannot provide negative values for either for one of these parameters
+    so there are two。 there are two forms or you provide only the stop value the stop
+    index index between quotes。 or you provide the start index the stop index and
+    the step index but there must be no negative。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个`islice`相当于那种，但适用于迭代器，唯一的区别是你不能为这些参数提供负值。因此，有两种形式，你只提供停止值，停止索引在引号中，或者提供起始索引、停止索引和步进索引，但不能有负数。
+- en: and we have another two from the more eta tools package which is called one
+    and the one。 function accepts an iterable and it's make sure that iterable only
+    contains exactly one value。 not zero not more exactly one and if it contains this
+    value then it extracts that from from。 the sequence and returns it as a value
+    so with the combination of these functions you can。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还有两个来自`more eta tools`包的函数，其中一个是`one`。`one`函数接受一个可迭代对象，并确保该可迭代对象仅包含一个确切的值，不是零，也不是多个，正好是一个，如果它包含这个值，那么它将从序列中提取并返回该值。因此，结合这些函数，你可以。
+- en: implement the second the second function that was requested by the product owner
+    so well。 we can continue like that for example here we have the islice this is
+    the first function。 here we use the islice function in the one index form just
+    only the stop value this is。 the one with the first and fix and finally the smallest
+    fit you remember we had the previous。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现产品负责人请求的第二个功能非常好。我们可以这样继续，例如，这里我们有`islice`，这是第一个功能。这里我们以一索引形式使用`islice`函数，只有停止值，这是第一个固定的，最后是最小的适配器，你还记得之前的吗？
+- en: function where we were using the take while and this one is using the drop while
+    so this。 one also takes a predicate function and it will drop any value as long
+    as the the condition。 holds and once the condition does not longer hold it will
+    start passing through the values。 that it gets from the iterator and the first
+    function from the more eta tools package just。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们使用`take while`的函数，这个使用`drop while`。这个函数也接受一个谓词函数，只要条件成立，它就会丢弃任何值，一旦条件不再成立，它将开始传递从迭代器获取的值，`more
+    eta tools`包中的第一个函数。
+- en: selects the first value and returns that one so that's how how you can implement
+    the。 the last the last requested function so this now we're moving towards the
+    end of the presentation。 I would say I would encourage you to read through the
+    documentation of the eta tools package。 the eta tools module and the more eta
+    tools package it's a very valuable collection and。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 选择第一个值并返回，因此这就是你如何实现最后请求的功能。现在我们正朝着演示的尾声前进。我会鼓励你阅读`eta tools`包的文档。`eta tools`模块及其更多内容都是非常有价值的集合。
+- en: you can use it perhaps more frequent than you than you were thinking and if
+    you have。 an idea but it all has to offer then it can make you code more expressive
+    as well so that's。 my my plea and part of the goal of this presentation and just
+    to to to teach you little bit for。 example if suppose you have a massive amount
+    of data build data that you need to put into。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能比你想象的更频繁地使用它，如果你有一个想法，但它的一切都能让你的代码更具表现力。这是我在本次演示中的诉求和目标之一，教你一点，比如，如果假设你有大量的构建数据需要放入。
+- en: a database and you're using some sort of ORM like SQL alchemy to put it in then
+    sometimes。 it's it could be useful to to to put it in chunks yeah I'm still there
+    in large chunks。 instead of all the data in one goal and then for example you
+    can use the more eta tools。 chunks or the eye chunked function of this module
+    so that's it so the recap is we are。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个数据库，如果你使用某种ORM，比如SQLAlchemy来存储数据，那么有时候把数据分成块是很有用的，是的，我还是在处理大块数据。与其一次性处理所有数据，不如使用更多的eta工具，或者这个模块的chunked功能，所以总结一下就是我们。
+- en: now perhaps more able to recognize a certain pattern of certain loops constructs
+    as candidates。 for reinfecting you know what generator functions are and how how
+    you can use them to extract。 the data producing part out of your entangled codes
+    and you have made acquaintance with。 the eta tools module and the more it's a
+    two's it's a package here are some resources and。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在也许更能识别某些循环结构的模式作为重构候选项。你知道生成器函数是什么，以及如何使用它们将数据生成部分从复杂的代码中提取出来。你已经熟悉了eta工具模块，以及更多的eta工具，这是一个包，这里有一些资源。
+- en: links I was inspired by Wikipedia for the definition of the Fibonacci number
+    code refactoring。 the Python glossary contains generator function definition the
+    documentation of eta tools。 and more eta tools and I would like to thank you you
+    can check my you can check out my。 repository don't look into its history but
+    it's a final result please on the main branch。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个链接是我从维基百科获得的关于斐波那契数的定义，Python词汇表包含生成器函数的定义，eta工具的文档，以及更多的eta工具。我想感谢你，你可以查看我的库，但请不要深入历史，只看最终结果，主要分支上的内容。
+- en: and actually perhaps as an additional note I have used pi test BDD behavior
+    driven development。 gurging language to test all the functions that are that you've
+    seen actually what you。 the functions that you've seen in this listing are actually
+    from the repo as a link linked。 in so to say and so the code that has been shown
+    is working code and I've used the pi。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，也许作为补充说明，我使用了pytest BDD行为驱动开发语言来测试你们看到的所有函数。实际上，你在这个列表中看到的函数来自于一个链接的库，因此展示的代码是有效的，我使用了pytest。
+- en: test BDD to test both the pre refactoring and the post refactoring variants
+    and even that。 weird combination function for its correct working and I understand
+    that questions it's。 better to get them later on or perhaps in the in the early
+    or so I would like to thank you。 for your attention and hope to speak you later。
+    [APPLAUSE]。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 测试BDD，以测试重构前后的变体，甚至是那个奇怪的组合函数以确保它的正确运行。我明白这些问题的原因，最好在之后再处理，或者在早期阶段。因此，我想感谢你的关注，希望稍后能和你交流。[鼓掌]。
+- en: '![](img/33efdd09484518636e8cf628d585467b_3.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/33efdd09484518636e8cf628d585467b_3.png)'

@@ -1,0 +1,949 @@
+- en: P12：Carl Meyer - Type-checked Python in the real world - PyCon 2018 - 哒哒哒儿尔
+    - BV1Ms411H7Hn
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P12：卡尔·迈耶 - 现实世界中的类型检查Python - PyCon 2018 - 哒哒哒儿尔 - BV1Ms411H7Hn
+- en: \>\> Hey， folks。 Let's all give a round of applause for Carl Meyer， who is here
+    to talk to us about。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 大家好。让我们为卡尔·迈耶热烈鼓掌，他将和我们分享关于的内容。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_1.png)'
+- en: type check Python in the real world。 [ Applause ]， \>\> Thank you， Rami。 Welcome
+    to the final session of talks at PyCon 2018。 I hope that。 after three days of
+    PyCon and three nights of enjoying the best of Cleveland， you're all。 awake enough
+    to process some Python code on slides because we're going to see a lot of。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在现实世界中类型检查Python。[掌声]，\>\> 谢谢你，拉米。欢迎来到2018年PyCon的最后一场讲座。我希望在经历了三天的PyCon和三晚享受克利夫兰的美好之后，你们都足够清醒，可以处理幻灯片上的Python代码，因为我们将看到很多。
+- en: it in the next half hour。 I'm Carl Meyer。 I work in Instagram server core infrastructure。
+    And I'm here to talk about type check Python。 So if you've seen me around the
+    internet。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的半小时里，我是卡尔·迈耶。我在Instagram的服务器核心基础设施工作。我今天要谈论的是类型检查Python。如果你在互联网上见过我。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_3.png)'
+  id: totrans-5
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_3.png)'
+- en: I probably look like this。 This is me and my sister prototyping some eyewear
+    designs of。 our own creation that never took off。 I'm Carl J。M。 pretty much everywhere
+    on the internet。 I've been writing Python code now since the -- well， since before
+    the turn of the millennium。 which I'm fairly sure makes me officially old。 For
+    the last couple years I've been working。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我可能看起来像这样。这是我和我的姐姐正在原型设计我们自己创作的眼镜设计，但这些设计从未推出。我是卡尔·J·M，在互联网上几乎到处都是。我写Python代码已经有一段时间了——其实在千禧年之前，这让我觉得自己正式变老了。在过去的几年里，我一直在工作。
+- en: at Instagram， most recently on adding type checking， type annotations to our
+    server。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Instagram，他最近在为我们的服务器添加类型检查和类型注解。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_5.png)'
+  id: totrans-8
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_5.png)'
+- en: code base。 So rough plan for the next half hour。 We'll talk a little bit about
+    why you。 might want to type your Python code。 We'll go into how you would go about
+    it， a sort of。 a brief tour of Python's type system。 And lastly， we'll talk about
+    gradual typing， what it。 means and why it matters。 So why type your Python code？
+    If some of you in here are coming。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码库。因此接下来半小时的粗略计划是：我们将讨论一下为什么你可能想要对Python代码进行类型注解。我们会探讨如何实现，简要介绍Python的类型系统。最后，我们将谈论渐进类型，什么是渐进类型以及它的重要性。那么，为什么要对你的Python代码进行类型注解？如果在座的某些人是从静态类型背景过来的。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_7.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_7.png)'
+- en: from a static typing background， you might have the opposite question， like
+    how is Python。 even usable without static typing。 But since we're at Python， we'll
+    take the question from。 the opposite side。 I've been using Python for years。 It's
+    fine。 Why do I care？ Why do。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从静态类型的背景来看，你可能会问，Python没有静态类型怎么能用？但因为我们是在谈论Python，所以我们从相反的角度来问这个问题。我使用Python已经很多年了，使用起来还不错。我为什么在乎？我为什么。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_9.png)'
+  id: totrans-12
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_9.png)'
+- en: I need type annotations？ So in this method， process method on some class。 it
+    takes an items argument。 What is items？ In Python， we have this idea of duck typing。
+    If it walks like a duck and quacks like a duck， it may as well be a duck。 So we
+    can give。 a duck typing answer to our question。 What is items？ Items is some collection
+    that we can。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我为什么需要类型注解？在这个方法中，某个类的process方法接受一个items参数。items是什么？在Python中，我们有鸭子类型的概念。如果它像鸭子一样走，像鸭子一样叫，它可能就是鸭子。因此我们可以给出一个鸭子类型的答案来回应这个问题。items是什么？items是我们可以。
+- en: iterate over。 Each item in the collection should have a value attribute， which
+    itself。 should have an idea attribute。 That's great。 That's a very flexible answer
+    to the question。 It could allow us to reuse this process method in various contexts，
+    pass different kinds of。 collections， maybe even containing different kinds of
+    objects， as long as they all conform。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 遍历。集合中的每个项目应该有一个值属性，而该属性本身应该有一个id属性。这很好，这是对问题的一个非常灵活的回答。它可以让我们在不同的上下文中重用这个process方法，传递不同类型的集合，也许还包含不同类型的对象，只要它们都符合。
+- en: to this contract。 With a type， the problem with this， though， is code is written
+    once。 but maintained for a long time。 So what if I come back to this code in six
+    months？ And。 I've forgotten everything I knew when I wrote it。 The contract that
+    we just described， I。 have to reestablish by reading through every line of code
+    in the function line by line。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这份合同。然而，问题在于，代码只写一次，但需要维护很长时间。那么如果我六个月后回到这段代码呢？而且，我忘记了我写这段代码时所知道的一切。我们刚描述的合同，我。必须通过逐行阅读函数中的每一行代码来重新建立。
+- en: It's entirely implicit。 Or what if -- how do I know that I'm conforming to this
+    contract。 everywhere in my code base？ Maybe somewhere in some dark corner， I'm
+    passing in some object。 where its value attribute could， in some cases， be none。
+    And then I'm going to get an attribute。 error。 How would I catch that？ Or maybe
+    I need to add some new functionality to this， function。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是完全隐式的。或者如果——我怎么知道我在我的代码库中到处遵循这个合同？也许在某个阴暗的角落，我传入了一些对象。其值属性在某些情况下可能为None。然后我会遇到一个属性错误。我如何捕捉到这一点？或者我可能需要为这个函数添加一些新功能。
+- en: I have a new requirement。 I want to access a new attribute on my items。 How。
+    do I know that everywhere that I'm currently passing an object to this function？
+    But they。 have this new attribute。 If I have a large code base， in some cases，
+    answering that question。 satisfactorily could require digging through layers and
+    layers of code。 Not only the call。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我有一个新的需求。我想在我的项目中访问一个新属性。如何。知道我目前在哪里将一个对象传递给这个函数？但是他们。拥有这个新属性。如果我有一个大型代码库，在某些情况下，满意地回答这个问题。可能需要深入层层代码。不仅仅是调用。
+- en: sites of this method， but perhaps their call sites and their call sites until
+    I track down。 the origin of the collection that ultimately is getting passed to
+    this method。 With a type。 annotation， all of that goes away。 Now I know exactly
+    what I can expect to receive。 A sequence。 of this particular item class， I can
+    go directly to the class， I know where it is， I can see。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个方法的调用位置，但也许他们的调用位置和他们的调用位置，直到我追踪到最终传递给这个方法的集合的来源。有了类型。注释，所有这些问题都消失了。现在我确切知道我可以期待收到什么。一个特定项类的序列，我可以直接去查找这个类，我知道它在哪里，我可以看到。
+- en: what attributes and methods it has。 This is nothing new， of course。 People have
+    been putting。 the same information into docstrings for years or into comments。
+    There's multiple standards， even。 E-PIDOC and others for how you can represent
+    argument and return types in your docstrings。 and Python。 So it's clearly useful
+    information for maintainers。 The problem with a docstring。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它有什么属性和方法。当然，这并不是什么新鲜事。人们多年来一直在将。相同的信息放入文档字符串或注释中。甚至有多个标准。E-PIDOC等，关于如何在文档字符串中表示参数和返回类型。因此，对于维护者来说，这显然是有用的信息。文档字符串的问题在于。
+- en: annotation is that at some point it's guaranteed that someone will update the
+    signature of。 the function and forget to update the docstring， at which point
+    it's obsolete and arguably worse。 than useless。 Whereas this type annotation can
+    automatically be checked for correctness， so。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注释的问题在于，某个时候，保证会有人更新函数的签名，却忘记更新文档字符串，到那时它就过时了，甚至可以说是无用的。而这种类型注释可以自动检查正确性，所以。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_11.png)'
+  id: totrans-21
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_11.png)'
+- en: it has to remain up to date with the code。 So I can almost hear someone in the
+    room thinking。 that's great， but I don't need it。 I could catch those things with
+    a test。 Which is great。 I love tests。 I've written a lot of tests。 I've given
+    Python talks on writing tests in Python。 There's this trope of the dynamic language
+    programmer claiming they don't need static types because。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它必须与代码保持同步。所以我几乎能听到房间里有人在想。这很好，但我不需要它。我可以通过测试捕捉到这些问题。这很好。我喜欢测试。我写了很多测试。我在Python中讲过关于编写测试的演讲。有一个说法是，动态语言程序员声称他们不需要静态类型，因为。
+- en: they write tests or the static typing programmer claiming they don't need to
+    write tests because。 the compiler catches all of their bugs。 Both are right and
+    both are of course wrong。 If we。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们写测试，或者静态类型程序员声称他们不需要写测试，因为。编译器捕捉到他们所有的错误。两者都是对的，但当然两者也是错的。如果我们。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_13.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_13.png)'
+- en: imagine a two argument function and this plot is the space of all possible inputs
+    to the， function。 So one argument on the x-axis， one on the y-axis， we have the
+    space of all possible， arguments。 If we write a test case， it's a single example。
+    We give two argument values， one for each argument。 We assert the correct return
+    value。 We've covered exactly one point， in this plot。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想象一个有两个参数的函数，这个图是所有可能输入的空间。所以一个参数在 x 轴，另一个在 y 轴，我们有所有可能参数的空间。如果我们写一个测试用例，它是一个单一的例子。我们给出两个参数值，每个参数一个。我们断言正确的返回值。在这个图中，我们仅覆盖了一个点。
+- en: Typically we write test cases for a variety of points on this plot that we。
+    think or hope or maybe even know are representative of the space of possible inputs
+    that we think。 we care about。 Maybe if we're especially clever， we can write a
+    parameterized test case， cover。 a whole range of inputs with a single test， maybe
+    even a quick check style or property-based， test。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常，我们为这个图中的各种点编写测试用例，我们认为或希望，甚至知道，它们代表我们关心的所有可能输入的空间。也许如果我们特别聪明，我们可以编写一个参数化测试用例，使用一个测试覆盖整套输入，甚至快速检查风格或基于属性的测试。
+- en: cover an even wider array of possible inputs。 With type annotations， we can
+    add。 just a few characters to our function definition and instantly eliminate
+    entire swathes of this。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 覆盖更广泛的可能输入。通过类型注释，我们可以在函数定义中添加。仅几个字符，立即消除整个范围的输入。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_15.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_15.png)'
+- en: area to cover。 I annotate that my function takes two integers and all of this
+    area out。 here for all the possible strings and lists and dictionaries is eliminated。
+    I can focus。 all my testing effort on ensuring correctness with high granularity
+    in this area where it。 really matters。 We're even the best type system， can't
+    fully ensure correctness。 So， let's say。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要覆盖的区域。我注释我的函数接受两个整数，所有这些区域中的所有可能字符串、列表和字典被排除。我可以集中。我的测试工作，以确保在这个真正重要的区域内高颗粒度的正确性。即使是最好的类型系统，也无法完全确保正确性。那么，假设。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_17.png)'
+  id: totrans-30
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_17.png)'
+- en: I've convinced you and you want to start checking your Python。 How do you make
+    it happen？ Let's。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我让你信服，而你想开始检查你的 Python，怎么做呢？让我们。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_19.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_19.png)'
+- en: take a little tour of what typing looks like in Python。 So we have a simple
+    function， a。 square function。 It takes an integer， returns an integer， the square
+    of the argument。 We've。 seen the syntax for this in previous slides。 After each
+    argument， we can have a colon and。 then the type。 After the argument list， we
+    can have an arrow and then the return type。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 了解 Python 中的类型是什么样子的。因此我们有一个简单的函数，一个平方函数。它接受一个整数，返回一个整数，即参数的平方。我们在之前的幻灯片中看到过这种语法。每个参数后面可以有一个冒号，然后是类型。在参数列表后，我们可以有一个箭头，然后是返回类型。
+- en: So let's call the function a few times。 We'll take the square of three。 We'll
+    take the square。 of a string。 Just for kicks， we'll take the square of four and
+    then add it to a string。 Now let's try type checking this code。 We'll pip install
+    myPy。 MyPy is an open source Python。 type checker written and maintained by a
+    team at Dropbox。 It's the by far today the most。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们多次调用这个函数。我们将三的平方。我们将一个字符串的平方。为了好玩，我们将四的平方并加上一个字符串。现在让我们尝试对这段代码进行类型检查。我们将
+    pip 安装 myPy。MyPy 是一个开源的 Python 类型检查器，由 Dropbox 的团队编写和维护。它是目前为止最。
+- en: commonly used Python type checker。 So we'll use it in our examples for this
+    talk。 So let's。 run myPy on our file and we get a couple of type errors。 Let's
+    dig into them a little， bit。 We get one type error because we tried to pass in
+    a string where an integer is expected。 and another type error because we tried
+    to add an integer， the annotated return type of。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 常用的 Python 类型检查器。因此我们将在本次演讲的示例中使用它。那么让我们。对我们的文件运行 myPy，结果出现了一些类型错误。让我们深入探讨一下。
+- en: the square function to a string which is a type error in Python。 And we got
+    both of those。 errors without having to set up any kind of test harness or write
+    any kind of test case。 that would exercise this code just by running a static
+    analyzer over the code。 So the type。 checker asks us to annotate our function
+    signatures in order to validate our assumptions about input。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将平方函数应用于一个字符串，这在 Python 中是一个类型错误。我们得到了这两个错误，而不需要设置任何测试工具或编写任何测试用例，只需对代码运行静态分析器。类型检查器要求我们注释我们的函数签名，以验证我们对输入的假设。
+- en: and output types。 In between， there's a lot it can infer。 For instance， in this
+    class。 it knows that we've told it that the type of the width and height arguments
+    to the initializer。 are both integers。 It can infer through the assignments to
+    self and understand that every。 photo instance will have a width and height attribute
+    that are integers。 And if we're in。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 和输出类型。在两者之间，它可以推断很多内容。例如，在这个类中，它知道我们告诉它初始化器的宽度和高度参数的类型都是整数。它可以通过对`self`的赋值推断出，每个照片实例将具有宽度和高度属性，这些属性都是整数。如果我们在。
+- en: another method， we try to return self dot width and self dot height and claim
+    that there are。 a couple of strings。 The type checker can catch that and tell
+    us no， that's a couple of integers。 We can also infer the types of containers。
+    If we create a list of photo objects， try to。 append a string to it， the type
+    checker will tell us， hey， maybe that's not what you intended。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一种方法，我们尝试返回`self.dot width`和`self.dot height`，并声称有几个字符串。类型检查器可以捕捉到这一点，并告诉我们不，这是几个整数。我们还可以推断容器的类型。如果我们创建一个照片对象的列表，尝试向其中添加一个字符串，类型检查器会告诉我们，嘿，可能这不是你想要的。
+- en: to do。 This is of course the type checker being a little bit opinionated。 In
+    Python， it's。 perfectly legal to have a heterogenous list。 But the type checker
+    assumes that if we initialised。 it with a homogenous set of objects， that probably
+    that's what we intended。 And it was。 probably a mistake to add a different type。
+    We can use an explicit type annotation if we。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样做。这当然是类型检查器稍微有点主观。在Python中，拥有一个异构列表是完全合法的。但类型检查器假设如果我们用一组同质对象初始化它，那可能就是我们的意图。而添加不同类型可能是个错误。如果我们可以使用显式的类型注解。
+- en: want to give a broader type to the list。 In some cases， type inference won't
+    be enough。 to understand the type of every variable。 For instance， if we create
+    an empty container。 the type checker doesn't know what we intend to put into it，
+    so it asks us to be explicit。 We can add a type annotation for the variable like
+    this and say this is intended to be a。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想要给列表一个更广泛的类型。在某些情况下，类型推断不足以理解每个变量的类型。例如，如果我们创建一个空容器，类型检查器不知道我们打算放入什么，因此要求我们明确。我们可以像这样添加一个变量的类型注解，说明这打算是一个。
+- en: list of strings， then the type checker is happy。 This particular syntax with
+    a colon after the。 variable name， then the type annotation before the equals sign
+    is new in Python 3。6。 If you're。 on an older version， there's an alternative comment
+    based syntax you can use。 I won't go。 over it here， but it's in the documentation。
+    So that's pretty much the basics。 To review。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 字符串列表，这样类型检查器就会满意。这种特定的语法是在变量名后面加冒号，然后在等号前加类型注解，这在Python 3.6中是新的。如果你使用的是旧版本，还有一种替代的基于注释的语法可以使用。我这里不详细讲解，但在文档中可以找到。所以这基本上就是基础知识。回顾一下。
+- en: what we've covered， mostly you want to annotate your function signatures， the
+    arguments and。 the return values。 And occasionally you might have to annotate
+    a variable， but usually you。 only want to do this if the type checker asks you
+    to。 Otherwise， you'll end up with a bunch。 of redundant variable annotations for
+    things the type checker could have inferred correctly， anyway。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于我们所讨论的内容，通常你想要注解你的函数签名、参数和返回值。有时你可能需要注解一个变量，但通常只有在类型检查器要求你这样做时才这样做。否则，你会得到一堆冗余的变量注解，而这些注解是类型检查器本可以正确推断的。
+- en: So let's go a little deeper。 Sometimes we write functions that can take or return。
+    more than one type。 We can handle this， the simplest way to handle this is with
+    a union， type。 So for this function it can return a foo or a bar， so we annotate
+    the return type。 as a union of foo and bar。 That means it could return either
+    a foo or a bar。 A very common。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们深入一点。有时我们编写的函数可以接受或返回多种类型。我们可以处理这个，处理这种情况的最简单方法是使用一个`union`类型。因此，对于这个函数，它可以返回一个`foo`或一个`bar`，所以我们将返回类型注解为`foo`和`bar`的并集。这意味着它可以返回`foo`或`bar`，这是非常常见的。
+- en: case of this is a function that can return something or none。 It's so common
+    in fact。 that there's a special form for that。 Optional foo means the same thing
+    as union of foo and， none。 This function could return a foo or it could return
+    a none。 So here we have a function。 get foo that takes a foo ID which is an optional
+    integer， either an integer or none and returns。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种情况是一个可以返回某个值或返回`none`的函数。实际上，这非常常见，因此有一种特殊的形式。`Optional foo`的意思与`foo`和`none`的并集相同。这个函数可以返回一个`foo`，也可以返回`none`。所以这里我们有一个函数`get
+    foo`，它接受一个`foo ID`，这是一个可选的整数，可能是一个整数或者`none`并返回。
+- en: an optional foo， either a foo or none。 So let's get a foo instance， my foo and
+    let's， access its ID。 Oops， we have a type error。 Because we told the type checker
+    that this。 function could return none and we didn't check whether my foo was in
+    fact a none。 So accessing。 the ID attribute could be an attribute error runtime，
+    so we get an error from the type checker。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个可选的 foo，可能是一个 foo 或者没有。所以让我们获取一个 foo 实例，我的 foo，并访问它的 ID。哎呀，我们遇到了类型错误。因为我们告诉类型检查器这个函数可以返回
+    none，但我们没有检查我的 foo 实际上是否是 none。因此，访问 ID 属性可能会导致运行时的属性错误，所以我们从类型检查器得到了一个错误。
+- en: This illustrates why you want to avoid using unions and optionals， particularly
+    as return， types。 Because every time if your function returns a union or an optional，
+    every caller。 has to check what they got back before they can safely make use
+    of the return value。 In。 this case though， that's a sad outcome。 If we look at
+    the code for get foo， we can see。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这说明了为什么要避免使用联合和可选类型，特别是作为返回类型。因为每次如果你的函数返回一个联合或可选类型，每个调用者在安全使用返回值之前都必须检查他们得到了什么。在这种情况下，这是一个不好的结果。如果我们查看
+    get foo 的代码，我们可以看到。
+- en: that if we give it a none， it will always return none。 If we give it an integer，
+    it will。 always return a foo。 So we know that but the type checker doesn't。 So
+    even though we call。 it with an integer， the type checker thinks the return value
+    might be none。 And this is。 going to cause us to have to add extra redundant checks
+    into our code that are useless at runtime。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们给它一个 none，它将始终返回 none。如果我们给它一个整数，它将始终返回一个 foo。所以我们知道，但类型检查器不知道。因此，即使我们用一个整数调用它，类型检查器认为返回值可能是
+    none。这将导致我们必须在代码中添加额外的冗余检查，而这些在运行时是没有用的。
+- en: just to satisfy the type checker。 There's a better option in this case。 Using
+    the overload。 decorator from the typing module， we can give the type checker more
+    information about the。 invariance of our function。 For instance， we can say overload
+    allows a kind of pattern。 matching similar to overloaded functions in other languages。
+    So you can say in this case。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仅仅是为了满足类型检查器。在这种情况下有更好的选择。使用 typing 模块中的 overload 装饰器，我们可以给类型检查器更多关于我们函数的不变性的信息。例如，我们可以说
+    overload 允许类似于其他语言中重载函数的模式匹配。所以在这种情况下。
+- en: if foo ID is none， then the return value will always be none。 If foo ID is an
+    integer， the。 return type will always be foo。 And then lastly， we give the actual
+    definition of get foo。 Now it's important to note that there's nothing， there's
+    no kind of dynamic dispatch or anything。 happening here at runtime。 This is purely
+    additional information for the type checker。 At runtime。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果 foo ID 是 none，那么返回值将始终是 none。如果 foo ID 是一个整数，返回类型将始终是 foo。最后，我们给出 get foo
+    的实际定义。需要注意的是，这里没有任何动态调度发生。这纯粹是类型检查器的附加信息。在运行时。
+- en: the only thing that's used is the final definition of get foo。 That's why the
+    other two don't need。 a body， they can just use pass。 They're just additional
+    information for the type checker。 to better understand the type invariance that
+    are actually implemented by the function。 So with this definition， if we call
+    get foo none， the type checker will understand that。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 唯一使用的是 get foo 的最终定义。这就是为什么其他两个不需要主体，它们可以只使用 pass。它们只是为类型检查器提供的附加信息，以更好地理解函数实际实现的不变性。因此，通过这个定义，如果我们调用
+    get foo none，类型检查器将理解。
+- en: the return value is none。 And if we call get foo with an integer， it will understand
+    that。 the return value is a foo。 And so we won't have to check before we access
+    its ID attribute。 or whatever else。 Another way that we can make the type checker
+    smarter about understanding。 our code is generic functions。 So to define a generic
+    function， we can define a type variable。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 返回值是 none。如果我们用一个整数调用 get foo，它会理解返回值是一个 foo。因此，在访问其 ID 属性或其他内容之前，我们无需进行检查。我们可以通过泛型函数来使类型检查器更智能。所以要定义一个泛型函数，我们可以定义一个类型变量。
+- en: which is like a placeholder for a type。 So here we define a type variable called
+    any string。 which is a placeholder for either string or bytes。 Type variables
+    can be unbounded where。 they can match any type or in this case this type variable
+    is as a bound of string and， bytes。 So we can define a concatenate function that
+    takes two any string and returns in any。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就像是一个类型的占位符。因此在这里我们定义了一个叫做 any string 的类型变量，它是字符串或字节的占位符。类型变量可以是不受限制的，可以匹配任何类型，或者在这种情况下这个类型变量被限制为字符串和字节。因此，我们可以定义一个连接函数，它接受两个
+    any string 并返回一个 any。
+- en: string and then concatenates them and returns the result。 Now this is different
+    from using。 a union of string and bytes because the type checker will ensure that
+    the type variable。 is binds to the same type throughout any call to the function。
+    So it will give us a type error。 if we try to call concatenate with a string and
+    a byte which is good because adding a。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 字符串，然后将它们连接并返回结果。现在，这与使用字符串和字节的联合体不同，因为类型检查器会确保类型变量在对函数的任何调用中绑定到相同的类型。因此，如果我们尝试用字符串和字节调用连接，它会给我们一个类型错误，这很好，因为添加一个。
+- en: string to a byte is a type error。 And of course because the type variable is
+    bound， it will。 also give us a type error if we try to call concatenate with two
+    objects that are neither。 string nor bytes。 And perhaps most importantly， if we
+    concatenate two strings together， the。 type checker will understand that the return
+    value must be a string， not a string or a bytes。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将字符串转换为字节是一个类型错误。当然，因为类型变量是绑定的，如果我们尝试用两个既不是字符串也不是字节的对象来调用连接，也会给我们一个类型错误。或许最重要的是，如果我们将两个字符串连接在一起，类型检查器会理解返回值必须是字符串，而不是字符串或字节。
+- en: And similarly with bytes， we concatenate two bytes， we definitely get a bytes
+    back。 In， fact。 this any string type variable is useful enough for defining functions
+    that can handle。 strings or bytes that it's built into the typing module。 We don't
+    need to define it ourselves。 We can just import it。 So to review， again， we can
+    use unions and optionals， but sparingly。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同样，对于字节，我们连接两个字节，确实会得到字节。事实上，这种 `any string` 类型变量在定义可以处理字符串或字节的函数时非常有用，它已经内置于类型模块中。我们不需要自己定义它。我们只需导入它。因此，再次回顾，我们可以使用联合体和可选类型，但要适度。
+- en: And overloads and generics allow us to teach the type checker more about the
+    invariance。 of our type signatures。 Compared to using unions or optionals， generics
+    or overloads can make。 your functions much more usable for callers without needing
+    redundant checks。 So at this， point。 somebody might be wondering， what about my
+    ducks？ I like duck typing。 In this， new type safe world。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 重载和泛型允许我们向类型检查器教授有关我们类型签名的不变性。与使用联合体或可选类型相比，泛型或重载可以使你的函数对调用者更加可用，而无需冗余检查。那么在这一点上，可能有人会想，我的鸭子呢？我喜欢鸭子类型。在这个新的类型安全的世界里。
+- en: how do I write a function that can take any type at all as long as it。 has the
+    right methods and attributes？ For instance， maybe I want to define a function。
+    that can take an object and will call its render method。 Any object that defines
+    a render method。 no matter its type。 This is actually similar to a number of built-in
+    protocols in Python。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我如何编写一个可以接受任何类型的函数，只要它具有正确的方法和属性？例如，也许我想定义一个可以接受对象并调用其 `render` 方法的函数。任何定义了
+    `render` 方法的对象，无论其类型如何。这实际上类似于 Python 中的一些内置协议。
+- en: For instance， the function， the len built-in， will call the dunder len method
+    on any object。 or the next built-in will call dunder next， et cetera。 So how can
+    I type this？ We could。 try to use object since we know that every object， every
+    type in Python is a subtype of， object。 But this won't work。 Object has no attribute
+    render。 Or we could try to use the， any type。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，`len` 内置函数会对任何对象调用双下划线 `len` 方法，或 `next` 内置函数会调用双下划线 `next` 等等。那么我该如何为此类型化呢？我们可以尝试使用
+    `object`，因为我们知道每个对象、每种类型在 Python 中都是 `object` 的子类型。但这行不通。`object` 没有 `render`
+    属性。或者我们可以尝试使用 `any` 类型。
+- en: The any type is a sort of escape hatch the typing system provides。 The any。
+    type is compatible with anything。 In type system terms， it's both a top type and
+    a bottom， type。 It's a subtype and a supertype of everything。 Or you could think
+    of it as it has every attribute。 and method。 Basically， it will never cause a
+    type error。 This makes our function type， check okay。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`any` 类型是类型系统提供的一种逃生口。`any` 类型与任何东西都是兼容的。从类型系统的角度来看，它既是顶层类型，也是底层类型。它是所有类型的子类型和超类型。或者你可以认为它具有每个属性和方法。基本上，它不会导致类型错误。这使得我们的函数类型检查正常。'
+- en: But it's a bit sad because now we can pass in something that doesn't have。 a
+    render method which will throw an error at runtime but the type checker won't
+    catch it。 These are the kinds of bugs we want our type checker to catch for us。
+    So I mentioned that。 this pattern is similar to built-in protocols in Python and
+    the type system solution for。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这有点悲伤，因为现在我们可以传入一些没有 `render` 方法的东西，这会在运行时抛出错误，但类型检查器却无法捕捉到。这些是我们希望类型检查器为我们捕捉到的错误。因此我提到，这种模式与
+    Python 中的内置协议类似，以及类型系统的解决方案。
+- en: it is also called protocol。 It's still technically experimental。 You have to
+    pip install typing。 extensions and import it from typing extensions。 But in practice，
+    it's very unlikely to change。 and will soon be in the built-in typing module。
+    So if we import protocol， we can define renderable。 as a subclass of protocol
+    and give it a render method。 We don't need to provide a body for。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也被称为协议。它在技术上仍然是实验性的。你必须使用pip安装typing.extensions并从typing.extensions导入它。但在实践中，它不太可能会改变，并且很快将会在内置的typing模块中。所以如果我们导入协议，我们可以将可渲染类型定义为协议的子类，并赋予它一个渲染方法。我们不需要提供一个体。
+- en: the method。 All we're giving here is an interface。 What matters is the attributes
+    and their types。 and the methods and their type signatures。 So once we have this
+    protocol defined， we can。 say that our render method takes an object of type renderable。
+    And then if we have some。 random class which has no explicit relationship to renderable，
+    simply because it has a render。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该方法。我们在这里提供的仅仅是一个接口。重要的是属性及其类型，以及方法及其类型签名。因此，一旦我们定义了这个协议，我们可以说我们的渲染方法接受一个可渲染类型的对象。如果我们有一个与可渲染类型没有明确关系的随机类，仅仅因为它有一个渲染。
+- en: method with the correct signature， the type checker will accept this call。 It
+    will allow。 us to pass a foo object to a render method because it sees that it
+    matches the protocol。 If we try to pass some other object without a render method，
+    we'll get a type error。 So。 this is exactly what we want。 And we found our duck。
+    You might hear this feature also referred。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果方法具有正确的签名，类型检查器将接受这个调用。它将允许我们将一个foo对象传递给渲染方法，因为它看到它匹配协议。如果我们尝试传递一些没有渲染方法的其他对象，我们会得到类型错误。所以这正是我们想要的。我们找到了我们的鸭子。你可能还会听到这个特性被称为。
+- en: to as structural subtyping。 So with typical inheritance， we have nominal subtyping
+    because。 if foo inherits bar， we've named our supertype bar。 So that's nominal
+    subtyping。 With structural。 subtyping， foo is a subtype of renderable because
+    it matches the structure of renderable。 It has the same attributes and methods。
+    So that's structural subtyping。 So strict static。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为结构性子类型。因此，在典型的继承中，我们有名义子类型，因为如果foo继承了bar，我们就将超类型命名为bar。这就是名义子类型。对于结构性子类型，foo是可渲染类型的子类型，因为它匹配可渲染类型的结构。它具有相同的属性和方法。这就是结构性子类型。所以严格的静态。
+- en: typing tends to be really good for like 90 to 95 percent of your code that's
+    pretty。 straightforward。 It's not doing anything too dynamic。 If you're writing
+    production code。 or production application， you probably want most of your code
+    to be like this because。 it's also going to be easier for your coworkers to read
+    and maintain。 But there may still be。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类型检查通常非常适合90%到95%的代码，这些代码相当简单。它并没有做太动态的事情。如果你在编写生产代码或生产应用程序，你可能希望大部分代码都是这样的，因为这也将使你的同事更容易阅读和维护。但仍然可能会有。
+- en: those few cases where you really do want to take advantage of Python's dynamic
+    nature。 You really do want to metaclass or to generate a bunch of classes on the
+    fly or whatever。 other off the wall thing you might be doing。 Or like us at Instagram，
+    you may have a lot。 of legacy code that was written long before type checking
+    existed。 And you need to continue。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在那些你确实想利用Python动态特性的少数情况下。你真的希望元类或者动态生成一堆类，或者做其他任何不寻常的事情。或者像我们在Instagram一样，你可能有很多遗留代码，这些代码是在类型检查存在之前很久就编写的。你需要继续。
+- en: supporting that code even if it's doing some things that don't quite fit into
+    the static。 typing world。 So Python's type system feels that pain and provides
+    some escape hatches。 that you can use when you really just need to tell the type
+    checker to go take a hike。 So the first one we already saw， it's the any type。
+    One sample case where you might use。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 支持那段代码，即使它做的一些事情并不完全符合静态类型的世界。因此，Python的类型系统感受到这种痛苦，并提供了一些逃生通道，当你真的需要告诉类型检查器去休假时，你可以使用这些通道。第一个我们已经看到了，就是any类型。一个你可能使用的示例案例。
+- en: the any type is some kind of get attribute wrapping proxy where you're wrapping
+    some。 object and proxying every attribute access。 You have no idea what you might
+    be proxying。 or what attributes it might have or what their types are。 So maybe
+    the best you can。 do is just say that your proxy returns any from it's get attribute。
+    It's not great because。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: any类型是一种获取属性的包装代理，你正在包装某个对象并代理每个属性访问。你不知道你可能在代理什么，或者它可能有什么属性，或者它们的类型是什么。因此，或许你能做的最好的事情就是声明你的代理在获取属性时返回any。这并不理想，因为。
+- en: it means you lose all the benefits of type checking on those wrapped objects。
+    But in。 some cases it may be the best option you have。 A second escape hatch is
+    the cast function。 It basically lets you lie to the type checker about the type
+    of some expression。 So for。 example at Instagram we have a configuration system
+    and we can get a configuration value。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着你会失去对那些包装对象的所有类型检查的好处。但在某些情况下，这可能是你拥有的最佳选择。第二个逃生通道是cast函数。它基本上让你对某个表达式的类型对类型检查器撒谎。因此，例如在Instagram，我们有一个配置系统，可以获取配置值。
+- en: by key and basically they're JSON structs。 They're dictionaries or lists or
+    whatever。 And we don't know what shape any given config var will have。 So the
+    best that our get config。 var function can do is be typed to return any because
+    we don't know what shape of object。 it might return。 But in practice given a particular
+    config key at some specific call site we probably。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过键，基本上它们是JSON结构。它们是字典或列表等等。我们不知道任何给定的配置变量会有什么形状。因此，我们的get config var函数所能做的最好是被类型化为返回任何类型，因为我们不知道它可能返回什么形状的对象。但在实践中，考虑到某个特定调用位置的特定配置键，我们可能。
+- en: do know what the shape of that config key will be otherwise we wouldn't be able
+    to make， use of it。 So we can use the cast function to tell the type checker look
+    actually I know。 this function says it returns any but in this case I know it
+    returns a dictionary mapping。 strings to integers。 And the type checker will believe
+    us。 So of course since you're lying。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们确实知道该配置键的形状，否则我们无法利用它。因此，我们可以使用cast函数告诉类型检查器，实际上我知道这个函数说它返回任何类型，但在这种情况下，我知道它返回一个将字符串映射到整数的字典。类型检查器会相信我们。因此，当然因为你在撒谎。
+- en: to the type checker you want to make sure that you're right because if you lie
+    to the。 type checker and you're wrong well you can expect the type checker to
+    lie right back。 The third escape hatch is kind of the nuclear option。 Type ignore
+    says ignore any type error。 on this line no matter what the cause。 We try to reserve
+    this one for bugs in the type checker。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于类型检查器，你需要确保你是正确的，因为如果你对类型检查器撒谎而且是错的，你可以预期类型检查器会回过头来撒谎。第三种逃生通道算是核选项。类型忽略表示无论原因如何，忽略这一行上的任何类型错误。我们尝试将其保留给我们无法以其他方式解决的类型检查器中的错误。
+- en: or limitations of the type checker that we can't work around any other way。
+    So one example。 is my pike currently has a bug where it can't handle a property
+    decorator stacked on top。 of another decorator。 So we just stick a type ignore
+    on the line where it throws an error。 add an explanatory comment linking to the
+    bug and move on。 So if the cast function is a way。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者是类型检查器的限制，这些我们无法通过其他方式解决。例如，我的Pike当前有一个错误，它无法处理堆叠在另一个装饰器之上的属性装饰器。因此，我们只是将类型忽略放在抛出错误的那一行，添加一个链接到错误的解释性注释，然后继续前进。因此，如果cast函数是一种方式。
+- en: to lie to the type checker stub files or how you lie to the type checker at
+    industrial， scale。 So at Instagram we use a lot of siphon and sea extensions for
+    performance hotspots。 And of course the type checker can't see into any of that
+    code。 It can't read siphon， syntax。 It can't read c code of course。 So it has
+    no idea what functions and classes。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于类型检查器存根文件，或如何在工业规模上对类型检查器撒谎。因此，在Instagram，我们在性能热点中使用很多虹吸和C扩展。当然，类型检查器无法查看任何这些代码。它无法读取虹吸语法，也无法读取C代码，因此它对函数和类一无所知。
+- en: are in our siphon or c code and what signatures they might have。 So for example
+    say we have。 a fast math module， compiled module with some fast math functions
+    in it。 And if we put those。 functions in there it's probably because we call them
+    a lot。 And if we call them a lot。 we'd really like our calls to them to be type
+    checked of course。 So we can solve this problem。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的虹吸或C代码中包含哪些内容以及它们可能具有什么签名。例如，假设我们有一个快速数学模块，编译的模块中包含一些快速数学函数。如果我们将这些函数放进去，可能是因为我们经常调用它们。当然，如果我们经常调用它们，我们希望调用时进行类型检查。我们可以解决这个问题。
+- en: by putting a p。y。i。 file next to the compiled module。 So p。y。i。 is python interface。
+    It's。 sort of like a c header file for python code。 It just provides the type
+    signatures， the。 interfaces of our functions and classes that are in the compiled
+    module so that the type。 checker is aware of them。 So for instance our fast math。pyi
+    if we had a square function。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过在编译模块旁边放置一个.pyi文件。因此，.pyi是Python接口。这有点像Python代码的C头文件。它只是提供了我们在编译模块中函数和类的类型签名和接口，以便类型检查器能够识别它们。例如，如果我们的快速数学.pyi有一个平方函数。
+- en: in our compiled module we could put this interface， this definition line in
+    our p。y。i。 file。 And。 now the type checker understands that fast math module has
+    a square function that takes。 an integer and returns an integer。 Similarly we
+    could put class interfaces in there。 Now。 it knows that we have a complex class
+    with these two attributes of these types。 So now。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的编译模块中，我们可以将这个接口，这个定义行放入我们的 .pyi 文件中。现在类型检查器理解这个快速数学模块有一个接收整数并返回整数的平方函数。同样，我们可以在这里放置类接口。现在。它知道我们有一个复杂的类，具有这两个类型的属性。所以现在。
+- en: the type checker will be able to check the correctness of our uses of those
+    functions， and classes。 Okay so that's the end of our two or three Python's type
+    system。 Last review， here。 protocols are statically checked duct typing or structural
+    typing。 And then we have。 a number of escape hatches that we can use if we need
+    to escape from the restrictions。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类型检查器将能够检查我们对那些函数和类的使用的正确性。好的，这就是我们对 Python 类型系统的两三次回顾。协议是静态检查的，管道类型或结构类型。然后我们有一些逃生通道，如果我们需要逃离限制。
+- en: of the type checker。 We can use any cast， ignore， stub files。 So we've talked
+    about why you might。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于类型检查器。我们可以使用任何类型转换、忽略、存根文件。因此我们讨论过你可能会。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_21.png)'
+  id: totrans-80
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_21.png)'
+- en: want to type check and how you could go about type checking。 Lastly what do
+    we mean by gradual。 typing and what does it matter？ We've actually already started
+    talking about gradual typing。 So gradual typing just means you can type check
+    your program even though not all expressions。 in the program are fully typed。
+    So when we look at something like the any type， that's。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想要进行类型检查，以及你可以如何进行类型检查。最后，渐进类型是什么意思？这有什么重要性？我们实际上已经开始讨论渐进类型。因此，渐进类型意味着即使程序中的所有表达式并不都是完全类型化的，你也可以对程序进行类型检查。所以当我们查看类似于任何类型的东西时，这就是。
+- en: already an example of gradual typing。 But we can go beyond that， gradual typing
+    also allows。 us to incrementally add type checking to our code base as we're ready
+    to deal with the consequences。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 已经是渐进类型的一个例子。但我们可以超越这一点，渐进类型还允许。我们逐步向代码库添加类型检查，随着我们准备好应对后果。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_23.png)'
+  id: totrans-83
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_23.png)'
+- en: So for instance here's our code base， a bunch of Python modules。 Arrows showing
+    dependencies。 between the modules。 We introduce type checking and this is what
+    we're going to see。 Errors。 everywhere。 It's not because the code is bad， it's
+    just the nature of introducing type checking。 to a code base that was never type
+    checked before。 But this is a problem。 We can't deal， with this。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，这里是我们的代码库，一堆 Python 模块。箭头显示模块之间的依赖关系。我们引入类型检查，这就是我们将要看到的。错误。无处不在。并不是因为代码不好，而是引入类型检查的本质。到一个以前从未进行类型检查的代码库。但这是一个问题。我们无法处理这个。
+- en: We have too much code， too much to do。 We can't stop the world while we fix。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的代码太多，事情太多。我们无法在修复时停止世界。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_25.png)'
+  id: totrans-86
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_25.png)'
+- en: thousands of type errors。 So gradual typing in Python is implemented with a
+    simple rule。 Only functions with type annotations are checked。 A function that
+    has no annotation is considered。 to take any， return any and the body of it isn't
+    even checked at all。 Nothing inside it。 the type checker won't even look at anything
+    inside the body of a function without type annotations。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数千个类型错误。因此，Python 中的渐进类型通过一个简单的规则实现。只有具有类型注释的函数会被检查。没有注释的函数被认为。可以接受任何类型，返回任何类型，甚至其主体根本不被检查。类型检查器甚至不会查看没有类型注释的函数主体中的任何内容。
+- en: So this rule allows us to introduce type annotations where we're ready to deal
+    with the consequences。 step by step， function by function。 And of course there's
+    a network effect as we add more and more。 type annotations。 So we annotate one
+    module and we will catch some type errors in internal。 calls within that module，
+    maybe some calls to standard library functions。 And as we annotate。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，这个规则允许我们在准备好应对后果时逐步引入类型注释，逐步进行，逐个函数。当然，随着我们添加越来越多的类型注释，网络效应也会出现。因此我们注释一个模块，就会在该模块内部的调用中捕获一些类型错误，可能还有一些对标准库函数的调用。随着我们注释。
+- en: more modules， we'll be able to catch more and more type errors and calls between
+    those modules。 And of course the number of errors we can catch increases super
+    linearly with the network effect。 You'll want to start with your most used functions
+    or modules because that's where you'll get the。 most immediate benefit from type
+    checking。 And you'll want to use continuous integration to。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更多的模块，我们将能够捕获越来越多的类型错误以及这些模块之间的调用。当然，我们可以捕获的错误数量随着网络效应呈超级线性增长。你会想从你最常用的函数或模块开始，因为那是你从类型检查中获得最直接收益的地方。你还想使用持续集成来。
+- en: defend your progress。 Once you've started adding type annotations and fixing
+    type errors。 you really， want to make sure that nobody's adding new type errors
+    back into that same code。 So you'll want， the type checker running in your continuous
+    integration to prevent that。 MIPI also provides a lot of， options for various
+    strictness levels and you can apply those options per module。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 保护你的进展。一旦你开始添加类型注释和修复类型错误，你真的想确保没有人将新的类型错误引入到相同的代码中。因此，你会希望在你的持续集成中运行类型检查器，以防止这种情况发生。MIPI
+    还提供了许多不同严格性级别的选项，你可以按模块应用这些选项。
+- en: So once you， have a module that's fully type checked， all the functions are
+    type annotated。 there's no type errors。 You can tell MIPI don't allow any untyped
+    function to be introduced into this module from now on。 and protect your progress
+    that way。 You can even go one step further and say don't allow any usage of。 any
+    type within this module if you really want it to keep it strictly typed。 So that's
+    all great。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦你有一个完全经过类型检查的模块，所有函数都已进行类型注释，且没有类型错误。你可以告诉 MIPI，从现在开始不允许在这个模块中引入任何未类型化的函数，以此来保护你的进展。你甚至可以更进一步，表示如果你真的希望保持严格类型，不允许在该模块中使用任何类型。因此，这一切都很好。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_27.png)'
+  id: totrans-92
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_27.png)'
+- en: There's still a problem。 I mentioned at the beginning of the talk how painful
+    it can be if。 you come back to code that you're not familiar with and you try
+    to figure out what types some。 function can take and this may require digging
+    through layers and layers of code to find all of。 the call sites of the call sites
+    of the call sites。 It turns out that this painful process is。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仍然存在一个问题。我在演讲开始时提到过，如果你回到一段不熟悉的代码中，试图弄清楚某个函数可以接受什么类型，这可能是多么痛苦。这可能需要深入挖掘代码的各个层次，以找到所有调用点的调用点的调用点。事实证明，这个痛苦的过程是。
+- en: exactly the same painful process that you have to go through when you're adding
+    type annotations to。 code。 You're trying to look through it， you're trying to
+    understand what are the types， what could。 be passed in here， how do I type annotate
+    this correctly， how do I know if I am type annotating it。 correctly， maybe I'm
+    adding a type annotation but it doesn't actually match what I'm doing in production。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你给代码添加类型注释时，你必须经历完全相同的痛苦过程。你试图浏览代码，试图理解类型是什么，什么可以传入这里，我该如何正确进行类型注释，如何知道我是否正确地进行了类型注释，可能我添加了类型注释，但它实际上并不匹配我在生产中所做的。
+- en: So our CTO at Instagram， Mike Krieger was actually the first person to dive
+    into type annotations at。 the beginning of last year and tried annotating one
+    of our big core modules。 a thousand lines of code， or so and came back two weeks
+    later and was like I'm done。 this is ridiculous。 So he suggested that， maybe we
+    could build something that would trace at runtime what types were being passed
+    into all。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的首席技术官 Mike Krieger 实际上是去年年初第一个深入研究类型注释的人，他尝试对我们一个大核心模块的千行代码进行注释，过了两周后他说我完成了，这太荒谬了。因此，他建议，也许我们可以构建一些东西，在运行时追踪所有传入的类型。
+- en: of our functions and then dump that information out in a really usable way to
+    make it much easier。 to add accurate type annotations。 So a couple of us set out
+    to build that and it turned out to work。 great and last fall we released it as
+    open source so you can also use it， it's called monkey type。 So an example of
+    how you could use monkey type， pip install monkey type of course and then you。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的某些功能，然后将这些信息以非常实用的方式导出，使得添加准确的类型注释变得更加容易。因此，我们中的几个人开始着手构建这个工具，结果效果很好，去年秋天我们将其作为开源项目发布，你也可以使用它，它叫做
+    monkey type。以下是如何使用 monkey type 的示例，首先使用 `pip install monkey type` 进行安装，然后你。
+- en: can use monkey type run to run any script， it could be your tests or it could
+    be any other script。 that exercises your code or there's even ways you can install
+    it to run in production which is what。 we do at Instagram， we sample a small percentage
+    of production requests and run them under monkey type。 tracing。 Once you've collected
+    some data using monkey type run， monkey type tracing then you can。
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以使用monkey type run来运行任何脚本，无论是你的测试还是其他任何调用你代码的脚本。你甚至可以安装它在生产中运行，这正是我们在Instagram所做的，我们对小比例的生产请求进行采样并在monkey
+    type下运行。跟踪。一旦你使用monkey type run收集了一些数据，monkey type tracing就可以接着使用。
+- en: run monkey type stub， some module and it will print out a stub file just like
+    the PUI files we。 saw earlier that's directly usable and it will show exactly
+    what types were recorded at runtime。 when your code ran。 And then if you want
+    to go further you can use monkey type apply and take。 that stub and it will apply
+    it to your code and rewrite your code with the type annotations applied。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行monkey type stub，某个模块，它将打印出一个存根文件，正如我们之前看到的PUI文件那样，可以直接使用，并将显示在运行时你的代码执行时记录的确切类型。如果你想更进一步，可以使用monkey
+    type apply，将该存根应用到你的代码上，并重写你的代码，应用类型注释。
+- en: and you can review that， commit it and you're type annotated。 So what's coming
+    next in the world of。
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以进行复习，提交它，并且你已经进行了类型注释。那么，接下来在这个世界上会发生什么呢？
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_29.png)'
+  id: totrans-100
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_29.png)'
+- en: Python typing？ We already mentioned in Python 3。7 there will be a future import
+    that will allow you to。 get rid of some ugly string forward references that are
+    currently necessary when you have circular。 type references in your code so that's
+    one thing that's coming。 Potentially in the future this。 isn't for sure yet but
+    we may be able to also get rid of some of these extra imports from the typing。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python类型？我们已经提到在Python 3.7中将有一个未来导入，允许你摆脱一些丑陋的字符串前向引用，这在你代码中有循环类型引用时是必要的，这就是即将到来的一个方面。未来可能会有更多的变化，尽管还不确定，但我们可能也能够摆脱一些额外的类型导入。
+- en: module like the capital D dict and instead just use the lowercase dict that's
+    already built in in。 our type annotations。 There's also a pep that was recently
+    accepted for a standard for how to bundle。 type stubs with third party packages
+    which will make it much easier to distribute type annotations。 with your libraries
+    on on PUI。 Conclusions from our experience at Instagram over the last year。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 模块如大写D的字典，而是直接使用小写字典，这在我们的类型注释中已经内置。最近还接受了一个PEP，标准化如何将类型存根与第三方包捆绑在一起，这将使在你的库中分发类型注释变得更容易。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_31.png)'
+  id: totrans-103
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_31.png)'
+- en: Typecheck Python is here it works there are some warts still but it's been very
+    productive for us in。 production use。 We prevent landing diffs in our code base
+    if they have type errors so we're using。 typecheck Python actively in development
+    every day。 Our experience also is that developers love it。 We've received basically
+    no pushback from anyone in our team of hundreds of developers working on。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Typecheck Python来了，它能够工作，尽管仍有一些瑕疵，但在生产使用中对我们来说非常有效。如果代码库中存在类型错误，我们会防止代码变更进入。我们每天在开发中积极使用typecheck
+    Python。我们的经验也是开发者们喜欢它。我们几乎没有收到来自我们数百名开发者团队的任何反对意见。
+- en: our Python code base and our type coverage has grown almost entirely organically
+    as developers choose。 to add type annotations because they see the benefits of
+    reading and maintaining code that has。 annotations。 Using monkey type you can
+    annotate large legacy code bases。 We've gone from zero to。 about half of our million
+    and half lines of Python code annotated over the last eight months。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的Python代码库和类型覆盖率几乎完全是有机增长的，因为开发者们选择添加类型注释，因为他们看到了有注释的代码在阅读和维护时的好处。使用monkey
+    type，你可以注释大型遗留代码库。在过去的八个月里，我们的Python代码注释从零增长到大约一百万五十万行的一半。
+- en: mostly by using monkey type。 So it's early days it's far from perfect but it
+    is good enough for use。 and it will get better in the future it's being actively
+    worked on。 A few thanks before I go to。 the team at Dropbox for creating and maintaining
+    my pie which has been a critical tool for us and。 to everyone in the Python community
+    who's contributed to writing and reviewing typing peps。
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 主要是通过使用monkey type。因此现在还是初期阶段，远非完美，但足够用于使用，并且未来会变得更好，正在积极开发。在我结束之前要感谢Dropbox团队，创建和维护了my
+    pie，这是对我们至关重要的工具，以及所有为编写和审查类型PEP贡献的Python社区的人。
+- en: I should。
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我应该。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_33.png)'
+  id: totrans-108
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_33.png)'
+- en: mention quick we did recently switch at Instagram from my pie to a new type
+    checker pyre that was。 developed by a team at Facebook mostly because it's faster
+    for very large code bases so if you。 have a very large code base or you want to
+    experiment with alternatives you can also try pyre。 For our， code base my pie
+    took about five and a half minutes and pyre takes about 45 seconds for a full
+    from。
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 简单提一下，我们最近在 Instagram 从 mypy 切换到了一个新的类型检查器 pyre，这个工具是由 Facebook 的一个团队开发的，主要是因为它在处理非常大的代码库时更快。所以如果你有一个非常大的代码库，或者想尝试其他选择，也可以试试
+    pyre。在我们的代码库中，mypy 大约需要五分半钟，而 pyre 只需大约 45 秒即可完成。
+- en: scratch type check。 If you're working with type check Python there's lots of
+    resources available I。 won't list them all out loud in detail but both for my
+    pie and for pyre and for the reference。 standards and there's real time support
+    and getter the pep places you can file issues monkey type。
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: scratch 类型检查。如果你在使用类型检查的 Python，有很多可用的资源。我不会详细列出它们，但无论是对于 mypy 还是 pyre，以及参考标准，还有实时支持和可以提交问题的
+    pep 地方 monkey type。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_35.png)'
+  id: totrans-111
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_35.png)'
+- en: issues on github as well and that's it if you would like to follow up with me
+    afterwards and explain。 to me the many failings of this talk I would welcome that
+    I'm Carl J。M。 on almost everywhere except of， course on Instagram itself where
+    I was too late to the game and yeah I'll be taking questions outside。
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 GitHub 上也有相关的问题，如果你想在之后跟我联系，向我解释这次演讲的许多不足之处，我非常欢迎。我在几乎所有地方都是 Carl J.M.，除了
+    Instagram 本身，因为我来得太晚了。是的，我会在外面回答问题。
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_37.png)'
+  id: totrans-113
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_37.png)'
+- en: in the hallway after the talk if you want to chat I'd love to talk to you。 Thank
+    you very much。 [Applause]。
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在演讲后的走廊里，如果你想聊天，我很乐意和你交流。非常感谢。[掌声]
+- en: '![](img/1f03046b5c09b70a9f1c359837752b68_39.png)'
+  id: totrans-115
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/1f03046b5c09b70a9f1c359837752b68_39.png)'

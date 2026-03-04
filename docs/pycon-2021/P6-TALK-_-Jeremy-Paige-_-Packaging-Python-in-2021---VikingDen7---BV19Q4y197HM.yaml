@@ -1,0 +1,562 @@
+- en: P6：TALK _ Jeremy Paige _ Packaging Python in 2021 - VikingDen7 - BV19Q4y197HM
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P6：演讲 _ Jeremy Paige _ 2021年Python打包 - VikingDen7 - BV19Q4y197HM
+- en: '[Music]。'
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[音乐]。'
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_1.png)'
+- en: Good morning and welcome everyone。 I'm so excited to be here with you virtually
+    at PyCon。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 早上好，欢迎大家。我很高兴能在PyCon上和你们虚拟相聚。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_3.png)'
+- en: This is packaging Python in 2021。 It's everything you need to know about the
+    latest standards。 and how you can write easily buildable projects。 I'll be detailing
+    how to maintain explicit。 predictable and readable build information。 This is
+    information that can be used by both humans。 and machines to better understand
+    your project。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是2021年的Python打包。这是你需要了解的关于最新标准的所有信息，以及如何编写易于构建的项目。我将详细说明如何维护明确、可预测和可读的构建信息。这些信息可以被人类和机器使用，以更好地理解你的项目。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_5.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_5.png)'
+- en: Today I'll be focusing on how to use the new PyProject。toml configuration along
+    with modern。 build front-end back-end paradigm that comes with it。 The file was
+    first introduced into。 the ecosystem five years ago， but it's gone through some
+    changes and has only recently been marked。 as a final standard。 PyProject。toml
+    is meant to hold core project metadata in a predictable。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 今天我将重点介绍如何使用新的PyProject.toml配置，以及随之而来的现代构建前端和后端范式。该文件在五年前首次引入生态系统，但经历了一些变化，最近才被标记为最终标准。PyProject.toml旨在以可预测的方式保存核心项目元数据。
+- en: location。 It's not meant to be a blueprint that describes step-by-step exactly
+    how to build。 your project。 Instead， it's more of a sign that points the reader
+    in the direction of some。 specific tools and other environments that the project
+    needs to prepare its own blueprint。 Although it might not contain enough information
+    to completely build your project， whatever。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 位置。它并不意味着是一个逐步描述如何构建项目的蓝图。相反，它更像是一个指示，指向读者一些特定工具和其他环境，以便项目准备自己的蓝图。尽管它可能不包含足够的信息来完全构建你的项目，但无论如何。
+- en: metadata is contained within should we treat as canonical for the project。 Then
+    the actual build tool specified by this file can come along and require additional。
+    configuration， either in the same PyProject。toml or its own configuration files。
+    If you weren't aware， Toml stands for Tom's Obvious Menmul Language。 It's a configuration。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 元数据应视为项目的权威内容。然后，由此文件指定的实际构建工具可以继续要求额外的配置，既可以在同一个PyProject.toml中，也可以在其自己的配置文件中。如果你不知道，Toml代表Tom的明显配置语言。这是一种配置。
+- en: format that's similar to YAML or INI。 It's become popular choice for packaging
+    systems。 across many programming languages。 However， it's not only build metadata
+    that ends up in PyProject。toml。 Despite that being a singular goal when it was
+    conceived， having a single configuration。 file that's known to exist for all Python
+    projects was just too attractive for many tool maintainers。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种格式类似于YAML或INI。它已成为许多编程语言中打包系统的流行选择。然而，最终出现在PyProject.toml中的不仅仅是构建元数据。尽管在构思时这是一个单一目标，但拥有一个众所周知的存在于所有Python项目中的单一配置文件对许多工具维护者来说实在太有吸引力了。
+- en: to avoid。 And over time， space was made in the Toml layout for arbitrary Python
+    tools to。 share and not conflict with one another。 Some projects such as Black
+    only allow authors。 to specify configuration in PyProject。toml。 While other projects
+    such as ISDOR allow the author to choose either write configuration。 in PyProject。toml
+    and consolidate with other tools or write it all out to its own tool specific。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了避免。随着时间的推移，Toml布局为任意Python工具腾出了空间，以便彼此共享而不发生冲突。一些项目例如Black只允许作者在PyProject.toml中指定配置，而其他项目例如ISDOR则允许作者选择在PyProject.toml中写入配置并与其他工具合并，或将其全部写出到其特定工具中。
+- en: file。 It is legal for PyProject。toml to contain this sort of tool configuration
+    but no build。 system。 However， in this case， the project is created as legacy
+    and to a build tool， it's。 the same as if it didn't have a PyProject。toml file
+    at all。 Here's an example of what a Menmul PyProject。toml might look like。 Then，
+    in the middle。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件。PyProject.toml合法地包含这种工具配置，但没有构建系统。然而，在这种情况下，该项目被创建为遗留项目，对于构建工具而言，它就像根本没有PyProject.toml文件一样。这是一个Menmul
+    PyProject.toml可能的样子示例。然后，在中间。
+- en: the project table contains only static data that is required to be part， of
+    any distribution。 whatever its type， or whatever tool is used to create it。 There
+    are other possible project fields that can go in this table， but not all of them
+    are。 required to be filled out。 The project table is very new and not only supported
+    by all， tools。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 项目表仅包含任何发行版所需的静态数据，无论其类型或使用何种工具创建。该表中还有其他可能的项目字段，但并不是所有字段都必须填写。项目表非常新，并且不仅受到所有工具的支持。
+- en: but look here in the future for where all projects might contain their core
+    metadata。 You can see lower down that the black configuration is in a subtable
+    under tool。 Within this space。 black is free to define any interface it wants
+    for its own options。 Back at the top。 you'll see the build system configuration
+    table where all the back end builder。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但请关注未来，所有项目可能包含其核心元数据。你可以看到下面黑色配置在工具下的子表中。在这个空间内，黑色可以自由定义它想要的任何选项接口。回到顶部，你会看到构建系统配置表，其中包含所有后端构建器。
+- en: requirements are listed out along with a single entry point into a specific
+    build back end。 A build back end might not be what you're used to selecting when
+    defining how to build a project。 but it actually gives you and your project's
+    consumers more flexibility to choose the tools。 that everyone wants to use。 What
+    used to always be a single tool chain has now been formally separated into three
+    categories。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需求被列出，并且有一个单一的入口点进入特定的构建后端。构建后端可能并不是你在定义如何构建项目时习惯选择的，但它实际上为你和项目的消费者提供了更多灵活性，以选择每个人想要使用的工具。过去总是一个工具链的情况现在已正式分为三个类别。
+- en: The old giant build tools would often lock downstream consumers such as packages，
+    installers。 or other maintainers to always choose the same tools that the author
+    used when first。 building the project。 But these new categories， which interconnectors
+    have standard APIs that。 are independent of any one project， allow each part to
+    operate independently。 Even if in the。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 旧的巨型构建工具通常会将下游消费者（如包、安装程序或其他维护者）锁定在必须始终选择与作者首次构建项目时使用的相同工具。但这些新的类别，连接器具有独立于任何一个项目的标准
+    API，允许每个部分独立运作。即使在。
+- en: other case， they are all defined in some larger project。 There are three main
+    tool categories used in turning source code into something you can import。 as
+    a package。 The build back end is the first。 It turns source code into a distribution
+    format。 such as a wheel file。 A project build back end is chosen by the project
+    author and recorded in PyProject。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其他情况下，它们都在某个更大的项目中定义。将源代码转换为可以作为包导入的内容使用的三种主要工具类别。构建后端是第一个。它将源代码转换为分发格式，如 wheel
+    文件。项目构建后端由项目作者选择，并记录在 PyProject 中。
+- en: Tomo。 It's the only one of these tools that actually gets recorded。 Next up
+    is the build front end。 which handles user interaction。 For instance， it might
+    provide， a command line interface。 display progress to the user， or show errors
+    from either bad。 metadata or problems on the build back end。 Build front ends
+    also must execute the back end in an environment that's actually suitable。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Tomo。这是这些工具中唯一一个实际被记录的。接下来是构建前端，它处理用户交互。例如，它可能提供命令行界面，向用户显示进度，或显示来自不良元数据或构建后端问题的错误。构建前端还必须在一个实际适合的环境中执行后端。
+- en: for building。 So this could involve installing dependencies for the build back
+    end， creating。 a virtual environment for it， setting its working directory， and
+    other similar tasks。 Although it's not very common， users wanting to build a project
+    can select a different front。 end than the author used， provided both that build
+    front end and back end， respect these， new APIs。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于构建。因此，这可能涉及安装构建后端的依赖项，创建虚拟环境，设置其工作目录，以及其他类似任务。虽然这并不常见，但希望构建项目的用户可以选择与作者使用的不同前端，只要这两个构建前端和后端都遵循这些新的
+    API。
+- en: The integration front end is not actually involved in the build process per
+    se， as by this point。 there already exists a build distribution file。 But it does
+    install this distribution。 file into your Python environment。 And I think that's
+    probably the most frequently any of。 us actually interact with distributions，
+    is by importing them。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 集成前端实际上并不直接参与构建过程，因为到这个时候，已经存在构建发行文件。但它确实会将这个发行文件安装到你的 Python 环境中。我认为我们与发行版互动的频率，可能就是通过导入它们。
+- en: An integration front end is capable of not just installing distributions， but
+    also resolving。 that distribution dependencies， possibly going out and finding
+    them locally or the internet。 maybe downloading them， and then also installing
+    those distributions。 A project author has no control over what integration front
+    end is actually used in。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个集成前端不仅能够安装分发包，还能解析这些分发包的依赖关系，可能会在本地或互联网上查找它们，甚至下载并安装这些分发包。项目作者对实际使用的集成前端没有控制权。
+- en: solid distribution。 In fact， probably all public projects right now are being
+    installed。 by multiple integration front ends。 For many of you。 there's just one
+    tool that's done all these tasks， and that's PIP。 PIP often handles all of them
+    for you at once， and hides the complexity of having to do。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 稳固的分发。实际上，目前所有公共项目都通过多个集成前端进行安装。对许多人来说，只有一个工具完成了所有这些任务，那就是 PIP。PIP 通常一次性处理所有这些，为你隐藏了必须做的复杂性。
+- en: different jobs behind the scenes。 Yet PIP is not actually a packaging tool。
+    Even though it's great。 I believe it's historic， use as the one command line tool
+    that's used to fulfill any kind of requirement for Python。 has blurred how Python
+    needs to see these different categories。 And some cases may。 harp them to see
+    the needs of them existing at all。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在幕后进行不同的工作。然而，PIP 实际上并不是一个打包工具。尽管它很棒，我相信它作为一个用于满足 Python 各类需求的历史性命令行工具的使用，模糊了
+    Python 需要看到这些不同类别的方式。在某些情况下，可能会使他们看到这些需求根本存在。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_7.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_7.png)'
+- en: So to show why PIP was originally needed for Python， and why Python now needs
+    to go beyond， PIP。 we're going to take a brief look at how packaging has evolved
+    alongside the Python， language。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，为了展示为什么最初需要 PIP 以及 Python 为什么现在需要超越 PIP，我们将简要回顾打包是如何与 Python 语言共同发展的。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_9.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_9.png)'
+- en: It all started with disk details。 Disk details was the original packaging library。
+    It was released as part of the Python language in version 1。6。 It also gave us
+    the current set of 。py convention and the top level directory to build， projects。
+    The common set of 。py script can act as either build front end or sort of， integration
+    front end。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一切都始于磁盘细节。磁盘细节是最初的打包库，作为 Python 语言 1.6 版本的一部分发布。它还为我们提供了当前的 `.py` 约定和构建项目的顶级目录。公共的
+    `.py` 脚本可以充当构建前端或某种集成前端。
+- en: As the CLI provided by importing disk details， allows for both building。 from
+    source and then installing that build into your environment。 However。 disk details
+    did not originally declare any way -- allow any way to declare， requirements。
+    let alone go out and resolve those dependencies。 It goes beyond what a build front
+    end is。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过导入磁盘细节提供的 CLI，可以从源代码构建并将该构建安装到你的环境中。然而，磁盘细节最初并没有声明任何方式来声明需求，更不用说解决这些依赖关系了。这超出了构建前端的范围。
+- en: but not quite so far to be an integration front， end in my opinion。 Disk details，
+    therefore。 is kind of like a build back end for which you as a project author。
+    have to write your own build front end each time as you write a new setup。py for
+    every， project。 Also note that disk details has been marked deprecated in the
+    latest version of Python。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在我看来，这并不完全是一个集成前端的结束。因此，磁盘细节有点像构建后端，作为项目作者，你每次编写新的 `setup.py` 时都需要编写自己的构建前端。此外，请注意，磁盘细节在最新版本的
+    Python 中已被标记为弃用。
+- en: which definitely makes it not a good choice for new projects。 After years of
+    nothing but disk details， set of tools emerged on the scene as a popular。 placement
+    that exists outside of the standard library。 It continues to use the set of 。py。
+    for all projects， meaning that project authors are still， to some degree， writing
+    their own。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这绝对使其不适合新项目。在经过多年仅使用磁盘细节后，一套工具作为流行的替代方案出现在标准库之外。它继续为所有项目使用 `.py`，这意味着项目作者仍然在某种程度上编写自己的组件。
+- en: components。 However， set of tools also came to the script called EasyInstall，
+    which did act。 as an integration front end， and definitely a better one than calling
+    straight setup。py， scripts。 It was capable of resolving dependencies and downloading
+    distributions from PyPI。org， which。 was originally brought online around the same
+    time as set up tools first release。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，这套工具还引入了一个名为 EasyInstall 的脚本，它确实充当了集成前端，显然比直接调用 `setup.py` 脚本要好。它能够解析依赖关系并从
+    PyPI.org 下载分发版，而 PyPI.org 在最初发布设置工具时大约同时上线。
+- en: Those set up tools were originally released to duplicate and extend all the
+    functionality。 disk details had。 It's used as a front end of any kind right now
+    as being actually moved， away from。 Much of the original functionality at first
+    gave the scripts that imported it， has been removed。 Functionality， such as running
+    tests or being able to declare requirements。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些设置工具最初发布是为了复制和扩展所有功能。现在，它作为任何一种前端的使用实际上正在减少。最初提供的功能，例如运行测试或声明需求的脚本已被移除。
+- en: for setting up your code or building your code using those special requirements
+    are。 no longer supported。 Soon setup tools projects will only be able to be built
+    when using a build front end that。 complies to the new front end specification。
+    However， it's used to the build back end is。 still very important and not going
+    away。 It's likely to remain at the core of Python。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于设置你的代码或使用那些特殊要求构建你的代码的方式不再受支持。不久后，setup工具项目只能在使用符合新前端规范的构建前端时构建。然而，构建后端仍然非常重要，并不会消失，可能会成为Python的核心。
+- en: packaging just as a build back end。 After setup tools。 it's still on a couple
+    of years until PyCienistas finally get a。 proper integration front end with PIP。
+    PIP makes using projects easier by。 hiding the details of using many setup。py's
+    directly in order to satisfy a set of。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: packaging就像是构建后端。在设置工具后，距离PyCienistas最终获得与PIP的恰当集成仍需几年时间。PIP通过隐藏使用多个setup.py的细节，使项目使用更简单，以满足一系列要求。
+- en: requirements for a project。 As a tool， it's definitely superior to easy install
+    and。 acted as a full replacement。 Even it will be a few more years until easy
+    install was。 officially marked deprecated。 PIP was also Python's first integration
+    front end that。 allowed dependencies to be installed directly from VCS addresses。
+    So you can。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 项目的需求。作为一个工具，它绝对优于easy_install，并且充当了完整的替代品。即便在easy_install被正式标记为不推荐使用之前，还需要几年时间。PIP也是Python的第一个集成前端，允许直接从VCS地址安装依赖项。
+- en: thank it for being able to install that project directly from a get hub link。
+    Still。 PIP is not a build tool。 It originally only knew how to build projects
+    from source。 because it knew the special way to invoke a setup。py which was the
+    build front end。 After the build back end was formalized， PIP did then learn how
+    to build call。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 感谢它能够直接从GitHub链接安装该项目。不过，PIP并不是构建工具。它最初只知道如何从源代码构建项目，因为它知道调用setup.py的特殊方式，这就是构建前端。在构建后端规范化后，PIP学会了如何进行构建调用。
+- en: build back ends directly which technically also makes it a build front end。
+    I think it's a pretty poor one as it's missing some important functionality you。
+    would want from a full build front end like the ability to create S-dist file，
+    distributions。 So PIP already worked as a front end and setup tools is still working。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，构建后端实际上也使其成为构建前端。我认为这是一个相当糟糕的选择，因为它缺少你希望从完整构建前端获得的一些重要功能，例如创建S-dist文件的能力。因此，PIP已经作为前端工作，而setup工具仍在工作。
+- en: great as a back end and they work together pretty well to do your building，
+    installing。 You might wonder why we're asking you to add yet another file to your，
+    project。 Especially if you stop to consider that PyProject。toml isn't。 actually
+    placing any of the functionality of either of those tools。 Well， first start。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为后端非常出色，它们在构建和安装方面配合得很好。你可能会想，为什么我们让你为项目添加另一个文件。尤其是当你考虑到PyProject.toml实际上并没有提供这些工具的任何功能时。
+- en: you'll be following the new expectations of consumers of your， project。 It's
+    not just tools but humans that work with your project are all now。 looking for
+    that ubiquitous PyProject。toml when first getting to know your， project。 By including
+    one you as the project author are then free to change。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你将遵循项目消费者的新期望。不仅是工具，所有与项目合作的人现在都在寻找普遍存在的PyProject.toml，以便更好地了解你的项目。作为项目作者，包含它后你就可以自由更改。
+- en: how you build a project without disruption to your users。 Another important
+    build prompt that's solved only by the use of PyProject。toml。 is declaring what
+    packages your project needs to start its build。 I think PIP's 518 best sums up
+    the prompt when it talks about setup。py's short， coming。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你如何在不干扰用户的情况下构建项目。另一个重要的构建提示仅通过使用PyProject.toml解决，就是声明你的项目在开始构建时需要哪些包。我认为PIP的518最能概括这个提示，它谈到了setup.py的不足之处。
+- en: It's a catch 22 of a file not being runnable without knowing its own。 contents
+    which can't be known programmatically unless you run the file。 Python has gone
+    in a long way by simply assuming that setup tools and PIP are。 almost universally
+    available just like the math module。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个 catch 22 的情况，一个文件在不知道其自身内容的情况下是无法运行的，除非你运行这个文件，而内容是无法程序化知道的。Python 通过简单地假设
+    setup tools 和 PIP 几乎是普遍可用的，就像 math 模块一样，走了很长一段路。
+- en: Both of these third-party packages have been deemed so important that they are。
+    in fact available upon a fresh and solved Python or any time you create a new，
+    VINs。 But it doesn't help you packaging if you decide to use a different build。
+    front end or if you use a different build back end or if you need anything more。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两个第三方包被认为是如此重要，以至于在每次创建新的 VINs 时，它们实际上都是可用的。但如果你决定使用不同的构建前端，或使用不同的构建后端，或者需要更多的东西，它对你打包并没有帮助。
+- en: than just setup tools and PIP to do your build like if you need Python or wheels。
+    Making PIP and setup tools as available as they are has fixed a lot of Python's。
+    build bootstrap problems。 At least it did until everyone decided that wheel was。
+    the newest standard and everyone should follow it。 You see PIP doesn't really
+    know。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不仅仅是使用 setup tools 和 PIP 来进行构建，就像你需要 Python 或 wheels 一样。让 PIP 和 setup tools
+    像现在这样普遍可用，解决了许多 Python 的构建引导问题。至少在大家决定 wheel 是最新标准并且每个人都应该遵循它之前，情况是这样的。你会发现 PIP
+    并不真正了解。
+- en: how to install a package from source。 It knows how to install a distribution。
+    If it comes across from source it first turns that source into a wheel file。 But
+    the build back end that PIP uses most commonly just setup tools doesn't know。
+    how to build a wheel file。 It knows how to build an S-dist file。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它知道如何从源代码安装一个包。它知道如何安装一个发行版。如果它遇到源代码，它首先将源代码转换为 wheel 文件。但是 PIP 通常使用的构建后端 setup
+    tools 并不知道如何构建一个 wheel 文件。它知道如何构建一个 S-dist 文件。
+- en: So we need this extra package which， confusingly， is also called the wheel package。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们需要这个额外的包，令人困惑的是，它也叫做 wheel 包。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_11.png)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_11.png)'
+- en: You'll notice this on this if you've ever tried to PIP install from source a。
+    project that does not contain a PyProject。toddle file。 You can see here what happens
+    when we try this in a fresh virtual environment。 When we try and PIP install，
+    PIP gives us a less than helpful error message。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你曾尝试从源代码用 PIP 安装一个不包含 PyProject。toddle 文件的项目，你会在此看到这个现象。当我们在一个新的虚拟环境中尝试 PIP
+    安装时，PIP 给出了一个不太有帮助的错误信息。
+- en: noting something about B-dist wheel not being a legal command。 Even though all
+    PIP with S-dist is just installed in Python source code。 If we look a little further
+    at the stack trace we see some PIP secret magic。 It's called setup。py behind the
+    scenes for us。 But it's choosing to pass along this illegal B-dist wheel command
+    it then。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意到 B-dist wheel 不是一个合法命令。尽管所有 PIP 与 S-dist 只是安装在 Python 源代码中。如果我们进一步查看堆栈跟踪，我们会看到一些
+    PIP 的秘密魔法。在幕后，它被称为 setup.py。但它选择传递这个非法的 B-dist wheel 命令。
+- en: complained about later on。 If you've seen this error before you probably immediately
+    recognize a solution。 You need to download a package called "wheel" from PyPI。
+    Just having this package around will magically fix the PIP command through the。
+    system's special setup tools hooks during its installation。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你以前见过这个错误，你可能会立刻认出解决方案。你需要从 PyPI 下载一个叫做 "wheel" 的包。只要有这个包的存在，就会通过系统的特殊 setup
+    tools 钩子在安装过程中神奇地修复 PIP 命令。
+- en: There's no change necessary to the setup。py file or the PIP command that was
+    chosen to run。 But all this is a pretty confusing conclusion from an error about
+    an invalid command。 that was not executed directly and which complained about
+    something B-dist wheel command。 Nothing about a wheel or a package's error message。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于选择运行的 setup.py 文件或 PIP 命令，没有必要做任何更改。但所有这些都是一个相当混乱的结论，源于一个关于无效命令的错误，而这个命令并没有被直接执行，并且抱怨关于
+    B-dist wheel 命令的某些事情。没有关于 wheel 或包的错误信息。
+- en: This confusion and probable stack overflow searching could have been avoided。
+    if this project just added a PyPI。TOMEL with a wheel requirement。 Doing so saves
+    its users a lot of pain and frustration。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果这个项目只是添加了一个包含 wheel 要求的 PyPI。TOMEL，这种困惑和可能的堆栈溢出搜索就可以避免。这样做为用户节省了很多痛苦和挫折。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_13.png)'
+  id: totrans-52
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_13.png)'
+- en: So let's take a look at how we can make this PyPI。TOMEL work for you in your
+    projects。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们来看看如何让这个 PyPI。TOMEL 为你的项目服务。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_15.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_15.png)'
+- en: Using the modern configuration that is PyPI。TOMEL not only lets you shed some。
+    outdated packaging practices， it gives you a lot of new advantages as well。 Being
+    explicit about your build backend will always get you the same build environment。
+    always on your machine and in CI and even on your users machines。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用现代配置的PyPI。TOMEL不仅让你摆脱一些过时的打包实践，还为你提供了许多新的优势。明确指定你的构建后端将始终为你提供相同的构建环境，始终在你的机器上，在CI中，甚至在用户的机器上。
+- en: Use the Q-SYS to use a different front end than you did。 It will also allow
+    you to try out different backends and have to change very little or nothing at
+    all about your code。 And now that PyPI。TOMEL is a standard， some build related
+    tools will only work on projects。 that have this file in their project at all。
+    Similarly， more and more tools are adopting PyPI。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用Q-SYS来使用与你之前不同的前端。这也将允许你尝试不同的后端，并且几乎不需要更改你的代码。现在PyPI。TOMEL是标准，一些构建相关的工具只会在具有此文件的项目中工作。类似地，越来越多的工具正在采用PyPI。
+- en: TOMEL as the location for their settings。 Even log tools that have nothing to
+    do with building。 This makes for a lot less files overall in your project's top
+    level directory。 So using your project is building just fine right now。 It's only
+    doing so based on a lot of assumptions。 And assumptions are no way to build dependable
+    software。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: TOMEL作为它们设置的位置。甚至与构建无关的日志工具。这使得你项目顶层目录中的文件大大减少。所以现在使用你的项目构建得很好。它只是基于很多假设在运行。而假设不是构建可靠软件的方法。
+- en: So go ahead and choose a build backend and let everyone know what you chose
+    by putting it in PyPI。TOMEL。 If you're sticking with the setup tools back end，
+    that's great。 But even after including a PyPI。TOMEL file， there's a few tasks
+    you can do to even more modernize your packaging。 First， stop using setup。py as
+    a script for any of your tasks。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，继续选择一个构建后端，并通过将其放入PyPI。TOMEL来让每个人知道你选择了什么。如果你坚持使用设置工具后端，那很好。但即使在包含PyPI。TOMEL文件后，还有一些任务可以进一步现代化你的打包。首先，停止将setup.py用作任何任务的脚本。
+- en: It's no longer intended as any kind of front end。 And whatever capabilities
+    it does still have will be going away。 Another advantage PyPI。TOMEL can give is
+    the ability to actually drop setup。py altogether。 Instead。 PyPI。TOMEL and the
+    setup。cfg files have static configuration can handle all of your build details
+    for you。 Then you don't have to have a build front end as part of your project
+    with a setup。py script。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它不再被视为任何类型的前端。无论它仍然具备什么功能，都将会消失。PyPI。TOMEL的另一个优势是可以完全省略setup.py。相反，PyPI。TOMEL和setup.cfg文件的静态配置可以处理你所有的构建细节。这样，你就不需要将构建前端作为项目的一部分，带有setup.py脚本。
+- en: A building tool outside of your project can handle all the building logic for
+    you。 Finally。 if you keep your setup。py file and it's important from disk utils。
+    switch that to important from setup tools。 You want to get away from this library
+    before it disappears entirely from the PyPI。TOMEL language。 If you maintain a
+    project that doesn't have a PyPI。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 项目外部的构建工具可以为你处理所有构建逻辑。最后，如果你保留setup.py文件并且它的重要性来自disk utils，将其切换到来自设置工具的导入。在这个库完全从PyPI。TOMEL语言中消失之前，你想要摆脱它。如果你维护一个没有PyPI的项目。
+- en: TOMEL file right now and you want to add one with the least amount of friction。
+    just create it with these three lines。 The legacy build specified here is in fact
+    the exact behavior that PyPI will give you。 if it comes across a project that
+    is missing a PyPI。TOMEL file。 So adding this file will not change how your project
+    actually gets built。 As a bonus。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在如果你想以最小的摩擦添加TOMEL文件，只需用这三行创建它。此处指定的遗留构建实际上是PyPI在遇到缺少PyPI。TOMEL文件的项目时将给你的确切行为。因此，添加此文件不会改变你的项目实际构建的方式。作为额外的好处。
+- en: users of your project won't get confusing beat us wheel errors because they
+    didn't have wheel ready to go for you on their machine。 If you want to go further
+    than just adding build information for what is essentially already happening。
+    try moving to the standard setup tools back end entry points。 Note that setup
+    tools does not yet support project data in PyPI。TOMEL。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的项目用户不会因为他们的机器上没有准备好的轮子而出现混淆的轮子错误。如果你想进一步发展，而不仅仅是为正在发生的事情添加构建信息，可以尝试移动到标准的设置工具后端入口点。请注意，设置工具尚不支持PyPI中的项目数据。TOMEL。
+- en: So you will still have to use setup。cfg to specify metadata as configuration。
+    You don't already have one try creating it and adding some core metadata there。
+    Then try moving more metadata from setup。py into your setup。cfg。 For long you
+    may find that everything that originally needed setup。py for can be moved to setup。cfg。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，你仍然需要使用`setup.cfg`来指定元数据作为配置。如果你还没有一个，尝试创建它并添加一些核心元数据。然后尝试将更多元数据从`setup.py`移动到你的`setup.cfg`中。长此以往，你会发现原本需要`setup.py`的所有内容都可以迁移到`setup.cfg`中。
+- en: which means you set up py disappears entirely and leaves you and users of your
+    project with only explicit。 predictable， and readable build information。 In the
+    end all users of this project will benefit from these changes。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着你设置的`setup.py`会完全消失，只留下你和项目用户明确、可预测和易读的构建信息。最终，所有使用这个项目的用户都将从这些更改中受益。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_17.png)'
+  id: totrans-65
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_17.png)'
+- en: Packaging is a very rich landscape that is still evolving。 So I encourage you
+    to keep learning about it。 There's a lot of great resources out there。 These are
+    some that have been helpful to me in forming this talk。 Thank you and have a great
+    rest of the conference。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 包装是一个非常丰富且仍在发展的领域。因此，我鼓励你持续学习相关知识。外面有很多优秀的资源。这些是对我形成这个演讲有帮助的一些资源。谢谢，祝你在会议的剩余时间里过得愉快。
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_19.png)'
+  id: totrans-67
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_19.png)'
+- en: '[BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]，
+    [BLANK_AUDIO]。 [BLANK_AUDIO]。'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[空白音频]， [空白音频]， [空白音频]， [空白音频]， [空白音频]， [空白音频]。 [空白音频]。'
+- en: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_21.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c0cc4b88a8773b6e24b57cc4aa655318_21.png)'

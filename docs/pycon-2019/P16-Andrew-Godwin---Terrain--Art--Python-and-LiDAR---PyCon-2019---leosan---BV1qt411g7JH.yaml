@@ -1,0 +1,756 @@
+- en: P16：Andrew Godwin - Terrain, Art, Python and LiDAR - PyCon 2019 - leosan - BV1qt411g7JH
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P16：安德鲁·戈德温 - 地形、艺术、Python和LIDAR - PyCon 2019 - leosan - BV1qt411g7JH
+- en: Welcome everybody。 Our next talk is going to be Andrew Godwin speaking about
+    terrain。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欢迎大家。我们的下一个演讲将由安德鲁·戈德温讲解地形。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_1.png)'
+- en: art， Python， and LIDAR。 Please welcome Andrew Godwin。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 艺术，Python和LIDAR。请欢迎安德鲁·戈德温。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_3.png)'
+- en: '[ Applause ]， \>\> Good morning everybody and welcome to my wonderful talk
+    about terrain。 A quick introduction， I''m Andrew Godwin。 I''m perhaps most well-known
+    for my work on Django。 migrations and south and most recently channels and async。
+    I''m a principal engineer over at Eventbrite in San Francisco。 I do own a lot
+    of lasers。'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[掌声]，>> 大家早上好，欢迎参加我关于地形的精彩演讲。简单介绍一下，我是安德鲁·戈德温。我也许最著名的工作是在Django、migrations和south，以及最近的channels和async。我是旧金山Eventbrite的首席工程师。我拥有很多激光器。'
+- en: I do require more。 I will see during the course of my presentation。 But this
+    talk is not about Django， which is unusual for me。 This talk is about landscapes。
+    I'm a big fan of the natural world and particularly， of mapping and topography。
+    For centuries we have tried to map our world to increasing degrees of accuracy。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我确实需要更多。我将在演讲过程中查看。但这次演讲与Django无关，这对我来说很不寻常。这次演讲是关于地貌的。我非常喜欢自然界，尤其是制图和地形。几个世纪以来，我们试图以越来越高的精度绘制我们的世界。
+- en: First it was people with sticks up mountains looking through holes， not particularly
+    accurate。 Then we got better， we got ranging， we got lasers。 But eventually we
+    figured we wanted a whole global map of the entire planet。 What does it look like？
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先是人们用棍子在山上通过孔观察，不太准确。然后我们变得更好，进行了测距，使用了激光。但最终我们发现我们想要整个星球的全球地图。它是什么样子的？
+- en: What are all the mountain ranges？ What are all the valleys？ And so in the '90s
+    we had this。 which is the shuttle radar topography mission。 They basically stuck
+    two giant radar dishes on the space shuttle。 one in the payload bay， one at the
+    end of a long wire and flew around the entire earth to get the first ever complete。
+    mapping of the earth's surface。 It has height values for every single part of
+    the earth I could get to。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有的山脉是什么？所有的山谷又是什么？所以在90年代，我们有了这个，就是航天飞机雷达地形任务。他们基本上在航天飞机上安装了两个巨大的雷达天线，一个在有效载荷舱，一个在长线的末端，飞绕整个地球，获得了第一份完整的地球表面地图。它为我能到达的地球每一个部分提供了高度值。
+- en: It's not particularly accurate。 It's about 30 meters accuracy。 But it is there。
+    And you get decent looking imagery like this。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不是特别准确。大约有30米的精度。但它确实存在。你能得到像这样的不错影像。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_5.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_5.png)'
+- en: It works well at those sort of wide scales。 It shows islands well， it shows
+    mountains well。 It shows valleys well。 The problem is， as I said， it's 30 meters。
+    It can't resolve things smaller than that。 And it also can't see behind valleys。
+    There's actually quite a lot of holes in the data where the shuttle was at an
+    angle。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它在这种广阔的尺度上运作良好。它很好地显示了岛屿、山脉和山谷。问题是，正如我所说，它是30米。无法解析小于这个的东西。它也无法看到山谷后面的东西。实际上，数据中有很多孔，因为航天飞机的角度。
+- en: And as the radar is scanning， it can't actually see over a mountain in the valley
+    behind it。 And you look at the raw data， you just have sort of one side of a mountain
+    and a mysterious hole on the other side。 And so this is a great start of data。
+    But we've progressed。 And we now have crucially lasers。 Space and lasers。 Great
+    combination。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当雷达扫描时，它无法看到后面山谷的山。查看原始数据时，你只看到山的一侧和另一侧的神秘洞口。这是一个很好的数据起点。但我们已经进步了。现在我们有关键的激光器。太空和激光器。绝佳的组合。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_7.png)'
+  id: totrans-13
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_7.png)'
+- en: And we took these lasers and we did what we do with radar。 And with radar。 that's
+    radio detection and ranging。 We'd say with light， which is light detection and
+    ranging。 That's what LiDAR is。 LiDAR is like radar。 It tells you where things
+    are and how far away they are。 But crucially， it's incredibly accurate。 It can
+    be accurate down to the centimeter。 In fact。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们使用这些激光器做我们在雷达上所做的事情。雷达是无线电探测与测距。我们用光来称之为光探测与测距。这就是LiDAR。LiDAR像雷达一样。它告诉你物体的位置和距离。但关键是，它极其精确。精度可以达到厘米级。实际上。
+- en: these days more accurate than that。 And what this means is you can build an
+    incredibly detailed map。 but of a smaller area。 LiDAR usually goes on something
+    like an aircraft。 as you can see here in the picture。 But also can be on a car
+    or the device that moves along and you only map things around it。 And this is
+    a crucial step。 We can take this kind of accurate range finding and map things
+    like cities in perfect detail。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在这些数据比以前更准确。这意味着你可以构建一个极其详细的地图，但覆盖的区域较小。激光雷达通常安装在飞机上，就像你在图片中看到的那样。但它也可以安装在汽车上，或者是沿着移动设备进行地图绘制，只需绘制周围的事物。这是一个关键步骤。我们可以利用这种精确的测距来完美地绘制城市等事物。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_9.png)'
+  id: totrans-16
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_9.png)'
+- en: In fact， in cities around the world， in most major cities and certainly in a
+    lot of the US。 LiDAR surveying planes regularly fly over those cities， and map
+    them in their entirety。 If you ever seen Google Maps or Apple Maps or other things
+    with 3D buildings。 those 3D buildings are built often from LiDAR data。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事实上，在全球范围内的大多数主要城市，尤其是在美国的许多城市，激光雷达测绘飞机定期飞越这些城市，并对它们进行全面测绘。如果你曾经看到过 Google 地图、Apple
+    地图或其他带有 3D 建筑的内容，这些 3D 建筑通常是基于激光雷达数据构建的。
+- en: It's those samples of the planes flying over regularly and taking those samples。
+    Now。 if you ever give me a large amount of interesting data， one thing immediately
+    comes to mind。 And that is I want to make things。 And so what I'm going to show
+    you is how I took some Python。 took some data， and made a few things with them。
+    And hopefully show you a few ways you can use Python。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是飞机定期飞越并进行取样的那些样本。现在，如果你给我大量有趣的数据，首先想到的事情就是我想制作一些东西。因此，我将向你展示我如何使用 Python、获取一些数据，并用它们制作一些东西。希望能向你展示几种使用
+    Python 的方法。
+- en: maybe you've not thought of up until now。 So first off。 let's start with maybe
+    the easier of the ones。 So before I get into what I'm making。 let's talk about
+    how the data I just talked about comes to you。 Now。 the first and easiest thing
+    you'll often see is people call it DEM， a digital elevation model。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许到现在为止你还没有考虑过这个。那么首先，我们从相对简单的开始讲起。在我讲述我正在制作的内容之前，让我们先谈谈我刚才提到的数据是如何传递给你的。首先，你最常看到的就是人们称之为
+    DEM，即数字高程模型。
+- en: If you work in games， this often is called a height map。 It's the same kind
+    of idea。 It is a big bit map。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你在游戏领域工作，这通常被称为高度图。这是相同的概念。它是一个大的位图。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_11.png)'
+  id: totrans-21
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_11.png)'
+- en: and it contains data for how high everything is on a 2D plane。 On the left here。
+    you can see a small portion of London， and the interview of buildings and streets。
+    On the right。 you can see part of Crater Lake and the namesake crater in the middle
+    of it。 Both of these show you have this gray scale where in this rendering。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它包含了在二维平面上每个地方的高度数据。在左侧，你可以看到伦敦的一小部分，建筑和街道的情况。在右侧，你可以看到火山湖及其中间的火山口的部分。这两者都展示了这种灰度，在这个渲染中。
+- en: the white is highest and the black is lowest。 Of course， the information in
+    this is more detailed。 These are elevations in meters from sea level。 But at its
+    core， it's just a big 2D array。 You can take that big 2D array of numbers and
+    just look through it and find out how high things are。 Every single pixel is just
+    where it is and how high it is。 And thankfully， in Python。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 白色表示最高，黑色表示最低。当然，这里面的信息更加详细。这些是从海平面起的高度，单位是米。但从本质上讲，它只是一个大的二维数组。你可以查看这个大的数字二维数组，找出物体的高度。每个像素都只是它的位置和高度。值得庆幸的是，在
+    Python 中。
+- en: operating arrays is relatively easy。 My first project I wanted to look at was
+    maybe the easiest to fabricate。 And fabrication is a big part of this， as we'll
+    see。 It is this。 This is a laser cut profile of the island of Hawaii。 There's
+    a scale here for reference。 If you want to see these models all the way， I'll
+    be outside at the end or find me during the conference。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 操作数组相对简单。我想要查看的第一个项目可能是最容易制作的。制作是这个过程中的一个重要部分，正如我们所看到的。这是一个。这个是夏威夷岛的激光切割轮廓。这里有一个比例尺供参考。如果你想要看到这些模型的整体情况，我将在最后在外面等你，或者在会议期间找到我。
+- en: And the key thing is this is laser cutting。 Laser cutting is maybe the easiest
+    of the fabrication methods I'm going to show you here today。 A laser cutter generally
+    just needs one thing。 It needs a cut path。 One of the nice things to make this
+    with is SVG。 And so what you do is you take an SVG file。 you feed it to a laser
+    cutter， it cuts it for you。 You take it out， glue it together。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关键是这是激光切割。激光切割可能是我今天要展示的制造方法中最简单的一种。激光切割机通常只需要一件事。它需要一个切割路径。制作这东西的好处之一是SVG。所以你做的是取一个SVG文件，把它输入到激光切割机，它就为你切割。你取出来，粘合在一起。
+- en: and you're done。 The gluing is honestly the most annoying part of that whole
+    process。 But we have to make the SVG file。 As you can see here。 what we have is
+    not just that top surface of the parts of the island。 We have slices through it。
+    taken at certain intervals that have solid bases。 In order to make it look solid
+    like you see here。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后就完成了。粘合实际上是整个过程最麻烦的部分。但我们必须制作SVG文件。正如你在这里看到的。我们不仅有岛屿部件的表面。我们有在某些间隔下切片的固体基础。为了让它看起来像你在这里看到的那样坚固。
+- en: you've got to have those slats that reach the end so I can glue them together。
+    And to do this， I。 of course， use Python。 I took that DEM。 I turned it into CSV
+    because I'm lazy and don't want to use geospatial libraries just yet。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你必须有那些能到达末端的板条，以便我可以将它们粘在一起。为此，我当然用Python。我把DEM转成了CSV，因为我懒，不想立刻使用地理空间库。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_13.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_13.png)'
+- en: I read it in with Python CSV library。 And then did a very simple thing of just
+    picking every 200th row sampling the data in that and during a contour out using
+    the SVG right library。 It's a relatively sort of simple set of things to put together。
+    There's a lot of debugging。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我用Python的CSV库读取了数据。然后只是简单地每200行抽样数据，并在使用SVG右库进行等高线处理时。将这些东西组合在一起相对简单。但有很多调试。
+- en: Obviously， it's not simple in itself。 One of the fascinating things you find
+    is if you just do this as you expect it。 you get incredibly flat vectors out。
+    It turns out that the way you think the earth looks from height is not how it
+    actually looks。 It's actually much flatter than you expect。 And so everything
+    you see for me today is exaggerated in the。 what I'm going to call the Z dimension，
+    the height axis， by 1。5 to 2 times at least。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然，这本身并不简单。你会发现一个迷人的事情是，如果你只是按预期去做，你会得到极其平坦的向量。结果发现，从高处看地球的样子并不是它实际的样子。实际上，它比你预期的要平坦得多。因此，今天你看到的所有东西在我所称的Z维度（高度轴）上至少被夸大了1.5到2倍。
+- en: And that's what this is applied to as well。 And so we take that， those right，
+    those rows。 we write them out to an SVG file。 We feed them to a laser cutter like
+    this one。 my local maker space， and then we do them together。 One of the fun things
+    about this particular adventure was that this method works very well for small
+    islands。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也是应用于这个。我们取那些，写出那些行，输出到SVG文件。我们把它们输入到像这样的激光切割机，我的当地创客空间，然后把它们组装在一起。这次特别冒险的一件有趣的事情是，这种方法对小岛屿效果很好。
+- en: It works very poorly for anything else。 If you can even see it， this is Scotland。
+    I love Scotland。 It's an amazing mountainous place， but you couldn't tell。 It's
+    a case of like。 the exaggeration you get， like Hawaii is perfect。 It's a New Zealand
+    that actually is too。 They rise out of the sea very sharply and have a defined
+    shape。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于其他任何东西效果都很差。如果你能看到的话，这是斯科特兰。我爱斯科特兰。它是一个令人惊叹的山区地方，但你无法判断。就像夸大一样，夏威夷是完美的。新西兰也是如此。它们从海中急剧上升，形状清晰。
+- en: When you take something like Scotland， it's full of wonderful locks and valleys。
+    But when you shrink it down， it just doesn't work at small scale。 A part of Scotland。
+    like one of the isles， would work fantastic， but it does not work as an overall
+    project。 And this is where I start thinking in different scales。 But first。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你拿斯科特兰的时候，它充满了美丽的湖泊和山谷。但当你缩小它时，它在小规模下就无法实现。斯科特兰的一部分，比如某个岛屿，效果很好，但作为整体项目就行不通。这时我开始考虑不同的比例。但首先。
+- en: I'm going to go to a smaller scale。 Two cities。 This is maybe the project I
+    got most press about。 which I'm quite happy about。 There was a right of in Forbes
+    at one point， which is exciting。 But let's go back to that LIDAR image。 So what
+    I've shown you is very large scale data。 The Hawaii data is from that original
+    shuttle mission。 It's very wide ranging。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我打算缩小规模。两个城市。这可能是我获得最多媒体关注的项目，这让我很开心。曾经在《福布斯》上有过一次报道，这很令人兴奋。但让我们回到那个LIDAR图像。所以我展示给你的是非常大规模的数据。夏威夷的数据来自那次原始的航天飞机任务，范围非常广泛。
+- en: You can get the whole earth in about a gigabyte or two of data。 It's not too
+    bad。 But cities are a different matter entirely。 Cities are so precise。 The LIDAR
+    image of London that you see on the left here is accurate within a half a meter。
+    It's about this much， if you're from America， which most of you are。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以用大约一到两GB的数据获得整个地球。这并不算太糟糕。但城市则完全不同。城市是如此精确。你在左侧看到的伦敦LIDAR图像的准确度在半米以内。如果你来自美国，那大约就是这个量。
+- en: And what that means is you can not just render individual buildings。 You can
+    render individual trees。 You can see things like cars and railway lines that you
+    just couldn't see from any other data。 It's incredible。 The result， by the way，
+    looks like this。 This is a thing about this big that sits on my wall at home。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着你不仅可以渲染单独的建筑物。你还可以渲染单独的树木。你可以看到汽车和铁路线路等东西，而这些是你从任何其他数据中无法看到的。这是令人难以置信的。顺便说一下，结果看起来是这样的。这是一个大约如此的东西，挂在我家墙上。
+- en: which is a full detailed map of San Francisco in this case。 I'm on London， I'll
+    show you later。 In its entire detail。 That is the entire San Francisco peninsula
+    rendered about this big。 You can see every individual building in San Francisco。
+    I can literally see where I live。 which is very exciting and kind of the point
+    of this。 For reference， I have a size code here。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是旧金山的完整详细地图。我在伦敦，稍后我会展示。在其完整细节中。那是整个旧金山半岛渲染得大约如此。你可以看到旧金山的每一栋建筑。我真的可以看到我住在哪里，这非常令人兴奋，正是这一点。作为参考，我这里有一个大小代码。
+- en: This is a one square kilometer tile salvaged as one of the failures from that
+    particular print。 There are over 100 of these in each of those because when you
+    want to print something。 I don't have a 3D printer that is a meter long。 I'd love
+    one if anyone's selling one or for cheap。 but I don't have one of those。 The real
+    problem you get to is not the fabrication that is a problem。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个从那次特定打印失败中挽救下来的一个平方公里的瓷砖。每个都有超过100个，因为当你想打印某样东西时，我没有一个长达一米的3D打印机。如果有人出售或者便宜点，我会很喜欢，但我没有这样的设备。真正的问题不是制作，而是数据。
+- en: The first problem you get to is the data。 So remember， I said there's a nice
+    height map。 They read "knife"， they're bigger rays。 You can easily put them to
+    CSV。 Now。 when you get LiDAR data， it often comes in the form of what's called
+    a point cloud。 Now。 a point cloud is basically a big collection of "here's the
+    raw data， the planes。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你面临的第一个问题是数据。所以记得，我说过有一个漂亮的高度图。它们被称为“刀”，它们的射线更大。你可以很容易地将它们转换为CSV格式。现在，当你获取LiDAR数据时，它通常以所谓的点云形式出现。现在，点云基本上是一个大型集合，“这是原始数据，来自飞机。”
+- en: LiDAR pod got back as it flew over the city。"， If you're lucky。 they're already
+    gridded up into one by one kilometer squares and aligned for you。 And if you look
+    at it from distance， it looks really sensible。 It looks solid。 You can see some
+    features。 If you're familiar with San Francisco。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: LiDAR探测器在飞过城市时得到了数据。如果幸运的话，它们已经被整理成一公里见方的网格，并为你对齐。如果你从远处看，它看起来非常合理。它看起来坚固。你能看到一些特征。如果你熟悉旧金山的话。
+- en: that is the AT&T Ballpark on the coastline。 The problem is if you zoom in。 that
+    illusion clearly vanishes。 It's not solid。 It's merely a series of points。 All
+    it is is literally the raw radar returns from every individual part of the landscape
+    that the planes saw。 There is no continuous surface here。 You can't take this
+    and print it out。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那是沿海的AT&T棒球场。问题是如果你放大，这种幻觉显然消失了。它并不坚固。它仅仅是一系列的点。它所显示的实际上是飞机看到的每个景观部分的原始雷达返回数据。这里没有连续的表面。你不能将其打印出来。
+- en: You can't print zero dimensional dots。 And so the problem we have is we have
+    to take this raw file and for reference。 a point cloud is literally a file full
+    of three dimensional vectors like this pretty much。 They come with some extra
+    data like attributes and the intensity of the return。 but you're basically working
+    with this kind of data。 And you have to turn it into a solid model。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你无法打印零维的点。因此，我们面临的问题是必须处理这个原始文件。作为参考，点云实际上是一个充满三维向量的文件，差不多就是这样的。它们带有一些额外的数据，比如属性和返回的强度，但你基本上是处理这种数据。你必须将其转变为一个实心模型。
+- en: Now， this is a challenge I would love to take on， but I have only so much spare
+    time and way too many hobbies。 And so what I do is I turn to existing tools。 In
+    particular， there is， I think。 the point cloud library， which is a very good way
+    of handling point clouds。 not only in terms of reducing them down and making it
+    easy to work with。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，这是我非常想挑战的事情，但我只有这么多空闲时间，而且有太多的爱好。所以我转向现有的工具。尤其是，我觉得有一个点云库，这是处理点云的非常好的方法，不仅可以减少它们并使其易于处理。
+- en: but also extracting height maps or 3D surfaces。 There is also a standalone program
+    called last tools。 It's not free， but it's free for small amounts of data。 That's
+    much more of a plug and play。 Give it a point cloud。 It will dump you out a height
+    map。 No real sort of extra Python work required。 But crucially。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有提取高度图或 3D 表面的方法。还有一个独立程序叫做 last tools。它不是免费的，但对于小量数据是免费的。这个程序更加即插即用。给它一个点云，它会输出一个高度图。不需要真正的额外
+    Python 工作。但至关重要的是。
+- en: both of these will take a raw point cloud like you saw。 A few variables like
+    do you want to eliminate things like trees or do you want to try and find the
+    actual height of the landscape？
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两者都会处理像你看到的那样的原始点云。一些变量，比如你是否想消除树木，或者你是否想尝试找出景观的实际高度？
+- en: And they will then return you a height map out of that code。 Then you've got
+    to change the manufacturing。 Now a height map， again。 is just that top surface
+    of the landscape。 A 3D printer can't print a basically two dimensional surface
+    mapped on a 3D plane。 It needs something solid。 And so you have to take that top
+    surface and you have to turn it into a fully sealed three dimensional model。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后它们会根据那段代码返回给你一个高度图。接下来你需要更改制造过程。再说一次，高度图就是景观的顶部表面。3D 打印机不能打印基本上是映射在三维平面上的二维表面。它需要一些实心的东西。所以你必须将那上表面转变为一个完全密封的三维模型。
+- en: Now， I happen to have a little bit of history in doing some game engine stuff
+    and playing around on my spare time。 And that's where these kind of hobbies overlap。
+    A three dimensional model that a 3D printer takes has to be fully sealed。 That
+    means it has to have no gaps in it。 If you have a polygon missing。 it will just
+    sit there and get very confused if you're unlucky。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我刚好有一点做游戏引擎的历史，并在空闲时间玩耍。这就是这些爱好的重叠之处。3D 打印机所需的三维模型必须是完全密封的。这意味着它必须没有任何缝隙。如果缺少一个多边形，它就会卡住，并且如果运气不好，会非常困惑。
+- en: So the resulting file looks a bit like this。 This is a very。 very close zoom
+    in of one of these tiles I showed you just now。 Every single individual point
+    on that height map has some polygons on the top surface。 But you see around the
+    side there's a wall built to make sure that it's solid。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以生成的文件看起来有点像这样。这是我刚才给你展示的其中一个瓷砖的非常非常近的放大图。高度图上的每一个单独点都有一些多边形在顶部表面。但你可以看到四周有一面墙，以确保它是实心的。
+- en: And then again there's a wall on the base of it as well。 And how we do this？
+    Well。 a couple of steps。 First of all， again， we have to load in that digital
+    elevation map， the DEM。 And then there's some interesting steps because I didn't
+    do the middle two steps at this the first time and the result was spectacular。
+    In that it was totally impossible to print。 First of all， you can click on maximum
+    height。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后底部也有一面墙。我们该怎么做呢？好吧，有几个步骤。首先，我们必须加载那个数字高程图，DEM。接下来有一些有趣的步骤，因为我第一次没有做中间的两个步骤，结果非常壮观。可以说完全无法打印。首先，你可以点击最大高度。
+- en: LIDAR is interesting。 It works on light。 It turns out things are reflective。
+    And when the laser pad surface often gets very confused。 Especially over water
+    or lots of glass buildings or even worse like fields of solar panels。 the laser
+    returns will be incredibly spiky。 They'll just randomly jump up 100 meters and
+    back down again。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: LIDAR很有趣。它是基于光的。结果发现物体是反射的。而激光平面表面经常会感到困惑。尤其是在水面上或很多玻璃建筑上，或者更糟的是像太阳能电池板的田野，激光返回会非常尖锐。它们会随机跳升100米然后再下去。
+- en: So you've got to do a first pass of taking that data and eliminating those high
+    points that are obviously outliers or looks suspicious。 Then you've got to make
+    sure that you actually can fit the entire height of your model in。 London's got
+    some very tall skyscrapers in it。 And so to make sure that you're actually going
+    to fit that in the size you want to print your 3D model。 the higher your print
+    is， the longer it takes to print。 And I'm an impatient man。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你必须第一次处理数据，消除那些明显的异常值或看起来可疑的高点。然后你必须确保你实际上可以将模型的整个高度装入。伦敦有一些非常高的摩天大楼。为了确保你可以把它放入你想打印3D模型的大小，打印越高，打印时间越长。我是个没有耐心的人。
+- en: And so I try and go for like two or three hours for each one。 But then the really
+    fun part is you've got to clip at the bottom。 So London is a very big city。 And
+    at the time this laser data was taken， they were building the big new railway
+    line。 which runs around 50 meters underneath London， because it's very dense really
+    far down。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我会尝试每个大约花两个或三个小时。但真正有趣的部分是你得在底部剪裁。所以伦敦是个很大的城市。在激光数据采集时，他们正在建造一条大新的铁路，这条铁路距离伦敦大约50米，因为那里真的很密集。
+- en: There is a giant pit in the middle of London that is 50 meters deep。 And so
+    the laser returns in this pit， readers minus 50。 If you're clipping。 so if you're
+    trying to print out with like， "Oh， well， the base of this is sea level。" you
+    get a model that goes， "La la la la。"， And then just dips below itself and cuts
+    through itself to 50 meters below itself。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 伦敦中间有一个50米深的巨坑。所以激光在这个坑中的返回值减去50。如果你正在剪裁。所以如果你尝试打印像，“哦，这个基础是海平面。”你会得到一个模型，它说：“拉拉拉。”然后就自己下沉，切割到自己下方50米。
+- en: And rather than print a giant base and make the giant hole appear， I just cut
+    it off at sea level。 So there's a few things like that you have to massage the
+    data and make sure it fits。 And a lot of this isn't in the pursuit of making it
+    look good， right？
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而不是打印一个巨大的基础并使这个巨大的洞出现，我只是将其剪裁到海平面。所以有一些事情你必须调整数据并确保它符合。而这一切并不是为了让它看起来好，是吗？
+- en: Like this is not meant to be an accurate representation of the model。 It's meant
+    to be a form of art， it's meant to look pleasant。 And part of this。 as you'll
+    see later is on with the other stuff I have， is maybe lying a bit about reality。
+    but making sure it looks nice。 For example， when I said I was actually a height。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不是为了准确表现模型。这是一种艺术形式，它的目的是让人感到愉悦。而部分内容，如你稍后将看到的我其他的东西，可能会在某种程度上歪曲现实，但确保它看起来不错。例如，当我说我实际上是一个高度时。
+- en: that's not quite true。 It's not just linear。 The small buildings are actually
+    a bit more and the big buildings are shrunk a bit so you can see all those buildings
+    individually。 They still look relatively bigger to each other， but you can actually
+    see the small buildings more closely rather than being like a fraction of the
+    height of those giant buildings。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不完全正确。它并不是线性的。小建筑实际上更大一些，而大建筑则缩小了一点，这样你可以看到那些建筑。它们之间看起来仍然相对更大，但你可以更近地看到小建筑，而不是像那些巨大建筑的高度的一小部分。
+- en: Once you've got that， if it's smoothed out the rough features。 even when it's
+    not on reflective surfaces， LIDAR is just rough。 It just reflects a bit and has
+    some jaggedness。 So you're going to run a smoothing pass。 Again in Python， this
+    is written as an array pass。 And then finally， write out an STL file。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦你完成了，如果它平滑了粗糙特征。即使在不反射的表面上，LIDAR也只是粗糙。它只是反射一点，有些不规则。所以你要进行一次平滑处理。在Python中，这是作为数组处理的。最后，写出一个STL文件。
+- en: STL is a pretty common 3D model format。 If you're not familiar with 3D models。
+    you basically write out a series of what's called polygons。 They are triangles
+    with three corners on them in 3D space。 And thankfully。 STL is relatively simple
+    format。 It's a giant binary file full of binary polygons。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: STL是一种相当常见的3D模型格式。如果你不熟悉3D模型，基本上是写出一系列称为多边形的东西。它们是3D空间中的三角形，每个三角形有三个角。幸运的是，STL是相对简单的格式。它是一个巨大的二进制文件，里面充满了二进制多边形。
+- en: We have the struct module for that。 Thank you， struct。 You pop in your normal。
+    which is like the angle of the face of the polygon， your three corners。 And then
+    for some reason。 there's a zero in every part of the polygons in the file that
+    is an extension that no software can read。 It's very exciting。 Thank you for that。
+    But you can do this in a Python for loop。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有结构模块来处理这个。谢谢你，结构。你输入你的常规数据，这就像是多边形面角度和三个角落。然后出于某种原因，文件中每个多边形的部分都有一个零，这是没有软件可以读取的扩展。非常令人兴奋。谢谢你。但是你可以在Python的for循环中做到这一点。
+- en: So you just go through that array。 It writes out every single group of squares
+    to polygons。 Then runs around the edges of the array to write out the walls and
+    then just does the floor underneath。 So it's a lot of work， a lot of complicated
+    maths， but it ends up being there in the end。 Now。 maybe thinking here， should
+    I have used NumPy？ Yes， I should。 Did I？ No。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你只需遍历那个数组。它会将每一组方块写成多边形。然后绕着数组的边缘写出墙壁，然后在下面做地面。所以这是一项庞大的工作，涉及很多复杂的数学，但最终会呈现出来。现在，也许在想，我是否应该使用NumPy？是的，我应该。可我没有。
+- en: I had this tendency to just go in full speed and just start writing like on
+    normal Python lists rather than actual proper NumPy arrays。 This is a failure
+    of mine。 If you do this， please use NumPy。 It has many of these things built in
+    as standard operators， and it's much faster than my script is。 If you want to
+    use this particular script is up on GitHub。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我有这种倾向，总是全速前进，开始像处理普通Python列表一样编写，而不是使用真正的NumPy数组。这是我的一个失误。如果你这样做，请使用NumPy。它有许多内置的标准操作，而且比我的脚本快得多。如果你想使用这个特定的脚本，可以在GitHub上找到。
+- en: the URL be up again at the end of the presentation。 It is a bit rough and ready。
+    There is some documentation， but not a lot。 But other people have made it work。
+    And if you want to and have a lot of 3D printing time and space。 you can make
+    San Francisco as seen here。 But let's go to one more fabrication。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 网址将在演示结束时再次出现。这个项目有点粗糙和初步。有一些文档，但不多。不过其他人已经让它发挥了作用。如果你想，而且有很多3D打印的时间和空间，你可以制作如这里所示的旧金山。但让我们再看一个制造示例。
+- en: And this is the most difficult one。 So I want to go from the small scale of
+    cities。 which I enjoy to the big scale。 I have a personal goal of visiting every
+    single national park in the US。 This may seem infeasible。 It is。 Do I like invisible
+    goals？ Yes， I do。 There are 59 of them if you are counting。 And at least three
+    of them have no roads。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是最困难的一个。所以我想从小规模的城市转向大规模。我有一个个人目标，就是拜访美国的每一个国家公园。这看起来可能不可行。确实如此。我喜欢隐形目标吗？是的，我喜欢。如果你在数的话，总共有59个。而且至少有三个没有道路。
+- en: It is very exciting。 One of them you get a boat from a local fisherman。 It is
+    great。 But I want to go visit them。 I want to represent that in a certain way。
+    And so what I did is I started making miniature landscapes in the national parks。
+    But this time not out of plastic from the 3D printer， but out of metal。 For size
+    reference。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这非常令人兴奋。有一个选项是从当地渔民那里租一艘船。这太棒了。但我想去拜访他们。我想以某种方式表达这一点。所以我开始在国家公园制作微型景观。这次不是用3D打印机的塑料，而是用金属制作的。作为尺寸参考。
+- en: this is one of the ones you see on screen。 That on screen there is great sand
+    in Colorado。 Fantastic place。 I recommend it highly。 There is some big sand dunes。
+    But the fun thing about this is it is not just a case of shipping a model through
+    a 3D printer the same way it was before。 You have a milling machine。 Rather than
+    adding to nothing。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是你在屏幕上看到的一个。这屏幕上的景观是科罗拉多州的沙丘。一个奇妙的地方。我强烈推荐这里。有一些大沙丘。但有趣的是，这不仅仅是将模型通过3D打印机运送。你还需要一个铣床。与其什么都不添加。
+- en: you have to subtract from a block of aluminium。 You have this giant spinning
+    machine of death。 It sits there for like four hours grinding away at it。 And crucially
+    one of the big problems I faced is that I have to find these outlines。 I can't
+    cut out a square。 I want the actual outline of the park and the shape of that。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你必须从一块铝块中减去材料。你有这个巨大的死亡旋转机器。它在那里研磨大约四个小时。至关重要的是，我面临的一个大问题是，我必须找到这些轮廓。我不能切出一个正方形。我想要的是公园的实际轮廓和形状。
+- en: I find that quite memorable。 This requires a bit of GIS work。 This is like the
+    only non-Python。 QGIS runs on the Python itself。 But you can take the US national
+    DEM which has its name suggests is a height map of the entire United States。 Thank
+    you USGS for that。 You can take a different set of outlines of national parks。
+    And then you can use QGIS to cut out the park from the national map。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我觉得这非常难忘。这需要一点地理信息系统（GIS）的工作。这是唯一一个非Python的。QGIS本身是基于Python的。但你可以获取美国国家DEM，顾名思义，它是整个美国的高度图。谢谢美国地质调查局（USGS）提供这个数据。你可以获取不同的国家公园轮廓集。然后你可以使用QGIS从国家地图中切出公园。
+- en: And so you get that just outline of the national park。 The problem is the format
+    you are using for DEM is still a 2D array。 It is still just a grid of values。
+    But the shape you want is a regular。 The way you represent that in a DEM is I
+    think called no data。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样你就能得到国家公园的轮廓。问题是你用于数字高程模型（DEM）的格式仍然是一个二维数组。它仍然只是一个值的网格。但你想要的形状是规则的。在DEM中表示这个的方式我认为叫做无数据。
+- en: Which in an amazing programming fashion is just the value -99。99。 Because someone
+    figured there is nothing on earth that is low。 And so you have to sit there and
+    filter that out。 But crucially also my software I wrote that I showed you now
+    for the city tiles assumed a square。 Because I was lazy。 I said previously。 And
+    so to go back and modify that software to make it understand well there might
+    be edges in here。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这以一种惊人的编程方式，值就是-99.99。因为有人发现，地球上没有什么是低的。所以你必须坐在那里把它过滤掉。但至关重要的是，我为城市图块编写的软件假设了一个正方形。因为我很懒。我之前说过。因此，回去修改那段软件，使其理解这里可能有边缘。
+- en: And rather than going around the edge of the square you have to work out where
+    the edges are。 Bring that in and then it now basically works out the outer perimeter
+    of that part of the model。 And that is where it builds its wall and builds its
+    solidity。 The nice thing is the driving programs for the milling machines do also
+    take STL。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而不是围着正方形的边缘走，你必须计算出边缘在哪里。将其引入，然后它基本上会计算出模型那部分的外部边界。这就是它建立墙壁和坚固性的地方。好的一点是，铣削机的驱动程序也可以接受STL文件。
+- en: So I can still use that part of my code again。 As a brief idea of what this
+    looks like you take a DEM on the left there。 You can then make it into 3D model
+    as you see in the middle。 And then you can take that 3D model and spend a good
+    hour in a tooling program for milling machines。 And then you can use this kind
+    of milling bit and run over it this way。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我可以再次使用我代码的那一部分。作为一个简单的概念，左边你获取一个DEM。然后你可以将其转化为中间所见的三维模型。接着你可以在铣削机的工具程序中花一个小时的时间。然后你可以使用这种铣削刀头，从这个方向进行铣削。
+- en: For reference each of these is 8 hours of milling。 It is not speedy and it is
+    not at home。 It is a nice warm workshop for 8 hours。 But it is worth a result。
+    And the goal is to try and make one of these for each park I have been to。 But
+    let's stop for a bit and talk about one thing I skimmed over here。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为参考，这些每个需要8小时的铣削。这不是快速的，并且不在家里。它是在一个温暖的车间里度过的8小时。但结果是值得的。目标是为我去过的每个公园制作一个这样的模型。但我们先停一下，谈谈我在这里略过的一件事。
+- en: I talked about you take the national elevation data set and you take the outlines
+    of the parks。 And you just pop them over each other。 No， no， no， no map projections。
+    So if you are familiar with map projections， I am sure you laughed if you were。
+    There is no actual way to represent the spherical earth on a 2D plane。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我提到你需要获取国家高程数据集，并提取公园的轮廓。然后你可以把它们叠加在一起。不，不，不，不要地图投影。所以如果你熟悉地图投影，我相信你会觉得好笑。如果你熟悉的话，实际上没有办法在二维平面上表示球形的地球。
+- en: And so for this reason we have different projections of the earth onto the 2D
+    plane。 The one on Google maps you are most familiar with。 That is called spherical
+    mercato。 It works really well at the equator and it sucks anywhere near the poles。
+    You see how big Greenland is on that map？ It is ridiculous。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，出于这个原因，我们有不同的地球投影到2D平面。你最熟悉的谷歌地图就是其中之一。它被称为球面墨卡托。它在赤道上表现良好，而在靠近极地的地方效果很差。你在那张地图上看到格林兰的大小了吗？真是荒谬。
+- en: And so different countries and different parts of the country pick different
+    projections。 For example， a projection you would use in Alaska is not going to
+    look good if you use it down here in the lower 48。 And so on this way。 On this
+    screen you see two different projections of the raw data of Crater Lake。 They
+    are both valid。 Both of these are projections you might use。 On the left is spherical
+    mercato。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，不同国家和不同地区选择不同的投影。例如，在阿拉斯加使用的投影，如果在这里的48个州使用就不会好看。如此类推。在这个屏幕上，你可以看到火山湖原始数据的两种不同投影。它们都是有效的。这两种投影都是你可能会使用的。左侧是球面墨卡托。
+- en: On the right is the US national production。 Which one of these is right？ Nobody
+    knows。 But thankfully we are doing art so we can get past the "I don't care about
+    how accurate it is" phase and go。 which one looks good？ Obviously the one on the
+    left。 So we go with that one。 But this does make map projections add to my extensive
+    list of things I refuse to work with。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 右侧是美国的国家生产。这其中哪个是正确的？没人知道。但感谢我们做的是艺术，所以我们可以超越“我不在乎它有多准确”的阶段，而去看哪个好看？显然是左边的那个。所以我们选择了那个。但这确实使得地图投影加到我拒绝处理的事物的广泛列表中。
+- en: So congratulations to map projections for making that。 The list will continue
+    forth with。 I look forward to doing a whole track next year on just these。 But
+    the nice thing about this is this is like a different kind of project again。 These
+    are the six ones I've made so far。 I've been to more national parks。 Again。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以祝贺地图投影做到了这一点。这个列表会继续下去。我期待明年专门进行一个关于这些的完整讲座。但这项工作的美妙之处在于，这又是一种不同类型的项目。这是我迄今为止做的六个项目。我去过更多的国家公园。
+- en: it's eight hours sitting in a hot room。 I'm kind of lazy again。 I haven't done
+    it a lot。 But the idea is I want to have this big magnetic board on the wall with
+    all the national parks in it and I can go into them。 So let's look a little bit
+    about some challenges here in the future of this kind of project。 For the future
+    obviously I want to do more of them。 As I said there are 59 of them。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在一个炎热的房间里坐八个小时。我有点懒惰，没做很多。但我的想法是我想在墙上有一个大磁性板，上面标出所有国家公园，我可以去到它们。所以我们来看看这个项目未来的一些挑战。显然，我想做更多的项目。正如我所说的，有59个国家公园。
+- en: The exciting ones like American Samoa National Park is very far away。 As previously
+    mentioned a good half of it。 The official recommendation is find a local fisherman
+    and ask to borrow their boat and they might let you get to the other half of it。
+    Which is very exciting。 Several Alaskan ones fly in only。 So thanks for your pilot's
+    license。 And there's a couple of them that are boat owned like one off the coast
+    of California。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像美属萨摩亚国家公园这样的激动人心的地方非常遥远。正如之前提到的，其中一半。官方建议是找一个当地渔民，借用他们的船，他们可能会让你到达另一半。这是非常激动人心的。几个阿拉斯加的地方只通过飞机抵达。所以感谢你的飞行执照。有几个地方是船主拥有的，比如加利福尼亚海岸附近的一个。
+- en: Another thing here is like these small pieces are incredibly fragile。 And the
+    size of the milling bits you have to use to make them is incredibly small。 I have
+    broken a good 9 or 10 of them by doing it wrong。 And making the milling bit try
+    to drill into the side。 It's just snaps off straight away。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里还有一个问题，这些小零件极其脆弱。而且你需要用来制造它们的铣刀大小非常小。我已经因为操作错误坏掉了大约9或10个。试图让铣刀钻入侧面，它会立刻断掉。
+- en: Finding an easy way to make this tool path stuff work would be great。 Milling
+    machines actually understand a thing called Gcode which is same as three printers。
+    You can just pass them instead of tooling instructions directly from your software。
+    So it's actually a scope here to have Python make the tooling instructions directly
+    to the milling machine。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 找到一种简单的方法来使这个工具路径工作会很棒。铣床实际上理解一种叫做Gcode的东西，这与三维打印机是相同的。你可以直接从软件传递它们，而不是工具指令。因此，在这里实际上有一个范围可以让Python直接向铣床生成工具指令。
+- en: Rather than spending an hour in a CAD/CAM program importing that model and manually
+    trying a tool path。 So that could be really interesting too。 I hear some of the
+    very enthusiastic there about Gcode。 Thank you。 Another thing here too is better
+    optimization。 So I showed you the grid of how those polygons look。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而不是花一个小时在CAD/CAM程序中导入该模型并手动尝试工具路径。这也可能非常有趣。我听说那里有一些人对G代码非常热衷。谢谢。这里还有另一件事是更好的优化。因此，我给你展示了那些多边形的网格。
+- en: Well it makes two polygons for every single grid point。 Even if it's a totally
+    flat lake surface it just makes like 400 polygons on that surface。 And so the
+    result is a file with between 5 million and 20 million polygons。 Now try and load
+    that into like a 3D modeling program。 It will complain but do it eventually。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它为每一个网格点生成两个多边形。即使是完全平坦的湖面，它也会在那表面生成大约400个多边形。因此，结果是一个包含500万到2000万个多边形的文件。现在尝试将其加载到3D建模程序中。它会抱怨，但最终会加载。
+- en: Try loading that into a CAD/CAM program that's used to like nice rectangles。
+    It just quits。 Like fusion 360 just went nope and just quit every time I try to
+    open it。 Right now I have to take that model take it into Blender which is a 3D
+    modeling program。 Run the mesh optimizer which takes like 5 minutes。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尝试将其加载到一个习惯于处理漂亮矩形的CAD/CAM程序中。它会直接退出。比如Fusion 360，每次我尝试打开它时都会说不，直接退出。现在我必须把模型带到Blender，这是一个3D建模程序。运行网格优化器，这大约需要5分钟。
+- en: And the whole computer is unresponsive at that point because Blender is very
+    demanding。 Then re-export it and then use it again。 I'd love to do that particular
+    optimization in the code again。 So it's much more of a single pass operation。
+    But writing optimization code in Python is a little bit tricky。 There actually
+    is some in there already。 It tries to snap the heights together and tries to merge
+    them together。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时整个计算机都无响应，因为Blender的要求非常高。然后重新导出，再次使用。我很想在代码中再次进行特定的优化。因此，这更像是一次性操作。但是在Python中编写优化代码有点棘手。实际上，里面已经有一些代码。它试图将高度对齐并合并它们。
+- en: But again I think using NumPy would help a lot with making those things faster。
+    Finally I'd like more lasers。 In particular I'd like some personal LiDAR which
+    is basically person scale ability to go in scan interiors of things。 One of my
+    biggest passions is subterranean architecture and landscapes。 Caves and underground
+    buildings and things like this conference center fascinate me。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我认为使用NumPy会大大提高这些东西的速度。最后，我想要更多的激光器。特别是我想要一些个人LiDAR，这基本上是可以进入并扫描内部的个人规模能力。我的一个最大热情是地下建筑和景观。洞穴和地下建筑，这种会议中心让我着迷。
+- en: And those just aren't done by any existing programs。 You don't get open street
+    map working underground。 That's not just what they do。 LiDAR is actually coming
+    down thanks to self driving cars。 Thanks self driving cars。 And hopefully soon
+    we'll have a person size LiDAR system that you can actually buy for let's say
+    a few thousand dollars rather than tens of thousands。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而这些任务并不是任何现有程序能完成的。你无法在地下使用开放街图。这并不是他们所做的全部。由于自动驾驶汽车，LiDAR实际上正在逐渐普及。感谢自动驾驶汽车。希望不久后我们能有一个人形LiDAR系统，价格可能只需几千美元，而不是几万美元。
+- en: And at that point I think it opens this whole thing up to a much more wide landscape
+    of what can I map？
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这一点上，我认为这为我可以映射的内容打开了一个更广泛的视野。
+- en: Where can I map it and that kind of thing。 If you're interested in what I've
+    talked about here。 as I mentioned， all the one tile output thing for cities is
+    the top URL there。 And some of the other things like the regular shape one and
+    a few other processing tools for the laser cut stuff is in the bottom of the room。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我在哪里可以映射这些内容。如果你对我在这里谈论的内容感兴趣。正如我提到的，城市的一块瓦片输出的链接是顶部的URL。还有一些其他的，比如规则形状和其他激光切割工具在房间的底部。
+- en: '![](img/ab03978769ea60d7b625f6c7cb817961_15.png)'
+  id: totrans-90
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ab03978769ea60d7b625f6c7cb817961_15.png)'
+- en: And if you want to look at any of the models I bought come and find me today
+    or sometimes at the conference and I'll let you play around with them and handle
+    them。 And thank you very much。 [Applause]。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想查看我购买的任何模型，今天或者在会议期间来找我，我会让你玩这些模型。非常感谢。[掌声]

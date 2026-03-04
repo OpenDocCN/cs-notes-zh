@@ -1,0 +1,771 @@
+- en: P69：Talk - Paul Kehrer_Alex Gaynor_ Shipping Python Extensions in Rust Two Million
+    T - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P69：演讲 - 保罗·凯赫尔_亚历克斯·盖纳_ 用Rust构建Python扩展，每天两百万次 - VikingDen7 - BV1f8411Y7cP
+- en: \>\> Good afternoon everybody。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 大家下午好。'
+- en: '![](img/fabc68ceb83500e75a0be261b8a2e468_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/fabc68ceb83500e75a0be261b8a2e468_1.png)'
+- en: '![](img/fabc68ceb83500e75a0be261b8a2e468_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/fabc68ceb83500e75a0be261b8a2e468_2.png)'
+- en: Welcome to this next session and it should be an exciting one here。 We have
+    Paul Carrer and Alex Gainer here are going to tell us about shipping a Rust Python。
+    extension many， million times a day。 So take it away。 \>\> All right。 Thank you
+    very much everybody。 So welcome everyone。 It's nice and intimidating to see you
+    all in one room again。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欢迎来到下一个环节，这将是一个令人兴奋的会议。我们有**保罗·凯赫尔**和**亚历克斯·盖纳**在这里，他们将告诉我们如何每天运输数百万次Rust Python扩展。那么请开始吧。
+    >> 好的，非常感谢大家。欢迎大家。再次看到你们聚集在一个房间里令人既兴奋又紧张。
+- en: We're doing this talk as a cooperative presentation so I get the honor of introducing
+    my co-presenter。 Alex Gainer。 Alex enjoys describing himself as a software resilience
+    engineer which is an accurate if。 understated way to describe his passions。 He
+    currently works for the US government at the FTC。 However， he is here in a personal
+    capacity and is not representing his employer in any， way。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们这次演讲是一次合作展示，因此我有幸介绍我的共同演讲者，**亚历克斯·盖纳**。亚历克斯喜欢把自己称作软件韧性工程师，这虽然准确但有些谦虚。他目前在美国政府的FTC工作。然而，他在这里是以个人身份出现，并不代表他的雇主。
+- en: As for me， these days I am a zoom based bobblehead and I moonlight as a security
+    architect for。 Oracle Cloud infrastructure。 I'm here in a personal capacity。 Although
+    if you're a cryptographic security engineer I'd love to talk to you。 Alex and
+    I are the co-mentainers of the entire Python cryptographic authority suite of
+    libraries。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 至于我，这些天我像个基于Zoom的摇头娃娃，同时担任**甲骨文云基础设施**的安全架构师。我也是以个人身份在这里。虽然如果你是一名加密安全工程师，我很乐意和你交流。亚历克斯和我是整个Python加密机构库的共同维护者。
+- en: But we spend most of our time and effort on PICA cryptography。 The goal of this
+    talk is to tell you about how we incorporated Rust into PICA cryptography。 First
+    we need to explain why we did it。 And to set the table we think security is important。
+    As a cryptography package we think our users expect that we go above and beyond
+    to keep。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们大部分时间和精力都投入在PICA加密技术上。这次演讲的目的是告诉你我们是如何将Rust融入PICA加密技术的。首先，我们需要解释为什么要这么做。为了铺垫，我们认为安全性非常重要。作为一个加密软件包，我们认为用户期望我们超越常规来保护他们的安全。
+- en: them secure。 After all， if you're encrypting something you probably care that
+    you're encrypting it。 securely。 PICA cryptography depends on open SSL。 We use
+    open SSL for all the cryptographic algorithms like AES and RSA。 And before we
+    did all of the work we're going to describe here today we used it for parsing。
+    structures like X509 certificates。 Open SSL is written in C。 And C is a pretty
+    low level language。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们是安全的。毕竟，如果你在加密某个东西，你可能在意的是它的加密是否安全。PICA加密依赖于OpenSSL。我们使用OpenSSL来处理所有加密算法，如AES和RSA。在今天我们要描述的所有工作之前，我们使用它来解析结构，比如X509证书。OpenSSL是用C语言编写的，而C是一种相对底层的语言。
+- en: This can be useful if you're trying to make an AES function that runs as fast
+    as is humanly。 possible。 But C is also memory unsafe。 This means that it's very
+    easy to introduce vulnerabilities like buffer overflows and use。 after freeze。
+    And indeed open SSL suffers from these from time to time。 Perhaps most famously
+    heart bleed which you may have heard of。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你试图制作一个尽可能快的AES函数，这将非常有用。但C语言的内存安全性也存在问题。这意味着很容易引入像缓冲区溢出和使用后释放等漏洞。实际上，OpenSSL时不时也会遭遇这些问题。也许最著名的是心脏出血漏洞，你可能听说过。
+- en: A full analysis of open SSL security is beyond the scope of this talk。 But in
+    short we think it's both reasonable to rely on open SSL and we want to minimize。
+    our exposure to vulnerabilities in open SSL。 Paul has done a bunch of analysis
+    and in general for large code bases written in C or C++。 about two thirds of their
+    vulnerabilities are going to be because of memory and safety。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对OpenSSL安全性的全面分析超出了这次演讲的范围。但简而言之，我们认为依赖OpenSSL是合理的，同时我们希望最小化我们对OpenSSL漏洞的暴露。保罗进行了大量分析，一般来说，对于用C或C++编写的大型代码库，大约三分之二的漏洞都与内存和安全性有关。
+- en: Or put it another way two thirds of these vulnerabilities are avoidable with
+    a different。 programming language。 That's the case for why not C but why Rust
+    in particular。 Well first and foremost it's memory safe。 Meaning that as long
+    as you don't use Rust's unsafe keywords these vulnerability classes。 like buffer
+    overflows and use after freeze are impossible。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 换句话说，这些漏洞中有三分之二是可以通过不同的编程语言来避免的。这就是为什么不选C而特别选择Rust的原因。首先，Rust是内存安全的。这意味着只要不使用Rust的不安全关键字，这些漏洞类别，比如缓冲区溢出和使用已释放内存，是不可能发生的。
+- en: It's high performance in the same way C is。 You can control the exact layouts
+    of objects and memory allocations。 And it's got a very modern set of tooling such
+    as a package manager， build system， code。 formatter and even integration with
+    Python bindings。 And it's widely used at this point many many of the sponsors
+    of this conference and many。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它的性能与C一样高。你可以精确控制对象和内存分配的布局。它还具备一整套现代工具，比如包管理器、构建系统、代码格式化器，甚至与Python绑定的集成。目前已经广泛使用，这次会议的许多赞助商也在使用它。
+- en: other major tech companies are using Rust。 Having identified that we thought
+    Rust was a good choice for pie C8 cryptography that。 was really enough for us
+    to commit to figure out how we were going to use it。 But we have another motivation
+    as well。 When Paul and I look at the problem of memory safety we see a problem
+    that goes way beyond。 pie C8 cryptography in open SSL。 We see a problem that impacts
+    operating systems and web browsers。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其他主要科技公司也在使用Rust。经过识别，我们认为Rust是用于PIE C8加密的一个不错选择。这足以让我们决定如何使用它。但我们还有另一个动机。当保罗和我审视内存安全问题时，我们看到的问题远不止PIE
+    C8加密在OpenSSL中的应用。我们看到的问题影响到操作系统和网页浏览器。
+- en: chat applications and video， and image libraries。 And we see memory and safety
+    vulnerabilities used against women's rights activists。 human， rights activists，
+    nutritionists working on a sugar tax in Mexico and ethnic minorities。 And we believe
+    something must and can be done to improve the state of security that makes。 exploiting
+    these vulnerabilities so practical。 Part of improving the situation is making
+    it easier for more people to adopt memory safe。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 聊天应用程序、视频和图像库。我们看到内存和安全漏洞被用来对抗女性权利活动家、人权活动家、在墨西哥推进糖税的营养学家以及少数民族。我们相信必须也可以采取措施来改善安全状态，使得利用这些漏洞变得如此实际。改善这种状况的一部分是让更多的人更容易采用内存安全的方案。
+- en: languages。 We have a pretty significant place in the Python ecosystem。 A lot
+    of people rely on us。 As you may have gotten from the title of this talk we have
+    millions of downloads a day。 We regularly are in the top 20 Python packages on
+    PIPI by downloads。 We want to use that position to make it easier for the next
+    library that wants to adopt Rust。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在Python生态系统中占有相当重要的位置。很多人依赖我们。正如你可能从这次演讲的标题中了解到的，我们每天有数百万次下载。我们经常在PIPI下载量前20名的Python包中。我们希望利用这个位置，让下一个想要采用Rust的库变得更容易。
+- en: to improve their security。 As you're going to hear we have to do a bunch of
+    work to make this practical and realistic。 We want the next person to choose Rust
+    not to have to deal with the challenges we had， to。 So how did we actually go
+    about adopting Rust？ Well first we had to figure out which tools we were going
+    to use beyond the Rust programming。 language itself。 And the first choice we made
+    was which library we were going to use for binding between Python。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了提高它们的安全性。正如你将听到的，我们需要做大量工作，使其实际可行。我们希望下一个选择Rust的人不必面对我们曾经遇到的挑战。那么，我们实际上是如何开始采用Rust的呢？首先，我们必须弄清楚除了Rust编程语言本身外，我们要使用哪些工具。我们做出的第一个选择是用哪个库来进行Python之间的绑定。
+- en: and Rust code。 We chose a library called PIO3 which wraps the CPython C API。
+    It's got a very ergonomic API。 It's well maintained。 It has support for basically
+    the entire Python API surface。 And here's some example code creating a module
+    with a single function in it called。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们选择了一个名为PIO3的库，它封装了CPython C API。这个库的API非常人性化，维护良好，基本上支持整个Python API的所有功能。以下是一些示例代码，创建一个模块，其中包含一个名为的单一函数。
+- en: double that takes an integer and multiplies it by two。 We're not going to fully
+    explain the Rust programming language but hopefully this is。 pretty reasonable
+    readable to you。 And PIO3 handles a lot of the details behind the scenes automatically
+    for you such as converting。 between Rust integers and Python integers。 Noting
+    when a Python integer is too large to fit into a Rust integer。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: double是一个接受整数并将其乘以二的函数。我们不会完全解释Rust编程语言，但希望这对你来说是相当合理可读的。PIO3在后台自动处理很多细节，例如在Rust整数和Python整数之间进行转换，并且在Python整数过大无法适应Rust整数时会进行标记。
+- en: all the details， like that。 So we find this to be pretty ergonomic。 I just want
+    to take this opportunity to say that PIO3 maintainers have done an amazing， job。
+    The work we're going to strive here is really a testament to the quality of the
+    library they。 have built。 Now that we have some Rust code we need to know how
+    to build it。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有细节就是这样。因此我们发现这相当符合人体工程学。我想借此机会说，PIO3的维护者们做得非常出色。我们所做的工作真的证明了他们所构建库的质量。现在我们有了一些Rust代码，我们需要知道如何构建它。
+- en: How do we make this a part of the pip install process that everybody uses to
+    actually get。 our library？ We wanted something to be drop in as possible that
+    would integrate with our existing setup。 tools build process。 Ideally users would
+    just have to have Rust installed and then everything would work。 For that we chose
+    setup tools Rust which is also from the maintainers of PIO3。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们如何将其纳入所有人使用的pip安装流程，以实际获取我们的库？我们希望它能够尽可能方便地集成到现有的构建工具中。理想情况下，用户只需安装Rust，然后一切就会正常工作。为此，我们选择了setup
+    tools Rust，这也是PIO3的维护者提供的。
+- en: It adds the Rust extensions option to the set up function， set up the PIO and
+    it kind。 of does what you'd expect。 You pointed the directory with your Rust code
+    and it will compile it。 put the 。so in the， right place and you're off to the
+    races。 So we picked our tools and so we put together a small little PR just a
+    basic integration。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它将Rust扩展选项添加到设置函数中，设置PIO，基本上做了你所期望的事情。你只需指向包含Rust代码的目录，它将编译该代码，将`.so`文件放在正确的位置，然后你就可以开始使用了。因此，我们选择了我们的工具，并一起提交了一个小的PR，进行基本的集成。
+- en: Create a module， one function， no problem。 Everything breaks。 So here's what
+    we have to do in order to get even the most basic pull request to green。 Well
+    first things first， we need Rust to be installed in our continuous integration
+    environment。 Obviously the base image for GitHub actions actually comes with Rust
+    installed。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建一个模块，一个函数，没问题。但所有的事情都崩溃了。所以，为了让最基本的拉取请求通过，我们必须做的第一件事是确保在我们的持续集成环境中安装Rust。显然，GitHub
+    Actions的基础镜像实际上是自带Rust的。
+- en: So we're good there but we also run some tests and some Docker containers so
+    we need to install。 Rust into those environments and on top of that we also used
+    a service called OpenDev for。 continuous integration where we also need to install
+    Rust。 Fortunately installing Rust is pretty simple， just a matter of a single
+    line of shell script。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们在这方面没问题，但我们还要运行一些测试和Docker容器，因此需要在这些环境中安装Rust。此外，我们还使用了一个叫做OpenDev的服务进行持续集成，在这里我们也需要安装Rust。幸运的是，安装Rust相当简单，只需一行shell脚本即可。
+- en: Speaking of CI， we also used the ReadTheDoc service to build our documentation
+    and it didn't。 have Rust installed in its environment。 This was also pretty straightforward
+    but we were able to contribute upstream here sending。 a pull request to the ReadTheDoc's
+    official Docker image to add Rust to that environment。 Now anybody using ReadTheDocs
+    can easily build a Rust documentation for a project incorporating。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 说到CI，我们还使用了ReadTheDoc服务来构建我们的文档，但它的环境中没有安装Rust。这也相当简单，但我们能够在这里做出贡献，向ReadTheDoc的官方Docker镜像发送了一个拉取请求，以将Rust添加到该环境中。现在，任何使用ReadTheDocs的人都可以轻松构建包含Rust文档的项目。
+- en: Rust。 Now we get to the more challenging pieces。 For many years C Python has
+    supported something called ABI3 or the limited API。 The basic idea is in exchange
+    for using only a subset of the C API you get wheel targets。 that are forwards
+    compatible。 This means you build one wheel for all your Python 3 versions instead
+    of needing to build。 one wheel for Python 3。5， one wheel for Python 3。6， one wheel
+    for Python 3。7， one wheel。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Rust。现在我们进入更具挑战性的部分。多年来，C Python支持一种称为ABI3或有限API的东西。基本思想是，使用C API的子集可以获得向前兼容的wheel目标。这意味着你只需为所有Python
+    3版本构建一个wheel，而不需要为Python 3.5、Python 3.6、Python 3.7等构建多个wheel。
+- en: for Python 3。8 and so on。 We currently support five different versions of Python
+    3 so ABI3 is more or less a hard。 requirement for us to keep this maintainable。
+    It's also a really important user experience thing for when a new version of Python
+    3 is。 released。 We don't have to scramble to get a wheel out as soon as Python
+    3。11 ships。 Unfortunately。 PyO3 didn't support ABI3 and always built libraries
+    that targeted this， full C Python C API。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于Python 3.8等版本，我们目前支持五个不同的Python 3版本，因此ABI3几乎是我们保持可维护性的硬性要求。这也是当新版本的Python
+    3发布时非常重要的用户体验问题。我们不必在Python 3.11发布后慌忙发布一个wheel。不幸的是，PyO3不支持ABI3，总是构建针对完整C Python
+    C API的库。
+- en: So this was a pretty involved fix。 We had to send about seven pull requests。
+    a few thousand lines of code and refactoring， to the PyO3 team。 Again。 they were
+    fantastic contributing code reviews and even working on this feature themselves。
+    once we got the ball rolling。 But the good news is this is all upstream now。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这次修复工作相当复杂。我们需要向PyO3团队发送大约七个拉取请求，几千行代码和重构。再次强调，他们在代码审查方面表现出色，甚至在我们开始推动这个功能时，他们自己也参与了开发。但好消息是，这些都已经在上游了。
+- en: Anyone using PyO3 can simply turn on the ABI3 option and they'll be able to
+    build ABI3。 wheels with Rust。 It's even nicely documented。 We also ran into some
+    build challenges with setup tools Rust and Alpine Linux and Windows。 32-bit。 On
+    Alpine Linux， the challenge is that Rust treats muscle libc which is what Alpine
+    uses。 a little specially which the Rust maintainers agree is a bug but fixing
+    it's hard to back。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用PyO3的任何人都可以简单地启用ABI3选项，他们就能够用Rust构建ABI3的wheel。这个功能也有很好的文档支持。我们在setup tools
+    Rust与Alpine Linux和Windows 32位之间也遇到了一些构建挑战。在Alpine Linux上，挑战在于Rust对Alpine使用的muscle
+    libc的处理有点特殊，Rust维护者同意这是一个bug，但修复起来比较困难。
+- en: with compatibility。 As a result， we had to send a pull request to setup tools
+    Rust that has it detect when。 the system libc is muscle and pass the right flags
+    to Rust to not treat it specially。 On 32-bit windows， the challenge is that very
+    often people use a 32-bit Python on a 64-bit。 windows operating system。 A lot
+    of tools would get confused and think it needs to build a 64-bit Rust library
+    because。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 兼容性。因此，我们不得不向setup tools Rust提交一个拉取请求，使其在系统libc是muscle时检测并传递正确的标志给Rust，以便不对其特殊处理。在32位Windows上，挑战在于，人们经常在64位Windows操作系统上使用32位Python。很多工具会感到困惑，认为需要构建一个64位的Rust库，因为。
+- en: it's a 64-bit operating system。 Again， fix was thankfully pretty straightforward。
+    A small pull request to setup tools Rust to have it detect that actually it's
+    a 32-bit。 Python on a 64-bit windows and pass the right flags。 Going through all
+    this was pretty involved。 It took us a couple weeks， maybe a couple months to
+    get to the point where all of the。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个64位操作系统。再次感谢，这次修复相当简单。向setup tools Rust提交一个小拉取请求，使其检测到实际上是在64位Windows上的32位Python并传递正确的标志。经历这一切相当复杂。我们花了几周，可能几个月的时间，才达到所有的。
+- en: different tools we rely on supported the full range of functionality and targets
+    that。 we and in turn our users need。 The good news is that this whole cost basically
+    only needs to be paid once。 Having done all this work ourselves， it's even smooth
+    sailing for us ever since and all。 of this is available to the next user who wants
+    to pick up PI03 or setup tools Rust。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们依赖的不同工具支持我们和我们的用户所需的全部功能和目标。好消息是，这笔费用基本上只需要支付一次。我们自己完成了所有这些工作，从那以后对我们来说一切都变得顺利，而且所有这些也可以供下一个想要使用PyO3或setup
+    tools Rust的用户使用。
+- en: So we think we hit one of that objective of making it easier for the next person。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们认为我们达成了一个目标，即为下一个人提供更方便的使用体验。
+- en: '![](img/fabc68ceb83500e75a0be261b8a2e468_4.png)'
+  id: totrans-33
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/fabc68ceb83500e75a0be261b8a2e468_4.png)'
+- en: So as we did the engineering work， we concurrently developed a roadmap for how
+    to actually ship。 this。 We are a foundational component of the Python ecosystem
+    and that has made us acutely aware。 that difficulties installing our package have
+    profound ripple effects。 However。 refusing to drop support for anything or move
+    to more modern solutions is also untenable。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在进行工程工作时，我们同时制定了一条实际的发布路线图。我们是Python生态系统的基础组件，这让我们深刻意识到，安装我们包的困难会产生深远的影响。然而，拒绝放弃对任何版本的支持或转向更现代的解决方案也是不可行的。
+- en: for security and maintainability reasons。 So we attempt to balance the two inherently
+    conflicting requirements as best we can。 We're going to talk a little bit now
+    about how we generally make choices， why we think。 about these things and how
+    Rust altered our math。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 出于安全性和可维护性的原因，我们尽力在这两个本质上相互冲突的要求之间找到平衡。我们现在要讨论一下我们通常如何做出选择，以及我们为什么会考虑这些问题，以及Rust如何改变了我们的思路。
+- en: '![](img/fabc68ceb83500e75a0be261b8a2e468_6.png)'
+  id: totrans-36
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/fabc68ceb83500e75a0be261b8a2e468_6.png)'
+- en: This actually has broadly speaking four unofficial levels of support。 First
+    is what we test in CI and ship via our binary wheels。 These are to use Rust's
+    parlance tier one targets， which we have high confidence in。 and have thoroughly
+    tested。 Cryptography will never ship a wheel for anything we do not test in our
+    CI。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从广义上讲，这实际上有四个非官方支持级别。第一个是我们在CI中测试并通过二进制轮子发布的。这些被称为Rust的术语一级目标，我们对此有高度信心，并进行了全面测试。加密库将永远不会为我们未在CI中测试的任何东西发布轮子。
+- en: Second， we provide best effort support for environments we can't test but we
+    are aware。 have significant use in the real world。 For these。 we will accept patches
+    and we'll potentially even perform significant effort。 ourselves to provide a
+    reasonable experience。 Examples of this right now include things like RMHF and
+    MIPS platforms。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其次，我们为我们无法测试但在实际使用中显著存在的环境提供尽最大努力的支持。对于这些，我们会接受补丁，甚至可能自己进行重大努力，以提供合理的体验。目前的例子包括RMHF和MIPS平台。
+- en: Third， we have， yeah， sure why not。 Where we will accept patches for less important
+    architectures and OS's as long as they're reasonably。 wet written and pass our
+    CI gates。 And then finally。 there is the set of things we consider entirely unsupported。
+    For example。 versions of open SSL that are too old， Python versions we have chosen
+    to。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第三，我们有，当然，为什么不呢？我们会接受对较不重要的架构和操作系统的补丁，只要它们编写得相当不错并且通过我们的CI测试。最后，有一组我们认为完全不受支持的东西。例如，版本过旧的OpenSSL和我们选择不支持的Python版本。
+- en: drop and arcane architectures where support would require significant modification
+    of。 the code base。 A good example of this is something like S390， not S390X。 If
+    you want these things to work， you're going to have to fork us， sorry。 So we have
+    the data that we want to use but we get it from this big fire hose called the。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 降级和神秘的架构，其中的支持需要对代码库进行重大修改。一个好的例子是S390，而不是S390X。如果你想让这些东西工作，你将不得不分叉我们，抱歉。所以我们拥有想要使用的数据，但我们从称为PIPI统计的大火水管中获取它。
+- en: PIPI statistics。 So how do we use that？ First usage of Python versions。 We actually
+    choose to drop support。 We would love to drop support when the upstream drops
+    support。 This is unfortunately not practical。 We drop support as usage drops under
+    a threshold。 like for example 5% or less。 Dropping a version for us is a concrete
+    barrier because when we drop support for Python version。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们如何使用这些数据呢？首先是Python版本的使用情况。我们实际上选择停止支持。当上游停止支持时，我们希望停止支持。不幸的是，这在实践中并不可行。我们在使用率降到某个阈值以下时停止支持，比如5%或更低。对我们来说，停止支持一个版本是一个具体的障碍，因为当我们停止支持Python版本时。
+- en: we tend to immediately start using features from our new minimum。 This means
+    that there's typically no way to run our code on an older Python。 When we began
+    this work， cryptography actually still supported Python too。 But PyO3 did not。
+    We had already chosen to support Py2 well past when CPython did。 In fact。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们倾向于立即开始使用新最低版本中的特性。这意味着通常没有办法在较旧的Python上运行我们的代码。当我们开始这项工作时，加密库实际上仍然支持Python。然而，PyO3并不支持。我们已经选择支持Py2，远远超过CPython的支持期限。事实上。
+- en: we had made a decision early on that we would support it at least one year past。
+    the final sunset date。 And PIP had dropped support as well。 But this gave us an
+    even stronger reason to finish our deprecation。 Fortunately。 the statistics that
+    we had showed usage dropping very rapidly and this was not。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们早期做出决定，支持至少一年，直到最终的结束日期。而PIP也已停止支持。但这给了我们更强的理由去完成我们的弃用过程。幸运的是，我们所掌握的统计数据显示使用率迅速下降，这并不。
+- en: actually an issue for us。 Within the set of Python 3s that we were interested
+    in supporting。 which was 3。6 and， above， our Rust dependency that we were adding
+    through PyO3 was not affected after the work。 that Alex and the PyO3 maintainers
+    had did in the previously mentioned contributions。 Next of course， operating system。
+    We support Linux， Mac OS and Windows directly in our CI。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上对我们来说是一个问题。在我们希望支持的 Python 3 版本集（即 3.6 及以上）中，我们通过 PyO3 添加的 Rust 依赖在之前提到的贡献工作后并没有受到影响。接下来，当然，操作系统。我们在我们的
+    CI 中直接支持 Linux、Mac OS 和 Windows。
+- en: But we of course provide best effort support for other operating systems like
+    FreeBSD， Open。 BSD and even some more esoteric things。 But of course Linux is
+    itself not a monolith。 And at the time we were looking to ship Rust， PIP only
+    supported many Linux wheels， which。 excluded Alpine and other muscle-based distributions。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们当然会尽力支持其他操作系统，如 FreeBSD、Open BSD，甚至一些更冷门的系统。但当然，Linux 本身并不是一个单一的整体。在我们希望发布
+    Rust 的时候，PIP 仅支持许多 Linux wheels，这排除了 Alpine 和其他基于 muscle 的发行版。
+- en: This meant that adding Rust would at minimum require Alpine users to install
+    Rust C as part。 of their build process in addition to the existing GCC and Clang
+    requirement。 GCC or Clang。 I mean。 you're welcome to install them both。 Obscure
+    operating systems might also lack Rust targets。 but ultimately we decided that
+    holding， back the entire ecosystem for niche areas wasn't unreasonable。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着添加 Rust 至少需要 Alpine 用户在其构建过程中安装 Rust C，除了现有的 GCC 和 Clang 要求之外。GCC 或 Clang，我的意思是，你可以同时安装它们。冷门操作系统也可能缺乏
+    Rust 目标，但最终我们决定为了小众领域而拖慢整个生态系统并不是不合理的。
+- en: Wasn't reasonable， rather。 Those unusual edge cases can and should get LLVM
+    and Rust bootstrapped in their world。 much， like they did with their C compiler。
+    So cryptography tests and ship wheels using x86。 x8664 and ARM64 both ARM V8 and
+    Apple， silicon。 We get occasional requests for various other architectures such
+    as ARM HF or PowerPC64。 a little and the end。 But as previously mentioned。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不合理，实际上。那些不寻常的边缘情况可以且应该在他们的环境中引导 LLVM 和 Rust，就像他们之前的 C 编译器一样。因此，我们使用 x86、x8664
+    和 ARM64（包括 ARM V8 和 Apple Silicon）进行加密测试并发布 wheels。我们偶尔会收到关于其他架构的各种请求，例如 ARM HF
+    或 PowerPC64，稍后再说。但如前所述。
+- en: we only directly support what we can test against。 However。 those best effort
+    targets should still compile and generally work。 So we need Rust to export at
+    least the broadly popular CPUs in the desktop， mobile， server。 and even some of
+    the embedded world。 Rust supports all these targets along with many more。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们只直接支持我们能够测试的内容。然而，那些尽力支持的目标仍然应该能够编译并正常工作。因此，我们需要 Rust 至少支持桌面、移动、服务器以及一些嵌入式领域中广泛流行的
+    CPU。Rust 支持所有这些目标以及更多。
+- en: but we realize that there may be， some silent users looking where this could
+    be challenging。 So even though most of our users get a wheel， we do want to allow
+    users to compile their。 own versions。 This means deciding on a range of open SSL
+    versions to support。 We support various versions of Libre SSL and most recently
+    boring， in addition to all。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们意识到，可能有一些沉默的用户面临挑战。因此，尽管我们的大多数用户获得了一个 wheel，我们确实希望允许用户编译自己的版本。这意味着需要决定支持一系列
+    Open SSL 版本。我们支持各种版本的 Libre SSL，最近还包括 Boring，除了所有其他版本。
+- en: the versions of open SSL that we currently have supported。 The PIP data that
+    we get is critical in making these decisions about when we can drop older。 versions，
+    which frequently carry significant support burden。 But it didn't affect our Rust
+    release。 so I actually mention it here only for the sake， of completeness。 And
+    then of course。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们目前支持的 Open SSL 版本。我们获得的 PIP 数据对于决定何时可以放弃旧版本至关重要，这些旧版本通常会带来显著的支持负担。但这并没有影响到我们的
+    Rust 发布。因此，我在这里提到这一点仅仅是为了完整性。然后当然。
+- en: as you might imagine， we're interested in the version of Rust， the Rust， compiler
+    that they have。 that users have available。 So we've recently convinced the PIP
+    folks to add that。 So the data we had gave us reasonable confidence that the vast
+    majority of our users would either。 be entirely unaffected or would be able to
+    continue using the project with some changes。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你想象的那样，我们对用户可用的 Rust 编译器版本很感兴趣。因此，我们最近说服了 PIP 的相关人员添加这个功能。所以我们拥有的数据让我们有合理的信心，相当大多数用户将完全不受影响，或者能够在一些更改的情况下继续使用这个项目。
+- en: to their build pipeline。 But how do we let people know this change is coming
+    so they can make plans and invest。 in the areas needed to ensure their chosen
+    platforms still have access to this project？
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如何让人们知道这个变化即将到来，以便他们能够制定计划并投资于确保他们选择的平台仍然能够访问这个项目？
+- en: We first announced that we were considering adding Rust code to PICA cryptography
+    on August。 2020 on our cryptography-dev mailing list， along with a GitHub issue
+    we invited people。 to comment on。 We followed that up with another email in December
+    2020 that also outlined our general。 release plan， which we can summarize as the
+    next release， which would be 3。4， would include。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首次宣布考虑在 PICA 加密中添加 Rust 代码是在 2020 年 8 月，在我们的 cryptography-dev 邮件列表上，并邀请大家在
+    GitHub 问题上发表评论。随后，我们在 2020 年 12 月又发了一封邮件，概述了我们的总体发布计划，可以总结为下一个版本，也就是 3.4，将包括。
+- en: a Rust extension module， which would be built by default but would not be required
+    for cryptography。 to work and could be disabled at build time with an environment
+    variable。 The release after that。 which we ultimately versioned 35， not 3。5 for
+    reasons we will， get into soon。 would include a Rust extension module without
+    which cryptography could not， work with。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个 Rust 扩展模块，默认情况下会被构建，但对于加密工作并不是必需的，并且可以在构建时通过环境变量禁用。之后的版本，我们最终标记为 35，而不是 3.5，原因我们会很快解释，将包括一个
+    Rust 扩展模块，没有这个模块，加密将无法工作。
+- en: In other words， we would depend upon Rust for actual core functionality。 This
+    two-step plan was a result of community feedback， specifically Jeff T。 So thank
+    you， very much。 Jeff， and designed out of a recognition that very few people follow
+    mailing lists。 or are issue tracker on a consistent basis。 They wouldn't be aware
+    of this change without us putting it front and center。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 换句话说，我们将依赖 Rust 来实现实际的核心功能。这个两步计划是基于社区反馈的结果，特别是 Jeff T 的反馈。所以，非常感谢你，Jeff，并且设计的初衷是因为很少有人持续关注邮件列表或问题跟踪器。如果我们不把这个变化放在显眼的位置，他们不会意识到。
+- en: but breaking， them with no escape valve was an anti-goal。 It was not our desire
+    to break people。 So after all this， we released 3。4 on February 7， 2021。 Hooray！
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是，让他们在没有逃生阀的情况下中断，这是一个反目标。我们并不希望破坏用户的体验。因此，在经历了这一切后，我们于 2021 年 2 月 7 日发布了 3.4。太好了！
+- en: This allowed us to both let people know Rust was coming， but also let people
+    who weren't。 quite ready to add the cryptography but don't build Rust flag to
+    their environment variables。 so they don't have to immediately make changes to
+    their build pipelines。 We expected feedback and。 well， we got it。 So the vast
+    majority of our users experienced no breakage in this transition。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这使我们既能让人们知道 Rust 将要到来，又能让那些还不太准备添加加密的人不必立即对他们的构建管道进行更改，而是可以将 Rust 标志添加到他们的环境变量中。我们期待反馈，结果确实收到了。所以，我们绝大多数用户在这个过渡中没有遇到任何中断。
+- en: However， amongst the minority who did， and to be very clear， we considered that
+    minority。 significant and important to us。 They existed a subset who were willing
+    to provide feedback。 It took various forms。 It also started getting a bit heated。
+    We also saw this release。 got some attention in places you wouldn't expect， which
+    ultimately。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，在少数人中，我们认为这一少数人对我们来说是重要且显著的。他们中有一部分愿意提供反馈。这些反馈形式各异，也开始变得有点激烈。我们也注意到，这次发布在一些意想不到的地方引起了关注，最终。
+- en: spawned some other articles talking about trade-offs we had chosen to make。
+    So throughout this process， we were taking what we learned from our users and
+    trying。 to provide improvements as quickly as we could。 First we got a bug in
+    our new type-ins。 which there's a lesson there。 Don't ship other stuff with your
+    big rust change。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 产生了一些其他文章，讨论我们所选择的权衡。在整个过程中，我们吸取了用户的反馈，并尽量快速提供改进。首先，我们在新的输入类型中遇到了一个错误，这里有一个教训。不要在你的重大
+    Rust 变更中一起发布其他东西。
+- en: We also realized we should provide more robust debug output when compilation
+    failed for people。 who aren't C and rust experts。 One of the unfortunate things
+    when we build these things is we become experts in the very。 things that are the
+    most opaque to the users who are having problems。 So day two was spent improving
+    our documentation， making our errors even more debugable and generally。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还意识到，我们应该在编译失败时为那些不是 C 和 Rust 专家的用户提供更强大的调试输出。构建这些东西时，我们成了在那些对遇到问题的用户来说最晦涩的领域的专家，这是一件不幸的事。因此，第二天我们花时间改善文档，使我们的错误更易调试，通常。
+- en: learning from user confusion to build more paved roads。 And again。 don't ship
+    other invasive changes with a rust transition。 After this。 we added a test in
+    our CI that tests for all possible import cycles because。 that was really annoying。
+    And finally， on the 13th， we released a version that dropped our MSRB。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从用户的困惑中学习，以建设更多的平坦道路。再一次，不要在 Rust 迁移时发布其他侵入性更改。在此之后，我们在我们的 CI 中添加了一个测试，用于测试所有可能的导入循环，因为这真的很烦人。最后，在第
+    13 天，我们发布了一个版本，去掉了我们的 MSRB。
+- en: our minimum supported， rust version， and also pre-announced a new versioning
+    scheme。 So what lessons did we learn from all this？ Well one common point of feedback
+    we got initially was that while we documented that don't use。 rust environment
+    variables in the documentation， it wasn't clearly linked to from either the。 error
+    message or the change log。 The flag was simply not as discoverable as it needed
+    to be。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的最低支持 Rust 版本，同时也预先宣布了一种新的版本方案。那么，我们从中学到了什么教训？一个共同的反馈点是，虽然我们在文档中记录了不要使用 Rust
+    环境变量，但在错误消息或变更日志中没有明确链接。这个标志显然不够易于发现。
+- en: Errors out of PIP when compilation fails can be extraordinarily verbose。 So
+    catching that and then emitting a more friendly message with both a set of relevant。
+    environment information as well as links on how to some common problems went a
+    long。 way towards minimizing the time it took users to get their environments
+    working again。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 编译失败时 PIP 的错误可能非常冗长。因此，捕获这些错误并发出更友好的消息，同时提供一组相关的环境信息和关于一些常见问题的链接，极大地减少了用户再次使其环境正常工作的时间。
+- en: This is the difference between a pile of Rust C or GCC failed output and one
+    that has like。 a pretty output that says， "Hey， look， you should consider doing
+    the following things。"。 And if those fail， please submit an issue。 Additionally。
+    for users who were willing to immediately jump into our rust requirement。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是 Rust C 或 GCC 失败输出的堆和那种看起来不错的输出之间的区别，后者会说：“嘿，看看，你应该考虑做以下事情。”如果这些失败，请提交一个问题。此外，对于愿意立即进入我们
+    Rust 要求的用户。
+- en: we didn't provide enough information about required rust version or how to obtain
+    it。 Typically users obtain their C compiler directly from the operating system
+    and the version。 barely matters。 But in the Rust case， our minimum supported rust
+    version was higher than some of the older。 Debian and out-client installations
+    requiring the user to learn how to install Rust up。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们没有提供足够关于所需 Rust 版本或如何获取的信息。通常，用户直接从操作系统获取他们的 C 编译器，而版本几乎不重要。但在 Rust 的情况下，我们的最低支持
+    Rust 版本高于一些较旧的 Debian 和外部客户端安装，要求用户学习如何安装 Rust。
+- en: which is an alternate mechanism installing these things。 These items were potentially
+    foreseeable errors on our part。 Our own familiarity with the code base and tooling
+    required resulted in a failure to。 systematically examine failure cases and think
+    through user experience。 We considered some of these。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一种替代机制，用于安装这些东西。这些项目在我们这方面可能是可预见的错误。我们对代码库和所需工具的熟悉程度导致未能系统性地检查失败案例并考虑用户体验。我们考虑到其中一些。
+- en: but failed to give users with problems good enough tools， to fix their issues。
+    We also discovered just how many people pinned cryptography assuming semantic
+    versioning。 When 3。4 made this change and their build pipelines blew up， this
+    shocked them as they。 believed we were breaking an unwritten contract。 While Alex
+    and I both have very strong feelings about the value of semantic versioning in
+    general。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但未能为遇到问题的用户提供足够好的工具来解决他们的问题。我们还发现，有多少人假设语义版本控制而锁定了加密。当 3.4 进行了此更改并且他们的构建管道崩溃时，这让他们感到震惊，因为他们认为我们破坏了一个不成文的契约。虽然
+    Alex 和我对语义版本控制的价值有很强烈的看法。
+- en: as well as specifically in the case of security critical libraries like cryptography，
+    we also。 don't want to surprise users。 So accordingly， we reversioned our library
+    such that every feature release is now a new。 major version， 35。0， 36。0， et cetera，
+    in the vein of Firefox's version numbers。 A talk about versioning could fill 30
+    minutes alone， so if you want our full hot takes。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 特别是在像加密这样的安全关键库的情况下，我们也不想给用户带来惊喜。因此，我们重新版本化我们的库，使得每个功能发布现在都是一个新的主要版本，35.0，36.0
+    等，像 Firefox 的版本号一样。关于版本的讨论可以单独占用 30 分钟，所以如果你想要我们完整的看法。
+- en: you'll have to find us in the hallway track。 Finally。 when things aren't working
+    and people are under pressure， tempers run hot。 We had passionate people both
+    defending us and registering their objections to some。 of our decisions。 But an
+    issue this emotionally charged results in that defense occasionally looking more。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会在走廊里找到我们。最后，当事情不顺利而人们承受压力时，情绪会变得激烈。我们有一些热情的人在为我们辩护，也有人对我们的一些决定提出反对。然而，这种情感充沛的问题，有时导致辩护看起来更为极端。
+- en: like an attack， and many users couldn't tell the difference between those overly
+    zealous。 defenders and the actual core maintainers。 This led to a less civil discourse
+    than we would have preferred。 So having shipped a module that incorporates Rust
+    into the build process but ultimately。 does nothing of use， the next step was
+    do something useful with Rust。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像攻击一样，许多用户无法区分这些过于热心的辩护者和实际的核心维护者。这导致的讨论比我们所期望的更不文明。因此，在发布了一个将 Rust 纳入构建过程但最终无用的模块后，下一步是用
+    Rust 做一些有用的事情。
+- en: Get the value out of it that is the reason we're using it in the first place。
+    Luckily for us。 we had a few concrete use cases in mind。 First we wanted to replace
+    the small amount of C code we've written ourselves for handling。 things like cryptographic
+    constant time operations。 And second。 we wanted to replace open SSL's X509 layer
+    in all of the parsing code for， ASN1 that it contains。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们之所以使用它，就是为了从中获得价值。幸运的是，我们有几个具体的用例。首先，我们想要替换自己编写的少量 C 代码，以处理像加密常量时间操作这样的事情。其次，我们希望替换
+    Open SSL 的 X509 层，涉及其包含的所有 ASN1 解析代码。
+- en: There's actually not a ton to be said about the process of replacing these things，
+    because。 mostly we just stuck to the best practice you'll hear about anytime you
+    think about rewriting。 things。 Make sure you have great test coverage。 Don't rewrite
+    everything at once。 Break up your rewrite into small components。 Make sure things
+    are working all along the way。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于替换这些东西的过程，其实没什么好说的，因为我们大多遵循了任何想要重写事物时会听到的最佳实践。确保有良好的测试覆盖率。不要一次性重写所有内容。将重写分解为小组件。确保在整个过程中一切正常。
+- en: Right don't leave things in half broken state。 And so really the process of
+    migrating to Rust is just a series of small pull requests that。 keep tests running，
+    add new test cases where we got concerned there wasn't enough test。 coverage and
+    attempting to measure how we were getting benefit from this。 So for example。 even
+    though our primary motivation in this effort was security， we also got some。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要让事情处于半破损的状态。因此，迁移到 Rust 的过程实际上是一系列小的拉取请求，这些请求保持测试运行，在我们担心测试覆盖率不足的地方添加新的测试用例，并试图衡量我们从中获得的收益。因此，例如，尽管我们这项工作的主要动机是安全，但我们也获得了一些其他的好处。
+- en: really big performance wins。 In the benchmarks we've got here。 we migrated the
+    parser for the OCSP request class from。 an open SSL and CFI implementation to
+    the Rust implementation。 The result is it is now 10 times faster than it used
+    to be。 This might come as a surprise。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上取得了巨大的性能提升。在我们这里的基准测试中，我们将 OCSP 请求类的解析器从 Open SSL 和 CFI 实现迁移到了 Rust 实现。结果是它现在比以前快了
+    10 倍。这可能会让人感到惊讶。
+- en: Open SSL is written in C。 C is fast。 C may be fast， but it's not magic。 Open
+    SSL's parsing code performs a significant number of allocations and memory copies。
+    Because of Rust safety features， we were able to easily write parsing code without
+    any。 allocations and without any memory copies。 We're still having confidence
+    that we weren't introducing these memory safety vulnerabilities。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Open SSL 是用 C 语言编写的。C 语言很快，但它并不是魔法。Open SSL 的解析代码执行了大量的内存分配和复制。得益于 Rust 的安全特性，我们能够轻松编写不需要任何内存分配和复制的解析代码。我们仍然对没有引入这些内存安全漏洞充满信心。
+- en: we talked about at the top。 We also got big benefits out of this in terms of
+    architectural improvements。 Specifically， our X509 API's implementation used to
+    be deeply intertwined with the open。 SSL implementation of other components of
+    our library。 This means this meant we'd have APIs that said things like "take
+    a private key，" but。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在开始时提到过。我们在架构改进方面也获得了重大好处。具体而言，我们的 X509 API 实现曾与 Open SSL 实现的其他库组件紧密相连。这意味着我们的
+    API 会有这样的声明：“接受一个私钥”，但……
+- en: in practice would be totally broken if it wasn't an open SSL private key。 Using
+    this code in Rust。 let us make the API boundaries between these two components，
+    actually much clearer。 And now things like sign a certificate with a private key
+    in a cloud key management service。 actually just works。 And here's what our adoption
+    curve looked like。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果没有一个开放的SSL私钥，实际上会完全崩溃。使用Rust中的这段代码，让我们使这两个组件之间的API边界变得更加清晰。现在，比如在云密钥管理服务中用私钥签署证书，实际上是可以工作的。以下是我们的采用曲线。
+- en: The blue sectioner downloads the versions with no Rust， the redder versions
+    that contain。 the optional Rust， and the yellow versions that require Rust。 There's
+    really two things I noticed about this。 First。 adoption of a new version happens
+    in two phases。 First it happens all at once。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 蓝色部分下载没有Rust的版本，红色部分包含可选的Rust，黄色部分是需要Rust的版本。我注意到这真的有两件事。首先，新版本的采用分为两个阶段。第一次是全部同时发生。
+- en: and then it happens slowly。 Immediately after we release a new version。 nearly
+    half of our users will be updated， indicating。 they're almost certainly not using
+    any sort of version or hash-pinning。 After that。 adoption increases very gradually。
+    Right now we're at a point where approximately 80% of our downloads are processed
+    in a facility。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，这一切缓慢发生。在我们发布新版本后，几乎一半的用户会进行更新，表明他们几乎肯定没有使用任何版本或哈希锁定。之后，采用率非常缓慢地增加。现在，我们大约有80%的下载是在一个设施中处理的。
+- en: that contains Rust。 And we'd like to get that 100% obviously。 We know the blue
+    section and no Rust is a mix of causes though。 Some of it is folks deliberately
+    pinning to versions before we had Rust。 Others of it are users pinning to our
+    2。x series， presumably because of expectations around。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 包含Rust的部分。我们显然希望达到100%。我们知道蓝色部分没有Rust是多种原因的混合。有些是用户故意锁定在我们引入Rust之前的版本，其他则是用户锁定在我们的2.x系列，可能是因为对期望的考虑。
+- en: semantic versioning that are not actually accurate for us。 So we hope we've
+    convinced you in this talk that Rust is now a viable choice no matter。 how popular
+    your project is。 Much of this ecosystem work was done out of necessity。 but the
+    vast majority is now complete。 We were also thrilled to see that other developers
+    took up the challenge to implement the muscle。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 语义版本控制对我们来说并不准确。所以我们希望在这个演讲中说服你，Rust现在是一个可行的选择，无论你的项目多么受欢迎。这个生态系统的很多工作是出于必要性，但绝大多数现在已经完成。我们也很高兴看到其他开发者接受了实现这一目标的挑战。
+- en: Linux standard across PyPA and PyPI， which gave out-pine Linux users access
+    to wheels。 much like we already had for Debian Ubuntu， Red Hat and other Glib
+    C based distributions。 And of course， we've hopefully weathered this storm of
+    legitimate concerns， well-meaning。 but confused people and angry trolls。 If we
+    can do it， so can you。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: PyPA和PyPI的Linux标准，使得外部Linux用户可以访问轮子，正如我们已经为Debian Ubuntu、Red Hat及其他基于Glib C的发行版所做的那样。当然，我们希望能经受住这一合法关切的风暴，尽管这些是出于好意，但困惑的人和愤怒的喷子。如果我们能做到，你们也可以。
+- en: Next time you find yourself reaching for the Python C API to eke out some more
+    performance。 take a second and maybe reach for a nice cold glass of Py03。 There
+    is however room for future improvement here。 For example。 alternate OSes such
+    as FreeBSD and OpenBSD are still required to build from， source。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下次当你为了获取更多性能而寻找Python C API时，花点时间，也许可以拿一杯冰冷的Py03。不过这里仍然有未来改进的空间。例如，像FreeBSD和OpenBSD这样的替代操作系统仍然需要从源代码构建。
+- en: It would be nice to be able to potentially define standards where that is no
+    longer required。 Additionally， to streamline the experience even more， we could
+    investigate better binary。 build tooling， moving setup tools rust into setup tools，
+    or better integrations with C Python。 itself。 The experience today is excellent
+    for most users， but we can make it better。 Oh。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果能定义标准，使这一点不再必要，那将是很好的。此外，为了进一步简化体验，我们可以研究更好的二进制构建工具，将设置工具Rust整合到设置工具中，或者与C
+    Python的更好集成。今天的体验对大多数用户来说是优秀的，但我们可以做得更好。哦。
+- en: and as announced via the Python announce list， and in this talk right now， the
+    next。 release of B-Crypt will be pure rust。 Thank you very much。 [APPLAUSE]。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如通过Python公告列表和目前的演讲中宣布的，下一个B-Crypt版本将是纯Rust。非常感谢大家。[掌声]
+- en: '![](img/fabc68ceb83500e75a0be261b8a2e468_8.png)'
+  id: totrans-86
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/fabc68ceb83500e75a0be261b8a2e468_8.png)'

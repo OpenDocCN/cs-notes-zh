@@ -1,0 +1,862 @@
+- en: P32：Talk - Christopher Neugebauer_ Fast and reproducible tests, packaging, and
+    deplo - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P32：谈话 - 克里斯托弗·诺伊格鲍尔_ 快速且可重复的测试、打包和部署 - VikingDen7 - BV1f8411Y7cP
+- en: Welcome to the last block of PyCon 2022。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欢迎来到 PyCon 2022 的最后一块。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_1.png)'
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_2.png)'
+- en: Our next talk， first talk of this block is fast and reproducible tests， packaging
+    and。 deploys with pants builds， hermetic environments by Christopher Noygabauer
+    and go ahead and。 take it away。 Thank you very much Mason。 All right。 Hello。 My
+    name is Christopher Noygabauer。 I work as an engineer at Toolchain。 I'm also a
+    maintainer on the PantsBuild open source project。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们接下来的谈话，本块的第一场是快速且可重复的测试、打包和使用 pants builds 的部署，由克里斯托弗·诺伊格鲍尔主讲，接下来请开始。非常感谢，梅森。好的。你好。我是克里斯托弗·诺伊格鲍尔。我在
+    Toolchain 担任工程师，同时也是 PantsBuild 开源项目的维护者。
+- en: Feel free to tweet me at the handle on the bottom of this slide。 If you can't
+    see it just yet。 it will be at the top in just a moment。 If you want to loudly
+    disagree with me during the talk。 I don't mind。 If you have legitimate questions，
+    you can send them to me by email。 Today's talk is about hermetic environments，
+    which is an approach that pants users to make。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您愿意，可以通过本幻灯片底部的账号给我发推文。如果您暂时还看不到，它马上会出现在顶部。如果您想在谈话中大声反对我，我不介意。如果您有合理的问题，可以通过电子邮件发送给我。今天的谈话是关于密闭环境的，这是一种
+    pants 用户采用的方法。
+- en: sure that we can predictably model the tasks that run while writing and testing
+    your code。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确保我们可以可预测地建模在编写和测试代码时运行的任务。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_4.png)'
+  id: totrans-7
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_4.png)'
+- en: First up， I want to point out that this is not a security talk。 A lot of the
+    approaches that we're going to be talking about today have trade-offs between。
+    guaranteeing absolute correctness on one hand and security on the other hand and
+    delivering。 speedy performance。 If you have different goals， you would probably
+    make different choices here。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我想指出这不是一场安全讲座。我们今天将讨论的许多方法在保证绝对正确性和安全性之间有权衡，同时还要提供快速的性能。如果您有不同的目标，您可能会在这里做出不同的选择。
+- en: So the focus of today's talk is on how reproducibility can make your build tools
+    perform better and。 what sandboxing techniques can deliver that reproducibility
+    without sacrificing performance。 That theoretical material is going to be sandwiched
+    in between an introduction to pants and how。 pants actually implements these things
+    so you can see how all this works in practice。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，今天谈话的重点是如何通过可重复性使构建工具表现得更好，以及哪些沙盒技术能够在不牺牲性能的情况下提供可重复性。这些理论材料将夹在对 pants 的介绍和
+    pants 如何实际实现这些内容之间，这样您就可以看到所有这些在实践中的运作方式。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_6.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_6.png)'
+- en: We're going to start the talk with a quick introduction to pants and some of
+    the problems。 that motivate the techniques we're talking about in this talk。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将以对 pants 的快速介绍和一些激励我们在本次谈话中讨论技术的问题开始谈话。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_8.png)'
+  id: totrans-12
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_8.png)'
+- en: So pants build is a build system， which is a bit of a holdover from compiled
+    languages。 where you need to run a lot of different programs in a very specific
+    order in order to get your。 code to run at all。 In our case， we orchestrate all
+    the tools that interact with your code。 That's everything from lending and testing
+    all the way through to building a package for。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以 pants build 是一个构建系统，这有点源于编译语言。在这些语言中，你需要以非常特定的顺序运行很多不同的程序，才能让你的代码运行。在我们的案例中，我们协调与代码交互的所有工具。这包括从借贷和测试到为部署或分发构建包的所有内容。
+- en: deployment or for distribution。 So even in Python where you don't have a compilation
+    step necessarily。 we can still help， orchestrate tools， correctness tools like
+    PyTest or MyPy or formatters and lintors like Flake。 8 and Black so that you can
+    run them more efficiently and only have to interact with one。 tool to run all
+    of them。 There's a small amount of jargon I'm going to have to get out of the
+    way first。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，即使在 Python 中，您不一定需要编译步骤，我们仍然可以帮助协调工具，像 PyTest 或 MyPy 这样的正确性工具，以及像 Flake 8
+    和 Black 这样的格式化和 lint 工具，使您可以更高效地运行它们，并只需与一个工具交互以运行所有工具。我需要先处理一些小的术语。
+- en: which will， hopefully make the rest of this talk go just a bit more smoothly
+    for you。 In the build systems community and pants in particular， there are terms
+    for the units。 of work that get run in your development workflows。 The ones that
+    I'm going to refer to are goals。 rules and processes。 Goals are things that an
+    end user will ask pants to do for them。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将希望使接下来的讨论对你稍微顺利一些。在构建系统社区，尤其是pants，有针对在开发工作流中运行的工作单元的术语。我将提到的术语是目标、规则和进程。目标是最终用户要求pants为他们做的事情。
+- en: That might be something like run this test or type check the source files in
+    this directory。 or package this library。 Most CI workflows， most pre-commit workflows
+    are made up of multiple goals。 Goals are the individual steps that pants needs
+    to perform in order to accomplish a goal。 A rule might be something like figure
+    out which files to give to MyPy in order to run。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能是像运行这个测试或对该目录中的源文件进行类型检查，或者打包这个库。大多数CI工作流，大多数预提交工作流由多个目标构成。目标是pants为完成目标而需要执行的单独步骤。一个规则可能是找出要提供给MyPy以便运行的文件。
+- en: a type checking run or figure out which source file is the entry point to a
+    Python executable。 Goals are made out of rules and rules can themselves run more
+    rules。 And processes are when we run the actual underlying tools that pants is
+    orchestrating。 Pluses might be something like run pytest with these specific source
+    files。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一次类型检查运行或找出哪个源文件是Python可执行文件的入口点。目标由规则构成，而规则本身可以运行更多的规则。进程是指我们运行pants所协调的实际底层工具。加分项可能是像使用这些特定源文件运行pytest。
+- en: Now today we're talking about pants too。 You may have heard of pants before。
+    That was the old version。 This is a new tool that's inspired by the original version
+    of pants that was developed。 at Twitter 10 or so years ago。 It's a complete rebuild
+    from the ground up by a community of open source developers including。 a bunch
+    of us who work at Toolchain。 The first releases were made very much with Python
+    in mind。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 今天我们讨论的是pants 2。你可能之前听说过pants，那是旧版本。这是一个新工具，灵感来源于大约10年前在Twitter开发的pants的原始版本。这是由一个开源开发者社区重新从头构建的，包括我们Toolchain的许多成员。最初的发布非常考虑Python。
+- en: We're trying to be good members of the Python community and we want pants to
+    be a great。 experience for Python focused code bases of any size。 If you use pants
+    on a small Python only code base we sort of fit into the same category。 of tools
+    as talks。 But the goal of pants is to be able to grow with your code base。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们努力成为Python社区的好成员，并希望pants能为任何规模的以Python为中心的代码库提供良好体验。如果你在一个小的仅Python代码库上使用pants，我们就像工具类的同类工具。但pants的目标是能够与代码库一起成长。
+- en: This means both supporting multiple languages and also being as efficient within
+    a large。 base as it is within a small code base。 So the ideal world for us is
+    for a developer to be able to work on Scala or Go or Python。 code and interact
+    with exactly the same tool commands no matter what language they use。 And we want
+    it to be pleasant enough for you to want to do that。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着同时支持多种语言，并且在大型代码库中也能像在小型代码库中一样高效。因此，我们理想的状态是开发人员可以在Scala、Go或Python代码上工作，并无论使用哪种语言都能与完全相同的工具命令进行互动。我们希望这能足够愉快，让你愿意这样做。
+- en: And finally we aim to make it easier to use a mono repo development workflow
+    so you get。 the configuration management and code reuse benefits that come with
+    that but still being。 as efficient and easy to reason about as a multi repo setup
+    might be。 The goal for us is to complete your goals faster while making them underline
+    tools。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们旨在简化单一代码库开发工作流的使用，以便你获得与之相关的配置管理和代码重用的好处，同时仍然能像多代码库设置那样高效和易于推理。我们的目标是更快地完成你的目标，同时让它们成为基础工具。
+- en: And pants can do things like identifying which rules can be run in parallel
+    or it can eliminate。 duplicated or unnecessary work。 The other is that as your
+    code base scales the work that pants does to configure and。 orchestrate your tools
+    will be more efficient and effective than just running those tools。 in their default
+    configurations。 As an example let's say you have a test suite with two test files
+    in it。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: pants可以识别哪些规则可以并行运行，或者可以消除重复或不必要的工作。另一个方面是，随着代码库的扩展，pants配置和协调你的工具的工作将比仅在默认配置下运行这些工具更高效有效。举个例子，假设你有一个包含两个测试文件的测试套件。
+- en: Pants will run your test suite that is not surprising。 If you edit one of these
+    two test files pants will only actually rerun the test file that。 you've edited。
+    You can see that the reading is reused that's what this MIMO-ized thing means。
+    It's still not all that surprising。 Most tools can do something like this。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: pants将运行你的测试套件，这并不令人惊讶。如果你编辑这两个测试文件之一，pants只会实际重新运行你编辑过的测试文件。你可以看到读取是被重用的，这就是MIMO化的意思。这仍然并不是特别令人惊讶。大多数工具可以做类似的事情。
+- en: What is surprising though？ Well first we can revert the test again and note
+    that both tests are MIMO-ized this time。 Rather than just saving the most recent
+    data to the tests pants has cached to our previous， runs。 Since we're running
+    tests that we've run in the past in exactly the same configuration。 pants will
+    use those results。 Now what happens if instead of changing a test file I change
+    the implementation file。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但令人惊讶的是？首先，我们可以再次恢复测试，并注意到这次两个测试都是MIMO化的。而不仅仅是将最近的数据保存到pants缓存的测试中。由于我们在完全相同的配置下运行之前运行过的测试，pants将使用这些结果。现在，如果我不是更改测试文件而是更改实现文件，会发生什么？
+- en: that is under test。 Again rerun the tests run against the implementations that
+    changed。 Everything else is cached。 That is because pants automatically understands
+    the dependencies in your code base through。 static analysis and it can use that
+    information to figure out what tests need to be run again。 When you start dealing
+    with code bases with hundreds or thousands of tests and implementation。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是在测试下的结果。再次对已更改的实现运行测试。其他一切都被缓存。这是因为pants通过静态分析自动理解你代码库中的依赖关系，并可以利用这些信息来确定哪些测试需要重新运行。当你开始处理拥有数百或数千个测试和实现的代码库时，情况就会如此。
+- en: files automatic decisions like this mean you don't have to remember which test
+    relevant。 to the parts of the code base that you've changed。 When you have a huge
+    and slow test suite which most probably are this can make it quite pleasant。 to
+    regularly run your entire test suite as you develop iteratively。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件的自动决策意味着你不必记住哪些测试与已更改的代码库部分相关。当你有一个庞大而缓慢的测试套件时，这通常会使你在迭代开发时，定期运行整个测试套件变得相当愉快。
+- en: We can run tools more efficiently locally but to scale properly we're working
+    to properly。 support remote caching and remote execution。 Remote caching means
+    that if one person on your team runs a given rule and another person。 needs an
+    identical rule completed we can fetch that result from a cache instead of running。
+    it again。 It is surprising how often a team can run exactly the same rule over
+    and over and over again。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以在本地更高效地运行工具，但为了适当扩展，我们正在努力支持远程缓存和远程执行。远程缓存意味着，如果你团队中的一个人运行了一个特定的规则，而另一个人需要完成一个相同的规则，我们可以从缓存中获取该结果，而不是再次运行它。令人惊讶的是，一个团队可以如此频繁地一次又一次地运行完全相同的规则。
+- en: It's a huge waste of time and money。 So solving remote caching means thinking
+    about a lot of problems around how we run the underlying。 tools that pants orchestrates。
+    Questions like what rules actually need to be run in order to finish a user's
+    goal？
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一种巨大的时间和金钱浪费。因此，解决远程缓存问题意味着要考虑我们如何运行底层的许多问题。工具是由pants协调的。像是什么规则实际上需要运行以完成用户目标的问题？
+- en: Do we split our goals into one process or several？
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们是将目标分割为一个过程还是多个过程？
+- en: And then once we split up the rules can we test with accuracy to see if a given
+    rule。 is already run。 And if a rule has already been run can we actually reuse
+    its output instead of running。 it again？ All these boil down to one question how
+    do we make sure that the end result of a rule。 is reliably reproducible？ Can we
+    be confident that if we reuse a result from a previous run the combined end result。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，一旦我们将规则分开，我们是否可以准确地测试某个特定规则是否已经运行？如果规则已经运行，我们是否可以实际重用其输出，而不是再次运行？所有这些归结为一个问题：我们如何确保规则的最终结果是可靠可复现的？如果我们重用之前运行的结果，最终的合并结果能否让我们放心？
+- en: is actually going to be valid？ If we can run rules and be confident that running
+    the same rule again will yield exactly。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这实际上会有效吗？如果我们能够运行规则，并且可以确信再次运行同一规则会产生完全相同的结果。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_10.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_10.png)'
+- en: the same result then we don't need to run those rules again。 Which leads us
+    to our first concept。 reproducibility。 Reproducibility is the idea that if you
+    run the same rule you will end up with the same。 result。 It seems like a simple
+    enough concept but there's enough of a sticking point that I'm。 going to need
+    to talk a bit about what we mean by the same。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果得到相同的结果，那么我们就不需要再次运行这些规则。这引出了我们的第一个概念：可重现性。可重现性是指如果你运行相同的规则，你将得到相同的结果。这个概念看似简单，但存在足够的问题点，以至于我需要谈谈我们所说的相同的含义。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_12.png)'
+  id: totrans-34
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_12.png)'
+- en: The elephant in the room here is this thing called reproducible builds which
+    you may have。 heard of if you work in open source。 Reproducible builds are a process
+    in open source that provides you with an absolute guarantee。 that a binary package
+    corresponds to a given set of source files。 The idea behind reproducible builds
+    is that if you start with a given snapshot of your。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里的关键问题是可重现构建这个东西，如果你在开源领域工作，你可能听说过。可重现构建是在开源中提供绝对保证的过程，确保一个二进制包对应于一组给定的源文件。可重现构建背后的理念是，如果你从一个特定的快照开始。
+- en: code base and run it in a very well specified environment and guarantee that
+    the dependencies。 are the same you will end up with exactly the same package as
+    the published binary。 Grants can be used as part of a reproducible builds workflow
+    but most development teams。 especially ones internal to a company don't actually
+    need this level of guarantee。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码库并在一个非常明确的环境中运行，并保证依赖关系是相同的，你将得到与发布的二进制文件完全相同的包。Grants 可以作为可重现构建工作流的一部分，但大多数开发团队，特别是公司内部的团队，其实并不需要这种级别的保证。
+- en: The ops people in your company who are installing internal software should have
+    high levels of。 trust of the developers who work for the same company as them。
+    So that's our use case we don't go out of our way to be cryptographically reproducible。
+    That's not what we're going to talk about today。 Our primary goal here is ensuring
+    a useful level of correctness。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 公司中的运维人员在安装内部软件时应该对与他们同一公司的开发人员有较高的信任度。这就是我们的用例，我们不会特别努力去实现密码学上的可重现性。今天我们讨论的不是这个。我们主要的目标是确保有用的正确性水平。
+- en: We really care about the completion time of your goals so you spend less time
+    at your。 desk waiting for your test to pass and you spend less time waiting for
+    your CI to go green。 For us reproducibility beings being able to be certain that
+    you'll get the same results。 running rules sequentially or in parallel and reproducibility
+    means being confident that。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们非常关心你目标的完成时间，因此你在桌子前等待测试通过的时间更少，等待 CI 变绿的时间也更少。对我们来说，可重现性意味着能够确保你会获得相同的结果，无论是顺序运行还是并行运行规则，可重现性意味着能够自信地知道。
+- en: you're not going to be able to get the same results。 Okay。 mathematically we
+    model each rule as a pure function of inputs that produce given， outputs。 A rule
+    with the same inputs should yield the same outputs。 For rules that are implemented
+    entirely within pants in Python code Python actually gives。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你无法获得相同的结果。好的。从数学上讲，我们将每个规则建模为输入的纯函数，这些输入会产生给定的输出。相同输入的规则应产生相同输出。对于完全在 Python
+    代码中实现的规则，Python 实际上为我们提供了所有所需的工具。
+- en: us all the tools that we need。 We make heavy use of frozen data classes and
+    those are easy to cache they're easy to check。 for quality。 The problem for us
+    is that processes are rules as well。 Indeed they end up being the rules underpin
+    basically every other rule that gets run。 The rules that run entirely inside pants
+    are usually just setting up inputs and configuration。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们大量使用冻结数据类，这些类易于缓存，易于检查质量。对我们来说，问题在于流程本身也是规则。实际上，它们最终成为基本上每个运行的规则的基础。这些完全在
+    pants 内部运行的规则通常只是设置输入和配置。
+- en: for the rules that run processes。 But processes are really really difficult
+    to model。 They're impacted by dependency versions by operating system characteristics
+    and more。 Being able to parallelize or cache any rule means being able to make
+    sure that we can。 make the results of processes as predictable as the pure function
+    codes that we write in。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于运行流程的规则。但流程实际上是非常难以建模的。它们受依赖版本、操作系统特征等的影响。能够并行化或缓存任何规则意味着能够确保我们可以使流程的结果与我们编写的纯函数代码一样可预测。
+- en: Python ourselves。 Being predictable means modeling processes so that there is
+    cacheable as any other rule。 that we run。 So if we want to be predictable we can't
+    rely on works on my machine because that is in。 no way reproducible at all。 And
+    full cryptographic reproducibility is more of a guarantee than most internal development。
+    teams actually need。 What we actually care about is making sure that we don't
+    get the wrong results as long。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python自身。可预测意味着对过程建模，使其可以缓存，就像我们运行的任何其他规则一样。所以，如果我们想要可预测，就不能依赖“在我的机器上可以工作”，因为那根本无法重现。完全的加密可重现性比大多数内部开发团队实际需要的更有保障。我们实际关心的是确保只要我们从相似的环境开始，就不会得到错误的结果。
+- en: as we start with a similar environment。 And annoyingly this brings about the
+    question what does it mean for an environment to be。 similar。 This discussion
+    is going to center on Python tooling so I'm going to focus on that。 The same general
+    concepts actually apply to other language ecosystems such as the JVM。 or Go which
+    we also support in pants。 So in Python the environment that we care about consists
+    of four aspects。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而令人烦恼的是，这引出了一个问题：环境相似是什么意思？这个讨论将集中在Python工具上，所以我会专注于此。相同的一般概念实际上也适用于其他语言生态系统，如JVM或Go，我们在Pants中也支持它们。因此，在Python中，我们关心的环境由四个方面组成。
+- en: The first is your operating system and if you use Mac OS that also includes
+    the architecture， of it。 Then there is the actual Python version that you're running。
+    Then there's the version of your dependencies which pants captures using lock
+    files so we。 do that right down to the specific artifact of PIPI。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先是你的操作系统，如果你使用的是Mac OS，这也包括其架构。然后是你正在运行的实际Python版本。接下来是你的依赖版本，Pants通过锁定文件捕获这些，因此我们做到这一点直到PIPI的特定工件。
+- en: And then there is the configuration of the tools that you run inside each rule。
+    Now even without pants most of these things you tend to fix in your day to day
+    life。 Your operating system very rarely changes from underneath you。 It's very
+    easy to stay on a specific Python version。 It's very easy to forget to upgrade。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后是你在每个规则中运行的工具的配置。即使没有Pants，你通常也会在日常生活中修复这些问题。你的操作系统很少会在你身边发生变化。保持在特定的Python版本上很容易，忘记升级则很简单。
+- en: And it's easy enough to keep your tools configured in exactly the same way。
+    By far the most complicated of these in Python land is how to handle dependency
+    versions which。 is particularly if you're the sort of developer who incrementally
+    adds dependencies as you， go。 If you spend a lot of time working in a given virtual
+    AM for example it can be really easy。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 保持你的工具配置完全相同其实很简单。在Python环境中，最复杂的部分是如何处理依赖版本，特别是如果你是那种逐步添加依赖的开发者。例如，如果你在某个虚拟环境中花费了大量时间，这会变得非常容易。
+- en: for your dependencies to drift away from what your code base actually specifies
+    which is。 what your collaborators are going to be working with。 This is because
+    standard Python tools sort of encourage you to build up your environment。 one
+    package at a time and then freeze your requirements once you're ready to release。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的依赖项有可能与代码库实际指定的内容偏离，这就是你的合作者将要使用的内容。这是因为标准的Python工具某种程度上鼓励你逐个包地构建环境，然后在准备发布时冻结你的需求。
+- en: And this really runs contrary to this idea of environments being predictable。
+    A much better approach is to make sure that every process gets run in a configuration。
+    that fully corresponds to your requirements or your lock file if you have one。
+    The best way to provide a predictable environment is actually to create a completely
+    new environment。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这实际上与环境可预测性的理念相悖。更好的方法是确保每个过程在一个配置中运行，这个配置完全符合你的要求或锁定文件（如果有的话）。提供可预测环境的最佳方法是创建一个全新的环境。
+- en: for every process that needs to be run。 One advantage of this is that you can
+    manage the versions and dependencies of your tools。 separately to your code base
+    so the version of black that you run doesn't need to be tied。 to the version of
+    play test that you run just because they share a common dependency。 The other
+    reason why we care about starting from clean environments for every process is。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于需要运行的每个过程，这样做的一个优点是，你可以单独管理工具的版本和依赖，与代码库分开，因此你运行的Black版本不需要与Playtest的版本绑定，只因为它们共享一个共同的依赖。我们关注从干净环境开始的另一个原因是。
+- en: that often processes produce outputs that we don't care about or they modify
+    the environment。 in ways that might impact subsequent runs of the same tool or
+    the behavior of other tools。 So in terms of modeling a reproducible process for
+    us is one where we specify the input files。 in the environment and we only collect
+    the output artifacts that we actually care about。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 过程通常会产生我们不关心的输出，或者以可能影响后续相同工具运行或其他工具行为的方式修改环境。因此，对于我们来说，建模可复现过程的方式是指定环境中的输入文件，并且我们只收集实际关心的输出工件。
+- en: Let's make this a bit clearer。 If we retain the side effects of any given process。
+    modeling the behavior of the process， becomes dependent on the order in which
+    they get run。 You need to run a given process in order to collect its side effects
+    from that run and。 you need to make sure those side effects are tracked。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们让这一点更清晰。如果我们保留任何给定过程的副作用，建模过程的行为就会依赖于它们运行的顺序。你需要运行给定过程以收集该运行的副作用，并且你需要确保这些副作用被跟踪。
+- en: So rather than having a predictable model of the process executions， you actually
+    have。 a model just of one step in a chain of processes which really isn't worth
+    modeling at all。 Because what happens if we change some of the inputs in one step
+    of the chain？
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，与其拥有可预测的过程执行模型，你实际上只是拥有一个链中一个步骤的模型，而这根本不值得建模。因为如果我们在链中的某个步骤更改了一些输入，会发生什么？
+- en: Well you break that chain and you need to rerun every subsequent step。 What's
+    worse is that if you keep the side effects around somewhere， if you want to achieve
+    the。 same goal and do it in a way that's correct， you have to run everything again
+    from the start。 because the environment has changed。 Now you might be thinking。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你打破了这个链条，就需要重新运行每一个后续步骤。更糟糕的是，如果你在某处保留了副作用，如果你想以正确的方式实现相同的目标，你必须从头开始重新运行所有内容，因为环境已发生变化。现在你可能会想。
+- en: I can now run make of as often as I like and it's instant， every second time。
+    That's because doing it correctly is tedious。 Those tools reuse the environment。
+    they assume that the side effects don't actually matter。 But this actually leads
+    to subtle contamination which can break things and this is why most。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我现在可以尽可能频繁地运行`make`，而且每第二次都是即时的。这是因为正确执行它是繁琐的。这些工具重用环境，假设副作用并不重要。但这实际上会导致微妙的污染，可能会破坏东西，这就是大多数人。
+- en: tools that you use have a clean command。 That's to deal with garbage that gets
+    left behind if your tool doesn't do the right thing。 in a reused environment。
+    On the other hand， if you don't reuse the environment then you actually break
+    this dependency。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你使用的工具有一个清理命令。这是为了处理在重用环境中，如果工具没有正确执行所留下的垃圾。另一方面，如果你不重用环境，你实际上会打破这个依赖关系。
+- en: on ordering。 And this means that you can reorder processes so that they're more
+    efficient。 This could be as simple as running formatters before you run linters
+    through to dividing。 up a test suite to run multiple cores in separate processes
+    through to skipping rules that have。 been run earlier or even by someone else。
+    And it can do this without an explicit clean goal because by not reusing the environment。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于顺序。这意味着你可以重新排序过程，使其更高效。这可能简单到在运行代码检查器之前先运行格式化器，或将测试套件分割以在多个核心中独立运行，甚至跳过之前已运行过的规则。它可以在没有明确清理目标的情况下做到这一点，因为通过不重用环境。
+- en: pants actually cleans as it goes。 So that's what a hermetic environment is。
+    Taught me half the talk to get here。 It's an environment that isolates the side
+    effects of a process from other processes in。 the same workflow。 It means that
+    if one process does something unfortunate that would invalidate the behavior。
+    of other processes， that effect doesn't get captured。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 裤子实际上在运行时会自动清洁。因此，这就是密闭环境的定义。教会我半段对话才能到达这里。这是一种将一个过程的副作用与同一工作流中其他过程隔离的环境。这意味着如果一个过程做了不幸的事情，导致其他过程的行为失效，这种影响不会被捕捉。
+- en: Indeed it means only capturing the effects of a process that we actually intend
+    to capture。 and discarding everything else。 And the way that we achieve a hermetic
+    build is by preparing a knowable environment containing。 dependencies that we
+    can model into which we place known input files。 The only things that we preserve
+    from this environment are specific output files。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确实，这意味着只捕获我们实际上打算捕获的过程效果，丢弃其他所有东西。我们实现密闭构建的方式是准备一个可知的环境，包含我们可以建模的依赖关系，并将已知的输入文件放入其中。我们从这个环境中保留的唯一东西是特定的输出文件。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_14.png)'
+  id: totrans-59
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_14.png)'
+- en: So I've said that that's a good thing。 I've explained some theory about what
+    constitutes a hermetic environment。 Now we need to look at how we actually go
+    about preparing these environments。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我说这是件好事。我解释了一些关于什么构成密闭环境的理论。现在我们需要看看如何实际准备这些环境。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_16.png)'
+  id: totrans-61
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_16.png)'
+- en: So we're going to talk a bit about sandboxing techniques。 The goal of a sandbox
+    is to isolate processes from one another so that their execution does。 not interfere
+    with each other。 Everyone can come in many forms but generally speaking the things
+    that we tend to care about。 are making sure that processes are isolated from each
+    other。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们将谈谈沙箱技术。沙箱的目标是将进程彼此隔离，以确保它们的执行不会相互干扰。沙箱可以有多种形式，但一般来说，我们关心的事情是确保进程之间的隔离。
+- en: Most operating systems these days do that automatically。 But also making sure
+    that processes don't write over files that are produced by other。 processes or
+    making sure that OS resources are allocated fairly。 These days like 90% of the
+    processes that need isolation can be adequately handled by， Docker。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如今大多数操作系统会自动做到这一点。同时，也要确保进程不会覆盖其他进程产生的文件，或确保操作系统资源分配公平。如今，大约90%需要隔离的进程可以通过Docker得到妥善处理。
+- en: everyone uses containers all the time these days。 And honestly you can do this
+    hermetic environment thing with Docker as well。 Another mono repo build system
+    called Bazel does in fact do this。 But it is amongst several sandboxing options
+    that you can choose from inside Bazel。 And that's because Docker even though it's
+    much lighter than a virtual machine still。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如今每个人都在使用容器。老实说，你也可以用Docker来实现这个密闭环境的概念。另一个名为Bazel的单一代码库构建系统实际上也是这样做的。但这只是你可以在Bazel中选择的几种沙箱选项之一。这是因为Docker尽管比虚拟机轻得多，但仍然。
+- en: has significant performance overheads。 If you want to replicate a containerized
+    environment multiple times that means you need。 to materialize a containerized
+    OS multiple times。 And there's a lot of underlying files that just don't change
+    very often。 So that ends up being a lot of repeated and often unnecessary work
+    just to run tests in， isolation。 Building up truly isolated environments be it
+    through Docker or through other means is， really。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有显著的性能开销。如果你想多次复制一个容器化环境，那意味着你需要多次物化一个容器化的操作系统。而且有很多底层文件并不会经常变化。所以这最终变成了很多重复且往往不必要的工作，仅仅是为了在隔离中运行测试。通过Docker或其他手段建立真正隔离的环境是非常。
+- en: really slow。 So all sandboxing approaches need to trade between the level of
+    isolation and the level。 of speed in which your sandboxes can be built。 And so
+    this raises the following question。 How much isolation do we actually need in
+    order to build up a predictable process execution， model？
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非常慢的。因此，所有沙箱方法都需要在隔离级别和沙箱构建速度之间进行权衡。这引发了以下问题。我们实际需要多少隔离才能建立一个可预测的进程执行模型？
+- en: And the answer is actually it's not a lot。 Again our needs are not really built
+    around ensuring security。 This is because most tools that pants orchestrates are
+    trustworthy。 This is a bit of a hand wave but generally you're already using these
+    tools to build your， software。 That means that you've already audited your functionality
+    as much as your organization， needs。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，答案并不是很多。再次强调，我们的需求并不是完全围绕确保安全性来构建的。这是因为大多数由pants协调的工具都是值得信赖的。这有点含糊，但一般来说，你已经在使用这些工具来构建你的软件。这意味着你已经根据组织的需求对功能进行了审核。
+- en: I presume you audit your tools。 Yeah， okay I see a lot of nodding here。 Pants
+    doesn't make these tools do anything that they don't do on their own。 Beyond that
+    build tools tend to do a predictable amount of work。 They tend to do a good job
+    of only reading the files that you tell them to and only outputting。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我假设你们会审核你们的工具。好吧，我看到很多人在点头。Pants并不会让这些工具做任何它们自己不会做的事情。此外，构建工具往往做出可预测的工作量。它们通常只会读取你告诉它们的文件，并仅输出结果。
+- en: in files in places that you tell them to。 So unlike in cases where processes
+    might run away like on a server facing the internet。 the processes that pants
+    runs doesn't really need enforcement of isolation。 They just need to stay in their
+    lane。 So enforcement approaches to isolation these are things like running processes
+    on dedicated。 machines or in containers or even just running in a file system，
+    Sherout jail。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在你告诉它们的位置的文件中运行。因此，与在面向互联网的服务器上可能逃跑的进程不同，pants 运行的进程并不需要隔离的强制执行。它们只需要保持在自己的轨道上。所以隔离的强制执行方法包括在专用机器、容器中，或者仅在文件系统中运行进程，Sherout
+    监狱。
+- en: All these require some amount of operating system primitives to be put in place
+    before。 you can even run a process。 But they give you some level of actual resource
+    isolation in return。 Guidance tools are a bit less frequent but in the Python
+    world we tend to use them all。 the time in the form of virtual M。 And all virtual
+    M does is it modifies your path environment。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有这些都需要一些操作系统原语在你能够运行进程之前设置好。但它们为你提供了一定程度的实际资源隔离。指导工具相对较少，但在 Python 世界中，我们倾向于随时使用它们，形式是虚拟
+    M。而虚拟 M 所做的就是修改你的路径环境变量。
+- en: variable so that when you ask to run Python， the first thing that your shell
+    finds is the。 version that you specified with the pip dependencies that you've
+    installed there。 The key observation is that VM doesn't actually stop you from
+    being able to run other versions。 of Python that are on your system。 It just makes
+    it easier to run one specific version of Python and a lot harder to run the。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样，当你要求运行 Python 时，你的 shell 找到的第一件事就是你在那里的 pip 依赖项所指定的版本。关键观察是，VM 并不会真正阻止你运行系统上的其他
+    Python 版本。它只是让运行特定版本的 Python 更容易，而运行其他版本则更困难。
+- en: rest。 So pants does more or less exactly the same thing。 Rather than putting
+    you in a predictable place inside a completely isolated environment。 pants will
+    run the processes inside the host operating system。 But the working directory
+    is a temporary directory in a completely unpredictable part of your。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以 pants 的作用基本上是一样的。它不会将你放在一个完全隔离环境中的可预测位置。pants 会在主操作系统中运行进程。但工作目录是一个完全不可预测部分中的临时目录。
+- en: file system and we set environment variables from scratch。 The tools that pants
+    runs are usually fairly well behaved。 They'll only access the files that you tell
+    them to。 And if you configure a Python tool to load dependencies from a specific
+    place， it will。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件系统，我们从头设置环境变量。pants 运行的工具通常表现良好。它们只会访问你告诉它们的文件。如果你配置一个 Python 工具从特定位置加载依赖项，它会这样做。
+- en: do that rather than looking to where the OS stores them。 That's how virtual
+    M works。 We just do it a bit more aggressively。 So because the tools that pants
+    runs tends to be trustworthy and they're configurable。 in a way that makes them
+    not interfere with files that they aren't told to， we're able。 to run these tasks
+    inside the host operating system。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而不是查看操作系统存储它们的地方来做到这一点。这就是虚拟 M 的工作原理。我们只是做得更积极一些。由于 pants 运行的工具往往是值得信赖的，并且它们是可配置的，以一种不会干扰未被告知的文件的方式，我们能够在主操作系统内运行这些任务。
+- en: We can run them in a temporary directory that is created especially for a given
+    process。 and we never run another process in the same directory。 So to create
+    environments。 all we need to do is copy in the input files and the dependencies。
+    that don't exist in the host environment。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以在为特定进程特别创建的临时目录中运行它们，并且我们从不在同一目录中运行另一个进程。因此，为了创建环境，我们只需复制输入文件和在主环境中不存在的依赖项。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_18.png)'
+  id: totrans-76
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_18.png)'
+- en: And we copy the build artifacts out when the process is done。 So there's still
+    one more thing that we need to discuss here which is how pants actually。 does
+    this stuff in practice。 Caching the results of rules is only really useful if
+    it's faster to compute a cache key。 than it is to run the rule itself。 Copying
+    files around can be really， really slow and wasteful。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当进程完成时，我们会将构建工件复制出去。因此这里还有一件事情需要讨论，那就是 pants 实际上是如何做到这些的。缓存规则的结果只有在计算缓存键的速度快于运行规则本身时才真正有用。复制文件可能非常，非常慢且浪费。
+- en: And if we're preparing environments and it's substantially slower to do that
+    when we need。 to run the processes， then users just aren't going to tolerate that
+    because people don't。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们在准备环境时发现这会显著拖慢进程的运行速度，那么用户是无法容忍的，因为人们不会。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_20.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_20.png)'
+- en: like slow build tools。 So once you decide you might want to cache the results
+    of rules。 the execution steps look， something like this。 We create some sort of
+    process request and we send that request into the internals of。 pants， something
+    happens。 We wait a while and then eventually pants will send back a process result
+    object。 To a Python developer， this is an async IO call and as a Python developer
+    you don't really。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像缓慢的构建工具。因此，一旦你决定想要缓存规则的结果，执行步骤看起来就像这样。我们创建某种过程请求，并将该请求发送到裤子的内部，发生了一些事情。我们等待一段时间，然后最终裤子会发送一个过程结果对象回来。对于Python开发者来说，这就是一个异步IO调用，作为Python开发者你并不真的。
+- en: care what goes on underneath the hood。 Underneath the hood though。 our pants
+    makes the decision to either run the process or fetch， it out of the cache。 The
+    point where we can end up saving some time comes from answering the question of
+    whether。 we've already run a given task。 So with hermetic environments。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不关心背后的机制。然而，底层的我们的裤子会决定是运行过程还是从缓存中获取。节省时间的关键在于回答我们是否已经运行过某个特定任务的问题。因此，在密封环境中。
+- en: we can answer one question which is if we have the same files， and the same
+    configuration。 the same dependencies， will we get the same result？
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以回答一个问题：如果我们有相同的文件、相同的配置和相同的依赖项，我们是否会得到相同的结果？
+- en: So it doesn't answer the question of is whether a set of files is the same。
+    And that's a problem because with build processes， especially on big code bases，
+    you can end up。 having hundreds or thousands of files and files on file systems
+    are annoyingly mutable。 And that makes reasoning about files on a file system
+    themselves quite slow and unreliable。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，它并没有回答文件集是否相同的问题。这是一个问题，因为在构建过程中，尤其是在大型代码库中，你可能会有数百或数千个文件，而文件系统上的文件恼人地是可变的。这使得对文件系统中自身文件的推理变得相当缓慢和不可靠。
+- en: So pants solves this by using content addressable storage。 In our case， we use
+    LNDB under the hood。 Using our own system to reason about the files that we're
+    modeling means that we get to decide。 what operations are cheap and what operations
+    aren't。 And we get to do that without the constraints that file systems normally
+    put on us。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，裤子通过使用内容可寻址存储来解决这个问题。在我们的案例中，我们在底层使用LNDB。使用我们自己的系统来推理我们正在建模的文件意味着我们可以决定哪些操作是便宜的，哪些不是。我们能够做到这一点，而不受文件系统通常施加的限制。
+- en: It's also useful because as people writing orchestration code， we very rarely
+    care about。 addressing individual files， but we do care about sets of files。 We
+    want to work with a set of source files or we want to work with the resolve collection。
+    of dependencies that an application has or perhaps we want to deal with a combination，
+    of both。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也很有用，因为作为编写编排代码的人，我们很少关心单个文件，但我们确实关心文件集。我们希望处理一组源文件，或者处理应用程序的依赖项集合，或者我们可能想处理两者的组合。
+- en: If you're a rule author writing pants rule code， your window into this content
+    addressable。 storage is a thing called a digest， which is a reference to a set
+    of files。 When we run a process。 what we end up with is a digest which represents
+    the files that。 we asked to copy out of the process execution environment and
+    nothing else。 Similarly。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你是编写裤子规则代码的规则作者，那么你对这种内容可寻址存储的窗口就是一个叫做摘要的东西，它是对一组文件的引用。当我们运行一个过程时，最终得到的摘要代表了我们要求从过程执行环境中复制的文件，而不是其他任何东西。同样。
+- en: when we talk about copying input files into the execution environment， what。
+    we're actually doing is materializing the content that is specified by the digest
+    into。 the execution environment。 Now digests are lightweight。 which makes them
+    cheap to use in a cache key。 And importantly for us， unlike files on a file system。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们谈论将输入文件复制到执行环境中时，我们实际上是在将摘要所指定的内容具现化到执行环境中。现在摘要是轻量级的，这使得它们在缓存键中使用便宜。对我们来说，与文件系统上的文件不同。
+- en: items in the content addressable， storage for us are immutable。 And that means
+    that we can deal with them in the same way that we attempt to reason about。 everything
+    else that we reason about in pants。 So digests are immutable。 They refer to immutable
+    content。 And most importantly。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内容可寻址的存储对我们来说是不可变的。这意味着我们可以以与推理其他事物相同的方式来处理它们。因此，摘要是不可变的。它们指向不可变内容。最重要的是。
+- en: the operations that we perform in our rule code in pants are very。 very cheap
+    compared with doing the same sorts of operations on a file system。 This includes
+    things like renaming files that they have a common prefix， moving a batch。 of
+    files into a different directory， merging multiple digests。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在pants中，我们在规则代码中执行的操作与在文件系统上执行相同类型的操作相比非常非常便宜。这包括重命名具有共同前缀的文件，将一批文件移动到不同目录，合并多个摘要等操作。
+- en: And also under the hood we can only store relative paths， which is important。
+    It means we can materialize files into a temporary directory just the same as
+    the rest of this。 execution model requires。 And speaking of materializing files。
+    the key thing is that we don't actually materialize。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且在后台，我们只能存储相对路径，这是很重要的。这意味着我们可以将文件物化到一个临时目录，就像其余的执行模型要求的那样。说到物化文件，关键在于我们实际上并不物化。
+- en: files into the host file system until we actually have a process that needs
+    our actual files。 And this approach means that we don't waste our time doing piles
+    of I/O in order to maintain。 these hemetic environments。 We only do the bare minimum
+    amount of copying files around to ensure that we end up with。 the files that we
+    actually want。 And so now that we have digests that can reliably represent an
+    input or output file set。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件进入主文件系统，直到我们实际有一个需要实际文件的过程。这种方法意味着我们不会浪费时间进行大量I/O，以维护这些密闭环境。我们只做最低限度的文件复制，以确保我们最终得到我们实际想要的文件。因此，现在我们有了可以可靠表示输入或输出文件集的摘要。
+- en: we can， model a process entirely in Python。 In pants， when we request to run
+    a process。 we supply the command that we want to run， a series of environment
+    variables。 and the files and the environment are specified as， a digest。 Under
+    the hood。 it's a data class which is efficient to cache in Python。 So now that
+    we have that。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以完全在Python中建模一个过程。在pants中，当我们请求运行一个过程时，我们提供我们想要运行的命令，一系列环境变量，以及文件和环境被指定为摘要。在后台，它是一个在Python中高效缓存的数据类。所以现在我们有了这个。
+- en: we have a lightweight reference to a lot of immutable files， which。 is a thing
+    that's accurate enough for us to use in a cache key。 And the result of that is
+    itself cheap enough to store into a cache。 So now the question of have we run
+    this rule becomes easy and lightweight to answer。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一个轻量级的引用，指向大量不可变的文件，这是一个足够准确的东西，可以用作缓存键。因此，结果本身也足够便宜，可以存储到缓存中。现在，是否运行过这个规则的问题变得简单且轻量。
+- en: If we've got a process with the same arguments， the same input digest， the same
+    environment。 et cetera， et cetera， then we can be confident that we have already
+    run it。 What's more。 this question can be answered equally effectively by a local
+    cache or by， a remote cache。 And that's it。 Four pants， a process execution consists
+    of the host operating system。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们有一个具有相同参数、相同输入摘要、相同环境等的过程，那么我们可以确信我们已经运行过它。更重要的是，这个问题可以通过本地缓存或远程缓存同样有效地回答。就是这样。对于pants，进程执行由主操作系统和缓存组成。
+- en: an environment， that we can predictably model， and the contents of a digest
+    that we can reliably store inside。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个我们可以可预测建模的环境，以及一个我们可以可靠存储其内容的摘要。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_22.png)'
+  id: totrans-96
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_22.png)'
+- en: a cache。 So that's basically the end of this talk。 We've done our high level
+    look into hermetic environments and how they unlock some of。 pants more interesting
+    time saving features。
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，这基本上是本次演讲的结束。我们对密闭环境进行了高层次的观察，并探讨了它们如何解锁一些pants更有趣的节省时间的功能。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_24.png)'
+  id: totrans-98
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_24.png)'
+- en: We saw that we're able to make existing Python tools run faster or not at all
+    if we can make。 good choices about how tools get run and when。 We saw that we
+    need to be able to predictably model processes。 which is quite difficult， to do
+    unless you have a predictable environment。 Then we did some hand waving that build
+    processes don't actually need a whole lot of process。
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们看到，如果我们能够很好地选择工具的运行方式和时间，现有的Python工具可以运行得更快，甚至根本不运行。我们了解到，我们需要能够可预测地建模过程，这在没有可预测环境的情况下是相当困难的。然后我们做了一些手势，表示构建过程实际上并不需要大量过程。
+- en: in isolation， or at least we don't need a whole lot to be able to predictably
+    model their， behavior。 And we saw that using a content addressable database makes
+    it cheaper to do orchestration。 tasks like merging these set of dependencies and
+    the set of source files and also makes， it much。 much easier to reason about file
+    sets in a cache。 So if you're interested in all this stuff。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在孤立状态下，或者至少我们不需要太多条件就能预测它们的行为。我们看到使用内容可寻址数据库可以降低协调任务的成本，例如合并这些依赖关系集和源文件集，并且也使得推理缓存中的文件集变得更容易。所以如果你对这些内容感兴趣。
+- en: we are going to be around at the rest of the， conference。 Myself， John and Benji。
+    we're going to be sprinting tomorrow both on pants build and， pecs。 which is a
+    project that the pants build project stewards。 One thing that we will be doing
+    in particular rather than working on features in pants will。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在会议的其余时间里待着。我自己、约翰和本吉。我们明天将同时在pants build和pecs项目上进行冲刺，后者是pants build项目的管理者之一。我们特别关注的一个方面是帮助你将pants集成到你的开源库中。
+- en: be helping you onboard pants into your open source repos。 So if this all this
+    seems interesting to you will help you take advantage of it。 You can come find
+    myself， Benji or John in the hallway track after this talk。 We're happy to answer
+    any questions that you had about this talk。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果这些听起来很有趣，我们将帮助你利用这些资源。演讲结束后，你可以在走廊活动中找到我、本吉或约翰。我们很乐意回答你对这次演讲的任何问题。
+- en: There are docs and demonstrations available at pantsbuild。org。 There's also
+    a link to our community Slack where you can ask us or other maintainers questions。
+    There are notes on this talk。 There are bits sparse at the moment available on
+    the pants build blog right now if I got。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在pantsbuild.org上有可用的文档和演示。此外，还有一个链接到我们的社区Slack，你可以在那儿向我们或其他维护者提问。关于这次演讲也有笔记。目前在pants
+    build博客上有一些稀疏的内容可用。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_26.png)'
+  id: totrans-104
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_26.png)'
+- en: the scheduling functionality correct。 That is the end of my talk。 Thank you
+    for paying attention。 I look forward to seeing you in the hallway track。 [APPLAUSE]。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调度功能已经正确。这是我演讲的结束。感谢你的关注。期待在走廊活动中见到你。[掌声]。
+- en: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_28.png)'
+  id: totrans-106
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d5a82ec9b1c3de02ce16a8ec0f97c83d_28.png)'

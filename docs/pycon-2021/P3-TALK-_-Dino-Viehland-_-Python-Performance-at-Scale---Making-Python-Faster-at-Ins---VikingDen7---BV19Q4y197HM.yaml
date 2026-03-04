@@ -1,0 +1,692 @@
+- en: P3：TALK _ Dino Viehland _ Python Performance at Scale - Making Python Faster
+    at Ins - VikingDen7 - BV19Q4y197HM
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P3：演讲 _ 迪诺·维兰 _ 大规模Python性能 - 让Python在Ins上更快 - VikingDen7 - BV19Q4y197HM
+- en: Hi， my name is Dena Veland and today I'll be talking to you about Python performance。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗨，我的名字是Dena Veland，今天我将与大家谈谈Python性能。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_1.png)'
+- en: at scale and how we make Python faster in Instagram。 We'll look at a few different
+    things。 First we're going to look at some of the successful improvements that
+    we've made to。 see Python and we have our own fork of it that we call sender。
+    We'll look at some more experimental work both in sender and beyond。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在大规模上，我们将讨论如何让Python在Instagram上更快。我们将关注几个不同的方面。首先，我们将看看我们对Python所做的一些成功改进，我们有自己的一个分支，称为sender。我们还将探讨一些在sender及其他方面的实验性工作。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_3.png)'
+- en: And finally we'll look at the results of our work and what's next for us。 But
+    before I get into that， let me first talk about Python and Instagram。 This is
+    going to be a super quick review for those of you who have seen other talks about。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们将看看我们的工作成果以及接下来要做什么。但在此之前，我先谈谈Python和Instagram。这将是一个非常简短的回顾，适合那些看过其他演讲的人。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_5.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_5.png)'
+- en: Instagram。 What is Instagram？ It's a monolithic web application that runs on
+    Django， Python 3。8。 and uses UWSGI as the， web server。 For those of you who aren't
+    familiar with UWSGI。 the way it works is that there's a parent， process and then
+    several child processes get created。 And these child processes are what serve
+    the actual workload。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Instagram。Instagram是什么？它是一个运行在Django上的单体Web应用，使用Python 3.8，并将UWSGI作为Web服务器。对于那些不熟悉UWSGI的人，它的工作原理是有一个父进程，然后创建几个子进程。这些子进程负责实际的工作负载。
+- en: These will spawn and respawn over the lifetime of the application and serve
+    all the requests。 We do a lot of profiling on our workload to understand what
+    we need to make faster。 And the way we do this is with the Linux Perf sampling
+    profiler。 We've done a few tweaks to the runtime to get a little bit of better
+    data， especially around。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些进程将在应用程序的生命周期中生成和重生，并处理所有请求。我们对工作负载进行了大量的性能分析，以了解需要加速的部分。我们使用Linux Perf采样分析器来做到这一点。我们对运行时进行了一些调整，以获取更好的数据，特别是在。
+- en: async call stacks。 And we get really good insights both at the Python and the
+    C level that we can drill into。 and kind of mix and match those views and understand
+    what's going on。 We look at one main metric to improve our performance， which
+    is requests per second under load。 We drive our servers up to a 90% level of load
+    and we see how many requests they're able。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 异步调用栈。我们在Python和C层面都获得了很好的洞察，能够深入分析，并结合这些视图来理解发生了什么。我们关注的一个主要指标是负载下的每秒请求数。我们将服务器负载提升到90%的水平，看看它们能够处理多少请求。
+- en: to serve at that level。 It's not really a metric that's stable over time。 but
+    it's good for just testing out the， win and loss of an individual change。 As the
+    application changes， different requests need to use more or less CPU。 And so that's
+    the reason why it's not good over a long period of time。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在该级别上提供服务。这并不是一个随着时间推移而稳定的指标，但对于测试单个更改的赢和输是有效的。随着应用程序的变化，不同的请求需要使用更多或更少的CPU。这就是为什么在长时间内不太适合的原因。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_7.png)'
+  id: totrans-11
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_7.png)'
+- en: So let's dive in and look at the successful improvements that we've made to
+    our fork of， CPython。 which is center。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么让我们深入研究一下我们对CPython分支所做的成功改进，中心。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_9.png)'
+  id: totrans-13
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_9.png)'
+- en: One big change that we've made is to leverage that relationship between the
+    parent and child。 processes that happens in the Uizgi server。 These processes
+    end up sharing a bunch of memory and the more we can maximize that。 the， more
+    memory that we have for the children to actually serve the requests。 The way shared
+    memory works is when a child writes to one of these pages， it ends up no。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们所做的一项重大变化是利用Uizgi服务器中父进程和子进程之间的关系。这些进程最终会共享大量内存，我们能最大化这一点，子进程就能有更多内存来处理请求。共享内存的工作方式是，当子进程写入这些页面之一时，它最终不。
+- en: longer being shared and the child process gets its own copy。 So we want to avoid
+    that as much as we can。 A large source of these writes is just from the reference
+    counts。 the objects that live， in the heap before we fork。 So what we've done
+    is we've modified the reference count to use a high bit in it that。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不再共享，子进程获得自己的副本。因此我们想尽量避免这种情况。这些写入的一个主要来源仅仅是来自引用计数。在我们分叉之前，堆中的对象。因此，我们所做的是修改引用计数以使用其中的高位。
+- en: marks objects as being immortal。 And this just means that they're never actually
+    going to die inside of the child processes。 This means that we have to update
+    Pi in Gref and Pi Defref， the macros which alter the。 reference count。 And every
+    single time we do one of those。 we need to avoid updating the reference count。
+    This actually adds a significant amount of overhead in the normal case of just
+    running。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将对象标记为不朽。这仅仅意味着它们在子进程内部永远不会消亡。这意味着我们必须更新Pi在Gref和Pi Defref中的宏，这些宏会改变引用计数。每次执行这些操作时，我们需要避免更新引用计数。这实际上在正常的运行情况下增加了显著的开销。
+- en: normal code， not in this forked model， but the memory savings actually make
+    it more than。 worth it in our workload。 Pre fork， the heap is actually collected
+    and it's traversed。 And all those objects that are in the heap are marked as being
+    immortal。 And this actually gives us a 5% win in requests per second in our production
+    workloads， which。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在正常代码中，而不是在这个分叉模型中，但内存节省实际上使得在我们的工作负载中更具价值。分叉前，堆实际上被收集并进行遍历。所有堆中的对象都被标记为不朽。这实际上为我们在生产工作负载中每秒请求提供了5%的收益。
+- en: is pretty amazing。 Another area that we've focused a lot of effort is on async
+    IO。 So one big change that we've made is just avoiding using stop iteration to
+    send and receive values。 into async functions。 This is creating an exception object，
+    which is a major source of overhead。 And on simple benchmarks we see improvements
+    of it being 1。6 times faster。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这真是惊人。我们关注的另一个领域是异步IO。因此我们所做的一项重大改变就是避免使用停止迭代来发送和接收异步函数中的值。这会创建一个异常对象，这是主要的开销来源。在简单的基准测试中，我们看到性能提升为1.6倍。
+- en: We actually upstream this work into Python， so it's available in Python 3。10
+    through a。 couple of different patches that have improved it。 And this was yet
+    another 5% win in production。 which is really， really huge for us。 Another way
+    that we've approved async IO is something that we call eager evaluation。 Frequently
+    you have something that would be like， we'll wait some call。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们实际上将这项工作上游到Python，因此在Python 3.10中可以通过几种不同的补丁获得改进。这对我们在生产中又带来了5%的收益，这对我们来说真的是非常巨大的。我们改进异步IO的另一种方式是我们称之为急切评估。通常你会有一些调用，我们会等待它。
+- en: And right now that needs to go off and schedule that function to run onto the
+    event loop。 But a lot of functions will just complete synchronously and you don't
+    have to wait for them。 So if it completes without blocking， we avoid the creation
+    of the code routine。 And instead what we do is we have a singleton wait handle
+    that gets returned。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而现在需要去调度该函数在事件循环中运行。但是许多函数会同步完成，你不需要等待它们。因此，如果它在不阻塞的情况下完成，我们避免了代码例程的创建。相反，我们做的是返回一个单例等待句柄。
+- en: And this actually has the value and it gets immediately consumed at the call
+    site。 There's only one in the entire process。 We also use this with async IO dot
+    gather。 And the way this is implemented is that there's a new vector call flag
+    to indicate that something。 is awaited。 And so functions recognizes flag as do
+    does async IO dot gather。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而这实际上具有价值，并且在调用位置立即被消费。在整个过程中只有一个。我们还使用这个与异步IO的`dot gather`。其实现方式是有一个新的向量调用标志来指示某些内容是被等待的。因此，函数识别该标志，就像异步IO的`dot
+    gather`一样。
+- en: And this is a 3% win in production。 Another big optimization we've done is adding
+    inline cache and support into the bytecode。 The way this works is hot methods
+    get a hidden copy of the bytecode。 And you can see the data structure for that
+    over on the right。 This includes a copy of the bytecode as well as a bunch of
+    inline caches as well。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这在生产中带来了3%的收益。我们所做的另一个重大优化是将内联缓存和支持添加到字节码中。这项工作的方式是热门方法会获得字节码的隐藏副本。你可以在右侧看到其数据结构。这包括字节码的副本以及一些内联缓存。
+- en: When we encounter an opcode that we can optimize， we replace the existing opcode
+    with a more。 specific one which can simply do a type check and do a fast dispatch
+    that doesn't have to。 go through the full normal dynamic lookup。 Overall this
+    has been a 5% win in production for us which is again another really big win。
+    So let's look at some of the bytecodes that we end up replacing and what we replace
+    them， with。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们遇到可以优化的操作码时，我们用更具体的操作码替换现有操作码，该操作码可以简单地进行类型检查并进行快速调度，而不必通过完整的正常动态查找。总体而言，这在生产中为我们带来了5%的收益，这也是一个非常大的收获。所以让我们看看一些我们最终替换的字节码，以及我们用什么替换它们。
+- en: Load adder is one of the most common opcodes that we use because we look up
+    a lot of attributes。 Every Python program does。 And there's a lot of different
+    variations of things that we can look up attributes against。 A lot of time attributes
+    are methods which are descriptors。 A lot of time attributes are instance members
+    stored in a dictionary。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 加载加法器是我们使用的最常见的操作码之一，因为我们查找很多属性。每个Python程序都是如此。而且我们可以查找属性的变体很多。很多时候，属性是方法，即描述符。很多时候，属性是存储在字典中的实例成员。
+- en: Python also has something called split dictionaries where the dictionary layout
+    is shared between。 multiple instances。 And of course we have things like types
+    and modules and we have polymorphic call sites。 as well where the attributes are
+    being looked up against multiple objects。 And the opposite of loading attributes
+    is of course storing attributes。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python还有一种被称为分裂字典的东西，其中字典布局在多个实例之间共享。当然，我们有类型和模块，还有多态调用位置，其中属性是针对多个对象查找的。而加载属性的反面当然是存储属性。
+- en: This doesn't happen quite as much and it doesn't happen quite with as many sort
+    of variations。 For example you don't do a lot of stores against types。 So this
+    one ends up being a lot simpler and we have a lot fewer replacements for it。 Load
+    global is of course a big big thing。 People look up the names of types and other
+    things that they've imported all the time。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种情况发生得并不多，而且变化也不多。例如，你不会对类型做很多存储。因此，这个操作最终简单得多，我们对它的替换要少得多。加载全局当然是一个大问题。人们一直在查找他们导入的类型和其他东西的名称。
+- en: And so we have a simple replacement for that which is load global cache and
+    we'll see how。 that works in a little bit more detail in the next slide。 And then
+    we have some other things that we've optimized as well like binary subscription。
+    And this isn't all the outputs that we've replaced but it gives you a pretty good
+    feel。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们有一个简单的替换，就是加载全局缓存，我们将在下一张幻灯片中更详细地了解它的工作原理。然后我们还有一些其他的优化，比如二元订阅。这并不是我们替换的所有输出，但它让你有一个不错的感觉。
+- en: of the surface area。 So the way we've optimized our global lookups is with something
+    that's called dictionary。 work watchers。 And watchers provide updates to global
+    and built-ins when they're modified。 So we start off with the built-ins dictionary
+    which has all the built-ins that you're familiar。 with。 Things like min， max，
+    type， int and so on。 And then a module has its own dictionary where you've defined
+    the things。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 表面面积。因此，我们优化全局查找的方式是使用被称为字典的东西。工作观察者。观察者在全局和内置被修改时提供更新。所以我们从内置字典开始，其中包含你熟悉的所有内置内容。比如min，max，type，int等等。然后一个模块有它自己的字典，你在其中定义了内容。
+- en: And some of these things might just be top level things like x equals one。 Other
+    things might be shadowing things that are built-ins like max here has been shadowed。
+    to return min。 I don't know why you want you to want to do that。 Let's say you
+    did。 And finally we have a function here which is actually using the global as
+    they're defined。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中一些内容可能只是顶层的东西，比如x等于一。其他的可能是覆盖内置的内容，比如这里的max已经被覆盖以返回min。我不知道你为什么想这样做。假设你确实想这样做。最后，我们有一个函数，它实际上是在使用定义的全局变量。
+- en: So it's calling max and passing xn and 42。 So we'll end up with three different
+    caches for these all the globals that are inside of。 this function。 Max will end
+    up storing the value for the max function that's in the module。 X will end up
+    storing the value for x that's in the module and min will end up storing the。
+    value that's min in the built-ins。 And if we were to go and mutate either the
+    module or the built-ins。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以它调用max并传递xn和42。因此，我们最终会为这个函数内部的所有全局变量生成三个不同的缓存。Max将存储模块中max函数的值。X将存储模块中x的值，而min将存储内置中的min值。如果我们去修改模块或内置的任何一个。
+- en: these little holders， would get updated when that mutation happens。 So that
+    all we have to do is retrieve a value from one address in memory and we know exactly。
+    what the built-in is with no extra chunks。 The way we've implemented this is to
+    reuse the existing version tag to mark watch dictionaries。 And the way that works
+    is dictionaries are marked with the low bit in the dictionary version， tag。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些小持有者在发生变更时会被更新。因此，我们所需要做的就是从内存中的一个地址检索一个值，我们就确切知道内置是什么，没有额外的部分。我们实现这一点的方法是重用现有版本标签来标记观察字典。其工作原理是字典的低位标记了字典版本标签。
+- en: Now whenever we're updating a dictionary version， we actually bump it by two
+    instead of bumping。 it by one。 And we can just check that low bit to know whether
+    or not a dictionary is being watched。 whenever a dictionary gets mutated。 So this
+    gives us a really low overhead way to implement this feature。 And when we integrate
+    this in with shadow bytecode， because it was originally an optimization。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，每当我们更新字典版本时，我们实际上是将其增加两倍，而不是增加一次。我们只需检查低位以确定字典是否正在被观察。每当字典发生变更时，这为我们提供了一种非常低开销的实现此功能的方法。当我们将其与影子字节码集成时，因为最初是优化的一部分。
+- en: that we used in the JIT， which I'll talk about soon， it ended up being an extra
+    5% when on。 top of the existing shadow bytecode。 We've done a bunch of targeted
+    optimizations as well。 One of those is fixed dunder built-ins。 So dunder built-ins
+    is an attribute that exists at the module level。 And if you were to redefine it
+    in CPython， you'll actually get a different set of built-ins。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在 JIT 中使用的这个，稍后我会谈到，结果在现有的影子字节码基础上增加了 5%。我们还做了一些有针对性的优化。其中之一是固定的 dunder 内置。dunder
+    内置是存在于模块级别的一个属性。如果你在 CPython 中重新定义它，你实际上会得到一组不同的内置。
+- en: There's a caveat there， you only sometimes get those additional sets of built-ins。
+    There's some weird CPython implementation details that kind of thwart that。 But
+    this is actually documented as a CPython implementation detail。 And we just got
+    rid of that implementation detail。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一个警告，你只有在某些情况下才能获得额外的内置集合。这里有一些奇怪的 CPython 实现细节，阻碍了这一点。但这实际上作为 CPython 实现细节被记录下来了。我们已经去掉了那个实现细节。
+- en: So that ended up giving us about a 1% when on requests per second。 We've done
+    some micro optimization throughout the entire codebase。 When that ended up being
+    kind of significant on benchmarks， so it's a PyType lookup， and。 we've upstream
+    this so it'll be in Python 3。10。 And on some benchmarks， this is 1。19 times faster。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这给了我们大约 1% 的请求每秒提升。我们在整个代码库中进行了一些微优化。当这在基准测试中变得相当显著时，这就是 PyType 查找，我们已经上游提交，这将在
+    Python 3.10 中实现。在某些基准测试中，这快了 1.19 倍。
+- en: So that's on InBody， but there are a couple of dozen benchmarks that showed
+    improvement。 with a minimum of 1。03x improvement。 So that was really kind of meaningful。
+    At least as far as the micro benchmarks go。 Shockingly。 this was really hard for
+    us to measure in production because it is just a。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这在 InBody 上，但是有几十个基准测试显示了改进，至少提高了 1.03 倍。因此，这在微基准测试中非常有意义。令人震惊的是，这在生产环境中非常难以测量，因为它就是一个。
+- en: really micro tweak to what's going on when we're doing a cache lookup。 So we
+    don't actually attribute anything there。 We've done a lot of work to avoid thread
+    state lookup throughout the runtime。 This is work that has been happening upstream
+    as well。 So one nice thing is as we upgrade。 we'll have less patches for these
+    sorts of things。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在进行缓存查找时，实际上是对正在发生的事情进行微调。因此，我们在这里并没有归因于任何东西。我们已经做了大量工作以避免在运行时进行线程状态查找。这项工作也在上游进行。所以一个好处是，随着我们的升级，我们将对这些问题的补丁减少。
+- en: We've also done some work around prefatching where loading certain attributes，
+    especially。 around frame creation， ends up going off in reading memory。 We can
+    just prefetch that earlier and avoid some stalls。 A huge amount of improvements
+    have actually come from just build system improvements。 So normally。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还做了一些关于预取的工作，特别是在框架创建时加载某些属性，最终会导致读取内存的延迟。我们可以更早地进行预取，避免一些停顿。大量的改进实际上来自于构建系统的改进。因此，通常情况下。
+- en: CPython is optimized using profile guided optimizations。 And those optimizations
+    go through and look at what code's running and optimize those specific。 code paths，
+    bring branches that are frequent closer together， in line things， things like，
+    that。 And by default， CPython just runs PGO against a set of tests。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CPython 是通过基于配置文件的优化进行优化的。这些优化会检查正在运行的代码并优化那些特定的代码路径，使频繁的分支更靠近，进行行内处理，诸如此类。默认情况下，CPython
+    仅对一组测试运行 PGO。
+- en: And that's what we were doing for a long time as well。 We also use something
+    called bolt。 which is an additional binary optimizer that improves， the layout
+    of the binaries even more。 And for both of these， we switch to actually using
+    data from live production host rather。 than using the test cases， which include
+    many paths that we're not going to take and don't。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们也进行了很长时间的这项工作。我们还使用了一种叫做 bolt 的工具，它是一种额外的二进制优化器，可以进一步改善二进制文件的布局。对于这两者，我们切换到实际使用来自在线生产主机的数据，而不是使用测试用例，因为测试用例包含了许多我们不会采取的路径。
+- en: necessarily include all the paths that we will take。 Another big source of wins
+    has been moving our UWSGI binary onto huge pages。 This helps reduce the instruction
+    translation look-aside buffer cache misses。 And that was about a 3% win。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不一定包含我们将采取的所有路径。另一个重要的收益来源是将我们的 UWSGI 二进制文件迁移到巨页上。这有助于减少指令翻译旁路缓存未命中率。这大约带来了
+    3% 的收益。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_11.png)'
+  id: totrans-42
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_11.png)'
+- en: So that's pretty awesome。 We've also done a whole bunch of other experimental
+    changes。 These are still things that we're working on and hope will pan out， but
+    it's still a。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这真是太棒了。我们还做了一系列其他实验性的更改。这些仍然是我们正在努力的方向，并希望能有所成效，但这仍然是一个。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_13.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_13.png)'
+- en: little bit too early to test。 So one of the biggest changes to sender has been
+    the development of a custom chat。 This is a method at a time jit， and we have
+    nearly full coverage of all of the opcodes， now。 Most of the unsupported opcodes
+    are things that are super rare or that we don't really， care about。 Things like
+    import star， which are only going to occur at the top level of the module， which。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在测试还有点早。因此，发送者最大的变化之一是开发了一个自定义的 JIT。这是一种按需的 JIT，目前我们几乎覆盖了所有的操作码。大多数不支持的操作码都是非常罕见的，或者我们并不在意的事情。像
+    import star 这样的东西，仅会在模块的顶层出现。
+- en: we're never going to jit。 The jit works with both the front end and the back
+    end。 The front end lowers to our HIR intermediate representation。 This does things
+    like single static assignment。 We have a ref count insertion pass that runs over
+    the final code to actually insert our。 in-croughs and deckrefs so that they can
+    be as optimal as possible。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们永远不会进行 JIT。JIT 与前端和后端都协同工作。前端降低到我们的 HIR 中间表示。这做了一些像单一静态赋值的事情。我们有一个引用计数插入传递，会在最终代码上运行，以实际插入我们的
+    in-croughs 和 deckrefs，使其尽可能优化。
+- en: And we do some other optimization passes in here as well。 So if we take a simple
+    function。 this is just assigning an attribute to a class， it ends， up turning
+    into this HIR initially。 And so this is pretty straightforward。 We're loading
+    self。 We're loading the value one。 We check to see if self is defined。 This is
+    something that happens in the interpreter loop for every single load of a variable。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在这里还进行了一些其他的优化传递。因此，如果我们考虑一个简单的函数，这只是将一个属性分配给一个类，最终变成了这个 HIR。这个过程相当简单。我们在加载
+    self，加载值为一，并检查 self 是否已定义。这是在解释器循环中对每一个变量加载都发生的事情。
+- en: We store the value one and we return none。 When we take this through all of
+    the passes。 we end up with this slightly different tree。 And so you can see here
+    that we've managed to get rid of the variable check on self。 It's a parameter。
+    It's never been deleted。 We know it's always going to be signed。 And you can also
+    see that we've inserted some in-croughs on the none in the return。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们存储值为一，并返回 none。当我们经过所有的传递时，最终得到了这个稍有不同的树。因此，你可以看到我们成功地去掉了对 self 的变量检查。这是一个参数，它从未被删除。我们知道它总是会被签名。你还可以看到，我们在返回的
+    none 上插入了一些 in-croughs。
+- en: That wasn't there before。 But the other interesting thing is there aren't actually
+    any in-croughs on other things。 Like we don't have to in-crough self or in-crough
+    the value of one。 We know that those are going to be a live-through lifetime of
+    the function。 After going through HIR。 we lower things to our lower intermediate
+    representation。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 之前是没有的。但另一个有趣的事情是实际上没有其他内容的内嵌。比如我们不需要内嵌self或内嵌1的值。我们知道这些将在函数的生命周期内是活跃的。在经过HIR之后，我们将内容降低到我们的较低中间表示。
+- en: Here things like register allocation happen and we do some targeted optimizations
+    while。 lowering as well。 Things like direct dispatch to known functions。 And this
+    uses as in JED for its final X64 code generation。 So if we take that same function。
+    this is what the LIR ends up looking like。 So you can see we start seeing actual
+    registers in here where we're binding the argument to。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，像寄存器分配这样的操作发生，我们在降低过程中进行一些有针对性的优化。比如直接调度到已知的函数。这使用了JED中的最终X64代码生成。因此，如果我们取同一个函数，这就是LIR最终的样子。可以看到，我们开始在这里看到实际的寄存器，我们将参数绑定到这些寄存器上。
+- en: RDI。 You can see that we load the constant。 The store is a complicated call
+    to a helper。 but it's a call。 And then we load the const for none and we do it
+    in breath on it。 And this bit test that you see in here is actually part of the
+    immortalization that we。 do that makes this a little bit more expensive。 And finally，
+    return the value of none。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: RDI。您可以看到我们加载常量。存储是对助手的复杂调用，但它是一个调用。然后我们加载none的常量，并对此进行调用。您在这里看到的位测试实际上是我们执行的不可变处理的一部分，这使得这一步稍微昂贵一些。最后，返回none的值。
+- en: Another experiment we've been working on is something that we call static Python。
+    This provides you with the performance gains that you get from something like
+    MyPys。C。 or， Sython。 but you just use normal Python files and load them at runtime
+    like normal。 This all starts with a source loader which recognizes files that
+    have been marked with。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们一直在进行的另一个实验是我们称之为静态Python的东西。这为您提供了从MyPys.C或Sython等工具获得的性能提升，但您只需使用普通的Python文件并在运行时像普通文件一样加载它们。这一切都始于一个源加载器，它可以识别被标记为静态的文件。
+- en: a import under static。 It supports cross module compilation and so we'll go
+    off and analyze other modules that。 the static module is importing as well。 There's
+    a new set of byte codes for static features。 things like invoke function and load，
+    field。 And rather than taking simple parameters like what attribute to load。 it
+    takes a descriptor， which indicates the class and field that we're loading it
+    from。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 静态下的导入。它支持跨模块编译，因此我们将分析其他模块的静态模块导入的内容。对于静态特性有一组新的字节码，比如调用函数和加载字段。而不是接受简单的参数，比如要加载哪个属性，它接受一个描述符，指示我们正在从中加载的类和字段。
+- en: And that can be bound more efficiently at runtime。 It just uses pet 44 annotations
+    like MyPys。C。 does， but we also added several new types， things like N64 which
+    live in the DUNR static module。 And these allow you to use primitive integer arithmetic
+    in a very efficient way。 Static Python code has to interrupt with normal Python
+    code in a safe manner and therefore。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可以在运行时更高效地绑定。它使用像MyPys.C那样的pet 44注释，但我们还添加了几种新类型，比如在DUNR静态模块中存在的N64。这些允许您以非常高效的方式使用原始整数运算。静态Python代码必须以安全的方式与普通Python代码进行交互。
+- en: we enforce type checks at boundaries。 So when you call in to statically type
+    Python code from normal Python code。 we'll validate， the arguments are correct
+    on the function call。 And we're using a new static compiler for this。 This is
+    based upon the Python 2 compiler package which has been updated to Python 3 and
+    we've。 added support for emitting the static opcodes as well。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在边界处强制执行类型检查。因此，当您从普通Python代码调用静态类型的Python代码时，我们会验证函数调用中的参数是否正确。我们为此使用了一个新的静态编译器。它基于已经更新到Python
+    3的Python 2编译器包，并且我们也添加了对静态操作码的支持。
+- en: So the compiler is entirely written in Python。 So let's take a look at what
+    some static Python looks like。 So it all starts with the import under static。
+    And this marks that the static loader should be used and that this should be statically。
+    compiled。 We've got some things like from static import in 64。 And so this is
+    type annotation that can be used to indicate that some things are primitive。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以编译器完全用Python编写。那么，让我们看看一些静态Python的样子。所有内容都从静态下的导入开始。这标志着应该使用静态加载器，并且这应该是静态编译的。我们有一些内容，比如从静态导入N64。因此，这是可以用来指示某些内容是原始的类型注释。
+- en: type and it will void a box integer and significantly increase the performance
+    if you're doing simple。 integer arithmetic。 We can do things like use final constants
+    so final int is a normal type annotation and。 this will allow us to treat this
+    global as a constant and actually inline it into the。 generated code。 So I mentioned
+    that we do type checks at the boundaries and so that's actually done by。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类型，它将 void 一个盒装整数，并显著提高执行简单整数运算的性能。我们可以做到像使用最终常量这样的事情，因此最终整数是一个普通的类型注释。这将允许我们将该全局视为常量，并实际将其内联到生成的代码中。所以我提到我们在边界进行类型检查，这实际上是由...
+- en: emitting a chat marks opcode when we call into functions。 And we'll actually
+    skip this opcode when we're calling from static Python to static Python。 But here's
+    what it looks like for this function。 We make sure that self is an instance of
+    C and that next is an instance of C or none。 We transform the initialized slots
+    in Dunder in it， the initialized fields in Dunder in。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们调用函数时发出聊天标记操作码。当我们从静态 Python 调用到静态 Python 时，我们实际上会跳过这个操作码。但对于这个函数，它的样子是这样的。我们确保
+    self 是 C 的一个实例，next 是 C 或 none 的一个实例。我们在 Dunder 中转换初始化的插槽，初始化的字段在 Dunder 中。
+- en: it into slots。 And so that ends up with a Dunder slots assignment in the generated
+    code for the class。 And we've extended this to support slot types。 And so here
+    we can actually say that length is a in 64。 And that's just a normal struct member
+    in the C Python parlance。 And next ends up being typed to this optional C。 And
+    we've added a new type descriptor that。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它进入插槽。因此，这在生成的类代码中最终形成 Dunder slots 赋值。我们扩展了这一点以支持插槽类型。因此，我们实际上可以说长度是一个 64 位整数。这只是
+    C Python 术语中的普通结构成员。接下来最终会被类型化为这个可选的 C。我们添加了一个新的类型描述符。
+- en: also does type enforcement when you assign to it。 For our field stores。 we end
+    up generating something like this where we have a store field。 opcode and we say
+    what instance and what name we are assigning to。 And when this turns into generated
+    code， it's literally just a single move instruction that's。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你赋值时，它也会进行类型强制。对于我们的字段存储，我们最终生成类似这样的内容，其中有一个存储字段操作码，我们说明正在赋值的实例和名称。当这转化为生成的代码时，实际上只是一个单一的移动指令。
+- en: moving to the correct offset， which is much more efficient than having to go
+    through a。 whole set of system to figure out what attribute we're assigning to
+    and where that lives。 And then things like this primitive integer arithmetic actually
+    turning the special op。 codes as well。 And when we jit those， those turn into
+    simple X64 instructions to load a simple integer and。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 移动到正确的偏移量，这比必须遍历整个系统以确定我们正在赋值的属性及其所在位置要高效得多。像这种原始整数运算实际上也会转换为特殊操作码。而当我们进行即时编译时，这些会转化为简单的
+    X64 指令来加载一个简单的整数。
+- en: to do the multiply。 Another big experiment we're working on is something that
+    we call pyro。 which is an experimental， from scratch runtime that reuses the C
+    Python standard library。 There's several significant differences from C Python。
+    It has a compacting GC。 It uses type pointers that allows us to treat integers
+    or floating point types as primitives。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 进行乘法运算。我们正在进行的另一个大实验是我们称之为 pyro 的东西，这是一个从零开始的实验性运行时，重用 C Python 标准库。与 C Python
+    有几个显著区别。它具有紧凑的垃圾回收机制。它使用类型指针，使我们能够将整数或浮点类型视为基本类型。
+- en: and uses hidden classes which give it a really efficient way to provide inline
+    caching。 We use the C API PEP 384 subset for support in C extensions。 And there's
+    several open questions about pyro。 There's the difficulty in adapting a PEP 384
+    at scale。 Most modules are not written to PEP 384 and there's the performance
+    of that API emulation。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并使用隐藏类，这为提供内联缓存提供了非常高效的方法。我们使用 C API PEP 384 子集来支持 C 扩展。关于 pyro 还有几个开放的问题。大规模适配
+    PEP 384 存在困难。大多数模块并未按照 PEP 384 编写，而且该 API 模拟的性能也有待提高。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_15.png)'
+  id: totrans-64
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_15.png)'
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_16.png)'
+  id: totrans-65
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_16.png)'
+- en: So what's next？ One thing we'd like to work on more is upstreaming some of our
+    changes。 We've seen from the previous slides that have been various things that
+    we've already upstreamed。 And there's a lot of things in here that are too big
+    and experimental for us to upstream。 like the JIT or static Python。 But there's
+    a lot that the community could benefit from as well。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那接下来是什么？我们希望进一步推进的一个方面是将我们的一些更改上游化。我们从之前的幻灯片中看到，已经有各种我们已上游化的内容。这里还有很多东西对我们来说太大且实验性，无法上游化，比如
+    JIT 或静态 Python。但社区也能从中受益。
+- en: And it helps us out too because it would be less for us to upgrade from version
+    to version。 Now let's go ahead and jump in and look at some performance results。
+    Measuring our production improvements is kind of a little bit difficult。 We've
+    seen lots of additive things， you've seen all of the percentages as we've gone
+    through。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也对我们有帮助，因为我们从一个版本升级到另一个版本所需的工作量会减少。现在让我们直接进入，看看一些性能结果。衡量我们的生产改进有点困难。我们看到许多增量的改进，您在整个过程中也看到了所有的百分比。
+- en: the slides， but you can't just add them up。 So we estimate that's probably around
+    a 20% to 30% win。 maybe closer to a 30% side in requests， per second。 We can look
+    at micro benchmarks or the PyPerformance Benchmark Suite and see kind of where
+    our wins。 are overall。 This isn't something that we usually do。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幻灯片上显示的数字无法简单相加。因此，我们估计这可能是大约20%到30%的收益，或许在每秒请求方面更接近30%。我们可以查看微基准测试或PyPerformance基准套件，了解我们的整体收益。这并不是我们通常会做的事情。
+- en: We're really a lot more focused on looking at the performance in production。
+    And so this is actually the first time that we've run the entire PyPerformance
+    Benchmark。 against Cinder and CPython to see how they compare。 We do focus on
+    a couple of random benchmarks and run those regularly。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们更专注于观察生产中的性能。因此，这实际上是我们第一次针对Cinder和CPython运行整个PyPerformance基准测试，以了解它们之间的比较。我们确实专注于几个随机基准并定期运行它们。
+- en: Those include Richards and Delta Blue and shockingly those are the two that
+    we do the best on here。 But these numbers are baseline to CPython。 So CPython
+    is 1x over here on the right and a smaller bar represents a less run time for。
+    that benchmark。 So you can see with Richards it's close to a 4x win and kind of
+    as we go through the benchmarks。 these are sorted by order of performance and
+    something that we call the JitnoFrame mode。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些包括Richards和Delta Blue，令人惊讶的是，这正是我们在这里表现最好的两个基准。但这些数字是与CPython的基线比较。因此，CPython在右侧是1x，较小的条形图表示该基准的运行时间较少。因此，您可以看到在Richards上，接近4倍的收益，随着我们逐步进行基准测试，这些是按性能排序的，称为JitnoFrame模式。
+- en: And this is a mode where the Jit runs but it doesn't use CPython frames at all。
+    It doesn't create them。 We're not yet using this in production。 There's still
+    a few issues with it。 But this is ultimately the mode that we intend to run on
+    long term。 The green bars here are just the normal Cinder Jit and so those actually
+    have frames。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个Jit运行但根本不使用CPython帧的模式。它不创建这些帧。我们还没有在生产中使用它。目前仍存在一些问题。但这最终是我们打算长期运行的模式。这里的绿色条形图只是正常的Cinder
+    Jit，因此它们实际上包含帧。
+- en: And then the blue bars are just Cinder。 So all the various optimizations excluding
+    the Jit。 These wins kind of continue through these other benchmarks。 And you can
+    see that generally speaking the Jit is a win。 Sometimes Cinder is a loss。 We haven't
+    really dug into these yet。 And then there's a set of things that in general Cinder
+    is kind of losing out on。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，蓝色的条形图只是表示Cinder。因此，所有各种优化都不包括Jit。这些收益在其他基准测试中也持续存在。总体来说，Jit是有益的。有时Cinder的表现却不尽如人意。我们还没有深入研究这些。而且有一系列的情况，Cinder总体上处于劣势。
+- en: Startup time is a big one。 Two to three we end up spending a whole bunch of
+    time in the Jit for some reason。 And part of that may be that right now the Jit
+    is really the way we Jit functions is tuned。 for our workload heavily。 In that
+    introduction we have a Jit list that enables the functions that we want to compile。
+    and those get compiled in that master process。 But if we're not running in production
+    we just Jit every single function the first time。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 启动时间是一个重要因素。在某些情况下，我们在Jit上花费了大量时间。这部分可能是因为目前Jit的调优是非常适合我们的工作负载。在介绍中，我们有一个Jit列表，启用我们希望编译的函数，这些函数在主进程中被编译。但如果我们不在生产环境中运行，我们会在第一次调用时Jit每一个函数。
+- en: it gets invoked。 And that isn't how you really want Jit to work in the real
+    world。 If you're only running a function once there's no reason to spend the overhead
+    of Jit in it。 So that would be an easy thing that would probably improve these
+    numbers a lot。 Another thing to dive into is just looking at a specific benchmark
+    and in this case it's， Richards。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它被调用的方式并不是您希望Jit在实际环境中工作的方式。如果您只运行一个函数一次，就没有理由在其中花费Jit的开销。因此，这将是一个很简单的改进，可能会显著提升这些数字。另一个需要深入研究的事情是具体基准的表现，这里指的是Richards。
+- en: So what we have here is the runtime on baseline CPython 3。8。 The runtime on
+    normal Cinder。 The runtime with the Jit。 The runtime with the Jit in no frame
+    mode。 And finally we have a version of Richards that has been annotated to run
+    in static Python。 And so you can see we end up with something like a 8x when from
+    the baseline。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们这里有基线 CPython 3.8 的运行时。普通 Cinder 的运行时。Jit 的运行时。在无框架模式下的 Jit 运行时。最后，我们有一个被注释过的
+    Richards 版本，能够在静态 Python 中运行。因此你可以看到，从基线来看，我们最终得到了大约 8 倍的性能提升。
+- en: So that is kind of quite a significant one overall。 So I mentioned another large
+    source of wins for us was just our build changes and this。 slide kind of looks
+    at that。 So initially we're just running the normal Python PGO and a few things
+    were missing from。 those runs。 One of those was running with our inline caching
+    enabled and another was running with async。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这总体上算是一个相当显著的改进。我提到过，另一个主要的收益来源就是我们的构建变更，这张幻灯片大致看了这个情况。最初我们只是运行正常的 Python PGO，且那些运行中缺少了一些内容。其中之一是启用了内联缓存的运行，另一个是使用了异步
+    I/O。
+- en: I/O and code routines。 So adding those in brought us up to a 3% win。 And then
+    we were also missing out the same sort of things。 We would run the same training
+    on the Uizki process and their CPython gets statically embedded。 And so when we
+    added inline caching and async I/O and code routines into the runs inside。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 和代码例程的运行。因此，添加这些内容让我们获得了 3% 的提升。而且我们同样遗漏了相似的事情。我们在 Uizki 进程上进行相同的训练，而他们的 CPython
+    被静态嵌入。所以当我们将内联缓存和异步 I/O以及代码例程添加到运行中时。
+- en: of there that brought us up to almost a 6% win。 So that was really kind of awesome。
+    As you can see this is a significant effort and it takes a lot of people to make
+    it all。 happen and come to life。 It's great working with all these people and
+    it's great to be able to talk about all of。 their hard work。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这使我们的提升达到了近 6%。这真的非常棒。正如你所看到的，这是一项重要的努力，需要很多人共同合作才能使其实现。与这些人一起工作真的很棒，能够谈论他们的辛勤付出也很棒。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_18.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_18.png)'
+- en: If you want to check out Cinder it's now available and open source on GitHub。
+    And of course we're hiring。 [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]。
+    [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [ Silence ]。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想查看 Cinder，现在可以在 GitHub 上获取并开源。当然，我们也在招聘。[BLANK_AUDIO]，[BLANK_AUDIO]，[BLANK_AUDIO]，[BLANK_AUDIO]。[BLANK_AUDIO]，[BLANK_AUDIO]，[BLANK_AUDIO]，[
+    Silence ]。
+- en: '![](img/57c6f36c336096e80bb61d058945b7cd_20.png)'
+  id: totrans-81
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/57c6f36c336096e80bb61d058945b7cd_20.png)'

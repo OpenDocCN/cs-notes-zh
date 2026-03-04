@@ -1,0 +1,901 @@
+- en: P14：Amjith Ramanujam   Awesome Command Line Tools   PyCon 2017 - 哒哒哒儿尔 - BV1Ms411H7jG
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P14：Amjith Ramanujam   精彩的命令行工具   PyCon 2017 - 哒哒哒儿尔 - BV1Ms411H7jG
+- en: And。 [APPLAUSE]， Hello， and welcome to another talk here at PyCon。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且。[掌声]，你好，欢迎来到 PyCon 的另一个演讲。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_1.png)'
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_2.png)'
+- en: My name is Amjith Ramanajim。 I'll be speaking about command line tools。 If you
+    have any questions or feedback about this talk， you're welcome to reach out to
+    me on Twitter。 My Twitter handle is @amjithr。 For my day job， I work at Netflix。
+    I'm part of the traffic engineering team， where we get to move enormous amounts
+    of traffic。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我叫 Amjith Ramanujam。我将讲解命令行工具。如果你对这次演讲有任何问题或反馈，欢迎在 Twitter 上联系我。我的 Twitter 账号是
+    @amjithr。我的日常工作是在 Netflix。我是流量工程团队的一员，我们负责移动巨量流量。
+- en: between AWS regions。 At peak traffic， we sometimes handle over 1/3 of entire，
+    internet's traffic。 It's a lot of fun。 But I'm not here to talk about my day job。
+    I'm actually here to talk about a couple of my side projects。 One called PGCLI
+    and the other one called MyCLI。 They're both command line clients for databases。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 AWS 区域之间。在流量高峰时，我们有时处理超过互联网总流量的三分之一。这很有趣。但我不是来谈我的日常工作的。实际上，我是来谈我的几个副项目的，一个叫
+    PGCLI，另一个叫 MyCLI。它们都是数据库的命令行客户端。
+- en: Postgres， and MySQL， respectively。 And this talk is actually about some of the
+    design decisions。 that we， as the core team of PGCLI and MyCLI， took in order
+    to overcome some of the inherent limitations。 of command line interfaces。 We took
+    a lot of inspiration from existing good command line。 applications that were well
+    designed。 And I'm going to go over some of the other tools as well that。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Postgres 和 MySQL，分别。这次演讲实际上是关于一些设计决策的，我们作为 PGCLI 和 MyCLI 的核心团队，为了克服命令行界面的一些固有限制而做出的决策。我们从一些设计良好的现有命令行应用程序中获得了很多灵感。我也会介绍一些其他的工具。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_4.png)'
+  id: totrans-7
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_4.png)'
+- en: will be covered and where we took inspiration from。 The story actually begins
+    about 20 years ago。 The protagonist was typing away furiously， on a computer terminal
+    on a cutting edge operating system。 called MS-DOS at the time。 He was typing one
+    character at a time because he did not。 know how to touch type at the time。 And
+    he finished the command， presses the enter key。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将会涵盖的内容以及我们的灵感来源。故事实际上开始于大约 20 年前。主角在一个前沿操作系统上的计算机终端上拼命输入。当时叫 MS-DOS。他一字符一字符地输入，因为他不知道如何盲打。他完成了命令，按下了回车键。
+- en: and looks up at the monitor eagerly， waiting for the results， only to realize。
+    that he made a typo and it resulted in an error。 Undefeated by this setback， he
+    proceeds。 to begin typing that command one more time， hoping that there is not
+    going to be a typo。 This happens for a couple of weeks， until his teacher introduces
+    him to this concept of history。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他急切地盯着显示器，等待结果，却意识到他打错了字，导致了错误。尽管遭遇挫折，他并没有气馁，决定再输入一次那个命令，希望不会再出现打字错误。这种情况持续了几周，直到他的老师向他介绍了历史记录的概念。
+- en: navigation。 And the way you do this is you press the up arrow。 and suddenly
+    the previous command that you typed comes back up， and you can edit it accordingly。
+    And suddenly you are able to fix the mistakes， without having to type the entire
+    thing one more time。 It was euphoric。 The kid was just jubilant。 He had lots of
+    hot chocolate that day to celebrate。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航。你可以按上箭头，之前输入的命令会重新出现，你可以相应地编辑它。突然之间，你能修复错误，而无需再输入整个命令。那感觉真是太好了。那个孩子简直是喜不自禁。为了庆祝，他那天喝了很多热巧克力。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_6.png)'
+  id: totrans-11
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_6.png)'
+- en: The protagonist may have been me。 Later on， when I was in grad school， I was
+    introduced to Linux。 And I was pleasantly surprised that Bash kept the convention，
+    of using the up arrow and down arrow。 in order to navigate history。 And that was
+    great。 And by now I have actually learned how to touch type。 And I was typing
+    at a furious blazing speed of 50 words， per minute。 That's right。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 主角可能就是我。后来，当我上研究生院时，我接触到了 Linux。我惊喜地发现 Bash 保持了使用上箭头和下箭头来导航历史记录的惯例。这真棒。而现在我实际上学会了盲打，打字速度达到了每分钟
+    50 个单词。没错。
+- en: I was pair programming with a friend of mine。 And I noticed that whenever he
+    typed any file names or path。 names， that happened to appear at a tremendous speed。
+    It was beyond humanly possible。 And so I was surprised。 I'm like， how did you
+    do that？
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我和一个朋友一起进行配对编程。我注意到每当他输入任何文件名或路径名时，那速度惊人，超出了人类的极限。我感到很惊讶，我问他：“你是怎么做到的？”
+- en: And then he introduces me to this concept of tab completion。 Because now you
+    can hit a tab。 And the shell automatically knows whatever prefix you have typed。
+    it'll try to match a file name to that。 And it'll automatically complete the rest
+    of the name for you。 Oh， that was another joyous day。 Much chocolate milk was
+    had。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后他向我介绍了这个“标签补全”的概念。因为现在你可以按一下标签键，命令行会自动识别你输入的前缀，并尝试匹配文件名，自动补全其余部分。哦，那是另一个快乐的日子，喝了很多巧克力牛奶。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_8.png)'
+  id: totrans-15
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_8.png)'
+- en: The moral of the story here is not that command line tools， have awesome features，
+    which they do。 The fact is those awesome features are not easy to find。 It's actually
+    pretty hard to stumble upon these features， unless someone introduces them to
+    you。 By being a new user to a command line interface， it's not easy to find these
+    features organically。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 故事的寓意不是命令行工具有多么惊人的功能，尽管确实如此。事实上，这些惊人功能并不容易找到。实际上，偶然发现这些功能是相当困难的，除非有人介绍给你。作为命令行界面的新用户，想要有机地找到这些功能并不容易。
+- en: You are either reading a man page， which is a different program from the program
+    that you're。 trying to use， or you have a good mentor or a friend who。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你要么在阅读手册页，这与正在使用的程序不同，要么有一个好的导师或朋友。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_10.png)'
+  id: totrans-18
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_10.png)'
+- en: tells you how to do these things。 Let's contrast that to a GUI application。
+    Whenever a new feature or a new version of your application， is released。 if there
+    is a new feature in that， then there is an icon or some kind of a toolbar。 or
+    a menu item that is listed。 And being humans that we are， whenever， we see something
+    new。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 告诉你如何做这些事情。我们来对比一下GUI应用程序。每当新功能或新版本的应用程序发布时，如果有新功能，就会有一个图标或某种工具栏，或列出的菜单项。作为人类，每当我们看到新东西时。
+- en: we tend to poke at it， until we find out what it is。 So how can we bring this
+    idea of discoverability， to command line applications？
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们通常会戳戳它，直到发现是什么。那么我们如何将这种可发现性引入命令行应用呢？
+- en: The two features that I just showed you， which is history navigation and tab
+    completion。 I'm going to take that as examples， and show you what we could do
+    to make those two features more。 discoverable in command line apps。 And that brings
+    us to the first application。 I'm going to show you how we solve this specific
+    problem， in PGCLI。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我刚刚展示的两个功能是历史导航和标签补全。我将以此为例，向你展示如何让这两个功能在命令行应用中更具可发现性。这就引出了第一个应用程序。我将向你展示我们在PGCLI中如何解决这个特定问题。
+- en: Have you ever wondered why we call that tab completion？
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你有没有想过为什么我们称之为标签补全？
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_12.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_12.png)'
+- en: Why do we need the tab key in order to complete that？ For example， I'm going
+    to launch PGCLI。 I'm launching a particular database here。 And I'm going to type
+    a select statement。 and try and see how we could complete that。 As soon as I start
+    typing， I am presented。 with all the completion options here。 I have not pressed
+    the tab key。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么我们需要按下标签键来完成这个？例如，我要启动PGCLI，连接一个特定的数据库，然后输入一个选择语句，看看如何完成它。刚开始输入时，所有补全选项就出现在我面前，我还没有按下标签键。
+- en: And this is how I think we should， be making this more discoverable， where I
+    could type select star。 And again， it provides us with all possible completions，
+    and we can start typing those things。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我认为我们应该如何使其更具可发现性，我可以输入选择星号，然后它再次为我们提供所有可能的补全，我们可以开始输入这些内容。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_14.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_14.png)'
+- en: We did not use any tab key in that scenario。 I'm going to switch over to a different
+    program。 that we are going to look at， which is called Fish Shell， which is a
+    modern shell。 I mean。 the word modern is--， it might not be appropriate， because
+    it's been 20 years， since it came out。 But it's an alternative to bash and Z-shell，
+    where this is a feature that goes even。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在那个场景中，我们没有使用任何制表键。我将切换到另一个程序，我们要看的是Fish Shell，这是一种现代shell。我的意思是，现代这个词——可能不太合适，因为它已经推出20年了。但它是bash和Z-shell的替代品，这是一个甚至更进一步的功能。
+- en: beyond the history navigation of up and down arrows。 If you've used bash。 there
+    is a special keyboard combination， called Control R。 which allows you to search
+    through the history。 So you press Control R。 you type up some of the partial string，
+    from the command that you type in the past。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 超越上下箭头的历史导航。如果你用过bash，有一个特殊的键盘组合，叫Control R，它允许你在历史记录中搜索。所以你按Control R，输入你之前输入命令的一部分字符串。
+- en: and it'll try and bring up that command from the history， by searching through
+    the history。 And this allows you to navigate history， in a much more random manner。
+    rather than the linear manner， in which you are used to using the up arrow and
+    down arrow。 Again。 it took me a couple of years， before I found Control R。 And
+    once I found it。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它会尝试通过在历史记录中搜索来调出那个命令。这使得你可以以一种更随机的方式导航历史，而不是习惯使用的上下箭头线性方式。再说一次，我花了几年才发现Control
+    R。一旦我找到了它。
+- en: there was I would always prefix R。 I would always。 start my commands by typing
+    Control R and try to SSH。 into the machine that I SSH like last week or yesterday，
+    or something。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我总是会在前面加上R。我总是会通过输入Control R开始我的命令，并尝试SSH到上周或昨天我SSH过的机器上。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_16.png)'
+  id: totrans-31
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_16.png)'
+- en: Now， if a shell kind of obviates the need， to start every command with a Control
+    R。 And the way。 this solves this is as soon as I start typing， it will start to
+    search through the history。 and it will start recommending things for me。 And
+    it is automatically suggesting things for me。 And I could just press the right
+    arrow， and make that happen or press Enter。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，如果一个shell能够避免每个命令都以Control R开头。那么，这样解决这个问题的方式是，我一开始输入，它会开始在历史记录中搜索，并为我推荐内容。它会自动为我建议内容。我只需按右箭头，就能执行，或按回车。
+- en: And that command will be executed。 So I could do work on， and I have been working
+    on prompt。 or make a new virtual environment， all those things。 As soon as I start
+    typing， it pulls up。 that command that was similar to the one， that you are trying
+    to type from history。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那个命令将会被执行。所以我可以进行工作，我一直在处理提示，或创建一个新的虚拟环境，所有这些事情。当我一开始输入时，它会调出与你尝试从历史记录中输入的命令相似的命令。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_18.png)'
+  id: totrans-34
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_18.png)'
+- en: and it starts suggesting that。 This is a fantastic way in which discoverability。
+    was solved in fish shell for that particular feature that is。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它开始建议这个。这是fish shell中为那个特定功能解决可发现性的一个极好的方式。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_20.png)'
+  id: totrans-36
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_20.png)'
+- en: We looked at some specific examples， but in general， the idea behind discoverability。
+    is that be a little bit more forthcoming。 Do not hide your features behind a special
+    key。 because those special combinations， are going to make it undiscoverable。
+    So if you want your features or your make your program more， discoverable。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们查看了一些具体示例，但一般来说，发现性的背后理念是要更加坦诚。不要把你的功能隐藏在特殊键后面，因为这些特殊组合会使其无法被发现。如果你想让你的功能或程序更具可发现性。
+- en: just be a little bit more forthcoming， with your features。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对你的功能要更加坦诚。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_22.png)'
+  id: totrans-39
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_22.png)'
+- en: The next item that I would like to talk about is user focus。 What I mean by
+    user focus is that whenever you have--。 whenever you're implementing a application
+    or a program， or a feature， the users always come first。 Think about how you could
+    make your program the most intuitive， for the user。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想谈的下一个项目是用户关注点。我所说的用户关注点是，无论何时你有——无论你在实施应用程序或功能时，用户总是第一位。考虑如何让你的程序对用户最直观。
+- en: Absolutely powerful for the user。 Don't think about how much harder。 is going
+    to be to make the implementation of it。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对用户来说绝对强大。不要考虑实施它会有多么困难。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_24.png)'
+  id: totrans-42
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_24.png)'
+- en: The implementation should always come next。 In order to demonstrate this， I'm。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现总是应该紧随其后。为了演示这一点，我在这里。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_26.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_26.png)'
+- en: going to start with my CLI， one of the other programs， that I showed。 But before
+    showing my CLI。 I want to show you my SQL。 And my CLI is an alternative for MySQL。
+    So MySQL。 I'm launching a database， launching the REPL here with the database。
+    I start to type SEL。 and then I hit a tab， and nothing happens here。 I expected
+    at least some kind of tab completion。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我将开始介绍我的CLI，这是我展示的另一个程序。但在展示我的CLI之前，我想先展示我的SQL。我的CLI是MySQL的替代品。因此MySQL，我在这里启动数据库，启动REPL。我开始输入SEL，然后按下tab键，这里什么也没有发生。我期待至少有某种tab补全。
+- en: Let's redo that again by doing all caps on everything uppercase， and I hit a
+    tab key。 and now it actually auto-completes for me。 That is a simple little tweak。
+    All we have to do is make that auto-completion case， insensitive。 and it would
+    be that much more easier for a user， to use it。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们再做一次，将所有内容转换为大写字母，然后我按下tab键，现在它实际上为我自动完成了。这是一个简单的小调整。我们所要做的就是让自动补全不区分大小写，这样用户使用起来就容易多了。
+- en: And it is a simple thing that the programmer could have done， but they apparently
+    didn't。 And after the select star from， and I hit a tab key。 and it asks me if
+    I would like to see all 811 possibilities， that it's going to offer。 And I certainly
+    don't have 800 tables in my database。 I say yes。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是程序员可以做的简单事情，但显然他们没有做到。在选择星号后，我按下tab键，询问我是否想查看它将提供的所有811种可能性。我的数据库中当然没有800个表。我说是。
+- en: and I am presented with every single keyword， that is available in MySQL。 Let's
+    contrast this with how my CLI handles a similar scenario。 Once again。 as soon
+    as I start typing， it's going to start suggesting things。 And you'll notice that
+    it is not case sensitive。 So I could do select star from。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我看到的是MySQL中所有可用的关键字。让我们对比一下我的CLI如何处理类似的场景。再次，当我开始输入时，它将开始建议内容。你会注意到它是不区分大小写的。因此我可以输入select
+    star from。
+- en: and it automatically， suggests only tables that come after the from keyword。
+    because it knows that these are the tables in that current， database。 And it goes
+    even further when you choose where it'll only， give the columns inside of that
+    table。 because it knows to show only the columns inside of that table。 Thank you。
+    [APPLAUSE]。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它自动建议仅在from关键字后出现的表，因为它知道这些是当前数据库中的表。当你选择where时，它只会提供该表中的列，因为它知道只显示该表中的列。谢谢。[掌声]
+- en: When I first got started with my CLI。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我第一次开始使用我的CLI时。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_28.png)'
+  id: totrans-51
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_28.png)'
+- en: I had actually taken the approach of doing， what MySQL was doing， which is show
+    all the keywords。 and let the user type them out， and try to figure out， from
+    the menu。 But then later。 I figured that actually being context sensitive， about
+    the completions will make it that much more powerful。 for the user to use。 But
+    at the time， and still now， there， is no open source SQL completion engine。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我实际上采取了与MySQL相同的方法，即显示所有关键字，并让用户输入它们，然后试图从菜单中找出答案。但是后来，我发现实际上对补全内容进行上下文敏感的处理，会使用户使用起来更强大。但当时，现在仍然没有开源的SQL补全引擎。
+- en: It was ridiculously hard to implement。 And it took me another two。 three weeks
+    before I could actually， call that thing complete。 And it was in a broken state。
+    I mean。 it was not a very well polished one。 And thankfully， there are now smarter
+    core developers。 for my CLI who have done a much better job of doing this。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现起来真是困难得离谱。我花了另外两到三周的时间才算把这个东西完成。而且那时它的状态是破损的。我的意思是，它并不是一个打磨得很好的版本。幸运的是，现在我的CLI有更聪明的核心开发者，他们做得更好。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_30.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_30.png)'
+- en: completion。 So the point about the user focus is that make the users， always
+    come first。 Whenever you are implementing a new feature or a program， think about
+    what the user wants。 Think about how to make it most intuitive and absolutely，
+    powerful for the user。 Do not worry about implementation。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完成。因此，关于用户关注点的重点是让用户始终放在第一位。每当你在实现一个新功能或程序时，考虑用户想要什么。考虑如何让它对用户来说最直观，绝对强大。不要担心实现细节。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_32.png)'
+  id: totrans-56
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_32.png)'
+- en: Implementation comes next。 You can make that happen。 I kind of saved the best
+    for the last。 B-Python is the favorite interactive shell， that I absolutely love。
+    I've taken a lot of inspiration from this， and stolen a bunch of ideas from here。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现接下来。你可以让这一切发生。我把最好的留到最后。B-Python是我绝对喜欢的互动Shell。我从这里获得了很多灵感，并窃取了很多想法。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_34.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_34.png)'
+- en: You'll see why in just a second。 Once again， I'm going to start out with Python
+    to show you。 what could be improved。 I'm going to import a module， a type IMPO，
+    and I hit Tab。 And a Tab key gets inserted。 I don't think there is any business
+    in a Tab key in a Python。 code at all， ever。 Thank you。 [APPLAUSE]， So I've imported
+    requests， and I want to do requests。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你很快就会明白为什么。再一次，我将用Python开始，展示可以改进的地方。我将导入一个模块，类型为IMPO，然后按Tab键。一个Tab键被插入。我认为在Python代码中根本没有Tab键的用处。谢谢。[掌声]，所以我导入了requests，我想执行请求。
+- en: And I hit a Tab key again。 I'm trying to see what is available in requests。
+    How can this be improved？ Well， let's look at what B-Python does here。 I do IMP。
+    And it not only gives me the list of items， that could be completed， it also。
+    does Fisch style autoscitation， where， I have typed this command before。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我再次按下Tab键。我想看看requests中可用的内容。这如何可以改进呢？好吧，让我们看看B-Python在这里做了什么。我输入IMP。它不仅给我提供了可以完成的项目列表，还做了Fisch风格的自动补全，我之前输入过这个命令。
+- en: So I could just press the right arrow key and proceed。 And I do requests。dot，
+    and it gives me。 all the available things that I could do。 I could do a post command
+    if I wanted to， instead of get。 And if I open a bracket here， it shows me， the
+    different arguments for that particular method。 And not only that， it actually
+    shows me， the doc string for that method。 So I never。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我只需按下右箭头键继续。我输入requests.dot，它给我提供了我可以执行的所有可用内容。如果我想的话，我可以执行一个post命令，而不是get。如果我在这里打开一个括号，它会向我展示该特定方法的不同参数。不仅如此，它还实际展示了该方法的文档字符串。所以我从来没有。
+- en: ever have to leave the terminal in order， to find out how to use this particular
+    method。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从来不需要离开终端去找出如何使用这个特定的方法。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_36.png)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_36.png)'
+- en: I think this is a powerful， powerful tool。 [APPLAUSE]。 And one of the common
+    things that I get a pushback on from users。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我认为这是一个强大的、强大的工具。[掌声]。而我从用户那里获得的一个常见反对意见。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_38.png)'
+  id: totrans-65
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_38.png)'
+- en: when I show B-Python is that， of course， the Python's default。 thing could do
+    most of what you have shown。 All I have to do is copy this particular snippet。
+    that I got from Stack Overflow， put it inside my Python RC， file， and suddenly。
+    if I hit the Tab key， it will do some of the things that you actually showed。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我展示B-Python时，当然是Python的默认设置。这项功能几乎可以实现你所展示的大部分内容。我只需复制这段特定的代码片段，来自Stack Overflow，将其放入我的Python
+    RC文件中，突然间，如果我按下Tab键，它就会执行一些你实际展示的内容。
+- en: And I don't have to install a new program。 My counterpoint to that is that configurability。
+    is the root of all evil。 I'm actually paraphrasing things from Fish Shell's design。
+    documentation here， which I've taken a lot of inspiration from。 One of the things
+    that is mentioned there， is that whenever you have added a configuration option。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我不需要安装新的程序。我的反对意见是，配置性是万恶之源。我实际上是在转述Fish Shell设计文档中的内容，我从中获得了很多灵感。文档中提到的事情之一是，每当你添加一个配置选项时。
+- en: to your program， what it means is that your program was too。 stupid to figure
+    out what was best for the user。 By definition or by extension， it's。 also calling
+    the person who implemented the program stupid。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对你的程序来说，这意味着你的程序太笨，无法判断对用户来说什么是最好的。从定义上或延伸上，这也在称呼实现这个程序的人愚蠢。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_40.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_40.png)'
+- en: So I do completely understand that configurations， are essential for some situations。
+    because certain things are taste-based。 They are subjective。 Say， for example，
+    a color scheme。 picking a color scheme， I mean， you might think that's polarized，
+    is the best default。 And I agree。 I mean， it is a good， sane default。 But some
+    other person might want a lighter color scheme。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我完全理解配置在某些情况下是必要的，因为某些东西是基于个人喜好的。它们是主观的。比如说，配色方案。选择配色方案，你可能认为那种极端是最佳默认设置。我同意。这确实是一个好的、合理的默认设置。但其他人可能想要一个更浅的配色方案。
+- en: or a much darker color scheme。 In that case， I think subjective options are
+    OK。 So if you are going to add a configuration option， make it a one where the
+    program really。 can't figure out what the two users taste are。 Tastes are。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者一个更深色的配色方案。在这种情况下，我认为主观选项是可以的。所以如果你要添加一个配置选项，就让它成为一个程序真的无法判断两个用户的口味的选项。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_42.png)'
+  id: totrans-72
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_42.png)'
+- en: All right。 We looked into three specific issues， with command line applications--，
+    discoverability。 user focus， and configurability。 And we showed some concrete
+    examples。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧。我们探讨了命令行应用程序的三个具体问题——可发现性、用户关注和可配置性。我们展示了一些具体的例子。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_44.png)'
+  id: totrans-74
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_44.png)'
+- en: from some of the existing tools， such as fish shell。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来自一些现有工具，如 fish shell。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_46.png)'
+  id: totrans-76
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_46.png)'
+- en: bee python， PGCLI， and my CLI。 At this juncture， you might be thinking， well。
+    I learned about these tools。 I'll start using them in my workflow。 But it looks
+    like these are some advanced features。 These are going to be hard to implement。
+    When I'm writing my own interactive shell， either for my internal use or I plan
+    on releasing something。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: bee python、PGCLI 和我的 CLI。在这个时候，你可能在想，嗯。我了解了这些工具。我会在我的工作流程中开始使用它们。但看起来这些都是一些高级功能。这些实现起来会很困难。当我编写自己的交互式
+    shell 时，无论是为了内部使用还是计划发布某个东西。
+- en: to the users， these things are much harder to implement。 And these things are--。
+    you might have competing priorities， like deadlines。 Or you might be thinking。
+    this is only for internal users。 So they're going to be forced to use my tool
+    anyway。 so I don't really have to care。 I've done that before， so it's not uncommon。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对用户来说，这些东西的实现要困难得多。而这些事情是——你可能有竞争的优先事项，比如截止日期。或者你可能在想，这只是为了内部用户。因此，他们无论如何都将被迫使用我的工具，所以我并不真的需要关心。我以前也这样做过，所以这并不罕见。
+- en: And I completely want to empathize with that sentiment。 But what if I told you
+    that implementing all these features， is actually not that hard？
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我完全想要与这种情感共鸣。但如果我告诉你，实现所有这些功能，其实并没有那么难？
+- en: What if I told you that they can all， be done in under 10 minutes with merely
+    10， maybe 11。 statements in Python？ In fact， this is a checklist that I typically。
+    use whenever I'm implementing an interactive shell， which。 is you must always
+    have a persistent history， which is just because you quit a program。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我告诉你，这一切都可以在不到 10 分钟的时间内用 10 或者 11 条 Python 语句完成，你会怎么想？事实上，这是我通常在实现交互式 shell
+    时使用的检查表。你必须始终拥有持久的历史，因为你退出了一个程序。
+- en: and you come back to it， it doesn't mean you， have to start from a clean slate。
+    Because obviously。 you have typed some important commands， in the past， and you
+    would like to be able to recover those。 So having a persistent history is a great
+    thing。 The ability to search the history。 either using a command R special key，
+    which is common these days and people power users of shell。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且当你回到它时，并不意味着你必须从零开始。因为显然，你过去输入了一些重要的命令，你希望能够恢复它们。因此，拥有持久的历史是一件好事。搜索历史的能力，无论是使用命令
+    R 特殊键，这在今天很常见，且是 shell 的高级用户。
+- en: already know about it， or using the fish style suggestion where。 it goes above
+    and beyond and doing that。 And EMACs key bindings。 This is another hidden feature。
+    maybe not so hidden anymore， because a lot of people are used to using bash。 Pressing
+    control A will take you to the beginning of a line。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 已经知道了它，或者使用 fish 样式的建议，它超越了基本的功能。还有 EMACs 键绑定。这是另一个隐藏的功能，也许现在不再那么隐蔽，因为很多人习惯于使用
+    bash。按下控制键 A 将带你到一行的开头。
+- en: Pressing control E will take you to the end of a line。 and control P and control
+    N are equivalents of up arrow， and down arrow。 And these are default key bindings，
+    that comes with any shell， bash， z shell， and even fish shell。 everything。 And
+    I think it's essential that any time a user is。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 按下控制键 E 将带你到一行的末尾。控制键 P 和控制键 N 分别是向上箭头和向下箭头的等效键。这些都是任何 shell 的默认键绑定，包括 bash、z
+    shell，甚至 fish shell。所有的一切。我认为每当用户使用时，这是至关重要的。
+- en: interacting with an interactive shell， they have come to expect these things
+    to be available。 So that's good to have。 Page output is when your output that
+    you're trying to print。 is much larger than it's going to fit in the page， then
+    it is good to send it through a pager。 so the user doesn't have to scroll up and
+    down。 It's just a convenience。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与交互式 shell 交互时，用户会期待这些功能的可用性。因此，这是个好事。页面输出是指当你试图打印的输出比页面能容纳的要大时，使用分页器是很好的选择。这样用户就不必上下滚动了。这只是为了方便。
+- en: And the last three are the items that I showed just a minute， ago， which is
+    autocompletion being。 able to automatically trigger them without having， to type
+    the tab key。 It's a very nice to have。 Having minimal configuration。 In fact，
+    if you don't have any configuration at all， much better。 And adding syntax coloring。
+    So I did not show--， or I don't know if you noticed this or not。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后三项是我刚才展示的，自动补全功能能够在不需要按下 tab 键的情况下自动触发。这是一个非常好的功能。配置最小化。事实上，如果你根本没有任何配置，那就更好了。还有添加语法着色。因此，我没有展示——或者我不知道你是否注意到了。
+- en: but all the shells that I showed today--， my CLI， PGCLI， Fisch shell， and B
+    Python， all of them。 have syntax highlighting automatically。 So as soon as you
+    start typing them。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是今天我展示的所有 shell——我的 CLI、PGCLI、Fisch shell 和 B Python，它们都有自动的语法高亮。因此，只要你开始输入，它们就会生效。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_48.png)'
+  id: totrans-87
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_48.png)'
+- en: it will appropriately color those commands for you。 We're going to implement
+    most of those things。 in the checklist using just a single tool or a single library，
+    called prompt toolkit。 I'm going to show you how。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它会为你适当地着色这些命令。我们将使用一个名为 prompt toolkit 的单一工具或库来实现大部分这些功能的清单。我将向你展示如何做到这一点。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_50.png)'
+  id: totrans-89
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_50.png)'
+- en: And we're going to actually implement a REPL。 A REPL stands for read， eval，
+    print， and loop。 which means you're going to read a user input， evaluate what
+    needs to be done with the user input。 print the results of that evaluation， and
+    loop back and start taking user input from the user again。 I believe I still have
+    10 more minutes left。 How many of you would like to see me do this live。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将实际实现一个 REPL。REPL 代表读取、评估、打印和循环，这意味着你将读取用户输入，评估需要对用户输入做什么，打印评估的结果，并循环返回，重新开始接受用户输入。我相信我还有
+    10 分钟的时间。你们中有多少人想看到我现场演示这个？
+- en: and how many of you want to just--。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你们中有多少人只想——。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_52.png)'
+  id: totrans-92
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_52.png)'
+- en: all right， do it live。 [LAUGHTER]， OK。 So we're going to create something from
+    blank slate。 There is nothing in this file。 I'm going to start from scratch。 First
+    thing we want to be able to do， is read an input from the user。 And typically。
+    if it is just a pure Python program， without any libraries imported， then， you
+    know。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，现场演示。[笑声]，好的。所以我们将从空白开始创建一些东西。这个文件里什么都没有。我将从头开始。我们首先要能做的事情是从用户那里读取输入。通常，如果这是一个纯
+    Python 程序，没有导入任何库，那么，你知道的。
+- en: standard library comes with the input command， or the input function or raw
+    input function。 But we are not just building any REPL。 We're building an awesome
+    REPL。 So we're going to take the prompt function that's， provided by prompt toolkit。
+    So I'm going to pull in the prompt function。 And it has the same signature as
+    the input or the raw input。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 标准库提供了输入命令，或者输入函数或原始输入函数。但是我们并不是在构建任何 REPL。我们在构建一个很棒的 REPL。因此，我们将使用 prompt toolkit
+    提供的提示功能。我将引入这个提示功能。它的参数与输入或原始输入相同。
+- en: where you give it some kind of a prompt。 And whatever the user has typed will
+    go into the INP variable。 And to keep things simple， our eval is going to be a
+    no app。 And what I mean by that is whatever the user has typed。 we're just going
+    to print it back to the user。 So it's just an echo REPL， if you will。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，你给它某种提示。用户输入的内容会被存入 INP 变量。为了简单起见，我们的 eval 将不会有应用。我所指的是，无论用户输入什么，我们都只是将其打印回给用户。所以这就像是一个回声
+    REPL，你可以这么理解。
+- en: And we obviously want to loop back and make this， into an infinite loop。 So
+    we'll just put a while loop there。 OK， so how does that look like？
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然，我们希望循环返回并将其变成一个无限循环。因此，我们将放置一个 while 循环。好的，这看起来怎么样？
+- en: So now we have a REPL that can take input from the user。 and it can do just
+    echo it back to the user。 It does not have history。 It does not have any kind
+    of auto-completion， no syntax highlighting， nothing。 But we can fix that。 Obviously，
+    if I press Control-D， it's， exiting with a trace back。 But again。
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们有一个可以接收用户输入的 REPL，它可以将输入回显给用户。它没有历史记录，没有任何自动完成，没有语法高亮，什么都没有。但我们可以解决这个问题。显然，如果我按下
+    Control-D，它会出现一个追溯错误。但再说一次。
+- en: we can catch that exception， and do something useful with it。 But we're not
+    going to do that right now for the sake of time。 So the next thing we want to
+    do is add some history， to this REPL that we just built。 And again。 prompt comes
+    with everything you need in order， to build an awesome REPL。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以捕获那个异常，并对此做一些有用的处理。但出于时间考虑，我们现在不打算这样做。接下来我们要做的是为我们刚构建的 REPL 添加一些历史记录。而且，prompt
+    提供了构建出色 REPL 所需的一切。
+- en: And I'm going to add a history option to it。 And import file-based history。
+    Because we want this history to be persistent。 We don't want it to go away when
+    we've。 quit a particular session。 And store it in a file that's called a history。text。
+    So now， I type A， B。 C， D， F。 I can press the up arrow， down arrow。 And I can
+    even do select from。
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我将为它添加一个历史选项，并导入基于文件的历史记录。因为我们希望这个历史记录是持久的。我们不希望它在退出特定会话时消失。并将其存储在名为 history.text
+    的文件中。所以现在，我输入 A、B、C、D、F。我可以按上箭头、下箭头，甚至可以执行选择操作。
+- en: And if I do a Control-R， it allows me to search things。 And that's all it took。
+    It's literally seven lines with white space including。 And that is having persistent
+    history。 And it also comes with the E-max key binding。 So I can do Control-A，
+    Control-E， Control-B。 Control-F， do all of that stuff。 This is all built into
+    the PROM toolkit。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我按下 Control-R，它可以让我搜索内容。这就是所需的一切。包括空白在内，实际上只有七行。这意味着拥有持久的历史记录。同时，它还配备了 E-max
+    快捷键绑定。因此我可以使用 Control-A、Control-E、Control-B 和 Control-F，执行所有这些操作。这些功能都内置于 PROM
+    工具包中。
+- en: This is already a good working REPL that we could use。 But we're going to continue
+    to make this awesome。 So the next thing that we talked about was Control-R is
+    nice and all。 But we just talked about making it more discoverable。 So we can
+    take the idea from fish。 And let's automatically suggest things from history，
+    that matches this scenario。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这已经是一个不错的可用 REPL，但我们将继续让它变得更出色。我们刚讨论了 Control-R 还不错。但我们提到过要让它更易发现。因此我们可以借鉴 fish
+    的理念。让我们从历史记录中自动建议与此场景匹配的内容。
+- en: It matches the command that we are trying to type。 And again， it comes with
+    Autosuggest。 And you can Autosuggest from various things。 But we're going to Autosuggest
+    from history。 OK。 And now it's actually Autosuggesting right there。 And I could
+    select that and this is coming from history。 And again， just one line to add the
+    fish style autocompletion。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它匹配我们试图输入的命令。并且它带有自动建议功能。你可以从各种内容中进行自动建议。但我们将从历史记录中自动建议。好的，现在它实际上就在自动建议。我可以选择这个，它来自历史记录。而且，仅需一行代码就可以添加
+    fish 风格的自动补全。
+- en: The next thing we talked about was we don't want to be using tab keys， for completion。
+    We want it to be automatically completing the things， as we start typing things。
+    Once again。 PROM toolkit to the rescue。 I can provide it with a completer。 And
+    since I'm typing select statements， let's make this into。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们讨论的下一个问题是，我们不希望使用 Tab 键进行补全。我们希望它在我们开始输入时自动完成内容。再一次，PROM 工具包来救援。我可以为它提供一个补全器。由于我正在输入选择语句，让我们将其转换为。
+- en: let's say that we are writing an SQL Lite CLI。 So we want to be able to provide
+    automatically complete。 SQL keywords in this case。 So PROM toolkit comes with
+    a lot of different completers。 And I'm going to pick one called--， sorry， I'm
+    blanking the name Word Completer。 Thank you。 OK。 And the way Word Completer works
+    is as soon as you start typing。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我们正在编写一个 SQL Lite CLI。我们希望能够自动完成 SQL 关键词。在这种情况下，PROM 工具包提供了许多不同的补全器。我会选择一个叫做——抱歉，我想不起来名字了，Word
+    Completer。谢谢。好的，Word Completer 的工作方式是，一旦你开始输入。
+- en: it is going to do a substring match on a list of strings， that you have provided
+    as its corpus。 And it is going to start providing the suggestions from that。 So
+    we need to instantiate a Word Completer object， and initialize it with a list
+    of keywords。 So let's call our new object as SQL Completer， because that's what
+    we're trying to build。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它将对您提供的字符串列表进行子字符串匹配。然后开始从中提供建议。因此我们需要实例化一个 Word Completer 对象，并用一个关键词列表进行初始化。我们把这个新对象称为
+    SQL Completer，因为这正是我们想要构建的。
+- en: And it's a Word Completer。 And it takes a list of items， and let's say select，
+    show--。 let's keep it simple， just four items maybe， like from and where。 And
+    we made a big deal about how MySQL was being all case-sensitive， with its completion。
+    So let's ignore case。 Thank you。 Thank you。 And we passed the Completer to the
+    prompt function。
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个单词补全器。它接收一个项的列表，比如说select、show——。让我们保持简单，可能就四个项，比如from和where。我们大肆宣传MySQL在补全时是大小写敏感的。所以我们忽略大小写。谢谢，谢谢。我们将补全器传递给提示函数。
+- en: And let's see how that works。 So now， I start with a statement， and right away
+    it is trying to。 suggest things that I could be doing。 And it still has fished
+    style completion that I could try and use here。 And again， that is all it took
+    to actually build a REPL that can auto-complete。 that can do auto-suggestion like
+    fish， and that can do history navigation。
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看这如何工作。现在，我开始一个语句，立刻它会尝试建议我可以做的事情。而且它仍然有鱼式（fish-style）的补全功能，我可以尝试在这里使用。而且，这就是构建一个可以自动完成的REPL所需要的一切，它可以进行像fish那样的自动建议，并且可以进行历史导航。
+- en: with the up-down arrow and all of that。 Another item we kind of briefly mentioned
+    is using syntax highlighting。 In Python， there is a powerful library called Pigments。
+    If you don't know what Pigments does。 it does syntax highlighting for your code，
+    and it comes built in with syntax highlighting for a lot of different languages。
+    Since we're dealing with SQL here， we could pull the SQL's syntax highlighting。
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用上下箭头等功能。我们提到的另一个项目是使用语法高亮。在Python中，有一个强大的库叫做Pigments。如果你不知道Pigments的功能，它可以为你的代码进行语法高亮，并且内置了多种不同语言的语法高亮。由于我们在这里处理SQL，我们可以提取SQL的语法高亮。
+- en: lexer and automatically feed it to prompt。 And prompt book it is built in a
+    way where it will automatically work with。 the Pigments' lexers， and you could
+    do auto-complete syntax highlighting for that。 So let me feed the SQL lexer to
+    this。 Obviously， I need to import that。 so that is coming from Pigments。 So I
+    am in fact using more than one library here。
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 词法分析器并将其自动输入到提示中。提示工具的构建方式使其能够自动与Pigments的词法分析器协同工作，并且你可以为此进行自动完成的语法高亮。因此，让我把SQL词法分析器输入到这里。显然，我需要导入它，这来自于Pigments。所以我实际上在这里使用了不止一个库。
+- en: but I think we'll not worry about that。 Okay。 And now I have a select statement
+    with auto-completion。 and that has syntax highlighting here。 Ta-da！ [Applause]，
+    Thank you。
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我认为我们不必担心这个。好的。现在我有一个带自动补全的select语句，并且这里有语法高亮。太好了！[掌声]，谢谢。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_54.png)'
+  id: totrans-111
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_54.png)'
+- en: '[Applause]， By the way， all the code that I typed is available here in the
+    slides。 and I will be posting the slides on my Twitter account pretty soon。'
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[掌声]，顺便提一下，我输入的所有代码都可以在幻灯片中找到。我将很快在我的Twitter账户上发布幻灯片。'
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_56.png)'
+  id: totrans-113
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_56.png)'
+- en: And this is our checklist that we started with， and we finished everything。
+    except for paging through the output。 If you are interested in knowing how to
+    do the paged output。 check out Click。 Click is another command line library for
+    Python that allows you to。 echo any output through a pager。 And it is cross-platform
+    compatible。
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们的检查清单，我们从中开始，并且完成了所有事项。除了分页输出。如果你有兴趣了解如何进行分页输出，可以查看Click。Click是另一个Python的命令行库，允许你通过分页器回显任何输出。它是跨平台兼容的。
+- en: so it will work right off the bat in Windows as well as Linux。 By the way。 prompt
+    toolkit is also completely cross-platform compatible。 so you could use this in
+    the program that I wrote will also work in Windows as well as Linux。 These are
+    some of the resources that I shared today， PGCLI， MyCLI， Fischl， B-Python interpreter。
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此它在Windows和Linux上都会立刻生效。顺便说一下，提示工具也是完全跨平台兼容的，所以我编写的程序也可以在Windows和Linux上运行。这些是我今天分享的一些资源，PGCLI、MyCLI、Fischl、B-Python解释器。
+- en: and prompt toolkit。 If you have any questions or comments about any of the things
+    that I've set in this talk。 you can reach out to me on Twitter @amjithr。 The people
+    that I've listed on the right。 Jonathan Slender， he's the author of prompt toolkit。
+    He's here at @picon in the first row， actually。 And Thomas Balinger， he is a core
+    developer in B-Python。 He's also here at @picon。 And Irina。
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提示工具。如果你对我在这次演讲中提到的任何内容有问题或意见，可以在Twitter上联系我@amjithr。我在右侧列出的人，Jonathan Slender，他是提示工具的作者，他实际上就在第一排的@picon这里。还有Thomas
+    Balinger，他是B-Python的核心开发者，他也在@picon这里。还有Irina。
+- en: she is the lead maintainer for PGCLI。 Actually， I've given the reins to Irina。
+    and she's doing a fantastic job。 She's also here at Picon， and she's somewhere
+    here in the talk。 So feel free to reach out to any of them， and they'll be happy
+    to help。
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 她是PGCLI的主要维护者。实际上，我已经把工作交给了Irina，她做得非常出色。她也在Picon，并且在这里的演讲中。随时可以联系她们，她们会很乐意提供帮助。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_58.png)'
+  id: totrans-118
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_58.png)'
+- en: That's it。 Thank you very much。 Goodbye。 [applause]。
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样。非常感谢。再见。[掌声]。
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_60.png)'
+  id: totrans-120
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_60.png)'
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_61.png)'
+  id: totrans-121
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_61.png)'
+- en: '[BLANK_AUDIO]。'
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[空音频]。'
+- en: '![](img/446f7186f960c62a6a2abb0c835f6cf5_63.png)'
+  id: totrans-123
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/446f7186f960c62a6a2abb0c835f6cf5_63.png)'

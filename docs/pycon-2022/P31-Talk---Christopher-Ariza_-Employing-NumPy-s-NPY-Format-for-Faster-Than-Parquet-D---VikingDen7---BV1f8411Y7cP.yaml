@@ -1,0 +1,872 @@
+- en: P31：Talk - Christopher Ariza_ Employing NumPy's NPY Format for Faster Than Parquet
+    D - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P31：演讲 - Christopher Ariza_ 使用NumPy的NPY格式实现比parquet更快的D - VikingDen7 - BV1f8411Y7cP
+- en: \>\> Good morning， everyone。 I welcome all of you to this second day of PyConUS
+    2022。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 大家早上好。我欢迎大家参加PyConUS 2022的第二天。'
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_1.png)'
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_2.png)'
+- en: Let's welcome Chris to deliver a talk on employing NMPI's NPOF format for faster
+    than。 parkway data frame civilization。 Thank you。 Good morning and thank you all
+    for coming。 A little bit about me to begin。 I am CTO at research affiliates。 This
+    is a finance firm。 located in Newport Beach， California。 I've been a Python programmer
+    since the year 2000。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们欢迎Chris来讲解如何使用NMPI的NPOF格式来实现比parquet更快的数据框架处理。谢谢。早上好，感谢大家的到来。首先介绍一下我自己。我是Research
+    Affiliates的CTO。这是一家位于加利福尼亚纽波特海滩的金融公司。我从2000年开始就是Python程序员。
+- en: My earliest work was in music。 I have a PhD in music and I was a former professor
+    of music。 technology。 I found ways to use Python and algorithmic composition and
+    computational music， ecology。 In the last 10 years I have been working on financial
+    systems in Python and。 that has led me to create an alternative data frame library
+    called static frame。 Static。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我最早的工作是音乐方面。我拥有音乐博士学位，并曾是一名音乐技术教授。我发现了使用Python进行算法作曲和计算音乐生态学的方法。在过去的10年里，我一直在Python中从事金融系统的工作，这让我创建了一个名为static
+    frame的替代数据框库。Static。
+- en: frame is based on an immutable data model， a more consistent interface than
+    pandas and。 support for all NMPI d types， including Unicode strings， daytime 64
+    units as well。 As over those 10 years building financial systems， many of you
+    might be able to relate to a sort。 of quest to find a complete data frame serialization
+    format。 We have tried many things from CSV。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 框架基于不可变数据模型，比pandas更一致的接口，并支持所有NMPI数据类型，包括Unicode字符串和日期时间64单位。在过去10年构建金融系统的过程中，许多人可能都能与寻找完整数据框序列化格式的探索产生共鸣。我们尝试过很多东西，包括CSV。
+- en: XLS， HDF5。 Most recently， parquet has offered the best performance and type
+    retention。 But。 it's not perfect。 No format supports all components of a data
+    frame and none support。 all NMPI d types。 If a data frame in Python can be thought
+    of as a collection of NMPI arrays。 this is the best way to serialize a NMPI array。
+    Well for that we can go way back to 2007 to。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: XLS，HDF5。最近，parquet在性能和类型保留方面表现最佳。但是，它并不完美。没有一种格式支持数据框的所有组件，也没有一种格式支持所有NMPI数据类型。如果在Python中可以将数据框视为NMPI数组的集合，那么这是序列化NMPI数组的最佳方法。要实现这一点，我们可以追溯到2007年。
+- en: NMPI enhancement proposal number one。 Now similar to PEPs， NEPs are proposals
+    to enhance。 NMPI and this one was proposed by Robert Kern in 2007。 It defines
+    two things。 It defines。 the NPY file which is a binary file format that can encode
+    all NMPI arrays and the NPs。 which is simply a zip bundle of NPY files。 Now this
+    format is still supported in NMPI。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: NMPI增强提案编号一。与PEP类似，NEP是增强NMPI的提案，这个提案是由Robert Kern在2007年提出的。它定义了两件事：它定义了NPY文件，这是一种可以编码所有NMPI数组的二进制文件格式，以及NP，这是NPY文件的简单压缩包。现在这种格式在NMPI中仍然受到支持。
+- en: you can use it right now with NP。save， NP。load。 What's really interesting about
+    these NMPI。 files is we can memory map array data with them and that's something
+    we're going to explore。 with data frames later on。 So can a data frame then be
+    serialized as a collection of， NMPI files？
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你现在可以使用NP.save，NP.load。这些NMPI文件非常有趣，因为我们可以通过它们对数组数据进行内存映射，这是我们稍后将要探讨的数据框处理。因此，数据框能否作为NMPI文件的集合进行序列化？
+- en: That was sort of my first question。 And so I set off to do this。 The way I first。
+    approach it was simply taking all the arrays that are included within the data
+    frame， package。 them up with an NPZ and my first implementation was using NP save
+    and NP。load。 In addition。 I created a special metadata file in JSON that I packed
+    into that NPZ to help me fully。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这大概是我最初的问题。因此我开始着手去做。我的第一种方法是将数据框中的所有数组打包成一个NPZ，我的第一个实现是使用NP保存和NP加载。此外，我还创建了一个特殊的JSON元数据文件，并将其打包到该NPZ中，以帮助我完全理解。
+- en: reconstruct the data frame。 And this worked but it was slower than parquet which
+    was a。 little disappointing。 Looking into the performance of the NMPI routines。
+    I found that if I re-implemented， the NPY and NPZ authoring routines。 I was able
+    to get massive performance improvements， and end up with something faster than
+    parquet。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 重构数据框。这是有效的，但速度比parquet慢，这有点令人失望。查看NMPI例程的性能。我发现如果我重新实现NPY和NPZ的创作例程，我能够获得巨大的性能提升，最终得到比parquet更快的东西。
+- en: So I'll give you a little taste of that performance。 If we use pandas here to
+    create a very simple frame of 10，000 square floats and we created。 data frame
+    with that， we're going to write this out as parquet but because parquet doesn't。
+    require that all column labels be strings， we're going to have to convert those
+    column。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我将给您一点性能的尝试。如果我们在这里使用pandas创建一个非常简单的10,000个平方浮点数的框，并用它创建数据框，我们将以parquet格式写出，但因为parquet不要求所有列标签都是字符串，我们需要将这些列标签转换为字符串。
+- en: labels to strings。 And then we can go ahead and use pandas to write this data
+    frame out。 as a parquet file。 And that takes about 10 and a half seconds。 Now
+    if we do build a corresponding。 frame， an static frame， and we export it， we write
+    it out as an NPZ， that takes 1。42 seconds。 nearly an order of magnitude better
+    performance for writing out this very， very simple frame。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们可以继续使用pandas将这个数据框写出为parquet文件。这大约需要10.5秒。如果我们构建一个相应的框，一个静态框，并将其导出，写出为NPZ，这大约需要1.42秒。对于写出这个非常简单的框，性能几乎提高了一个数量级。
+- en: What about reading？ Well we can read in that same parquet again using pandas，
+    reading in。 that parquet file， we can read it into a pandas data frame in about
+    five seconds。 If we do the。 same thing from an NPZ using static frame， we can
+    do it in about one second。 Not an order。 of magnitude but a very significant improvement。
+    Alright， so what we're going to do today is。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么读取呢？我们可以再次使用pandas读取同一个parquet，通过读取该parquet文件，我们可以在大约五秒钟内将其读入pandas数据框。如果我们使用静态框从NPZ做同样的事情，我们可以在大约一秒内完成。这不是一个数量级的提高，但这是一个非常显著的改善。好吧，今天我们要做的是。
+- en: we're going to look at the components of a data frame in detail。 We're going
+    to look。 at the NPY and NPZ format to get a sense of how we can use these。 We're
+    going to talk。 about how we encode a data frame in an NPZ。 We'll talk about a
+    few of the things I did。 to improve NPY performance。 We'll look at some very thorough
+    performance comparisons。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将深入探讨数据框的组件。我们将研究NPY和NPZ格式，以了解如何使用这些格式。我们将讨论如何在NPZ中编码数据框。还会谈到我做的一些事情，以提高NPY的性能。我们将查看一些非常全面的性能比较。
+- en: And finally we'll close by talking about how we can use the NPY now to actually
+    memory。 map a complete data frame。 After this presentation I hope you gain a clear
+    understanding of data。 frames and how they're built。 You'll also understand NPY
+    encoding and you'll leave here。 with more options for serializing and memory mapping
+    data frames。 So let's look at the components。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们将讨论如何使用NPY现在实际内存映射完整的数据框。希望通过本次演示，您能清晰理解数据框及其构建方式。您还将理解NPY编码，并能带着更多选项离开这里，以进行数据框的序列化和内存映射。那么，让我们来看看这些组件。
+- en: of a data frame in depth。 Now the first data frame was introduced back in 1991
+    as part。 of the S language。 They've been around for a long time and many libraries
+    and many languages。 have implemented data frames。 There is really no standard
+    for a data frame but what I'm。 going to provide for you is how static frame defines
+    a frame。 And you can think of this。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 深入探讨数据框。第一个数据框是在1991年作为S语言的一部分引入的。它们已经存在很长时间，许多库和许多语言都实现了数据框。数据框并没有真正的标准，但我将为您提供静态框如何定义框的方式。您可以这样想。
+- en: as a slight superset over the pandas data frame。 So many of you probably worked
+    with。 data frames but it's important to remember what they are。 They are not a
+    two dimensional， array。 A two dimensional array has uniform type and access to
+    rows and columns only by， integer。 With the data frame we get the opportunity
+    to have a table of columnar data where columns。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为pandas数据框的一个轻微超集。许多人可能已经使用过数据框，但重要的是要记住它们是什么。它们并不是二维数组。二维数组具有统一类型，并且仅通过整数访问行和列。使用数据框，我们可以获得一个列数据的表格，其中包含列。
+- en: have heterogeneous types。 And we can label our rows and columns and access them
+    with things。 other than integers。 Our labels can be any type， our labels can be
+    hierarchical and those。 hierarchical depths themselves can have different types。
+    In addition data frames have name attributes， attached to the rows。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以有异构类型。我们可以为行和列贴标签，并用除整数以外的东西访问它们。我们的标签可以是任何类型，我们的标签可以是层次的，这些层次深度本身可以具有不同的类型。此外，数据框具有附加到行的名称属性。
+- en: the columns and the frame itself。 And these name attributes give us a。 really
+    convenient way to either have an additional label or rich metadata attached to
+    those components。 Now I created this schematic diagram of data frame to help us
+    talk through how we are going。 to encode this entire data frame。 And what I'm
+    showing here are the array components。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些名称属性为我们提供了一种非常方便的方式，可以为这些组件附加额外的标签或丰富的元数据。现在我创建了这个数据框的示意图，以帮助我们讨论如何编码整个数据框。我在这里展示的是数组组件。
+- en: in gray rectangles， the array types in the gray diamonds， the black diamonds
+    are the component。 types for the index and the columns and the black circles are
+    the component names for columns。 index and the frame itself。 Now we're going to
+    see this a lot so I'll help you understand。 it as we go。 But before we do that
+    I want to compare that representation to the representation。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在灰色矩形中，数组类型在灰色菱形中，黑色菱形是索引和列的组件类型，黑色圆圈是列的组件名称、索引和框架本身。现在我们将经常看到这一点，所以我会在过程中帮助你理解。但在那之前，我想将这种表示与框架和列本身的表示进行比较。
+- en: of static frames standard wrapper of a data frame。 You'll notice this is a richer
+    representation。 than Panda's representation of a data frame because in static
+    frame we're very concerned。 about our types。 We want to always show our users
+    what types we have at hand。 And I'm。 going to relate this representation to what
+    we were looking at previously。 So here I've。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 静态框架是数据框的标准包装。你会注意到，这比Pandas的数据框表示更丰富，因为在静态框架中，我们非常关注我们的类型。我们希望始终向用户展示我们手头的类型。我将把这种表示与我们之前看到的联系起来。因此这里我已经。
+- en: highlighted in orange and yellow the values of the data frame。 So we can think
+    of this。 as four or actually two arrays of first integers and then bullions。 This
+    is the data。 in our data frame and we can see it in both representations here。
+    In blue gray here I'm。 showing the arrays of the columns and we can see that we
+    have two arrays that represent。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用橙色和黄色突出显示数据框的值。因此，我们可以将其视为四个，实际上是两个数组，第一个是整数，第二个是布尔值。这是我们数据框中的数据，我们可以在这里看到两种表示。在蓝灰色中，我展示了列的数组，我们可以看到有两个数组代表。
+- en: the columns in this case， hierarchical columns。 I have two arrays also representing
+    the index， here。 And then finally in purple I have the additional stuff， the types
+    of the index and。 the columns and the name attributes。 And if we bring that all
+    together you can see the。 correspondence between these two representations。 We're
+    going to see this frame diagram come。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下是列的列层次。我还有两个数组表示索引，在这里。最后在紫色中，我有额外的内容，索引和列的类型以及名称属性。如果我们将所有这些汇总在一起，你可以看到这两种表示之间的对应关系。我们将看到这个框架图。
+- en: back so you'll get used to it as we go forward。 Now an important part of how
+    data frames work。 is that they manage internal array stores called blocks。 Block
+    structure might deviate。 from the actual column presentation。 So what you see
+    when you're working with the data。 frame is not how the data is actually stored。
+    And that's important because in consolidating。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回顾一下，你在前进的过程中会逐渐习惯这一点。现在数据框工作的重要部分是它们管理称为块的内部数组存储。块结构可能与实际的列表示有所不同。因此，当你处理数据框时，看到的数据并不是数据的实际存储方式。这一点很重要，因为在合并时。
+- en: same type data into fewer blocks we get better performance。 In essence we can
+    do more in。 NumPy and that will give us better performance。 So there's maybe three
+    block consolidation。 strategies。 We could have unconsolidated blocks where each
+    column is a one dimensional， array。 Or we could have order dependent block consolidation
+    where adjacent same typed columns。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将相同类型的数据合并成更少的块可以提高性能。从本质上讲，我们在NumPy中可以做得更多，这将为我们提供更好的性能。因此，可能有三种块合并策略。我们可以有未合并的块，每列是一个一维数组。或者我们可以有顺序依赖的块合并，邻近的相同类型的列。
+- en: can be consolidated into two dimensional blocks。 Finally we could have order
+    independent blocks。 where all columns are consolidated into a 2D block per type。
+    So I know that's a lot。 So this diagram here should help you understand what we're
+    talking about。 So on the left。 hand side we have the represented values。 Here
+    you see a data frame that has a couple of columns。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以整合为二维块。最后，我们可以获得与顺序无关的块，所有列按类型整合为一个二维块。所以我知道这很多。这张图应该能帮助你理解我们在讨论什么。在左侧，我们有表示的值。在这里，你看到一个数据框，它有几列。
+- en: of integers， bullions and floats。 You just see one type per column。 But the
+    blocks might。 be constructed differently。 On the right hand side we see these
+    three options where we have。 unconsolidated blocks。 Maybe one one dimensional
+    array for each column。 Order dependent block。 consolidation combines adjacent
+    columns into larger two dimensional arrays。 Order independent。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 整数、布尔值和浮点数。每列只看到一种类型。但块的构造可能会不同。在右侧，我们看到这三种选择，其中有未整合的块。也许每列有一个一维数组。顺序依赖块整合将相邻列合并为更大的二维数组。顺序无关。
+- en: blocks， disregards order and simply consolidates column data by type。 So this
+    block consolidation。 has trade-offs in terms of performance and complexity。 So
+    order independent consolidation。 as used by pandas gives the opportunity for optimal
+    type consolidation but requires more。 complexity because we have to translate
+    from those blocks to the representation that the， user sees。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 块，无视顺序，仅按类型整合列数据。因此，这种块整合在性能和复杂性方面存在权衡。因此，pandas 使用的顺序无关整合提供了最佳类型整合的机会，但需要更多复杂性，因为我们必须从这些块转换到用户看到的表示。
+- en: Order dependent consolidation as used by static frame is sub-optimal in some，
+    cases。 We can't consolidate everything but this gives us less complexity and as
+    we'll。 see later on improves our serialization performance because we don't have
+    to do that translation。 from the consolidated blocks。 Alright， I'm talking about
+    complete data frame serialization。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 静态框使用的顺序依赖整合在某些情况下是次优的。我们无法整合所有内容，但这给我们带来了更少的复杂性，正如我们稍后将看到的，这提高了我们的序列化性能，因为我们不必从整合块进行转换。好吧，我在谈论完整数据框的序列化。
+- en: So we'll talk a little bit about what that is。 Now no legacy format except pickle
+    supports。 all data frame characteristics and I really mean all characteristics。
+    So generally there's。 some sort of limits on the array data types。 There may not
+    be a perfect mapping of your。 array types into your serialization format。 There's
+    often limits as we've already seen。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们将稍微谈谈这是什么。现在除了 pickle，没有任何遗留格式支持所有数据框特性，我真的是指所有特性。因此，一般来说，对数组数据类型有某种限制。可能无法完美映射你的数组类型到序列化格式。正如我们已经看到的，通常存在限制。
+- en: in parquet on what the types of the columns and index can be。 And there's often
+    very limited。 support for those name attributes which while not that important
+    can be really annoying。 to not have come back and forth from your serialization。
+    Now pickle in many cases is。 the fastest at reading and writing data frames。 We
+    can always pickle a data frame in pandas。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 parquet 中，列和索引的类型可以是什么。对于那些名称属性通常支持非常有限，虽然不那么重要，但确实很令人烦恼，不能在序列化中来回出现。现在在许多情况下，pickle
+    是读取和写入数据框的最快方式。我们总是可以在 pandas 中对数据框进行 pickle。
+- en: or static frame but pickle is not really safe as a long term store as I hope
+    all of。 you know untrusted code can be executed in a pickle。 And pickle is not
+    suitable for long。 term storage。 A pickle can hold on to references of objects
+    that are no longer available and。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或静态框，但 pickle 作为长期存储并不是非常安全，我希望你们都知道不受信任的代码可以在 pickle 中执行。并且 pickle 不适合长期存储。一个
+    pickle 可能会持有不再可用的对象的引用。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_4.png)'
+  id: totrans-34
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_4.png)'
+- en: you can end up pretty easily with broken pickles。 So complete data frame serialization
+    needs。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能很容易就会遇到损坏的 pickle。因此，完整的数据框序列化需要。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_6.png)'
+  id: totrans-36
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_6.png)'
+- en: to encode all the values and types and encode all index and columns labels。
+    We need to support。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对所有值和类型进行编码，并对所有索引和列标签进行编码。我们需要支持。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_8.png)'
+  id: totrans-38
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_8.png)'
+- en: hierarchical labels。 We need to support heterogeneous types per label depth
+    and we need to get those。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 层次标签。我们需要支持每个标签深度的异构类型，并且需要获取这些。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_10.png)'
+  id: totrans-40
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_10.png)'
+- en: name attributes。 So I want to make clear that parquet is not a data frame。 Parquet
+    came。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 名称属性。所以我想明确一点，parquet不是数据框。Parquet起源于。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_12.png)'
+  id: totrans-42
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_12.png)'
+- en: out of the Apache Hadoop system and was designed for cross-platform cross-language
+    support。 It is really a table implemented as unconsolidated columnar data and
+    it's great for that purpose。 It has very sophisticated mechanisms for handling
+    large data sets and rich metadata but importantly。 it's not a data frame so we
+    shouldn't be surprised that we lose information in translating。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Apache Hadoop系统，并设计用于跨平台跨语言支持。它实际上是作为非整合的列式数据实现的表，非常适合这个目的。它有处理大型数据集和丰富元数据的复杂机制，但重要的是，它不是数据框，因此在转换时信息丢失不应让我们感到惊讶。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_14.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_14.png)'
+- en: back and forth to parquet。 So let's take a deep dive into NPY and the NPZ format。
+    So。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来回转换到parquet。因此，让我们深入研究NPY和NPZ格式。所以。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_16.png)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_16.png)'
+- en: the NPY format is a binary file format。 What we have here is a header followed
+    by a payload。 of contiguous bytes。 Now in order to translate contiguous bytes
+    into an array we need three。 things for NumPy。 We need the D type which is going
+    to tell us the bytes per element。 We need the order。 Is it Fortran， Call of Major
+    or C， Row Major style， two dimensional。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: NPY格式是一种二进制文件格式。我们这里有一个头，后面跟着一组连续字节的有效载荷。现在，为了将连续字节翻译成数组，我们需要NumPy的三个东西。我们需要D类型，它将告诉我们每个元素的字节数。我们需要顺序。是Fortran的列主顺序还是C的行主顺序，二维的。
+- en: or larger array。 And we need some specification of the shape of that data frame。
+    So here's。 a little example。 You can do this on your own of going back and forth
+    between bytes。 Here。 I have a simple three element array of Boolean and I can
+    call the two bytes method which from。 any NumPy array will give me the contiguous
+    byte representation behind that array。 And。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者更大的数组。我们还需要对数据框形状的一些说明。因此这里有一个小例子。你可以自己在字节之间来回转换。在这里，我有一个简单的三元素布尔数组，我可以调用`two
+    bytes`方法，该方法从任何NumPy数组中给出该数组背后的连续字节表示。并且。
+- en: I can translate that back into array by using here the from buffer constructor。
+    I need to。 specify the D type。 We need to tell NumPy how to interpret those bytes
+    but as you can。 see we get back the array that we started with。 So back to NPY。
+    So an NPY file consists。 of a header and a series of contiguous bytes。 In the
+    header we have a number of things。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我可以使用`from buffer`构造函数将其翻译回数组。我需要指定D类型。我们需要告诉NumPy如何解释这些字节，但如你所见，我们得到了最初的数组。所以回到NPY。因此，一个NPY文件由一个头和一系列连续字节组成。在头中，我们有许多东西。
+- en: We have what's called the magic prefix which is a binary string that has a special
+    binary。 character and NumPy right there。 So you know what you're looking at。 It
+    has two bytes。 to provide the version number。 And then it has the byte count of
+    the remaining header。 So that a consumer of this file knows how many bytes to
+    read before we get to the contiguous。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有所谓的魔术前缀，这是一个包含特殊二进制字符的二进制字符串，NumPy就在这里。因此，你知道自己在看什么。它有两个字节。提供版本号。然后它有剩余头的字节计数。这样，该文件的消费者就知道在达到连续的字节之前需要读取多少字节。
+- en: byte data。 The remaining header has a binary encoding of three of a three element
+    Python。 dictionary。 And that dictionary is the D type description string whether
+    it's Fortran。 order or C order and the shape of the array。 We're going to have
+    a little bit of padding。 there so we can align it 64 byte divisions。 So this diagram
+    makes clear the structure， of the NPY。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 字节数据。剩余的头部包含三个元素Python字典的二进制编码。这个字典是D类型描述字符串，无论是Fortran顺序还是C顺序以及数组的形状。我们将有一些填充，以便我们可以将其对齐为64字节的分区。因此，这个图表清晰地展示了NPY的结构。
+- en: We have the magic prefix in purple。 We have the version number in green。 And
+    we have the padded header length again telling us how far we need to read to get。
+    the rest of the header。 The header here of the array is given in orange and we
+    see that's。 an encoding of a Python dictionary to tell us how to interpret that
+    contiguous byte， data。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有紫色的魔术前缀。我们有绿色的版本号。还有填充的头长度再次告诉我们需要读取多远才能获得其余的头。这里的数组头以橙色显示，我们看到这是一个Python字典的编码，用于告诉我们如何解释那段连续的字节数据。
+- en: We have a little bit of padding and then we have the contiguous byte data which
+    you。 should recognize now as that same Boolean array we started with consisting
+    of false true and， true。 Now the original NPY implementation supports object arrays
+    through pickling。 But。 for our purposes we're going to reject supporting object
+    arrays and pickles in our data frames。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一点填充，然后是连续的字节数据，你现在应该认出来是我们开始时的那个包含false、true和true的布尔数组。原始NPY实现通过pickle支持对象数组。但是，出于我们的目的，我们将拒绝在我们的数据框中支持对象数组和pickle。
+- en: Even if we just have only one array that's an object any pickle compromises
+    the safety。 and long term storage of this format。 So we're just not going to use
+    it。 And if you need to。 encode object arrays you're better off just using pickle，
+    just pickle your data frame。 and you'll be fine。 Now I mentioned that NPY supports
+    many versions。 These versions aren't。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 即使我们只有一个对象数组，任何pickle都会危及这种格式的安全性和长期存储。因此，我们将不再使用它。如果你需要编码对象数组，使用pickle更好，只需pickle你的数据框，就可以了。我提到过NPY支持许多版本。这些版本并不。
+- en: deprecated。 They're a different kind of versioning system。 So all versions are
+    currently supported。 And if you use NP。save right now it writes at the minimum
+    version necessary。 So very likely。 you'll get a version one NPY if you use this。
+    These versions are differentiated by the available。 header size and the encoding
+    and versions two and three are really only there for structure。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 已弃用。它们是一种不同的版本控制系统。目前所有版本均受支持。如果你现在使用`NP.save`，它会写入所需的最低版本。因此，很可能如果你使用它，你会得到版本一的NPY。这些版本通过可用的头大小、编码进行区分，版本二和三实际上仅用于结构。
+- en: to raise。 We don't need structure to raise for what we're doing so we can just
+    stick with。 version one。 Now I mentioned that this NEP one defined NPY and NPZ。
+    So what is the NPZ？
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以提高。我们不需要为我们正在做的事情提高结构，因此我们可以坚持使用版本一。我提到过这个NEP一定义了NPY和NPZ。那么NPZ是什么呢？
+- en: Well the NPZ is very simple。 It's just a zip bundle of the NPY files。 The original。
+    specification provides no standard naming or no metadata file。 In my work here
+    that is。 what we have added。 You can write these with NP。save Z and we can read
+    them with NP。load。 And if you do this you get back a dict like interface that
+    allows you to get at your NPY。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: NPZ非常简单。它只是NPY文件的zip包。原始规范没有提供标准命名或元数据文件。在我的工作中，我们添加了这些。你可以通过`NP.save Z`来写这些，我们可以用`NP.load`来读取它们。如果你这样做，你会得到一个字典式的接口，让你访问你的NPY。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_18.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_18.png)'
+- en: files。 Okay so how do we encode a data frame as an NPZ？ So what we're going
+    to do is we're。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件。那么我们如何将数据框编码为NPZ？我们要做的是。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_20.png)'
+  id: totrans-60
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_20.png)'
+- en: going to create an uncompressed zip。 We're going to store all of our arrays
+    as NPY files。 We're going to store our values blocks as NPY files。 We're going
+    to store our index and。 columns labels as NPY files per depth。 And we're going
+    to use a common naming convention。 so we can find those NPY files。 And we're going
+    to define a custom JSON metadata file。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将创建一个未压缩的zip。我们将把所有数组存储为NPY文件。我们将把值块存储为NPY文件。我们将按深度存储索引和列标签作为NPY文件。我们将使用一种通用命名约定，以便找到这些NPY文件。我们还将定义一个自定义JSON元数据文件。
+- en: to give us all the additional information we need。 So returning to the schematic
+    that。 we started with we can see how the components of the data frame are translated
+    into the， NPZ。 We'll start with the orange and yellow values arrays。 We see each
+    of those becomes。 one NPY file to represent those arrays by type。 We have two
+    blue NPY files to represent。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 给我们提供所有额外的信息。因此，回到我们开始时的示意图，我们可以看到数据框的组件如何转化为NPZ。我们从橙色和黄色的值数组开始。我们看到每个数组通过类型变成一个NPY文件。我们有两个蓝色的NPY文件来表示。
+- en: the column data to green NPYs to implement to represent the index data。 And
+    finally all。 the other stuff the purple is wrapped up in our JSON。 If we were
+    to look into some of。 those NPY files this is what we would see。 And hopefully
+    this is familiar by now。 We。 see a block zero and blocks one represented and we
+    see that same header followed by a。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 列数据到绿色NPY以实现索引数据。最后，所有其他的东西，紫色部分被包裹在我们的JSON中。如果我们查看一些NPY文件，这就是我们会看到的。希望到现在你对它已经很熟悉了。我们看到块零和块一被表示，并且看到同样的头后面跟着一个。
+- en: bunch of contiguous bytes。 Now the JSON metadata file is there so that we can
+    define the component。 types and additional metadata we need to recreate our data
+    frame。 We're going to define。 the component types of strings。 We're going to define
+    the depth as integers which will。 allow us to discover our NPY files。 And we're
+    going to store the name attributes as a simple。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在 JSON 元数据文件存在的目的是为了定义组件类型和我们需要的额外元数据，以便重建我们的数据框。我们将定义字符串的组件类型。我们将深度定义为整数，这将使我们能够发现我们的
+    NPY 文件。我们将简单地存储名称属性。
+- en: JSON array。 So now we have the same diagram but I'm showing you where we pull
+    information。 into the metadata file。 So in purple you see that we have the name
+    information gathered。 into a JSON array。 We have type information stored in the
+    green， yellow and orange components。 of this little JSON object。 And then finally
+    we have a depth JSON array that stores the。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: JSON 数组。因此现在我们有了相同的图表，但我向你展示了我们如何将信息提取到元数据文件中。在紫色部分，你可以看到我们将名称信息汇集到一个 JSON 数组中。类型信息存储在这个小
+    JSON 对象的绿色、黄色和橙色组件中。最后，我们还有一个深度 JSON 数组，存储了一系列连续的字节。
+- en: depths of each of these components so we can unpack them later。 So if you want
+    to use。 this instead of frame all you need to do is use our simple constructor
+    and exporter。 If。 you're bringing in an NPZ file you can just say from NPZ and
+    if you're writing it out。 you can just say to NPZ。 As I mentioned we spent a decent
+    amount of time improving NPY， performance。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些组件的深度，以便我们以后可以解包它们。因此，如果你想使用这个而不是 frame，你只需使用我们简单的构造函数和导出器。如果你要引入一个 NPZ 文件，你只需说
+    from NPZ；如果你要写出它，你只需说 to NPZ。正如我提到的，我们花了相当多的时间来提高 NPY 的性能。
+- en: So and the reason is because NP。save and NP。load are not designed for writing。
+    thousands or hundreds of thousands of NPY files which is what we end up doing
+    when we。 serialize a data frame this way。 And NumPy's implementation priority
+    is on compatibility。 and what we found is a more narrow implementation can offer
+    massive performance gains。 So a。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 原因在于 NP.save 和 NP.load 并不是为写入成千上万或数十万个 NPY 文件而设计的，而这正是我们在以这种方式序列化数据框时所做的。NumPy
+    的实现优先考虑兼容性，而我们发现更窄的实现可以提供巨大的性能提升。因此，有一个。
+- en: couple things that we did to improve performance。 We removed support for structured
+    arrays。 We。 don't need them and this allows us to write version one NPY files
+    in a very straightforward， way。 We also emit support for object arrays。 A really
+    important performance game was achieved。 by removing backwards compatibility for
+    NPY's authored in Python 2。 NumPy does some tricky。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们做了一些事情来提高性能。我们移除了对结构数组的支持。我们不需要它们，这使我们能够以非常简单的方式写出版本一的 NPY 文件。我们也取消了对对象数组的支持。通过移除对
+    Python 2 编写的 NPY 的向后兼容性，获得了一个重要的性能提升。NumPy 做了一些复杂的事情。
+- en: stuff in order to handle that situation and we're just not going to support
+    that。 We also。 employ some header caching to improve the speed of translating
+    that header into Python， objects。 In the context of encoding NPY's in a data frame
+    you're going to have a lot。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了处理这种情况，我们将不支持那种情况。我们还使用了一些头部缓存，以提高将头部转换为 Python 对象的速度。在数据框中编码 NPY 时，你将会有很多。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_22.png)'
+  id: totrans-70
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_22.png)'
+- en: of headers that are the same and so this cache header decoding really helps
+    us improve our。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相同的头部，因此这个缓存头解码确实帮助我们提高了我们的。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_24.png)'
+  id: totrans-72
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_24.png)'
+- en: performance。 Okay so I've claimed that this format is faster than per K。 We've
+    seen a。 little bit of example but let's dive into some greater details of this。
+    So we're going。 to look at a number of benchmarks reading and writing data frames
+    and we're going to use。 pandas to serial ought to read and write a data frame
+    to par K。 We're going to do it。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 性能。所以我声称这个格式比 per K 更快。我们已经看到了一些例子，但让我们深入探讨一些更详细的内容。因此，我们将查看多个基准，读取和写入数据框，并使用
+    pandas 来序列化、读取和写入数据框到 par K。我们将这样做。
+- en: both with the snappy compression which is the default in pandas as well as no
+    compression。 and then we're going to use static frame to read and write in both
+    NPY and pickle files。 Pickle gives us another benchmark on the other end there。
+    Now of course ORS and hardware affect。 performance of file system operations like
+    these but I've tried this on a few OS's and。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们同时使用 pandas 默认的快速压缩和无压缩。接着我们将使用 static frame 来读写 NPY 和 pickle 文件。Pickle 为我们提供了另一个基准。现在当然，ORS
+    和硬件会影响这些文件系统操作的性能，但我在几个操作系统上尝试过这个。
+- en: it seems to be pretty robust。 Most importantly shape and D type headerogeneity
+    matter。 Too。 often I see performance benchmarks of data frames where they just
+    have done something。 with one data frame but the shape of the data frame and the
+    underlying D type headerogeneity。 really matter。 So we're going to look at performance
+    across a million elements and a hundred million。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它似乎相当稳定。最重要的是形状和 D 类型头部异构性也很重要。太常见的是，我看到数据框的性能基准，仅仅使用一个数据框，但数据框的形状和基础的 D 类型头部异构性确实很重要。因此，我们将查看在不同形状和
+    D 类型配置下的百万个元素和一亿个元素的性能，我使用一个叫做 frame fixtures 的包生成这些值。
+- en: elements in various shapes and D type configurations and I generated those values
+    using a package。 called frame fixtures which allows me to easily generate a variety
+    of frames。 So we're going。 to explore three shape ratios so the shape matters
+    and how a data frame can perform。 We're。 going to look at tall shapes， square
+    shapes and wide shapes and we're going to look at。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们将探讨三种形状比率，形状很重要，以及数据框如何表现。我们将查看细高形状、方形形状和宽形形状。
+- en: three types of D type headerogeneity。 We're going to look at column where we
+    have one。 D type per column with no block consolidation， mixed D type headerogeneity。
+    We have two pairs。 out of five that are consolidated and uniform D type headerogeneity
+    where we have one block。 that can represent all of the data。 So when I present
+    these nine benchmarks we're going。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 三种 D 类型头部异构性。我们将查看每列一个 D 类型且没有块合并的列，混合 D 类型头部异构性。我们有两对，五个中有两个是合并的，均匀的 D 类型头部异构性则是一个块可以表示所有数据。因此，当我呈现这九个基准时，我们将。
+- en: to see them in this presentation so I just want you to get a sense of it before
+    you see。 all these graphs。 We're going to have the shape variations across the
+    columns tall， square。 and wide and we're going to have the D type headerogeneity
+    along the rows column or mixed。 and uniform。 Okay so let's look at read performance。
+    I know there's a lot of information here so。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个演示中看到它们，所以我只是想让你在看到所有这些图表之前感受一下。我们将在列中看到形状的变化，细高、方形和宽形，并且我们将沿行查看 D 类型头部异构性，列或混合和均匀的。好的，让我们看看读取性能。我知道这里有很多信息。
+- en: I'll try to help you out with it。 In dark blue we have parquet with compression
+    in purple。 we have parquet without compression in magenta we have NPZ and in orange
+    we have pickle。 So we see right away that pickles very fast okay that's our first
+    observation。 Notice。 that NPZ in magenta is faster than parquet with and without
+    compression in all cases here。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我会尽量帮助你。在深蓝色中，我们有压缩的 parquet，在紫色中，我们有不压缩的 parquet，在品红色中我们有 NPZ，在橙色中我们有 pickle。所以我们立刻看到
+    pickle 非常快，这是我们的第一个观察。注意到，品红色的 NPZ 在所有情况下都比有无压缩的 parquet 快。
+- en: and as the data gets more uniform as we go down we see that NPZ performance
+    increases。 Notice also that with the compression sometimes reduces parquet performance
+    that's going to。 be relevant when we look at the trade-off in sizes and file size
+    on disk。 Now if I scale。 this to a hundred million elements and we do the same
+    examination we see the outperformance。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随着数据变得更均匀，我们看到 NPZ 的性能提高。还要注意，压缩有时会降低 parquet 的性能，这在我们查看大小和磁盘文件大小的权衡时会很相关。现在如果我将此扩展到一亿个元素，并进行相同的检查，我们看到
+    NPZ 的优越性持续。
+- en: of NPZ continues and we see now that the compressed parquet always underperforms
+    the uncompressed。 parquet and I want you to keep that in mind when we look at
+    file sizes。 There's one case。 where that's not true。 But notice again here lower
+    is better in all these graphs that NPZ。 in magenta is significantly outperforming
+    reading parquet。 Now what about writing？ Well。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: NPZ 的表现继续，而我们看到压缩的 parquet 始终表现不如未压缩的 parquet。希望你在查看文件大小时记住这一点。有一种情况并非如此。但请再次注意，在所有这些图表中，越低越好，品红色的
+    NPZ 明显在读取 parquet 时表现出色。那写入呢？好吧。
+- en: here NPZ does really well we see again in magenta NPZ that bar is always lower
+    than parquet and。 again lower is better here and we see NPZ writing in a few cases
+    even outperform pickle。 Those。 tiny little lines there at the bottom。 So this
+    is a really exciting observation and this。 similarly scales to a hundred million
+    elements where again NPZ again in magenta lower is better。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，NPZ 表现非常好，我们再次看到品红色的 NPZ，那个条形始终低于 parquet，越低越好，我们看到在一些情况下 NPZ 的写入甚至超越了 pickle。底部那些小线条。因此，这是一个非常激动人心的观察，这同样扩展到一亿个元素，再次品红色的
+    NPZ 越低越好。
+- en: continuously outperforms parquet in writing out complete data frames。 So what
+    about file。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 持续在写出完整数据帧时优于parquet。那么文件呢？
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_26.png)'
+  id: totrans-84
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_26.png)'
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_27.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_27.png)'
+- en: size？ Well we have to consider compression when we consider file size。 Parquet
+    supports。 many types of compressions and that's a really fantastic feature of
+    parquet。 At this point。 we're not doing any compression on our NPYs and we're
+    not even using compressed zips because。 that degrades our performance。 Even without
+    any compression NPZ size compares favorably。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件大小？考虑文件大小时，我们必须考虑压缩。Parquet支持多种类型的压缩，这是parquet的一个非常出色的特点。在这一点上，我们没有对NPYs进行任何压缩，甚至没有使用压缩的zip，因为那会降低我们的性能。即使没有任何压缩，NPZ的大小也是比较可观的。
+- en: which is very interesting。 NPZ is always smaller than parquet without compression
+    but when NPZ。 is larger it's generally not more than 25% larger than parquet with
+    compression。 Okay so。 here's a similar chart of the resultant file size on disk
+    of NPZ parquet and pickle。 Again。 parquet is in dark blue with compression purple
+    without compression and right away we see that。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这非常有趣。NPZ在未压缩时始终小于parquet，但当NPZ变大时，通常也不会比压缩后的parquet大25%以上。好吧，这是NPZ、parquet和pickle在磁盘上的结果文件大小的类似图表。再次提醒，压缩的parquet用深蓝色表示，未压缩的用紫色表示，我们马上就看到了。
+- en: the compression works。 Compression is always smaller。 Notice also the NPZ in
+    magenta is sometimes。 always smaller than uncompressed sometimes even smaller
+    than the compressed parquet and。 that's a really interesting observation。 Now
+    as we scale this to a hundred million elements。 we see the benefit of parquet
+    compression。 Now compressed parquet files are always smaller。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 压缩是如何工作的。压缩总是更小的。请注意，洋红色的NPZ有时总是小于未压缩的，有时甚至小于压缩后的parquet，这是一个非常有趣的观察。现在，当我们将其扩展到一亿个元素时，我们看到了parquet压缩的好处。现在，压缩的parquet文件始终更小。
+- en: than the corresponding NPZ file but the NPZ file is still always smaller than
+    the uncompressed。 parquet。 Now we do get a smaller file size with parquet but
+    if you remember our performance。 numbers the compressed parquet read/write performance
+    performed very poorly at this scale so there's。 trade-offs in compression as I'm
+    sure you're aware。 Now what about memory mapping these data。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对应的NPZ文件，但NPZ文件始终小于未压缩的parquet。现在，我们确实得到了更小的parquet文件大小，但如果你记得我们的性能数据，压缩的parquet在这个规模下的读/写性能表现非常糟糕，所以在压缩方面存在权衡，这一点你肯定知道。那记忆映射这些数据呢？
+- en: frames？ So a memory map is a segment of virtual memory assigned a byte-for-byte
+    correlation。 to the bytes in a file and for large files this can increase read
+    performance significantly。 and can permit an incremental lazy loading of data
+    into RAM。 So how do we memory map an。 array just so we have an array what can
+    we do？ Well we can use the standard libraries。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 框架？因此，内存映射是分配给文件中字节逐字关联的虚拟内存段，对于大文件，这可以显著提高读取性能，并允许将数据增量懒加载到RAM中。那么我们如何内存映射数组？只要我们有一个数组，我们可以做什么？好吧，我们可以使用标准库。
+- en: mmap to create an instance from the bytes in the body of the NPY file and then
+    we can。 simply hand that mmap to an ND array constructor as the data buffer for
+    the array。 So let's。 do that we're going to create a simple binary file and we're
+    going to put the three bytes。 that hopefully you know by now into that file。 We're
+    going to open that file back up as binary。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: mmap用于从NPY文件主体的字节创建实例，然后我们可以简单地将该mmap作为数据缓冲区交给ND数组构造函数。因此，让我们这样做，我们将创建一个简单的二进制文件，并将希望你现在已经知道的三个字节放入该文件。我们将以二进制形式重新打开该文件。
+- en: we're going to give it to our memory map and that's all we need to do we can
+    create an。 ND array with that memory map as the buffer and we have a memory mapped
+    array。 So we can。 do that with our NPYs but we can't use a zip anymore what we
+    need to do is write all。 of our NPYs to the file system and static frame offers
+    an exporter to do that you simply。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将把它交给我们的内存映射，这就是我们需要做的全部，我们可以使用该内存映射作为缓冲区创建ND数组，并且我们有了一个内存映射数组。因此，我们可以这样做使用我们的NPYs，但我们不能再使用zip了，我们需要做的是将所有的NPYs写入文件系统，而静态框架提供了一个导出器来做到这一点，你只需简单。
+- en: say to NPY we're going to give it a directory and we're going to fill that directory
+    with。 NPY files。 To get the memory map file back into memory we're going to use
+    a specialized。 constructor that's going to give us back two things it's going
+    to give us back a frame and。 a special function we need to close the memory maps
+    after we're done with them。 So this gives。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我们给NPY一个目录，并将该目录填充NPY文件。要将内存映射文件重新加载到内存中，我们将使用一个专用构造函数，它将返回两个东西，一个框架和一个我们需要在完成后关闭内存映射的特殊功能。因此，这提供了。
+- en: us some overhead and working with memory map data frames we have to lay out
+    everything。 on the file system but and we must remember to close those memory
+    maps but even so we can。 get even better performance so NPY at the scale of 100
+    million elements always outperforms。 NPZ and we see well it just drops off the
+    chart here outperforming pickle itself in。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在使用内存映射数据框时，我们有一些开销，我们必须在文件系统上布局所有内容，但我们必须记得关闭那些内存映射，但即便如此，我们仍然可以获得更好的性能，因此在1亿元素的规模上，NPY始终优于NPZ，我们看到它在这里超越了图表，表现优于pickle本身。
+- en: reading in a data frame which is a very exciting result。 So memory mapping a
+    data frame provides。 significant benefits in read performance often being faster
+    than NPZ maybe always and offering。 better memory performance and this is really
+    enabled by static frame in part because the。 NPY structure is identical to the
+    blocks and those blocks are adjacently consolidated meaning。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在数据框中读取是一个非常令人兴奋的结果。因此，将数据框内存映射提供了显著的读取性能优势，通常比NPZ更快，甚至可能总是更快，并提供更好的内存性能，这在一定程度上得益于静态框架，因为NPY结构与块是相同的，这些块是相邻整合的，意味着。
+- en: we don't have to do any translation to get at that underlying data。 Furthermore
+    unlike。 pandas static frame has an immutable data model and because it's a mutable
+    data model we can。 memory map all of that array data into our frame and we can
+    take views of that memory。 map data without forcing premature copies which means
+    we can keep our memory map data。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不需要进行任何转换就能获取底层数据。此外，与pandas不同，静态框架具有不可变的数据模型，而因为它是一个可变数据模型，我们可以将所有数组数据内存映射到我们的框架中，我们可以在不强制提前复制的情况下，查看该内存映射数据，这意味着我们可以保留我们的内存映射数据。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_29.png)'
+  id: totrans-97
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_29.png)'
+- en: and use it for quite a long time before having to make any copies。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在很长一段时间内使用它而不需要制作任何副本。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_31.png)'
+  id: totrans-99
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_31.png)'
+- en: Alright current state and future work。 These NPY NPZ read write routines are
+    fully implemented。 in static frame we're already widely using them in production
+    and have observed very。 significant performance benefits converting from using
+    parquet to using NPY and NPZ。 As。 mentioned you can export and import these NPZs
+    with constructors and exporters with names。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，目前的状态和未来的工作。这些NPY NPZ读写例程在静态框架中已完全实现，我们已经在生产中广泛使用它们，并观察到从使用parquet到使用NPY和NPZ的非常显著的性能收益。如前所述，你可以使用带名称的构造函数和导出器导出和导入这些NPZ。
+- en: that should be familiar to you if you want to go to an NPY a directory of all
+    of this data。 there's similar exporters and constructors and finally we saw the
+    special NPY M map constructor。 that allows you to memory map a complete NPY from
+    NPY's on your file system。 If you're。 using pandas you can use this right away
+    you can simply convert from pandas to static frame。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想访问一个包含所有这些数据的NPY目录，这应该是你熟悉的。有类似的导出器和构造函数，最后我们看到了特殊的NPY M映射构造函数，它允许你从文件系统中的NPY内存映射完整的NPY。如果你在使用pandas，你可以立即使用这个，你可以简单地将pandas转换为静态框架。
+- en: write out your NPZ or do the same in reverse use static frame to read your NPZ
+    and then。 convert it to pandas。 Now pandas has drifted away from NumPy a little
+    bit so if you're。 using data frame pandas data frame features that aren't part
+    of NumPy you're not going。 to be able to do this but if for very common NumPy
+    d types this will work perfectly well。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将你的NPZ写出，或者反向操作，使用静态框架读取你的NPZ，然后转换为pandas。现在，pandas已经与NumPy有些脱节，因此如果你使用的数据框特性不是NumPy的一部分，你将无法做到这一点，但对于非常常见的NumPy
+    d类型，这将完美运行。
+- en: In the future there's a few more optimizations we have to explore to further
+    increase the。 performance of reading and writing these NPY and NPZ files and we
+    might explore NPY compression。 as we saw the benefits of compression for very
+    large data frames is potentially valuable。 Alright so I hope you've gained a good
+    understanding of data frames and how they are built。 I hope。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在未来，我们还有一些优化需要探索，以进一步提高读取和写入这些NPY和NPZ文件的性能，我们可能会探索NPY压缩，因为我们看到对于非常大的数据框，压缩的好处是非常有价值的。好的，我希望您对数据框及其构建方式有了很好的理解。希望如此。
+- en: now you have a clear understanding of how this 14 year old encoding mechanism
+    works and how。 we can redeploy it now to produce something that's actually materially
+    faster than the。 so-called gold standard of data encoding and I hope you leave
+    here with more options for。 serializing and in fact memory mapping data frames
+    than you had when you started。 Thank。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经清楚了解了这个14年历史的编码机制是如何工作的，以及我们如何重新部署它，以产生比所谓的数据编码黄金标准更快的东西。我希望您离开这里时，对于序列化和内存映射数据框有比开始时更多的选择。谢谢。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_33.png)'
+  id: totrans-105
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_33.png)'
+- en: you very much if you'd like to learn more about static frame you can visit us
+    here。 Thank， you。 [Applause]。
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非常感谢，如果您想了解更多关于静态框架的信息，您可以在这里访问我们。谢谢您。[掌声]。
+- en: '![](img/f61fb68ed6758a61de881dd3a65d7322_35.png)'
+  id: totrans-107
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/f61fb68ed6758a61de881dd3a65d7322_35.png)'

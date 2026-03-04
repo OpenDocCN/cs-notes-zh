@@ -1,0 +1,743 @@
+- en: P23：Talk - Benjamin Bariteau_ How We Migrated 3.8 Million Lines of Python 2
+    Without - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P23：演讲 - 本杰明·巴雷托_ 我们是如何在不打断开发的情况下迁移3.8百万行Python 2的 - VikingDen7 - BV1f8411Y7cP
+- en: All right， excellent。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，非常好。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_1.png)'
+- en: All right， and thank you for attending this last presentation of the session。
+    We have Benjamin Barretow， Benjamin Barretow giving us a presentation on how he，
+    not we， migrated 3。8 million lines of Python 2 without interrupting development。
+    All yours， Benjamin。 Cool， hi。 I'm Ben Barretow， I'm a software engineer at Yelp。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，感谢您参加本次会议的最后一个演讲。我们有本杰明·巴雷托，本杰明·巴雷托为我们展示他是如何在不打断开发的情况下迁移3.8百万行Python 2的。接下来请你，本杰明。你好，我是本·巴雷托，我是Yelp的一名软件工程师。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_3.png)'
+- en: And we're going to get right into it。 So first a little bit about me。 I grew
+    up in Louisville。 Kentucky， or Louisville if you're not from there。 And I went
+    to Georgia Tech。 I was the class of 2014。 I got a Bachelor of Science in Computer
+    Science。 And I've worked at Yelp since graduating for almost eight years now。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将直接进入主题。所以先说一下我自己。我在肯塔基州的路易斯维尔长大，或者如果你不是那里的话，可以叫路易斯维尔。我上了乔治亚理工学院，2014届。我获得了计算机科学的学士学位。毕业以来，我在Yelp工作了将近八年。
+- en: I work on the core services team， which we do a lot of back-end infrastructure，
+    things。 like tooling， just test runners， stuff like that。 And we also are specifically
+    on a lot of the Python infrastructure at Yelp。 That's things like our PI PI servers，
+    a lot of base libraries for doing stuff in Python。 If you want to contact me，
+    my Twitter is @benbarretow and my github is github。com/benbarretow。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我在核心服务团队工作，我们负责很多后端基础设施的事情，比如工具、测试运行器等等。我们也专注于Yelp的许多Python基础设施。这包括我们的PI PI服务器，以及用于Python的许多基础库。如果你想联系我，我的Twitter是@benbarretow，我的GitHub是github.com/benbarretow。
+- en: So first of all， I'm from Yelp and at Yelp， we're all about connecting people
+    to great。 local businesses。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我来自Yelp，在Yelp，我们专注于将人们与优秀的本地企业连接起来。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_5.png)'
+  id: totrans-8
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_5.png)'
+- en: And to that end， our code needs to work。 So let's talk about Yelp main。 That's
+    the name of the repo that we're concerned with today。 It's our monolith。 It was
+    sort of the original code base at Yelp。 We've since moved to a service-oriented
+    architecture。 but it still exists and still has a ton of， code in it that's really
+    important。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为此，我们的代码需要正常工作。那么我们来谈谈Yelp主系统。这是我们今天关注的代码库的名称。它是我们的单体系统。这是Yelp最初的代码库。我们后来转向了面向服务的架构，但它依然存在，并且仍然有大量重要的代码在其中。
+- en: So where does Yelp main exist in our ecosystem？ This is sort of important to
+    understanding why we need to do this and what it looks like。 when we're doing
+    this migration。 So this is sort of a flow over request。 And there's basically
+    two basic ways that it works。 First is we get a request from a user。 It goes into
+    what we call the routing service， which is a reverse proxy layer。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么Yelp主系统在我们的生态系统中存在于何处？这对理解为什么我们需要这样做以及它在迁移时的样子非常重要。这是一个请求流的概述。基本上有两种基本的工作方式。第一，我们从用户那里收到请求。它进入我们称之为路由服务的部分，这是一个反向代理层。
+- en: That goes into Yelp main。 And Yelp main is responsible then for creating an
+    HTML page。 It'll get data from its own database。 And maybe it'll call into some
+    independent services。 things we call back-end services。 And then it will render
+    a full HTML page that will end up being shown to the user。 And the alternative
+    way， and this is the sort of more modern way that things happen， is。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将进入Yelp主系统。而Yelp主系统负责创建一个HTML页面。它将从自己的数据库获取数据。并可能调用一些独立服务，即我们称之为后端服务的东西。然后它将渲染一个完整的HTML页面，最终呈现给用户。另一种方式，这是更现代的处理方式。
+- en: request will have the routing service and instead it'll go to what we call front-end，
+    service。 which is a different service than Yelp main that is responsible for creating，
+    that HTML。 And then front-end service will call into some back-end services to
+    get data。 And then it'll probably also call into internal API， which is the part
+    of Yelp main that exposes。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请求将会有路由服务，而不是，它将进入我们称之为前端服务的部分。这是与Yelp主系统不同的服务，负责创建那个HTML。然后前端服务将调用一些后端服务以获取数据。接着，它可能还会调用内部API，这部分是Yelp主系统所暴露的。
+- en: a RESTful JSON API in order to get the data that's in its database。 So either
+    way you slice it。 Yelp main is really important to when a user is actually getting，
+    you know web pages from us。 So let's go a little deeper on to how it's structured。
+    So first Yelp main has a web server。 This web server is responsible for serving
+    all of the web traffic that it's responsible， for。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个RESTful JSON API，用于获取其数据库中的数据。因此，不论你怎么切分，Yelp主站对于用户获取我们的网页来说都非常重要。那么我们来深入探讨一下它是如何结构化的。首先，Yelp主站有一个网络服务器。这个网络服务器负责处理所有的网络流量。
+- en: which is six different sites as we call them。 And so we have www。yelp。com。 That's
+    sort of our consumer facing website。 If you've ever used Yelp。 that's probably
+    what you've been looking at。 Biz。yelp。com。 which is our business owner facing
+    website。 And then as I mentioned， internal API。 And in total。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这被称为六个不同的网站。所以我们有www.yelp.com。这是我们面向消费者的网站。如果你曾经使用过Yelp，那可能就是你所看到的。Biz.yelp.com是我们面向商家的网站。正如我提到的，还有内部API。总的来说。
+- en: these are over 2，000 endpoints。 So it's a ton of logic and code。 In addition
+    to the web server。 there's also things that we call batches。 These are just background
+    processes。 They're called batches for kind of historical reasons， but that's the
+    terminology that we， use。 And we have over 800 individual batches。 And these all
+    run as independent processes。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些有超过2000个端点。所以这是大量的逻辑和代码。除了网络服务器，还有我们称之为批处理的东西。这些只是后台进程。由于历史原因，它们被称为批处理，但这就是我们使用的术语。我们有超过800个独立的批处理，它们都作为独立进程运行。
+- en: So the web server is a single process and then each batch is an individual process。
+    And it's used for all sorts of things， but anything that we don't want to do during。
+    our web request， things like time intensive reports， date of backfills， maybe
+    things like， billing。 really anything that you wouldn't be able to complete during
+    the course of a， normal web request。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，网络服务器是一个单一的进程，每个批次是一个独立的进程。它被用于各种事务，但任何我们不想在网络请求期间处理的事情，比如时间密集型报告、数据填充，可能还有账单，实际上就是在正常网络请求期间无法完成的任何事情。
+- en: So in terms of how we actually develop on Yelp main， we have about 20 to 30
+    changes per day。 And it changes just a branch。 So a branch can be huge， it can
+    be small。 but that's sort of how we measure it。 And we batch up these changes
+    into what we call pushes。 And so that push or deploy takes about two hours on
+    average。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于我们如何在Yelp主站上开发，我们每天大约有20到30次变更。它们只是一个分支。因此，一个分支可以很大，也可以很小，但这就是我们衡量的方式。我们将这些变更批量处理成我们所称的推送。所以这个推送或部署平均需要大约两个小时。
+- en: That's part of the reason why we batch it is because it takes so long。 So otherwise。
+    there just wouldn't be enough hours in the day to push out all the code。 And about
+    800 developers are simultaneously working on this。 And this is part of the reason
+    why there's a lot of techniques in here that you might。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这部分原因是我们批量处理，因为这需要很长时间。否则，白天就没有足够的时间来推送所有的代码。大约有800名开发者同时在这上面工作，这也是为什么这里有很多技术的原因。
+- en: not necessarily use on a smaller code base。 It really prevents this sort of
+    one big branch type migration。 And we also have about 700 Python package dependencies
+    in here， which is not definitely。 not the biggest that you could get， but it's
+    definitely a lot more than your typical Python。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不一定在较小的代码库上使用。这确实防止了一种大分支类型的迁移。我们还有大约700个Python包依赖，这绝对不是你能得到的最大数量，但比典型的Python应用程序要多得多。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_7.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_7.png)'
+- en: app。 Also， it's pretty old。 The first commit was in 2004。 And you may or may
+    not remember， hey。 y'all， was still topping the charts。 It came out in 2003， but
+    it was still out。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，它还相当老旧。第一次提交是在2004年。你可能还记得，当时“嘿，大家好”还在排行榜上。它是在2003年发布的，但仍然在流行。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_9.png)'
+  id: totrans-22
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_9.png)'
+- en: And as I mentioned in the title， it's 3。8 million Python lines of code。 There's
+    more of other stuff like JavaScript and CSS， which if you printed that out would。
+    be about as long as 63 copies of War and Peace， which is a famously long historical
+    fiction。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我在标题中提到的，它包含380万行Python代码。还有其他东西，比如JavaScript和CSS，如果打印出来的话，大约相当于63本《战争与和平》的长度，这是一部著名的长篇历史小说。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_11.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_11.png)'
+- en: novel。 And it has about 100，000 tests， which is just kind of an unfathomable
+    number。 So I figured out， OK， how long does that take to run end to end？ And it
+    takes about 35 hours。 We don't actually do that。 We have a parallel test runner。
+    But that 35 hours in total is about a little over three watches of the extended
+    Lord of。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 小说。而且它大约有100,000个测试，这个数字真是难以想象。所以我算了一下，完整运行一次需要多长时间？大约需要35个小时。我们实际上并不这样做。我们有一个并行测试运行器。但那35个小时的总时长大约相当于看三遍《指环王》的加长版。
+- en: the Rings trilogy， which I'm sure some of you have done that before。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 《指环王》三部曲，我相信你们中的一些人以前做过这件事。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_13.png)'
+  id: totrans-27
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_13.png)'
+- en: So definitely a marathon。 You can do that three times。 But this is all really
+    important。 We have lots of users。 We have lots of people who use this stuff。 We
+    get about 33 million monthly after users， which is about the total population
+    of Peru。 So let's talk about the actual migration and sort of what we need to
+    do in order to make。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以绝对是一个马拉松。你可以这样做三次。但这都是非常重要的。我们有很多用户。我们有很多人使用这些东西。我们每月大约有3300万的活跃用户，这大约是秘鲁的总人口。所以让我们谈谈实际的迁移，以及我们需要做什么。
+- en: this happen。 So why do we do it， first of all？ It's kind of obvious。 I think
+    to most people why you'd want to do this， but it's worth saying anyway， which。
+    is that we knew that important libraries that we used were going to drop Python
+    2 support。 things like PyTest and PIP， have already dropped Python 2 support right
+    now。 And also。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么我们要这样做，首先？这对大多数人来说似乎是显而易见的，但还是值得一说的是，我们知道我们使用的重要库将会停止支持Python 2。像PyTest和PIP这样的东西，已经停止支持Python
+    2了。
+- en: it's really nice to just be able to use the newer language features。 It's a
+    sort of developer productivity thing。 In terms of what we needed to do in order
+    to make this happen。 we knew that we couldn't， have normal development stop during
+    this project。 We couldn't just say。 hey， we're not going to ship any new features。
+    We're not going to increase revenue。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 能够使用更新的语言特性真的很不错。这是一种开发者生产力的提升。关于我们需要做什么才能实现这一点，我们知道在这个项目期间不能停止正常开发。我们不能仅仅说，嘿，我们不打算发布任何新特性。我们不打算增加收入。
+- en: That was just not an option。 And also， importantly， in order to make sure this
+    was safe。 we needed to make sure that， all the changes were rolled back safe。
+    So we couldn't be like， OK。 we're going to make this big change。 And if it breaks
+    something， we can't go back。 We don't want to give them that position。 So let's
+    talk about the different phases of this and what that timeline looked like。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这根本不是一个选项。此外，重要的是，为了确保这一切安全，我们需要确保所有更改都能安全回滚。所以我们不能说，好的，我们要进行这个重大更改。如果出现故障，我们无法回退。我们不想让他们处于这种境地。所以让我们谈谈这个过程的不同阶段，以及时间线是什么样的。
+- en: So first was basically making sure that the code parsed under Python 3。 That
+    was a really simple task， actually。 There were very few actual changes in that
+    space。 So it took us about two weeks。 Importability was next。 This was basically
+    making sure that we could actually import the code under Python 3。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以第一步基本上是确保代码能够在Python 3下解析。这实际上是一个非常简单的任务。在这方面的实际更改很少。所以我们花了大约两周的时间。接下来是可导入性。这基本上是确保我们实际上能够在Python
+    3下导入代码。
+- en: That seems kind of trivial， but it's actually a good amount of work。 And it
+    took us about two months。 But the biggest one， by far， is the third phase。 which
+    is what I call functional parity， which took us about a year。 And this is basically
+    just making sure that the code works the same。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这看起来有点微不足道，但实际上是相当多的工作。我们花了大约两个月的时间。但最大的一个，毫无疑问，是第三阶段。我称之为功能平衡，这花了我们大约一年。这基本上是确保代码的工作方式是相同的。
+- en: I'll go into a lot of details about that later。 And then finally。 once we actually
+    were confident that our code was working the same under Python， 2 and 3。 we went
+    to the rollout phase， where we actually rolled it out to production。 And that
+    took us about two months。 So in terms of actually tracking this work。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我稍后会详细讲述这一点。然后最后，一旦我们真正有信心我们的代码在Python 2和3下都能正常工作，我们就进入了推出阶段，实际将其推出到生产环境。这花了我们大约两个月。因此在实际跟踪这项工作方面。
+- en: you have to understand what needs to be done， and making sure that people are
+    coordinating and all that stuff。 So this is sort of what we did for each of those。
+    This is the parsability， as I mentioned。 this was a really small part of the task。
+    And so it was literally like。 you just try and parse all the files。 You just kind
+    of run Python 3 on it。 Did it parse OK？
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你必须了解需要做什么，并确保人们之间的协调和其他相关工作。所以这就是我们为每个文件所做的。这就是我提到的可解析性，这实际上是任务中的一个非常小的部分。所以这简直就是，你只是尝试解析所有文件。你只是简单地在上面运行
+    Python 3。解析得好吗？
+- en: If it didn't make a ticket， that was like a single pass。 For importability。
+    what we did is we just imported all the files and then inspected the。 import error
+    stack trace and looked at what was the last file that's actually in our repo。
+    that caused this import error。 And then just sort of pipe that to unique-c and
+    then sort-n。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果没有生成工单，那就像是单次处理。对于可导入性，我们做的是导入所有文件，然后检查导入错误的堆栈跟踪，看看导致这个导入错误的最后一个实际在我们代码库中的文件。然后将其传递给
+    unique-c，接着排序。
+- en: And then you get here are your top files that are causing import errors。 And
+    you just kind of run that script every week or something， file tickets， and then。
+    pick up the tickets and fix them。 For the functional parity， most of it was about
+    running tests。 So we have a test runner already， which groups all of the test
+    failures by traceback。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后你会看到导致导入错误的主要文件。你大概每周运行一次那个脚本，生成工单，然后处理这些工单并修复它们。对于功能上的一致性，大部分工作都是运行测试。因此我们已经有一个测试运行器，可以根据回溯将所有测试失败分组。
+- en: And so we basically ran the test periodically。 We basically run it every day。
+    And then we would file the tickets of like what was at the top in terms of issues
+    and。 then pick stuff off of that pool。 So an important tool in this。 which some
+    of you may or may not be familiar with， is Python， modernize。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们基本上定期运行测试。我们几乎每天都运行一次。然后我们会生成工单，记录顶端的问题，然后从那一池中选择一些东西。所以在这方面一个重要的工具是 Python
+    modernize，有些人可能熟悉，也可能不熟悉。
+- en: So Python modernize is a great tool。 It's an open source tool that we used。
+    which converts Python 2 only code to Python 2 and， 3 compatible code。 Since we
+    wanted to make sure that this rollout was rollback safe， we needed to make sure
+    that。 it was compatible。 We couldn't just use 2 to 3。 Even though Python modernize
+    actually uses lib2 to 3。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python modernize 是一个很棒的工具。这是一个我们使用的开源工具，它将仅支持 Python 2 的代码转换为兼容 Python 2 和 3
+    的代码。由于我们想确保这个版本的回滚是安全的，我们需要确保它是兼容的。我们不能仅仅使用 2 到 3。即使 Python modernize 实际上使用了 lib2
+    到 3。
+- en: It uses a lot of the functionality in lib2 to 3 to get you to that state。 Some
+    of the 2 to 3 fixes are actually just totally compatible。 But some of them use
+    6 as a compatibility layer。 There's actually a similar tool called Python Futurize。
+    which uses future。 We were already using 6， so we decided to use modernize instead。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它利用了 lib2 到 3 中的许多功能来让你达到那个状态。一些 2 到 3 的修复实际上是完全兼容的。但其中一些使用 6 作为兼容层。实际上还有一个类似的工具叫做
+    Python Futurize，它使用 future。我们已经在使用 6，所以决定使用 modernize。
+- en: There's not really a particular reason to use one or the other other than your
+    particular， setup。 In terms of what it actually does is it fixes some of the syntax
+    changes， it fixes some。 of the standard lib import changes， and also some of the
+    behavior changes。 So I'll go through this example that I have on the right in
+    terms of each of the changes。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了你的特定设置之外，并没有特别的理由去选择其中一个。就它实际所做的而言，它修复了一些语法变化，修复了一些标准库的导入变化，以及一些行为变化。所以我将逐一讲解我在右侧的示例中的每一个变化。
+- en: So first is in Python 2， you imported the Q object， the Q class from the Q module
+    where。 it was capital case。 But in Python 3， you import it from the lower case，
+    module name。 And so you can't really import it from both at the same time， so
+    use this 6 shim to import。 that class。 The other one is that the values， methods，
+    and the items method and the keys method。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先是在 Python 2 中，你从 Q 模块中导入 Q 对象，Q 类，它是大写的。但在 Python 3 中，你是从小写的模块名中导入它。因此，你不能同时从两者中导入，所以使用这个
+    6 的 shim 来导入那个类。另一个是值、方法，以及 items 方法和 keys 方法。
+- en: those， all return iterators instead of lists in Python 3。 So in order to be
+    compatible。 you have to wrap those in a list， and it does that automatically。
+    Similarly。 there was the iter items method， iter values and iter keys， which were
+    removed。 in Python 3 because they were now redundant。 And so now there's a shim
+    for 6 and automatically replaces the regular method call with that shim。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些在Python 3中都返回迭代器而不是列表。因此，为了兼容，你必须将它们包装在列表中，且这会自动完成。同样，iter items方法、iter values和iter
+    keys在Python 3中被移除了，因为它们现在是多余的。因此，现在有一个shim用于6，并自动用该shim替换常规方法调用。
+- en: And then finally， there's a syntax change which is that you used to be able
+    to raise。 exceptions like this where you would give the exception class， comma，
+    and then arguments。 But you can't do that anymore。 So now it just constructs the
+    exception for you。 So let's talk a little bit about some of the tooling that we
+    used during this migration。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后还有一个语法更改，以前你可以这样引发异常，给出异常类和参数的逗号。但现在不再支持了，所以它会为你构造异常。接下来我们来谈谈在这个迁移过程中使用的一些工具。
+- en: So one of the things is that we use pre-commit。 Python modernized is actually
+    a pre-commit hook。 And pre-commit's really nice because it allows us to run all
+    these linters and code mods。 and make sure that they get run for new branches。
+    So we made sure that any new code checked in would be run through these code mods
+    so。 that they were as compatible as possible with Python 3。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们使用pre-commit。Python modernized实际上是一个pre-commit钩子。pre-commit非常好，因为它允许我们运行所有这些linter和代码修改，确保它们在新分支上运行。所以我们确保任何新提交的代码都会经过这些代码修改，从而尽可能与Python
+    3兼容。
+- en: And one of the things that was kind of cool is that we actually added black
+    to this repo。 during the work on this migration。 And it didn't require any extra
+    dev time。 It just sort of happened。 And we didn't really think about it。 And it
+    just worked。 So let's sort of take this piece of code。 I made up this silly piece
+    of code which allows us to sort of go through the phases of this。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且有趣的是，我们实际上在这个仓库中添加了黑色（black）。在这个迁移的过程中，这并没有需要额外的开发时间。它就这样发生了，我们并没有特别考虑，结果也很顺利。所以让我们来看看这段代码。我编写了这段无聊的代码，它可以帮助我们逐步了解这个过程。
+- en: migration and what those look like at each stage。 So first is parsability， as
+    I mentioned。 So this in this case you basically just run-- we ran Python modernized。
+    And this fixed a couple of syntax errors。 As I mentioned， there's the change to
+    the raised syntax。 There's also a change to the accept syntax。 You used to be
+    able to say accept exception comma and then a variable name that you bind。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 迁移以及每个阶段的样子。因此首先是可解析性，正如我提到的。在这种情况下，你基本上只需运行——我们运行了Python modernized。这修复了一些语法错误。正如我提到的，有对引发语法的更改，也有对接受语法的更改。你以前可以说接受异常和一个绑定的变量名。
+- en: the exception to。 That was removed in Python 3。 So you now have to say as。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个例外被移除了在Python 3中。因此你现在必须说as。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_15.png)'
+  id: totrans-49
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_15.png)'
+- en: And Python modernized just fixes this for you。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而Python modernized会为你修复这些问题。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_17.png)'
+  id: totrans-51
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_17.png)'
+- en: And that's it。 That's parsability。 So importability is basically-- again， using
+    Python modernized。 And we did it in chunks mostly for rollback safety。 We wanted
+    to make sure that our changes were relatively small。 And then we also had to fix
+    our package importability。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样。这就是可解析性。所以可导入性基本上又是——同样使用Python modernized。我们主要是分块进行，以确保回滚的安全性。我们希望确保我们的更改相对较小。同时，我们还需要修复我们的包导入性。
+- en: So a lot of that was sort of upgrading those packages to versions that now had
+    Python 3， support。 Some of them we had to replace because they never got Python
+    3 support。 We usually use some sort of fork or something like that。 And some of
+    them we just kind of had to refactor away。 They never got Python 3 support。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以很多内容都是将那些包升级到现在支持Python 3的版本。有些我们不得不替换，因为它们从未支持Python 3。我们通常会使用某种分支或类似的东西。而有些则需要重构，因为它们也未曾支持Python
+    3。
+- en: And we were like， well， we don't really need these that bad。 We can just refactor
+    it。 And then we also had our internal packages。 So some of them didn't have Python
+    3 support yet。 They just had-- they were too old。 And so we had to upgrade them
+    to have Python 3 support。 and then bump them in Yalt main。 And mostly that was
+    just running Python modernized on them。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们想，实际上我们并不太需要这些。我们可以进行重构。然后我们还有内部包。其中一些包还没有 Python 3 的支持。它们太旧了。因此我们必须升级它们以支持
+    Python 3，然后在 Yalt main 中进行更新。大部分工作只是运行 Python modernized。
+- en: So now we get this piece of code importable。 And one of the things is that C
+    pickle is removed in Python 3。 in favor of being merged into the pickle module。
+    So there's a section for that。 And Python modernized just fixes that。 And all
+    of the import and all of the references。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们可以导入这段代码。其中一件事是 C pickle 在 Python 3 中被移除，合并到 pickle 模块中。所以有一个部分是这样。Python
+    modernized 正好解决了这个问题，以及所有的导入和引用。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_19.png)'
+  id: totrans-56
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_19.png)'
+- en: So functional parity is the next thing。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以功能平等是接下来要关注的。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_21.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_21.png)'
+- en: Functional parity for this was mostly that--， so first of all is we built this
+    parallel virtual amp。 So we just kind of made a second virtual amp that。 was Python
+    3 based that used most of the same packages。 We have to filter out a few things
+    that were mostly backwards， that you can install in Python 3。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 功能平等主要是首先，我们构建了一个并行的虚拟环境。我们只是做了一个基于 Python 3 的第二个虚拟环境，使用大部分相同的包。我们必须过滤掉一些主要是向后兼容的东西，这些东西可以在
+    Python 3 中安装。
+- en: Things like typing and features were things that we just， didn't need in Python
+    3。 And this also led us due development against Python 3。 So people could use
+    Python 3 to verify their code， was-- would work once we flipped。 Next we wanted
+    to get our test pass。 As I mentioned， we needed to fix 100，000 tests， which is
+    a ton。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像类型和特性这些在 Python 3 中是我们不需要的。这也导致我们在 Python 3 下进行开发。这样人们可以使用 Python 3 验证他们的代码在我们切换后是否能正常工作。接下来，我们想让我们的测试通过。正如我提到的，我们需要修复
+    100,000 个测试，这真是一大堆。
+- en: We still used a lot of Python modernized stuff。 Some of that was automatable。
+    As you can see on the right， this is our code again。 And one of the things is
+    that we're。 using the Unicode built-in in Python 2， which， doesn't exist in Python
+    3。 So we used a 6-shim in order to get around that。 And so that was nice。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们仍然使用了很多现代化的 Python 工具。其中一些是可以自动化的。正如你在右侧看到的，这又是我们的代码。其中一件事是我们在使用 Python 2
+    的内置 Unicode，这在 Python 3 中不存在。因此，我们使用了一个 6-shim 来解决这个问题。这真不错。
+- en: But the elephant in the room is always going to be text and bytes。 And mixing
+    those up was really easy in Python 2。 So we had to fix those in Python 3。 And
+    mostly that was relying on tests。 There were some other tricky things， things
+    like double。 under bool versus double under non-zero。 These were in Python 3，
+    double under bool。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但房间里的大象总是文本和字节。在 Python 2 中混合这些是非常容易的。所以我们必须在 Python 3 中修复这些问题。主要依赖于测试。还有其他一些棘手的事情，比如双下划线布尔与双下划线非零。在
+    Python 3 中是双下划线布尔。
+- en: is used for if statement truthiness。 That's how you customize if statement truthiness。
+    And in Python 2， it's double under non-zero。 So there were some classes， some
+    custom classes。 that had double under non-zero defined， but not double under bool。
+    And the thing about that is it's confusing， because it just sort of passes the
+    if statement。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于 if 语句的真值性。这是如何自定义 if 语句的真值性。在 Python 2 中，它是双下划线非零。因此，有一些自定义类定义了双下划线非零，但没有定义双下划线布尔。而这很令人困惑，因为它在
+    if 语句中通过了。
+- en: or doesn't pass the if statement when you expect。 So you have to make sure that
+    that you sort of figure out。 where the actual error is。 And the fix is simple，
+    but actually figuring out。 where the error is is more difficult。 Similar with
+    meta classes， with meta classes。 this is actually fixable by Python modernize。
+    It's just like any time you're using a meta class。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者在你预期时没有通过 if 语句。所以你必须确保找出实际错误所在。修复是简单的，但实际上找出错误更困难。类似于元类，这实际上可以通过 Python modernize
+    来修复。只要你使用元类的任何时间。
+- en: that uses a shim to make sure that it's working in both Python 2， and Python
+    3。 But the behaviors can be confusing。 But our goal was always to have behavior
+    consistency。 between Python 2 and Python 3， so that we could make sure。 that everything
+    worked when we rolled forward。 One of the other things we had to deal with。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个函数使用了一个shim，以确保它在Python 2和Python 3中都能正常工作。但行为可能会让人困惑。但我们的目标始终是确保Python 2和Python
+    3之间的行为一致性，以确保在我们向前推进时一切正常工作。我们还必须处理的另一件事情是。
+- en: was the fact that we had these caches that used pickle。 And if you've ever had
+    to deal with pickle。 across Python 2 and 3， it doesn't really work super great。
+    There's a lot of weird gotchas。 So we just decided that we were just， going to
+    get rid of pickle entirely。 So what we did is we decided to switch to JSON。 But
+    we didn't want to just completely bust our caches。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事实是我们有这些使用pickle的缓存。如果你曾经需要处理Python 2和3之间的pickle，它并不是特别好用。有很多奇怪的陷阱。因此我们决定完全放弃pickle。所以我们决定切换到JSON。但我们不想完全破坏我们的缓存。
+- en: because these caches are important for the performance， of our website。 So what
+    I did is basically started， logging these JSON encoded values。 And then we would
+    check the equality of the values， once they were encoded。 So we basically make
+    sure that the pickle and the JSON。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为这些缓存对于我们网站的性能至关重要。所以我所做的基本上是开始记录这些JSON编码的值。然后我们会在编码后检查这些值的相等性。因此我们基本上确保了pickle和JSON。
+- en: encoded cache values ended up being the same。 And once we got those to a working
+    state。 we would basically switch to what we call the mixed mode。 where we would
+    try to read the JSON values。 And if that didn't work， we would fall back to pickle。
+    read the pickle value， and then we would write back JSON。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 编码后的缓存值最终是相同的。一旦我们将它们调整到工作状态，我们基本上会切换到我们所称的混合模式。在这种模式下，我们会尝试读取JSON值。如果这不奏效，我们会回退到pickle，读取pickle值，然后再写回JSON。
+- en: And then any time we were writing a new value， write JSON。 Eventually over time。
+    if you wait long enough， you end up with mostly JSON， and you can flip to doing
+    just， JSON only。 And there were a few things that were really complex， weird，
+    setups that we just couldn't fix。 And so we ended up just using a cache prefix。
+    So those things just were different on Python 2 and Python。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后每当我们写入一个新值时，就写入JSON。随着时间的推移，如果你等得够久，最终你会主要得到JSON，然后你可以只使用JSON。而且有一些东西非常复杂、奇怪的设置，我们就是无法修复。因此我们最终只是使用了一个缓存前缀。所以这些东西在Python
+    2和Python之间就是不同的。
+- en: 3。 Another thing we had to deal with was context lib nested， which was removed
+    in Python 3。 This was relatively easy to fix。 It just didn't have an automated
+    fix， which is basically。 we wrote a function， which used exit stack， to replicate
+    the interface。 And we used a little bit of said to replace the imports， and the
+    usages。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个我们必须处理的事情是context lib嵌套，这在Python 3中被移除了。这相对容易修复。它只没有自动修复，基本上我们编写了一个使用exit
+    stack的函数来复制接口。我们还用了一点said来替换导入和用法。
+- en: Another thing is that you can actually end up--， you may or may not be familiar
+    with--。 the CMP function that used to be in Python 2's sorted， and list。sort。
+    So that was mostly-- that was the key function was added in--。 I can't remember
+    what version of Python 2， but eventually the CMP function was removed。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一件事是你实际上可能会遇到——你可能对——不太熟悉的CMP函数，它曾经在Python 2的sorted和list.sort中使用。所以这主要是——这个关键函数是在——我记不清是哪一个版本的Python
+    2，但最终CMP函数被移除了。
+- en: And these just were slightly different ways， of dealing with sorting， deciding
+    how to sort things。 But it turns out you can actually use both。 There's a shim
+    function for converting a CMP function。 to a key function in functools， functools
+    CMP， to key， which is really useful。 But it turns out that sometimes you can use
+    both。 And that wasn't really supported。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两者只是处理排序的略微不同方式，决定如何对事物进行排序。但事实证明，你实际上可以同时使用两者。functools中有一个shim函数可以将CMP函数转换为键函数，即functools的CMP转键，这非常有用。但有时你可以同时使用这两者，而这并没有真正得到支持。
+- en: So we wrote this function， which takes both of those functions。 and converts
+    it into a new key function。 And all it really does is it just calls the CMP to
+    key。 on the CMP function。 And that calls the key function on the value that's
+    passed in。 and passes that new value to the CMP to key created function。 Sorry，
+    I should just--。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们编写了这个函数，它接受这两个函数，并将其转换为一个新的键函数。它实际上所做的只是调用CMP到键的转换。它在传入的值上调用键函数，并将该新值传递给创建的CMP到键函数。抱歉，我应该只是——。
+- en: So that's-- and that was really useful。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这就是——这真的很有用。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_23.png)'
+  id: totrans-75
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_23.png)'
+- en: because there are some situations where that was just really， hard to re-factor。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为有些情况确实很难进行重构。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_25.png)'
+  id: totrans-77
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_25.png)'
+- en: So roll out。 This is， I think， the coolest part。 This is the part that I found
+    was the most difficult。 But we came up with us a way of dealing with the situation，
+    that I think is really interesting。 which is that since we， had these parallel
+    Python 2 and 3 virtual ends。 we were able to actually run separate instances，
+    some， under Python 2 and under Python 3。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以推出。这是，我认为，最酷的部分。这是我发现最困难的部分。但我们想出了一个应对这种情况的方法，我认为非常有趣。因为我们有这些并行的 Python 2
+    和 3 虚拟环境，我们实际上能够独立运行某些实例，有些在 Python 2 下，有些在 Python 3 下。
+- en: but running the same code otherwise。 And we would use the reverse proxy layer。
+    that we have to basically look at the URL prefix， and go to the Python 3 instance
+    or the Python 2 instance。 And this allowed us to granularly roll out， individual
+    URL prefixes。 And it was really great because if we were having errors， with a
+    particular prefix。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但运行的代码是相同的。我们会使用反向代理层，基本上根据 URL 前缀，转向 Python 3 实例或 Python 2 实例。这使我们能够逐个 URL
+    前缀进行精细推出。非常棒，因为如果我们在特定前缀上遇到错误。
+- en: we didn't have to roll back， everything。 We just had to say， oh， that prefix
+    is bad。 Let's roll it back。 Let's fix the issue and then roll it back forward。
+    This was really valuable because some of the errors， were just not caught by tests。
+    Our test coverage is OK， but you're， just never going to be 100% perfect in that
+    way。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不需要回滚所有内容。我们只需要说，哦，那个前缀有问题。让我们回滚。解决问题后再推出。这非常有价值，因为有些错误只是没有被测试捕获。我们的测试覆盖率还可以，但你永远无法做到
+    100% 完美。
+- en: So it was really valuable that we were able to do this。 And we coordinated it
+    using an ownership spreadsheet。 There were about 800 endpoint prefixes across
+    the six sites。 And then we did a similar thing for batches。 Since they were individual
+    processes。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们能够做到这一点真的很有价值。我们使用一个责任表格进行了协调。六个站点大约有 800 个端点前缀。然后我们对批处理做了类似的处理。因为它们是独立的过程。
+- en: we could actually just flip them to Python 3 independently。 And we did a similar
+    ownership spreadsheet。 So in terms of the outcomes。 it was very much a very long
+    tail， especially during the functional parity page。 This is-- or sorry。 phase。
+    This is a graph of our test failures over time。 So we started out really high
+    test failure。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们实际上可以独立地将它们切换到 Python 3。我们也做了类似的责任表格。因此在结果方面，特别是在功能平衡阶段，这确实是一个非常长的尾部。这是——抱歉。这是我们测试失败随时间变化的图表。所以我们一开始测试失败率非常高。
+- en: or sort of passing percentage。 We started out really low passing percentage。
+    but we quickly got up to very， very high。 But the last few percentage points took
+    a lot longer。 because we were doing less impactful fixes each time。 Type annotations
+    would have been really useful。 We thought about adding type annotations。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者说通过率。我们开始时通过率非常低，但我们很快达到了非常非常高的水平。但是最后几个百分点花了更长的时间，因为每次我们做的修复影响较小。类型注解会非常有用。我们考虑过添加类型注解。
+- en: before this project， but we decided， that was a huge project in itself。 So we
+    didn't do it。 But it would have been exceptionally useful， especially for the
+    text and bytes issues。 The rollout did take longer than expected。 We were originally
+    scoping for a month。 Part of that was that we were blocked by teams， doing verification。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个项目之前，但我们决定，这本身就是一个庞大的项目。所以我们没有去做。但这会非常有用，尤其是在文本和字节问题上。推出确实比预期要花更长的时间。我们最初的预期是一个月。部分原因是我们被团队阻塞了，进行验证。
+- en: And that was kind of our fault for not really， notifying them earlier。 Because
+    of this sort of-- this curve， we didn't really know exactly when we'd be done。
+    So we just kind of like were like， oh， we're close to done。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这有点是我们的错，没有早点通知他们。因为这种——这个曲线，我们并不确切知道何时会完成。所以我们只是觉得，哦，我们快完成了。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_27.png)'
+  id: totrans-86
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_27.png)'
+- en: Let's let people know。 But that was a little bit too late。 In the end。 we ended
+    up with about a 15% to 20% speedup， which is great。 We were not going for that
+    at all。 We just wanted to get our code working on a newer version， of Python，
+    but it was faster。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让大家知道这件事。但这有点晚了。最后，我们的速度提升了大约 15% 到 20%，这很好。我们并没有特别追求这个目标。我们只是想让我们的代码在新的 Python
+    版本上运行，但结果却变得更快。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_29.png)'
+  id: totrans-88
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_29.png)'
+- en: It was great。 Plus， we used about 26% less memory。 I think both of these really
+    show that this type of basic sort。 of maintenance can really have an effect on
+    your bottom line。 And it's really valuable to do it for reasons like this。 In
+    terms of the future。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这非常棒。此外，我们的内存使用减少了约 26%。我认为这两点确实表明，这种基本的维护工作对公司的底线可以产生真实的影响。出于这样的原因进行这项工作是非常有价值的。关于未来。
+- en: what we're doing right now， is we're automating minor Python version bumps。
+    We're trying to leverage the existing tool that we already， have， which is used
+    to bump packages。 We basically use PIP tools to do targeted upgrades， and then
+    run tests to ensure functional parity。 And this is actually running--， it's one
+    of our internal tools。 And it's actually running right now。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在正在做的，就是自动化小版本的 Python 升级。我们试图利用现有的工具，这个工具用于升级包。我们基本上使用 PIP 工具进行有针对性的升级，然后运行测试以确保功能一致。这实际上是在运行——它是我们内部的一个工具。并且它现在正在运行。
+- en: And we can do these upgrades where， we go from to newer minor Python versions。
+    It's really great。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以进行这些升级，将 Python 版本升级到更新的小版本。这真的很棒。
+- en: '![](img/dcecd717e18909c1d807150de9d75b57_31.png)'
+  id: totrans-92
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/dcecd717e18909c1d807150de9d75b57_31.png)'
+- en: So that's it。 I know that there's no official Q&A， but I'm not doing anything
+    after this。 So if you want to ask me any questions， I'm happy to do it in the
+    hallway。 [APPLAUSE]。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这些。我知道没有官方的问答环节，但我在这之后没有其他安排。所以如果你想问我任何问题，我很乐意在走廊里回答。 [掌声]。

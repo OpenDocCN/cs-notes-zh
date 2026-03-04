@@ -1,0 +1,497 @@
+- en: P7：TALK _ John Belmonte _ Your app is async so take advantage of it for development
+    - VikingDen7 - BV19Q4y197HM
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P7：演讲 _ 约翰·贝尔蒙特 _ 你的应用是异步的，所以利用它进行开发 - VikingDen7 - BV19Q4y197HM
+- en: '[MUSIC]。'
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[音乐]。'
+- en: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_1.png)'
+- en: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_2.png)'
+- en: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_3.png)'
+- en: Wouldn't it be great if as developers we could， inspect and modify internal
+    state without pausing our application？
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果作为开发者我们能够在不暂停应用程序的情况下检查和修改内部状态，那该多好啊？
+- en: If your app is async， this kind of thing is already possible。 So let's take
+    advantage of it for development。 It's an area that hasn't been explored much。
+    Async in the context of Python means we're using cooperative multitasking。 and
+    typically there's only one OS thread， and you're being careful not to block that
+    thread for any length of time。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你的应用是异步的，这种事情已经可以实现了。那么我们来利用这一点进行开发吧。这是一个尚未被充分探索的领域。在Python的上下文中，异步意味着我们使用协作式多任务处理。通常只有一个操作系统线程，并且你要小心不要阻塞该线程。
+- en: So let's dive into the land of no pausing。 My name is John Belmanti。 and I'm
+    happy to present that Python this year。 I'm someone who likes to talk with my
+    hands。 so I'll be waving this laser pointer around during the talk。 I'd also like
+    to introduce Lubbot。 Lubbot's a companion robot， and that project has inspired
+    a lot of。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么让我们深入无暂停的领域吧。我叫约翰·贝尔曼提。我很高兴能在今年的Python大会上发言。我是一个喜欢用手 gesturing 的人，所以在演讲时我会挥动这个激光指示器。我还想介绍一下Lubbot。Lubbot是一个伴侣机器人，这个项目激发了许多灵感。
+- en: the tools and methods that I'll present in this talk。 It's been developed by
+    a company called Groovex， and has been on the market in Japan for over a year
+    now。 Not only is Python running inside the robot， but it's at the top level of
+    the software stack。 and it's in charge of managing all the concurrency going on
+    in the robot。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我将在本次演讲中介绍的工具和方法。这些工具是由一家名为Groovex的公司开发的，并且在日本市场上已经有一年多的时间了。Python不仅在机器人内部运行，而且处于软件栈的顶层，负责管理机器人内部的所有并发操作。
+- en: So all the sensor inputs and servo outputs， deciding what behaviors to run and
+    things like that。 This is Oreo。 He's the development bot that lives at home with
+    me working day-to-day。 and he's got a nice gig because at the end of day of hard
+    work。 he can relax and play with the family。 So most programs have interesting
+    things going on inside。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有的传感器输入和伺服输出，决定要运行什么行为等等。这就是Oreo。他是我在家工作的开发机器人，日常工作中与我相伴。他的工作很轻松，因为在辛勤工作的一天结束后，他可以放松并与家人玩耍。所以大多数程序内部都有有趣的事情发生。
+- en: There's probably a lot of state machines， algorithms happening。 So for a developer。
+    it's important to understand that state， and it's used when you're trying to debug
+    a problem。 And also when you're just trying to iterate and enhance the program。
+    But we don't always want to pause the program in order to do that kind of inspection。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能有很多状态机和算法在运作。所以对于开发者来说，理解状态是重要的，当你试图调试一个问题时，它会被用到。同时当你只是在试图迭代和增强程序时也会用到。但我们并不总是希望在进行这种检查时暂停程序。
+- en: So for example， the program might have a UI， that users are actively engaged
+    with。 or it's connected to services that might have a bi-directional communication。
+    So the services expecting a reply from the application。 Or especially for our
+    robot。 the application might have a strong connection to the physical world。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，程序可能有一个用户界面，用户正在积极参与。或者它连接到可能进行双向通信的服务。这些服务期待应用程序的回复。尤其是对于我们的机器人，应用程序可能与物理世界有着紧密的联系。
+- en: So the robot has all these light and sound sensors。 and it's got a physical
+    body that has to deal with inertia and momentum。 So it's not always convenient
+    to just say stop the world， because we want to inspect our program。 And what we
+    want isn't always available developer display。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以机器人有这些光和声音传感器，并且它有一个需要处理惯性和动量的物理身体。因此，仅仅说“停止世界”并不总是方便，因为我们想要检查我们的程序。而我们想要的并不总是可以在开发者显示上可用。
+- en: So how do we go about surfacing a display like that？ Here are a few approaches。
+    So you've got your incredible and awesome application。 One obvious way is to do
+    something with the console。 And the console can actually display some simple graphics，
+    if you use a library like N-curses。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们如何来实现这样的显示呢？这里有几种方法。所以你有了这个不可思议的应用程序。一个显而易见的方法是使用控制台。实际上，如果使用像N-curses这样的库，控制台也可以显示一些简单的图形。
+- en: So this works， but it's not always easy to get access to the console。 And the
+    console might be used for other things like logging。 Well， if your application
+    has a GUI。 how about making kind of a hidden developer view as part of that GUI？
+    So this will work。 GUI APIs are often complex， however， and not all applications
+    will have a GUI。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这有效，但并不总是容易访问控制台。而且控制台可能用于其他功能，例如记录。如果你的应用有GUI，那如何在GUI中做一个隐藏的开发者视图呢？这可以实现。然而，GUI
+    API通常很复杂，并不是所有应用都有GUI。
+- en: Some embedded applications might not even have a display。 So we're starting
+    to assemble kind of some desirable properties we're looking for。 It'd be nice
+    if we can do remote access， had a nice graphical display。 And if this developer
+    view were decoupled from the normal operation， of the console and GUI。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一些嵌入式应用可能甚至没有显示器。因此，我们开始汇总一些我们所期望的理想特性。如果我们能进行远程访问，并且有一个不错的图形显示，那就太好了。如果这个开发者视图能够与控制台和GUI的正常操作解耦，那就更好了。
+- en: so basically decoupled from whatever else is going on in the program。 So let's
+    explore some avenues in detail。 So we have a redeveloped print loop。 which everyone
+    is familiar with。 And this is nice。 Let's say I've got my robot and I want to。
+    check the IMU sensor to get a reading on the tilt of the robot。 So that works
+    nicely。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基本上与程序中发生的其他事情是解耦的。所以让我们深入探讨一些细节。有一个重新开发的打印循环，大家都很熟悉。这很好。假设我有一个机器人，我想检查IMU传感器，以获取机器人倾斜的读数。这很好用。
+- en: And I could use the REPL not only to inspect state， but also to modify the program。
+    So here I'm changing the mode of the eyelid blinking。 Ripples are nice because
+    you can just make these general queries。 It doesn't。 They don't require lots of
+    upfront development and thought。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我可以使用REPL不仅来检查状态，还可以修改程序。在这里，我正在改变眼睑闪烁的模式。波动很不错，因为你可以进行一般查询。它们不需要大量的前期开发和思考。
+- en: for what you want to display and how you want to display it。 But again， really，
+    we， in my case。 I don't want to stop the robot， to to execute these statements。
+    So all right。 let's just wave our hand and say we can have a REPL like this， without
+    pausing the program。 But there's still something missing。 We'd like to be able
+    to connect to this REPL on demand。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于你想展示的内容和如何展示。但实际上，在我的情况下，我不想停止机器人来执行这些语句。那么好吧，我们可以假设可以有这样的REPL，而不暂停程序。但仍然缺少什么。我们希望能够按需连接到这个REPL。
+- en: depending on the situation and say the robot is suddenly exhibiting a bug。 And
+    now I want to go explore the program and see what's going on。 So one is a remote
+    access。 So let's say I'm going to use a web browser， connect to my local device。
+    and have access to this window。 One limitation of REPL is it's。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据情况，如果机器人突然出现bug，我想去探索程序，看看发生了什么。一个是远程访问。假设我要使用网页浏览器连接到我的本地设备，并访问这个窗口。REPL的一个局限性是它的。
+- en: it's not going to show us a customizer visual display。 So let's see what we
+    can do as far as that。 The print function is actually something I use often to
+    surface， internal state in real time。 And I'll show an example of how I do this
+    for a certain state machine， that's controlling the。 the servo for inserting and
+    extracting the real real wheel。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它不会向我们展示自定义的可视化显示。那么我们可以做些什么呢？打印函数实际上是我经常用来实时展示内部状态的工具。我会展示一个如何为控制伺服器插入和提取真实轮子而控制某个状态机的例子。
+- en: This happens kind of like landing gear on a plane。 And we do this so that when
+    you pick up and hug or hug the robot， the wheels won't be in the way。 So we want
+    to decide when to have the servo on or off。 We don't want the servo on all the
+    time because it will exhaust the battery。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这有点像飞机的起落架。我们这样做是为了在你抱住机器人时，轮子不会妨碍我们。因此，我们想决定何时打开或关闭伺服器。我们不希望伺服器一直开启，因为这会消耗电池。
+- en: So we've got a leg state class。 And what I would do in this case is I would
+    drop a print。 into the update call of the state machine。 So for example。 I've
+    got my state machine inputs and internal variables and output。 And this is what
+    I would see on the console。 Now， if the update is called 30 times a second。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们有一个腿部状态类。在这种情况下，我会把打印语句放到状态机的更新调用中。例如，我有状态机的输入、内部变量和输出。这就是我在控制台上看到的内容。如果更新每秒调用30次。
+- en: this will be scrolling wildly。 So in that case， I'll use this trick of the end
+    parameter of the print function。 And you can do some simple cursor control。 So
+    here I'm doing a carriage return。 And so after this print happens， we send the
+    cursor back to the beginning of the line。 for the next print。 So then you get
+    just one nice， continuously updating line on your console。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样会导致内容疯狂滚动。所以在这种情况下，我会使用打印函数的结束参数这个技巧。你可以进行一些简单的光标控制。在这里，我进行了回车操作。因此在这次打印后，我们将光标移回行的开头，以便进行下一个打印。这样你只会在控制台上看到一行漂亮的、持续更新的内容。
+- en: So this works well enough。 Everyone knows how to use the current print function。
+    But this works well enough。 Everyone knows how to use print。 It's quite informal
+    because each developer is deciding on the display format they'd like to use。 Very
+    importantly， it's localized。 So you're putting this print very near the code that
+    you're trying to display。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样运行得很好。每个人都知道如何使用当前的打印函数。但这足够好。每个人都知道如何使用打印。它非常非正式，因为每个开发者都在决定他们希望使用的显示格式。非常重要的是，它是本地化的。因此，你将这个打印放在离你想要显示的代码非常近的地方。
+- en: And it can be optional。 So often what I do is after I'm done developing this
+    code。 I'll comment it out， and actually merge it into our code base because in
+    the future。 another developer might want， to re-enable the code and use this display
+    to learn about the state machine。 So a few drawbacks。 Using print this way is
+    not very composable because it assumes that it has complete control of the console。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可以是可选的。因此，我经常在完成这段代码后，会将其注释掉，并实际合并到我们的代码库中，因为将来其他开发者可能想要重新启用这段代码，并利用这个显示来了解状态机。所以有几个缺点。以这种方式使用打印并不够组合，因为它假设自己完全控制了控制台。
+- en: And again， observers need to get the terminal access somehow。 How did they do
+    that？
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次强调，观察者需要以某种方式获取终端访问权限。他们是如何做到的？
+- en: Now let's consider something more graphical。 So this is our leg visualization
+    and it includes a lot of the same information I had in the print function。 So
+    here's the output of the state machine， whether the servo is on or off。 This white
+    dotted line is the requested position of the leg and the blue line is the feedback
+    position coming from the servo。 But we're able to show since this is a rich display，
+    even more information。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在让我们考虑一些更具图形化的东西。这是我们的腿部可视化，它包含了我在打印函数中使用的许多相同信息。这是状态机的输出，伺服器是开还是关。这条白色虚线是腿部的请求位置，而蓝色线是来自伺服器的反馈位置。由于这是一个丰富的显示，我们能够显示更多信息。
+- en: So this colored bar is telling us when the wheel is either kind of in the air
+    and unloaded and when it's actually starting to push against the ground and dealing
+    with the forces of gravity。 But we can take this even further and say， well， this
+    can be interactive as well。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个彩色条告诉我们轮子何时处于空中和未加载状态，以及何时实际上开始接触地面并承受重力的作用。但我们可以进一步扩展，假设这也可以是交互式的。
+- en: So let's say I can have a manual control mode where I can drag this white dotted
+    line and set the requested leg position and basically tinker with my state machine
+    and see how it responds this way。 And in this case as well， ideally we'd like
+    to have remote access so we can just pop up this display on demand。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我可以有一个手动控制模式，在那里我可以拖动这条白色虚线，设置请求的腿部位置，基本上调整我的状态机并观察它如何响应。在这种情况下，我们理想情况下也希望能够远程访问，这样我们可以随时弹出这个显示。
+- en: Let's take a look at this working in action。 So next I'm going to insert the
+    leg again。 but put my hand in the way to interfere with the insertion。 So the
+    state machine enters a stuck mode。 And then eventually it will retry。 Next I'll
+    put it into manual control mode and drag around the white dotted line。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看这个在实际操作中的表现。接下来，我将再次插入腿部，但把手放在中间以干扰插入。因此，状态机进入卡住模式。然后它最终会重试。接下来，我会将其切换到手动控制模式，并拖动白色虚线。
+- en: And then release the manual mode。 So this is great。 but there's something we
+    have to consider there with this。 How difficult is it to code visualizations like
+    this？
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后释放手动模式。所以这很好，但我们需要考虑这个问题。编写这样的可视化有多难？
+- en: The people coding on our project include designers and animators and researchers。
+    And each person is bringing their own experience and insight to the project。 So
+    it's really important that we keep development accessible。 So how do we make coding
+    these visualizations easy？ Well， we could do something like this。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们项目中的人员包括设计师、动画师和研究人员。每个人都将自己的经验和见解带入项目。因此，保持开发的可访问性非常重要。那么，我们如何使这些可视化的编码变得简单呢？好吧，我们可以这样做。
+- en: We've got our leg state class。 Let's have it derived from a mix-in that provides
+    out one of these web views。 And as part of that contract， we have to implement
+    a draw method that takes a graphical context。 So now we're making graphic function
+    calls。 And we're accessing some of the local attributes of our class instance。
+    So this checks out a lot of the same boxes we had with the print function。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有了我们的腿状态类。让它继承一个提供这些网页视图的混入类。作为这个契约的一部分，我们必须实现一个接受图形上下文的绘制方法。现在，我们正在进行图形功能调用，并访问类实例的一些本地属性。因此，这符合我们在打印功能中拥有的许多相同要求。
+- en: It's still fairly simple and it's informal。 So each developer decides how they
+    want to display the information。 And importantly， again， it's localized。 So we've
+    got our。 we're using Python code to do the draw functions right next to the statements
+    sheet implementation that we're trying to display。 And it's optional because whatever
+    infrastructure is ultimately calling this draw method can decide if the visualization
+    is actually being viewed or not。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这仍然相对简单且非正式。因此，每个开发人员决定如何展示信息。重要的是，这种展示是本地化的。我们正在使用Python代码来实现绘制功能，紧挨着我们试图展示的语句表实现。因为最终调用这个绘制方法的基础设施可以决定是否实际查看可视化，这也是可选的。
+- en: And so make the call conditionally。 And we get more because this is a rich display。
+    It can be interactive。 We can access it remotely。 There's a subtle T however。
+    which is when is the draw method called because in the print example。 we just
+    put print into the state machines updates method。 But with draw。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们可以有条件地调用它。我们获得更多，因为这是一个丰富的显示。它可以是交互式的，我们可以远程访问。然而，有一个微妙的点，即绘制方法何时被调用，因为在打印示例中，我们只是将打印放入状态机更新方法中，但对于绘制。
+- en: we might not want to call it as frequently because it's， it might be a little
+    bit heavier。 And so basically what this means is we would like to decouple this
+    draw function from the normal operation of our program。 And this is where async
+    becomes important。 So how do we leverage async in our solution？
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可能不想那么频繁地调用它，因为它可能会稍微重一点。因此，这基本上意味着我们希望将这个绘制功能与程序的正常操作解耦。这就是async变得重要的地方。那么我们如何在解决方案中利用async呢？
+- en: It does provide a way to have an efficient HTTP server and such inside of our
+    application。 And this is important for the remote aspect of things。 But there's
+    something much more important that cooperative multitasking provides。 So the nature
+    of cooperative multitasking is that tasks only yield explicitly when they're at
+    a good stopping point。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它确实提供了一种高效的HTTP服务器以及应用程序内部的功能。这对于远程方面非常重要。但合作多任务提供了更重要的东西。因此，合作多任务的本质是任务仅在合适的停顿点显式让出。
+- en: So that means we've got a natural place to go and inspect the state of our program。
+    And in most cases， we'll get a coherent consistent view of things。 So as an example。
+    let's say we've got a list of animals and we also want to maintain a count of
+    the number of times each animal appears in the list。 And so an invariant of the
+    program is that these two collections are always consistent。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着我们有一个自然的地方来检查程序的状态。在大多数情况下，我们会获得一致的视图。例如，假设我们有一个动物列表，同时我们还想记录每种动物在列表中出现的次数。因此，程序的不变性是这两个集合始终保持一致。
+- en: And when we add a zebra to the list， we also need to increment the zebra count
+    by one。 So with cooperative multitasking， we're sure that basically these two
+    operations are atomic。 And it's only when an await statement is executed that
+    there is a context switch。 So between any of the await statements， it's basically
+    like an atomic section of code。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们将斑马添加到列表中时，我们还需要将斑马的计数增加一。因此，通过合作多任务，我们确保这两个操作基本上是原子的。只有在执行await语句时，才会发生上下文切换。因此，在任何await语句之间，它基本上就像一段原子代码。
+- en: And so we're taking advantage of this and we'll know that the repls eval would
+    never see an inconsistent view of these two collections。 So on our project， we
+    introduced the tool to do this kind of visualization about three years ago to
+    our program。 And it's worked out really well。 It's been widely adopted by our
+    development team。 And I would say really importantly， it's a way for the developers
+    to communicate what's going on and the components they create to other people
+    on the team。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们利用这一点，我们知道 repls eval 永远不会看到这两个集合的不一致视图。在我们的项目中，大约三年前我们引入了这个工具来进行这种可视化。效果非常好，开发团队广泛采用。我认为更重要的是，这为开发者提供了一种与团队其他成员沟通他们所创建组件和发生情况的方式。
+- en: And to newcomers to the team or say， sometimes we have guest developers。 They're
+    able to go and learn about the real time operation of some of the pieces of the
+    program。 And we use this tool very heavily。 So I would say good portions of our
+    development and quality assurance would literally just stop if we didn't have
+    this tool。 And guest developers on our team have even contributed visualizations。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于团队的新成员或者有时的客座开发者，他们能够学习程序某些部分的实时操作。我们非常频繁地使用这个工具。我认为如果没有这个工具，我们的开发和质量保证的很大一部分将会停止。团队中的客座开发者甚至贡献了可视化。
+- en: And that speaks to having enough information。 Having enough simplicity there
+    for doing that。 So our implementation is called Pura。 And it provides these remote
+    campus visualizations as well as the REPL。 It's liberally licensed so you can
+    embed it into your program。 An important principle of Pura is if a visualization
+    doesn't have an observer。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这说明了拥有足够信息的重要性。要有足够的简单性来实现这一点。我们的实现被称为 Pura，提供这些远程校园可视化以及 REPL。它是自由授权的，所以你可以嵌入到你的程序中。Pura
+    的一个重要原则是如果可视化没有观察者。
+- en: there's no runtime overhead。 And that's very important。 You don't want to interfere
+    with the normal production behavior of your application。 So let's jump into a
+    demo of Pura。 So I've got an example program running in the background and I'm
+    just going to connect to it on Pura's main port。 So here's a hello example。 And
+    this drop down lets me pick any of the other available visualizations。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有运行时开销，这一点非常重要。你不想干扰应用程序的正常生产行为。让我们进入 Pura 的演示。我在后台运行了一个示例程序，我将连接到 Pura 的主端口。这是一个
+    hello 示例，这个下拉框让我选择任何其他可用的可视化。
+- en: This is a faster than real time clock。 And a mini physics chain simulation。
+    So I'm going to go to another browser client and open another connection。 So this
+    is a connection to the same running program。 So now we're displaying two visualizations
+    at once。 And then a third window。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个比真实时间更快的时钟，和一个迷你物理链模拟。因此我将去另一个浏览器客户端，打开另一个连接。这是连接到同一个正在运行的程序。因此现在我们同时展示两个可视化，接着是第三个窗口。
+- en: Now with this follow example， you'll see that the views are mirroring each other。
+    So the program only has one internal representation of the state of this chain。
+    And I happen to be manipulating that state in one of the clients。 And it's just
+    getting broadcast to the other。 So that's what's going on there。 Let's see。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在通过这个示例，你会看到视图彼此镜像。因此程序只有一个内部状态表示，而我恰好在一个客户端中操控那个状态，它被广播到另一个客户端。这就是发生的事情。让我们看看。
+- en: Let me open up a ruffle。 So I've got to have completion to explore what variables
+    are available。 And there's a clock object， which is the object that's running
+    the clock visualization。 So this actually has a little 12 hour alarm that you
+    can set。 And so we can inspect the current alarm time from the ruffle。 And we
+    could set it to another time。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我打开一个 ruffle。因此我需要完成来探索可用的变量。有一个时钟对象，它是运行时钟可视化的对象。这个对象实际上有一个可以设置的 12 小时闹钟。所以我们可以从
+    ruffle 中检查当前的闹钟时间，并将其设置为另一个时间。
+- en: There we go。 Note the thing I want to show is what happens if we stop the program。
+    So all of these status lights change from blue to red， showing that we lost our
+    connection。 And I'll start the program back up。 And what happens is each visualization
+    reconnects to the server automatically。 So this is nice for a typical development
+    flow。 And that is Pura。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看！我想展示的是如果我们停止程序会发生什么。因此所有这些状态灯从蓝色变为红色，表明我们失去了连接。我将重新启动程序。发生的事情是每个可视化自动重新连接到服务器。这对典型的开发流程非常友好。这就是
+    Pura。
+- en: So just one interesting point about Pura's design。 So here's that hello example
+    again。 A decision we made was not to be in the business of creating a graphics
+    API。 That's been done many times before。 So we actually borrowed the API from
+    a framework called processing。 So processing is a graphics library and IDE that's
+    popular with students and graphic artists and animators for just working with
+    graphics and interactivity with mouse and keyboard and things。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于Pura设计的一个有趣点。这里又是那个hello示例。我们做出的一个决定是，不进入创建图形API的业务。这种事情已经做过很多次了。因此，我们实际上借用了一个名为processing的框架的API。processing是一个图形库和IDE，在学生、图形艺术家和动画师中很受欢迎，适合处理图形和与鼠标、键盘的交互。
+- en: So by using the processing API， we're also able to take advantage of the existing
+    docs and examples and expertise in that community such as forums and books。 And
+    actually the follow example that we just saw was one of the official processing
+    examples。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过使用处理API，我们也能够利用该社区现有的文档、示例和专业知识，比如论坛和书籍。实际上，我们刚刚看到的follow示例就是官方处理示例之一。
+- en: And then a quick look at architecture。 All presentations need to have an architecture
+    slide。 So the main thing is Pura will have this web view server component in your
+    application and you'll register your visualizations with that component。 And then
+    I'll just skip ahead here。 And the interesting part is that it's not until one
+    of the web clients makes a specific web socket to a visualization that the corresponding
+    draw function will be called periodically say like 10 times a second。 And what
+    happens with that draw function is doing as you're making calling those those
+    Python functions。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 快速看看架构。所有演示都需要有一个架构幻灯片。因此，主要是Pura将在你的应用程序中具有这个网页视图服务器组件，你将注册你的可视化与该组件。然后我会在这里跳过一些有趣的部分，直到一个网页客户端发起对某个可视化的特定WebSocket连接，对应的draw函数才会定期调用，大约每秒10次。draw函数的作用是在调用那些Python函数时。
+- en: they're actually assembling some JavaScript HTML5 canvas code。 And then that
+    eventually gets shipped back to the client in eval。 So we've got。 we'll pull up
+    a second visualization。 And then another instance of that visualization and an
+    interesting point here is that each frame the follow draw method will only be
+    called one time and then that JavaScript will be broadcast to all of the clients
+    watching the visualization。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们实际上在组装一些JavaScript HTML5画布代码。然后最终这些代码会通过eval发送回客户端。所以我们有。我们会调出第二个可视化实例。另一个有趣的点是，每一帧的follow
+    draw方法只会被调用一次，然后那段JavaScript会广播给所有观看可视化的客户端。
+- en: And then there's the terminal。 The， the REPL is a little bit different because
+    the client is running a terminal emulator。 And every， every connection to the，
+    to the web view server gets its own REPL instance。 So they're not shared。 I'd
+    just like to conclude today with some ideas for future work。 As I said。 I think
+    this is a pretty rich area to explore。 And I'm sure others have some ideas。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后是终端。REPL有点不同，因为客户端正在运行一个终端模拟器。每个与网页视图服务器的连接都有自己的REPL实例。所以它们不是共享的。我想以一些未来工作的想法结束今天的讨论。如我所说，我认为这是一个很丰富的探索领域，其他人肯定也有一些想法。
+- en: I'd like to hear them。 So one is a debuggers typically have a variable display。
+    But again。 you have to pause your program to inspect the variables。 What if we
+    can just do that while the program's running and all these values would just be
+    continuously updating。 Another thing we could do is have a way to explore the
+    long running tasks in our program。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想听听他们的意见。所以调试器通常会有一个变量显示。但你必须暂停程序才能检查变量。如果我们可以在程序运行时做到这一点，所有这些值将会持续更新。我们还可以探索程序中的长时间运行任务。
+- en: And this is just， that would be a way to discover variables you're interested
+    in and look at all the levels of the program stack。 So that too could be done
+    in real time as your program's running。 Thank you very much for your time。 If
+    you're interested in trying the approach shown here， please check out the prayer
+    library。 Also。 if you're interested in software concurrency， I've got a talk on
+    productive concurrency from Python。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这只是发现你感兴趣的变量，并查看程序堆栈所有级别的方法。因此，这也可以在你的程序运行时实时完成。非常感谢你的时间。如果你对这里展示的方法感兴趣，请查看祈祷库。此外，如果你对软件并发感兴趣，我有一个关于Python高效并发的演讲。
+- en: Japan a few years ago， as well as an article about the notion of structured
+    concurrency。 This talk has a web page that will have these links as well as addendum
+    and other information。 And finally， I would just like to give a big thank you
+    to friends and colleagues who gave me feedback on early versions of this presentation。
+    And also thank you to my family for understanding my preoccupation in the past
+    many weeks。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 几年前在日本，关于结构化并发的概念也有一篇文章。这次演讲有一个网页，其中包含这些链接以及附录和其他信息。最后，我想对给予我早期版本反馈的朋友和同事表示衷心的感谢。同时也感谢我的家人理解我在过去几周的忙碌。
+- en: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_5.png)'
+  id: totrans-56
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_5.png)'
+- en: Goodbye until next time。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。
+    Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank
+    you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。
+    Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank you。 Thank
+    you。 [BLANK_AUDIO]。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再见，直到下次。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。谢谢。
+    [BLANK_AUDIO]
+- en: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_7.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ae7cb7d0cb125d791c62f97cb07a460a_7.png)'

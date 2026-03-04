@@ -1,0 +1,547 @@
+- en: P84：Talks - Fred Phillips_ Hooking into the import system - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P84：演讲 - Fred Phillips_ 接入导入系统 - VikingDen7 - BV1f8411Y7cP
+- en: \>\> Hello， everyone。 Let's welcome Fred Phillips to deliver a talk on hooking
+    into the import。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '\>\> 大家好。让我们欢迎 Fred Phillips 进行关于接入导入系统的演讲。 '
+- en: '![](img/b0ec26acaf9d7147d5b6c6e702b6b378_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b0ec26acaf9d7147d5b6c6e702b6b378_1.png)'
+- en: system。 \>\> What do you think？ \>\> Hi， everyone。 Thanks for coming。 My name
+    is Fred。 My pronouns are he and him。 And I'm， engineering team lead at Bloomberg。
+    So team that I lead is part of the news automation group。 where we basically write
+    software which writes news stories automatically。 So the news automation。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 你觉得怎么样？ \>\> 嗨，大家好。感谢你们的到来。我叫 Fred。我的代词是 he 和 him。我是 Bloomberg 的工程团队负责人。因此，我领导的团队是新闻自动化小组的一部分，我们基本上编写软件来自动撰写新闻故事。所以新闻自动化。
+- en: group is split into two teams。 Those that are writing code that generates the
+    content。 so writing new stories。 And then those building the platform that runs
+    that code。 So my team。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 小组分为两个团队。一组是编写生成内容的代码，撰写新故事。而另一组则是在构建运行这些代码的平台。所以我所在的团队。
+- en: '![](img/b0ec26acaf9d7147d5b6c6e702b6b378_3.png)'
+  id: totrans-5
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b0ec26acaf9d7147d5b6c6e702b6b378_3.png)'
+- en: fits into that second half。 Our main responsibilities include providing a development
+    platform。 for the content team， to use and a runtime platform which runs their
+    code in a fast and。 reliable way， whilst abstracting as much of the infrastructure
+    as possible。 So one part。 of this is then providing a lightning fast deployment
+    mechanism for the content。 So shipping。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 适用于第二部分。我们主要的责任包括为内容团队提供一个开发平台，以及一个快速且可靠地运行他们代码的运行时平台，同时尽可能抽象出大部分基础设施。因此，这其中的一部分是为内容提供一个闪电般快速的部署机制。所以运输。
+- en: artifact to real machines or building docker containers is too slow for our
+    use case。 So。 we had to find a new mechanism to do that。 So that's where we use
+    import hooks in our system。 I'm going to tell you a little bit about that。 So
+    in this talk， I will guide you through the。 Python import system and introduce
+    you to ways of using it to solve real problems。 Import hooks。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将工件转换为实际机器或构建 Docker 容器对我们的用例来说太慢。因此，我们不得不寻找新的机制来实现这一点。这就是我们在系统中使用导入钩子的地方。我将稍微介绍一下这一点。所以在这次演讲中，我将引导你了解
+    Python 导入系统，并介绍如何使用它来解决实际问题。导入钩子。
+- en: in my opinion， I kind of excelled them use an undocumented feature of Python。
+    But the。 import system is very powerful and can open the door to many useful features。
+    So in this， talk。 I'll show you how a standard import works in Python that loads
+    files from the disk。 and then how Python lets us customize and influence imports。
+    And most importantly， why。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我看来，我在使用 Python 的一个未文档化功能上超越了他们。但导入系统非常强大，可以打开许多有用功能的大门。所以在这次演讲中，我将向你展示标准导入如何在
+    Python 中从磁盘加载文件，然后 Python 如何让我们自定义和影响导入。最重要的是，为什么。
+- en: we would want to do this。 So start off with what does import actually do？ So
+    importing。 a module in Python comprises two main steps。 The first is finding and
+    the second is loading。 So finding finds the code， usually from files on disk，
+    and the loading executes that code。 and loads it into the interpreter for you
+    to use。 So by default， there are three finds， available。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望这样做。那么，首先导入到底做了什么呢？在 Python 中导入一个模块包括两个主要步骤。第一个是查找，第二个是加载。查找从磁盘上的文件中找到代码，加载则执行该代码并将其加载到解释器中供你使用。因此，默认情况下，有三种查找方式可用。
+- en: The built-in importer， the frozen importer， and the pathfinder。 So the built-in。
+    importer is what's used for finding built-in modules such as OS or sys。 So in
+    C Python。 these are mostly written in C。 And such they did not exist as Python
+    files on disk， like。 the module that most people are familiar with。 The frozen
+    importer is a special importer。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内置导入器、冻结导入器和路径查找器。内置导入器用于查找内置模块，如 OS 或 sys。在 C Python 中，这些模块大多是用 C 编写的，因此它们并不存在于磁盘上的
+    Python 文件中，像大多数人熟悉的模块一样。冻结导入器是一种特殊的导入器。
+- en: Its most important use case is to bootstrap the import mechanism or machinery
+    into the。 importer itself， into the interpreter itself。 Because obviously it's
+    difficult to import。 import until import has been imported。 So when the pathfinder
+    is the one which is used。 by everyone every day， so this is what finds Python
+    files on disk and loads them for you。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它最重要的用例是将导入机制或工具引导到导入者自身，进入解释器自身。因为显然，导入很难在导入之前进行导入。所以，当路径查找器是每天都被大家使用的工具时，它就负责在磁盘上找到
+    Python 文件并为你加载它们。
+- en: to implement。 So all you need to do to implement your own finder is to define
+    a class with。 a single method called find spec。 So this method takes the name
+    of the module's first， argument。 the path to the parent module if there is one，
+    and then the target which is。 used to make a more educated guess about what spec
+    to return。 We're not going to cover the。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现你的查找器。因此，你需要做的就是定义一个具有单个方法find spec的类。这个方法接受模块名称的第一个参数、父模块的路径（如果有的话），以及目标，后者用于更有根据地猜测返回什么规格。我们不会详细讨论。
+- en: use of targets in this talk and I've yet to find a use case for it myself。 So
+    then you'll。 find there's a stored in this variable called the sys。metaPath。 So
+    this is a list of finders。 which will then have their find spec method called
+    in order that there are in the list。 So if the module you want to provide with
+    your finder are uniquely named， it doesn't。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个谈话中使用目标，而我自己还没有找到一个使用案例。然后你会发现有一个存储在这个变量中的东西，叫做sys.metaPath。这是一个查找器的列表，它们的find
+    spec方法将按照它们在列表中的顺序被调用。因此，如果你希望用你的查找器提供的模块具有唯一名称，它并不会。
+- en: matter where you put your finder in this list。 But if you want to affect all
+    imports across。 the system， you need to make sure you're putting your finder in
+    the first position。 So that's。 why we're doing this dot insert into the 0th position
+    in the list here。 That would mean。 our finder is always going to be called first。
+    So when your code imports the module， when。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不管你在这个列表中把你的查找器放在哪里。但是如果你想影响整个系统中的所有导入，你需要确保将查找器放在第一个位置。因此，这就是我们将点插入到列表的第0位置的原因。这意味着我们的查找器总是会首先被调用。因此，当你的代码导入模块时，。
+- en: you type import， then your module， Python iterates through this list， calls
+    all the finders until。 one of them returns a module spec。 So that's the specifications
+    for a module。 Or if they。 all return none， a module not found error is raised。
+    So if you try an imported module。 which doesn't exist， it will try every single
+    finder。 None of them can find it， so it will。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你输入import，然后你的模块，Python会遍历这个列表，调用所有查找器，直到其中一个返回模块规格。所以这是模块的规格。或者如果它们全部返回none，就会引发模块未找到错误。因此，如果你尝试导入一个不存在的模块，它会尝试每一个查找器。没有一个能够找到它，所以它会。
+- en: just raise you an error。 So once the module has been found， it then needs to
+    be loaded。 So this is a two-step process。 One， the first part creates the module。
+    So it takes in the。 module spec found by the finder and then returns a module
+    object。 And then the next。 one executes it。 So for loading files from disk， this
+    first creates an empty instance of module。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只会引发一个错误。因此，一旦模块被找到，它就需要被加载。这是一个两步过程。第一部分创建模块。它接受查找器找到的模块规格，然后返回一个模块对象。接下来，执行它。所以从磁盘加载文件时，这第一步创建了一个模块的空实例。
+- en: and then just uses the exec built-in to load code into it。 The module is then
+    assigned， a name。 so you can reference it in your code。 And a copy is then stored
+    in the sys。modules， dictionary。 This also means that if you import a module again，
+    it won't be loaded again， it。 will just grab whatever's been put in that dictionary
+    already。 So if you try and re-import。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后只是使用exec内置函数加载代码。模块然后被分配一个名称，因此你可以在代码中引用它。然后它的副本会存储在sys.modules字典中。这也意味着如果你再次导入一个模块，它不会再次被加载，而是会抓取已经放入字典中的内容。所以如果你尝试重新导入。
+- en: a module， you probably notice that you're not getting the latest code。 So the
+    Python import system allows us to hook into this process at nearly every step
+    and。 inject your own special behavior。 So to start with， we'll go over a toy example
+    of our own， finder。 So this is my implementation of what I call a tracing finder。
+    Well， we implement。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导入模块时，你可能会注意到你没有获得最新的代码。因此，Python导入系统允许我们在几乎每一步中插入这个过程，并注入你自己的特殊行为。所以首先，我们将介绍一个我们自己的玩具示例，查找器。这是我称之为跟踪查找器的实现。好吧，我们实现。
+- en: a class called tracing finder。 It inherits from this base class which is provided
+    by。 the import system called meta path finder。 And then we define this one method
+    that we。 talked about before， find spec。 So it takes the name， the path， and the
+    target。 So what。 we want to do is just print out when we're importing things so
+    that the user can just。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一个叫做跟踪查找器的类。它继承自导入系统提供的这个基类，称为元路径查找器。然后我们定义了之前提到的一个方法，find spec。因此，它接收名称、路径和目标。那么我们想要做的就是在导入内容时打印出来，以便用户可以。
+- en: see it on their terminal。 So all we do is we print out looking for name and
+    path and。 then we return none to indicate that we haven't found this module in
+    this finder and to fall。 back to the other finders。 So we insert this in the first
+    position， which means that every。 time import is called， our finder will be called，
+    and then it will fall back to the old finders。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户可以在终端上看到它。所以我们所做的就是打印出查找名称和路径，然后返回`none`以表示我们没有在这个查找器中找到该模块，并且回退到其他查找器。因此，我们将其插入到第一个位置，这意味着每次调用导入时，我们的查找器将被调用，然后它将回退到旧的查找器。
+- en: So then we do an import of date time and then we call date time dot date time
+    dot now。 So。 if we do this， our output will look something like this。 So we do
+    the import and during that。 import， we can see that the code we wrote for our
+    finder is printing out this stuff。 And because date time doesn't have any parents，
+    our path is always none。 But then we can see。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们导入日期时间，并调用`datetime.datetime.now`。所以，如果我们这样做，我们的输出会看起来像这样。在导入过程中，我们可以看到为我们的查找器编写的代码正在打印这些内容。由于日期时间没有任何父类，我们的路径总是为`none`。但我们可以看到。
+- en: that we're printing out the current date time and it's completely unaffected
+    by our own import。 So we can see that we're trying to import date time here and
+    then date time indirectly。 imports math and then underscore date time。 So you
+    can see it's affecting every single。 import that's happening， not just the imports
+    that we're making ourselves in our code。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们正在打印当前的日期和时间，完全不受我们自己导入的影响。所以我们可以看到我们在这里尝试导入日期时间，然后日期时间间接地导入数学模块和下划线日期时间模块。因此，你可以看到这影响到每一个正在发生的导入，而不仅仅是我们在代码中自己做的导入。
+- en: So why do you want to do this？ So this is kind of a trivial example， not really
+    much。 practical application。 So I'm going to go over two import hooks that I've
+    used in my。 work at Bloomberg。 The first one is going to be implementing a block
+    list of modules that。 are not allowed to be imported。 And then we're going to
+    implement a finder and a loader。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么你为什么想这么做呢？这实际上是一个微不足道的例子，并没有太多实际应用。所以我将介绍两个我在Bloomberg工作中使用的导入钩子。第一个是实现一个不允许导入的模块阻止列表。接下来我们将实现一个查找器和加载器。
+- en: which are going to load Python code from a database rather than from files。
+    So I'm going。 to put snippets of code on the slides。 I hope it's big enough to
+    be legible but also all。 of this code is going to be on GitHub or already is on
+    GitHub。 So at the end there'll。 be a link where you can go and find the full example
+    code of all of this and it all should。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些将从数据库加载Python代码，而不是从文件加载。我将在幻灯片上放置代码片段。希望它的字迹足够大以便易于阅读，而且所有这些代码都将在GitHub上，或者已经在GitHub上。因此，最后会有一个链接，你可以找到所有这些的完整示例代码。
+- en: work fine in the latest Python 3 interpreter if you want to have a play around
+    with it。 So we'll start with the block list。 So one of the requirements of the
+    system that my team。 and I develop is running code in a sandbox environment。 So
+    this environment is intended。 to prevent mistakes rather than being a secure against
+    malicious use。 So this means all the。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想玩一下，这在最新的Python 3解释器中运行良好。所以我们从阻止列表开始。我团队和我开发的系统的一个要求是在沙箱环境中运行代码。这个环境旨在防止错误，而不是抵御恶意使用。因此，这意味着所有。
+- en: ideas and the code that's being presented here is not intended to be secure
+    or to be。 used to lock down your interpreter or environment against attack。 It's
+    more there to prevent。 escape mistakes from non-expert users。 So one feature that
+    we provide to the users of the。 system is an allow/block list of Python packages
+    and modules that should be used。 So some of。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里呈现的想法和代码并不是为了安全而设计，也不是为了保护你的解释器或环境不受攻击。它的目的是防止非专业用户的错误逃逸。因此，我们为系统的用户提供了一个允许/阻止的Python包和模块列表，以便他们使用。
+- en: the blocked modules could be installed on the system where this is running so
+    we can't。 rely on the libraries just not being there。 So instead we have an import
+    hook that blocks。 the importing of these modules。 So this is really easy to implement
+    using a custom finder。 So we start by defining the classes before。 We make this
+    new class block list finder inheriting。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 被阻止的模块可以安装在运行该程序的系统上，因此我们不能仅仅依赖于库的缺失。因此，我们有一个导入钩子来阻止这些模块的导入。这可以通过自定义查找器很容易地实现。所以我们首先定义这些类，然后创建这个新的类阻止列表查找器。
+- en: from this abstract base class to path finder。 In this case we're also going
+    to define the。 done the init function。 So this is going to take a list of strings
+    which represent the。 packages we want to block for our users。 We put that in a
+    member variable so we can access。 it later。 And then we start by defining find
+    spec again。 So it's the same as before。 We。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从这个抽象基类到路径查找器。在这种情况下，我们还将定义初始化函数。这将接受一个字符串列表，表示我们想要为用户阻止的包。我们将其放入一个成员变量中，以便稍后访问。然后我们再次开始定义查找规格。因此它与之前相同。
+- en: take the full name of the module being imported， the path to the parent and
+    then the target。 So the first thing it's going to do is if the full name is in
+    the list of blocked packages。 if it is， we raise an import error saying we cannot
+    import this as it is blocked。 If it's。 not in the list of blocked packages all
+    we need to do is return none indicating that this。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 获取正在导入的模块的完整名称、父路径和目标。因此，它首先要做的是检查完整名称是否在被阻止包的列表中。如果是，我们会引发一个导入错误，说明我们无法导入，因为它被阻止。如果不在被阻止包列表中，我们只需返回无，表示这是。
+- en: finder does not handle this package and then it will then just fall back to
+    the other finders。 again。 So we do exactly the same thing as before。 In the sys。meta
+    path we insert our new。 block list finder。 So for this example we're saying， okay，
+    let's stop people from importing。 socket because for our use case there is no
+    use case for importing socket。 And then our。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查找器不处理此包，然后它将退回到其他查找器。因此，我们与之前完全相同。在 sys.meta path 中插入我们的新阻止列表查找器。所以在这个示例中，我们说，好的，让我们阻止人们导入
+    socket，因为在我们的用例中，没有导入 socket 的用例。然后我们的。
+- en: user then says import http。server。 So you see this is not on the list of blocked
+    modules， but http。server tries to import socket。 So then when we do that we get
+    this import error。 So it cannot be imported because it is blocked。 So we found
+    this to be really useful， a very。 useful application of import hooks in our system
+    to help each of non-expert Python users。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户然后说导入 http.server。你会看到这不在被阻止模块的列表中，但 http.server 尝试导入 socket。所以当我们这样做时，会出现这个导入错误。因为它被阻止，所以无法导入。因此，我们发现这在我们的系统中非常有用，是导入钩子的一个非常有用的应用，帮助每个非专家
+    Python 用户。
+- en: So another example of an import hook is for loading modules from locations other
+    than。 files on disk。 So for example a database。 So this requires us to implement
+    both a finder。 and a loader。 So the finder will be called by the import system
+    to determine what modules。 it can provide from the database。 And then the loader
+    will run the necessary。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导入钩子的另一个示例是从其他位置加载模块，而不是从磁盘文件中加载。因此，例如，从数据库中加载。这要求我们实现一个查找器和一个加载器。因此，查找器将由导入系统调用，以确定它可以从数据库提供哪些模块。然后加载器将运行必要的。
+- en: queries to pull the data from the database and execute the code and load it
+    into a module。 to be returned to whoever called import。 So we'll start with the
+    loader and then we'll。 move on to the finder。 So for a loader we again create
+    another classes based on one。 of these base classes provided by the import library
+    in the standard library。 So for this。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查询以从数据库中提取数据并执行代码，将其加载到一个模块中，返回给调用导入的人。所以我们将从加载器开始，然后转到查找器。因此，对于加载器，我们再次基于标准库中提供的这些基类之一创建另一个类。所以对于这个。
+- en: we want to say okay we're going to pass in package name。 So we want to say every
+    package。 which every module is in this specific package we want to say okay we're
+    going to load that。 from a database rather than from files。 And then we're also
+    passing in this database handle。 So for this example I used SQLite 3， DP API 2
+    connection but it kind of applies to any。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们想说好的，我们将传入包名称。所以我们想说每个模块所在的每个包，我们希望说好的，我们将从数据库而不是从文件加载它。然后我们还传入这个数据库句柄。因此在这个示例中，我使用了
+    SQLite 3，DP API 2 连接，但它适用于任何。
+- en: other kind of database connection that you might want to use。 And then we again
+    set these。 as just member variables that we can come back to them later。 So we
+    need to go and implement。 these two functions that we talked about before that
+    create and the exec。 So we'll start with。 the create module。 So this takes this
+    spec variable which is what a finder returns。 And。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能想使用的另一种数据库连接。然后我们再次将这些设置为成员变量，以便稍后可以访问它们。所以我们需要去实现之前讨论过的这两个函数，创建和执行。所以我们从创建模块开始。这接受这个规格变量，即查找器返回的内容。
+- en: then what we do is we first create a new module。 And to make this example as
+    simple as possible。 we're only going to consider what the name is。 So this creates
+    a brand new empty module。 based on this name。 And then the second bit here is
+    dealing with packages。 So package is。 basically a module which may have sub modules。
+    So you know if you want to do I say date， date。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们做的第一件事是创建一个新的模块。为了使这个例子尽可能简单，我们只考虑名称是什么。因此，这基于这个名称创建一个全新的空模块。接下来是处理包的部分。所以包基本上是一个可能有子模块的模块。
+- en: util is a good example。 So you have date util dot tz date util is your package。
+    It also。 is a module because it has things on it but you have these sub modules
+    as well。 So what。 we're saying for this example is we're going to provide one
+    package which we can name up。 front you know call like my database code or something。
+    And we're saying if the module。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: util 是一个很好的例子。所以你有 date util.dot tz，date util 是你的包。它也是一个模块，因为它有内容，但你也有这些子模块。所以在这个例子中，我们会提供一个可以命名的包，比如我的数据库代码或其他什么。
+- en: that we're currently importing is exactly the same name as this package as in
+    we're not。 trying to import a sub module at this time。 We set this thing called
+    module dot pack to。 an empty list。 So this is a sort of special variable attached
+    on modules。 And if it is。 a list or an empty list like this it is basically informing
+    the interpreter this is a package。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们当前导入的内容与这个包的名称完全相同，这意味着我们这次并不打算导入子模块。我们将这个名为 module.pack 的东西设置为一个空列表。这是附加在模块上的一种特殊变量。如果它是一个列表或像这样的空列表，它基本上是在告知解释器这是一个包。
+- en: and may have sub packages as well。 And then all we need to do is then return
+    the module。 So for any of these sub modules of this package it will just create
+    a new module with the。 name and return it for the packages it will do this extra
+    special step here and we just， return it。 So then we want to execute this code。
+    So normally if you're reading from a。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能还有子包。然后我们所需要做的就是返回模块。对于这个包的任何子模块，它将创建一个带有名称的新模块并返回；对于包，它会在这里执行额外的特殊步骤，然后我们只是返回它。因此，我们想执行这段代码。
+- en: file we do a file open get the code out run exec load it into the module but
+    because we're。 doing a database very differently。 So the first thing we're doing
+    is importing the package， here。 So for this use case we're going to say that the
+    packages are not going to have。 any code or anything that any functions that we
+    want to be able to call in there。 So if。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件我们打开文件提取代码运行 exec 将其加载到模块中，但因为我们在做数据库时方式非常不同。所以我们首先要做的是在这里导入包。对于这个用例，我们会说包中不会有任何代码或我们希望能够调用的函数。
+- en: the module name is exactly the package name we're just going to return nothing
+    which means。 that I can import it but it will have no members on it。 That's fine
+    for this。 And then we want。 to actually load this code from the database。 So rather
+    than doing file open we're going。 to get a database cursor and we're going to
+    select the code from a table called code where。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 模块名称正是包名称，我们只会返回 nothing，这意味着我可以导入它，但它不会有任何成员。这在这里没问题。然后我们想实际从数据库加载这段代码。所以与其打开文件，我们将获取一个数据库游标，并选择表中名为
+    code 的代码。
+- en: the name is equal to the name that we passed in which is module。name。 Then all
+    we need to。 do is we got that cursor we don't need to fetch the actual row and
+    then we just exec， it。 I'm not sure if everyone will back and see that but basically
+    we're saying just calling。 the exec built in of the code and we're loading that
+    into this variable called module。dict。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常，如果你是从数据库中读取，名称就等于我们传入的名称 module.name。然后我们所需要做的就是获取那个游标，我们不需要获取实际的行，然后我们只需执行它。我不确定每个人是否都会看到这一点，但基本上我们只是调用
+    exec 内置的代码，并将其加载到这个名为 module.dict 的变量中。
+- en: So this is basically represents the global namespace of your module that you're
+    importing。 So everything that's defined at the global level in your code get loaded
+    into this dictionary。 and that's how you access it after you import it。 So this
+    modifies the module that was passed， in。 So you can see we pass in the module
+    and then we do this exec into here so we don't。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这基本上代表了你正在导入的模块的全局命名空间。因此，代码中全局级别定义的所有内容都被加载到这个字典中。这就是你在导入后如何访问它的方式。所以这修改了传入的模块。
+- en: return anything from exec module。 It just modifies the thing that was pushed
+    in。 So now we need。 to combine this with a finder to allow clients to call import
+    as normal and then create a。 way for the loader to advertise what packages it
+    can provide by looking at the database。 So。 one way to do this is to add a new
+    method to db loader which I decided to call provides。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从exec模块返回任何内容。它只是修改了被推送的内容。所以现在我们需要结合这个查找器，允许客户端像正常一样调用导入，然后创建一种方式，让加载器通过查看数据库来广告它可以提供哪些包。所以，一种方法是向数据库加载器添加一个新方法，我决定称之为provides。
+- en: which takes in the name and will turn true or false depending on whether there
+    is some。 code if there's a module of this name in the database。 So this is not
+    a part of the standard。 abstract base class that we're basing these classes on。
+    This is just a custom bit of custom。 code that we can write to help a function
+    for us to use。 So basically we have a very similar。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它接受名称，并根据数据库中是否存在此名称的模块返回true或false。这不是我们基于的标准抽象基类的一部分。这只是我们可以编写的一段自定义代码，以帮助我们使用的功能。基本上，我们有一个非常相似的。
+- en: query but we don't have to access the code so we just select one where code
+    equals the。 name and this will either return a row or return a row。 So I've highlighted
+    the code。 around that but basically all we need to do here is check how many rows
+    are returned。 if it's zero we return false if it's one you return true。 So now
+    we have a db loader class。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查询，但我们不需要访问代码，所以我们只需选择一个代码等于名称的。这将返回一行或返回一行。所以我突出显示了周围的代码。基本上我们需要做的是检查返回了多少行。如果是零，我们返回false，如果是一行，则返回true。所以现在我们有一个数据库加载器类。
+- en: which has these three methods on it。 Create module， exec module and provides。
+    So now we。 need to combine that with the finder。 So we create a new finder again
+    best based on the。 meta path finder abstract base class and we pass in an instance
+    of this loader that we've。 created to find and we set that again to a member variable。
+    So now we can have a simple。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建模块、执行模块和提供。因此现在我们需要将其与查找器结合在一起。我们再次创建一个新的查找器，基于元路径查找器抽象基类，并传入我们创建的加载器的实例来查找，并再次将其设置为成员变量。因此现在我们可以有一个简单的。
+- en: implementation of find spec that first is going to leverage that provides method
+    that。 we implemented before。 We're going to take the full name that was passed
+    in and ask the。 loader are we providing do you provide this a module or of this
+    name。 If that is true we。 then call this useful helper method that's been provided
+    by the import lib which is a。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: find spec的实现首先将利用我们之前实现的provides方法。我们将获取传入的完整名称，并询问加载器我们是否提供这个名称的模块。如果是真的，我们就调用import
+    lib提供的这个有用的辅助方法，这是一个。
+- en: standard library standard library package that we can use which basically creates
+    this。 module spec that we've been passing around。 So we never really need even
+    need to deal with。 like what this module spec is or what kind of how we actually
+    need to build it because。 this is all taken care of for us。 So what we do is we
+    say okay make a new spec with a。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以使用的标准库包，基本上创建了我们一直在传递的模块规范。所以我们甚至不需要处理模块规范是什么，或者我们实际上需要如何构建它，因为这一切都是为我们处理好的。所以我们做的是说好，创建一个新的规范，具有这三个方法。
+- en: loader assigned to it by of this name and then here's this loader that we passed
+    in and the。 constructor earlier。 And then if this returns false as in the loader
+    does not provide this。 all you need to do is return none to indicate the import
+    system that we don't provide a。 module of this name。 So either this will fall
+    back to the other finders if you have any。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由这个名称指定的加载器，然后是我们之前传入的构造函数的加载器。如果这返回false，即加载器不提供此内容，你只需返回none，向导入系统指示我们不提供此名称的模块。因此，如果有任何标准库查找器，它将回退到其他查找器。
+- en: that are going to provide this or return a module not found error as we saw
+    before。 And。 that's it basically。 So all in all this is about 30 lines of Python
+    code and we have。 a fully working import hook which is loading code from a database
+    that is totally transparent。 to the caller。 So I've got a little demo of how that
+    works here。 So what we're doing is。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将提供此模块或返回未找到模块错误的内容，就像我们之前看到的那样。基本上就是这样。所以总的来说，这大约是30行Python代码，我们有一个完全工作的导入钩子，它从数据库加载代码，对调用者是完全透明的。所以我这里有一个小演示，展示它是如何工作的。
+- en: first we're going to import this code from the disk。 So we have to start by
+    creating a。 new SQLite database。 So we're going to just import the code we just
+    wrote and we're going。 to create this new SQLite database and it's creating a
+    memory here rather than on disk。 And so then we're going to insert some rows。
+    So I'm just going to insert a single row in。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先我们要从磁盘导入这个代码。所以我们需要从创建一个新的SQLite数据库开始。我们将导入刚刚编写的代码，并创建这个新的SQLite数据库，它是在内存中创建的，而不是在磁盘上。然后我们将插入一些行。所以我将只插入一行。
+- en: this database which is going to be a module called package。mymodule。 So first
+    we're just。 going to create this table called code which has the name and the
+    code in it and then insert， this。 so I'm going to call it my package。mymodule。
+    And then just create a global function called。 fn which takes an x and multiplies
+    it by 2 and returns that。 So now we have this in our， database。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个数据库中的模块叫做package.mymodule。首先，我们将创建一个名为code的表，其中包含名称和代码，然后插入这个。因此，我将其命名为my
+    package.mymodule。然后创建一个全局函数fn，它接受一个x并将其乘以2，然后返回结果。因此，现在我们在数据库中有了这个。
+- en: So then what we need to do is take these things we imported from our dbload
+    that， we wrote before。 insert those into the sys。metapath。 So we say okay the
+    dbloader is going to provide。 packages from my package and here's our db handle。
+    You can see here that my package of。 my module is matching the thing we wrote
+    in the database and we're importing fn this function。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们需要做的是将这些我们之前从dbload导入的内容插入到sys.metapath中。因此我们说好，dbloader将提供来自我的包的包，这里是我们的db句柄。你可以看到我的模块与我们在数据库中写入的内容相匹配，我们正在导入这个函数fn。
+- en: And then so now we just have this function fn that we can pass， we can call
+    and twice， 21 is 42。 twice is 0。5 is 1 and if we try and import something that
+    doesn't exist， so my。 package does not exist we get a standard module not found
+    error that says that the module does。 not exist。 So we use this as a deployment
+    mechanism。 So we're files on disk and all suitable。 So。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，现在我们只需要这个函数fn，我们可以传递，我们可以调用，2乘以21等于42，2乘以0.5等于1。如果我们尝试导入不存在的内容，比如我的包不存在，我们会得到一个标准的模块未找到错误，表明该模块不存在。因此，我们将其用作部署机制。所以我们在磁盘上的文件都合适。
+- en: some examples of why we want to use this is writing to a database is obviously
+    very， very fast。 You can write to a database in sub second。 So in our application
+    we have just。 have a save button you click save it writes to the database and
+    immediately your code is。 available in production。 It's also very useful if you
+    want to maintain multiple versions in。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用这个的例子之一是，写入数据库显然是非常快速的。你可以在亚秒级别将数据写入数据库。因此在我们的应用中，我们只需要一个保存按钮，点击保存，它就写入数据库，立即你的代码就可以在生产中使用。如果你想维护多个版本，这也是非常有用的。
+- en: production。 So for this table that we had here we just had the two columns name
+    and code。 But。 we could also have a version in there and then we can come up with
+    a way of making sure。 that we're really importing the version that we'd want。
+    Whereas if we wanted to do that。 in a sort of standard file based hierarchy you'd
+    either need a separate version， a version。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 生产。因此，对于我们这里的这个表格，我们只有两列：名称和代码。但我们也可以在其中添加一个版本，然后想出确保我们真正导入所需版本的方法。反之，如果我们想在标准的文件层次结构中做到这一点，我们就需要一个单独的版本，一个版本。
+- en: of every single application that you have which doesn't really scale very well
+    or you。 can only if you're just importing files from the system you only get one
+    version。 So that's。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每一个应用程序都不是很好扩展，或者如果你只是从系统导入文件，你只能得到一个版本。所以那样是。
+- en: '![](img/b0ec26acaf9d7147d5b6c6e702b6b378_5.png)'
+  id: totrans-59
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b0ec26acaf9d7147d5b6c6e702b6b378_5.png)'
+- en: it。 Thank you。 I hope that was all very useful and I need to learn something
+    today。 So I'll。 be available outside the room for any questions that you have。
+    I'll also be on the Bloomberg。 booth at lunchtime if you want to come and see
+    me there。 You can also send me emails if。 you want us F Phillips with 2L7@blimmer。net
+    or F。O。 Phillips on Twitter。 And if you want。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 感谢你。我希望这对你很有用，我今天需要学习一些东西。所以我会在房间外面等待你们的任何问题。如果你想在午餐时间见我，我也会在彭博社的展位上。如果你想发邮件给我，可以联系F
+    Phillips，邮箱是2L7@blimmer.net，或者在Twitter上找到F.O. Phillips。如果你想。
+- en: to see any of this code you can go to github。com/fofillips/import-hooks。 So
+    on there I have the three， examples the tracing finder。 the database and also
+    the block list all with working examples， with the full code in there。 So yeah
+    thank you very much for coming。 Thank you Fred for， a great talk。 Thank you。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要查看这些代码，您可以访问 github.com/fofillips/import-hooks。在那里我有三个示例：跟踪查找器、数据库和阻止列表，所有示例都有完整的代码。所以，非常感谢大家的到来。感谢弗雷德，感谢您的精彩演讲。谢谢。

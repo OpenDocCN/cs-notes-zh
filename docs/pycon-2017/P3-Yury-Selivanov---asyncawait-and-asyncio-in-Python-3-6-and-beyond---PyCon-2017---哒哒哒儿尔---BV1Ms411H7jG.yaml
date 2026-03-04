@@ -1,0 +1,690 @@
+- en: P3：Yury Selivanov   asyncawait and asyncio in Python 3 6 and beyond   PyCon
+    2017 - 哒哒哒儿尔 - BV1Ms411H7jG
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P3：Yury Selivanov async await和asyncio在Python 3.6及以后的PyCon 2017 - 哒哒哒儿尔 - BV1Ms411H7jG
+- en: \>\> Good afternoon， everybody。 And welcome to this session of PyCon 2017。 Before
+    we get started。 I would like to encourage everyone with a device that is capable
+    of， making noise。 Do please have a chat with it and ask it not to。 Because when
+    it does。 everyone's going to stare at you and some people might be nasty， to you
+    on Twitter。 With that said。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 大家下午好。欢迎来到2017年PyCon的这个环节。在开始之前，我想鼓励每一个有发声设备的人，请和它聊聊，要求它安静。因为当它发声时，所有人都会盯着你，有些人可能会在Twitter上对你不友好。说完这个。
+- en: I would like to introduce our next speaker。
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想介绍我们的下一位演讲者。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_1.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_1.png)'
+- en: His name is Yuri Salivanov and he will be talking about async and await and
+    async IO。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他的名字是Yuri Salivanov，他将讨论async和await以及async IO。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_3.png)'
+  id: totrans-5
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_3.png)'
+- en: Please make him welcome。 [ Applause ]， \>\> Hi， I'm Yuri Salivanov。 I'm from
+    Toronto， Canada。 Today we're going to talk about async await and async IO in Python
+    36 and beyond。 Feel free to follow me on Twitter and email at yy@magic。io。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请欢迎他。[掌声]，\>\> 嗨，我是Yuri Salivanov。我来自加拿大多伦多。今天我们将讨论Python 3.6及以后的async await和async
+    IO。欢迎在Twitter上关注我，或通过yy@magic.io与我联系。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_5.png)'
+  id: totrans-7
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_5.png)'
+- en: So quickly about me。 I'm core developer since 2013。 Worked on a number of peps
+    mostly about async and await。 I maintain async IO， UV loop and async/pg。 I work
+    at magic stack， check out our website， magic。io。 We do a lot of stuff with Python。
+    for Python and sometimes to Python。 It's pretty interesting。 So let's talk about
+    async/await。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 简单介绍一下我。我是核心开发人员，自2013年起工作。主要在多个PEP上工作，尤其是关于async和await。我维护异步IO、UV循环和async/pg。我在magic
+    stack工作，可以查看我们的网站magic.io。我们与Python做了很多事情，既为Python服务，有时也涉及Python。非常有趣。那么我们来谈谈async/await。
+- en: The first question is why do we even have it？ Because there are so many other
+    ways how you can do concurrency。 For instance， you can do threats or you can code
+    with callbacks and promises or maybe。 you can do G event or use event land or
+    stackless Python or maybe you could just use generators。 with yield from syntax。
+    And the answer is readability。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个问题是我们为什么会有它？因为有很多其他方法可以实现并发。例如，你可以使用线程，或者使用回调和承诺，或者使用G事件，或事件驱动，或无栈Python，或许你可以只用带有yield
+    from语法的生成器。而答案是可读性。
+- en: It's arguably better than callbacks or promises。 I think anybody who tried to
+    debug or refactor some JavaScript or old Python code with a lot。 of nested callbacks
+    can attest to that。 It's easier to reason about the async/await code。 You just
+    see all those explicit points in your code when you can switch context for IO。
+    or for something else。 And it actually promotes better patterns like message passing
+    and not having global shared。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以说它比回调或承诺要好。我认为任何尝试调试或重构大量嵌套回调的JavaScript或旧Python代码的人都可以证明这一点。处理async/await代码更容易。你可以清晰地看到代码中所有可以为IO或其他内容切换上下文的显式点。它实际上促进了更好的模式，如消息传递，而不是使用全局共享。
+- en: data structures。 Because no matter what you think about your ability to write
+    multithreading code。 you will， inevitably end up having situation on the right
+    side。 Any other reasons？ Well， efficiency。 Since we have this little problem in
+    Python called gill， threats aren't always the answer。 But even in the languages
+    like C# where there is no gill， we still have async/await。 Why？
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据结构。因为无论你对编写多线程代码的能力有什么看法，你最终都会遇到右侧的情况。还有其他原因吗？效率。由于Python中有一个小问题叫做GIL，线程并不总是解决方案。但即使在没有GIL的语言如C#中，我们仍然有async/await。为什么？
+- en: Because threats are a system resource， you cannot have an infinite number of
+    threats。 So with async。 you can handle thousands or hundreds of thousands or sometimes
+    millions， of open。 long-lasting connections on the server。 Anyways， what is async/await？
+    Well， obviously it's a syntax。 We added them first in Python 3。5。 And we added
+    syntax to define coroutines or async functions。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为线程是一种系统资源，你无法拥有无限数量的线程。所以使用async，你可以处理成千上万、甚至有时数百万个开放的、长时间存在的服务器连接。总之，什么是async/await？显然这是一种语法。我们在Python
+    3.5中首次添加了它们，并添加了定义协程或异步函数的语法。
+- en: syntax for asynchronous context， managers， asynchronous iterators。 and obviously
+    a weight expression。 In 3。6， we took it even further。 We now have asynchronous
+    generators， asynchronous list comprehensions， and even asynchronous。 generator
+    expressions。 And I'd say that at this point we have almost complete coverage of
+    whatever you can do in。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于异步上下文的语法，管理器，异步迭代器。显然还有一个权重表达式。在3.6中，我们进一步发展。现在我们有异步生成器，异步列表推导，甚至异步生成器表达式。我可以说，目前我们几乎覆盖了你能做的所有事情。
+- en: Python synchronous mode。 You can do it with async/await。 Except one thing， this
+    is yield from。 Yield from for asynchronous generators。 We might add syntax for
+    yield from in 3。7。 but this is not a top priority。 I'll be honest with you。 What
+    else is async/await？ It's a protocol。 There is a common misconception that async/await
+    was created specifically for async/aw or only。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python同步模式。你可以使用async/await来实现，除了一个例外，那就是yield from。用于异步生成器的yield from。我们可能会在3.7中添加yield
+    from的语法，但这不是优先事项。我会诚实地告诉你。async/await还有什么？它是一种协议。常见的误解是，async/await是专门为async/aw或仅创建的。
+- en: async/await can use it。 And this is not true。 Internally。 async/await based
+    on the iterator protocol， we have a bunch of magic methods， like dunderawait。
+    which allows you to make an object awaitable or use them in a weight， expression。
+    We have magic methods to define and create asynchronous iterators and asynchronous
+    context。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: async/await可以使用它。这不是真的。在内部，async/await基于迭代器协议，我们有一系列魔法方法，比如dunderawait，它允许你使对象可等待或在权重表达式中使用它们。我们有魔法方法来定义和创建异步迭代器和异步上下文。
+- en: managers。 It's pretty generic。 You could totally write your own framework for
+    async/await。 but you probably shouldn't。 It's a lot of work unless you want to
+    experiment， of course。 So if you take a look at modern async/await application，
+    there is a stack。 And at the bottom of the stack is operating system， of course。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 管理器。这是相当通用的。你完全可以为async/await编写自己的框架，但你可能不应该。这需要大量的工作，当然，除非你想实验。因此，如果你看看现代async/await应用程序，会有一个堆栈。底部当然是操作系统。
+- en: Then we have Python interpreter and then we have async/ framework。 Maybe tornado，
+    twisted， trio。 trio， or maybe async/aw。 And then we have application framework。
+    Maybe it's HTTP or Sennick or something else， Django， Flask， if they have asynchronous
+    versions。 And only then you have your applications。 So what kind of frameworks
+    do we have？
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们有Python解释器，接着是async/框架。也许是Tornado、Twisted、Trio。Trio，或者也许是async/aw。然后我们有应用程序框架。也许是HTTP或Sennick或其他东西，Django，Flask，如果它们有异步版本。只有在那之后你才有你的应用程序。那么我们有哪些框架？
+- en: The good use is that twisted and tornado can use async/await syntax today。 And
+    twisted is actually a model of async and Python。 So much originated from twisted。
+    And I think no one even knows how all twisted is now。 But it can use async/await
+    now。 And both twisted and tornado have big ecosystems。 And maybe what's even more
+    important。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好处是Twisted和Tornado今天可以使用async/await语法。Twisted实际上是async和Python的一个模型。许多都起源于Twisted。我认为现在没有人知道Twisted的所有内容。但它现在可以使用async/await。而且Twisted和Tornado都有庞大的生态系统。也许更重要的是。
+- en: they have a big mind share。 So there are lots and lots of questions on Stack
+    Overflow and sometimes answers。 (Laughter)， Tornado today and twisted very soon，
+    maybe tomorrow。 will be able to run on top of async/await。 And what it means is
+    that you can call async/await libraries from your tornado code。 Or maybe soon
+    from your twisted code。 Or maybe you'll be able to use twisted libraries which
+    we have a lot in your async/await code。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们拥有很大的市场份额。因此，在Stack Overflow上有很多问题，有时也有答案。（笑声），Tornado今天以及很快的Twisted，也许明天，将能够在async/await之上运行。这意味着你可以在Tornado代码中调用async/await库。或者也许很快在Twisted代码中。或者也许你能够在你的async/await代码中使用我们有很多的Twisted库。
+- en: So this is quite good。 We also have curiantrillo。 Those are two new keys on
+    the blog。 Both try to explore new approaches。 Both try to make async easier and
+    maybe sometimes safer to use。 And of course， if they find something new or new
+    useful patterns or good ideas， we'll。 steal them and put them in async/await。
+    That I can promise。 Both are not mainstream yet。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这相当不错。我们还有curiantrillo。这是博客上的两个新键。两者都尝试探索新方法。两者都试图使async更容易，有时也更安全使用。当然，如果他们发现一些新的或有用的模式或好的想法，我们会。偷走它们并放入async/await。这是我可以保证的。两者尚未主流。
+- en: Curio is like here and a half years old。 Trio is a few months。 It's really good
+    projects and I really encourage you to take a look at them and to explore how。
+    they are implemented inside。 It's quite an interesting take of how you should
+    do async or can do async。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Curio 已经存在一年半了。Trio 则几个月。这些都是非常好的项目，我真的鼓励你去看看它们，并探索它们内部的实现。这是关于如何进行 async 或可以进行
+    async 的一个相当有趣的视角。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_7.png)'
+  id: totrans-22
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_7.png)'
+- en: But not mainstream yet。 Anyways， let's talk about async/aw。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但还不是主流。无论如何，让我们谈谈 async/await。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_9.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_9.png)'
+- en: So what is async/await？ async/await is first of all a foundation。 It defines
+    low-level APIs。 high-level async/await APIs。 It is here to stay and it has a plug-able
+    event loop。 So what are those low-level APIs？ That's of course stuff to schedule
+    callbacks。 to write protocols with transfers， to the network， processes， handle
+    unique signals。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么什么是 async/await？ async/await 首先是一种基础。它定义了低级 API 和高级 async/await API。它将持续存在，并且具有可插拔的事件循环。那么那些低级
+    API 是什么呢？当然是用于调度回调的东西，用于编写带有传输的协议，网络，进程，处理唯一信号。
+- en: all callback based， all very low-level。 But this is actually a good thing to
+    have because it allows us to integrate with other。 low-level code written in languages
+    like C， C++ and others。 On top of that。 it has async/await to run coroutines and
+    also to do streams and sockets， to the network programming。 call sub-processes，
+    use logs if you like dead logs， timeouts， installations。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有基于回调，所有都是非常低级的。但这实际上是一个好事，因为它使我们能够与其他用 C、C++ 等语言编写的低级代码集成。除此之外，它还有 async/await
+    来运行协程，以及进行流和套接字的网络编程，调用子进程，使用日志（如果你喜欢死日志），超时，安装。
+- en: everything that is handled in async/await。 It has all the tools。 It is mainstream。
+    Starting with Python 3。6， it's no longer provisional。 It's in the standard library。
+    And this is a promise from core development community and from Python community
+    that async。/await is a safe foundation to bet on。 It has a healthy ecosystem。
+    Surprisingly。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有在 async/await 中处理的内容。它拥有所有工具。它已成为主流。从 Python 3.6 开始，它不再是临时的。它已包含在标准库中。这是核心开发社区和
+    Python 社区的承诺，async/await 是一个安全的基础，可以依赖。它有一个健康的生态系统。令人惊讶的是。
+- en: we have a few frameworks right now to do HTTP and Python and HTTP， and there
+    are many others。 We have database libraries like async/pidg， we have support from
+    MySQL， AO MySQL， radius。 memcache/d， pretty much all of them are covered。 We have
+    a swath of libraries and AO libs organization on GitHub。 So I'd say pretty much
+    every major component of our systems has some sort of async/await。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目前我们有一些框架来处理 HTTP 和 Python，还有许多其他框架。我们有像 async/pidg 这样的数据库库，我们有 MySQL、AO MySQL
+    和 radius 的支持。memcache/d，几乎所有都得到支持。我们在 GitHub 上有一系列库和 AO libs 组织。所以我想说，我们系统的每个主要组件都有某种
+    async/await。
+- en: library around it。 And it has a pluggable event loop。 And this is something
+    that was envisioned in the very beginning of async/await。 This is something that
+    lets async/aw be integrated with frameworks like Twisted or Tornado， but。 it also
+    gives us the ability to switch the event loop and do something fun with it， like。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 围绕它的库。它有一个可插拔的事件循环。这是 async/await 最初设想的内容。这使得 async/await 可以与 Twisted 或 Tornado
+    等框架集成，但它也赋予我们切换事件循环并进行一些有趣操作的能力，比如。
+- en: make it faster。 So there is this project called UV loop and it has this promise
+    or idea to make async/await。 for time faster。 And it does in micro benchmarks。
+    But it's not surprising to see 15， 20， 30。 and some type of 50% speedups in real
+    production， code。 So if you haven't seen UV loop before or haven't tried it， definitely
+    give it a try。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让它更快。因此有一个名为 UV loop 的项目，它有这个承诺或想法，让 async/await 在时间上更快。在微基准测试中它确实如此。但在实际生产代码中看到
+    15%，20%，30%，甚至某种情况下 50% 的速度提升并不令人惊讶。所以如果你之前没有见过 UV loop 或者没有尝试过，一定要试试。
+- en: I'd say that at this point of time it's stable and it's safe to use in production。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我会说，在这个时候它是稳定的，适合在生产环境中使用。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_11.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_11.png)'
+- en: So try to do it。 And here is something else。 We call this Pythonium 3X site。
+    This is a new GitHub group that we created just about a month ago。 And it explores
+    a way to bring Rust to Python。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以尝试一下。这里还有其他内容。我们称之为 Pythonium 3X 网站。这是我们大约一个月前创建的新 GitHub 组。它探索将 Rust 带入 Python
+    的方法。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_13.png)'
+  id: totrans-34
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_13.png)'
+- en: So let's get back to this pluggable event loop idea。 What if we could have an
+    event loop and async/await loop written in Rust so that async/await becomes。 a
+    bridge from Python world to Rust world？ What if you could call a quality in implemented
+    in Rust in Python with a timeout and cancel。 it later？ What if you could have
+    an HTTP server or some protocol implemented in Rust and then used。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们回到这个可插拔事件循环的想法。如果我们可以有一个用Rust编写的事件循环和async/await循环，这样async/await就能成为Python世界与Rust世界之间的桥梁？如果你可以在Python中以超时和取消的方式调用一个用Rust实现的质量怎么办？如果你可以有一个用Rust实现的HTTP服务器或某种协议，并且可以被使用呢？
+- en: in your high level code？ So this is the project that tries to explore that。
+    It's not there yet。 I think it implements most of the async/await APIs right now
+    but it's still incomplete and。 still experimental。 It's not as fast as UV loop
+    right now but it will be there。 And one of the things that we actually want to
+    focus here is safety。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在你的高级代码中？所以这是一个尝试探索这个问题的项目。它还未完成。我认为它目前实现了大部分async/await API，但仍然不完整，仍在实验中。现在它的速度不如UV循环，但它会赶上。而我们实际上希望关注的一件事是安全性。
+- en: Because UV loop and a lot of other accelerators are written in Python and C
+    and sometimes you。 find segfals， sometimes you find bugs。 With Rust you just don't
+    have this kind of problem and you have performance。 And Rust is this new shiny
+    thing。 It's everybody's favorite language。 You don't know what you know of it。
+    So it's really cool。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为UV循环和许多其他加速器是用Python和C编写的，有时你会发现segfault，有时你会发现错误。使用Rust，你根本没有这种问题，并且性能优越。而Rust就是这个新的闪亮的东西。它是每个人的最爱语言。你不知道自己知道了什么。所以它真的很酷。
+- en: And I really have high hopes for this new thing。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我对这个新事物真的抱有很高的期望。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_15.png)'
+  id: totrans-39
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_15.png)'
+- en: So definitely check it out。 It's on GitHub Live。 So let's talk about what's
+    next for async/await。 What will happen with async/await？
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以一定要查看一下。它在GitHub Live上。接下来我们谈谈async/await会发生什么。async/await将会怎样？
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_17.png)'
+  id: totrans-41
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_17.png)'
+- en: We have some goals。 We have some goals for Python 3。7。 Actually one of the first
+    things that we want to make sure of is that we can run and use。 twisted code on
+    async/await。 There were some blockers to that but I think we kind of addressed
+    them all in 3。6。 And in any case， for 3。7 this is one of the things that we want
+    to do。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一些目标。我们对Python 3.7有一些目标。实际上，我们想确保的第一件事是能够在async/await中运行和使用twisted代码。对此有一些阻碍，但我认为我们在3.6中解决了这些问题。无论如何，对于3.7，这是我们想做的事情之一。
+- en: We want to make sure that everything that was developed for tweezers。 There
+    is a lot of good code that we can use in async/await。 Another question is maybe
+    curio and trio can be built or rebuilt on top of async/await。 Maybe this will
+    let us fix bugs in async/aw because of the increased user base or maybe。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们想确保为镊子开发的所有内容都能得到充分利用。我们有很多优秀的代码可以在async/await中使用。另一个问题是，curio和trio是否可以在async/await之上构建或重建。也许这将让我们因为用户基础的增加而修复async/await中的错误。
+- en: we will be able to have a compatibility between async/await and curio/code or
+    trio/code。 This is something to explore。 So this is another goal is to see if
+    we have enough APIs or if our APIs are flexible enough。 to implement new source
+    of frameworks， new async/await frameworks on top of async/await。 And that trust
+    loop。 So we have some problems right now in Tokyo。 For instance。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将能够在async/await和curio/code或trio/code之间实现兼容。这是值得探索的事情。因此，这也是另一个目标，看看我们是否有足够的API，或者我们的API是否足够灵活。以在async/await之上实现新的框架，新的async/await框架。还有信任循环。所以我们现在在东京有一些问题。例如。
+- en: right now it's really hard to have a task or a quarantine and rust to be。 fully
+    compatible with Python code。 There are some low-level details。 It can be work
+    around it but we definitely want to make sure that in 3。7 it's straightforward。
+    So maybe if you are writing your next event loop， I don't know， in pure assembly，
+    you。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，任务或隔离与Rust完全兼容Python代码真的很困难。有一些底层细节。可以绕过这些问题，但我们绝对希望在3.7中确保这一点很简单。所以，也许如果你正在编写下一个事件循环，我不知道，在纯汇编中，你。
+- en: will be able to integrate easily with async/await。 The other thing that we want
+    to focus on Python 3。7 is to improve usability and specifically。 to address the
+    issue of documentation。 The documentation of async/await is huge。 I'd say it's
+    really hard to follow。 It focuses too much on low-level details。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将能够与async/await轻松集成。我们希望在Python 3.7中关注的另一件事是提高可用性，特别是。解决文档问题。async/await的文档非常庞大。我会说，这真的很难跟随。它过于关注底层细节。
+- en: Instead of teaching people how to use async/await or how to use it in an optimal
+    way， how to。 maintain code bases with async/await or how to write frameworks and
+    protocols for async/await。 in an optimal way。 The original documentation， by the
+    way。 was written by Victor Steiner and I think he deserves。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与其教人们如何使用 async/await，或者如何以最佳方式使用它，如何用 async/await 维护代码库，或者如何以最佳方式为 async/await
+    编写框架和协议，不如直接上手。顺便提一下，原始文档是由 Victor Steiner 编写的，我认为他应得这个荣誉。
+- en: some credit for it because he did it single-handedly。 When async/await wasn't
+    such a big thing as it is right now， he re-done all of it and I。 think we kind
+    of dropped the ball and we didn't update it。 We didn't really maintain it。 So
+    this is one of the top priorities for 3。7 is to fix the documentation， make async/aw。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这要给他一些功劳，因为他是单枪匹马完成的。当 async/await 还没有像现在这样受欢迎时，他重新完成了所有工作。我觉得我们有些掉链子，没有更新它，也没有真正维护它。所以，对于
+    3.7，这是我们的首要任务之一，就是修复文档，使 async/await。
+- en: easy to learn， add some tutorials to it。 So we'll be focusing on that。 And of
+    course。 if you guys want to help， you're welcome to do so。 And now， this is an
+    interesting topic。 These are the functions that you -- if you know this function，
+    this functions， you can。 pretty much write any async/await program。 This is all
+    to async/await。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 易于学习，添加一些教程。因此我们会专注于这一点。当然，如果你们想要帮助，欢迎这样做。现在，这是一个有趣的话题。这些是你——如果你了解这些函数，你几乎可以编写任何
+    async/await 程序。这都是关于 async/await 的。
+- en: There are a couple of more but not really important。 If you understand how these
+    functions work。 you can do it。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有一些，但不是特别重要。如果你理解这些函数是如何工作的，你就能做到。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_19.png)'
+  id: totrans-51
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_19.png)'
+- en: But if you -- it doesn't work。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是如果你——它就不起作用。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_21.png)'
+  id: totrans-53
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_21.png)'
+- en: If you look at them， you will see that some functions are prefixed with async/aw
+    and some。 functions are prefixed with loop。 And this is another subtle problem
+    of async/aw and maybe it's also a documentation issue。 The idea was that async/await
+    programs try to always pass event loop explicitly in your， program。 So you always
+    carry the event loop object around you。 You can't do things without it。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你查看它们，你会发现一些函数前面带有 async/await，而另一些函数前面带有 loop。这是 async/await 的另一个微妙问题，也可能是文档问题。其核心思想是，async/await
+    程序总是尝试在你的程序中显式传递事件循环。因此你始终需要携带事件循环对象。没有它，你无法执行某些操作。
+- en: So async/awitself， all of async/await unit tests， many of async/awit packages，
+    they all accept。 loop argument。 They will expect you to pass it。 It's kind of
+    really suboptimal。 But in Python 3。6。 we've fixed get event loop method。 And now
+    it behaves deterministically。 Whenever you call it from an async/await code， it
+    will always return you the correct event， loop。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，async/await 本身、所有的 async/await 单元测试，以及许多 async/await 包，都接受 loop 参数。它们会期望你传递这个参数。这确实有点不够理想。但在
+    Python 3.6 中，我们修复了获取事件循环的方法。现在它的行为是确定性的。每当你从 async/await 代码中调用它时，它总会返回正确的事件循环。
+- en: So the idea is that you can have your high level， beautiful async/await API。
+    And whenever you have to go low level in your implementation， you always can get
+    this event， loop。 But you don't need the user to pass this event loop for you
+    around。 So pretty much starting right now， we start to encourage people to design
+    their APIs without。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们的想法是，你可以拥有你高层次的、漂亮的 async/await API。每当你需要在实现中进入底层时，你总是可以获取这个事件循环。但是你不需要用户将这个事件循环传递给你。因此，从现在开始，我们开始鼓励人们在设计
+    API 时不需要考虑。
+- en: explicit event loop in mind。 But for 3。7， we'll need to fix many of our APIs
+    and add new APIs to promote this pattern。 so that high level async/awit programs
+    don't even care about the event loop。 It's a low level detail。 Don't think about
+    it。 Don't bother with it。 We also need to do -- we also want to add new things。
+    One of them is start TLS。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 明确的事件循环是很重要的。但是对于 3.7，我们需要修复许多 API，并添加新的 API，以促进这种模式，使得高层次的 async/await 程序根本不需要关心事件循环。这是一个底层细节。不要去思考它。也不要为此烦恼。我们还需要做——我们也希望添加新内容。其中之一就是启动
+    TLS。
+- en: There are some protocols that start as a clear text and then they suddenly need
+    to upgrade。 and become secure and they need start TLS。 There is also a very frequently
+    requested feature by Armandronica to add call and pass。 context APIs。 Perhaps
+    he wants to re-implement Flask or something。 but this is quite a serious thing，
+    actually。 This is quite a serious issue for large applications。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有些协议开始时是明文传输，但随后它们突然需要升级并变得安全，需要启动TLS。Armandronica也非常频繁地请求添加调用和传递上下文API。也许他想重新实现Flask或其他什么，但实际上这是一个相当严肃的事情。这对于大型应用程序来说是一个相当严重的问题。
+- en: If you have thousands of lines of code or hundreds of thousands of code， sometimes
+    somewhere deep。 down below you realize， oh， I need more context。 Maybe I need
+    the current request object or maybe I need the current host or port that。 I'm
+    connected to for logging or for something like that。 And without rewriting all
+    of your code。 you pretty much can't do it。 You cannot use for local objects because
+    they don't work with async in a way。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你有数千行代码或数十万行代码，有时在某个深处你会意识到，哦，我需要更多的上下文。也许我需要当前请求对象，或者我需要当前主机或端口，以便进行日志记录或其他类似的事情。没有重写所有代码，你几乎无法做到这一点。你不能使用本地对象，因为它们与异步的工作方式不兼容。
+- en: You cannot use a global variable because it's a shared state。 So it's really
+    hard。 And one of the last major things is to add async。reple so that you can just
+    type Python。 dash m async。io or maybe just Python and experiment and play with
+    async。io with its native syntax。 so that you can just write away something and
+    it would do it for you。 And overall we need your help。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你不能使用全局变量，因为它是一个共享状态。所以这真的很难。最后一个主要任务之一是添加async.reple，以便你可以直接输入Python -m async.io，或者可能只是Python，并用其原生语法进行实验和玩耍，这样你可以随意编写一些代码，它会为你完成。总的来说，我们需要你的帮助。
+- en: Ask for the new features。 You can use bugs Python to work for bug requests，
+    bug reports。 but you can also use it for feature， requests。 You also have Python
+    tool if mailing list。 Tool if is the original name of async。io。 But it's still
+    quite active。 Gwidderez it and helps people a lot。 A lot of other async developers
+    read it。 And also on GitHub。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请求新特性。你可以使用bugs Python来处理bug请求和报告，但你也可以用它来请求新特性。你还有Python工具的邮件列表。Tool if是async.io的原名，但它仍然相当活跃。Gwidderez对此做出了很多贡献，帮助了许多人。许多其他的异步开发者也在阅读它。此外，还有GitHub上的内容。
+- en: C Python moved to GitHub completely and everything now happens on GitHub。 You
+    can issue pull requests。 It's so much easier。 The whole idea of this migration
+    was to involve more people in C Python and also in async。io， development。 So help
+    us guys。 I think async。io has a very bright future especially with things like
+    rust integration。 This might enable us to do so much more in the near future。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: C Python完全迁移到了GitHub，现在一切都在GitHub上进行。你可以提交拉取请求。这简单多了。这次迁移的整个想法是让更多人参与C Python的开发，以及async.io的开发。所以，伙计们，帮帮我们。我认为async.io有一个非常光明的未来，特别是在与Rust集成方面。这可能使我们在不久的将来能够做更多的事情。
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_23.png)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_23.png)'
+- en: That's it。 If you guys have any questions， I'd be happy to address them。 Thank
+    you。 Thank you， Yuri。 If anyone has any questions， please come up to one of the
+    microphones in the aisles。 Do you mind comparing the async。io infrastructure to
+    what's available in other languages？ Like。 you know， obviously JavaScript has
+    promises and now Senka wait and C#。 Just like at a high level。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样。如果你们有任何问题，我很乐意回答。谢谢你。谢谢你，Yuri。如果有人有问题，请到走道上的麦克风前来提问。你介意将async.io的基础设施与其他语言中可用的进行比较吗？比如，众所周知，JavaScript有Promise，现在也有Senka
+    wait，C#也是。就像在一个高层次上。
+- en: just to get a feel of how， like， are they roughly doing the same。 thing or is
+    there an in here and difference between what different languages are doing。 since
+    all of them seem to be moving towards having a Senka wait at least。 But behind
+    it is probably not quite the same。 Yes， they're not quite the same。 But yes。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只是想了解一下它们大致上是否在做相同的事情，或者不同语言之间是否有差异，因为所有语言似乎都在向至少拥有Senka wait的方向发展。但背后的实现可能并不完全相同。是的，它们并不完全相同。但确实有区别。
+- en: the idea is almost the same。 I'd say one of the problems in Python that we have
+    with async。io and async。io is that the， language itself originally was designed
+    to be a synchronous thing。 So a lot of APIs can actually block。 So one of the
+    ideas that we need to research in Python specifically is to find a way to。 see
+    if your application is making some blocking system calls while doing its async。io。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个想法几乎是相同的。我会说，Python在async.io和async.io方面面临的一个问题是，语言本身最初设计为一个同步的东西。所以很多API实际上可能会阻塞。因此，我们需要在Python中特别研究的一个想法是，找出你的应用程序在进行异步时是否正在进行一些阻塞系统调用。
+- en: Other than that， I'd say Python async。io wait implementation is quite similar
+    to what you。 have in JavaScript。 If you know how to use it in JavaScript， you
+    know how to use it in Python。 If I'd say， for instance， this context sharing，
+    context object idea， it kind of comes from。 C# where they solve this problem for
+    async。io code。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除此之外，我会说Python的async.io wait实现与JavaScript中的实现非常相似。如果你知道如何在JavaScript中使用它，你就知道如何在Python中使用它。举例来说，这种上下文共享、上下文对象的想法，部分来自于C#，他们为async.io代码解决了这个问题。
+- en: So it's the point where we can copy good ideas from other languages and edit
+    to Python。 And in many ways， Python support of async。io wait is greater than in
+    any other language。 I don't think that a lot of languages or any languages besides
+    Python have asynchronous。 context managers or asynchronous generators。 One copy
+    at least at first。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这是我们可以从其他语言中借鉴好主意并编辑到Python的地方。在很多方面，Python对async.io wait的支持优于任何其他语言。我认为除了Python之外，没有很多语言或任何语言拥有异步上下文管理器或异步生成器。起码最初是一个拷贝。
+- en: async and the wait expression from C# but we added so much， more to make it
+    useful。 \>\> I was wondering， I guess， kind of two questions。 One。 why isn't UV
+    loop the standard loop if it's so much faster than the async。io one？ And then
+    also。 are there any efforts to improve the steps to start the loop and register
+    your。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: async和来自C#的wait表达式，但我们增加了很多，使其变得更有用。>> 我在想，我想大概有两个问题。一个，为什么如果UV循环比async.io的快这么多，它不是标准循环？然后，是否有任何改善启动循环和注册你自己的步骤的努力？
+- en: function and everything seems cumbersome from a user standpoint？
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 函数以及从用户的角度来看，一切似乎都很繁琐？
+- en: Are there any efforts to improve the usability there as well？
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那里有没有任何提高可用性的努力呢？
+- en: \>\> The first question is why you will loop is faster？ \>\> Or why isn't it
+    the async。io default loop？
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 第一个问题是为什么你会觉得循环更快？>> 或者为什么它不是async.io的默认循环？'
+- en: \>\> You will loop uses libv。 Libv is the low level library。 Original developed
+    for null。js。 It's a large dependency。 It's a big library。 It's a lot of code。
+    We don't need Python to depend on this library， especially how easy it is to install
+    UV loop。 It was envisioned from the beginning that such a thing should be possible。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 你将循环使用libv。Libv是底层库。最初为null.js开发。它是一个庞大的依赖项。它是一个大型库。代码量很大。我们不需要Python依赖这个库，尤其是安装UV循环是多么简单。从一开始就设想这样的事情是可能的。'
+- en: So I guess there is not enough motivation to add a lot of low level SQL to Python
+    at this。 point of time。 The core functionality of async。io right now is in pure
+    Python。 It's relatively easy to read and fix。 So it's just not that big of an
+    issue。 As for the second question， yes， specifically we want to add two high level
+    functions， async。io。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我想在这一时间点，没什么动力去给Python添加很多低级SQL。async.io的核心功能目前是纯Python。相对容易阅读和修复。所以这并不是个大问题。至于第二个问题，是的，具体来说我们想添加两个高级函数，async.io。
+- en: run and async。io run forever。 The first one would accept a query and it would
+    just run。 This is like an entry point for a simple async。io application。 If you
+    have a complex async。io application which spawns a lot of services， subprocesses。
+    and you kind of have to finalize and clear the state of async。io program consistently。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: run和async.io永远运行。第一个会接受一个查询并直接运行。这就像一个简单async.io应用程序的入口点。如果你有一个复杂的async.io应用程序，它产生很多服务和子进程，你就必须一致地最终确定和清理async.io程序的状态。
+- en: you'll have the second method which actually accepts an asynchronous generator
+    or an asynchronous。 complex manager。 So the idea is that you enter your asynchronous
+    state consistently in an asynchronous way and。 you can clean up your state in
+    an asynchronous way consistently。 And the whole machinery of creating loop， cleaning
+    up resources， printing out debug information。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你将有第二种方法，它实际上接受异步生成器或异步复杂管理器。所以这个想法是你以一致的异步方式进入你的异步状态，并且你可以以一致的异步方式清理你的状态。创建循环、清理资源、打印调试信息的整个机制。
+- en: can be handled by this function。 But yes， we recognize this problem that right
+    now it's really a cumbersome process to bootstrap。 async。io application。 So yes，
+    we have some solutions。 I'll be working on a PEP on a new PEP for Python 3。7 pretty
+    soon。 And my plan is to have the PEP and have a library on GitHub， we'll call
+    it aio， next， or aio。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个功能可以处理。但是，是的，我们认识到这个问题，目前启动一个 async。io 应用程序的过程确实很繁琐。所以，是的，我们有一些解决方案。我将很快开始撰写一个针对
+    Python 3。7 的 PEP。我的计划是有一个 PEP，并在 GitHub 上发布一个库，我们称之为 aio，next，或 aio。
+- en: extra or something like that， prototyping those things so that you guys can
+    start using。 them and give us some feedback before this lends to Python 3。7。 \>\>
+    I'm curious about the Py03。 Is it more about putting some Python in your roster，
+    putting some rust in your Python or。 just simplifying them both？ What's sort of
+    the use case of the actual Py03， Py03 library？ \>\> Yes。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 额外的或者类似的东西，原型制作这些东西，以便你们可以开始使用它们，并在这些内容引入 Python 3。7 之前给我们一些反馈。>> 我对 Py03 感到好奇。这更多是关于在你的名单中加入一些
+    Python，还是将一些 Rust 融入你的 Python，还是仅仅简化它们？实际的 Py03，Py03 库的用例是什么？>> 是的。
+- en: the use case is the first enable this integration because we have C Python rust
+    binding。 which allows you to easily create bindings of rust code to the Python
+    code。 But there is no way right now to have an API， an asynchronous version of
+    that API。 It doesn't know anything about async。io and asynchronous nothing about
+    rust。 So async。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用例首先是启用这种集成，因为我们有 C Python Rust 绑定。这使你可以轻松创建 Rust 代码到 Python 代码的绑定。但现在没有办法拥有一个
+    API，一个异步版本的 API。它对 async。io 和异步一无所知，也对 Rust 一无所知。所以 async。
+- en: io can be a bridge here。 The other thing is performance because yes， you can
+    write a low level。 let's say HTTP parsing， library or low level postgres driver
+    in rust。 It will be very efficient and it will be probably safer than a similar
+    thing written in C。 So the idea is to make it easier to reuse existing rust code
+    in Python。 In an asynchronous way。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: io 可以在这里作为桥梁。另一件事是性能，因为是的，你可以用 Rust 编写一个低级的，比如 HTTP 解析库或低级的 Postgres 驱动程序。这将是非常高效的，而且可能比用
+    C 编写的类似代码更安全。所以这个想法是使在 Python 中以异步方式重用现有 Rust 代码变得更容易。
+- en: \>\> Thank you。 We have time for one or two more questions if anyone has any。
+    Thank you very much。 Yuri。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 谢谢。如果有人还有问题，我们还有时间问一两个问题。非常感谢你，尤里。'
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_25.png)'
+  id: totrans-82
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_25.png)'
+- en: \>\> Thank you。 [ Applause ]。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 谢谢。[ 掌声 ]。'
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_27.png)'
+  id: totrans-84
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_27.png)'
+- en: '[ Silence ]。'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[ 静默 ]。'
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_29.png)'
+  id: totrans-86
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_29.png)'
+- en: '![](img/bb2821bda2722c62fd564607bdde3cfb_30.png)'
+  id: totrans-87
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/bb2821bda2722c62fd564607bdde3cfb_30.png)'

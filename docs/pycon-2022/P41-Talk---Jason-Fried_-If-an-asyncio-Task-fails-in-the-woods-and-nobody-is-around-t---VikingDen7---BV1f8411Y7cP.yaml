@@ -1,0 +1,773 @@
+- en: P41：Talk - Jason Fried_ If an asyncio Task fails in the woods and nobody is
+    around t - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P41：演讲 - Jason Fried 如果一个 asyncio 任务在森林中失败，周围没有人 - VikingDen7 - BV1f8411Y7cP
+- en: Hello， how's everyone doing today？ Great， awesome。 Okay， so we can start with
+    our next。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗨，大家今天过得怎么样？很好，太棒了。好吧，我们可以开始下一个。
+- en: '![](img/df6885c898ea62de8ffd925cf05e68b3_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/df6885c898ea62de8ffd925cf05e68b3_1.png)'
+- en: '![](img/df6885c898ea62de8ffd925cf05e68b3_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/df6885c898ea62de8ffd925cf05e68b3_2.png)'
+- en: talk。 It's by Jason and oh， I love this talk title。 If an async。io task fails
+    in the words。 and nobody's around to see it， does it still page you at 3am？ Over
+    to you， Jason。 All right。 welcome to my talk。 This was the longest title I could
+    think of， but if it helps。 you can refer to it by a Hany acronym。 I at fit woe@cd。py3，
+    but which， that should be less。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 演讲。这是 Jason 的演讲，我非常喜欢这个演讲标题。如果一个 async。io 任务在森林中失败，周围没有人看到，它还会在凌晨 3 点打扰你吗？现在把时间交给你，Jason。好的，欢迎来到我的演讲。这是我能想到的最长的标题，但如果有帮助，你可以用一个简短的缩写来称呼它。我在
+    fit woe@cd。py3，但这应该更少。
+- en: cumbersome when you want to talk about this talk in conversation later。 I actually
+    wanted。 to see what that looked like on the， I guess we don't have time for that。
+    I'm currently。 a production engineer at Meta。 I've contributed regularly to CPython
+    and various other open。 source projects。 And I've been writing software for a
+    while。 I spent seven years writing C code。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在以后的对话中，当你想谈论这个演讲时，这显得很繁琐。我实际上想看看那是什么样子的，但我想我们没有时间。我目前在 Meta 担任生产工程师。我定期为 CPython
+    和其他各种开源项目贡献代码。我已经编写软件有一段时间了。我花了七年时间编写 C 代码。
+- en: and then 10 years writing Pearl and basically I started writing Python when
+    I started Facebook。 in 2011。 So I've been involved in Python development for 10
+    years， a little bit more。 At Meta。 I drove the Python 2 to 3 conversion way back
+    when， just so I could use async。io， in production。 Though back then it was still
+    called Tulip and we were still on pre， we're， still on before 3。5。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后花了十年时间编写 Perl，基本上我在 2011 年开始 Facebook 时开始写 Python。所以我已经参与了 Python 开发十年多一点。在
+    Meta，我在很久以前推动了 Python 2 到 3 的转换，只是为了能在生产中使用 async。io。虽然那时它仍被称为 Tulip，而我们仍然在 3.5
+    之前。
+- en: And when you're a pioneer， you have to forward a lot of rivers。 And you。 have
+    to make do with whatever you can build yourself。 So we had rivers that had to
+    be。 crossed before appropriate bridges had been built in the standard liver， PPI。
+    So I had。 to build them or to solve problems like async unit tests， async context
+    managers， we needed。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你是一个开拓者时，你必须渡过很多河流。你必须利用自己能够构建的任何东西。因此，我们有一些河流必须在标准库 PPI 建立适当的桥梁之前渡过。所以我不得不建立它们或者解决像
+    async 单元测试、async 上下文管理器这样的问题。
+- en: an exit stack。 But fast forward to today， we have hundreds of backend services
+    written， with async。io。 There are tens of thousands of people offering Python
+    commits every month， at Meta。 So I have seen lots of code。 I've seen the good，
+    I've seen the bad， and I've seen， the ugly。 And in this talk， we're going to cover
+    the ugly。 In very humorous detail， things。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个退出堆栈。但快进到今天，我们已经有数百个使用 async。io 编写的后端服务。每个月在 Meta 有成千上万的人提供 Python 提交。因此，我看到了大量的代码。我看到了好的、坏的，还有丑陋的。在这次演讲中，我们将讨论那些丑陋的内容。非常幽默的细节，事情。
+- en: like nested event loops， bad async。io bootstrapping， anonymous tasks， calling
+    co-routines in the。 init method， bad signal handling， ignoring cancellation， and
+    not using timeouts。 So on。 the subject of a bit loops， now this is mostly for
+    library writers， you have existing callers。 you're not an async def， but you want
+    to call co-routine。 This seems very simple。 I'll just。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像嵌套事件循环、糟糕的 async。io 启动、匿名任务、在 `init` 方法中调用协程、糟糕的信号处理、忽视取消、以及不使用超时等等。在稍微涉及到一些循环的主题时，这主要是针对库的编写者，你有现有的调用者。你不是一个
+    async def，但你想要调用协程。这看起来非常简单，我就来。
+- en: get the default event loop and I'll run it to complete。 Well， the problem comes
+    is that。 you have some caller way up in a call chain that you're not even aware
+    of that's already。 running the loop。 And they get an exception about the loop
+    already running。 And because。 you would have to change a whole bunch of unrelated
+    functions outside of your own project。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 获取默认事件循环，我将运行它以完成。然而，问题在于，你有一些调用者在调用链的上层，你甚至没有意识到它们已经在运行循环。它们会收到一个关于循环已经在运行的异常。而且因为你必须更改一大堆与自己项目无关的函数。
+- en: to have async def variants， you figure it's just easier to hack it。 So you decide
+    to pause。 the existing loop and use your own loop。 So this pattern is called the
+    nested event loop。 Basically trick async。io into thinking that there are no event
+    loops running so that you。 can create your own and start it while you block the
+    current one。 The example above is。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你需要async def变体，你可能会觉得黑客攻击更容易。因此，你决定暂停现有的循环并使用自己的循环。这个模式被称为嵌套事件循环。基本上是欺骗asyncio，让它认为没有事件循环在运行，这样你就可以创建自己的循环并在阻塞当前循环时启动它。上面的例子是。
+- en: obviously shorted and we have some mini slides to go into detail but it's really
+    a dirty。 hack and it has some very bad unintended con-insquences。 And we'll probably
+    get you page at 3am。 because the service owner is seeing timeouts in their event
+    loop once you stop blocking， it。 Look。 I've seen this kind of logic used at meta。
+    And people still try to do crazy。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然被缩短了，我们有一些迷你幻灯片可以详细说明，但这确实是一个肮脏的黑客解决方案，并且有一些非常糟糕的意外后果。而且，当你停止阻塞时，可能会在凌晨3点得到你的页面，因为服务所有者在他们的事件循环中看到超时。看看。我见过在meta使用这种逻辑的情况。人们仍然试图做疯狂的事情。
+- en: shit like this because we all know writing quick and brittle， un-maintainable
+    code is。 better than taking time to do it correctly because it just seems easier。
+    Well， it's easier。 now but in the long run it's going to be very difficult。 The
+    first thing is that this。 is completely unsupported behavior。 It requires you
+    to reach into the guts of async。io to make。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像这样的事情，因为我们都知道，编写快速且脆弱、不易维护的代码比花时间正确地做到这一点要好，因为这看起来更简单。现在，确实更简单，但从长远来看，这将非常困难。第一件事是，这完全是不受支持的行为。它要求你深入asyncio的内部。
+- en: it work。 And the next thing you will find is that the original loop has things
+    scheduled。 on it that you are not aware of。 And those things have timeouts。 And
+    those timeouts will， get。 will be expired because you have blocked its event loop。
+    The last one is you will end。 up having tasks on the new event loop that you had
+    created and they will throw some。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它的工作。接下来你会发现，原始循环上安排了你不知情的事情。这些事情有超时，而由于你阻塞了事件循环，这些超时会到期。最后，你将在新创建的事件循环上有任务，它们将抛出一些。
+- en: strange stack traces when you'd have to close up your own event loop。 And in
+    the future。 you might have other work that gets somehow added to this sub-aloop
+    and you might have。 loops within loops nested very far down and it'll be very
+    hard to reason about what's， going on。 I've given up trying to help people when
+    I find them doing this and I'd just like。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理奇怪的堆栈跟踪，当你不得不关闭自己的事件循环时。未来，你可能会有其他工作以某种方式添加到这个子循环中，你可能会有嵌套得很深的循环。对此进行推理会非常困难。当我发现人们这样做时，我已经放弃了帮助他们的尝试。
+- en: point them in the right way。 But the more magical your Python code gets the
+    harder it will be。 for you to support it。 Understanding what it's doing when something
+    does go wrong is。 just a wasted effort。 So the solution is just to use async。io。run。
+    You may say it doesn't， async。io。run have the same issues as we had before。 Well
+    yes it does but it lets the caller。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将它们引导到正确的方向。但是，Python代码越神奇，你支持它的难度就越大。当事情出现问题时，理解它的运行情况只是一种浪费的努力。因此，解决方案就是使用asyncio.run。你可能会说，asyncio.run和我们之前遇到的问题没有区别。确实如此，但它让调用者。
+- en: easily put it into a different thread using an executor because it creates a
+    new event。 loop instead of assuming that there's a default one which is not true
+    on threads other than。 main and that exception thrown is a good thing。 It lets
+    the caller know that they need to。 put the function in a thread pull executor
+    or you could do it for them if you happen。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 容易通过执行器将其放入不同的线程，因为它创建了一个新的事件循环，而不是假设有一个默认的事件循环，而这一点在主线程以外的线程上并不成立，并且抛出的异常是件好事。它让调用者知道他们需要将函数放入线程池执行器，或者如果你有机会，也可以为他们做到这一点。
+- en: to live in a giant monorepo shared code base like meta because you need to land
+    your own。 changes and you don't want to break their tests。 Now the best solution
+    but it's not always。 practical or possible is to provide an entire async def call
+    chain from their code to your。 code and maintain a separate blocking call chain
+    that used to exist。 It sounds daunting。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在像meta这样庞大的共享代码库中生活，因为你需要提交自己的更改，而不想破坏他们的测试。现在，最佳解决方案虽然不是总是可行的，就是提供一个完整的async
+    def调用链，从他们的代码到你的代码，并维护一个过去存在的单独阻塞调用链。这听起来令人生畏。
+- en: but that's probably the best solution。 So some tips is you only own the event
+    loops you create。 Respecting ownership means that if you do not own it you don't
+    mess with it。 Like you。 don't come to my ranch and mess with my goats and I'll
+    forge you the same courtesy。 A core。 tentative Python is that we are all consenting
+    adults。 We don't need the language to make。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这可能是最好的解决方案。因此一些提示是，你只拥有自己创建的事件循环。尊重所有权意味着，如果你不拥有它，就不要干扰它。就像你不要来我的农场干扰我的山羊一样，我也会给你同样的礼遇。一个核心的、初步的Python理念是，我们都是同意的成年人。我们不需要语言来做。
+- en: us behave or respect each other's privacy。 In the case of event loops don't
+    stop it。 Don't start it。 Don't block it。 Just leave it alone。 You can do normal
+    stuff but you。 definitely don't set up a magic sub-nested event。 This violates
+    the number one rule of， async。io which you're just now going to hear about because
+    I made it up this week。 You are。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们应该互相尊重彼此的隐私。在事件循环的情况下，不要停止它，不要启动它，不要阻塞它。就让它保持原样。你可以做正常的事情，但你绝对不应该设置一个魔法的嵌套事件。这违反了`async.io`的第一条规则，你将听到，因为我这周才想出来。你是。
+- en: not allowed to block the event loop on purpose。 Sure people block it all the
+    time out of ignorance。 but when you do it on purpose that's malicious intent。
+    Right there and it makes you a bad。 person but maybe not a bad person but you
+    should feel bad。 So you should be using async。io。run。 and ideally only ever have
+    one event loop。 If that's not possible have one event loop per。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不允许故意阻塞事件循环。当然，人们出于无知时常会这样做，但如果故意这样，那就是恶意行为。这就使你成为一个坏人，也许不是坏人，但你应该感到愧疚。所以你应该使用`async.io.run`，理想情况下只需一个事件循环。如果不可能，那就每个都有一个事件循环。
+- en: thread but you should never have more than one loop on the same thread。 It's
+    just madness。 Also let your college decide what to do。 They have more context
+    than you。 They have about。 the event loop and maybe what might be scheduled there
+    and they have the ability to put an。 executor。 You don't have that from a blocking
+    call。 Now let's look at the bootstrapping async。io。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程，但你永远不应该在同一个线程上有超过一个循环。这太疯狂了。此外，让你的同事决定该怎么做。他们比你更有背景。他们知道事件循环，也许还有什么可能在那里被调度，他们有能力设置一个执行器。你从阻塞调用中得不到这一点。现在让我们看看引导`async.io`。
+- en: and why it's important you have clean async bootstrapping。 Bootstrapping is
+    the process。 of starting up the event loop， scheduling the initial work and also
+    concerned with handling。 the results and handling cleanup and taking care of signal
+    handling so that your application。 can terminate safely。 You've probably seen
+    code like this in the past。 I've seen it all。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以及它为什么重要，你需要干净的异步引导。引导是启动事件循环、调度初始工作、处理结果和清理工作、处理信号以确保应用程序安全终止的过程。你可能在过去见过这样的代码。我见过它所有。
+- en: over the place。 It's a holdover from a pattern before we had code routines and
+    before we had。 an async。io run and it was encouraged people use callback style。
+    This is super old。 It's， terrible。 You're in and out of the loop。 We start the
+    loop。 We get some value。 Go back， into the loop。 We create a task and we run forever。
+    Well we don't ever actually stop。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到处都是。这是一个在我们拥有代码例程之前的模式遗留，它鼓励人们使用回调风格。这是非常老旧的，糟糕的。你在循环中进进出出。我们启动循环，得到一些值，回到循环中。我们创建一个任务并永远运行。其实我们从未真正停止。
+- en: the loop unless somebody stops the loop。 If that task died we're still running
+    the loop。 If we do somehow do stop the loop we have to handle our cleanup so we
+    have to cancel the。 task and run the loop again and then we're finally closing。
+    That task while it has a name。 it might as well be anonymous。 We don't ensure
+    that stays running。 This might get you woken。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除非有人停止循环。如果任务死掉了，我们仍在运行循环。如果我们真的停止了循环，我们必须处理清理工作，因此我们需要取消任务，再次运行循环，然后我们最终关闭它。那个任务虽然有个名字，但也可以是匿名的。我们不能确保它会继续运行。这可能会让你惊醒。
+- en: up in the middle of night to find that your running service is actually doing
+    nothing。 This is a maintenance nightmare。 Even if you do get your task canceled
+    you have no knowledge。 or basic you can't ensure that the callbacks if there are
+    any callbacks on it actually。 get run before you complete and run on to complete。
+    The solutions pattern is easy and， much cleaner。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 半夜醒来发现你的服务实际上毫无作为。这是一个维护噩梦。即使你取消了任务，你也没有知识，基本上无法确保回调，如果有任何回调，实际上会在你完成之前被执行。解决方案模式很简单，而且干净得多。
+- en: Like the last issue the solution is async。io。run。 It handles all the crazy boot。
+    strapping cleanup like cancellation of tasks and some basic single handling and
+    it's just。 less code and easier to read。 Now we're doing pretty much the same
+    work but we basically。 take a code routine and we do initialization and pass it
+    to async。io。run。 If that very important。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 和最后一个问题一样，解决方案是async.io.run。它处理所有疯狂的启动清理，如取消任务和一些基本的单一处理，这样代码更少，也更易读。现在我们所做的工作几乎是相同的，但我们基本上只需进行初始化并将其传递给async.io.run。如果那非常重要。
+- en: task some server that we had before if it fails the code just exits like it
+    logically， should。 And since we're talking about tasks let's look at the problem
+    of anonymous tasks。 or what I call set it and forget it。 Pattern it also applies
+    to daemon threads。 Unlike。 infomercial kitchen or tistory tasks should never be
+    created and forgotten about。 This。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 任务是我们之前拥有的某个服务器，如果它失败，代码就像逻辑上应该的那样退出。既然我们在谈论任务，让我们看看匿名任务的问题，或者我称之为设置并忘记的模式，它也适用于守护线程。与信息推广的厨房或故事任务不同，任务不应该被创建后就被遗忘。
+- en: is exactly the kind of thing that gets you page for in the morning。 Turns out
+    that something。 important happens in the do something code routine and it has
+    been printing exceptions。 all night but because we didn't do anything with the
+    task nobody noticed they just get。 printed to the standard out standard error
+    and it did nobody knows till four in the morning。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这正是让你早晨起床的原因。结果在执行某些代码例程时发生了一些重要的事情，整个晚上都在打印异常，但因为我们没有对任务采取任何措施，没人注意到它们只是打印到标准输出和标准错误，直到凌晨四点才有人知道。
+- en: until it started breaking other things。 You should have some mechanism to ensure
+    that。 your tasks when are expected when they have exceptions。 Your unit test shouldn't
+    look。 for these unhandled tasks。 The solution to this is simple use async。io。run。
+    Okay that's， a joke。 Not everything is all base and go to run。 It can't solve
+    all your problems。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 直到它开始破坏其他东西。你应该有某种机制来确保你的任务在预期时处理异常。你的单元测试不应该寻找这些未处理的任务。解决这个问题的办法很简单，使用async.io.run。好吧，这是个玩笑。并不是所有的问题都能通过运行来解决。
+- en: One possible solution is the nursery from trio。 I don't know the origins of
+    the name but we。 can generally reason about how it should work。 We don't let small
+    children just wander。 around unattended and we put them in a nursery so that we
+    can watch over them and take care。 of them in case something bad happens。 Now
+    don't get the idea of killing all the other。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一种可能的解决方案是来自trio的保育所。我不知道这个名字的起源，但我们可以大致推测它应该如何运作。我们不会让小孩无人看管地到处游荡，我们把他们放在保育所，这样我们就能照看他们，万一发生不好的事情可以及时处理。现在不要有杀掉其他人的想法。
+- en: kids when one kid has an issue that kind of gets dark and it mirrors the disturbing
+    terminology。 we use and we talk about the POSIX process model about killing children
+    when their parents。 die and sometimes there's zombies involved。 To get back on
+    track the gist of this idea。 is you have the failure domain of tasks。 If a task
+    in the nursery dies for whatever reason。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 孩子们，一个孩子有问题时，这有点黑暗，它反映了我们使用的令人不安的术语，我们谈论POSIX进程模型时关于在父母去世时杀死孩子的情况，有时还涉及僵尸。回到正轨，这个想法的要点是你有任务的失败域。如果保育所中的任务因为某种原因而失败。
+- en: the other tasks are canceled。 An application wide feature domain is useful for
+    important。 tasks that for your service that if they failed for whatever reason
+    would be really bad。 You。 can get this functionality in async。io using the A。O。
+    nursery or the later package from， PyPI。 The later calls them watchers they basically
+    have the same goal。 So you might。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其他任务被取消。一个应用程序广域特征域对你服务中的重要任务很有用，如果由于某种原因它们失败，那会非常糟糕。你可以在async.io中使用A.O.保育所或来自PyPI的later包来获得此功能。后者称之为监视者，它们的目标基本相同。所以你可能会。
+- en: ask well I don't care if the task fails it's best effort。 I'm logging or doing
+    something， like that。 So sure if it fails every once in a while maybe that's fine
+    but what if it。 started failing every time you called it。 Is that still best effort？
+    You should have some。 mechanism to ensure that not all these best effort activities
+    fail。 Maybe set some kind。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 问道，我不在乎任务失败，它是尽力而为。我在记录日志或做其他事情。所以当然，如果偶尔失败也许没关系，但如果每次调用它时都开始失败，那还算尽力而为吗？你应该有某种机制来确保这些尽力而为的活动不会全部失败。也许设置某种。
+- en: of SLA like if you start failing a certain percentage per hour maybe you should
+    do something。 about it or go ahead and set your alarm for 3 a。m。 so I can call
+    you。 You might say that。 you're just using tasks for this abomination。 So this
+    is something example I've seen in。 talks and I've seen this online is we have
+    this bound queue and we're putting an item。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据服务水平协议，如果每小时的失败百分比超过某个阈值，也许你应该采取行动，或者干脆设置一个凌晨 3 点的闹钟，以便我可以打电话给你。你可能会说，你只是在为这种可憎的事情使用任务。这里有一个我在演讲中和网上看到的例子，我们有这个有限制的队列，并且我们正在放置一个项目。
+- en: on it and they're like oh I don't want to get blocked so I'm going to put that
+    in a， task。 So what this pattern I've seen this pattern talked about like what
+    the hell are。 you actually doing because this is so much more performant just
+    having an unbound queue。 and using put no wait like think would you rather unbound
+    memory growth potential or unbound。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们会说：“哦，我不想被阻塞，所以我会把它放在一个任务中。”所以我看到的这个模式，我对这个模式感到困惑，你到底在做什么，因为仅仅使用一个无限制的队列并使用“放入无等待”要高效得多。想想看，你宁愿选择无限制的内存增长潜力，还是之前谈论过的循环，这有着所有相同的问题而且很奇怪。
+- en: memory growth potential and slow hell slow ass event loop cycling through an
+    unbound list。 of tasks which has an effect become a second queue which if you
+    know anything about queuing。 theory you don't do secondary queues but one thing
+    that is but this one secondary queue。 is way more expensive than the original
+    queue because the bigger it gets the slower your。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内存增长潜力和缓慢的事件循环在遍历一个无限制的任务列表时，导致的影响变成了第二个队列。如果你了解排队理论，你就知道不应该使用二级队列，但这一点是，这个二级队列的成本远高于原始队列，因为它变得越大，你的性能越慢。
+- en: event loop gets because your event loop has to cycle through all the tasks to
+    check them。 if they're ready。 So if you're going to do something this then just
+    use an unbounded。 queue or use the put no wait but if you're going to use a bounded
+    queue use it for what。 it's supposed to be for it's supposed to be for flow control
+    so you can get back pressure。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事件循环必须循环遍历所有任务以检查它们是否准备就绪。因此，如果你打算这样做，那就使用一个无限制的队列，或者使用“放入无等待”，但如果你打算使用有限制的队列，就要用它的真正用途，它应该用于流量控制，以便你能够获得背压。
+- en: you can know that the queue that we're working on is filling up maybe I should
+    report to the。 user that we're overloaded。 Let's move on。 So calling corout coroutines
+    from a knit people。 always seem to want to get the situation like I got a call
+    this this coroutine for my， net method。 I see code like this and I personally
+    think do you hate me like are you doing this。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以知道我们正在处理的队列正在填满，也许我应该向用户报告我们超负荷了。让我们继续。因此，从编织方法调用协程的人，总是想要处理这种情况，像我必须为我的编织方法调用这个协程。我看到这样的代码，我个人认为你讨厌我吗？你在这样做吗？
+- en: on purpose like so by doing this in a net you have barred me from using async。io
+    run which。 according to this talk you'll know is my favorite thing in the world
+    which you should。 be using by the way since it creates its own event loop that
+    anything you produce or。 start here is in a different event loop。 Some people
+    use that nasty magic nested event。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 故意如此，因此通过在编织方法中这样做，你使我无法使用异步 I/O 运行，正如本次演讲所述，你会知道这是我最喜欢的事情，顺便说一下，你应该使用它，因为它创建了自己的事件循环，你在这里生成或启动的任何内容都在一个不同的事件循环中。有些人使用那种讨厌的嵌套事件魔法。
+- en: loop that we had we talked about before and it has all the same problems and
+    it's weird。 or they create anonymous tasks which we just got finished talking
+    about。 The problem with。 these patterns is you're doing some kind of async activity
+    in a place that was not designed。 and is ill suited for that task like when what
+    are we really trying to do here like。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者他们创建匿名任务，我们刚刚讨论完这些。这个模式的问题是你在一个不适合的地方进行某种异步活动，这个地方并不是为此任务设计的。那么我们到底想要做什么呢？
+- en: any I/O inside of a knit method is bad design good a knit method should not
+    block or affect。 any state outside themselves。 So don't do this you don't need
+    it there are better alternatives。 the solution is the async context manager it
+    to initialize any async state of an object。 by using an async context manager
+    you have a method that is well suited for initializing。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在编织方法中进行任何 I/O 操作都是糟糕的设计，编织方法不应阻塞或影响其外部状态。因此，不要这样做，你不需要这样，还有更好的替代方案。解决方案是异步上下文管理器，用于初始化对象的任何异步状态。通过使用异步上下文管理器，你可以得到一个适合初始化的方法。
+- en: async stuff and as a added bonus you have a well suited method for cleaning
+    and cancelling。 your async stuff because they're coroutines that's what they're
+    made for。 And on the。 subject of using context managers I've seen code like this
+    to like you get a random package。 somebody's download and pipe you want you to
+    help them get it running and you have to。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 异步的内容，作为额外的好处，你有一个适合清理和取消异步内容的方法，因为它们是协程，这就是它们的用途。关于使用上下文管理器，我见过这样的代码，你会得到一个随机包，某人下载并通过管道，你希望帮助他们运行，而你必须。
+- en: go read through their docs and you have to find what they decided to name this
+    method。 that you have to run for it to work。 Well there's no conventions this
+    method can be named。 anything here it's like oh let me go read your docs again
+    so I can see what this is called。 but then you sometimes have to worry about cleanup
+    and you have to go find out what that's。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 去查阅他们的文档，你得找到他们决定为这个方法命名的内容，你必须运行它才能使其工作。好吧，这里没有约定，这个方法可以被命名为任何东西，这就像哦，让我再去看看你的文档，看看它叫什么，但有时你还得担心清理，并且你得找出那是什么。
+- en: called though with an async context manager there's a better pattern it's the
+    same amount。 of work except that the the maintainer of the better async web server
+    can do it for you。 this pattern is less error prone it uses less of your own headspace
+    to keep track of。 the API is defined by a PEP which means it's well defined in
+    part of the language you learn。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过异步上下文管理器调用，但有一个更好的模式，它的工作量是一样的，只是更好的异步Web服务器的维护者可以为你完成这项工作。这种模式出错的可能性更小，使用你自己的头脑空间的需要更少，API由PEP定义，这意味着它是良好定义并且是语言的一部分，你可以学习。
+- en: it once it never means well hopefully the async context manager and what context
+    managers。 in general are pretty awesome they they're like the perfect system for
+    writing like a。 plugin or extensions no matter what my object does everyone already
+    knows how to enter its。 context they know how to clean it up it's built into Python
+    using the with statement。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦它从未意味着好，希望异步上下文管理器和上下文管理器一般都非常棒，它们就像是编写插件或扩展的完美系统，无论我的对象做什么，大家都知道如何进入它的上下文，他们知道如何清理，这已经内置于Python中，使用`with`语句。
+- en: or in this case the async with statement so let's move to signal handling every
+    application。 needs signal handling especially async code async I'll run which
+    I love to talk about gives。 us some helpful defaults for control C and which is
+    a case again but you probably will。 need more this is essentially the signal handling
+    example in the AC go docs I've shortened it。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者在这种情况下是异步的`with`语句，所以让我们转向信号处理，每个应用程序都需要信号处理，特别是异步代码，异步我喜欢谈论的内容为控制C提供了一些有用的默认值，而这又是一个案例，但你可能会需要更多，这本质上是AC
+    go文档中的信号处理示例，我已将其简化。
+- en: not clean it up because it it likes what they were calling functions but basically
+    we have。 our main method we get the loop the running loop correct way and we set
+    the signal it we。 set the sick term the first one being control C and we add the
+    signal handlers and we do。 some partial magic so we can pass it the loop and what
+    the signal was and then in our handler。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有清理，因为它像他们所称的函数，但基本上我们有我们的主要方法，我们获取循环，以正确的方式运行循环，我们设置信号，我们设置终止信号，第一个是控制C，我们添加信号处理程序，然后我们做一些部分魔法，以便我们可以传递循环和信号是什么，然后在我们的处理程序中。
+- en: we print that we got the signal that we're exiting and then we do a loop dot
+    stop this。 is straight from the docs like what to do when you want to handle this
+    is terrible this practice。 of handling shut down of an application this is this
+    it's like the act adding signal handlers。 that's a good part that's like actually
+    useful but what we do with the signals of the problem。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们打印出我们得到了信号，我们正在退出，然后我们执行循环停止。这是来自文档的内容，像是处理这一过程时要做的事情，这种处理应用程序关闭的实践很糟糕，这就像添加信号处理程序。这部分是好的，实际上是有用的，但我们对信号的处理才是问题所在。
+- en: we just called stop and if you do call loop stop your application will raise
+    a runtime。 error to be raised wherever you happen to run the loop because we all
+    know that your application。 should explode with unhandled exceptions when you
+    handle a signal and everything goes as。 expected the the exception lets you know
+    it's working okay nobody thinks like that if you。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们称之为停止，如果你确实调用了循环停止，你的应用程序将在你运行循环的任何地方引发运行时错误，因为我们都知道你的应用程序应该在处理信号时因未处理的异常而崩溃，所有事情如预期那样进行，这个异常让你知道它正常工作，没人在这样想。
+- en: tell me that you're just going to catch that exception I'll be paging you tomorrow
+    at 3。25， a。m。 if you're not using AC go run then you need to start the loop again
+    to handle cleanup。 by yourself we saw that in the boots trapping example and if
+    you are using AC go run you。 better be okay with all the tasks being canceled
+    at pretty much the same time and there's a。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 告诉我你只是要捕获那个异常，明天凌晨3:25我会给你发消息。如果你不使用 `AC go run`，那么你需要自己重新启动循环来处理清理。我们在引导陷阱示例中看到了这一点，如果你使用
+    `AC go run`，你最好能接受所有任务几乎同时被取消。
+- en: good chance that you will care like what if you have a async web server will
+    say that。 runs a status page of your application and when it's shutting down you
+    would like to。 update the status page you can you can know that the process is
+    still going and shutting。 down and know what it's doing well it because some of
+    your tasks might take a little while。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你很可能会关心，如果你有一个异步网络服务器，它会显示你的应用程序的状态页面，当它关闭时你希望更新状态页面，你可以知道这个过程仍在进行中并且正在关闭，并了解它在做什么，因为你的一些任务可能需要一点时间。
+- en: to shut down and maybe they can update on this page well if you use loop dot
+    stop your web。 server will probably be the first thing to get canceled and you're
+    still going to have。 to wait for your other tasks to finish one solution is that
+    you could instead cancel。 a task this task might be what you're primarily concerned
+    with this your shutdown logic could。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关闭时，可能它们可以在这个页面上更新。如果你使用 `loop.stop`，你的网络服务器可能是第一个被取消的事情，而你仍然需要等待其他任务完成，一个解决方案是你可以取消一个任务，这个任务可能是你主要关心的，你的关闭逻辑可以。
+- en: be just handled in cancellation flow you could combine this with maybe a later
+    watcher or a。 task nursery later watcher has a method you can call on the watcher
+    to cancel all the。 tasks and fall through the context that's what I use in my
+    method for terminating my applications。 from signal handlers if you and I do that
+    from the non-signal things if you combine。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只需在取消流程中处理它，你可以将其与稍后的观察者或任务托儿所结合起来，稍后的观察者有一个方法，你可以在观察者上调用来取消所有任务并通过上下文。这就是我在处理信号处理程序时终止我的应用程序的方法，如果你和我一起这样做，而不是从信号中处理。
+- en: this with an async context manager and exit stack you have this like subscribeable
+    system。 that you can handle well-ordered startup and well-ordered shutdown it
+    all happens in the。 order you specify so if you want your web server to be the
+    last thing that gets canceled。 you enter its context first so all the other things
+    have to be canceled and exit and then。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与异步上下文管理器和退出栈结合使用，你有这样一个可订阅的系统，可以很好地处理有序启动和有序关闭，所有这些都按照你指定的顺序发生，因此如果你希望你的网络服务器是最后一个被取消的，你首先进入它的上下文，这样所有其他事情都必须被取消和退出，然后。
+- en: your web server shut down shut down logic and signal handling logic should be
+    the same because。 most of the time how else do shut down your application but
+    sitting in a control C or。 a SIG term and even if you have some other non-signal
+    you wait shut down your application。 you probably want to do the same thing anyway
+    so just make them the same or you could use。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的网络服务器关闭逻辑和信号处理逻辑应该是相同的，因为大多数时候，除了通过按控制C或SIG终止来关闭你的应用程序，还有什么其他方法？即使你有一些非信号的等待，你也可能想以同样的方式进行关闭，所以就把它们保持一致，或者你可以使用。
+- en: an event that might be a solution your task could wait on it they can use it
+    as a looping。 flag multiple places in your code could monitor the same event it's
+    not as robust as task。 cancellation and the watcher solution with the acx stack
+    but it's better than the blast。 crater that's created with loop stop because that
+    provides zero customization about how。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事件可能是你的任务可以等待的解决方案，它们可以在你的代码中多个地方作为循环标志监控同一个事件，这并不像任务取消和观察者解决方案那么强大，但比 `loop.stop`
+    创建的爆炸坑要好，因为它对如何。
+- en: things get turned off so we talked about cancellation a few times so we should
+    probably。 go over it so let's spend the next 40 slides to quickly reduce cancellation
+    okay I'm kidding。 we're not going to do that but I'm going to go over some of
+    it cancellation is tricky。 and it's hard but it's not that hard many people screwed
+    up just by ignoring cancellation。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们谈到了取消几次，所以我们应该可能复习一下，所以让我们花接下来的40张幻灯片快速减少取消，我开玩笑的，我们不会这样做，但我会讲一些内容。取消是棘手的，难度大，但并不是那么困难，很多人只是通过忽视取消而搞砸了。
+- en: either on purpose or out of ignorance like this code above or maybe this code
+    where。 we still do the same thing but we're just catching base exception or maybe
+    this code。 where we have we're still catching cancellation error but we're just
+    very terrible about it。 because we're using naked accepts so if we go back to
+    the original the code here so what。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论是故意还是出于无知，就像上面的代码或这个代码一样，我们仍然做同样的事情，只是捕获基础异常，或者这个代码，我们仍然在捕获取消错误，但我们处理得很糟糕，因为我们使用了裸接受。所以如果我们回到这里的原始代码，那又有什么呢？
+- en: are we doing here like what were you trying to accomplish like you I see patterns
+    like。 this and the only time you should ever do something like this is if you
+    have just canceled。 a task yourself and you're awaiting for it to ensure that
+    it cancels and even then it's。 not so simple as we'll see we'll see later so people
+    generally expect to be able to cancel。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在这里做什么？你试图实现什么？我看到像这样的模式，唯一一次你应该做这样的事情是如果你刚刚自己取消了一个任务，并且你在等待它以确保它被取消，即便如此，也没有那么简单，正如我们稍后将看到的那样。所以人们普遍期望能够取消。
+- en: a task but task writers never expect their tasks to be canceled cancellation
+    is a contract。 it's not a clear one but you agree to it the moment you start running
+    async IO code I cobbled。 together what the contract looks like by just reading
+    through the documentation it's in a。 couple of different places number one in
+    a wait statement any a wait statement can raise。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是任务的编写者从来不期望他们的任务被取消，取消是一个合同。虽然它不是一个明确的合同，但你在开始运行异步 IO 代码的那一刻就同意了它。我通过阅读文档拼凑出了合同的样子，它在几个不同的地方：首先在
+    await 语句中，任何 await 语句都可以引发。
+- en: a cancel later it could be somebody canceling you it could be somebody canceling
+    tasher。 wedding or it could be both you can have me canceled more than once that's
+    a little weird。 you can catch the exception but you should never ignore it and
+    always re-raise the exception。 when you get canceled you don't have to exit right
+    now but you should move towards shutdown。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 取消，那可能是有人取消了你，也可能是有人取消了任务或两个都发生了。你可以被取消多次，这有点奇怪。你可以捕获这个异常，但你永远不应该忽略它，总是重新引发异常。当你被取消时，你不必立即退出，但你应该朝着关闭的方向移动。
+- en: like async IO run expects that all tasks will eventually cancel because it attempts
+    to do。 just that before it returns and as for the documentation the canceled error
+    exception。 can be caught to perform custom operations when async tasks are canceled
+    in almost all。 situations that exception must be re-raised well but what about
+    the other ones where you。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 比如，异步 IO 运行期望所有任务最终会被取消，因为它试图在返回之前做到这一点。至于文档，取消错误异常可以被捕获，以在几乎所有情况中执行自定义操作，当异步任务被取消时，这个异常必须重新引发。好吧，但其他情况呢？
+- en: don't have to re-raise it well I guess nobody knows I won't figure that out
+    later so it's。 not hard to comply with the contract when you get the exception
+    start your cleanup and。 stop accepting new work move towards exiting and then
+    raise when you're done this also。 means you have to stop catching basic exception
+    or using empty except clauses with your async。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你不必重新引发它。好吧，我想没人知道，我会在后面搞清楚的。所以，当你遇到异常时，遵守合同并不困难，开始清理，停止接受新工作，朝着退出的方向移动，然后在完成后引发。这也意味着你必须停止捕获基本异常或在你的异步任务中使用空的
+    except 子句。
+- en: IO code unless you're being very careful to check that what you did catch was
+    not a。 cancel error because it is a cancer you have to re-raise it in most cases
+    and the other。 side of cancellation is easy right you want to cancel a task you
+    just called canceled。 wrong that task isn't actually canceled yet it's scheduled
+    to be canceled the next time。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: IO 代码，除非你非常小心地检查你捕获的内容是否不是取消错误，因为这是一个癌症，你必须在大多数情况下重新引发它，而取消的另一面是简单的，对吧？你想取消一个任务，只需调用取消。错误在于这个任务实际上还没有被取消，它被安排在下一个时间点取消。
+- en: you await something yet I see people canceling things and expecting that this
+    is what this。 happens for this reason I have long held the opinion that cancel
+    should return on a waitable。 so canceling things correctly is not too hard you
+    could we you can cancel on a task。 but it's didn't actually cancel to the next
+    event loop cycle if the task has never been。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你等待某些东西，我看到人们取消事情并期望这就是发生的原因。出于这个原因，我长期以来一直认为取消应该返回一个可等待的对象。因此，正确地取消事情并不太难，你可以在任务上取消，但它实际上并没有在下一个事件循环周期取消，如果任务从未被。
+- en: run then it's canceled without ever the coaching coaching ever being started
+    but if the task。 is already running the next cycle the loop will cause a cancel
+    error to be erased whatever。 a wait statement it's currently paused at and this
+    affects all the things that are that。 it's awaiting on as well so it goes all
+    the way down the chain unless it's shielded and。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行时，它会被取消，而教练从未开始。但如果任务已经在运行，下一个循环将导致取消错误被抛出，无论当前暂停在什么等待语句上。这影响到所有正在等待的事情，因此它会一直沿着链传播，除非被保护。
+- en: starts and throws into cancel error even when task even then a task is not considered
+    canceled。 until it re-rases the cancel error the doc seemed to say it should be
+    the same cancel。 error so we do this in the coroutine above we cancel the task
+    and then we wait on it and。 catching the exception error or the cancel exception
+    because we know it's going to happen。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦开始，就会抛出取消错误，即使任务并没有被认为是取消的，直到它重新抛出取消错误。文档似乎表示它应该是相同的取消错误，所以我们在上面的协程中这样做，我们取消任务，然后等待，并捕获异常错误或取消异常，因为我们知道这会发生。
+- en: but we don't want to raise it because we're purposely canceling something but
+    what if。 the task takes a long time to cancel and someone has come from above
+    you and attempted to cancel。 you while you're waiting on the task to finish but
+    you're supposed to re-raise the cancel。 you've got but we're suppressing it so
+    maybe it's not as easy as I've let on so I've come。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们不想提高这个，因为我们故意在取消某些东西，但如果任务取消的时间很长，有人从上面来试图在你等待任务完成时取消你，而你应该重新提出取消。你有，但是我们在抑制它，所以这可能并不像我所说的那么简单。
+- en: up with this monstrosity so you can see that what we're doing is we're trying
+    to prevent。 ourselves from being canceled until the task we were trying to cancel
+    has finished canceling。 that's a mouthful so we check that the task was canceled
+    every time we catch the cancel。 error and if we catch one and the task is not
+    done we save that exception to raise later。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后得到这个怪物，所以你可以看到我们正在尝试防止自己被取消，直到我们试图取消的任务完成取消。这话说得有点长，所以每次我们捕获取消错误时都会检查任务是否已被取消。如果捕获到一个，而任务尚未完成，我们会保存那个异常以便稍后抛出。
+- en: to complete our part of the cancellation contract we also cycle the event loop
+    after the task。 cancel so we give a chance for the callbacks to get a chance to
+    run you may notice we also。 use shield so this is where we this is when we are
+    canceled we can prevent that the task。 that we have already sent a canceled message
+    to from getting a secondary cancel while we。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了完成我们的取消合同，我们还会在任务取消后循环事件循环，以便给回调机会运行。你可能会注意到我们还使用了保护，这就是我们在被取消时可以防止已经发送取消消息的任务再次被取消的地方。
+- en: are waiting it yeah you could do all this every time you wanted to cancel something
+    or you。 could do something like later。cancel from the later package and papi and
+    I would push out。 a new release sometime tonight to update with this new extended
+    behavior but let's move on。 so you need timeouts you you should use timeouts in
+    your application because in the world world。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是的，你可以每次想要取消某些东西时都这样做，或者你可以做一些像 later.cancel 的事情来自 later 包。Papi 和我今晚会推出一个新版本，以更新这个新扩展的行为，但让我们继续。因此，你需要超时，你应该在你的应用程序中使用超时，因为在现实世界中。
+- en: things get stuck now you may tell me that you have never used timeouts and you
+    don't。 have any issues I call you a liar but no so what are the chances that an
+    async call won't。 complete the expected time well in your dev environment at zero
+    look we've all heard the。 lament hey it worked in my dev server everything works
+    on your dev server because that's where。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事情会卡住。现在你可能告诉我你从未使用过超时，也没有任何问题，我会称你为说谎者，但不是。那么异步调用在预期时间内不会完成的几率有多大呢？在你的开发环境中，几乎是零。我们都听过这样的感叹：嘿，它在我的开发服务器上工作，所有东西都在你的开发服务器上工作，因为那是你在等待的地方。
+- en: you stuff but in production is a little different everybody's experiences things
+    don't always。 behave expected the first time you run in production but what you
+    you may not know is。 that running something in production makes your service actively
+    hate you not not people。 in general just you so during standard business hours
+    it seems to change based on whether。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的一些事情在生产中略有不同，大家的经验是事情并不总是按预期进行。当你在生产环境中第一次运行时，可能你不知道的是，在生产中运行某些东西会让你的服务主动讨厌你，而不是一般的人。所以在标准营业时间，这似乎会根据情况而变化。
+- en: or not you were at your desk it fails more more the moment you step away from
+    your desk。 and because even more unstable the moment you're out eating lunch with
+    your friends and I'm。 not sure exactly how this one happens but it does things
+    also fail more often during。 weekends then they do on weekdays things never seem
+    to fail when you're actually working there。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论你是否在桌子旁边，它的失败几率会增加，尤其是在你和朋友外出吃午餐时。我不太确定这种情况是如何发生的，但确实如此。事情在周末更容易失败，而在工作日时似乎并不常见。当你真的在工作时，事情似乎从未失败。
+- en: are some obvious modifiers that have been observed on holidays when you're sleeping
+    when。 you don't have access to your laptop things fail more often and then later
+    the later the。 night gets the more things fail so if it's if you're sleeping at
+    5 a。m。 while having forgot。 up at work on a holiday that's a hundred and ten percent
+    wait that's over a hundred。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在假期、睡觉或无法访问笔记本电脑时，一些明显的修饰符已经被观察到。事情更容易失败，且晚上越晚，失败的情况越多。因此，如果你在假期的早上五点睡觉，忘记了工作，这就相当于超过了百分之一百。
+- en: percent Jason you're not doing probability correctly well at that point your
+    service。 has broken all the rules of probability and is going after all the other
+    services in。 your infrastructure for sport if you sleep until ten that's a site
+    wide incident and then。 you were somehow taking down random pieces of the internet
+    and your CEO is calling you。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 杰森，你的概率计算不正确。那么此时你的服务已经违反了所有概率规则，并且正在“攻击”你基础设施中的其他服务。如果你睡到十点，那就是全站故障，随后你可能会让互联网的随机部分瘫痪，而你的CEO正在给你打电话。
+- en: because they have to release a press release okay I've made all that up but
+    the idea is。 that your service is going to fail at certain times you may think
+    it's directly related。 to you because it will just fall on its face at random
+    times timeouts are kind of a way。 to keep things in check when you're not there
+    to manually intervene or to interrupt it when。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 任务可能会失败，或者有时它们必须发布新闻稿。好吧，我编造了这些，但要点是你的服务会在某些时刻失败。你可能会认为这与你直接相关，因为它会在随机时刻崩溃。超时是一种确保事情在你不在时仍然保持正常的方式，防止手动干预或中断。
+- en: it gets stuck so look things fail prepare for it sometimes things don't raise
+    exceptions。 when they will never complete they might raise an exception eventually
+    but that could be on。 geologic timescales not human ones this is why we have timeouts
+    and software you have。 a few choices there's wait and wait for but neither are
+    as elegant as the async timeout。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它会卡住，所以要做好失败的准备。有时事情不会抛出异常，即使它们永远无法完成。它们可能最终会引发异常，但这可能发生在地质时间尺度上，而不是人类时间尺度上。这就是为什么我们在软件中使用超时的原因。你有几种选择，等待或继续等待，但都没有异步超时优雅。
+- en: package from pipeline things inside the timeout context get canceled if they
+    run too long and。 outside the context gets gets raised a timeout error when you
+    are waiting for something that。 could be delayed consider adding timeouts around
+    the code when you don't want to have。 to be welcome to build a night figure out
+    why your service is doing nothing at all in our。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在超时上下文中，管道中的包会被取消，如果它们运行时间过长。超出上下文时，当你在等待可能会延迟的事情时，会引发超时错误。考虑在不想被干扰的代码周围添加超时。
+- en: example above we are using nested timeouts because the request timeout we want
+    should we。 should plan to retry them when they timeout and how long we should
+    attempt to retry them。 that's a case of a budget we've set like a hundred milliseconds
+    so that we that they。 should only ever take a hundred milliseconds total if they
+    have to keep retrying so look。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在上面的例子中，我们使用了嵌套超时，因为我们希望请求的超时。我们应该计划在超时时重新尝试它们，以及我们应该尝试重新尝试的时长。这是我们设定的预算，比如一百毫秒，这样它们在必须不断重试时总共只应该花费一百毫秒。
+- en: shit happens try to make the best of it async o can be a powerful tool but used
+    poorly will。 cause you lots of pain so let's wrap up this talk so inclusion never
+    assume intent or violate。 ownership expectations never nested event loops is a
+    bad idea if you want logical startup。 and shut down use async o context managers
+    in async exit stacks tasks fail or sometimes。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 发生事情时，尽量从中寻找最佳解决方案。异步操作（async）可以是一个强大的工具，但使用不当会给你带来很多痛苦。因此，让我们总结一下这次讨论：绝不要假设意图或违反所有权期望。嵌套事件循环是个坏主意，如果你想实现逻辑的启动和关闭，使用异步上下文管理器。
+- en: ever complete use timeouts and handle your exceptions and I've had people tell
+    me that。 cancellation is too hard look it's not that hard and it's not that painful
+    set up it's。 definitely better than being paged in the middle of a cold night
+    while you're sleeping， uh。 i suggest asic are run because the best bootstrap we
+    have even though it raises exceptions。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完全使用超时并处理你的异常，我听到过人们告诉我取消操作太难了。看，这并没有那么难，也没有那么痛苦，设置起来绝对比在寒冷的夜里睡觉时被呼叫要好得多，呃。我建议ASIC运行，因为这是我们拥有的最佳引导方式，尽管它会引发异常。
+- en: it's awesome because i'd rather know that you're attempting to run an event
+    loop that。 i can easily put an excuse without having to worry about threads getting
+    default event。 loops um that's it thank you for coming to my ten talk any questions
+    will be a questions。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这太棒了，因为我更想知道你正在尝试运行事件循环。我可以轻松地找借口，而不必担心线程获取默认事件循环。嗯，就是这样，谢谢你们来我的十分钟演讲，有什么问题欢迎提问。
+- en: '![](img/df6885c898ea62de8ffd925cf05e68b3_4.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/df6885c898ea62de8ffd925cf05e68b3_4.png)'
+- en: will be out in the hallway， (applause)。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 会在走廊里，(掌声)。

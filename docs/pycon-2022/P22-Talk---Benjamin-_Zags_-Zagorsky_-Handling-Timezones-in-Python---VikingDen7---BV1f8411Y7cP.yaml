@@ -1,0 +1,734 @@
+- en: P22：Talk - Benjamin _Zags_ Zagorsky_ Handling Timezones in Python - VikingDen7
+    - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P22：演讲 - 本杰明 _扎戈斯基_ 处理Python中的时区 - VikingDen7 - BV1f8411Y7cP
+- en: And， you know， we do， you know， front end， through back end， databases， integrations，
+    all。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且，你知道，我们做前端，也做后端、数据库、集成等等。
+- en: '![](img/da32327101e4d6f29aad8f16815471db_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/da32327101e4d6f29aad8f16815471db_1.png)'
+- en: that stuff。 The reason I'm giving this talk， well， there's two。 First。 a primary
+    back end language is Python。 We do a lot of work in Python and particular Python
+    Django。 So I've seen a lot of Python used in different contexts in a lot of different
+    industries。 And the second， one of the joys of doing software consulting is I
+    get to see the same problems。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些问题。给这次演讲的原因有两个。首先，我们的主要后端语言是Python。我们在Python和特别的Python Django方面做了很多工作。因此，我在许多不同的行业中看到很多Python的使用。其次，做软件咨询的乐趣之一是我可以看到相同的问题。
+- en: over and over again in a number of different contexts and come up with solutions
+    that work。 across all of them。 And I will tell you one of the problems that comes
+    up over and over again is time zones。 So that's why I'm giving this talk。 Why
+    are you here？ Let's start with a seemingly simple question。 What is today's date？
+    If you look at your phone， it will tell you that correctly here is today's date
+    of the。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一遍又一遍地在多个不同的环境中寻找解决方案，并在所有这些环境中都能奏效。我会告诉你一个反复出现的问题，那就是时区。所以这就是我为什么要进行这次演讲。你为什么在这里？让我们从一个看似简单的问题开始。今天的日期是什么？如果你查看手机，它会告诉你今天的确切日期。
+- en: 29th。 But if you ask somebody in Tokyo， right now， they will tell you correctly
+    that today's。 date is the 30th。 So already， with some seemingly simple question。
+    we've uncovered something incredibly complicated。 And that complicated thing is
+    that whenever you are working with dates or times。 you are， working with time
+    zones。 Whether you think you are or not， and if you don't think you are。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 29号。但如果你现在问东京的人，他们会正确地告诉你今天的日期是30号。所以，已经通过这个看似简单的问题，我们揭示了一个极其复杂的事情。而这个复杂的事情是，无论你是否认为自己在处理日期或时间，你都在处理时区。
+- en: oh， you're in trouble。 That's how you get time zone bugs。 So I'm here to tell
+    you how to think about time zones and avoid those nasty time zone， bugs。 Now。
+    there might be some of you in the audience thinking， OK， but what if all my users
+    are in。 one time zone？ I don't care。 But you still care because time zones aren't
+    just about users being in multiple different。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 哦，你遇到麻烦了。这就是时区错误的产生方式。所以我在这里告诉你如何思考时区并避免那些麻烦的时区错误。现在，观众中可能有些人会想，好的，但如果我的所有用户都在一个时区呢？我不在乎。但你仍然需要在意，因为时区不仅仅涉及用户位于多个不同的地方。
+- en: time zones。 It's also about the rules of how time behaves in a time zone。 things
+    like daylight savings， time。 And even if the Sunshine Protection Act currently
+    up for consideration by Congress。 which will， end daylight savings time by making
+    it permanent， it's a little weird。 Even if that passes， as software engineers，
+    we are cursed with daylight savings time forever。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 时区。这也涉及到时区中时间的运作规则，比如夏令时和时间。即使目前国会正在考虑的阳光保护法案，通过后将永久取消夏令时，这有点奇怪。即使通过了，作为软件工程师，我们注定要永远面临夏令时的问题。
+- en: because of historic time stamps-- oh， yeah， and Europe still exists。 They still
+    do daylight savings time， even if we stop。 So having correct time zone support
+    also gives you daylight saving time support， all。 these other weird temporal anomalies。
+    All of that is bundled into this umbrella of time zones。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于历史时间戳的原因——哦，对了，欧洲仍然存在。即使我们停止，他们仍然会执行夏令时。因此，拥有正确的时区支持也意味着支持夏令时，以及所有这些其他奇怪的时间异常。所有这些都包含在时区的这个伞下。
+- en: And you want to have that in your code base from the start so that when you
+    do have to。 deal with historic time stamps， or you do start having users in other
+    time zones， or。 daylight savings time happens， which it does， you don't get burned。
+    This is also the time for this talk。 It's the time because Python is changing
+    or already has changed。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你希望从一开始就将这些考虑到你的代码库中，这样当你处理历史时间戳，或开始有用户在其他时区，或者夏令时发生时（确实会发生），你就不会被烧到。这也是这次演讲的时间。因为Python正在变化或已经改变。
+- en: Python 3。9， Python finally has standard library support for all time zones。
+    Before that。 it had support for one UTC。 Now with Python 3。9， the zone info module
+    adds support for all time zones。 and the community， is shifting。 Django， for example。
+    in Django 4 is replacing PyTZ with zone info as the default time zone， provider。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python 3.9终于为所有时区提供了标准库支持。在此之前，它只支持一个UTC。现在，Python 3.9的zone info模块增加了对所有时区的支持，社区也在逐渐转变。例如，在Django
+    4中，Django将PyTZ替换为zone info作为默认时区提供者。
+- en: And if you're using PyTZ， you should make that same change。 I'll tell you why
+    in a bit。 So here's what we're going to go through。 First， what not to do。 As
+    I go through that， think。 do I do this anyway， code base， make notes。 Then， we're
+    going to talk about what to do high level。 how to think about time zones well。
+    And then we're going to get low level。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你使用的是PyTZ，你也应该做同样的更改。我稍后会告诉你为什么。所以我们将讨论的内容是：首先，什么是不该做的。在我讨论的过程中，思考一下我是否在代码库中这样做，做好记录。然后，我们将讨论如何从高层次考虑时区。最后，我们将深入讨论。
+- en: We're going to actually get into code recipes for how to handle the common problems
+    that。 show up when working with time zones， those things that show up again and
+    again in every， industry。 And then we'll take a few minutes to the end。 Anyone
+    using Django。 Django's got some extra utils for handling time zones that I'll
+    run， you through。 So what not to do？
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将实际进入如何处理常见时区问题的代码示例，这些问题在每个行业中反复出现。然后我们会花几分钟时间讨论Django。Django有一些额外的工具来处理时区，我会向你讲解。那么，什么是不该做的呢？
+- en: The language in this section is going to be intentionally extreme。 The reason
+    I'm going to be extreme is not to say never do these， but because these are。 all
+    things that don't do what the average developer expects。 And so if you do them。
+    not only should you know what you're doing， but you should comment。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本节的语言将故意极端。我要极端的原因并不是说永远不要这样做，而是因为这些都是**平均开发者**不期望的事情。因此，如果你这样做，不仅要知道自己在做什么，还应该加上注释。
+- en: your code so that the next person knows what you did and doesn't copy the stuff
+    you did。 in the wrong context and introduce time zone bugs。 So number one， don't
+    use naive date times。 Ever。 What is a naive day time？ A day time in Python is
+    a seven tuple， your month day， hour， minute。 second， and then it， has an optional
+    TZ info attribute for time zone information。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确保你的代码能够让下一个人知道你做了什么，避免在错误的上下文中复制你的代码，从而引入时区错误。因此，第一，不要使用天真的日期时间。什么是天真的白天时间？在Python中，白天时间是一个七元组，包括月、日、小时、分钟、秒，然后它有一个可选的TZ
+    info属性用于时区信息。
+- en: Now it's optional because， well， as I just said， Python didn't have full time
+    zone support， until 3。9， so it couldn't exactly require you to pass time zone
+    information in。 But that leaves us in a really nasty situation where the default
+    way to construct a daytime。 is without time zone information and that's not what
+    you want。 And a where daytime。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在这是可选的，因为，如我所说，Python在3.9之前并没有完整的时区支持，所以它不能要求你传入时区信息。但这使我们陷入一个很棘手的境地，即构造白天时间的默认方式是不带时区信息的，而这正是你不想要的。
+- en: one that has time zone information， represents what you think a daytime， represents。
+    which is an actual point in time past， present， or future。 A naive day time on
+    the other hand represents the idea of a time， a template， if you will。 This naive
+    day time represents the idea of noon on New Year's Day 2022。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个包含时区信息的时间表示了你认为的**白天**，它表示了一个实际的时间点——过去、现在或未来。另一方面，一个天真的白天时间表示的是一种时间的概念，可以理解为一种模板。这个天真的白天时间表示的是2022年元旦的正午。
+- en: And that actually represents dozens of different points in time。 A full 26 hours
+    of ambiguity are represented by that naive day time。 Time zones range from UTC
+    minus 12 to plus 14。 So if you're constructing a daytime and what you are trying
+    to represent is a point in time。 which is probably what you're doing if you're
+    constructing a daytime， please attach a time。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这实际上代表了多个不同的时间点。这个天真的白天时间所代表的是足足26小时的模糊性。时区从UTC-12到UTC+14。因此，如果你正在构造一个白天时间，并且你试图表示的是一个时间点，如果你正在构造一个白天时间，请务必附上时区。
+- en: zone to it。 You'll regret it if you don't。 Now that's simple， but what about
+    libraries？
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 否则你会后悔的。这很简单，但库呢？
+- en: I assume you use them。 There's a whole bunch of libraries。 I'm not going to
+    cover all of them。 but what I am going to cover is the two biggest perils， in
+    the Python standard library。 Date time now。 If you call date time now in your
+    code with no arguments， you have time zone books。 The reason is two-fold。 Date
+    time now does not attach a time zone。 It gives you a naive day time。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我假设你在使用它们。有很多库。我不会覆盖所有的库，但我将覆盖Python标准库中的两个最大隐患。日期时间现在。如果你在代码中调用没有参数的日期时间，现在，你就会有时区错误。原因有两个方面。日期时间现在不附加时区，它给你的是一个天真的日期时间。
+- en: so that's already bad， as I hopefully just convinced you。 And also。 the return
+    is dependent on system time。 So this means you can run the same code at the same
+    instant。 Locally and on a server get totally different results。 This is unintentional。
+    non-deterministic behavior。 That is a very bad feature or a very bad bug to have
+    in your code。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这已经很糟糕了，正如我希望让你相信的那样。而且，返回值依赖于系统时间。这意味着你可以在同一时刻本地和服务器上运行相同的代码，得到完全不同的结果。这是意外的非确定性行为。在你的代码中，这是一个非常糟糕的特性或错误。
+- en: really an anti-feature。 And it's a particularly pernicious kind of bug because
+    it's one that doesn't show up。 in local testing。 You run your code locally。 It's
+    perfect。 You push it to the server。 Everything's ruined。 Now you might think，
+    OK， I'll use daytime UTC now， right？
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这真是一个反特性。这是一种特别恶性的错误，因为它在本地测试中不会出现。你在本地运行代码，完美无缺。你推送到服务器，一切都毁了。现在你可能会想，好吧，我现在用白天的UTC时间，对吧？
+- en: UTC fixes a lot of problems。 Now at least we've solved the problem of we don't
+    get different results in different。 time zones。 We see now， again， as part of
+    the history。 that function is old enough that it returns a naive， day time。 So
+    you know it was UTC when you constructed it。 But as soon as you go hand it to
+    somebody else。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: UTC解决了很多问题。现在至少我们解决了在不同时间区不产生不同结果的问题。我们再次看到，作为历史的一部分，这个函数足够老，以至于返回的是天真的日期时间。所以你知道它在构造时是UTC的。但一旦你将其交给其他人。
+- en: you put it in a database or you convert， it to an ISO string and send it through
+    an API。 you have lost the time zone information， and instead handed them 26 hours
+    of ambiguity。 So don't use naive day times。 That's the big takeaway here。 Next
+    up。 don't use dates without a time zone。 Now hopefully there is at least someone
+    in the audience thinking。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你将其放入数据库或将其转换为ISO字符串并通过API发送，你就失去了时区信息，反而交给了它们26小时的模糊性。所以不要使用天真的日期时间。这是这里的主要结论。接下来，不要使用没有时区的日期。现在希望至少在观众中有一个人这样想。
+- en: but ZAGs， dates don't， have time zones。 There's no TZ info attribute on dates
+    and you would be technically correct but have missed。 the bigger picture。 If what
+    a date represents in your code is an actual 24-hour interval past。 present， or，
+    future， you're talking about actual points on the timeline and you need to have
+    a time。 zone。 You need to have a time zone in mind that you're constructing that
+    date in or else you're。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但日期没有时区。日期上没有时区信息属性，你从技术上讲是正确的，但忽略了更大的图景。如果你代码中的日期表示的是过去、现在或未来的实际24小时区间，那么你是在谈论时间线上的实际点，你需要考虑时区。你需要构建日期时考虑的时区，否则你将。
+- en: going to be getting the wrong date in some cases。 So for example， if you call
+    date。today。 you have time zone bugs。 The reason that date。today is nasty is what
+    it does。 It takes the current system time， pulls out the date。 And so you can
+    run the same code at the same instant locally and on a server and get results。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在某些情况下得到错误的日期。例如，如果你调用`date.today`，你就会有时区错误。`date.today`之所以麻烦，是因为它所做的事情。它获取当前系统时间，提取出日期。因此，你可以在同一时刻本地和服务器上运行相同的代码，得到结果。
+- en: a day apart。 And this is the worst kind of bug。 Not only does this bug show
+    up。 not show up in local development， only shows up when， you push it to the server。
+    but this bug only shows up outside of business hours。 This is a bug that shows
+    up late at night for US developers or early in the morning for。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相隔一天。这是最糟糕的错误。这种错误不仅在本地开发中不会出现，只有在你推送到服务器时才会出现，而且这种错误只会在非工作时间出现。对于美国开发者来说，这个错误会在晚上很晚出现，或者在早上出现。
+- en: European developers。 And so you won't catch it。 You won't catch it in QA。 but
+    your users or your overnight jobs， they absolutely will， catch it。 If you write
+    a form validation saying， you know， the date must not be in the future and。 you
+    use date。today， that user in Tokyo who's trying to fill out the current date，
+    your。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欧洲开发者。所以你不会发现这个问题。你在 QA 中是不会发现的，但你的用户或者夜间作业绝对会发现。如果你写了一个表单验证，说明日期不能在未来，而你使用的是
+    date.today，那么试图填写当前日期的东京用户，你的。
+- en: website's broken for them。 So the solution to this is kind of in the title。
+    When you're constructing a date， if what you're talking about is an interval of
+    time。 that actually has or will happen， have a time zone in mind。 Number three。
+    don't do duration arithmetic outside of UTC。 So duration arithmetic is if we're
+    taking two date times and we're saying。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对他们来说，网站是坏的。所以解决方案大致在标题中。当你构造一个日期时，如果你谈论的是一个实际发生或将要发生的时间间隔，记得考虑时区。第三，不要在 UTC
+    以外进行持续时间算术。因此，持续时间算术是如果我们取两个日期时间并说。
+- en: well， what's， the difference in time between the two？
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，两者之间的时间差是什么？
+- en: So if we're taking one date time and saying add some number of hours to it。
+    Now this is a very specific date time that I have in this example。 130 in the
+    morning， March 13。 US Eastern， 30 minutes before daylight savings time。 This equals
+    itself converted to UTC。 That is correct。 Converting a time from one time onto
+    another。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果我们取一个日期时间，并说加上若干小时。现在这是一个非常具体的日期时间，我在这个例子中用的是 3 月 13 日凌晨 1:30，东部时间，夏令时前的
+    30 分钟。这等于将其转换为 UTC。这是正确的。将时间从一个时区转换到另一个时区。
+- en: they still fundamentally represent the same， point in time。 If we add two hours
+    to both sides。 they're no longer equal。 So for anyone， Matthew in the audience，
+    what I just said， Python does。 You can run this。 A equals B。 A plus 2 does not
+    equal B plus 2。 That should terrify you。 That should tell you this code isn't
+    doing what you expect。 And it's not。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们仍然从根本上表示同一个时间点。如果我们给两边都加上两个小时，它们就不再相等了。所以，对于在场的任何人，马修，我刚才所说的，Python 就是这样做的。你可以运行这个。A
+    等于 B。A 加 2 不等于 B 加 2。这应该让你感到恐惧。这应该告诉你这段代码并没有如你所预期的那样运行。实际上，它并没有。
+- en: When you add a time delta to a date time in Python， what Python is doing is
+    it's saying。 please take the hour hand on the clock and move it forward that much
+    and then do some。 date rollover。 And then once we're done with that， we can reexamine
+    time zones。 And so what that means is that we haven't actually added two hours
+    of duration。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你在 Python 中给一个日期时间加上时间增量时，Python 实际上在做的是，它在说：请把时钟上的时针向前移动那么多，然后进行一些日期的滚动。等我们完成这一切后，我们可以重新审视时区。这意味着我们实际上并没有增加两个小时的持续时间。
+- en: We've just changed the clock by two hours， but the UTC office has changed。 And
+    so adding two hours in Python to 130 in the morning in US Eastern on this date
+    gives。 us a result only one hour later。 The fix for this， again in the title。
+    do duration arithmetic in UTC。 Because UTC doesn't have these pesky temporal discontinuities。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们刚刚将时钟改了两个小时，但 UTC 办公室的时间改变了。因此，在 Python 中将美国东部时间凌晨 1:30 加上两个小时只会给我们一个小时后的结果。对此的修复，再次在标题中提到。在
+    UTC 中进行持续时间算术。因为 UTC 没有这些烦人的时间间断。
+- en: Next up， don't use PyTC。 That's a really flagrant statement right there。 This
+    is not to say the entire PyTC library is bad， but there are aspects of it that
+    are。 very dangerous。 PyTC is a great library last decade。 PyTC has been around
+    since 2004。 and I really appreciate its contribution to adding date， time support
+    to Python。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，不要使用 PyTC。这确实是一个非常明显的说法。这并不是说整个 PyTC 库不好，但它确实有一些方面是非常危险的。PyTC 是一个在过去十年中很棒的库。PyTC
+    自 2004 年以来就已经存在，我非常感谢它为 Python 添加日期和时间支持所做的贡献。
+- en: But it's so old that it's not compatible with the directions Python has gone
+    in in terms。 of how time zones should work。 So for example， if we take this actually
+    normal day time。 there's no magic on this one。 There's no daylight saving time
+    or anything like this。 Totally normal day time in April of this year。 And we attach
+    the PyTC time zone of US Eastern to this at time of construction。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但它太旧了，以至于与 Python 在时区工作方面的发展方向不兼容。因此，例如，如果我们取这个实际上是正常的日期时间。这并没有什么魔法。这没有夏令时或其他类似的东西。是今年四月的一个完全正常的日期时间。我们在构造时将
+    US Eastern 的 PyTC 时区附加到这个时间上。
+- en: We get a UTC offset of four hours and 56 minutes。 That is not correct。 The correct
+    number is minus four hours。 And that number has not been correct for America。
+    New York since 1883。 That's what I mean by incompatibilities with the Python standard
+    library。 The solution to this， very simple， the Python standard library now has
+    time zone support。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们得到的UTC偏移是四小时五十六分钟。这是不正确的。正确的数字是负四小时。这个数字自1883年以来对美国，尤其是纽约来说一直不正确。这就是我所说的与Python标准库的不兼容性。解决方案非常简单，Python标准库现在支持时区。
+- en: It's called zone info。 You should use it。 The last one before we get into what
+    to actually do is don't replace the time zone info on。 an aware date time。 Now
+    this is specifically for aware date times。 An aware date time is one that already
+    has time zone information。 The reason you shouldn't do this is as is broadly the
+    theme here。 It doesn't do what you expect。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这被称为时区信息。你应该使用它。在我们进入实际操作之前的最后一点是，不要替换意识日期时间的时区信息。现在这特别针对有意识的日期时间。一个有意识的日期时间是指已经拥有时区信息的时间。你不应该这样做的原因正如这里的主题所示。它不会如你所期望的那样工作。
+- en: What I would expect replacing the time zone on a aware date time would do would
+    be please。 convert this same point in time but just give it to me in a different
+    time zone。 That's not what happens。 What happens is you take the date， you take
+    the time。 you pick them up off the page， you， go put them in a different time
+    zone。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我希望替换时区的意识日期时间所做的事情是，请转换这个相同的时间点，但给我一个不同的时区。这并不是发生的事情。发生的事情是你拿起日期，拿起时间。你把它们从页面上摘下来，放到另一个时区。
+- en: So what that's actually doing， right， the numbers of the daytime aren't changing
+    but。 the time represented by it is changing by many hours。 And so replacing the
+    time zone info。 what you're saying， this is actually in a different， time zone，
+    whoops。 and this represents in all likelihood a different point in time。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以实际上发生的事情是，日期时间的数字没有改变，但它所表示的时间却变化了许多小时。因此，替换时区信息时，你所说的是，这实际上在一个不同的时区，哎呀。这很可能代表了一个不同的时间点。
+- en: So probably not what you want to do， almost certainly not。 If what you want
+    to do is convert a daytime to another time zone， use the function has， time zone。
+    All right， so let's talk about how to do it right。 I've said UTC a lot already。
+    What is UTC？ Well。 first and foremost is a bad acronym。 What they did was they
+    took the English， they took the French。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这可能不是你想做的，几乎可以肯定不是。如果你想做的是将某个时间转换到另一个时区，使用函数has，time zone。好吧，那我们来谈谈如何正确地做到这一点。我已经提到UTC很多次了。什么是UTC？首先，最重要的是这是一个糟糕的首字母缩略词。他们做的是取了英语和法语的内容。
+- en: they had the same letters， in a different order， the compromise was no one wins。
+    So if you want。 UTC stands for utterly terrible compromise。 But bad acronyms aside，
+    it's an amazing standard。 First of all， no temporal discontinuities。 Ahem， leap
+    seconds。 Oh， sorry。 All right。 we're ignoring leap seconds because Python does。
+    Python actually ignores them。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们有相同的字母，顺序不同，妥协是没有人赢。所以如果你想。UTC代表完全糟糕的妥协。但抛开糟糕的缩略词不谈，这是一个惊人的标准。首先，没有时间的断层。咳，闰秒。哦，抱歉。好吧。我们忽略闰秒，因为Python会忽略它们。Python实际上忽略了它们。
+- en: leaves it to network time protocol to sort them out。 So we're not talking about
+    those。 And if we aren't talking about those， UTC does not have any of those temporal
+    discontinuities。 Daily saving time， what's that？ Pacific islands， switching sides
+    of the international date line。 don't care。 So this is a great place to work in
+    because we can actually do duration arithmetic safely。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让网络时间协议来整理它们。所以我们不讨论这些。如果我们不讨论这些，UTC就没有任何时间的断层。日光节约时间，这是什么？太平洋岛屿，国际日期变更线两侧的切换。不在乎。所以这是一个很好的工作场所，因为我们实际上可以安全地进行持续时间算术。
+- en: Next up， all other time zones are defined in relation to UTC。 And this one I
+    don't have an asterisk on。 As far as I can tell， that is true。 There's some weird
+    offsets out there。 There's some half hour offsets， some 15 minute offsets。 But
+    all of them are still defined in relation to UTC。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，所有其他时区都是相对于UTC来定义的。这个我没有加星号。就我所知，这是真的。外面有一些奇怪的时差。有些是半小时的，有些是15分钟的。但是它们都是相对于UTC来定义的。
+- en: There is still some offset depending on the time of year。 So UTC is a great
+    central place to work when you're trying to get， you know， you can convert。 to
+    and from other time zones very easily because UTC is the time zone by which all
+    other time。 zones are measured。 And then finally， it's the official time zone
+    of the international space station and。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据一年中的时间，仍然会有一些偏移。因此，当你尝试获取时，UTC是一个很好的中心位置。你知道，你可以很容易地转换到其他时区，因为UTC是所有其他时区的基准。而且最后，它也是国际空间站的官方时区。
+- en: space is cool。 This diagram is the most important slide in this talk。 Don't
+    worry about getting it all at once。 Okay， we're going to zoom in on various pieces
+    of it when we go into code recipes。 But we are also going to take a little bit
+    of time here and explore this。 So right here in the middle， we have this beautiful
+    green bubble。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 太空是很酷的。这张图是本次演讲中最重要的一张幻灯片。不要担心一次性理解所有内容。好吧，我们在进入代码示例时会对各个部分进行详细分析。但我们也会花一点时间在这里探索这个。所以就在中间，我们有这个美丽的绿色气泡。
+- en: This is the idyllic paradise of UTC。 In the time zone safe zone of UTC。 we don't
+    care about temporal discontinuities。 We don't care about there even being more
+    than one time zone。 If we have time zone aware UTC day times， we can do duration
+    arithmetic on them all day。 pun intended。 We can put them in time zone aware database
+    storage and back out。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是UTC的理想乐园。在UTC的安全时区中，我们不关心时间的间断。我们不关心是否存在多个时区。如果我们有时区感知的UTC日期时间，我们可以全天进行持续时间计算。双关语意在其中。我们可以将它们放入时区感知的数据库存储中，然后再取出来。
+- en: We can send them to other systems as ISO strings。 And if we get the current
+    time in UTC。 we're still in this beautiful paradise and where， time zones don't
+    exist。 And we could stay here forever if it weren't for one pesky little thing，
+    the user。 Software would be a lot easier without them。 So let's deal with users。
+    Okay。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以将它们作为ISO字符串发送到其他系统。如果我们获取当前的UTC时间，我们仍然处于这个美丽的乐园，在这里，时区并不存在。如果不是因为一个恼人的小东西，即用户，我们可以永远呆在这里。没有他们，软件会简单得多。所以让我们来处理用户吧。好吧。
+- en: so we've got user input， right？ Users have time zones。 In order to deal with
+    users。 we actually need to know what time zone a user is talking about。 So we
+    need to either have a time zone attribute on the user or have the user provide
+    us the。 time zone they're talking about when we get whatever they're giving us。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们得到了用户输入，对吧？用户有时区。为了处理用户，我们实际上需要知道用户所谈论的时区。因此，我们需要在用户身上有一个时区属性，或者在我们获取他们提供的任何信息时，让用户告诉我们他们所谈论的时区。
+- en: So if we take the user input of a year， a month a day， a time， and they give
+    us a time zone。 we can attach that time zone to all that other information。 We
+    can get an aware date time and then as time zone that into UTC。 ISO strings up
+    at the top here。 they're actually easier to deal with because correct ISO strings，
+    have a UTC offset baked in。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，如果我们获取用户输入的年份、月份、日期和时间，他们给我们一个时区。我们可以将该时区附加到所有其他信息上。我们可以获取一个带时区的日期时间，然后将其转换为UTC。在这里的ISO字符串实际上更容易处理，因为正确的ISO字符串中已经包含了UTC偏移。
+- en: So we actually know how to get that。 We can use stir time or from ISO format。
+    we can get an aware non- UTC daytime as time's， on that into UTC。 And going back
+    the other way。 as time zone does double duty。 That can also get us to a user's
+    local time zone， a local daytime。 And from that， we can turn that into a string
+    or we can get those dates that you probably。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们实际上知道如何获取这个。我们可以使用标准时间或从ISO格式转换。我们可以获得一个带时区的非UTC日期时间，并将其转换为UTC。反过来，时区也可以发挥双重作用。这还可以让我们获取用户的本地时区和本地日期时间。从中，我们可以将其转换为字符串，或者获取那些日期。
+- en: really want to use at some point。 And that would be it except for this one little
+    arrow over here which is calendar arithmetic。 So instead of saying I want to add
+    or subtract durations， saying what I want to do is change。 the date by sum amount，
+    that you should do on dates。 If you do calendar arithmetic。 you say I want to
+    change my date by some number of days。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在某个时刻真的想要使用的就是这些。除了这边的一个小箭头，即日历算术。所以与其说我想要增加或减少持续时间，不如说我想通过一定的量来改变日期，这是你应该在日期上执行的。如果你进行日历算术，你会说我想要将我的日期改变一定天数。
+- en: As a duration in UTC and then convert to a local time zone， all of those temporal
+    discontinuities。 now show up as bugs in the math you just did。 So if we're talking
+    about changing time。 that needs to happen in UTC。 If we're talking about editing
+    the date， do that on a date。 I mentioned already to use zone info， Python standard
+    library， especially instead of PyTC。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为 UTC 的持续时间，然后转换为本地时区，所有这些时间不连续性现在都会在你刚才进行的数学计算中显示为错误。因此，如果我们谈论更改时间，那需要在 UTC
+    中进行。如果我们谈论编辑日期，请在日期上进行。我已经提到要使用 zone info，Python 标准库，特别是代替 PyTC。
+- en: That's not to say this is the only option。 There's other options out there。
+    DateUtil， for example。 is actually compatible with the Python standard library。
+    But at least in terms of sensible defaults。 zone info gets us what we want which
+    is add， ability with the rest of the Python standard library。 We can take that
+    same totally normal， no tricks here， totally normal daytime， attach the US。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不是说这是唯一的选择。还有其他选项，例如 DateUtil，它实际上与 Python 标准库兼容。但至少在合理的默认值方面，zone info 为我们提供了想要的，能够与其他
+    Python 标准库一起使用。我们可以将完全正常的日期时间附加到美国。
+- en: Eastern to it and get the correct offset of four hours， the correct at least
+    for this， century。 not for 1883。 Now zone info isn't added until Python 3。9， but
+    you don't have to wait。 If you're still on older versions of Python， there's a
+    back port， you can pip install it。 add this to your requirements file。 Nice and
+    easy。 You can even do the pre and post Python 3。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将其设置为东部时区并获取正确的四小时偏移，至少在这个世纪是正确的，而不是 1883 年。现在 zone info 直到 Python 3.9 才添加，但你不必等。如果你仍在使用较旧版本的
+    Python，有一个移植版，你可以通过 pip 安装。将其添加到你的要求文件中，简单易行。你甚至可以做兼容 Python 3 的导入声明，如果你想要更复杂一点，升级时省去麻烦。
+- en: 9 compatible import statement if you want to， get really fancy and save yourself
+    hassle when you do upgrade。 The one other recommendation on here for compatibility，
+    add the TZ data library。 The TZ data library is a compilation of all of the time
+    zone information that Python will。 use as a fallback if it can't find the system
+    time zone information files。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里关于兼容性的另一个建议是添加 TZ 数据库。TZ 数据库是 Python 使用的所有时区信息的汇编，如果找不到系统时区信息文件，它将作为回退使用。
+- en: These are the files that keep track of all of the rules of all of the time zones
+    in the。 world of which there's a lot。 That's really helpful for either minimal
+    distributions of Linux or whatever that might not ship with。 that or Windows where
+    Python has no idea where anything is。 So now we're going to zoom in on pieces
+    of the diagram and we're actually， I mean， there's。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些文件跟踪了世界上所有时区的所有规则。对于那些可能没有随附这些信息的最小 Linux 发行版或 Python 在 Windows 上无法识别的情况，这真的很有帮助。所以现在我们将深入研究图表的各个部分。
+- en: been some code so far， but this is the killer code。 This is the code you should
+    use in your code base。 So first， getting the current time。 How do we do it？ What
+    we want is the current time UTC with the times unattached。 Very simple。 All you
+    have to do is actually pass the UTC time zone as an argument to date time now。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止有一些代码，但这是关键代码。这是你应该在代码库中使用的代码。首先，获取当前时间。我们该怎么做？我们想要的是当前的 UTC 时间，而不附加时区。非常简单。你只需将
+    UTC 时区作为参数传递给 date time now。
+- en: So date time now turns out it is the right function after all。 You just have
+    to use it right。 Compare that to UTC now。 They will give you the same value。 but
+    this first one will actually attach that time zone。 information so you're not
+    running around with the extremely dangerous naive date times。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以现在的日期时间函数实际上是正确的。你只需正确使用它。与 UTC 进行比较，它们会给出相同的值，但第一个会附加时区信息，这样你就不会使用极其危险的天真的日期时间。
+- en: If we want to get the current date， that only makes sense to do in a time zone。
+    There is no such thing as the current date。 There's only the current date in a
+    time zone。 Each time now actually takes some other arguments besides UTC。 You
+    can actually give it the time zone that you want and it will get you the current
+    time。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们想获取当前日期，那只在时区中有意义。没有“当前日期”这种说法，只有“在某个时区的当前日期”。每次调用 now 实际上除了 UTC 还需要其他参数。你可以给它你想要的时区，它会为你获取当前时间。
+- en: in that time zone and then you can pull out a date。 So this will safely get
+    you the date in that time zone。 Let's say we already have some UTC date times
+    and we want to do output。 So we want to get。 turn that into a date。 So here， I
+    mean， as time zone is going to do most of the work。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在那个时区，然后你可以提取出一个日期。所以这将安全地让你获得那个时区的日期。假设我们已经有一些 UTC 日期时间，我们想要输出。所以我们想要将其转换为日期。因此，在这里，我的意思是，作为时区将完成大部分工作。
+- en: As time zone gets us into the user's time zone， we can pull out the date。 No
+    problem。 Similarly。 if we want to output to a string， as time zone， get into the
+    user's time and。 we can do stir time or whatever we want to pull out a string
+    on that。 Input a little hairier because with input we might be ending up touching
+    naive time zones。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为时区让我们进入用户的时区，我们可以提取出日期。没有问题。同样，如果我们想要输出为字符串，作为时区，进入用户的时间。我们可以使用 stir time
+    或其他任何方法从中提取字符串。输入会稍微复杂一些，因为在处理输入时，我们可能会碰到天真的时区。
+- en: and naive date times at some point and we want to avoid that。 So if we're handling
+    input。 the best way to do it is actually don't handle a naive date， time。 So you
+    can build that date time with the time zone in it right away。 You're great。 Well。
+    you're half great。 Then ask time zone that in UTC and you're great。 If you can't，
+    so for example。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在某个时刻想要处理天真的日期时间，并且希望避免这种情况。所以如果我们在处理输入，最好的方法实际上是不处理天真的日期时间。这样你可以直接创建带有时区的日期时间。你很棒。不过，你只有一半的出色。然后将时区转到
+    UTC，你就很棒了。如果不能，比如说。
+- en: if you're using stir time and that hands you back a naive， date time。 you do
+    need to attach a time zone to that。 And here's where we get into a little bit
+    of potential trouble because the way to attach。 a time zone to a naive date time
+    is replacing the TZ info， which if you remember back to。 cardinal sin number five，
+    you don't want to do replaced TZ info on an aware date time。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你使用 stir time，而它返回给你一个天真的日期时间。你确实需要为其附加一个时区。这就是我们可能面临一点麻烦的地方，因为将时区附加到天真的日期时间的方法是替换
+    TZ 信息，如果你记得的话。第一个大忌是，你不想在意识日期时间上替换 TZ 信息。
+- en: It's fine on a naive date time because what you're saying here fundamentally
+    is， I know。 what time zone this is and I'm filling in that information。 So that's
+    why I have added here this assert statement， assert that the time zone information。
+    is none。 Please use an actual exception there if you're writing this code。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在一个天真的日期时间上没问题，因为你在这里说的基本上是，我知道。这是哪个时区，我正在填充这个信息。所以我在这里添加了这个断言语句，断言时区信息是空的。如果你在写这段代码，请使用一个实际的异常。
+- en: But check that this is a naive date time before attaching time zone information
+    to it。 so that you don't accidentally replace time zones on aware date times by
+    accident and。 then as time zone into UTC。 ISO strings slightly easier because
+    we've got that UTC offset baked in。 So here we can use stir time or from ISO format，
+    get that into an aware date time and as time。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在附加时区信息之前，检查这是否是一个天真的日期时间。这样你就不会意外地用错误的时区替换了意识日期时间。然后再把时区转到 UTC。ISO 字符串稍微简单一些，因为我们已经内置了那个
+    UTC 偏移量。所以在这里我们可以使用 stir time 或从 ISO 格式获取，转为一个意识日期时间。
+- en: zone that into UTC。 As long as we don't stop halfway。 the thing that's weird
+    if we stop halfway is that's， not a time zone in that string。 That's a UTC offset
+    and those are different。 That doesn't tell you US Eastern。 That tells you UTC
+    offset of four hours which you will notice is not the US Eastern time zone。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 把它转到 UTC。只要我们不半途而废。如果我们半途而废，奇怪的事情是，字符串中没有时区。这是一个 UTC 偏移量，而这两者是不同的。那并没有告诉你美国东部。这告诉你的是四小时的
+    UTC 偏移量，你会注意到这并不是美国东部时区。
+- en: So all that tells you is enough information to get to UTC and nothing else。
+    So don't stop halfway when converting ISO strings。 Now one of the reasons that
+    we've done all of this work， finally we can do duration math， in UTC。 So here's
+    this pesky example from earlier 30 minutes before daylight saving time in US，
+    Eastern。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这所有的信息足以让你转到 UTC，仅此而已。所以在转换 ISO 字符串时不要半途而废。我们这样做的原因之一是，最终我们可以在 UTC 中进行持续时间计算。所以这是之前提到的一个恼人的例子，即在美国东部夏令时前的
+    30 分钟。
+- en: If we add times on that in the UTC， we add two hours and then we add times on
+    the back。 into US Eastern， we get the correct two hours later date time of 4。30
+    in the morning and notice。 that 4。30 is two hours after 1。30 because the UTC offset
+    has changed by one hour。 Now here's the other side of it。 If what you want to
+    do is calendar math。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们在 UTC 上添加时间，我们添加两个小时，然后在后面添加时间到美国东部时间，我们得到的正确的两小时后的日期时间是早上 4:30，注意，4:30
+    是在 1:30 之后两个小时，因为 UTC 偏移量已经变化了一个小时。现在这是另一面。如果你想做的是日历数学。
+- en: you need to do that on dates。 If we've got， let's say we've got August 1st here。
+    If we convert。 we do that in local time， we pull out the date， we want to add
+    120 days。 Great。 November 29th that is in fact 120 days later， take my word for
+    it。 But if we do 120 days as a UTC duration， we're going to run into problems
+    because daylight。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你需要在日期上这样做。如果我们假设这里是 8 月 1 日。如果我们转换。我们在本地时间中这样做，提取日期，我们想要添加 120 天。很好。11 月 29
+    日，确实是 120 天后，相信我。但如果我们以 UTC 持续时间做 120 天，我们将会遇到问题，因为夏令时。
+- en: saving time， an extra hour gets added and so our duration doesn't actually cover
+    all of。 that because fundamentally， we're not trying to add 120 days of duration。
+    We're not trying to add 120 days times 24 hours times 3600 seconds。 So if we do
+    that。 what we end up with is this thing a day early with 23 hours hanging out。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 节省时间，增加了一个小时，因此我们的持续时间实际上并没有覆盖所有的。因为从根本上来说，我们并不是想添加 120 天的持续时间。我们并不是想添加 120
+    天乘以 24 小时乘以 3600 秒。所以如果我们这样做。我们最终得到的是这个东西，提前一天，只有 23 小时。
+- en: and then if you call date on that， you're going to be missing a day due to rounding
+    errors。 So really this guy right here， that's what you actually want to do。 Do
+    the rule here。 If you've got dates， do date math on dates。 If you want to do time
+    math， do that on UTC date times。 All right， we're going to do a couple things，
+    couple extras for those of you using Django。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你在那上面调用日期，你将因为舍入误差而缺失一天。所以实际上这里这个家伙，就是你真正想要做的。遵循这个规则。如果你有日期，对日期进行日期数学。如果你想做时间数学，就对
+    UTC 日期时间进行。好的，我们将为使用 Django 的你们做几件事情，额外的。
+- en: If you're using Django， Django has wonderful time zone support。 Use it。 That's
+    easy to true。 This will happen by default in Django 5。 Please do not wait that
+    long。 And then Django has a setting time zone and this defines the default time
+    zone for your。 Django project。 If all of your users are in one time zone。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你在使用 Django，Django 有很好的时区支持。使用它。这是真的简单。这将在 Django 5 中默认发生。请不要等那么久。然后，Django
+    有一个设置时区，这定义了你的 Django 项目的默认时区。如果你的所有用户都在一个时区。
+- en: sure set that to be your user's time zone。 If not。 set it to UTC and then what
+    you need to do is you need to call activate on your。 user's time zone whenever
+    you're working with that user。 Best way to do this。 store the time zone name on
+    the user object， call this in the middleware。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确保将其设置为用户的时区。如果不是，将其设置为 UTC，然后你需要做的是每当你与该用户工作时，都需要调用激活用户的时区。做到这一点的最佳方法是在用户对象上存储时区名称，并在中间件中调用。
+- en: So that whenever you're working with that user， right， for the rest of that
+    view or whatever。 for the rest of that view， you've got the user's time zone active。
+    And Django will then do magic for you。 Django templates automatically convert
+    to the active time zone。 Whoo！ That's so cool。 So if we've got the US Eastern
+    active。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样每当你与该用户工作时，接下来的视图或其他的，对于接下来的视图，你将保持用户的时区激活。Django 然后会为你做魔法。Django 模板会自动转换为活动时区。哇！太酷了。所以如果我们有美国东部时间激活。
+- en: we've got UTC date times in our database， we render， that in a template。 Boom。
+    converted to US Eastern。 Love it。 Django then has a bunch of utilities。 most of
+    which also work with the active time zone。 The one that doesn't， this is just
+    truly generic。 time zone now。 This is Django's time zone module， by the way， not
+    the date time。time zone module。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的数据库中有 UTC 日期时间，我们在模板中渲染这些。哇，转换成美国东部时间。太棒了。Django 然后有一堆实用工具，其中大多数也适用于活动时区。唯一不适用的，这真的是非常通用。现在是时区。顺便说一下，这是
+    Django 的时区模块，而不是日期时间时区模块。
+- en: That will give you the current time in UTC with that UTC time zone attached。
+    Great。 If you want the current date in the active time zone， you can call local
+    date and that。 will do the work of， you know， putting the time zone into date
+    time now and pulling out。 the date for you。 If you want to convert UTC date times
+    to the user's time zone。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将给你当前的 UTC 时间，并附带该 UTC 时区。太好了。如果你想要当前日期在活动时区中，可以调用本地日期，这将为你做，将时区放入日期时间现在并提取日期。如果你想将
+    UTC 日期时间转换为用户的时区。
+- en: we've got local date and， local time here， both of which will convert to the
+    active time zone and then local date。 pulls out the date。 Local time leaves it
+    as a date time and you can do whatever you want。 like call stir time， on it。 And
+    then finally going back in。 So if we're taking user input。 if we get in a naive
+    date time， Django has this handy， function make aware。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们这里有本地日期和本地时间，二者都会转换为活动时区，然后本地日期提取出日期。本地时间保持为日期时间，您可以随意操作，比如调用`stir time`。最后再返回去。如果我们获取用户输入，如果得到一个无意识的日期时间，Django有这个方便的函数`make
+    aware`。
+- en: which does exactly what you'd expect。 It turns it into an aware date time。 This
+    is the same thing that I showed you earlier with replacing the time zone info
+    with。 the added benefit of it will check that this is in fact a naive date time
+    so that you don't。 accidentally replace the time zone on an aware date time。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这正是你所期望的。它将其转换为一个有意识的日期时间。这与我之前展示的相同，替换时区信息，并且额外的好处是，它会检查这实际上是一个无意识的日期时间，以免你不小心替换一个有意识的日期时间。
+- en: And then of course the thing to do with that as time is on it into UTC。 So the
+    summary here。 pretty simple。 Take your input， get that into UTC。 write all your
+    code against UTC and then when you're。 done then you actually need to get talk
+    to the user again， get that back into the user's， time。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后当然要将时间转换为UTC。所以总结起来很简单。将输入转换为UTC，所有代码都基于UTC编写，当完成后，需要再次与用户沟通，将其转换回用户的时间。
+- en: That's all I've got for you today。 Thank you very much to you all。 I'd also
+    like to extend a thank you to Paul Gansil in addition to authoring the zone info。
+    module that got added to the Python standard library。 So wonderful。 We can now
+    all have the benefit of his work。 He also reached out to me and really helped
+    me hammer through some of the thornier examples。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 今天我就讲这些。非常感谢大家。我还想感谢保罗·甘希尔，他不仅编写了被添加到Python标准库的时区信息模块，非常棒。我们现在都可以受益于他的工作。他还联系了我，帮助我解决了一些棘手的示例。
+- en: in this talk。 So really appreciate that。 This is my email right here。 If you've
+    got questions。 I will be sticking around afterwards but anyone on video， if you've，
+    got questions。 feel free to email me。 If you need contract software work， time's
+    unrelated or otherwise。 happy to help。 So drop me a line。 Thank you。 [APPLAUSE]。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个演讲中，非常感谢大家。这是我的邮箱。如果你有问题，我会在之后待着，但任何观看视频的人，如果你有问题，随时可以给我发邮件。如果你需要合同软件工作，时间无关或其他方面，乐意提供帮助。请联系我。谢谢。[鼓掌]。
+- en: '![](img/da32327101e4d6f29aad8f16815471db_3.png)'
+  id: totrans-82
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/da32327101e4d6f29aad8f16815471db_3.png)'

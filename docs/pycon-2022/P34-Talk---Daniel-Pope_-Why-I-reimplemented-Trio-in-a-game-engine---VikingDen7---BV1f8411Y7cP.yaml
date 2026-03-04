@@ -1,0 +1,625 @@
+- en: P34：Talk - Daniel Pope_ Why I reimplemented Trio in a game engine - VikingDen7
+    - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P34：演讲 - Daniel Pope_ 为什么我在游戏引擎中重新实现 Trio - VikingDen7 - BV1f8411Y7cP
+- en: We have an event loop， so it's going to call update and it's going to call draw
+    at maybe。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一个事件循环，因此它将调用更新，并且它将调用绘制，也许。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_1.png)'
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_2.png)'
+- en: 60 times a second。 Update has the responsibility of updating all of the game
+    logic and draw has the responsibility。 of drawing it to the screen。 So the first
+    thing that many game engines do。 and this includes other games and games， like
+    Piglet， Pi Game Zero。 which is my educational game framework， and wasabi2d， which
+    is what。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每秒 60 次。更新负责更新所有游戏逻辑，而绘制负责。将其绘制到屏幕上。因此，许多游戏引擎首先做的事情。包括其他游戏和游戏，比如 Piglet，Pi Game
+    Zero。这是我的教育游戏框架，以及 wasabi2d，这是什么。
+- en: I'm going to be talking about today， they will absorb the event loop and they
+    will just give， you。 you have a hard coded event loop and we just have a function
+    called run that is。 the somewhere passing update and draw into it， whatever。 And
+    then the next optimization or the next advancement in structure here is to have
+    an。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我今天要讨论的是，它们会吸收事件循环，并且只会给你。你有一个硬编码的事件循环，我们只是有一个名为 run 的函数，它是。某个地方传递更新和绘制进来，等等。接下来的优化或结构进展是有一个。
+- en: object called a scene graph。 And a scene graph is going to be a data structure
+    that represents what is drawn and the engine。 can handle drawing that。 So it can
+    build in considerations like make it pretty or don't draw what isn't visible。
+    in order to go as fast as possible。 An update of course is still going to run
+    60 times a second but it's responsibility is。 now to make those changes into the
+    scene graph to be drawn when a draw happens。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个被称为场景图的对象。场景图将是一个数据结构，表示什么被绘制，且引擎。可以处理绘制它。因此它可以考虑诸如使其美观或不绘制不可见内容。以尽可能快地运行。当然，更新仍然每秒运行
+    60 次，但它的责任是。现在是将这些更改应用到场景图中，以便在绘制发生时绘制。
+- en: So from this point forward we're not going to talk about graphics in a game，
+    we're just。 going to assume a scene graph exists。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从这一点开始，我们将不再讨论游戏中的图形，我们只是。假设一个场景图是存在的。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_4.png)'
+  id: totrans-8
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_4.png)'
+- en: So now I want to take a little look at the state of the art for concurrency
+    in games。 I've got a bit of video here。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我想稍微看看游戏中并发的最新技术。我这里有一段视频。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_6.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_6.png)'
+- en: So in this game I'm moving lots of objects， they are all moving it in at the
+    same time。 You could easily see how this could be written as one function and
+    maybe vectorized。 And that view is always going to be useful， that's possibly
+    a faster way of animating。 many objects at the same time。 But if you look at a
+    different example where you have two actors in the game that are doing。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个游戏中，我正在移动很多物体，它们都在同一时间移动。你可以很容易地看到这可以被写成一个函数，也许是向量化的。而这种视图总是有用的，这可能是以更快的方式同时动画化。许多物体。但是如果你看看另一个例子，其中有两个演员在游戏中做。
+- en: completely independent behaviors， this is much more easy to see as two tasks，
+    two sets。 of behaviors that just happen to exist within the same game engine and
+    the same game loop。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完全独立的行为，这更容易被视为两个任务，两组。行为恰好存在于同一个游戏引擎和同一个游戏循环中。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_8.png)'
+  id: totrans-13
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_8.png)'
+- en: If we look at the logic for the update function world， there are lots of problems
+    with this。 So it's messy， there are lots of state variables。 This function even
+    gets cool when there's no work to do so there's an early return at。 the top。 And
+    this is， it's hard to refactor because it's all woven together。 We look at a coroutine
+    based version， things get a lot simpler。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们查看更新函数的逻辑，有很多问题。因此它很混乱，有很多状态变量。当没有工作要做时，这个函数甚至会变得很冷清，因此在顶部有一个早期返回。而且这很难重构，因为它们都交织在一起。我们查看基于协程的版本，事情变得简单得多。
+- en: So the coroutine syntax in Python is if you have an await， you are pausing，
+    suspending。 the execution and you'll be resumed later。 So we're delegating back
+    to the event loop。 the game loop。 But lots of things drop out of this。 So the
+    current state of a task is captured by local variables and the position in the。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以Python中的协程语法是，如果你有一个await，你是在暂停、挂起执行，并且稍后会恢复。因此我们正在将控制权委托回事件循环，游戏循环。但许多事情会从中掉落。因此，一个任务的当前状态由局部变量和位置捕获。
+- en: coroutine function。 And a coroutine function now has a much bigger slice of
+    an object's behavior。 So you can see a behavior end to end within a function。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 协程函数。现在，协程函数拥有更大范围的对象行为。所以你可以在一个函数中看到端到端的行为。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_10.png)'
+  id: totrans-17
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_10.png)'
+- en: This is a full example from Wissabi 2D。 So I'm going to walk you through this
+    briefly。 The scene object is the scene graph， then random position is a function
+    that just returns a。 random position within the screen。 That's obviously a sync
+    function。 And then drive ship is an async function。 It's going to create a ship
+    sprite at a random position and then forever it will pick a new。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是来自Wissabi 2D的完整示例。所以我将简要介绍一下。场景对象是场景图，然后随机位置是一个返回屏幕内随机位置的函数。这显然是一个同步函数。然后驱动船是一个异步函数。它将在随机位置创建一个船的精灵，然后永远选择一个新的位置。
+- en: random position and then over time it will turn the ship to face that and then
+    over time。 it will move it to the next position。 And then we pass that coroutine
+    into the run function in order to run that as our game。 That coroutine becomes
+    our game。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随机位置，随着时间的推移，它将转动船以面向该位置，然后逐渐移动到下一个位置。然后我们将该协程传递到运行函数，以便将其作为我们的游戏运行。该协程成为我们的游戏。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_12.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_12.png)'
+- en: Taking a look around the world of game engines， Unity has port for coroutines。
+    And this is what it looks like in Unity。 But this is quite limited。 it has a limited
+    capability and the syntax is quite clumsy。 This is apparently C# state of the
+    art for generators。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看看游戏引擎的世界，Unity支持协程。这在Unity中的样子。 但这相当有限。它的能力有限，语法也相当笨拙。这显然是C#在生成器方面的最先进技术。
+- en: They're still at the phase of using generators as coroutines。 Another example
+    from the world of UI。 In fact， like JavaScript you would expect it's doing a lot
+    of UI。 So there would be lots of these frameworks。 And actually this is the only
+    one that I could find that is using coroutines in order。 to do animations on screen。
+    So Python has superb coroutine support and let's go use it。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们仍处于使用生成器作为协程的阶段。另一个来自UI世界的例子。实际上，就像JavaScript一样，你会期望它在做很多UI。因此会有很多这样的框架。实际上，这是我找到的唯一一个使用协程来在屏幕上进行动画的框架。所以Python有出色的协程支持，让我们去使用它。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_14.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_14.png)'
+- en: Another example if you have children perhaps or you are a child this is code
+    from a programming。 language called scratch， a graphical programming language。
+    And it has forever loops and it doesn't have a break。 So naively this would run
+    forever。 this would just hang。 But this is where you do animation in scratch。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个例子，如果你有孩子，或者你是一个孩子，这是来自一种叫做Scratch的编程语言的代码，一种图形编程语言。它有永远循环，并且没有中断。因此，天真地说，这将永远运行。这将只会挂起。但这就是你在Scratch中进行动画的地方。
+- en: You do a forever loop so there is an implicit yield somewhere in there。 In fact，
+    in a few places。 So now we come onto the meat of this talk which is structured
+    concurrency。 So we've seen concurrency， we've seen the ability to run tasks that
+    delegate to the event， loop。 What is structured concurrency？ I'm going to steal
+    a quote from Nathaniel Smith who is the author of trio。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会做一个永远循环，所以在其中有一个隐式的让步。实际上，在几个地方都有。所以现在我们来谈谈这次演讲的重点，即结构化并发。我们已经看到了并发，看到能够运行委托给事件循环的任务。那么什么是结构化并发？我要借用Nathaniel
+    Smith的一个引用，他是trio的作者。
+- en: Here's the core idea。 Every time our control path splits into multiple concurrent
+    paths we want to make sure they。 join up again。 And I'm also going to steal Nathaniel's
+    slide。 The green task is。 so it's a task that's running。 It starts doing something
+    concurrently。 And then all of those tasks must finish before the green task can
+    continue running。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是核心思想。每当我们的控制路径分裂成多个并发路径时，我们希望确保它们能够再次汇聚。而且我还要借用Nathaniel的幻灯片。绿色任务正在运行。它开始并发地做一些事情。而且所有这些任务必须在绿色任务继续运行之前完成。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_16.png)'
+  id: totrans-27
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_16.png)'
+- en: But we can look at that in code。 This is the code from trio。 And so imagine
+    you have a fetch function that's fetching a remote URL or something。 We have an
+    async with block that is opening a nursery。 And the nursery is the scope in which
+    we can start more tasks。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们可以在代码中查看。这里是trio的代码。因此，想象一下你有一个fetch函数，它正在获取一个远程URL或其他东西。我们有一个async with块正在打开一个nursery。nursery是我们可以启动更多任务的范围。
+- en: And the exit of the async with block is the point at which we wait for those
+    tasks to， complete。 So unfortunately in Python it's a really important point，
+    a really important await point。 And unfortunately it's just indicated by that
+    D DENT。 So keep your eyes peeled for that because it's going to be crucially important。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: async with块的退出点是我们等待这些任务完成的地方。因此在Python中，这是一个非常重要的点，一个非常重要的等待点。不幸的是，它仅通过那个D
+    DENT指示。因此，请保持警觉，因为这将是至关重要的。
+- en: So we await both tasks at the D DENT of that block and then we can compare。
+    You can contrast this to what we can do with asyncio today。 It looks superficially
+    quite similar。 But there are a few differences。 So first you can， with asyncio。
+    you can still create tasks for the outside of a gather。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们在那个块的D DENT处等待这两个任务，然后可以进行比较。你可以将其与我们今天可以使用的asyncio进行对比。看起来表面上非常相似。但有一些区别。首先，你可以，使用asyncio，仍然可以在gather之外创建任务。
+- en: So you could at any point create a disown task that survives a function。 And
+    in fact。 the way that I've written this， those， the tasks that are created， if
+    you moved。 one of those outside of the gather， it would still be a task that is
+    running。 You can also pass code reaching functions in to gather and then the task
+    is， you don't。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，你可以在任何时候创建一个在函数之外生存的disown任务。事实上，按照我编写的方式，如果将其中一个任务移出gather，它仍然会是一个正在运行的任务。你还可以将代码传递给gather中的函数，然后该任务就不再是你的。
+- en: have the task object。 But you can't pass the gather object around and you can't
+    add more things to it。 But more deeply， there's no concept of ownership here。
+    So if one of the tasks raise an exception。 then the， that， the exception will
+    be raised， here immediately。 But the other tasks will continue running。 This isn't
+    bound together。 In Wissabi 2D。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 拥有任务对象。但你不能将gather对象传递，也不能向其中添加更多内容。但更深层次地，这里没有所有权的概念。因此，如果一个任务引发异常，那么，该异常将立即被引发。但其他任务将继续运行。这并没有绑定在一起。在Wissabi
+    2D中。
+- en: you'll see code that is super similar to trio。 Some things are spelled differently。
+    We embrace koroutine objects。 But the behavior is exactly the same。 And coming
+    in Python 3。11。 there's task group。 And it looks super similar to Wissabi 2D。
+    So in Async。io and task groups in Python 3 and 11， if you are only using task
+    groups， then yeah。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会看到代码与trio非常相似。有些东西拼写不同。我们接受koroutine对象。但行为完全相同。而在Python 3.11中，有任务组。看起来与Wissabi
+    2D非常相似。因此在Python 3和11中的Async.io和任务组中，如果你只使用任务组，那么是的。
+- en: you're doing structure concurrency。 It's not going to enforce that you are only
+    using task groups。 And I still think like Trio has more power。 It's further along
+    in its adoption of this model。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你在做结构化并发。它不会强制你仅使用任务组。我仍然认为Trio更强大。在采用这种模型方面更进一步。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_18.png)'
+  id: totrans-35
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_18.png)'
+- en: So the fact that we can only start tasks through a nursery。 and we have had
+    to enter that nursery before we could do it。 means that we can construct a tree
+    of the tasks。 There is logically a tree by which tasks are connected。 to one another。
+    And this tree could go deeper than this。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们只能通过一个nursery启动任务，并且在执行之前必须进入该nursery。这意味着我们可以构建一个任务树。逻辑上，任务之间是相互连接的树。这棵树可以比这更深。
+- en: So we don't need to know what drive ship is doing， but if that was running tasks。
+    then this tree would be deep。 So we have to bear in mind that there。 is a tree
+    structured behind this because that's， going to come in--。 that's going to be
+    important later。 So let's look at a few examples of why structured concurrency。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们不需要知道drive ship在做什么，但如果它正在运行任务，那么这棵树将会很深。所以我们必须记住，这背后有一棵树结构，因为这将会在后面变得重要。因此，让我们看一些结构化并发的示例。
+- en: is useful in games。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在游戏中很有用。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_20.png)'
+  id: totrans-39
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_20.png)'
+- en: And to do this， I am using a game， that I wrote for Pi Week in September last
+    year， Pi Week 32。 The theme was never ending。 So it's going to have a never ending
+    succession of waves。 of enemy ships approaching。 And I'm flying around and shooting
+    at them。 And there's a little bit sped up。 So how do we do an infinite progression
+    of waves？ In this code。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了做到这一点，我使用了一个我去年九月为圆周率周编写的游戏，圆周率周32。主题是无尽。因此，它将会有一个无尽的敌舰波次不断袭来。我在飞行并向它们射击。这有一点加速。那么我们如何实现无限的波次进程呢？在这段代码中。
+- en: it's tools。count will loop forever。 And it's just going to count up。 And at
+    the start of each wave。 let's， pause for a moment in order to let the player get
+    into position。 I say pause。 I mean， sleep。 this coroutine。 The player will still
+    be moving。 And then we start a nursery， and we。 can spawn enemy ships into it。
+    The enemy ships were called frex。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`tools.count`将永远循环。它只会不断计数。在每个波次开始时，让我们暂停一下，以便让玩家进入位置。我说暂停，我的意思是让这个协程休眠。玩家仍然会移动。然后我们开始一个幼儿园，并且可以在其中生成敌舰。敌舰被称为frex。'
+- en: So that's why it's the odd naming of that function。 And the nursery isn't going
+    to exit。 until all of those ships are dead， which， is why we can write it like
+    this。 [VIDEO PLAYBACK]。 - But something that surprised me as I was adopting this。
+    in writing games is that it was really natural to use。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这就是为什么那个函数的命名如此奇怪。而且幼儿园在所有那些飞船都死掉之前不会退出，这就是我们可以这样写的原因。[视频播放]。
+- en: nurseries to decompose the behaviors of a ship， or any game object into a bundle
+    of tasks。 So most of them are defined as closures in this function。 That was in
+    PyWiki， right code quickly。 But your style preferences may vary。 But there's a
+    benefit here， which。 is that we can really easily share， behaviors between game
+    objects and not by inheritance。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幼儿园将飞船或任何游戏对象的行为分解成一系列任务。因此大多数都是在这个函数中定义为闭包。这是在PyWiki上，快速编码。但你的风格偏好可能会有所不同。但这里有一个好处，那就是我们可以非常轻松地共享行为，而不是通过继承。
+- en: but by running their behaviors as part of our nursery， on our game object。 But
+    the behaviors individually become easy to write。 This is a compelling thing that
+    in the top example here， we're waiting for input。 Oh， yeah。 you can wait for input。
+    So we're waiting for the controller button to be pressed。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但通过将它们的行为作为我们游戏对象的一部分在幼儿园中运行。但单独的行为变得容易编写。这是一个引人注目的事情，在这里的顶部示例中，我们在等待输入。哦，没错。你可以等待输入。所以我们在等待控制器按钮被按下。
+- en: And at the moment that the button is pressed， we create a bullet object。 And
+    then we sleep。 which puts a limit on the maximum speed， at which the player compressed
+    the button to shoot。 And something else to note is that we're spawning the bullet，
+    into an outer nursery。 So it's lifetime isn't coupled to the lifetime of the ship。
+    In the bottom example。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当按钮被按下的瞬间，我们创建一个子弹对象。然后我们休眠，这限制了玩家按下按钮射击的最大速度。还有一点需要注意的是，我们将子弹生成到一个外部的幼儿园中。因此，它的生命周期与飞船的生命周期并不相互关联。在底部的示例中。
+- en: I'm just sort of illustrating， how this could be refactored。 So this is the
+    kind of model where。 you can only have one bullet on screen at the same time，
+    which would give the game a retro feel。 I think。 But it just requires a little
+    bit of pivoting in the code。 And the behavior is really obvious in both cases。
+    But the thing that underpins being able to split apart。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我只是想说明一下，这可以如何重构。这是那种模型，在屏幕上一次只能有一颗子弹，这会给游戏带来复古的感觉。我觉得。但这只需要在代码中稍微调整一下。而且在这两种情况下，行为都是非常明显的。但支撑能够拆分的关键在于。
+- en: behaviors as different tasks is cancellation。 So any nursery-- in fact， the
+    primitive that could be。 cancelled is called a cancellation scope。 And a nursery
+    contains a cancellation scope。 So here。 we're creating a ship object with a nursery。
+    And when a-- the code at the bottom is a separate task that is。 running collision
+    detection。 And when the enemy ship collides with the bullet。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将行为作为不同任务的取消。任何幼儿园——实际上，可以被取消的原语被称为取消作用域。而一个幼儿园包含一个取消作用域。所以在这里，我们创建了一个带有幼儿园的飞船对象。当底部的代码是一个正在运行碰撞检测的单独任务时，当敌舰与子弹发生碰撞。
+- en: we just cancel that nursery。 And cancellation means that an exception is thrown
+    inside， every task。 And when all of the tasks have finished， the exceptions have
+    propagated such that they've all finished。 Then the flow continues outside of
+    the nursery block。 And that means that the explosion effects here that will， play。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们刚刚取消了那个育儿室。取消意味着在每个任务内部抛出异常。当所有任务完成后，异常传播到所有任务完成。那么流程继续在育儿室块外。这意味着这里的爆炸效果将会播放。
+- en: that's a graphical explosion effect and a sound， effect。 So the collision causes
+    the death of the ship， and the ship's， code can react to its death。 But also，
+    outer cancellation implies an cancellation。 If you had a nursery。 the nursery
+    that is running your， task would imply， if that's， cancelled。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个图形爆炸效果和声音效果。所以碰撞导致了飞船的死亡，而飞船的代码可以对其死亡做出反应。但是，外部取消意味着一个取消。如果你有一个育儿室，正在运行你的任务的育儿室意味着，如果它被取消。
+- en: then it cancels the task within your nursery and， your nursery。 So going back
+    to the model of tasks as a tree， you can。 cancel at any point and flow returns
+    at that point。 And all of that tree is collapsed and thrown away。 So here。 the
+    bottom koroutine is running the entire player's， existence。 It's giving the player
+    three lives。 And then after those three lives are up， it's going to， cancel the
+    nursery。 And that's going to cancel the level as well。 So game over。 We go back
+    to wave one。 So returning to the ship， then， there are two ways out of， this function。
+    Remember。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后它取消了你育儿室中的任务，以及你的育儿室。所以回到任务作为树的模型，你可以在任何时候取消，流程会在那个点返回。整个树都会被折叠并抛弃。所以这里，底部的协程正在运行整个玩家的存在。它给玩家三条命。然后在这三条命用完后，它会取消育儿室。那也会取消关卡。所以游戏结束。我们回到第一波。所以返回到飞船时，有两种方式可以退出这个函数。记住。
+- en: we were awaiting at the exit of the nursery。 And we either are cancelled in
+    this scope。 in which case， the flow continues afterwards， and we'll play the，
+    explosion effects。 Or the entire level is thrown away。 At which point an exception
+    is raised at that point。 And flow doesn't continue。 That means that we can start
+    using things like context， managers。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在育儿室的出口处等待。我们要么在这个范围内被取消，这种情况下流程会在之后继续，并且我们将播放爆炸效果。或者整个关卡被抛弃。在这一点上会抛出异常，流程不会继续。这意味着我们可以开始使用像上下文管理器这样的东西。
+- en: So here， there are a couple of context managers to show the。 ships bright on
+    the screen and delete it afterwards and to， turn on collision detection。 And both
+    of those are turned off regardless of how this， koroutine exits。 So that's going
+    to seem more of sync with my slides on here。 So this is really important。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这里有几个上下文管理器，用于在屏幕上显示飞船的亮光并在之后删除它，以及开启碰撞检测。无论这个协程如何退出，这两个都是关闭的。所以这将与我在这里的幻灯片更同步。这是非常重要的。
+- en: This became really compelling。 In games that I've written without structured
+    concurrency。 or concurrency as a paradigm， cleanup was really， really， hard， and
+    buggy。 and because the state is everywhere。 So we can cancel by throwing things
+    away， and we can use。 context managers when we're doing it。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这变得非常引人注目。在我没有结构化并发的游戏中，或作为一种范式的并发，清理是非常困难且有缺陷的，因为状态无处不在。所以我们可以通过丢弃东西来取消，并且在我们进行时可以使用上下文管理器。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_22.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_22.png)'
+- en: So I'm going to talk a little bit about some of the。 synchronization problems
+    or the parallels between。 synchronization in games and synchronization in I/O。
+    So there's another example video here from Axiom。 Oh， what's that？ Can you take
+    that away， please？
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我将稍微谈谈一些同步问题，或游戏中的同步与I/O中的同步之间的平行关系。所以这里有一个来自Axiom的另一个示例视频。哦，那是什么？能把它拿走吗？
+- en: Who's at the desk？ The speaker notes are popped up on there。 OK。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 桌子上是谁？演讲者的备注在上面弹出。好的。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_24.png)'
+  id: totrans-57
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_24.png)'
+- en: I'll just talk through it a little bit。 What you're going to see is an example
+    of a play in which。 there is a repair drone， and there is an iris door which，
+    will open to let out the repair drones。 And also I'm also going to be picking
+    up powerups。 We're back from there backwards。 OK， cool。 So I'm picking up powerups。
+    The powerup building factory things are going to start。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我会稍微讲一下。你将看到一个游戏示例，其中有一个修复无人机，还有一个虹膜门，它会打开以放出修复无人机。而且我也会捡起能量提升。我们从后面回到这里。好吧，酷。所以我正在捡起能量提升。能量提升工厂的东西将会开始。
+- en: building another powerup。 Keep your eye on the iris opening and closing to let，
+    drones in and out。 You can move on from there。 So this is achieved through event
+    objects， which are a。 thing in Trio as well as with RBCB2D。 And they allow tasks
+    to communicate， not by--。 so cancellation just seems to be a concurrency primitive，
+    as well。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 构建另一个能量提升。留意虹膜的开启和关闭，以便让无人机进出。你可以从那里继续。因此这是通过事件对象实现的，事件对象在Trio和RBCB2D中都是一种东西。它们允许任务通过通信，而不是通过--。所以取消似乎也是一种并发原语。
+- en: But if you don't have anything that you actually want to， cancel。 here we want
+    generate powerups to continue running。 And it's an infinite loop。 It's going to
+    do the build up to create a new powerup。 It will create one and set an event that
+    it hasn't been， collected yet。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但如果你没有任何想要取消的内容。在这里我们希望生成能量提升以继续运行。这是一个无限循环。它将进行构建以创建一个新的能量提升。它将创建一个并设置一个事件，表明它尚未被收集。
+- en: And then it's going to wait for that event， so wait for that， powerup to be
+    collected。 Then turn off the lights when it is collected， and do it， all again。
+    And we use set in the collision handling to initiate that， event。 And the iris
+    turned out to be really satisfying when I， actually implemented this code。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后它会等待那个事件，即等待收集到那个能量提升。收集后关闭灯光，然后重新开始这一切。我们在碰撞处理时使用set来启动那个事件。当我实际实现这段代码时，虹膜的效果令人非常满意。
+- en: because I thought this was， going to be really hard to write。 And it turned
+    out to be really easy。 I needed two coreroutine， two event objects。 And I had
+    to make the iris control its own coreroutine。 So you can imagine there's a program
+    running on that， spaceship。 And it is waiting for a request to open the iris。
+    And when the iris is open。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我认为这会很难写。但实际上它变得很简单。我需要两个协程，两个事件对象。我必须让虹膜控制它自己的协程。所以你可以想象在那艘宇宙飞船上运行着一个程序。它在等待请求打开虹膜。当虹膜打开时。
+- en: it signals everything that's， waiting to go through it， that it is open。 And
+    then it waits for a second and times out and closes the， iris again。 And the function
+    open iris there， request the iris open， and， waits for it to be opened。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它会向所有正在等待通过的信号，表明它是开放的。然后它会等一秒钟，超时并再次关闭虹膜。打开虹膜的函数请求虹膜打开，并等待它被打开。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_26.png)'
+  id: totrans-64
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_26.png)'
+- en: And that dropped out very nicely。 So why would I write trio in my game engine
+    when trio is a， thing？
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而这非常顺利。那么为什么我在我的游戏引擎中编写Trio，而Trio本身就是一种东西呢？
+- en: So that slide has moved。 Maybe come back to that。 One reason is that we're waiting
+    at different points。 So in trio， we're waiting on I/O。 So we're waiting for a，
+    file description to be ready。 And the call to do that is a select like thing or
+    a， selector。 And in PiGame。 we're waiting for input events or a time out。 So both
+    cases we maintain a clock。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以那张幻灯片已经移动了。也许稍后再回来看看。一个原因是我们在不同的点上等待。在Trio中，我们在等待I/O。因此我们在等待一个文件描述符准备好。进行此操作的调用类似于选择器的`select`。在PiGame中，我们在等待输入事件或超时。因此在这两种情况下，我们都保持一个时钟。
+- en: which is the next thing， that we need to wake up for anyway。 But we're using
+    different functions to drive the point， that we blocked the entire thread。 And
+    we could combine those two， maybe。 We could run two threads。 And we could pass
+    events between one and the other。 And it would be a little bit clumsy。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也是我们需要唤醒的下一个事情。但是我们使用不同的函数来推动这一点，阻塞整个线程。我们可以将这两者结合起来，或许。我们可以运行两个线程，并在它们之间传递事件。这样会有点笨拙。
+- en: But there was a deeper issue， which is that when multiple， tasks are ready to
+    run。 we have to have some opinion on， which order they run in。 You can't just
+    not have an opinion。 You have to pick one and run it。 So which would we run？
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但还有一个更深层次的问题，就是当多个任务准备运行时。我们必须对它们的运行顺序有一些看法。你不能不发表意见。你必须选择一个并运行它。那么我们会运行哪个呢？
+- en: The one that's waiting longest or the highest priority task， if， you had priorities。
+    And there's no right answer。 It just depends what you're trying to optimize for。
+    So here。 Trio and Walsabi 2D diverge。 Trio currently just picks a task at random，
+    which doesn't。 necessarily optimize for anything。 But Nathaniel justifies that
+    as avoiding users having any。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 等待时间最长的任务或优先级最高的任务，如果你有优先级的话。而没有正确答案。这仅取决于你想优化什么。因此在这里，Trio和Walsabi 2D分歧。Trio当前只是随机选择一个任务，这并不一定优化任何东西。但内森·塔尔对此的解释是为了避免用户有任何。
+- en: expectations of what it's optimizing for so that he can， change it later。 Walsabi
+    2D always runs the earliest created task first。 So it's a deterministic ordering
+    that prioritizes， determinism。 And that's because if you picked at random， a task
+    could be。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 期望优化的内容，以便他可以稍后进行更改。Walsabi 2D始终首先运行最早创建的任务。因此，这是一个优先考虑确定性的确定性排序。因为如果你随机选择，一个任务可能会被运行。
+- en: scheduled at the end of one frame and the start of another， frame。 And then
+    it's not seen a whole frame's worth of changes in， the rest of the world。 So we
+    want it to see approximately one frame's worth， of changes every time。 The order
+    then might be relevant， but at least we don't， have the jitter to deal with。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 安排在一个帧的结束和另一个帧的开始之间，然后没有看到整个帧中的变化在其余的世界中。因此，我们希望每次看到大约一个帧的变化。顺序可能是相关的，但至少我们不需要处理抖动。
+- en: But our ideas of time diverge as well。 So in Trio， we have an idea of continuous
+    time。 So--。 or the normal time。 I'm calling it continuous here。 Every time you
+    ask the clock for what time it is， it， will tell you a different time。 Time will
+    move on。 And we could schedule frames every six-tenth of a second。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们对时间的想法也不同。因此在Trio中，我们有一个连续时间的概念。因此——或者正常时间。我在这里称之为连续。每次你询问时钟当前时间时，它会告诉你一个不同的时间。时间将会流逝。我们可以每六分之一秒安排帧。
+- en: But I would be worried about a task being suspended into， the next frame。 when
+    it absolutely had to happen in the， first frame。 So we have a model of time where
+    it's a discrete model， where。 time doesn't move forward within a frame。 We have
+    a bundle of stuff that has to run， and all of it。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我会担心一个任务被暂停到下一个帧中，而它绝对必须在第一个帧中发生。因此我们有一个时间模型，是一个离散模型，其中时间在一个帧内不会向前移动。我们有一堆需要运行的东西，所有这些。
+- en: has to be run before we can say， OK， we're done。 We can draw a frame。 And the
+    clock will just return the same time within that， unit of time。 So summing up。
+    In games programming， structured concurrency lets a， split behaviors into multiple
+    code routines。 And cancellation seems to be the important thing for， implementing
+    this。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 必须在我们可以说“好，我们完成了”之前运行。我们可以绘制一个帧。时钟只会在那个时间单位内返回相同的时间。总结一下。在游戏编程中，结构性并发允许将行为分割为多个代码例程。取消似乎是实现这一点的重要因素。
+- en: And code seems easier to write， because as we saw， behaviors are more simply
+    stated。 We can have more of them。 They can do independent things， even though
+    they're。 acting on the same objects。 There is a slight shift in focus， which is
+    that。 exceptions are pretty unimportant for Wissabi 2D。 Exceptions cause cancellation。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码似乎更容易编写，因为正如我们看到的，行为表达得更简单。我们可以有更多的它们。它们可以独立地执行任务，即使它们正在作用于相同的对象。重点稍微转移了一下，即异常在Wissabi
+    2D中几乎不重要。异常会导致取消。
+- en: but exceptions in a game are， probably less expected than if you're dealing
+    with I/O。 It's more likely to indicate a bug in your game logic。 So Wissabi 2D
+    doesn't bother with handling multiple， exceptions or exception groups。 So all
+    of this led to a model that practically eliminated， state-keeping bugs in a game。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在游戏中，异常可能比处理I/O时更不常见。它更可能表明游戏逻辑中存在一个错误。因此Wissabi 2D不费心处理多个异常或异常组。这一切导致了一种几乎消除了游戏中状态保持错误的模型。
+- en: And it was very easy to add more animations。 And animations are good in games，
+    because they add。 graphical richness。 And every time that the world changes， you
+    want to have。 the player see that as juicy as this model of games， programming。
+    where you're trying to keep the player， engaged。 And avoiding a global nursery。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 添加更多动画非常简单。动画在游戏中是有益的，因为它们增加了图形丰富性。每当世界发生变化时，你希望玩家能够看到这一点，这就像这种模型的游戏，编程中你试图让玩家保持参与，避免全球性幼儿园。
+- en: using structural concurrency， helps make code refactorable， because you can
+    always call a。 co-routine function from another， or you can pivot your， entire
+    program。 because they're guaranteed to be self-contained， tasks。 So thank you。
+    This is all on GitHub。 The co-routine stuff is on the master branch， and it's，
+    documented。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用结构性并发有助于使代码可重构，因为你可以随时从另一个协同例程函数调用它，或者你可以调整整个程序，因为它们被保证是自包含的任务。所以谢谢你。这一切都在GitHub上。协同例程的内容在主分支上，并且已记录。
+- en: But I'm still working my way up to a release。 I've got kids now。 so it's less
+    time to play with stuff。 Axiom is on the Pi Week website。 And Pi Week is at piweek。org。
+    So maybe you could join us for the next competition， which， will be in September。
+    Thanks very much。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我仍在努力准备发布。我现在有孩子了，所以玩东西的时间少了。Axiom在Pi Week网站上。Pi Week的网址是piweek.org。所以，也许你可以参加我们下一个将在九月份举行的比赛。非常感谢。
+- en: '![](img/b4a1e9094e82ce4350beb179861e167f_28.png)'
+  id: totrans-80
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a1e9094e82ce4350beb179861e167f_28.png)'
+- en: '[APPLAUSE]。'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[掌声]。'

@@ -1,0 +1,645 @@
+- en: P2：TALK _ Anthony Shaw _ Restarting Pyjion, a general purpose JIT for Python-
+    is it - VikingDen7 - BV19Q4y197HM
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P2：演讲 _ 安东尼·肖 _ 重新启动 Pyjion，一个通用的 Python JIT - 是它 - VikingDen7 - BV19Q4y197HM
+- en: '[Music]。'
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[音乐]。'
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_1.png)'
+- en: Hi everyone。 I hope you're really enjoying Pike on US 2021 so far。 I'm really
+    excited to be here。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家好。我希望你们到目前为止真的很享受 2021 年的 Pike on US。我很高兴能在这里。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_3.png)'
+- en: to present something to you today called Pigeon which is a project that I've
+    been working on for。 the last nine months and yeah I want to say a big hello to
+    all the international Pythonistas out。 there and so pleased that everyone can
+    make it this year virtually and really look forward to seeing。 you in the future
+    face-to-face。 In this talk we're going to cover five main topics in a short space。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 今天我想向大家介绍一个项目，叫做 Pigeon，这是我在过去九个月里一直在进行的项目，我想向所有国际 Python 爱好者致以热烈的问候，很高兴大家今年能在虚拟环境中聚集在一起，真的期待未来能与大家面对面见面。在这个演讲中，我们将简要讨论五个主要主题。
+- en: of time。 Some of these topics especially the JIT compiler are very niche technology
+    areas。 I'm not assuming that everyone watching this talk is a compiler expert
+    but I'll really try my best。 to break down some of the topics。 We don't have that
+    much time。 If you find yourself wanting to。 learn more by the end of the talk
+    there are plenty of links to follow up with or you can reach out to。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 时间有限。其中一些主题，特别是 JIT 编译器，是非常小众的技术领域。我并不认为观看这个演讲的每个人都是编译器专家，但我会尽力把一些主题分解得更清楚。我们没有太多时间。如果你在演讲结束时想学习更多，还有很多链接可以跟进，或者你可以直接联系我。
+- en: me directly。 So first off let's recap from my Pike on US 2020 talk why is Python
+    slow？ I strongly。 recommend you watch that talk because it gives some context
+    for why I'm looking at a JIT to solve。 some of Python's performance challenges。
+    In that talk I talked about a particular benchmark。 called the N-Body Algorithm。
+    The N-Body Algorithm is a mathematical formula that can calculate the。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 直接联系我。那么，首先让我们回顾一下我在 2020 年的 Pike on US 演讲，为什么 Python 这么慢？我强烈建议你观看那场演讲，因为它为我研究
+    JIT 解决 Python 的性能挑战提供了一些背景。在那场演讲中，我讨论了一个特别的基准，叫做 N-Body 算法。N-Body 算法是一个数学公式，可以计算。
+- en: orbits of the Jovian planets which are Jupiter， Saturn， Uranus and Neptune。
+    I picked N-Body because。 the Python implementation suffers from an extreme case
+    of some of the causes of its general slowness。 If you compare C and C-Python 3。9
+    which is written in C the execution times are not even in the same。 galaxy that
+    learn the same planet。 Even Ruby， PHP and Perl but Python to shame on this algorithm。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 木星、土星、天王星和海王星的轨道。我选择 N-Body 是因为 Python 实现极其受限于其普遍慢速的一些原因。如果你比较 C 和用 C 编写的 CPython
+    3.9，执行时间根本不在同一银河系。即使是 Ruby、PHP 和 Perl，在这个算法上也让 Python 感到羞愧。
+- en: when it comes to speed but it's not those languages I'd like to compare Python
+    against。 its JavaScript。 JavaScript is equally dynamic it has a GC and it kind
+    of even has a gill as well。 So how is no JS which runs JavaScript so much faster
+    than Python？
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它是 JavaScript。JavaScript 同样动态，它有垃圾回收（GC），甚至还有一个全局解释器锁（GIL）。那么，为什么运行 JavaScript
+    的 Node.js 比 Python 快得多呢？
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_5.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_5.png)'
+- en: This is the guts of the Python N-Body implementation。 To summarize what's happening
+    here it's looping， over a list of tuples unpacking them and then performing a
+    number of calculations and floating。 point numbers。 I've highlighted the core
+    integral of the algorithm here all of the highlighted。 variables are floats。 Something
+    that's important is that Python won't do anything clever with the。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 Python N-Body 实现的核心。总结一下这里发生的事情，它正在循环遍历一个元组列表，解包它们，然后进行多项计算和浮点数运算。我在这里突出了算法的核心部分，所有突出显示的变量都是浮点数。重要的是，Python
+    在速度上不会做任何聪明的优化，但我并不是要把 Python 与那些语言进行比较。
+- en: operators。 The compiler knows the order of operations and emits the bytecodes
+    in the correct sequence。 It uses a mnemonic that maybe you land at high school
+    like Bodmap or Pemdas。 The Achilles heel of this calculation is at the result
+    of each multiplication。 addition subtraction is a new floating point object which
+    then gets D reference to the next operation。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运算符。编译器知道操作顺序，并按正确顺序发出字节码。它使用一个记忆法，也许你在高中学过，比如 Bodmap 或 Pemdas。这个计算的 Achilles
+    劣势在于每次乘法、加法和减法的结果都是一个新的浮点对象，这个对象会被引用到下一个操作。
+- en: Let's expand line 74 on I'll show you what I mean。 In this equation Python will
+    run four。 multiplication operations， two addition operations and one power operation。
+    The resulting floating。 point numbers have to be allocated in memory。 The native
+    C float has to be converted to a。 pie float object and then in the very next operation
+    it gets converted back into a C float。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们扩展第 74 行，我来给你展示我的意思。在这个方程中，Python 将执行四次乘法操作，两次加法操作和一次幂操作。结果浮点数必须在内存中分配。原生
+    C 浮点数必须转换为一个 pie 浮点对象，然后在接下来的操作中再转换回 C 浮点数。
+- en: The reference count becomes zero and so the memory is freed。 You might think
+    that memory is fast。 but the floating point numbers in steps one to six in this
+    diagram are all temporary objects。 so they get allocated and then deallocated
+    almost instantaneously。 So if you think of the time it。 takes to do that multiply
+    that by the half a million iterations this loop executes and then。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引用计数变为零，因此内存被释放。你可能会认为内存很快，但在此图中第 1 到第 6 步的浮点数都是临时对象。因此，它们被分配后几乎瞬间就被释放。所以如果你考虑一下所需时间，将其乘以这个循环执行的五十万次迭代，然后。
+- en: again for each planet and then again for each step。 It's actually over a billion
+    operations。 of this particular line so when you add all that up it adds up to
+    a lot of execution time。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于每个行星，再针对每一步。这实际上超过了十亿次操作。将这一特定行添加在一起，最终导致了大量的执行时间。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_7.png)'
+  id: totrans-16
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_7.png)'
+- en: If you were to convert this function to a siphon module and annotate all of
+    those variables as。 doubles it would bypass the temporary object allocations and
+    siphon would compile that down to。 execute about eight times faster。 It does this
+    because a floating point number still fits within。 64 bits so the CPU can keep
+    that on the register and it doesn't have to allocate and deallocate memory。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你将这个函数转换为一个 siphon 模块，并将所有这些变量注解为双精度浮点数，它将绕过临时对象的分配，siphon 将编译成大约快八倍的执行速度。之所以能够做到这一点，是因为浮点数仍然适合
+    64 位，因此 CPU 可以将其保留在寄存器中，而不需要分配和释放内存。
+- en: from the heap to do the calculation。 If you were to run anybody using another
+    JIT， PiPy。 it has its own mechanism for removing the allocation and deallocation
+    of these temporary objects。 The PiPy approach is super efficient on the CPU but
+    it does consume more memory。 This is a。 common issue with JITs to have high memory
+    usage at the expense of reduced execution times。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从堆中进行计算。如果你运行其他 JIT，例如 PiPy，它有自己的机制来移除这些临时对象的分配和释放。PiPy 的方法在 CPU 上超级高效，但确实消耗更多内存。这是
+    JIT 的一个普遍问题，高内存使用会以减少执行时间为代价。
+- en: So let's recap the conclusion of why is Python slow。 There's a temporary object
+    problem。 There's the evaluation loop of CPython and the big overhead that that
+    has。 so tight loops and cycles are really slow。 Most attempts at improving the
+    performance of Python。 come with major drawbacks to either compatibility or platform
+    support。 And so having a truly。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们回顾一下为什么 Python 慢的结论。存在临时对象问题。CPython 的评估循环和其带来的巨大开销。因此，紧密的循环和周期真的很慢。大多数尝试提高
+    Python 性能的做法，都伴随着对兼容性或平台支持的重大影响。因此，要真正做到这一点。
+- en: compatible optimizer for Python is actually pretty tricky。 The garbage collector
+    is a stop。 everything collector unlike Node。js which does a multi-threaded mark
+    process。 And lastly。 the theory is that a specialized JIT could help in some scenarios。
+    There are plenty of projects which add a JIT compilation to your Python code depending
+    on the。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 兼容的 Python 优化器实际上相当棘手。垃圾回收器是一个停止一切的收集器，不像 Node.js 采用多线程标记过程。最后，理论上，专门的 JIT 在某些情况下可能会有所帮助。有许多项目会为你的
+    Python 代码添加 JIT 编译，具体取决于。
+- en: domain。 For data science and in particular for NumPy there's the number project。
+    Number is a。 decorator that you wrap on certain functions with annotations on
+    which underlying types are used。 It will then JIT compile parts of the function
+    to benefit NumPy calls。 If you're already using。 NumPy this is great but if you're
+    just writing general Python code it likely won't make any。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 领域。对于数据科学，尤其是 NumPy，有一个数字项目。Number 是一个装饰器，你可以在带有注解的特定函数上使用，以指示使用哪些底层类型。它会 JIT
+    编译函数的部分，以便受益于 NumPy 调用。如果你已经在使用 NumPy，这很棒，但如果你只是编写普通的 Python 代码，这可能不会带来任何。
+- en: difference at all it might even make the code slower。 Next there's the piston
+    project which is a fork， of CPython that includes a JIT for some operations using
+    the LLVM JIT engine。 Number claims performance， gains are 10 to 20% compared to
+    CPython 3。9。 However the drawbacks is that it's a close source。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根本没有区别，它甚至可能使代码变得更慢。接下来是piston项目，它是CPython的一个分支，包含了对某些操作使用LLVM JIT引擎的JIT。它声称与CPython
+    3.9相比，性能提升为10%到20%。然而，缺点是它是闭源的。
+- en: project and that it's a runtime that you have to deploy install and support
+    as well。 And lastly。 the PyPy project a Python interpreter written in Python which
+    has a mature JIT that will deliver。 massive performance gains in many scenarios。
+    The drawbacks with PyPy is that in some cases it's。 significantly slower than
+    CPython and also it lacks a lot of compatibility with C extensions。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 项目以及它是一个你需要部署、安装和支持的运行时。最后，PyPy项目是一个用Python编写的Python解释器，它具有成熟的JIT，可以在许多场景中提供巨大的性能提升。PyPy的缺点是，在某些情况下，它的速度显著慢于CPython，并且缺乏与C扩展的兼容性。
+- en: I think there's still a gap here for a general purpose JIT that focuses on compatibility。
+    and delivers performance gains to plug some of the pitfalls in CPython's eval
+    loop。 This is where Pigeon comes in。 Pigeon is a JIT compiler for CPython bytecode。
+    You can pip install it from PyPy and it's compatible with CPython 3。9。 Pigeon
+    is compiled for Linux。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我认为这里仍然有一个通用JIT的空白，专注于兼容性，并提供性能提升，以弥补CPython评估循环中的一些不足。这就是Pigeon的用武之地。Pigeon是一个用于CPython字节码的JIT编译器。你可以通过PyPy进行pip安装，并且它与CPython
+    3.9兼容。Pigeon为Linux编译。
+- en: MacOS and Windows。 It supports 64-bit Intel CPU architectures and I'll work
+    on ARM support if。 somebody can buy me an M1。 Something I want to make super clear。
+    Pigeon is not another Python。 interpreter。 It works inside CPython 3。9。 Pigeon
+    is not a new project either。 It was originally。 presented at PyCon 2016 by Brett
+    Cannon and Dilla Veland。 It was written against the Python 3。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: MacOS和Windows。它支持64位Intel CPU架构，如果有人能给我买个M1，我会着手开发ARM支持。我要明确一点，Pigeon不是另一个Python解释器。它在CPython
+    3.9内部运行。Pigeon也不是一个新项目。它最初是在2016年的PyCon上由Brett Cannon和Dilla Veland提出的。它是针对Python
+    3编写的。
+- en: 6 byte， code。 It also only worked on Windows and it required a custom build
+    of Python because it required。 PEP 523 which wasn't yet merged and then was later
+    introduced in Python 3。7。 It was also written。 for a JIT compiler based on 。NET
+    Core 1。0 beta which is long since past。 So I have all intents。 and purposes rewritten
+    the original project over the last nine months。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 6字节，代码。它仅在Windows上有效，并且需要一个定制的Python构建，因为它需要PEP 523，而该提案尚未合并，后来在Python 3.7中引入。它也是为基于.NET
+    Core 1.0 beta的JIT编译器编写的，该版本早已过时。因此，我在过去九个月里基本上重写了原始项目。
+- en: The design of it is very similar， but there's some fundamental changes which
+    I want to talk about。 I know the original project was， seeking optimizations through
+    the use of unboxing integers and floats but I've largely abandoned。 that idea。
+    I don't think the effort is worth reward and there are better options of functions。
+    which use lots of floats and integers。 Pigeon focuses on compatibility。 If it
+    runs in CPython。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它的设计非常相似，但有一些根本性的变化我想谈谈。我知道原始项目是通过使用拆箱整数和浮点数来寻求优化，但我在很大程度上放弃了这个想法。我认为这种努力得不偿失，还有更好的函数选项，使用大量的浮点数和整数。Pigeon专注于兼容性。如果它在CPython中运行。
+- en: it should run in Pigeon。 The JIT startup overhead should be minimal。 Especially
+    if subinterpreters。 are widely adopted beyond Python 3。10。 This can't be like
+    waiting for a big VM to boot like the Java。 VM。 Beyond enabling the JIT， Pigeon
+    should not require any changes to the code。 It shouldn't require， type annotations
+    or rubber functions。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它应该在Pigeon中运行。JIT启动开销应该是最小的。特别是如果子解释器在Python 3.10之后得到广泛采用。这不能像等待大型虚拟机启动一样，像Java虚拟机那样。除了启用JIT，Pigeon不应该要求对代码进行任何更改。它不应该需要类型注解或橡胶函数。
+- en: I'm assuming that people want to use a general purpose JIT for， code that they
+    don't control。 they don't want to change， they really just want to enable the
+    JIT。 in already working code and have it optimize where possible。 Lastly， I want
+    this to be able to be。 deployed anywhere。 If you're using a cloud environment
+    where you don't control the Python。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我假设人们希望使用一个通用JIT，针对他们不控制的代码。他们不想更改，只想在已有工作代码中启用JIT，并在可能的地方进行优化。最后，我希望这个工具能够在任何地方部署。如果你在一个不控制Python的云环境中使用。
+- en: that's installed， you should be able to pip install and import Pigeon。 This
+    opens up opportunities for， all sorts of past platforms where you can add this
+    to optimize your existing code。 To understand how Pigeon works， let's look briefly
+    at the components that make up C Python's。 compiler an execution process。 So first
+    you have your Python code。 This is parsed in Python 3。9。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦安装完成，你应该能够 pip 安装并导入 Pigeon。这为各种过去的平台打开了机会，你可以将其添加到以优化现有代码。要理解 Pigeon 的工作原理，我们简要看看构成
+    C Python 的编译器和执行过程的组件。首先，你有你的 Python 代码。这在 Python 3.9 中被解析。
+- en: using the shiny new Pige parser。 The parser will read your code and understand
+    how and where you've。 used the Python syntax。 It will also throw up things like
+    syntax errors when you make mistakes。 that couldn't even be parsed。 The parsed
+    code is emitted as an abstract syntax tree or AST。 ASTs are very useful representations
+    for the Python compiler。 The Python compiler。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用崭新的 Pige 解析器。解析器会读取你的代码，并理解你在何处使用了 Python 语法。当你犯错时，它还会抛出诸如语法错误等问题，这些错误甚至无法解析。解析后的代码以抽象语法树或
+    AST 的形式输出。AST 对于 Python 编译器非常有用。
+- en: compiles down each function into small sequential atomic commands called bytecodes。
+    These bytecodes。 are cached on disk in your dunder pi cache folder and each time
+    Python executes your code。 it will loop through the bytecodes and call the corresponding
+    APIs within CPython to bring your。 code to life。 It also does the work of interconnecting
+    with C extensions。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将每个函数编译成称为字节码的小型顺序原子命令。这些字节码会缓存到磁盘中的你的 dunder pi 缓存文件夹中，每次 Python 执行你的代码时，它都会遍历这些字节码并调用
+    CPython 中相应的 API 以使你的代码生效。它还负责与 C 扩展的互连工作。
+- en: handling memory allocation， threading， garbage collector and quite a lot else。
+    So Pigeon inserts itself between the compiler， and the evaluation stages。 It will
+    recompile the Python bytecode into native machine code。 And it does this at runtime。
+    which is what makes it a jit compiler。 Pigeon will kick in when a。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理内存分配、线程、垃圾收集等许多其他内容。因此，Pigeon 将自己插入到编译器和评估阶段之间。它将在运行时重新编译 Python 字节码为本机机器代码，这就是它作为
+    jit 编译器的特性。当一个函数运行时，Pigeon 会启动。
+- en: function is run a certain number of times。 It compiles the Python bytecode into
+    an intermediary。 language called ecmesil。 Ecmesil is used by the 。net compiler。
+    This is the 。net 5 compiler。 not to be confused with the older 。net。 The use of
+    the 。net 5 jit is really an implementation detail， and in no way helps you doing
+    anything 。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 函数运行一定次数时，它将 Python 字节码编译成一种称为 ecmesil 的中间语言。Ecmesil 被 .net 编译器使用。这是 .net 5
+    编译器，不要与旧版 .net 混淆。使用 .net 5 jit 实际上是一个实现细节，并不会帮助你做任何事情。
+- en: net related or working with any 。appis。 It was selected because。 the sill is
+    a good cross platform level。 And 。net 5's review jit compiler is a mature well
+    supported。 jit compiler that supports Intel CPU X64 and ARM。 So the compiled code
+    is assembly。 Well。 actually it's machine code， but it's a compiled binary kept
+    in memory。 So Pigeon compiles。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与 .net 相关或使用任何 .appis。之所以选择它，是因为该层次是一个很好的跨平台级别。而 .net 5 的评审 jit 编译器是一个成熟且得到良好支持的
+    jit 编译器，支持 Intel CPU X64 和 ARM。因此，编译的代码是汇编代码。实际上，它是机器代码，但它是保存在内存中的编译二进制文件。所以 Pigeon
+    编译。
+- en: each of your Python functions into executable symbols and caches them in RAM。
+    All of this is really theoretical and a lot easier to explain with a demo。 Pigeon
+    is pip installable。 So you start off with the Python 3。9 virtual environment。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将你的每个 Python 函数转换为可执行符号并将其缓存到 RAM 中。所有这些实际上都是理论上的，使用演示来解释会简单得多。Pigeon 是可通过 pip
+    安装的。因此，你需要从 Python 3.9 虚拟环境开始。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_9.png)'
+  id: totrans-37
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_9.png)'
+- en: Pip install Pigeon。 Start up a Python 3。9 REPL and we can see the compiler in
+    action。 Let's define a crude Python function that divides numbers in half。 So
+    we'll take an input of X。 and we'll return X divided by 2。 So once you declare
+    this function on the REPL。 CPython will have compiled it and stored the code object
+    in the dunder code attribute of。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 pip 安装 Pigeon。启动一个 Python 3.9 REPL，我们可以看到编译器在运行。让我们定义一个粗略的 Python 函数，用于将数字减半。因此我们将输入
+    X，并返回 X 除以 2。因此，一旦你在 REPL 上声明此函数，CPython 将编译它并将代码对象存储在 dunder code 属性中。
+- en: the function object。 You can disassemble the function into CPython bytecode
+    using the。 DIS method in the DIS module。 If you use Pigeon， you first need to
+    import the Pigeon package。 and then enable the jit compiler。 If you execute the
+    half function。 the jit will kick in and compile， those Python bytecodes into machine
+    code。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 函数对象。你可以使用DIS模块中的DIS方法将函数反汇编为CPython字节码。如果你使用Pigeon，你首先需要导入Pigeon包，然后启用JIT编译器。如果你执行减半函数，JIT将启动并将这些Python字节码编译为机器代码。
+- en: Pigeon uses a hidden field in the code object called。 Co-extra to store a dictionary
+    of attributes of its jit compiled state。 This includes the binary。 instructions
+    for the compiled function。 You can see the status of this by using the info function
+    in。 the Pigeon module。 This result tells us that it has compiled a function， it's
+    executed once。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Pigeon使用代码对象中一个名为Co-extra的隐藏字段来存储其JIT编译状态的属性字典。这包括编译函数的二进制指令。你可以通过使用Pigeon模块中的info函数查看这一状态。这个结果告诉我们，它已经编译了一个函数，并且它只执行了一次。
+- en: and that the PGC status is one which I'll come to later。 I've also included
+    a disassembler。 into Pigeon。 So you can see both the echima-sil instructions as
+    well as the assembly。 You can。 sell the sil instructions by using the Pigeon。dis
+    module and then called in the dis function and。 passing it the function object。
+    The method calls an IL a referencing Python C API。 So Pigeon will。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且PGC状态是一个我稍后会提到的状态。我还在Pigeon中包含了一个反汇编器。因此你可以看到echima-sil指令以及汇编代码。你可以通过使用Pigeon的dis模块并调用dis函数，传入函数对象来反汇编sil指令。这个方法调用的是IL，引用Python
+    C API。所以Pigeon将。
+- en: use your operating systems ABI to call the Python 3。9 C API where required。
+    In the case of this。 half function it will call the pi number underscore divide
+    which is part of the C API because it has。 no idea what X is so it's just going
+    to say right I assume it's a number and I'll just do the division。 operator。 You
+    can go a level deeper and disassemble the compiled machine code into x86 using
+    the dis。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用你的操作系统ABI在需要时调用Python 3.9 C API。在这个减半函数的情况下，它将调用pi number underscore divide，这是C
+    API的一部分，因为它不知道X是什么，所以它只会说，我假设这是一个数字，我将进行除法运算。你可以更深入一步，使用dis将编译的机器代码反汇编为x86。
+- en: underscore native function。 If you want to use an external disassembler you
+    can dump the compiled。 binary code using Pigeon。dump native to disk and then load
+    it directly using a tool like Hopper for。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: underscore本地函数。如果你想使用外部反汇编器，可以使用Pigeon将编译后的二进制代码转储到磁盘，然后直接使用像Hopper这样的工具加载它。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_11.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_11.png)'
+- en: example。 So a function that divides numbers in half is pretty unimpressive so
+    let's try something a。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 示例。因此，一个将数字减半的函数并不令人印象深刻，所以让我们尝试一些不同的东西。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_13.png)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_13.png)'
+- en: bit more interesting。 This is a dead simple flask application and I've bundled
+    a whiskey middleware。 with Pigeon that all it really does is when it initializes
+    it enables the jits。 So you can use。 it with frameworks like flask and Django
+    and if you've deployed it with a web worker， a whiskey。 worker like G unicorn
+    for example it'll enable the jit compiler on your whiskey workers so that。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这稍微有点意思。这是一个非常简单的flask应用程序，我将whiskey中间件与Pigeon打包在一起，它所做的就是在初始化时启用JIT。因此你可以将其与像flask和Django这样的框架一起使用，如果你已经与网络工作者（例如G
+    unicorn这样的whiskey工作者）部署了它，它将启用JIT编译器。
+- en: your web application， your routes， your functions and everything will all be
+    jit compiled。 So once。 you've added this whiskey middleware just use flask as
+    normal。 So if we start up that script。 right and we can see that's running and
+    listening on the port and flask is working as normal。 So this， required absolutely
+    no change just the existing code other than obviously to import the whiskey。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的网页应用程序、你的路由、你的函数以及所有内容都将被JIT编译。因此，一旦你添加了这个whiskey中间件，就可以正常使用flask。所以如果我们启动那个脚本，没错，我们可以看到它正在运行并监听端口，flask正常工作。所以这绝对不需要任何改变，除了显然需要导入whiskey以外的现有代码。
+- en: module but that can be done once at the application level。 You don't need to
+    decorate any functions。 you don't need to change any functions， your existing
+    application should just work。 So in this demo I。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 模块，但这可以在应用程序级别完成。你不需要装饰任何函数，也不需要更改任何函数，你现有的应用程序应该可以正常工作。因此，在这个演示中我。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_15.png)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_15.png)'
+- en: skimmed over a couple of things。 Pigeon works by attaching a special jit object
+    to code objects。 This is actually permitted per pep 523。 This isn't a hacky thing
+    that we've come up with。 This special object contains the compile binary for your
+    function as well as some other handy data。 CPython is still the thing that parses
+    the code。 You don't need to worry about whether the syntax。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我略过了几件事。Pigeon通过将特殊的JIT对象附加到代码对象上来工作。这在PEP 523中是允许的。这并不是我们想出来的黑客手段。这个特殊对象包含了你函数的编译二进制文件以及其他一些有用的数据。CPython仍然是解析代码的工具。你不需要担心语法。
+- en: will be compatible。 Pigeon never reads the code， it works at a bytecode level。
+    Pigeon compiles。 the bytecode from Python 3。9 into machine code。 When you enable
+    pigeon it tells CPython that pigeon。 will now evaluate frames。 So after pigeon
+    has been enabled pigeon will now evaluate all frames。 regardless of whether or
+    not they have been jit compiled。 If it detects that the function hasn't。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将兼容。Pigeon从不读取代码，它在字节码级别工作。Pigeon将Python 3.9的字节码编译为机器代码。当你启用Pigeon时，它会告诉CPython，Pigeon现在将评估帧。因此，在启用Pigeon后，Pigeon将评估所有帧，无论它们是否已经JIT编译。如果检测到函数尚未。
+- en: yet been compiled it will compile it in line。 So this sounds pretty awesome，
+    you saw that assembly。 code in the screen so this must be ridiculously fast right？
+    I sadly know at least not yet。 The。 jitted code you saw is still calling the CPython
+    C API and the C eval loop is also compiled code。 So the C compiler does probably
+    a much better job actually of writing assembly than I would。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还未编译，它将在行内编译。所以这听起来非常棒，你在屏幕上看到了汇编。代码，这一定非常快吧？我很遗憾地知道，至少目前还不是。你看到的JIT代码仍然调用CPython的C
+    API，而C评估循环也是编译过的代码。因此，C编译器实际上写汇编的效果可能远比我好。
+- en: So in terms of performance it doesn't make a difference just to call the same
+    API and have it。 jit compiled。 Jit compile is a faster only when they can make
+    optimizations。 So far pigeon has 15。 optimizations that I've written and I think
+    when it's really pushing the boundaries that number is。 going to be more like
+    100。 All of these optimizations are patterns that can be observed with a code。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从性能来看，仅仅调用相同的API并让其JIT编译没有区别。JIT编译只有在可以进行优化时才更快。到目前为止，我写了15个Pigeon的优化，我认为当它真正推动边界时，这个数字将更接近100。所有这些优化都是可以在代码中观察到的模式。
+- en: object when it's compiling。 So pigeon uses them to emit faster code which is
+    still compatible with。 the equivalent CPython code。 So as an example let's roll
+    back to nbody。 I'll show you two optimizations。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在编译时会使用对象。因此，Pigeon利用它们来发出更快的代码，这仍然与相应的CPython代码兼容。作为一个例子，让我们回到nbody。我将向你展示两个优化。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_17.png)'
+  id: totrans-56
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_17.png)'
+- en: that make a dent on the execution time when you use pigeon。 The first is really
+    simple。 Pigeon will notice that when you access an item in a list or tuple using
+    a constant index like。 here the number zero one instead of using the pylong object
+    for the index it uses the much。 faster C API method for getting an item out of
+    a list or tuple using a C integer。 The second。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用Pigeon时，对执行时间造成影响的因素。第一个非常简单。Pigeon会注意到，当你使用常量索引访问列表或元组中的项时，例如这里的数字零，而不是使用pylong对象作为索引，它会使用更快的C
+    API方法，通过C整数从列表或元组中获取项。第二个。
+- en: optimization is one I talked about at the beginning when pigeon notices that
+    a statement uses two。 sequential mathematical operations on a float or long it
+    will keep the carryover value in its。 native type instead of constructing a new
+    pi object。 This takes effect for in-place operations as well， like these in-place
+    additions and subtractions。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 优化是我在一开始提到的，当Pigeon注意到一个语句在浮点数或长整型上使用两个顺序数学操作时，它会将进位值保留为本地类型，而不是构造一个新的pi对象。这也适用于原地操作，例如这些原地加法和减法。
+- en: The result of the right hand side of the statement。 is kept as a native C float
+    and the additional pi object is never allocated。 So these aren't。 massive improvements
+    but they're patterns which I've observed in a lot of other Python code as well。
+    so they don't just apply to nbody they can be used for a number of different scenarios
+    and actually。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 语句右侧的结果作为本地C浮点数保留，额外的pi对象则从未分配。因此，这些并不是巨大的改进，但它们是我在许多其他Python代码中观察到的模式，因此它们不仅适用于nbody，还可以用于许多不同的场景，实际上。
+- en: work really nicely in a general purpose JIT。 So one of the biggest challenges
+    any Python optimization。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在通用JIT中表现得非常好。所以，任何Python优化面临的最大挑战之一。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_19.png)'
+  id: totrans-61
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_19.png)'
+- en: is going to have is trying to establish what type things are。 So I'm working
+    on a feature at。 the moment called profile guided compilation or PGC。 The concept
+    is that Python is really dynamic。 is very hard to determine the types of variables
+    however the types at particular。 opcode positions don't tend to change much between
+    executions of a function。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目的是尝试确定事物的类型。因此，我目前正在开发一个名为配置文件引导编译（PGC）的功能。这个概念是，Python 是非常动态的，变量的类型很难确定，但在特定操作码位置的类型在函数执行之间变化不大。
+- en: If you execute a function， thousand times and every single time you send it
+    a string and it works with strings let's optimize。 it for strings。 PGC doesn't
+    interpret the AST like other typing tools it's a profiler so when you run。 the
+    JITID function the first time it can pass some probes into the machine code。 These
+    capture any。 types that PIGIN is particularly interested in。 When you run the
+    function again it will use the profile。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你执行一个函数，一千次，每次都传递一个字符串并且它处理字符串，那么让我们针对字符串进行优化。PGC 不像其他类型工具那样解释 AST，它是一个性能分析器，所以当你第一次运行
+    JITID 函数时，它可以将一些探针插入机器代码。这些捕获了 PIGIN 特别感兴趣的类型。当你再次运行这个函数时，它会使用配置文件。
+- en: and then start to make some assumptions about what it can and can't optimize。
+    The PGC state is。 either uncompiled which means the JIT compiler has never seen
+    it before。 The second stage is to compile， it as a generic function with probes
+    which then basically emits the profile data and then when the。 function is executed
+    again it will see that it has the profile data and it will recompile the function。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后开始对其能优化和不能优化的内容做出一些假设。PGC 状态是未编译，这意味着 JIT 编译器之前从未见过它。第二阶段是编译，将其作为带有探针的通用函数，这基本上会发出配置文件数据，然后当函数再次执行时，它会看到有配置文件数据并重新编译函数。
+- en: and then include any optimizations that it can make。 You can see which stage
+    is out using the。 PIGIN。info function that I demoed earlier。 So let's take another
+    example this is a simple function。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后包含它可以做的任何优化。你可以使用之前演示的 PIGIN.info 函数查看当前状态。让我们再看一个例子，这是一个简单的函数。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_21.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_21.png)'
+- en: in the Django source code for listing static files for a particular storage
+    location。 The first time it runs PGC says hey self。locations is a list， self。storages
+    is a dictionary。 and then when it recompiles the function with the PGC profile
+    data it says okay let's optimize that。 In case the type do change it compiles
+    a type guard to inspect the value at runtime。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Django 源代码中列出特定存储位置的静态文件。第一次运行时，PGC 会识别出，self.locations 是一个列表，self.storages
+    是一个字典。然后，当它使用 PGC 配置文件数据重新编译函数时，会说好的，让我们优化它。为了防止类型变化，它编译一个类型保护，以在运行时检查值。
+- en: and if it isn't what it was expecting based on the profile data it will default
+    back to the generic。 path。 So coming back to the end body algorithm I'm actually
+    currently getting about a third of。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果它与基于配置文件数据的预期不符，它会默认返回通用路径。因此，回到末尾算法，我目前实际上获得大约三分之一的。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_23.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_23.png)'
+- en: the execution time in PIGIN compared to CPython 3。9。 Other benchmarks are showing
+    promise are the。 Fancuk and the float benchmarks which have around 20% speed improvement
+    at the moment。 My philosophy is that anything below 20% isn't worth the effort
+    so I'm looking really much higher。 than that and looking to see if we can get
+    multiples of performance off this。 Same conclusion I'd。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: PIGIN 中的执行时间与 CPython 3.9 相比。其他基准测试显示出前景的还有 Fancuk 和 float 基准，目前有大约 20% 的速度提升。我的哲学是，任何低于
+    20% 的优化都不值得努力，因此我希望能够获得更高的提升，并查看我们是否可以实现多重性能提升。结论也是如此。
+- en: love some help on this。 JIT compiler is really fun to work on and there are
+    at this stage thousands。 of tests so you can see all sorts of different scenarios
+    and how this can be worked and used。 I think the idea has a lot of potential as
+    a drop-in module to optimize CPython。 and optimize code which would really benefit
+    from a JIT and then have a transparent effect on code。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我很想对此获得一些帮助。JIT 编译器真的很有趣，现阶段有成千上万的测试，因此你可以看到各种不同的场景以及如何运作和使用。我认为这个想法有很大潜力，可以作为一个可插拔模块来优化
+    CPython，并优化那些真正受益于 JIT 的代码，然后对代码产生透明的效果。
+- en: which doesn't。 And lastly the more I look into this I'm finding problems that
+    the PIPI project has。 already solved so check out PIPI and see whether your code
+    works with PIPI I think。 they've done a brilliant job already。 There's a lot of
+    brilliant science and research that's。 gone into PIPI and their JIT and it can
+    make a drastic difference to the performance of your code。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不。最后，我越深入了解，就发现PIPI项目已经解决了很多问题。所以查看一下PIPI，看看你的代码是否与PIPI兼容，我认为他们已经做得非常出色。PIPI及其JIT中融入了大量杰出的科学和研究，这能显著提高你的代码性能。
+- en: already。 So the documentation for this project is up at pigeon。readedox。io and
+    the sources on my。 github repository at github。com/tonyballoni/pigeon。 If you
+    want to understand more about CPython's。 compiler， the eval loop， memory management，
+    I cover all of this in my CPython internals book。 and you can follow my blog on
+    my website for the latest on what I'm working on or follow me on Twitter。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 已经。所以这个项目的文档在pigeon。readedox。io上，源代码在我的github仓库github。com/tonyballoni/pigeon。如果你想更深入了解CPython的编译器、评估循环和内存管理，我在我的CPython内部书中都有涉及。你也可以在我的网站上关注我的博客，获取我最新的工作动态，或者在Twitter上关注我。
+- en: Thank you and enjoy the rest of PyCon。 [Music]。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谢谢，祝你享受PyCon的剩余时间。[音乐]。
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_25.png)'
+  id: totrans-75
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_25.png)'
+- en: '[Music]， [Music]， [Music]， [Music]， [Music]， [Music]， [Music]， [Music]， [Music]，
+    [Music]， [Music]。 [Music]， [Music]， [Music]， [Music]， (buzzing)， Alright， let''s
+    go。'
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[音乐]，[音乐]，[音乐]，[音乐]，[音乐]，[音乐]，[音乐]，[音乐]，[音乐]，[音乐]。[音乐]，[音乐]，[音乐]，[音乐]，（嗡嗡声），好的，走吧。'
+- en: '![](img/ada841d6cf07faa6bfce329a162ecbca_27.png)'
+  id: totrans-77
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/ada841d6cf07faa6bfce329a162ecbca_27.png)'

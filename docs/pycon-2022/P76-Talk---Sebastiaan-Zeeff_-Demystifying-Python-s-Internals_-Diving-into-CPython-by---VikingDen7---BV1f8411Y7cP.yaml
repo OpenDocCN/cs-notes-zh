@@ -1,0 +1,824 @@
+- en: P76：Talk - Sebastiaan Zeeff_ Demystifying Python’s Internals_ Diving into CPython
+    by - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P76：演讲 - Sebastiaan Zeeff_ 破解Python内部_ 深入CPython - VikingDen7 - BV1f8411Y7cP
+- en: It's my pleasure to introduce Sebastian Safe， who will be talking about demonstrating
+    Python's。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我很高兴介绍Sebastian Safe，他将谈论演示Python的内容。
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_1.png)'
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_2.png)'
+- en: internals， diving into C Python by implementing a pipe operator。 Yes， well，
+    thank you very much。 So you must be hearing this a lot。 This is my first in-person
+    Python and my first in-person Python talk。 I gave a talk last year， but it was
+    online。 I'm really happy to be here and to just be able to see you all。 I'm also
+    really happy for all of the people who are joining us from home online。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内部，深入C Python，通过实现管道运算符。是的，非常感谢。所以你们一定听到过很多。这是我第一次参加现场Python会议，也是我第一次在现场演讲。去年我做过一次演讲，但那是在线进行的。我真的很高兴能在这里，能够见到你们。我也很高兴所有在线从家里参加的人。
+- en: It's really like a birthday present。 And in fact， today is my birthday。 So this
+    actually is a birthday present for me。 So thank you all for joining my little
+    birthday party today。 So before we dive into Python， I'm first briefly going to
+    introduce myself so you， know who I am。 And then we're going to dive right into
+    the talk。 So my name is Sebastian。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这真的像是生日礼物。实际上，今天是我的生日。所以这实际上是给我的生日礼物。感谢大家参加我今天的小生日派对。在我们深入Python之前，我首先简要介绍一下自己，让你们知道我是谁。然后我们将直接进入演讲。所以我叫Sebastian。
+- en: You can see my Twitter handle over there。 If you have any angry corrections
+    or you want to ask me questions。 just tweet something， at me。 And another thing
+    that I would really appreciate it is photos。 I don't have a lot of photos of me
+    speaking， especially in the past two years。 Everything has been online， staring
+    into a webcam。 So if you do make a photo。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以看到我的Twitter用户名。如果你有任何愤怒的纠正或想问我问题，直接给我发推。还有一件我非常感谢的事，就是照片。我没有很多我演讲的照片，尤其是在过去两年。所有的事情都是在线进行，盯着网络摄像头。所以如果你拍了一张照片。
+- en: it doesn't matter if it's from close by or far away， please， tweet it at me。
+    So I have the photo as well。 Thank you very much。 So I flew in from the Netherlands
+    last Saturday。 We had a nice road trip here to Salt Lake City。 And in the Netherlands。
+    I worked for the Ordina Python years。 And what we do is we use Python and we go
+    out to our customers and we help them with。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论是近处还是远方，请务必发推给我。这样我也能得到那张照片。非常感谢。我上周六从荷兰飞来。我们有一个愉快的公路旅行，来到盐湖城。在荷兰，我在Ordina
+    Python工作多年。我们使用Python，帮助客户解决问题。
+- en: their problems。 We implement solutions。 We do enterprise development。 We do
+    a lot of artificial intelligence and machine learning。 I'm more in the web development
+    and the enterprise side of things。 But that's part of what we do。 And I'm also
+    part of the codesmith group of the Ordina software development， which means。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们的问题。我们实施解决方案。我们进行企业开发。我们在人工智能和机器学习方面做了很多工作。我更专注于网络开发和企业方面的内容。但这就是我们所做的部分。我也是Ordina软件开发的代码师团队的一员，这意味着。
+- en: I get to be here。 I get to do stuff with innovation and education。 It's all
+    really nice and I really like that。 In my spare time， I'm a volunteer for Europe，
+    Python。 which is another great conference。 It's happening in Dublin this year。
+    which might be a little bit far away for a lot of， you， but there are hybrid options。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我有机会在这里。我可以参与创新和教育的工作。这一切都很好，我真的很喜欢。在我的业余时间，我是欧洲Python的志愿者，这是另一个伟大的会议。今年在都柏林举行，可能对很多人来说有点远，但有混合选项。
+- en: So do consider coming or joining online。 It's going to be awesome。 And I'm also
+    one of the founders or owners of Python Discord， which is a large online。 Python
+    community。 So right。 Let's dive into the talk itself。 What we're going to do today。
+    we're going to take a journey all the way from source code， to execution。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以考虑一下是否参加或在线加入。这会很棒。我还是Python Discord的创始人之一，这是一个大型在线Python社区。好的，让我们深入谈话内容。今天我们要做的，是从源代码到执行的旅程。
+- en: So what we're going to see， we're going to see a lot of topics like tokens，
+    grammar。 the pack parser。 We're going to talk about abstract syntax trees。 We're
+    going to talk a little bit about the compiler that Python has byte code and upcodes。
+    or the instructions。 And finally， we will see the evaluation loop。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们将看到很多主题，如标记、语法、pack 解析器。我们将谈论抽象语法树。我们还会稍微谈谈 Python 的编译器、字节码和操作码，或者指令。最后，我们将看到评估循环。
+- en: And this is where really the magic happens。 And I'm not just going to give you
+    a lecture explaining all of those topics。 but what we're， going to do。 So I'm
+    going to implement a new operator in Python， a pipe operator。 And it will very
+    naturally take us all the way from source code to execution。 There are also some
+    time constraints。 So please excuse me。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是魔法真正发生的地方。我并不是要给你们讲解所有这些主题，而是我们将要做的事情。所以我将会在 Python 中实现一个新的运算符，一个管道运算符。它会非常自然地将我们从源代码带到执行。还有一些时间限制，请多多包涵。
+- en: This talk will feature blatant emissions and gross oversimplifications。 So if
+    you'd like to know more after this very broad introductions， there are a few great，
+    resources。 There's the Python dev guide that you can find online。 It's an excellent
+    resource and it has everything you need to get you started with developing and。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本次演讲将包含明显的遗漏和粗略的简化。因此，如果你想在这个非常宽泛的介绍后了解更多，有几个很好的资源。你可以在网上找到 Python 开发指南。它是一个优秀的资源，涵盖了你开始开发所需的一切。
+- en: contributing to see Python。 There's also a guide written by Victor Stinner。
+    Excellent。 On Google。 I forgot to mention it here。 And then obviously there's
+    the C Python internals book written by Anthony Schull and the real。 Python crew。
+    Definitely check out that book as well。 So for today。 we're going to take the
+    entire journey from source code all the way to execution。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有助于了解 Python。还有维克托·斯蒂纳写的指南，优秀。在谷歌上。我忘了在这里提到。显然还有安东尼·舒尔和真正的 Python 团队写的 C Python
+    内部书。绝对要去看看那本书。因此，今天我们将从源代码到执行进行整个旅程。
+- en: But there's a lot of details in here， a lot of code。 There are a lot of slides。
+    So if you want to read along or read it after my talk， you can find everything
+    on my GitHub， page。 It's over there， Sebastian Z/Python。 I thought it was a nice
+    name for the repository。 And basically you will find everything that I tell you
+    today。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是这里有很多细节，很多代码，还有很多幻灯片。所以如果你想在我的演讲中跟着阅读或之后阅读，可以在我的 GitHub 页面找到所有内容。就在那边，Sebastian
+    Z/Python。我觉得这个名字对这个仓库来说不错。基本上你会找到今天我告诉你的所有内容。
+- en: You will also find it in there so you can play around with this new implementation
+    of， Python。 Cool。 So what is this new operator that we're going to implement？
+    It's a new binary operator。 And this means that it takes two operands， one on
+    the left-hand side and one on the right-hand。 side。 And then it does something
+    with those two values。 And our pipe operator。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你还会在里面找到它，这样你就可以玩转这个新的 Python 实现。酷。那么我们要实现的这个新运算符是什么？这是一个新的二元运算符。这意味着它需要两个操作数，一个在左侧，一个在右侧。然后它对这两个值做一些事情。我们的管道运算符。
+- en: it works with very simple functions。 So you have this double function here。
+    It just takes a single argument and it returns something。 Internally。 the function
+    can be quite complex， but it has to take a single argument and it。 has to return
+    something， while not returning something， it's very difficult in Python。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它与非常简单的函数一起工作。所以你有这个双重函数。它只接受一个参数，并返回某些内容。内部，函数可以非常复杂，但它必须接受一个参数并返回某些东西，而在 Python
+    中，不返回某些东西是非常困难的。
+- en: So this is the kind of functions that we'll work with。 What we'll be able to
+    do is to call the function in a new way。 So what we can do is we can first specify
+    the argument， one in this case， use the operator。 and then name the function。
+    And then the argument will be passed to the function and the result of this operation。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这就是我们将要处理的函数类型。我们能做的是以一种新的方式调用函数。我们可以首先指定参数，在这个例子中是一个，使用运算符，然后命名函数。然后参数将传递给函数，得到操作的结果。
+- en: will be whatever value the function returns。 So it's equivalent to calling double
+    with one as the argument。 Obviously this isn't very interesting， but the thing
+    that this enables us to do is we。 can now build a pipeline。 So we can start with
+    a single value and then build a pipeline of functions to process that。 value。
+    So if you have a data set or a list or a single value， you need to do a number
+    of operations。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将是函数返回的任何值。所以这相当于以一作为参数调用double。显然这并不是很有趣，但这使我们能够构建一个管道。因此，我们可以从一个单一值开始，然后构建一个函数管道来处理这个值。所以如果你有一个数据集、一个列表或一个单一值，你需要进行多次操作。
+- en: on them。 You can do that in a very functional way。 You can pass the value from
+    function to function and eventually you'll get a return value out。 of it。 So that's
+    what we're going to do today。 And obviously this is not a part of Python itself
+    and it probably will never be a part。 of Python。 I know this operator has been
+    proposed a few times。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以以一种非常函数式的方式做到这一点。你可以将值从一个函数传递到另一个函数，最终你会得到一个返回值。所以这就是我们今天要做的。而显然这不是Python本身的一部分，并且可能永远不会成为Python的一部分。我知道这个运算符已经被提议过几次。
+- en: There are very good reasons not to add it to the language。 There are other ways
+    to call functions。 We might not need the complexity。 But that's not my department。
+    If you really want such an operator。 go discuss it with a core developer or with
+    the steering， council。 But just to be sure。 this is not in Python。 We're going
+    to implement it here。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不添加它到语言中有非常好的理由。还有其他方式调用函数。我们可能不需要这种复杂性。但那不是我的职责。如果你真的想要这样一个运算符，去和核心开发者或指导委员会讨论。但为了确保，这不在Python中。我们将在这里实现它。
+- en: And also the implementation is purely educational。 I'm going to take a few shortcuts
+    maybe。 I'm going to implement it in a non-efficient way so that I can show you
+    all the parts that。 we need to change。 And I'm not going to use existing opcodes
+    and things like that just to be able to show。 you everything。 So it's purely educational。
+    But if you want。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现纯粹是为了教育目的。我可能会采取一些捷径。我将以一种非高效的方式实现它，这样我可以向你展示我们需要更改的所有部分。我不会使用现有的操作码和类似的东西，只是为了能够展示给你所有内容。所以这纯粹是教育目的。但如果你想要。
+- en: you can download the source code and try to improve it。 Cool。 So what we're
+    going to do。 we're going to first start with our source code and produce。 something
+    called an abstract syntax tree。 An abstract syntax tree is a different representation
+    of your source code。 It's a nice tree structure which is much easier for the compiler
+    to work with。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以下载源代码并尝试改进它。酷。所以我们要做的事，我们将首先从源代码开始，产生一个称为抽象语法树的东西。抽象语法树是源代码的另一种表示形式。它是一个很好的树结构，更容易让编译器处理。
+- en: So that is the first step。 We want to take the source code with the new operator
+    and we want the parser to be able。 to turn it into such an abstract syntax tree
+    node。 So let's first zoom in on the source code。 So here we have a piece of source
+    code。 And for us humans， we are very good at chunking stuff。 So we immediately
+    see a 10。 We maybe see the name double。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这是第一步。我们想要将源代码与新的运算符结合，并希望解析器能够将其转换为这样的抽象语法树节点。首先，让我们仔细看看源代码。在这里，我们有一段源代码。对我们人类来说，我们非常擅长分块。因此，我们立即看到10。我们可能看到名称double。
+- en: We see kind of a weird operator in the middle that's not part of Python just
+    yet。 But for Python。 it just starts with a stream of characters。 So for Python，
+    at first， these are just 12 characters。 Maybe there's a new line at the end。 I've
+    left it out。 These are just 12 characters， two spaces。 and it doesn't quite know
+    what to do with it， yet。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们看到中间有一个奇怪的运算符，这在Python中尚未出现。但对Python来说，最开始这些只是12个字符。也许最后有一个换行符。我把它省略了。这些只是12个字符，两个空格。它还不太知道该如何处理它。
+- en: The first step for Python is to turn those characters into a stream of tokens。
+    And the tokenizer of Python will do that for you。 It will recognize a number token
+    over here。 This is the smallest part that we can divide in our source code if
+    we try to separate these。 characters we lose meaning。 There's a name token over
+    here， the name double。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python的第一步是将这些字符转换为令牌流。Python的词法分析器将为你完成这项工作。它会在这里识别出一个数字令牌。这是我们可以在源代码中分割的最小部分，如果我们试图分离这些字符，我们就失去了意义。这里还有一个名称令牌，名为double。
+- en: And obviously if we leave out some of the characters， the name changes。 But
+    then there's this weird thing here in the middle。 So the tokenizer doesn't quite
+    recognize this token just yet。 And actually there are two existing tokens in there。
+    But we really want the tokenizer to be able to recognize this as a single token
+    in your。 source code。 Well， is that difficult to do？ Well， actually not。 This
+    is just a configuration file。 So if you look in the Python repository， there's
+    a folder called grammar。 And in there。 there's a file called tokens。 And this
+    is just a text file。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然，如果我们遗漏了一些字符，名称会改变。但中间有个奇怪的东西。因此，词法分析器目前尚未完全识别这个令牌。实际上，其中有两个现有的令牌。但我们确实希望词法分析器能够将其识别为你源代码中的一个令牌。好吧，这难做到吗？其实不难。这只是一个配置文件。如果你查看
+    Python 仓库，有一个叫做 grammar 的文件夹。在里面，有一个名为 tokens 的文件。这只是一个文本文件。
+- en: And it maps the name of the token to the character sequence that makes up the
+    token。 So you find a lot of tokens in there。 These are just a few。 And the only
+    thing that we need to do is we need to add a token of our own。 So I'm calling
+    it the V-Bar Grader because they're not really semantics at this point。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它将令牌的名称映射到构成令牌的字符序列。因此，你可以在其中找到很多令牌。这只是其中的一些。我们需要做的唯一事情是添加一个我们自己的令牌。因此，我称之为
+    V-Bar Grader，因为此时它们并没有真正的语义。
+- en: They just follow the naming convention in here。 And this V-Bar Grader is mapped
+    to the character sequence that we want the token to have。 Well， at this point，
+    the tokenizer won't actually use it。 Because the tokenizer won't continuously
+    read in this file。 It's actually generated using this file。 So for the tokenizer
+    to actually use this， we have to regenerate it。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们只是遵循这里的命名约定。这个 V-Bar Grader 被映射到我们希望令牌具有的字符序列。好吧，此时，词法分析器实际上不会使用它。因为词法分析器不会持续读取这个文件。它实际上是使用这个文件生成的。因此，为了让词法分析器实际使用它，我们必须重新生成它。
+- en: And this is going to be something that we'll see a lot in this talk。 We'll have
+    to run a few commands。 On Linux and Mac， that's make regen token。 On Windows。
+    there's a build。bat file in the PC build folder。 And you can run the --regen command。
+    which will actually regenerate a whole bunch of， other stuff as well。 And once
+    you've done this。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将是我们在本次演讲中看到很多的内容。我们需要运行一些命令。在 Linux 和 Mac 上是 `make regen token`。在 Windows
+    上，PC 构建文件夹中有一个 build.bat 文件。你可以运行 --regen 命令，这实际上会重新生成其他一些内容。一旦你完成了这个。
+- en: now you have a tokenizer that knows the token， that's aware。 of the token and
+    can finally parse it and put it in a stream of tokens。 So after this simple change。
+    we've already went from source code to a stream of tokens。 And this stream of
+    tokens is the input for the parser。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你有一个知道令牌的词法分析器，意识到这个令牌并最终可以解析它并将其放入令牌流中。因此，在这个简单的更改之后，我们已经从源代码转变为令牌流。而这个令牌流是解析器的输入。
+- en: And this makes the pack parser in Python a little bit weird。 Most pack parsers
+    actually work with raw characters。 But in Python。 it works with the tokens that
+    we know。 And this stream of tokens will be put into the parser。 And the parser
+    will output the abstract syntax tree。 And if you've looked at the parser in the
+    past。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这使得 Python 中的 pack 解析器有些奇怪。大多数 pack 解析器实际上处理原始字符。但在 Python 中，它与我们所知道的令牌一起工作。这个令牌流将被放入解析器中，解析器将输出抽象语法树。如果你过去查看过解析器。
+- en: the old parser that was in Python， it， actually used an intermediate step called
+    the concrete syntax tree。 With the pack parser that was added to Python in 3。9，
+    the parser can immediately translate。 this stream of tokens that it parses into
+    the abstract syntax tree。 So that's what we need to do。 So we now need to add
+    support in the parser for our new token。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 之前在 Python 中的旧解析器，实际上使用了一个叫做具体语法树的中间步骤。使用在 3.9 中添加到 Python 的 pack 解析器，解析器可以立即将它解析的这个令牌流翻译成抽象语法树。这就是我们需要做的。因此，我们现在需要在解析器中添加对新令牌的支持。
+- en: And that's obviously very important because there currently is no syntax that
+    uses the， token。 So if you try to use it， the parser won't recognize it。 And then
+    finally。 we also need to add support for this new operator in the abstract syntax，
+    tree。 It needs to have a node on its own。 So that's what we're going to do next。
+    And to do that。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这显然非常重要，因为目前没有使用该令牌的语法。因此，如果你尝试使用它，解析器将无法识别它。最后，我们还需要在抽象语法树中添加对这个新运算符的支持。它需要有自己的节点。这就是我们接下来要做的。为此。
+- en: we're going to add a new grammar rule to Python for our new operator。 And as
+    I just said。 Python now uses a pack parser。 So we're going to use the parsing
+    expression grammar syntax to define our token。 Now， I'm not going to explain all
+    of this syntax to you。 There's an excellent chapter in the dev guide online。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将为我们的新操作符向Python添加一条新的语法规则。正如我刚才所说，Python现在使用包解析器。因此，我们将使用解析表达式语法来定义我们的令牌。现在，我不会向你解释所有这些语法，在线开发指南中有一个很好的章节。
+- en: But I am going to zoom in on just a little bit of the parts that we need for
+    our new， operator。 So first of all， here's a very simplified piece of pack grammar。
+    And you can assume that there are some other statements above there that define
+    statements。 but these are the only two expressions in my simplified mini language。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我将重点关注我们新操作符所需的部分。因此，首先，这是一个非常简化的包语法片段。你可以假设在这上面还有一些定义语句的其他语句，但这些是我简化的迷你语言中的唯一两个表达式。
+- en: And I've left out some noise that we don't need right now。 So and let me just
+    color code it for you because that's important。 In this language defined by this
+    small piece of grammar， there are just two expressions。 There's a sum expression
+    which has two alternatives that it might match。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我省略了一些我们现在不需要的噪音。让我为你着色，因为这很重要。在这个由这小段语法定义的语言中，只有两个表达式。一个求和表达式，它有两个可能匹配的选择。
+- en: You can tell that they are alternatives by the vertical bar at the front。 So
+    the first alternative is an atom plus another atom。 And the second alternative
+    for the sum rule is an atom on its own。 Well， what is an atom？ Well。 the atom
+    is actually another rule in our very minified grammar， which is just a number，
+    token。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以通过前面的竖线判断它们是选择项。因此，第一个选择项是一个原子加另一个原子。第二个选择项是单独的一个原子。那么，什么是原子呢？其实，原子在我们极简的语法中是另一条规则，仅仅是一个数字，令牌。
+- en: We're not going to go into how Python recognizes number tokens， but we can just
+    assume that。 it does。 And as you can see， the sum rule includes the atom rule
+    at the bottom。 And that's how our grammar kind of flows down。 That's how we get
+    all the alternatives that we might try to parse at a specific point that。 we're
+    trying to parse。 So if you have these rules。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不打算讨论Python如何识别数字令牌，但我们可以假设它能够做到。正如你所看到的，求和规则在底部包括原子规则。这就是我们的语法如何向下流动。这是我们在特定解析点可能尝试解析的所有选择项。所以如果你有这些规则。
+- en: it's fairly trivial to see that if we have a very simple one， this。 will match
+    the second branch in the sum， which is just an atom on its own， so we can parse。
+    this as a single number。 It's also very easy to see that if we have one plus one
+    with the literal plus in the middle。 that we can parse this one as well。 This
+    is the first rule of the sum rule。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们有一个非常简单的表达式，这将匹配求和中的第二个分支，也就是单独的一个原子，所以我们可以将其解析为一个单一的数字。如果我们有一个中间有字面加号的一个加一个，这也很容易看出我们可以解析这个。这就是求和规则的第一条规则。
+- en: But now what about this one？ So this is an interesting one。 So once the parser
+    gets going。 it will consume our characters。 So it's perfectly able to match this
+    first part。 and we're not going to worry about the， actual order of matching here。
+    So that we'll have consumed these characters for our need sum rule， and then it's
+    left。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么这个呢？这是一个有趣的例子。当解析器开始工作时，它会消耗我们的字符。因此，它能够完美地匹配第一部分，而我们并不担心匹配的实际顺序。因此，我们将为所需的求和规则消耗这些字符，然后留下。
+- en: with plus three。 There's no rule that matches plus three， so it's not able to
+    parse this expression。 So what should we do？ We can obviously add another rule
+    for atom plus atom plus atom。 but what about four pluses， or three or six or eight
+    pluses in an expression？
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于加上三个（plus three），没有任何规则能够匹配它，因此无法解析这个表达式。那么我们该怎么做呢？显然，我们可以为原子加原子加原子添加另一条规则。但是在一个表达式中，如果有四个、三个、六个或八个加号呢？
+- en: So we have to add a rule for each number of pluses that we have。 Luckily， we
+    don't have to。 We can slightly tweak the first rule of sum。 We can replace the
+    first atom by sum itself。 and this will make the rule recursive。 So as you can
+    see now， it's able to match a sum。 but it's also able to match a sum nested， in
+    another sum。 And obviously。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们必须为每个加号的数量添加一条规则。幸运的是，我们不需要这样做。我们可以稍微调整求和的第一条规则。我们可以用求和本身替换第一个原子，这将使规则具有递归性。现在可以看到，它能够匹配一个求和，但也能够匹配嵌套在另一个求和中的求和。
+- en: this is a recursive relationship。 So you can now match an arbitrary number of
+    pluses in a row。 If you think about it， this is precisely what we want to do with
+    our pipe operator。 We want to be able to build pipelines。 So we're going to use
+    this recursive rule in our new grammar rule。 So let's add it。 So this is a section
+    in Python's grammar。 You can find it in grammar/python。gram。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个递归关系。因此，你现在可以匹配任意数量的加号。如果你仔细想想，这正是我们想用 pipe 运算符做到的。我们希望能够构建管道。因此，我们将在新的语法规则中使用这个递归规则。让我们添加它。这是
+    Python 语法中的一部分。你可以在 grammar/python.gram 中找到它。
+- en: Just took out a small portion， and I'm going to insert a new grammar rule between
+    these， two。 It's actually not the best place to do it for presidents and all other
+    stuff， but this is。 a very easy way for me to add a new rule， and I'll show you
+    why in a minute。 And again。 if you'd like to improve on this， do download the
+    source code and just try to。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我刚刚拿出一小部分，并准备在这两者之间插入一个新的语法规则。实际上，这不是针对总统和其他内容的最佳位置，但这对我来说是添加新规则的非常简单的方法，稍后我会告诉你原因。如果你想改进这一点，请下载源代码试试看。
+- en: make it better yourself。 So what am I going to do？ I'm going to add a new grammar
+    rule called pipe。 It's an expression type。 You kind of can ignore that for now。
+    Here， in the middle。 we have our recursive rule。 So pipe includes pipe itself，
+    and it includes the sum。 which is the rule just below it。 Now， we're nearly done。
+    There's just one problem left。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自己改进它。那么我将要做什么？我将添加一个名为 pipe 的新语法规则。它是一种表达式类型。现在可以暂时忽略它。这里在中间，我们有我们的递归规则。因此，pipe
+    包括它自己，并且包括下方的总和规则。现在，我们快完成了。只剩下一个问题。
+- en: and that is that our grammar rule isn't referenced by， any other grammar rule。
+    So if you look at the shift rule just above， it only references the sum， so it
+    will step。 over our rule。 It's not actually used。 So we have to change those references。
+    And that's what I'm going to do next。 I'm just going to make the shift expression
+    refer to our new rule and then make that rule。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的语法规则没有被其他任何语法规则引用。这就是为什么如果你查看上面的移位规则，它只引用了总和，因此它会跳过我们的规则。实际上并没有使用。所以我们需要更改这些引用。这就是我接下来要做的。我只会让移位表达式引用我们的新规则，然后制定该规则。
+- en: refer to sum。 And this is why I inserted it here。 Here I only have to change
+    a few references。 I don't have to change a lot of references。 So now。 this means
+    that we can now parse this bit of syntax。 That's very cool。 But what about the
+    last step？
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引用总和。这就是我在这里插入它的原因。在这里我只需更改几个引用，不必更改很多引用。所以现在，这意味着我们可以解析这部分语法。这非常酷。但最后一步呢？
+- en: We haven't actually told the parser how it can convert what it has just parsed
+    into an。 AST node that you see on the right-hand side here。 So a bin of node is
+    the representation of our operation。 It has a left-hand side。 the ten in this
+    case。 It has the operation in the middle。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们实际上还没有告诉解析器如何将刚解析的内容转换为右侧看到的 AST 节点。因此，二元节点是我们操作的表示。它有一个左侧，这种情况下是十。它在中间有操作。
+- en: and it has the name double on the right-hand side。 There's probably going to
+    be a load below that as well， but I just kept it simple。 So we have to tell the
+    parser how it can get from parsing the syntax to making such an， AST node。 And
+    with the new pack parser， there's a very convenient way to do that。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它在右侧的名称是 double。可能还会有一些负载，但我只是保持简单。所以我们必须告诉解析器如何从解析语法转换为这样的 AST 节点。通过新的 pack
+    解析器，有一种非常方便的方法可以做到这一点。
+- en: And it's called grammar actions。 And grammar actions are basically just small
+    pieces of embedded code within a grammar rule。 So as you can see here， there are
+    two curly braces。 And within there。 there's just a tiny bit of C code。 This is
+    calling a function。 and it will pass in some information and the function will
+    construct， the AST node for us。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这被称为语法动作。语法动作基本上是在语法规则中的小段嵌入代码。正如你在这里看到的，有两个大括号。在里面，只有一点 C 代码。这是在调用一个函数，并且它将传入一些信息，函数将为我们构造
+    AST 节点。
+- en: So as mentioned， we'll need the left-hand side and the right-hand side。 That's
+    why the grammar rules slightly more complex。 There's the A is sum and B is term
+    in there。 And that's assigning names to the left-hand side and the right-hand
+    side so we can pass。 it into this pi bin of function。 There's also an add in the
+    middle。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如提到的，我们需要左侧和右侧。这就是为什么语法规则稍微复杂一些。这里的 A 是总和，B 是项。并且为左侧和右侧分配名称，以便我们可以将其传递到这个二元函数中。中间还有一个加法。
+- en: We know that this is an add operator because this is the plus rule， so we just
+    hard-coded， in here。 There are also some extra bits。 We're not going to talk about
+    them today。 Things like line number。 column offset， things like that。 We're just
+    going to assume that they're taking care of for us。 So this is how we can tell
+    the parser how to create a AST node。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道这是一个加法运算符，因为这是加法规则，所以我们在这里进行了硬编码。还有一些额外的内容。我们今天不打算讨论它们，比如行号、列偏移量等。我们只是假设它们已经为我们处理好了。这就是我们如何告诉解析器如何创建AST节点。
+- en: So we just copy this approach for our pipe rule。 The only thing that we really
+    need to change is that instead of specifying that this is。 an add operator， we're
+    going to specify that this is a call pipe operator， which is how。 I named this
+    operation。 Just one tiny problem。 There's now a call pipe node in my AST。 but
+    it doesn't exist yet。 So we have to create that one as well。 Well， it sounds kind
+    of difficult。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们只是将这种方法复制到我们的管道规则中。我们真正需要更改的唯一事情是，不再指定这是一个加法运算符，而是指定这是一个调用管道运算符，这是我为这个操作命名的。只有一个小问题。我在我的AST中有一个调用管道节点，但它还不存在。所以我们必须创建那个节点。好吧，这听起来有点困难。
+- en: but actually this is just another configuration file。 If you open the parser/python。asdl。
+    which stands for abstract syntax definition language。 this is a file that defines
+    all of the AST nodes that are in Python and Python。 And you can actually generate
+    all of the necessary types from this file。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但实际上这只是另一个配置文件。如果你打开parser/python.asdl，代表抽象语法定义语言。这个文件定义了Python中的所有AST节点。你实际上可以从这个文件生成所有必要的类型。
+- en: So you don't really need to write all the classes or types yourself。 You can
+    have them generated for you。 As you can see here。 I picked a bit that includes
+    operator and operator has a lot of alternatives。 One here is add。 And what the
+    generator will do， it will make a C enum for us that has a number of members。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你并不需要自己编写所有的类或类型。你可以让它们为你生成。如你所见，我选择了一些包括运算符的内容，运算符有很多选择。这里有一个是加法。而生成器将为我们创建一个C枚举，其中包含多个成员。
+- en: or fields and add is one of those fields。 So the only thing that we need to
+    do is we need to add our operator at the end。 And then we need to regenerate all
+    the AST nodes with this file。 And then we will magically get another member of
+    field in the C enum with a new integer。 assigned to it。 And then we can use the
+    call pipe。 So after we've done this。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或字段，加法就是这些字段之一。因此，我们需要做的唯一事情是将我们的运算符添加到最后。然后我们需要用这个文件重新生成所有AST节点。然后我们会神奇地在C枚举中获得另一个字段成员，并为其分配一个新的整数。然后我们可以使用调用管道。所以在我们完成这项工作后。
+- en: we have the grammar rule。 We can now regenerate the parser itself。 And now we
+    can actually use it。 So we can use AST。parse， pass in our expression， and it will
+    actually be able to build an AST。 that includes a bin of operation and a call
+    pipe operator， as you can see here。 This is all very handy， but this doesn't do
+    anything yet。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有语法规则。现在我们可以重新生成解析器本身。现在我们实际上可以使用它。因此，我们可以使用AST。解析，传入我们的表达式，它实际上能够构建一个AST，其中包含操作的二进制和调用管道运算符，正如你在这里看到的。这一切都非常方便，但这还没有做任何事情。
+- en: Now we have a nice tree-like representation of our code， but there's no execution
+    yet。 And that's what we're going to see in part two。 So what we're going to do
+    in part two。 we're going to take the AST， pass it into the compiler。 and then
+    the compiler will pass something to the evaluation loop and then we'll get magic。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们有了代码的树状表示，但还没有执行。这就是我们在第二部分要看到的。因此，我们在第二部分要做的是将AST传入编译器，然后编译器会将某些东西传递给评估循环，然后我们会得到魔法。
+- en: And I call this magic because it's always been magic to me。 I type in some magic
+    formula or spell into my computer and then something happens。 It's really like
+    magic to me。 Cool。 So let's zoom in on that second part。 So we have the AST as
+    the input。 We will put it into the compiler and the compiler will generate something
+    for us called bytecode。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我称之为魔法，因为这对我来说一直是魔法。我在计算机上输入一些魔法公式或咒语，然后就会发生某些事情。对我来说，这真的像魔法一样。酷。所以让我们放大第二部分。因此，我们将AST作为输入。我们将把它放入编译器，编译器将为我们生成一些称为字节码的东西。
+- en: And this is like an intermediate language and it's just a long list of instructions。
+    A long list of bytes or integers， which is more easy for us to reason about。 And
+    these are really the instructions that the evaluation loop will then perform。
+    And for those of you who like the discussion about is Python a compiled language
+    or not。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就像一种中间语言，只是一长串指令。是一长串字节或整数，对我们推理来说更简单。这些实际上是评估循环将要执行的指令。对于那些喜欢讨论 Python 是否是一种编译语言的人来说。
+- en: just think about this and then ignore the discussion because it always gets
+    very toxic。 So first of all， we're going to add some support to the compiler。
+    And each instruction that we are able to perform has its own upcode or operation
+    code。 What I'm going to do is I'm going to add a new upcode for our new operator。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 先想一下这个，然后忽略讨论，因为它总是变得非常有毒。首先，我们将为编译器添加一些支持。我们能够执行的每个指令都有自己的操作码或操作码。我将添加一个新的操作码，用于我们的新操作符。
+- en: Some of you may wonder there's already about the fact that there is already
+    an upcode for。 calling functions。 I'm going to ignore that one because I want
+    to show you how to implement a new one。 So this is purely educational in a way。
+    So right， this is the first and probably the only Python file that we'll see today。
+    in my， talk at least， and it's in lib/upcode。py。 And this defines all the operation
+    codes that we have。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有些人可能会想，实际上已经有一个调用函数的操作码。我将忽略这一点，因为我想向你展示如何实现一个新的操作码。这在某种程度上纯属教育意义。所以好吧，这是我们今天看到的第一个也是唯一一个
+    Python 文件，至少在我的演讲中，它位于 lib/upcode.py。这定义了我们拥有的所有操作码。
+- en: And it basically specifies a name and then the byte or the integer that we have
+    for the。 operation code。 Now ours doesn't have taken argument or upcode。 It works
+    with values that are already on the value stack。 More about that later。 So we
+    need to add it 40 half argument constant or the value defined in there。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它基本上指定一个名称，然后是我们为操作码提供的字节或整数。我们的没有接受参数或操作码。它处理的是已经在值栈上的值。稍后会详细介绍。所以我们需要添加一个常量
+    40 的半参数，或者在这里定义的值。
+- en: So just going to add it here with the new integer of 90 and then increment all
+    the values。 below that just to make it work again。 That's the issue of working
+    with sequential numbers。 So once we've defined our operation code here， we can
+    regenerate all the upcodes and now we。 have a new upcode。 Which is cool but the
+    compiler still doesn't know when to use it。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在这里添加一个新的整数 90，然后递增所有下面的值，以使其再次正常工作。这是处理顺序数字的问题。一旦我们在这里定义了我们的操作码，我们就可以重新生成所有的操作码，现在我们有了一个新的操作码。这很酷，但编译器仍然不知道何时使用它。
+- en: So that's what we'll do next。 We're now going to teach the compiler when to
+    write this upcode into the bytecode。 So in the compiler， in a file called Python/compile。c。
+    there are a lot of functions that get cold whenever。 the compiler encounters a
+    specific type of AST node。 And in our case。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以接下来我们将要做的就是教编译器何时将这个操作码写入字节码。在编译器中，名为 Python/compile.c 的文件中，有许多函数会在编译器遇到特定类型的
+    AST 节点时被调用。在我们的例子中。
+- en: we're dealing with an expression。 So we're going to modify the compiler visit
+    expression one function。 And this is a function that gets cold internally whenever
+    we get to an expression node in the， AST。 And this function is basically just
+    a large switch case statement and it has a case for。 bin up kind， the binary operations。
+    And that's the one that will take care of writing our upcodes for our new binary
+    operation。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们正在处理一个表达式。所以我们将修改编译器的 visit expression 函数。这个函数在我们到达 AST 中的表达式节点时会被内部调用。这个函数基本上只是一个大的
+    switch-case 语句，并且对二元操作有一个 case。这将负责为我们的新二元操作写入操作码。
+- en: And what's important to note here is that there are two visits first。 So it's
+    first going to visit the left-hand side of our binary operation。 And that means
+    that it will first write all the instructions to evaluate the left-hand。 side
+    of our operator to get that value。 Then it will do the same for the right-hand
+    side。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要注意的是，这里有两个访问。首先，它将访问我们二元操作的左侧。这意味着它会首先写出所有评估左侧操作数的指令，以获得该值。然后它将对右侧执行相同的操作。
+- en: So it will write all the instructions it needs to evaluate the right-hand side
+    of the operator。 And that's logical because we need both values before we can
+    actually perform the operation。 before we can write out the new upcode that we
+    have。 Well。 taking care of the new upcode is the add up a macro that we see here
+    to just write， a single upcode。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，它将写入所有需要评估操作符右侧的指令。这是合乎逻辑的，因为在我们实际执行操作之前，我们需要两个值，才能写出我们拥有的新上码。好的，处理新上码的是我们在这里看到的加法宏，它只是写入一个单一的上码。
+- en: Now， how does it know which one？ Well， it calls a helper function， calls bin
+    up。 And bin up is just another switch case statement。 And it has cases for all
+    the operators defined in the ASD。 Here we have the add。 And it will just simply
+    return the upcode associated with that operator。 So all we have to do is modify
+    and add another case of our own， case call pipe， return our。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，它是如何知道哪个？好吧，它调用一个助手函数，调用bin up。bin up只是另一个switch case语句。它为ASD中定义的所有操作符提供了案例。这里我们有加法。它将简单地返回与该操作符相关联的上码。因此我们所要做的就是修改并添加我们自己的另一个案例，案例调用管道，返回我们的。
+- en: new operator to binary pipe call。 And now the compiler knows that whenever it
+    sees such a call pipe ASD node。 it has to， write a binary pipe call instruction。
+    There's one final thing that we have to do here which takes care of the stack
+    effect。 I'm going to show you the value stack in a minute， but we have to specify
+    that our operation。 pops one value out of the value stack。 So after performing
+    our operation。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 新的操作符用于二进制管道调用。现在编译器知道每当它看到这样的调用管道ASD节点时，它必须写入一个二进制管道调用指令。这里还有一件我们需要做的最后的事情，这涉及到栈的效果。我稍后会给你展示值栈，但我们必须指定我们的操作会从值栈中弹出一个值。因此，在执行我们的操作后。
+- en: there's one value less on the value stack， which is， the same as a lot of other
+    binary operations。 So that's why I've added it here。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 值栈中的值减少了一个，这与许多其他二进制操作是一样的。所以这就是我把它加到这里的原因。
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_4.png)'
+  id: totrans-73
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_4.png)'
+- en: And this is just something to make the compiler work as well。 So after we've
+    done this。 the compiler can now turn the ASD into that intermediate byte， code
+    language。 And now we get to the magical part， the evaluation loop。 And the evaluation
+    loop really is the main loop of Python。 And it's an enormous loop。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这只是为了让编译器工作。因此，在我们完成这一步后，编译器现在可以将ASD转换为那个中间字节码语言。现在我们进入了神奇的部分，求值循环。求值循环实际上是Python的主循环。它是一个巨大的循环。
+- en: And inside of it is an enormous switch case statement。 And it has a case for
+    most of the-- or all of the upcodes that it needs to be able to， perform。 And
+    then it has the code that will actually handle that instruction。 That will actually
+    perform that operation。 And just to show you one。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中包含一个巨大的switch case语句。它为大多数或所有需要执行的上码定义了一个案例。然后它有处理该指令的代码。它实际上将执行该操作。只是给你展示一个。
+- en: I've picked the case for the binary subtract operation code。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我选择了二进制减法操作码的情况。
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_6.png)'
+  id: totrans-77
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_6.png)'
+- en: And this is just a case within that huge loop that we have。 And this will perform
+    for us the something minus another thing。 So when you subtract two things。 you
+    actually need to know the things。 I just cannot do thing minus thing without knowing
+    what the thing is。 So first， within this case， we need to get the value for the
+    right-hand side and the value。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这只是我们那个巨大循环中的一个情况。这将为我们执行某个东西减去另一个东西的操作。因此，当你减去两个东西时，你实际上需要知道那些东西。我不能在不知道那个东西是什么的情况下进行东西减去东西的操作。因此首先，在这个案例中，我们需要获取右侧的值和。
+- en: for the left-hand side。 And that is what happens here。 But where are those values
+    coming from？
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而这正是发生的情况。但是那些值从哪里来呢？
+- en: As I told you earlier， whenever we have a binary operation， Python will first
+    write the。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我之前告诉你的，每当我们有一个二元操作时，Python会首先为左侧写入。
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_8.png)'
+  id: totrans-81
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_8.png)'
+- en: instructions to evaluate the left-hand side of that operator。 It will evaluate
+    it and it will finally get a value。 And it will put it on the stack so it can
+    keep track of it。 So this for will be evaluated。 It will be on the stack。 Then
+    it will evaluate the three on the right-hand side。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该操作符左侧的指令进行求值。它会对其进行求值，并最终得到一个值。它会把它放到栈上，以便跟踪。因此这个将被求值。它将位于栈上。然后它将求值右侧的三。
+- en: It will put it on the stack as well。 And just to be sure。 there can be a lot
+    of other values on the stack as well below that。 And once we've evaluated the
+    left-hand side and the right-hand side， we now have three on， top。 the right-hand
+    side and the four below that， the left-hand side。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它也会放在栈上。为了确保，栈上也可能有很多其他值。而一旦我们评估了左侧和右侧，我们现在在顶部有三个，右侧和下面的四，左侧。
+- en: So this is our value stack when we're evaluating the two operands， the left-hand
+    side and the。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这是我们在评估两个操作数时的值栈，左侧和右侧。
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_10.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_10.png)'
+- en: right-hand side。 So when we get to here， we can， for the right-hand side。 we
+    can simply pop the value off of the， value stack and then write points to that
+    right-hand side value。 For the left-hand side， we're going to do something similar。
+    But we're going to peek at the top of the value stack， which is what the top macro
+    does。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 右侧。因此，当我们到达这里时，我们可以对右侧的值简单地从值栈中弹出，然后写入指向那个右侧值。对于左侧，我们将进行类似的操作。但我们将查看值栈顶部，这就是顶部宏的作用。
+- en: and now left points to the four on the value stack。 So now we have right pointing
+    to three。 left pointing to four。 Then we can call a function within the C API，
+    pi number subtract。 pass in the two values， and then we get a result back and
+    we will make rest point to the result of that pi number。 subtract。 Now we're done
+    with the left-hand side and the right-hand side。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在左指向四个值的栈。因此，现在我们有右指向三。左指向四。然后我们可以在 C API 中调用一个函数，pi 数字减法。传入这两个值，然后我们得到一个结果，我们将
+    rest 指向这个 pi 数字的结果。减法。现在我们完成了左侧和右侧的操作。
+- en: so we decrease the reference， count， but we still only have the result within
+    this function。 So what do we need to do？ We have to put it back on the value stack。
+    But instead of putting it as an additional value on the value stack， we're going
+    to use， set top。 which replaces the four that we already have。 So this one will
+    move over and it will replace the four that we have。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们减少了引用计数，但我们仍然只有在这个函数内的结果。那么我们需要做什么？我们必须把它放回值栈。但我们不是将其作为额外的值放入值栈，而是使用 set
+    top。它替换掉我们已经拥有的四。因此这个值会移动并替换掉我们已有的四。
+- en: This also explains the minus one with the stack effect that we saw earlier because
+    we。 started with a three and a four and we end up with one value less on the stack。
+    Then there's some error handling and then finally we have dispatch with which
+    tells the。 evaluation loop to continue to the next instruction。 So this is binary
+    subtract。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也解释了我们之前看到的栈效果中的减一，因为我们从三和四开始，最后在栈上剩下一个值。然后进行一些错误处理，最后我们有调度，指示评估循环继续到下一个指令。这就是二进制减法。
+- en: That's copy and paste。 This one and changes for our new operator。 We have to
+    change the target。 binary pipe call。 Obviously， we don't want to subtract numbers。
+    but there's a very convenient new function， within the C API starting from Python
+    3。9 by object call one arc。 And we can pass in the function and the value and
+    remember the function was on the right。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那是复制和粘贴。这个和我们新操作符的更改。我们必须更改目标。二进制管道调用。显然，我们不想减去数字。但在 Python 3.9 及更高版本的 C API
+    中，有一个非常方便的新函数，叫做通过对象调用一个参数。我们可以传入函数和值，记住函数是在右侧。
+- en: hand side and the value on the left hand side of the operator。 Then we get the
+    result。 we set it back on the value stack and now our operator works。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 操作符左侧的值。然后我们得到结果。我们将其放回值栈，现在我们的操作符可以工作了。
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_12.png)'
+  id: totrans-92
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_12.png)'
+- en: And we can actually show that， but because the only thing that we now need to
+    do to get。 all the way to the magic， we can now， oh wait， I forgot about this
+    slide。 And now we've completed the entire journey from source code to magic。 The
+    only thing left to do is compiling our new version of Python。 There are a few
+    comments for that。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们实际上可以展示这一点，但因为我们现在唯一需要做的就是一直走到魔法，我们现在，哦等一下，我忘记了这张幻灯片。现在我们已经完成了从源代码到魔法的整个旅程。剩下的唯一任务是编译我们新的
+    Python 版本。对此有一些说明。
+- en: I'm using two cores to compile it。 But the important message is I can now define
+    a function。 use the new operator and actually， get values out of it。 So recap
+    and remarks。 A lot of Python internals do check out the resources so you can have
+    a deep dive into， them。 The source code in the slides are available and if you
+    get weird errors while working on， CPython。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我正在使用两个核心来编译它。但重要的信息是我现在可以定义一个函数。使用新的操作符，实际上可以从中获取值。所以总结一下和备注。很多Python内部实现，请查看资源，以便深入了解它们。幻灯片中的源代码是可用的，如果在使用CPython时遇到奇怪的错误。
+- en: try running may clean or clean all on windows just to get rid of all the intermediate。
+    and compiled files that might give you issues and look into the magic number that
+    versions。 the byte code because we've changed the byte code so all the old precompiled
+    pi C files。 need to be recompiled。 And that's it。 Before we go， you're a Python。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尝试在Windows上运行`may clean`或`clean all`，以清除所有可能导致问题的中间和编译文件，并查看版本的魔法数字。字节码因为我们更改了字节码，所以所有旧的预编译`.pi`文件都需要重新编译。就这样。在我们离开之前，你是一个Python。
+- en: Check it out and double in this year， go there， either in person or online。
+    Check it out。 Really cool conference。 And that was it。 Thank you very much。 [APPLAUSE]，
+    (applause)。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查看一下并在今年加倍，去那里，无论是亲自还是在线。真的很酷的会议。就这样。非常感谢。[掌声]，（鼓掌）。
+- en: '![](img/5632ecbf70ba85f31442fabbf3c785c2_14.png)'
+  id: totrans-97
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5632ecbf70ba85f31442fabbf3c785c2_14.png)'

@@ -1,0 +1,640 @@
+- en: P27：Talk - Brendan Collins_ Who Said Wrangling Geospatial Data at Scale was
+    Easy_ - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P27：演讲 - 布伦丹·柯林斯_ 谁说在规模上处理地理数据很简单_ - VikingDen7 - BV1f8411Y7cP
+- en: \>\> Hello， everyone。 Let's welcome Brandon Collins to deliver a talk on who
+    said ranking。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 大家好。让我们欢迎布兰登·柯林斯进行关于谁说地理数据处理在规模上很简单的演讲。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_1.png)'
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_2.png)'
+- en: your special data at scale was easy。 Huge thanks to the PyCon 2022 organizers
+    for。 making this event happen。 Super excited to be here。 This is my first PyCon。
+    Also， you， know。 my first PyCon presentation， obviously。 Also， huge thanks to
+    Chris Skynor from the。 Nature Conservancy who loaned me his PyCon for Dummy's
+    book in 2008 and was super patient。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的特殊数据在规模上处理起来很简单。非常感谢PyCon 2022的组织者们，让这次活动得以举行。我很高兴能在这里。这是我的第一次PyCon。同时，你知道的，这是我第一次PyCon演讲，显然也是我的第一次演讲。此外，特别感谢来自自然保护协会的克里斯·斯凯诺，他在2008年借给我他的《PyCon傻瓜书》，并且非常耐心。
+- en: with me as I struggled through writing some of my first PyCon functions。 I learned
+    about。 geospatial data and the power of bringing spatial thinking to organizations
+    while working at。 a company called Blue Raster which was using geospatial data
+    for helping conservation groups。 better achieve their goals。 I've built a career
+    on geospatial data off of the work of a lot。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我在写我的一些第一次PyCon函数时，我与之并肩作战。我了解到地理空间数据以及在一家名为Blue Raster的公司工作时，将空间思维带入组织的力量，该公司利用地理空间数据帮助保护组织更好地实现目标。我在地理空间数据领域建立了自己的职业生涯，得益于许多人的工作。
+- en: of other people。 Huge thanks to Peter Wang and Travis Olafant， Matt Rocklin
+    who is here。 and also Brian Vandivan， folks that have mentored me and helped me
+    and also shown me。 that there are business models that don't involve locking important
+    tools behind proprietary。 licenses and keys。 So big thanks to those folks。 I wanted
+    to start off by showing an example。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于其他人。特别感谢彼得·王、特拉维斯·奥拉芬特、马特·洛克林（他在这里）以及布莱恩·范迪万，他们指导并帮助了我，还让我看到有一些商业模式并不需要将重要工具锁在专有许可证和密钥后面。因此，特别感谢这些人。我想开始时展示一个例子。
+- en: of a vertical scaling solution for geospatial data。 What we're looking at is
+    Crater Lake。 National Park and as I click around the map， I'm generating a view
+    shed or a line of site。 analysis on this terrain while I'm rotating the position
+    of the sun to do ray tracing in。 a hillshade。 This is made possible through using
+    a CUDA enabled GPU that was all written。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个针对地理空间数据的垂直扩展解决方案。我们看到的是克雷特湖国家公园，当我在地图上点击时，我正在生成视域或视线分析，同时旋转太阳的位置进行光线追踪以产生阴影。这得益于使用CUDA支持的GPU，所有代码都是用CUDA编写的。
+- en: from a library called XRA Spatial which we maintain at MakePath。 It's an example
+    of taking。 a small amount of data and making what is a somewhat computationally
+    intensive task fast。 using a GPU。 In this talk， I'm going to be presenting really
+    a grab bag of different tools。 that you should be aware of if you're approaching
+    geospatial analytics in Python。 My name is。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来自我们在MakePath维护的一个名为XRA Spatial的库。这是一个将少量数据转化为相对计算密集型任务的快速例子，使用的是GPU。在这个演讲中，我将介绍一些你在进行Python地理空间分析时应该了解的不同工具。我的名字是。
+- en: Brennan Collins。 I've been involved in open source geo for about 10 years。 I
+    am the maintainer。 of XRA Spatial which is a Raster based spatial analytics library。
+    I'm also a huge fan of。 data shader which is a general purpose rasterization pipeline。
+    We're going to be talking a little。 bit about data shader。 I'm also the author
+    of the King Jason Bible down there at the bottom。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 布伦丹·柯林斯。我参与开源地理工作大约有10年了。我是XRA Spatial的维护者，这是一款基于光栅的空间分析库。我也是数据着色器的忠实粉丝，这是一种通用的光栅化管道。我们将稍微讨论一下数据着色器。我也是下方《金雅典圣经》的作者。
+- en: left for anyone that's interested in doing NLP on the Bible。 Also a new package
+    from。 MakePath called MapShader which is trying to make GIS web services easy
+    from Python。 I'm the co-founder of MakePath which is an Austin based spatial analytics
+    firm。 We are。 focused on bringing the broader tools from the data science ecosystem
+    to geospatial professionals。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于任何对在圣经上进行自然语言处理感兴趣的人，还有一个新的来自MakePath的包，名为MapShader，旨在使GIS网络服务在Python中变得简单。我是MakePath的联合创始人，这是一家位于奥斯丁的空间分析公司。我们专注于将数据科学生态系统中的更广泛工具引入地理空间专业人士。
+- en: and the clients that we work with。 A lot of times tools from general data science
+    are。 not named in ways that GIS analysts and geospatial data scientists recognize
+    and we're trying。 to bridge that gap while also providing services to clients。
+    If you'd like to learn more about MakePath， please visit our blog and you can
+    see a blog。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们合作的客户。很多时候，通用数据科学的工具并不是以GIS分析师和地理空间数据科学家所认识的方式命名的，我们正在努力弥补这个差距，同时为客户提供服务。如果你想了解更多关于MakePath的信息，请访问我们的博客，你可以看到一篇关于。
+- en: post on this GPU enhanced geospatial analysis with the greater Lake National
+    Park that I。 just showed。 You can see a little bit more of what went into creating
+    that。 So who said that processing geospatial data at scale was easy？ Well maybe
+    you was Sophia， Yang。 I don't know if you know her。 She's a senior data scientist
+    at Anaconda。 She just。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在大湖国家公园进行GPU增强的地理空间分析的博客文章，我刚才展示了。你可以看到更多关于创建这个的内容。那么，谁说大规模处理地理空间数据容易呢？也许是Sophia
+    Yang。我不知道你是否认识她。她是Anaconda的高级数据科学家。她刚刚。
+- en: started a YouTube channel and has some really great content on there that she
+    shows a lot。 of her secrets for data science。 So maybe it was Sophia Yang。 Also
+    Natalie Odell here who's a GIS analyst at MakePath。 Natalie do you think that
+    processing。 geospatial data at scale is easy？ Sometimes。 Sometimes。 Cool。 So Natalie
+    is the author of。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 启动了一个YouTube频道，上面有一些非常好的内容，她展示了许多数据科学的秘密。所以也许是Sophia Yang。还有Natalie Odell，她是MakePath的GIS分析师。Natalie，你认为大规模处理地理空间数据容易吗？有时。
+    有时。很酷。所以Natalie是。
+- en: a really interesting library called Census Park A。 And what Census Park A is
+    doing is。 it's taking the Census 2020 geographic files， shape files， and converting
+    them into a format。 that's better for processing at a large scale， which is Park
+    A。 So this is not exactly the。 Park A files themselves， but the tools to create
+    those Park A files。 So you can go to。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个非常有趣的库叫做Census Park A。而Census Park A所做的是，它正在将2020年人口普查的地理文件、形状文件转换为一种更适合大规模处理的格式，即Park
+    A。所以这并不是Park A文件本身，而是创建这些Park A文件的工具。所以你可以去。
+- en: Census Park A and download this and you can modify these scripts for other uses。
+    But we。 took this and we processed the Census 2020 data so that it would be easy
+    to consume from。 big data systems like Dask and Spark and other solutions。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Census Park A并下载这些，你可以修改这些脚本以供其他用途。但我们。处理了2020年人口普查的数据，使其更容易从像Dask和Spark这样的超大数据系统中消费，以及其他解决方案。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_4.png)'
+  id: totrans-16
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_4.png)'
+- en: Now one of the things that makes processing geospatial data difficult is that
+    there's a。 lot of different formats。 So as we go over to OGC， the Open Geospatial
+    Consortium， we can。 see a list of the OGC standards which they currently support
+    and there's a bunch of them。 They apply to many different types of data and it
+    can be a little overwhelming if you're。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，处理地理空间数据困难的原因之一是存在许多不同的格式。所以当我们转向OGC，开放地理空间联盟时，我们可以看到OGC当前支持的标准列表，里面有很多标准。它们适用于许多不同类型的数据，如果你。
+- en: getting involved in this to choose which data formats should I be targeting。
+    So this talk。 I hope that you leave this talk with a good idea of the formats
+    and tools that you should。 be using for different types of geospatial data。 These
+    data formats are really divided。 up into two general categories。 One of those
+    are for vector data and another is for raster， data。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 参与其中，以选择我应该针对哪些数据格式。所以这次讲座。我希望你在离开这次讲座时对不同类型的地理空间数据应该使用的格式和工具有一个好的了解。这些数据格式大致分为两类。其中一种是针对矢量数据，另一种是针对栅格数据。
+- en: In looking at data carpentry。org， which is a great site to learn more about
+    data science。 you can see a little bit of an introduction to vector data。 So vector
+    is a very overloaded。 term in data science but in GIS and geospatial it refers
+    to points， lines and polygons。 So。 vector data represents discrete phenomena。
+    So if we think of a building， then that building。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在查看data carpentry。org时，这是一个很好的学习数据科学的网站。你可以看到对矢量数据的一点介绍。所以，矢量在数据科学中是一个非常复杂的术语，但在GIS和地理空间中，它指的是点、线和多边形。因此，矢量数据代表离散现象。所以如果我们考虑一栋建筑，那栋建筑。
+- en: could be represented as a point。 It could be represented as a line as the outline
+    of。 the building footprint or it could be represented as a polygon。 Those are
+    all vector formats。 So。 vector are for discrete phenomena。 Some of the tools to
+    handle vector data points， lines。 and polygons that we should think about start
+    with a library called pandas which many of。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以表示为一个点。它可以表示为一条线，比如建筑轮廓，或者可以表示为一个多边形。这些都是矢量格式。因此，矢量是用于离散现象的。处理矢量数据点、线和多边形的一些工具应该考虑，从一个叫做
+    pandas 的库开始，很多人。
+- en: you are familiar with that gives us the ability to manipulate tabular data in
+    Python and organize。 numpy arrays with labels。 Now another library came out called
+    geo pandas and geo pandas will。 add a geometry column to your pandas data frames
+    so that you can process vector data。 with a similar API to pandas。 So geo pandas
+    is great and just like pandas， it's an in。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你熟悉的让我们能够在 Python 中操作表格数据并组织带标签的 numpy 数组的工具。现在又出现了一个库叫做 geo pandas，它会在你的 pandas
+    数据框中添加一个几何列，这样你就可以使用与 pandas 类似的 API 来处理矢量数据。因此，geo pandas 非常出色，就像 pandas 一样，它是一种。
+- en: memory data structure that you're working with。 So another library on the vector
+    side。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你正在处理的内存数据结构。因此，矢量侧的另一个库。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_6.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_6.png)'
+- en: that I just wanted to talk about was dask geo pandas。 So the dask data frame，
+    which is。 a really great abstraction for scaling pandas data frames to multiple
+    threads or multiple。 cores or multiple machines also has this extension dask geo
+    pandas to give you that geometry column。 on your dask data frame so that you can
+    use the dask abstractions with geo pandas。 This。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想谈的就是 dask geo pandas。所以 dask 数据框是一个非常好的抽象，可以将 pandas 数据框扩展到多个线程、多个核心或多台机器，它也有这个扩展
+    dask geo pandas，以便在你的 dask 数据框上提供几何列，这样你就可以使用 dask 抽象与 geo pandas。
+- en: is a fairly new library。 It's I would say like has some rough edges but they're
+    getting。 smoothed out and it's a really great dependency if you're going to process
+    vector data sets。 that do not fit on a single machine。 So as we processed census
+    parquet and Natalie was。 writing those scripts， we used dask geo pandas to load
+    up each one of the individual census。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是一个相对较新的库。我会说它有一些粗糙的地方，但这些问题正在被解决。如果你要处理无法适应单个机器的矢量数据集，它是一个非常好的依赖项。因此，当我们处理人口普查
+    parquet 时，Natalie 在编写这些脚本时，我们使用 dask geo pandas 来加载每一个单独的人口普查。
+- en: files into a single large data frame that we could then save out as partitioned
+    as a。 partition parquet file。 So I'm going to mention parquet a lot and I think
+    the first take away。 from this in processing geo spatial data at scale is that
+    parquet is a really good， friend。 OGC is now putting out a geo parquet specification
+    for having that geometry in。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将文件合并成一个大的数据框，然后我们可以将其保存为分区的 parquet 文件。因此，我将多次提到 parquet，我认为处理大规模地理空间数据的第一个要点是
+    parquet 是一个非常好的朋友。OGC 现在正在发布一个 geo parquet 规范，以便在。
+- en: your parquet file and there's a couple of reasons why you're going to want to
+    use parquet。 as a format。 So the first reason that you're going to want to use
+    parquet as a format is。 because it's binary instead of a text based format。 It
+    supports a wide number of compression。 formats and it also stores data by column
+    and that's really nice and it's partitionable。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的 parquet 文件中包含几何信息，有几个原因让你想要使用 parquet 作为格式。第一个原因是你想使用 parquet 作为格式，因为它是二进制格式，而不是基于文本的格式。它支持多种压缩格式，并且以列的方式存储数据，这非常好，并且是可分区的。
+- en: So those four things together make parquet a really good option for storing
+    your data。 and we know that performance breaks down into two different things。
+    It breaks down into。 memory and IO or compute and IO。 So parquet is going to handle
+    the IO component of scaling。 and as long as we have a geometry column in our parquet
+    file then we'll be able to scale。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，这四个因素使得 parquet 成为存储数据的一个非常好的选择，我们知道性能分为两部分。它分为内存和 IO，或计算和 IO。因此，parquet
+    将处理扩展的 IO 组件，只要我们在 parquet 文件中有一个几何列，我们就能够进行扩展。
+- en: vector operations on top of the data。 So the first lesson in scaling would be
+    choose a。 data format that lends itself to fast IO。 So it should be binary。 It
+    should support various。 types of compression。 It should be most likely column
+    or store so you don't have to load。 all of your data into memory if you're only
+    interested in one column and it should also。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在数据上进行向量操作。因此，缩放的第一个教训是选择一个适合快速输入输出的数据格式。它应该是二进制的，支持各种压缩类型。它应该大多数情况下是列存储的，因此如果你只对一列感兴趣，就不必将所有数据加载到内存中。
+- en: be partitionable so that you can have individual processes or workers load in
+    one partition as。 opposed to having to load the entire data。 Now the other area
+    of spatial data is raster。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以进行分区，这样你可以让单独的进程或工作者加载一个分区，而不是必须加载整个数据。现在，空间数据的另一个领域是栅格。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_8.png)'
+  id: totrans-31
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_8.png)'
+- en: data。 Raster data is regular grids。 We know rasters from formats like JPEGs
+    and PNGs。 They're。 images。 So raster formats in the geospatial world are used
+    to represent mostly continuous。 phenomena。 So we think of rainfall， soil types
+    is a common one。 Elevation。 Those tend to be。 represented as rasters。 And a fun
+    little cliche comment from the geospatial world we say raster。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 栅格数据是规则网格。我们知道栅格格式来自于JPEG和PNG等格式。它们是图像。因此，在地理空间领域，栅格格式主要用于表示连续现象。例如，降雨、土壤类型是常见的。高程通常也以栅格形式表示。来自地理空间领域的一个有趣的老生常谈是我们说栅格。
+- en: is faster and vector is correct。 So a lot of times in performance the performance
+    gains。 can be found by making sure that you're using the correct formats for your
+    data。 If you。 take a large elevation data set and you convert it into a vector
+    from a raster you can do that。 but you're going to end up with very complicated
+    vectors。 So many vertices for each one of your。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更快的向量是正确的。因此，很多时候在性能方面的提升可以通过确保使用正确的数据格式来实现。如果你将一个大型的高程数据集从栅格转换为向量，可以做到这一点，但最终会得到非常复杂的向量。每个数据都有许多顶点。
+- en: areas and as you process that it's going to be fairly slow。 Now raster data
+    has its own。 issues and we're going to talk about a couple of libraries that are
+    going to help you。 The。 foundational library which we all know and love is NumPy
+    which gives us the ability to。 allocate a typed array that is much faster to work
+    with than say a Python， a heterogeneous。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在处理这些时，速度会比较慢。现在，栅格数据有其自身的问题，我们将讨论一些将帮助你的库。我们都知道并喜爱的基础库是NumPy，它使我们能够分配一个类型数组，这比说Python的异构数组工作得要快得多。
+- en: Python list where we're doing all the type checking for every element。 So NumPy
+    forms。 the foundation for the geospatial libraries for raster processing that
+    come after。 But。 there are some things about NumPy that can be difficult。 So one
+    of them is not having， labels。 So when you're using a NumPy array you'll find
+    that you do a lot of integer indexing。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python列表在这里我们为每个元素进行所有的类型检查。因此，NumPy为随后的栅格处理地理空间库奠定了基础。但是，NumPy有一些地方可能比较困难。它的一个问题就是缺乏标签。因此，当你使用NumPy数组时，你会发现你做了很多整数索引。
+- en: with the NumPy array slicing syntax。 And it would be really nice if you could
+    build a。 say a cube let's think about a 3D array where you have x and y as your
+    geospatial coordinates。 and maybe z as your different layers。 Those could be maybe
+    the bands of a Landsat image。 or they could be different you know different data
+    sets from places that have been co-registered。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用NumPy数组切片语法。如果你能构建一个立方体，那就太好了。想想一个3D数组，其中x和y是你的地理坐标，也许z是你的不同层。这些层可能是Landsat图像的波段，或者是来自已进行地理配准的地方的不同数据集。
+- en: X array will give you the ability to label those dimensions and refer to those
+    dimensions。 with strings instead of integers。 That makes your code a lot more
+    readable and in three。 months when you come back to a function you'll be able
+    to understand what it's doing。 There's。 a lot of work has gone into x array and
+    we owe it make path a huge credit to the pan。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: X数组将使你能够为这些维度标记并使用字符串而不是整数引用这些维度。这使得你的代码更具可读性，三个月后当你回到一个函数时，你能够理解它的作用。X数组进行了大量的工作，我们应当对其进行极大的赞誉。
+- en: geo community for pushing forward the x array format and other formats like
+    XAR that we。 also rely on for raster data。 Make path decided that there could
+    be more universal functions。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 地理社区在推动x数组格式和其他像XAR这样的格式方面做了很多工作，我们也依赖于它们来处理栅格数据。Make path决定可以有更多的通用函数。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_10.png)'
+  id: totrans-39
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_10.png)'
+- en: on top of x array objects。 So we created a library called x array spatial which
+    includes。 spatial extensions for x array objects。 This library does not introduce
+    any new data structures。 All it is is a set of really the universal functions。
+    So if we think of NumPy really。 is two things the nd array plus universal functions
+    like some and standard deviation that operate。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基于x数组对象。我们创建了一个名为x数组空间的库，其中包含x数组对象的空间扩展。这个库并没有引入任何新的数据结构。它只是一个真正的通用函数集。因此如果我们把NumPy视为两件事，nd数组加上像一些和标准差这样的通用函数，这些函数在NumPy数组上操作。
+- en: on top of the NumPy array。 X array spatial is basically like spatial ufunks
+    which take。 x array data arrays as input and tend to return x array data arrays
+    as output。 There's a couple。 of functions which return pandas data frames and
+    we can see a couple of those。 But we have。 a nice list of the features that are
+    in x array spatial if you scroll down a little bit。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: x数组空间基本上就像空间ufunks，接受x数组数据数组作为输入，并倾向于返回x数组数据数组作为输出。有一些函数返回pandas数据框，我们可以看到其中的一些。但我们有一个很好的x数组空间功能列表，如果你向下滚动一点。
+- en: and we can see some of the categories of universal functions that we support。
+    So classifying or。 binning rasters where you want to bin using like an equal interval
+    method on top of a， raster。 Focal analytics where we're looking at neighborhoods
+    around pixels similar to。 you know convolution filters but we have a general apply
+    so that you can create your。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以看到我们支持的一些通用函数类别。因此分类或分箱栅格，想要在栅格上使用等间隔方法进行分箱。焦点分析，我们查看像素周围的邻域，类似于卷积滤波器，但我们有一个通用应用，因此你可以创建自己的。
+- en: own filters to pass over an image。 Hot spot analysis to identify statistically
+    significant。 hot spots in an image。 Statistics so multi spectral functions these
+    are all about combinations。 of different bands and imagery。 So if you get a Landsat
+    scene or a sentinel scene you'll。 have RGB bands but then also near infrared and
+    a slew of other bands you can combine。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自定义滤波器以处理图像。热点分析用于识别图像中统计显著的热点。统计多光谱功能，这些都是关于不同波段和影像的组合。因此，如果你获得Landsat场景或哨兵场景，你将会有RGB波段，但还有近红外和其他一系列波段可以组合。
+- en: those together to pull out interesting information。 The classic one in multi
+    spectral would be。 NDVI。 So there's a bunch of other ones。 Now as I look through
+    these features you'll notice。 that there's different columns here。 So these different
+    columns correspond to which array。 backends are supported by the function。 So
+    the NumPy x array data array so x array is。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将这些组合在一起以提取有趣的信息。在多光谱中经典的会是NDVI。因此，还有许多其他的。当我浏览这些特性时，你会注意到这里有不同的列。因此，这些不同的列对应于函数支持的数组后端。NumPy
+    x数组数据数组，所以x数组是。
+- en: wrapping a NumPy array to provide labels right but it can wrap other types of
+    arrays。 So。 it can also wrap Dask arrays。 So if you're loading up a chunked array
+    using Dask you can。 still use those x array labels but the underlying data is
+    a Dask array instead of just a NumPy。 array。 There are also Koopa arrays so Koopa
+    provides a NumPy like API on top of CUDA， GPUs。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将NumPy数组封装以提供正确的标签，但它也可以封装其他类型的数组。因此，它也可以封装Dask数组。所以如果你使用Dask加载一个分块数组，你仍然可以使用那些x数组标签，但底层数据是Dask数组，而不仅仅是NumPy数组。还有Koopa数组，Koopa在CUDA和GPU之上提供了类似NumPy的API。
+- en: So that's really handy。 You can put a Koopa array inside of an x array data
+    array。 and then run it through x array spatial functions and that's nice。 And
+    then there's also the。 Dask GPU column。 So that would correspond to a cluster
+    of GPUs that you're running an， analysis on。 We have some simple pathfinding on
+    top of rasters。 Also proximity analysis。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这真的很方便。你可以将Koopa数组放在x数组数据数组中，然后通过x数组空间函数运行，这很不错。还有Dask GPU列。这对应于你正在进行分析的GPU集群。我们在栅格上有一些简单的路径查找，还包括接近度分析。
+- en: So we're looking at the distance from target pixels in a couple of different
+    ways。 There's。 allocation direction and just distance which is the proximity function
+    and those currently。 only work on NumPy and Dask arrays。 We're still implementing
+    the Koopa versions。 Some raster。 devector tools and classic surface tools like
+    doing slope and curvature view shed is one。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们以几种不同的方式查看目标像素的距离。有分配方向和距离，即接近度函数，这些目前仅适用于NumPy和Dask数组。我们仍在实现Koopa版本。一些栅格去矢量工具和经典的表面工具，比如坡度和曲率视域。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_12.png)'
+  id: totrans-48
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_12.png)'
+- en: of them here that I showed earlier。 So we have vector and we have raster。 So
+    data shader。 is a great tool which came out of Anaconda really led by Jim Bednar
+    and Jim Christ。 And。 what this is is a general purpose rasterization pipeline。
+    So by that I mean moving from vector。 data to raster data。 So what if you're dealing
+    with elevation data and you're also dealing。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我之前展示的这些内容在这里。我们有矢量（vector）和光栅（raster）。数据着色器（data shader）是一个很棒的工具，它来自Anaconda，主要由Jim
+    Bednar和Jim Christ领导。它是一个通用的光栅化管道。我的意思是从矢量数据转换为光栅数据。那么如果你正在处理高程数据，同时还在处理其他数据呢？
+- en: with parcel data。 Parcels， say the boundaries of a given property in a community
+    are best。 representative vectors while elevation is best represented as a raster。
+    Data shader。 will allow you to convert between the two in an intelligent way and
+    it also allows you。 to specify aggregation functions for dealing with things like
+    over plotting。 And so data。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与地块数据结合。地块，比如说社区中某一物业的边界，最好的代表是矢量，而高程则最适合用光栅表示。数据着色器将允许你以智能的方式在两者之间转换，同时还允许你指定聚合函数来处理重叠绘图的问题。因此数据着色器。
+- en: shader is a really amazing tool。 We use it all the time at MakePath and we can
+    see an。 example here of population in the United States of the lower 48 and this
+    is one point。 per pixel in the country。 So this is a vector data set of points
+    and data shader is taking。 it and aggregating it to the two different pixels and
+    then applying a function to reduce。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 着色器是一个非常惊人的工具。我们在MakePath中一直在使用它，这里我们可以看到一个例子，显示的是美国48个州的人口分布，每个像素代表一个数据点。所以这是一个点的矢量数据集，而数据着色器正在将其聚合到两个不同的像素上，然后应用一个函数进行简化。
+- en: those values into a color here。 There's a log color ramp applied so we're able
+    to resolve。 the Midwest cities and not get drowned out by New York Houston and
+    Chicago and Los Angeles。 But data shader is one of those tools you want in your
+    toolbox so that you can convert。 from vector to raster easily and co-register
+    data sets。 And by co-register I mean having。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将这些值映射到颜色上。这里应用了对数颜色渐变，因此我们能够区分中西部城市，而不会被纽约、休斯敦、芝加哥和洛杉矶淹没。但是数据着色器是你在工具箱中希望拥有的工具之一，以便你可以轻松地将矢量转换为光栅，并进行共同配准数据集。共同配准的意思是确保。
+- en: their pixels aligned。 So if I load up say my elevation data and then I want
+    to bring in。 parcel data and summarize the elevation by the parcels， right？ I'm
+    going to have to convert。 those parcels into a raster but I'm going to need their
+    pixels to align and that's where。 data shader can help you by helping you resample
+    the elevation data， rasterize the vector data。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们的像素对齐。所以如果我加载我的高程数据，然后想要引入地块数据并按地块汇总高程，对吧？我必须将这些地块转换为光栅，但我需要确保它们的像素对齐，这就是数据着色器可以帮助你的地方，通过帮助你重新采样高程数据，将矢量数据光栅化。
+- en: bring them together and allow you to do your analysis without worrying about
+    those creativity。 killing steps。 Now in scaling there's some other dependencies
+    that need to be highlighted， here。 Numba is certainly one of them。 In X-ray spatial
+    we have heavy use of number for vertical。 scaling and by vertical scaling I mean
+    making our algorithms faster。 I want to stay in Python。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将它们结合起来，使你能够进行分析，而无需担心那些有创意的、可能阻碍步骤的内容。现在在扩展中，还有一些其他的依赖关系需要强调，这里Numba无疑是其中之一。在X-ray空间中，我们大量使用Numba进行垂直扩展，而垂直扩展的意思是加快我们的算法速度。我希望能继续使用Python。
+- en: I don't want to drop down to a C extension when I need to loop through a bunch
+    of pixels。 And so the Numba functions inside of X-ray spatial I hope to get to
+    showing you one of。 them make it possible to have performant code without adding
+    a C extension。 And on the horizontal。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我需要遍历一堆像素时，我不想退回到C扩展。因此，我希望能向你展示X-ray空间中的Numba函数之一，它使得在不添加C扩展的情况下拥有高效代码成为可能。在横向。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_14.png)'
+  id: totrans-56
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_14.png)'
+- en: scaling， Dask is the solution for being able to scale out to multiple threads
+    and multiple， CPUs。 It understands Numba functions to send around to workers and
+    so these tools integrate， very nicely。 I mentioned Kupai。 Kupai is for interfacing
+    with CUDA GPUs with a Numbai-like， syntax。 And here's a recent merge that we had
+    on X-ray spatial where Twee， one of the， engineers。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于扩展，Dask是能够扩展到多个线程和多个CPU的解决方案。它理解Numba函数，以便将其发送到工作节点，因此这些工具集成得非常好。我提到过Kupai。Kupai用于与CUDA
+    GPU进行交互，具有类似Numba的语法。这里是我们在X-ray空间上进行的最近一次合并，其中Twee，一位工程师。
+- en: says current hotspots Kupai case implementation runs on pure Kupai， enabling。
+    Numba helps greatly improve performance in testing this array size。 We got a 6000X
+    performance。 increase。 So that was an example where there's probably a lot of
+    low hanging fruit to do。 on the hotspots tool。 And using Numba and its JIT decorator
+    for CUDA we were able to target。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当前的热点 Kupai 案例实现运行在纯 Kupai 上，Numba 有助于大幅提高在测试此数组大小时的性能。我们获得了 6000 倍的性能提升。这是一个例子，可能还有很多低垂的果实可以在热点工具上做。使用
+    Numba 及其针对 CUDA 的 JIT 装饰器，我们能够针对。
+- en: GPUs for hotspots and get a really nice improvement。 I also wanted to highlight
+    the planetary computer， from Microsoft。 The planetary computer combines curated
+    datasets with scalable compute on。 Jupiter lab and open source tools like Dask
+    and Numba。 And looking at a quick example here。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 热点的 GPU 可实现显著提升。我还想强调微软的行星计算机。行星计算机将策划的数据集与可扩展的计算结合在一起。Jupiter Lab 和 Dask、Numba
+    等开源工具也在其中。我们来快速看一个例子。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_16.png)'
+  id: totrans-60
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_16.png)'
+- en: we can see pulling in elevation data from the planetary computer and doing a
+    nominal。 analysis on it。 So what I'm doing is I'm importing data shader。 I'm importing
+    a planetary computer。 library and X-ray， choosing some areas of interest， and
+    then using what is a stack catalog to。 access data。 Stack is a great open source
+    specification。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以看到从行星计算机提取高程数据并进行名义分析。我所做的是导入数据着色器，导入行星计算机库和 X-ray，选择一些感兴趣的区域，然后使用堆栈目录来访问数据。堆栈是一个很好的开源规范。
+- en: it's a spatiotemporal asset catalogs for being， able to have a JSON file which
+    you can read which describes a multi-part raster dataset。 So if you have a large，
+    say you have Landsat and there's many scenes， you don't want to。 loop through
+    every scene and check its bounds to see whether it's in your study area or not。
+    You want to consult an index。 And that's what stack is。 It's an index that you
+    can put in。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个时空资产目录，能够有一个可以读取的 JSON 文件，描述一个多部分栅格数据集。因此，如果你有一个大型数据集，比如 Landsat，有许多场景，你不想逐一遍历每个场景并检查它的边界是否在你的研究区域内。你希望咨询一个索引。这就是堆栈的作用。它是一个你可以放入的索引。
+- en: S3 along with some other formats and read that stack catalog and find the data
+    that you're。 interested in。 So we've queried this stack catalog， the NASA DEM
+    for our area of interest。 We're retrieving that elevation。 Then we're able to
+    grab that data and use data shader。 to an X-ray spatial。 So here we're computing
+    a hillshade with X-ray spatial and then color。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: S3 及其他一些格式，读取该堆栈目录，找到你感兴趣的数据。我们已经查询了这个堆栈目录，NASA DEM 针对我们的感兴趣区域。我们正在检索该高程。然后我们能够抓取数据并使用数据着色器和
+    X-ray 空间。因此，这里我们使用 X-ray 空间计算一个山影图，然后上色。
+- en: mapping with a pseudo-elevation color map。 And so this was querying a very large
+    dataset。 but it used stack to figure out what area of the data to pull。 And then
+    used X-ray to。 open that dataset and resample it。 Used X-ray spatial to compute
+    a hillshade to place a。 light source at a given location in Azmuth。 And then used
+    data shader at the end to actually。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用伪高程颜色图进行映射。这是在查询一个非常大的数据集，但它使用堆栈来确定要提取的数据区域。然后使用 X-ray 打开该数据集并重新采样。使用 X-ray
+    空间计算一个山影图，在特定位置的方位角放置光源。最后用数据着色器进行实际操作。
+- en: add color mapping to the array。 So what this is is this is， you know， if you're
+    interacting。 with this， this is an X-ray data array。 So stack， I mentioned a little
+    bit about stack。 so check stack out。 There's a lot of great tools around stack。
+    Stack is not Python specific。 it's simply a specification but there's pie stack
+    and other libraries that implement it。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 向数组添加颜色映射。这是一个 X-ray 数据数组。如果你在交互中，这就是一个 X-ray 数据数组。我提到了一点关于堆栈，所以请查看堆栈。围绕堆栈有很多很好的工具。堆栈并不是特定于
+    Python 的，它只是一个规范，但有 pie stack 和其他实现它的库。
+- en: And X-ray spatial has a whole user guide where you can look at the different
+    tools and actions。 So this is a proximity notebook where we're looking through
+    calculating proximity on points。 So we have our starting points and we're able
+    to run the X-ray spatial proximity tool。 to generate a grid where every pixel
+    is the value in distance to the nearest point。 And。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: X-ray 空间有完整的用户指南，可以查看不同的工具和操作。这是一个接近性笔记本，我们正在计算点的接近性。我们有我们的起始点，并能够运行 X-ray 空间接近性工具，生成一个网格，其中每个像素是与最近点的距离值。
+- en: you can choose different distance metrics。 You can also do this where you are，
+    say， doing。 the distance from a line feature。 And here's the result of a line
+    feature。 You can threshold。 that distance。 You can also do proximity allocation
+    and direction where I want the value not。 to be the distance to the nearest item。
+    I want it to be the ID of the nearest item。 And that's。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以选择不同的距离度量。你也可以这样做，比如说，计算从线特征的距离。这是线特征的结果。你可以对那个距离进行阈值处理。你还可以做临近分配和方向，我希望值不是到最近物品的距离。我希望它是最近物品的ID。这就是。
+- en: what allocation is。 And so that is an allocation grid。 And then also direction
+    where you want， the。 say， the cardinal direction to the nearest point。 So those
+    are some tools available in。 X-ray spatial。 We do have a continued CUDA working
+    group where we're working on algorithms。 I mentioned the hotspots tool。 And I
+    wanted to quickly show I just have a little time。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 分配是什么。因此，这就是一个分配网格。然后还有方向，你希望，比如说，最近点的方位方向。这些是X-ray空间中一些可用的工具。我们确实有一个持续的CUDA工作组，正在研究算法。我提到过热点工具。我想快速展示一下，我的时间不多。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_18.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_18.png)'
+- en: left。 What it's like inside the code of X-ray spatial looking at these number
+    functions。 So here is the code for slope。 But I'm just going to quickly change
+    this to hillshade because。 we saw more of the hillshade demos here。 So we have
+    first a NumPy implementation of hillshade。 just using NumPy U funks。 Great。 We
+    can take that NumPy version of our hillshade and we。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 左边。查看这些数字函数时X-ray空间内部的代码是什么样子。这是坡度的代码。但我将迅速将其更改为阴影图，因为我们在这里看到更多阴影图的演示。所以我们首先有一个使用NumPy实现的阴影图，仅使用NumPy的U函数。很好。我们可以将我们阴影图的NumPy版本。
+- en: can scale it to using Dask。 Look how easy Dask is。 So there is an edge case
+    here where。 we have to handle overlapping partitions。 Because our data is spread
+    out， we can use， map overlaps。 So we can pull in the edge pixels from one partition
+    and the edge from。 another so we can compute our hillshade and not have edge effects
+    for every partition of。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以扩展到使用Dask。看看Dask是多么简单。在这里有一个边缘情况，我们必须处理重叠的分区。因为我们的数据是分散的，我们可以使用映射重叠。所以我们可以从一个分区提取边缘像素，并从另一个分区提取边缘，这样我们可以计算我们的阴影图，而不会对每个分区产生边缘效应。
+- en: our raster。 We can then sprinkle on the CUDA JIT decorator。 And we've enabled
+    this code， for GPUs。 So in this file here， it's about 200 lines with some documentation。
+    It's handling， the NumPy case。 the Dask case， the GPU case and the Dask GPU case。
+    All in 200 lines of。 code without any C extensions and it's very performant。 So
+    check out X-ray spatial and。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的栅格。然后我们可以在CUDA JIT装饰器上洒上。这使得我们为GPU启用了这段代码。所以在这里的这个文件中，大约有200行包含一些文档。它处理NumPy案例、Dask案例、GPU案例和Dask
+    GPU案例。所有这些都在200行代码内，没有任何C扩展，并且性能非常好。所以查看X-ray空间。
+- en: minimum steel functions from it and look at examples of implementing NumPy and
+    Dask together。 In general， I'm just so grateful to be here。 It's an amazing opportunity
+    to interface with。 the Python community。 I urge folks to reach out to me and to
+    other people at MakePath。 I always enjoy going and evangelizing these tools and
+    helping organizations to use them。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从中提取最小钢铁函数，并查看将NumPy和Dask一起实现的示例。总的来说，我非常感激能在这里。这是一个与Python社区互动的绝佳机会。我鼓励大家与我和MakePath的其他人联系。我总是喜欢去推广这些工具，帮助组织使用它们。
+- en: And I think we're not doing any Q&A but thank you guys so much for the opportunity
+    and hope。 to see you around the conference。 [Applause]。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想我们没有进行问答环节，但非常感谢大家给予的机会，希望在会议上见到你们。[掌声]。
+- en: '![](img/a2643f9d5e12a977ee487808bc5263f6_20.png)'
+  id: totrans-75
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a2643f9d5e12a977ee487808bc5263f6_20.png)'

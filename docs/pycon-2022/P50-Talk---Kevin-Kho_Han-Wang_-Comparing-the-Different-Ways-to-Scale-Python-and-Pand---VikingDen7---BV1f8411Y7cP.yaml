@@ -1,0 +1,698 @@
+- en: P50：Talk - Kevin Kho_Han Wang_ Comparing the Different Ways to Scale Python
+    and Pand - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P50：演讲 - Kevin Kho_Han Wang_ 比较不同方式来扩展 Python 和 Pandas - VikingDen7 - BV1f8411Y7cP
+- en: \>\> Everyone， how are you doing today？
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 大家，今天过得怎么样？
+- en: '![](img/7a0a16a9552ae890dfb1d9cc57f2ba2c_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/7a0a16a9552ae890dfb1d9cc57f2ba2c_1.png)'
+- en: '![](img/7a0a16a9552ae890dfb1d9cc57f2ba2c_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/7a0a16a9552ae890dfb1d9cc57f2ba2c_2.png)'
+- en: \>\> Good。 \>\> Okay。 So we can get started with our next talk。 We have comparing
+    the different ways to scale Python and Pandas code。 We had the speakers Kevin
+    Ko and Han Wang。 Just a quick tip。 So there's no Q and A after the talk。 but if
+    you'd like to ask questions to the speakers。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 好的。 \>\> 那么我们可以开始下一个演讲。我们将比较不同方式来扩展 Python 和 Pandas 代码。演讲者是 Kevin Ko 和
+    Han Wang。一个小提示。在演讲结束后没有问答环节，但如果你想向演讲者提问。
+- en: you can feel free to catch them at the hallway or anywhere outside。 All right？
+    Over to you。 \>\> Thank you。 \>\> Hey， everyone。 Welcome to different ways to
+    scale Python and Pandas code。 We're very happy to be here in an in-person conference。
+    Happy to have met a bunch of you and definitely looking forward to chatting with
+    the rest of。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以随时在走廊或外面找他们。好的？交给你了。 \>\> 谢谢。 \>\> 大家好。欢迎来到不同方式来扩展 Python 和 Pandas 代码的会议。我们很高兴能够在现场会议上与大家见面。很高兴见到了很多人，期待与其他人聊天。
+- en: you also。 So a bit about us。 So Han and I will be talking。 Han is -- we are
+    both affiliated with the Fugue open source project。 Han is the main Fugue author
+    and he works for Lyft as a tech lead for the Lyft machine。 learning platform。
+    I am an engineer at Prefect， which is also a sponsor for this year's conference。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你们也。关于我们的一些信息。汉和我将进行演讲。汉是——我们都与 Fugue 开源项目有关联。汉是主要的 Fugue 作者，他在 Lyft 担任机器学习平台的技术负责人。我是
+    Prefect 的一名工程师，Prefect 也是今年会议的赞助商。
+- en: We have a sponsor booth。 Prefect is an open source workflow orchestration framework
+    and prior to that I was a data scientist。 So obviously we're here to look at ways
+    to scale Python and Pandas code， but just worth。 noting what the limitations of
+    Pandas are。 So first of all， it's single core by default。 It's known to not be
+    memory efficient。 You probably heard something along the lines of if you want
+    to handle a Pandas data free。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一个赞助商展位。Prefect 是一个开源工作流编排框架，之前我是一名数据科学家。所以显然我们在这里探讨扩展 Python 和 Pandas 代码的方法，但值得注意的是
+    Pandas 的限制。首先，它默认是单核的。已知其内存效率低下。你可能听说过，如果你想处理一个 Pandas 数据集。
+- en: may efficiently， you need 3x or 5x as much RAM as your data。 So if you have
+    like a 5 gig data set。 you then need like 15 gigs of RAM to handle it effectively，
+    at least。 And of course there's an assumption that everything is confined to a
+    single machine。 So once you start hitting this bottle next and hitting these limitations，
+    then you need。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果要高效处理，你需要的 RAM 要比数据多 3 倍或 5 倍。所以如果你有一个 5GB 的数据集，你需要大约 15GB 的 RAM 才能有效处理，至少。而且假设所有内容都局限于单台机器。因此，一旦你开始达到这个瓶颈并碰到这些限制，你就需要。
+- en: to use other frameworks to scale。 So how do you scale out？
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用其他框架来扩展。那么你怎么扩展呢？
+- en: If you start with your existing computing logic in Python or Pandas and you
+    want to bridge。 that gap to utilize distributed compute frameworks， what you can
+    use is a semantic layer。 And the semantic layer is what will map that existing
+    logic to the distributed compute， frameworks。 So we have two kinds of semantic
+    layers。 The first is Pandas like。 The second one is SQL like。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你从现有的 Python 或 Pandas 计算逻辑开始，并想要弥补这个差距以利用分布式计算框架，你可以使用语义层。语义层将现有逻辑映射到分布式计算框架。因此，我们有两种类型的语义层。第一种是类似
+    Pandas 的。第二种是类似 SQL 的。
+- en: And what we find is that both of these semantic layers have some deficiencies
+    in them which。 Han will talk more about later。 And that's why Fugue as a semantic
+    layer aims to provide both of these options so that we。 can allow the user to
+    describe their logic in the grammar that they prefer。 And then we can be responsible
+    for bringing that to the distributed compute framework。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们发现这两种语义层都有一些缺陷，汉会在稍后详细讲解。这就是为什么 Fugue 作为一种语义层旨在提供这两种选择，以便我们可以让用户用他们喜欢的语法描述逻辑。然后我们可以负责将其带入分布式计算框架。
+- en: So if you're not familiar with the distributed compute frameworks， these are
+    the most popular。 ones right now as part， Dask and Ray。 So what happens with Pandas
+    is when you have like a five gig dataset and then maybe you。 use like a 16 gig
+    gram machine and it's going fine， all of a sudden five gigs becomes 10。 You didn't
+    have to bump up the underlying hardware。 And that's what's called vertical scaling。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你不熟悉分布式计算框架，这些是目前最流行的框架，包括Dask和Ray。当使用Pandas时，如果你有一个五GB的数据集，使用一个16GB内存的机器时，起初一切正常，但突然间五GB的数据变成了10GB。你并不需要提升底层硬件，这就是所谓的垂直扩展。
+- en: But what happens is maybe you only have one step in the pipeline that really
+    needs a lot， of RAM。 But then because of the way Pandas is， you then need to have
+    your machine， your powerful。 machine for the duration of your entire pipeline。
+    So these distributed compute frameworks allow us to use clusters that utilize
+    auto scaling。 under the hood so we only need to bump the resources up for an expensive
+    step。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但问题是，管道中可能只有一步确实需要大量内存。然而，由于Pandas的工作方式，你需要在整个管道期间保持你的强大机器。因此，这些分布式计算框架使我们能够使用集群，并在底层利用自动扩展，因此我们只需在高开销的步骤中提升资源。
+- en: And then these frameworks are also optimized to handle operations for big data。
+    So for example。 if you have a lot of columns and you only need two at the end，
+    there are。 these optimizations that can traverse the computation graph and only
+    use those two columns。 Whereas Pandas， you need all the data in memory。 But of
+    course。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些框架也经过优化，以处理大数据操作。例如，如果你有很多列，而最后只需要两个，这些优化可以遍历计算图并仅使用那两列。而Pandas则需要将所有数据加载到内存中。当然。
+- en: these frameworks are not straightforward to use。 You have to learn a new syntax
+    or a new framework。 And in addition to the new syntax or framework， you then have
+    to learn a lot of concepts such。 as partitioning， persisting， even schema。 And
+    in general， they all have a relatively。 I compared to Pandas， a relatively poor
+    developer。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些框架并不容易使用。你必须学习新的语法或新的框架。除了新的语法或框架外，你还需要学习许多概念，如分区、持久化，甚至是模式。总体来说，与Pandas相比，它们在开发者友好性上相对较差。
+- en: experience in that it's hard to develop locally quickly and then bring it to
+    the distributed。 setting。 And that's about Spark specifically。 That's just a bit
+    better because it's Python native。 And that's why a few exists to bridge that
+    gap between local compute to distributed compute。 So there are other projects
+    that do the same thing in Modin and Koalas。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在经验上，本地快速开发并将其带入分布式环境是困难的。具体来说，这与Spark有关。由于其原生Python的特点，这稍微好一些。因此，存在一些工具来弥补本地计算与分布式计算之间的差距。还有其他项目，如Modin和Koalas，也在做同样的事情。
+- en: The difference is that they use Pandas as the interface。 Whereas Fugue uses
+    Python， Pandas and SQL。 So again， these are interoperable。 People can choose the
+    language that they prefer。 And then we port it over to the relevant distributed
+    system for them。 So a lot of this talk will be about what the deficiency of the
+    Pandas interface is and why。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不同之处在于它们使用Pandas作为接口，而Fugue则使用Python、Pandas和SQL。因此，这些都是可以互操作的。人们可以选择他们喜欢的语言，然后我们将其转移到相关的分布式系统上。因此，很多讨论将围绕Pandas接口的缺陷以及原因展开。
+- en: it's not necessarily the good grammar for distributed compute。 But before that。
+    we're going to introduce Fugue。 So Fugue is an abstraction layer for distributed
+    computing。 And we find that Fugue users often see because they can describe their
+    code in native Python。 We find that maintenance is reduced。 And also iteration
+    speed with big data projects increase。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不一定是分布式计算的良好语法。但在此之前，我们将介绍Fugue。Fugue是分布式计算的一个抽象层。我们发现Fugue用户经常看到，因为他们可以用原生Python描述他们的代码。我们发现维护成本降低，同时大数据项目的迭代速度增加。
+- en: So we publish an article with Lyft earlier this month。 And with Fugue。 the average
+    wall time of Spark jobs decreased from 3 hours to 0。3 hours。 This is because that
+    bridge allows you to prototype quickly and only use the cluster。 when your code
+    is production ready。 We don't have any fancier optimizations other than providing
+    guardrails around best practices。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本月早些时候，我们与Lyft发布了一篇文章。通过Fugue，Spark作业的平均壁钟时间从3小时减少到0.3小时。这是因为这个桥接允许你快速原型开发，并在代码准备好投入生产时才使用集群。我们没有其他更复杂的优化，除了围绕最佳实践提供保护措施。
+- en: so that your code can execute well in the distributed setting。 So let's look
+    at the most basic Fugue code。 Here in this operation。 we have input data with
+    the ID and value。 And we want to make a new column called food。 So the top code
+    is the Pandas syntax。 And the bottom code is the Spark syntax。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样你的代码就可以在分布式环境中顺利执行。接下来，让我们看看最基本的Fugue代码。在这个操作中，我们有带有ID和数值的输入数据。我们想要创建一个名为food的新列。因此，顶部的代码是Pandas语法，而底部的代码是Spark语法。
+- en: So if you want to -- if you already have a lot of Pandas code that you then
+    want to bring， to Spark。 you then have to rewrite a lot of the code。 And this
+    isn't an isolated example。 You'll find that a lot of similar operations have drastically
+    different syntax。 So let's look at how Fugue would do it。 Up above is the Pandas
+    function。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你已经有很多Pandas代码想要迁移到Spark，那么你就得重写很多代码。这并不是一个孤立的例子。你会发现许多类似的操作具有截然不同的语法。那么让我们看看Fugue是如何处理的。上面是Pandas的函数。
+- en: All we're using is this map to get the appropriate dictionary value。 And then
+    -- so all we want to do is get the value in the value column， use the dictionary。
+    to map it to the corresponding food， and then create the new column。 So here the
+    function is left unchanged。 And what we're going to do is we're going to use the
+    Fugue transform function。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们所使用的只是这个映射来获取相应的字典值。然后——所以我们想做的就是获取值列中的值，使用字典将其映射到相应的food，然后创建新列。因此这里的函数保持不变。我们要做的是使用Fugue转换函数。
+- en: And the Fugue transform function takes in the data frame and the function。 And
+    then the schema。 which we'll be adding a new column called food。 And then we have
+    the parameters passed。 And this will work on Pandas。 But what happens if we want
+    to bring this to Spark？
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Fugue转换函数接受数据框、函数以及模式。我们将添加一个名为food的新列。然后，我们有传递的参数。这将在Pandas上工作。但是如果我们想把它带到Spark呢？
+- en: All we have to do is specify the engine。 And the engine is just a Spark session。
+    And we also support desk at the moment。 So what we can -- we're using the same
+    function。 All we have to do is change the engine now。 And then the code will run
+    on Spark or desk。 And this is also flexible to however you want to define your
+    function as a user。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们要做的就是指定引擎，而引擎只是一个Spark会话。我们目前也支持desk。因此我们可以——我们使用同样的函数。我们所要做的就是现在更改引擎，然后代码将在Spark或desk上运行。这也对用户希望如何定义他们的函数是灵活的。
+- en: So I have three other implementations that are non-pandous based and purely
+    native Python。 that you can also be brought to Spark or desk。 So all of these
+    use some combination。 I'll use some combination of list and dictionaries。 And
+    then it's flexible。 whatever the input type is or the output type Fugue will then，
+    adjust。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我还有三个其他非Pandas基础的实现，完全是原生Python的，也可以被带到Spark或desk。因此所有这些使用某种组合。我将使用某种列表和字典的组合。然后它是灵活的，无论输入类型或输出类型是什么，Fugue都会进行调整。
+- en: And now I'll hand it to Han for the second portion of this talk。 Hello。 Hello，
+    everyone。 Nice to meet you。 And thank you， Kevin。 And now I'm going to have a
+    further discussion on the deficiencies of the pandas like semantic。 layer and
+    the traditional SQL semantic layer。 So first of all。 let's talk about the limitations
+    of the pandas like semantics。 Considering this data frame。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我将把时间交给Han进行本次演讲的第二部分。大家好，大家好，很高兴见到你们。谢谢你，Kevin。接下来，我将进一步讨论Pandas类似语义层和传统SQL语义层的不足之处。首先，让我们谈谈Pandas类似语义的局限性。考虑这个数据框。
+- en: it has four columns， A， B， C and D， A and B are strings。 And C is just a random
+    number from zero to one。 And D is just an integer from zero to one thousand。 We're
+    going to use this data frame in the format of pandas coalesce， which is also known
+    as。 pandas on Spark as of Spark 3。2。 And also that's data frames and the morning
+    data frame。 Okay。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它有四列，A、B、C和D，A和B是字符串。C是从零到一的随机数，而D是从零到一千的整数。我们将使用这个数据框以Pandas coalesce的格式进行处理，这也被称为Spark
+    3.2中的Pandas on Spark。此外，这也是数据框和早上的数据框。好的。
+- en: We're going to use this data frame as an example to demonstrate some of the
+    problems of some。 basic assumptions of pandas。 First of all， pandas assumes that
+    data is physically together。 Look at this I log function。 I think everyone knows
+    I log and I think most of us just the love I look。 But the assumption behind I
+    log is that random access is cheap。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用这个数据框作为示例，演示一些关于Pandas基本假设的问题。首先，Pandas假设数据是物理上聚集在一起的。看看这个I log函数。我想每个人都知道I
+    log，而且我认为我们大多数人只是喜欢I log。但是I log背后的假设是随机访问是便宜的。
+- en: But this is not true in the distributed system。 So look at this data frame with
+    one million rows of the previous example I've shown。 And now we are going to run
+    five different cases and we are going to compare their performances。 in each backend。
+    Here is the result。 So we always use the first case as the reference case。 We
+    assume the first case will always take one unit of time and then we compare horizontally。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在分布式系统中，这并不成立。所以看看我之前展示的具有一百万行的数据框。现在我们将运行五种不同的情况，并比较它们在每个后端的性能。这是结果。所以我们总是将第一种情况作为参考案例。我们假设第一种情况总是需要一个单位的时间，然后进行横向比较。
+- en: You will see that for pandas， I log is faster than the popular functions such
+    as head and， tail。 which is good， right？ And no matter where you access the data
+    frame， it's faster。 But for moding on Ray， you will see that the performance of
+    the four cases， first four cases。 is very similar。 But for the last case， when
+    you try to access the middle of the data frame。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会发现对于pandas，I log的速度比流行的函数如head和tail快。这很好，对吧？无论你在哪里访问数据框，它的速度都更快。但在Ray上进行模态分析时，你会看到前四种情况的性能非常相似。但对于最后一种情况，当你尝试访问数据框的中间部分时。
+- en: somehow it is， two times slower。 And then for Spark case。 even more weird because
+    none of other cases is even close to the first， case。 This is slower than the
+    first case， especially when you use random access， try to get the。 middle and
+    the end part of the data frame。 You see it's 15 times slower。 And for dusk。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不知怎么的，它慢了两倍。然后对于Spark情况，更奇怪的是，其他情况都没有接近第一种情况。这比第一种情况慢，特别是当你使用随机访问时，试图获取数据框的中间和末尾部分。你会发现速度慢了15倍。对于dusk。
+- en: dusk even this allows you to do random access using iLook。 So here we see the
+    first discrepancy of the interface。 But why does this allow this？
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: dusk甚至允许你使用iLook进行随机访问。所以在这里我们看到了接口的第一个不一致。但为什么会允许这样？
+- en: Because random access is not a good practice in distributed computing。 So I
+    think what dusk is doing is just trying to provide a guardrail for you to use
+    the。 distributed system in a more efficient way。 Natural order。 So pandas assumes
+    that natural order is preserved。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为随机访问在分布式计算中不是一个好做法。所以我认为dusk所做的就是试图为你提供一个保护措施，让你以更高效的方式使用分布式系统。自然顺序。因此，pandas假设自然顺序是保留的。
+- en: But this is not always true in the distributed system。 We still use the existing
+    data frame and we sort by C。 We compute the diff， we compute。 the standard deviation。
+    On the other hand， we just the same sorted value。 So if our really back to the
+    same compute。 So if natural order is preserved by a backhand。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在分布式系统中，这并不总是成立。我们仍然使用现有的数据框，并按C排序。我们计算差异，计算标准偏差。另一方面，我们只是使用相同的排序值。因此，如果我们的确返回相同的计算。如果自然顺序由后端保留。
+- en: then x should equal to y。 So as you can see， it's not true in Spark。 Why？
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: x应该等于y。所以如你所见，这在Spark中并不成立。为什么？
+- en: Because it is very expensive to preserve the global order of data in a distributed
+    system。 Sometimes this is not even a well defined problem。 So that's why you cannot
+    expect a distributed system to always keep the global order for， you。 It is very
+    expensive。 Now let's talk about data shuffle。 If the data frame is in memory and
+    local。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为在分布式系统中保持数据的全局顺序是非常昂贵的。有时这甚至不是一个明确定义的问题。这就是为什么你不能指望分布式系统始终为你保持全局顺序。这非常昂贵。现在让我们谈谈数据洗牌。如果数据框在内存中且是本地的。
+- en: data shuffle is trivial。 But this is always a very big challenge in distributed
+    systems。 Assuming we have a data frame with 100K rows and for each group of D，
+    we just want to group。 the data frame by D。 And for each group， we just find the
+    row with the largest C。 You probably can use group by applying to solve this problem。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据洗牌是微不足道的。但在分布式系统中，这始终是一个很大的挑战。假设我们有一个包含100K行的数据框，对于每个D组，我们只想按D对数据框进行分组。对于每个组，我们只需找到C值最大的行。你可能可以使用group
+    by来解决这个问题。
+- en: But someone just figured out a more elegant and smarter way to like method one
+    to solve。 this problem。 We just need to sort the values on both columns C and
+    D。 And then we just drop the duplicate based on group D。 And keep the last。 Then
+    we get the expected result。 It is expressive and it is very elegant。 On the second
+    method。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但有人刚刚想出了更优雅、更聪明的方法来解决这个问题。我们只需按C和D两列的值进行排序。然后我们只需根据D组丢弃重复项，并保留最后一项。然后我们就得到了预期的结果。它是表达式且非常优雅。在第二种方法中。
+- en: we just group by D。 And then we try to find the index with the max C。 And then
+    we join back this index to Df， all index in order to get the result。 The second
+    method is less straightforward。 It's more complicated。 Let's take a look at the
+    speed。 And actually on pandas， the second method is even slower than the first
+    method。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们只是按D分组。然后我们尝试找到最大C的索引。然后我们将这个索引连接回Df，所有索引以获得结果。第二种方法不那么直接。它更复杂。我们来看看速度。实际上，在pandas中，第二种方法甚至比第一种方法还慢。
+- en: That will just confirm you that method two has no value。 Now this is not true
+    on distributed system。 You will see that on a distributed system， all of them
+    will get significantly faster， on method two。 Why？ Because method two can avoid
+    shuffling。 It can minimize， at least it can minimize shuffling。 And in some cases，
+    for example， in Spark， with certain settings， you can completely avoid。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将证实你方法二没有价值。现在这在分布式系统中并不成立。你会看到，在分布式系统中，所有方法二的速度都会显著提高。为什么？因为方法二可以避免洗牌。它可以最小化，至少它可以最小化洗牌。在某些情况下，例如在Spark中，使用特定设置，你可以完全避免。
+- en: shuffling。 That is why method two is much faster in a distributed system。 Now
+    you have a dilemma。 If you want to keep use the pandas syntax and you have to
+    choose between flexibility and。 elegance versus performance， which one do you
+    choose？ It's always a difficult choice。 Now let's talk about index。 It's common
+    sense that index can speed up the pandas computation。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 洗牌。这就是为什么在分布式系统中方法二要快得多。现在你面临一个两难选择。如果你想继续使用pandas语法，你必须在灵活性和优雅与性能之间做出选择，你会选择哪个？这总是一个艰难的选择。现在让我们谈谈索引。众所周知，索引可以加快pandas计算。
+- en: But it's not always true in distributed systems。 So now that data frame or still
+    have one million rows。 an idea is just a Df。set index on A。 And we do two things。
+    We just use the original data frame and use the data frame with index to get a
+    one group， of data。 And then we compute the sum of C。 As you can see， pandas，
+    as you expected， it is faster。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在分布式系统中并不总是如此。现在这个数据框仍然有一百万行。一个想法是只对Df.set index在A上进行操作。我们做两件事。我们使用原始数据框，并使用带索引的数据框获取一组数据。然后我们计算C的总和。正如你所看到的，pandas，正如你所预期的那样，更快。
+- en: But look at this distributed backends。 They have very different execution behaviors。
+    This is not the only thing。 The other thing is multi-index is not fully supported
+    by any of these backends。 There is technical difficulties to support this multi-indexing
+    in a distributed system。 So here the point is not only you get different execution
+    behavior， but also you get inconsistent。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是看看这些分布式后端。它们的执行行为非常不同。这并不是唯一的事情。另一个问题是多重索引并没有被这些后端完全支持。在分布式系统中支持这种多重索引存在技术困难。所以这里的问题不仅在于你得到不同的执行行为，还有不一致性。
+- en: interface。 And it's not like identical interface with pandas。 Now let's talk
+    about eager evaluation and lazy evaluation。 Let's use this example。 It has two
+    million rows and 40 columns。 And we just want to save this to a file。 The first
+    example is just we read back this file and we just compute the mean of every，
+    column。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接口。它与pandas的接口并不完全相同。现在让我们讨论急切评估和懒惰评估。我们用这个例子。它有两百万行和40列。我们只想将其保存到一个文件中。第一个例子是我们读取这个文件，并计算每列的均值。
+- en: And the second case， we just compute the mean of two columns of this file。 By
+    the way。 it has several hundred megabytes of data。 So it will take some time to
+    load。 So here is the result。 You can see that for pandas and moding on rain， the
+    second case is just a little bit faster。 than the first case。 It's expected because
+    the heavy part is read by K。 But why in Spark and Dask。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在第二个案例中，我们只是计算这个文件两个列的均值。顺便说一下，它有几百兆的数据。所以加载会花费一些时间。结果如下。你可以看到，对于pandas和在rain上的moding，第二个案例比第一个案例稍微快一点。这是意料之中的，因为重的部分由K读取。但为什么在Spark和Dask中。
+- en: they're significantly， faster than the first case。 This is because of the benefit
+    of lazy evaluation。 Many evaluation can understand that you only need C1， C0 and
+    C1。 So it will just access a small portion of the file。 So the IO will be much。
+    much smaller than reading the whole file and storing in memory。 So that is why
+    Spark and Dask are so much faster because they save on the IO time。 Okay。 But
+    if you don't fully understand lazy evaluation， then you will get hurt immediately。
+    So we have these two examples。 The only difference on the second case is that
+    the second case will。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们比第一个案例显著快。这是由于惰性求值的好处。许多评估可以理解你只需要 C1，C0 和 C1。因此它将只访问文件的一小部分。因此 IO 会小得多，远小于读取整个文件并存储在内存中。这就是为什么
+    Spark 和 Dask 快得多，因为它们节省了 IO 时间。好的。但如果你没有完全理解惰性求值，那么你将立即受到影响。所以我们有这两个例子。第二个案例的唯一区别是第二个案例将。
+- en: in addition to computing， the mean， it will also compute max and the average。
+    Look at the time。 Again， pandas and moding， they're very predictable。 The computer
+    is just a little bit slower on second case。 But look at Spark and Dask。 They are
+    much。 much slower。 Why？ This is also because of lazy evaluation。 L lazy evaluation
+    will depend on actions。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了计算外，均值还将计算最大值和平均值。再看看时间。再次，pandas 和 moding，它们是非常可预测的。在第二个案例中计算机只是稍慢一点。但看看
+    Spark 和 Dask。它们要慢得多。为什么？这也是由于惰性求值。惰性求值将依赖于操作。
+- en: Action will trigger the lineage to run and to end。 So if you don't know that
+    you need to break the lineage here， then these three actions。 will trigger this
+    read by K， three times。 Right？ Then now we are facing another dilemma。 Do we want
+    to add a persist here in order to save the time？ Right？
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 操作将触发血统运行并结束。因此，如果你不知道需要在这里中断血统，那么这三个操作将三次触发 K 的读取。对吧？现在我们面临另一个困境。我们想在这里添加一个持久化以节省时间吗？对吧？
+- en: Next is not even a concept of pandas。 And now we have to make a decision。 Do
+    we want to add additional syntax to pandas？ If we add that is not consistent with
+    the pandas interface。 but if we don't add， we can， fully control our powerful
+    distributed systems。 We cannot fully utilize it。 So which one to choose？ You can
+    definitely see that voting on rain。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下一个甚至不是 pandas 的一个概念。现在我们必须做出决定。我们想要向 pandas 添加额外的语法吗？如果我们添加的内容与 pandas 接口不一致。但如果我们不添加，我们可以完全控制我们强大的分布式系统。我们无法充分利用它。那么选择哪个呢？你一定能看到在雨天的投票。
+- en: voting does not choose lazy evaluation。 It chooses to be eager evaluation to
+    be consistent with pandas。 But Spark and Dask， they choose to provide additional
+    syntax in order for you to have。 more control of the distributed systems。 Pro-san
+    calls。 But the point is now they are no longer the same。 They are very different。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 投票不选择惰性求值。它选择急切求值以与 pandas 保持一致。但 Spark 和 Dask，他们选择提供额外的语法，以便你能够更好地控制分布式系统。Pro-san
+    调用。但关键是现在它们不再相同。它们非常不同。
+- en: So what is the motivation to use pandas like semantic for distributed computing？
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么使用类似 pandas 的语义进行分布式计算的动机是什么？
+- en: Flat learning curve， low migration effort， no vendor logging。 So as you see
+    from the previous example， only if you are using Hello World examples， you。 will
+    find it has flat learning curve。 You can have dropping replacement for the pandas
+    input。 But if you use anything that is a little bit advanced， you will see a lot
+    of inconsistency。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 平坦的学习曲线，低迁移成本，没有供应商记录。因此，如你在之前的例子中所见，只有在使用“Hello World”示例时，你才会发现它有平坦的学习曲线。你可以替换
+    pandas 输入。但如果你使用一些稍微复杂的内容，你会看到很多不一致。
+- en: on interface and you will see even bigger difference on the execution behaviors。
+    Then you have to write the backend specific code or corons and then you have to
+    optimize。 towards one backend。 But when you make it work for one backend。 you
+    get vendor logging because that code is， no longer optimal for other backend。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接口上，你会看到执行行为的差异更大。然后你必须编写后端特定代码或协程，然后你必须优化。朝着一个后端。但当你让它在一个后端上工作时，你会得到供应商记录，因为那段代码不再对其他后端是最优的。
+- en: That is also the reason that field doesn't want to be another pandas like framework。
+    We don't see much value to use the pandas as our semantic for distributed computing。
+    But we have to clarify that we heavily rely on pandas。 But just in a totally different
+    way。 I will talk about it in the next example。 So now let's talk about the limitations
+    of SQL semantics。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也是该领域不想成为另一个类似 pandas 框架的原因。我们看不到使用 pandas 作为我们分布式计算语义的巨大价值。但我们必须明确，我们在很大程度上依赖
+    pandas。但只是以一种完全不同的方式。我将在下一个例子中谈论这个。那么现在我们来谈谈 SQL 语义的局限性。
+- en: Considering this data frame， it contains 1000 time series。 Each has 10，000 data
+    points。 And instead of using data stamps， we just use IDX which is integer for
+    simplicity。 In the values。 there are anomalies。 What we want to do is we want
+    to compute the rolling Z score and then using the Z score。 to identify anomalies。
+    We want to find the top five series with the most anomalies and then we want to
+    get the。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 考虑这个数据框，它包含 1000 个时间序列。每个有 10,000 个数据点。为了简单起见，我们使用整数 IDX 而不是数据戳。在值中，有异常。我们想做的是计算滚动
+    Z 分数，然后使用 Z 分数来识别异常。我们希望找到前五个异常最多的序列，然后获取它们。
+- en: sum of the Z scores。 It sounds complicated， right？ It is complicated。 So here
+    is a Spark solution based on traditional SQL syntax。 Because it's not trivial。
+    we will have used this with statement which is also known as， CTE statement。 Because
+    in this way we can write several sub-statement and then to combine them together。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Z 分数的总和。听起来很复杂，对吧？确实复杂。所以这里有一个基于传统 SQL 语法的 Spark 解决方案。因为这并不简单，我们将使用这个与语句，也被称为
+    CTE 语句。因为这样我们可以写几个子语句，然后将它们组合在一起。
+- en: There are several problems with this CTE statement。 Although I know a lot of
+    you just write this kind of statement every day。 But have you ever thought about
+    the baller play code you have to write every time？
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个 CTE 语句有几个问题。尽管我知道很多人每天都写这种语句，但你有没有想过每次都要写的复杂代码？
+- en: For every step you have to write as bracket， bracket， comma and you have to
+    have width。 And also you have to name every step。 If you write in bad SQL you
+    don't have to name every step。 But now you have to。 Even sometimes it's awkward
+    to figure out the name。 You still have to give a name。 This is probably the minor
+    issue。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于每一步，你必须写括号、逗号，并且必须有宽度。你还必须给每一步命名。如果你写糟糕的 SQL，你就不必给每一步命名。但现在你必须这样做。有时甚至很难想出名称，你仍然必须给一个名称。这可能是一个次要问题。
+- en: But this is probably a bigger issue。 That this kind of syntax， parquet。file，
+    something like that。 This is platform specific。 So as soon as you write this kind
+    of syntax you get vendor logging。 This SQL is already logged with a certain back-end。
+    And another thing is look at this Z。 If you're familiar with distributed computing。
+    So look at this Z。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这可能是一个更大的问题。这种语法，parquet.file，类似的。这是特定于平台的。所以一旦你写这种语法，你就会遇到供应商日志。这条 SQL 已经与某个后端关联记录了。还有一点是，看看这个
+    Z。如果你熟悉分布式计算，看看这个 Z。
+- en: This Z is used by both top and the worst by two data frames。 So in order to
+    avoid a recompute。 what do we should do？ I mentioned that before。 We should use
+    a persist here to break the lineage。 How do you add a persist in SQL？ It's not
+    even a syntax of SQL。 Right？
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个 Z 是由两个数据框的最高和最低共同使用的。为了避免重新计算，我们该怎么做？我之前提到过。我们应该在这里使用持久化来打破数据依赖。如何在 SQL 中添加持久化？这甚至不是
+    SQL 的语法，对吧？
+- en: SQL does not have this in mind。 Then what can we do？
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: SQL 并没有考虑到这一点。那么我们该怎么办？
+- en: So in Spark you can break this big width statement to two width statements。
+    To run the first width statement， export that data to Spark， persist it， and register
+    it。 as a temp data frame back。 And then you run the second statement。 What is
+    the problem with that？
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在 Spark 中，你可以将这个大的宽度语句拆分为两个宽度语句。要运行第一个宽度语句，先将数据导出到 Spark，持久化它，并注册为临时数据框。然后再运行第二个语句。这有什么问题呢？
+- en: This is your logic flow。 Right？ This is one unit of logic。 But now in order
+    to achieve certain features you have to break it up。 Then the code becomes less
+    readable， less understandable， and it's harder to maintain。 And there are some
+    other syntax that SQL doesn't have。 Group to map， group to apply in pandas。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是你的逻辑流程，对吗？这是一个逻辑单元。但现在为了实现某些功能，你必须拆分它。然后代码变得不那么可读，不太容易理解，也更难维护。而且 SQL 还缺少一些其他语法。Pandas
+    中的分组映射和应用。
+- en: SQL does not have that。 Persist broadcast。 They just very commonly use the syntax。
+    And the next thing is single task。 Think about that。 Sometimes I want multiple
+    output。 What if I want to save the top data frame into a table or into a file？
+    Can we do that？ No。 Only solution is you have to break up the CTE statement to
+    several parts in order to save。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: SQL 并没有这个。持久化广播。他们只是非常常用这种语法。接下来是单任务。想想看。有时我想要多个输出。如果我想将顶级数据框保存到表或文件中呢？我们能做到吗？不能。唯一的解决方案是你必须将
+    CTE 语句拆分为几部分以便保存。
+- en: the intermediate files。 Because my definition of CTE or any statement of SQL
+    is to do one thing。 For this complicated logic you have to do multiple things。
+    Last but not the least。 it is very expensive and difficult to develop such kind
+    of query。 Think about that。 You're working on big data。 Each sub statement could
+    take significant time。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 中间文件。因为我对 CTE 或任何 SQL 语句的定义是做一件事。对于这种复杂的逻辑，你必须做多件事。最后但并非最不重要的是，开发这种查询非常昂贵且困难。想想看。你正在处理大数据。每个子语句可能会耗费大量时间。
+- en: Every time when you add one more sub statement during development you have to
+    rerun everything。 from the beginning。 So that's a huge amount of recompute。 With
+    time it wastes money。 And you will find your iteration time is just getting slower
+    and slower while you develop。 this gigantic query。 So here is an example of how
+    Fuchsie call by improving the syntax of traditional SQL。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次在开发过程中添加一个子语句时，你都必须从头开始重新运行所有内容。因此这是巨大的重新计算量。随着时间的推移，这浪费了金钱。你会发现随着你开发这个庞大的查询，迭代时间只会越来越慢。所以这里是一个例子，展示了如何通过改进传统
+    SQL 的语法来实现 Fuchsie 调用。
+- en: How we can solve this problem。 So look at the SQL and the SQL immediately is
+    smaller。 And what we removed is the CTE statement。 Of course we support CTE statement
+    but we don't have to use it。 And look at this we only need to name two steps because
+    it's necessary because we need。 to join them so they need a name。 And for other
+    steps we can keep anonymous。 And look at this load。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们如何解决这个问题。所以看看 SQL，SQL 立刻变得更小。我们去掉的就是 CTE 语句。当然我们支持 CTE 语句，但我们不必使用它。看看这个，我们只需命名两个步骤，因为这是必要的，因为我们需要将它们连接起来，所以它们需要一个名称。而其他步骤我们可以保持匿名。看看这个加载。
+- en: It's additional syntax but Fuchsie call is able to run seamlessly on any back-hand
+    with， support。 So locally we can run that DB and distributed we can run that and
+    spark。 So using this additional syntax does not give you vendor locking。 And also
+    look at this persist。 We just need the seven-letter keyword。 We can totally change
+    the game。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是额外的语法，但 Fuchsie 调用能够在任何支持的后端上无缝运行。所以在本地我们可以运行该数据库，在分布式环境中我们可以运行 Spark。因此，使用这个额外的语法并不会造成供应商锁定。再看看这个持久化。我们只需要这个七个字母的关键词。我们可以彻底改变游戏规则。
+- en: So the speed will be much faster。 You will see the final benchmark。 This persist
+    the execution speed of the whole workflow is much faster than before。 So now let
+    me talk about another thing。 How do you leverage Python？ Think about that。 For
+    this query there is still a big chunk of code which is to use the window function
+    to。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以速度将会快得多。你将看到最终的基准。这持久化整个工作流的执行速度，比以前快得多。所以现在让我谈谈另一件事。你如何利用 Python？想想看。对于这个查询仍然有一大块代码是使用窗口函数来实现的。
+- en: compute the rolling standard deviation and the min。 It is what it is。 If you're
+    using SQL you have to write that。 There is no shortcut。 But what if you can express
+    that logic in Python？ It will be much more elegant。 Given that this data frame
+    is already one series of data。 It's already sorted。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 计算滚动标准差和最小值。事情就是这样。如果你使用 SQL，就必须写这个。没有捷径。但是如果你可以用 Python 表达这个逻辑呢？那将更优雅。鉴于这个数据框已经是一个数据系列。它已经排序好了。
+- en: Then you can use this very expressive and very short way to describe your logic。
+    Plus you can also do the filtering。 So this is to visualize the transformation。
+    It's from a thing told data frame to a fat and short data frame。 This is not a
+    typical thing that any SQL UDF can do。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后你可以用这种非常简洁且富有表现力的方式来描述你的逻辑。此外，你还可以进行过滤。所以这是可视化转换。从一个长而窄的数据框变成一个宽而短的数据框。这不是任何
+    SQL UDF 可以做到的典型事情。
+- en: Because SQL UDF requires the output to be exactly the size of the input data
+    frame。 It has the change， it changed the dimension on both dimensions。 X and Y。
+    So for this kind of transformation how can we use that in FUG？
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为 SQL UDF 要求输出的大小必须与输入数据框完全相同。它有变化，改变了两个维度的大小。X 和 Y。因此，对于这种转换，我们如何在 FUG 中使用它？
+- en: As you can see we just replaced that whole chunk of window function with just
+    one line， of code。 It is additional syntax but this syntax can run any backhand
+    with support。 We just use this way to call a very simple Python function that
+    has nothing to do with， FUG。 And people may ask things。 So what I heard is that
+    Python is always slower than Spark。 Is that true？
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所看到的，我们仅用一行代码替代了整个窗口函数的块。这是额外的语法，但这个语法可以在任何支持的后端上无缝运行。我们只用这种方式调用一个与 FUG 无关的非常简单的
+    Python 函数。人们可能会问一些问题。所以我听说 Python 总是比 Spark 慢。这是真的吗？
+- en: Actually that is not true。 So here is the example。 Here is the final execution
+    result。 Firstly let's take a look at the code size。 Original Spark SQL and then
+    with the FUG SQL you can see the code size reduced a bit。 But with just that persist
+    keyword you can see how much drop on execution time。 But the final winner is the
+    last one。 Where we combine the Python logic with the SQL。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其实这并不正确。这里是一个例子。这是最终的执行结果。首先，让我们看看代码大小。原始的Spark SQL，然后是FUG SQL，你可以看到代码大小减少了一些。但仅凭那个persist关键字，你可以看到执行时间下降了多少。而最终的赢家是最后一个，我们将Python逻辑与SQL结合在一起。
+- en: And it has the least code but it has the best performance。 I'm not saying this
+    is always the case but at least it should be easily available to。 every developers
+    to try and to figure out which way is the best for you。 And here FUG SQL just
+    find a way to get the best part of Python and the best part of SQL。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它的代码最少，但性能最好。我并不是说这种情况总是如此，但至少它应该容易让每位开发者尝试并找出最适合自己的方式。在这里，FUG SQL找到了一种将Python和SQL最佳部分结合的方法。
+- en: together in a very organic way。 So let me give a summary of our talk。 Moving
+    from local computing to distributed computing。 It is just like moving from integers
+    to real numbers。 You cannot avoid learning。 You must learn。 You must accept this
+    fact that you have to learn new things。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以一种非常自然的方式结合在一起。所以让我总结一下我们的讨论。从本地计算转向分布式计算。这就像从整数转向实数。你无法避免学习。你必须学习。你必须接受这个事实：你需要学习新事物。
+- en: And you have to change the way of thinking。 It is necessary。 There is no magic。
+    And as a semantic layer for FUG our mission is to keep the operations simple and
+    intuitive。 but not magical。 You should understand what is going on there。 And
+    we should keep you mindful when you program。 And we should help you follow good
+    practices。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你必须改变思维方式。这是必要的。没有魔法。作为FUG的语义层，我们的使命是保持操作简单直观，但不是魔法。你应该理解发生了什么。我们应该让你在编程时保持专注，并帮助你遵循良好的实践。
+- en: That is the mission of FUG。 Thank you everyone。 And here is the resource page
+    of FUG。 If you are interested in using FUG or contributing to FUG feel free to
+    contact us and we are。 open to talk to you。 And also there are tutorials。 And
+    feel free to browse the source code in the open source repository。 Thank you。
+    Thank you so much。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是FUG的使命。谢谢大家。这里是FUG的资源页面。如果你有兴趣使用FUG或为FUG做贡献，请随时联系我们，我们愿意与你交流。同时还有教程。欢迎浏览开源代码库中的源代码。谢谢，非常感谢。
+- en: That was pretty informative and I think it was an amazing talk。 Feel free to
+    reach out to the speakers for Q&A。 They will be at the hallway。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这次讨论相当有启发性，我认为这是一场精彩的演讲。欢迎向演讲者提问。他们会在走廊里。
+- en: '![](img/7a0a16a9552ae890dfb1d9cc57f2ba2c_4.png)'
+  id: totrans-80
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/7a0a16a9552ae890dfb1d9cc57f2ba2c_4.png)'
+- en: And I think our next talk starts at 3。30。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我认为我们的下一个讨论开始于3点30分。

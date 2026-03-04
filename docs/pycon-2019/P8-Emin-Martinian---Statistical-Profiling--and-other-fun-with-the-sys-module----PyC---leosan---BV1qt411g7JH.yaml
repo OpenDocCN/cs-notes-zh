@@ -1,0 +1,1126 @@
+- en: P8：Emin Martinian - Statistical Profiling (and other fun with the sys module)
+    - PyC - leosan - BV1qt411g7JH
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P8：Emin Martinian - 统计性能分析（以及与 sys 模块的其他有趣内容） - PyC - leosan - BV1qt411g7JH
+- en: Hi everyone， welcome。 Next speaker will be talking to us about Statistic Hub
+    profiling and other form of the C's module。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家好，欢迎。下一位演讲者将与我们讨论统计中心性能分析以及 C 模块的其他形式。
+- en: '![](img/9a585a963414ed426c943fb97181173d_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_1.png)'
+- en: Please welcome Emi and Martina。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请欢迎 Emi 和 Martina。
+- en: '![](img/9a585a963414ed426c943fb97181173d_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_3.png)'
+- en: '[applause]， Thank you very much and thanks for coming to my talk。'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[掌声]，非常感谢大家，感谢你们来参加我的演讲。'
+- en: '![](img/9a585a963414ed426c943fb97181173d_5.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_5.png)'
+- en: So today I'm going to tell you about why you might want to do statistical profiling。
+    I'll tell you about some of the various Python tools that are available and I'll
+    give you。 some details about the OX profile， statistical profiling package which
+    I've written。 The slides and the source for all of this is on GitHub at the address
+    below so you don't。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 今天我将告诉你为什么你可能想进行统计性能分析。我会告诉你一些可用的 Python 工具，并给你一些关于我编写的 OX profile 统计性能分析包的细节。所有这些的幻灯片和源代码都在
+    GitHub 上，地址如下，所以你不需要担心。
+- en: have to take notes or anything。 Okay so we're going to learn how to use profilers
+    and hopefully you also learn how to write your。 own。 One of the things I really
+    love about Python is it gives you access to the internals of。 the system in such
+    a way that you can do things like debuggers， profilers， code coverage that。 would
+    be very difficult at least for me in a language like C。 So let's start with what
+    is profile。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不需要做笔记或其他事情。好的，我们将学习如何使用性能分析器，并希望你们也能学会如何编写自己的性能分析器。我非常喜欢 Python 的一件事是，它以一种方式让你访问系统的内部，使你能够进行调试器、性能分析器、代码覆盖等操作，而在像
+    C 这样的语言中，这些操作至少对我来说会非常困难。那么，让我们先了解什么是配置文件。
+- en: According to the Python。org website a profile is a set of statistics that describes
+    how often。 and for how long various parts of the program are executed。 So profiling
+    is basically useful to find out which parts of your program are slow。 That way
+    you can spend your efforts in optimizing things and writing really nice tight
+    code in。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据 Python.org 网站，配置文件是一组统计数据，用于描述程序的各个部分执行的频率和持续时间。因此，性能分析基本上是用来找出程序中哪些部分比较慢。这样你就可以将精力集中在优化这些部分并编写更加紧凑的代码上。
+- en: the parts of the program that really map。 So for deterministic profiling there's
+    a number of profilers you can use。 C profile is one of the built in profilers。
+    It's very easy to use。 You do import C profile and then you do C profile dot run
+    and you give it a string for the。 function you want it to run。 So then run your
+    code and it'll give you back what's called a profile which tells you。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 程序的各个部分确实会映射到这里。因此，对于确定性性能分析，有许多性能分析器可以使用。C profile 是内置的性能分析器之一，非常易于使用。你只需导入
+    C profile，然后调用 C profile.run，传入你想要运行的函数的字符串。然后运行你的代码，它会返回一个称为配置文件的结果，告诉你。
+- en: how many function calls there were， how often each function was called， the
+    total time， the。 per call， cumulative and it'll rank them in order of the function
+    it took the most time。 So when you can look at that deterministic profile and
+    see which parts of your program。 were slow or took longer than you thought and
+    work on optimizing those。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有多少次函数调用，每个函数被调用的频率，总时间、每次调用的时间、累积时间，并且它会按耗时的函数进行排名。这样，当你查看那个确定性的配置文件时，可以看到程序中哪些部分较慢或耗时超出预期，并着手优化这些部分。
+- en: So again that's deterministic profiling。 So how does deterministic profiling
+    work？
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次强调，那是确定性性能分析。那么确定性性能分析是如何工作的呢？
+- en: Well the sys module provides you a couple of really neat hooks。 One of these
+    is set profile。 So if you call sys。set profile you can give it your profiling
+    function and then the interpreter。 will execute your profiling function on each
+    function call。 And if you want even lower granularity you can call settrace which
+    is like set profile。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，sys 模块为你提供了一些非常实用的钩子。其中一个就是设置配置文件。因此，如果你调用 sys.set_profile，你可以传入你的性能分析函数，然后解释器将在每次函数调用时执行你的性能分析函数。如果你想要更细粒度的控制，可以调用
+    settrace，它类似于 set_profile。
+- en: where you give it a tracing function and then the interpreter will call your
+    tracing function。 on every single line of your program。 And you can use that to
+    figure out what code coverage is or what parts are slow or whatever。 else you
+    want to do。 Okay so once we call these things we get a hook to inspect the stack
+    frame。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你提供一个跟踪函数，然后解释器将在你的程序的每一行调用你的跟踪函数。你可以用它来确定代码覆盖率是什么，或者哪些部分很慢，或者你想做的其他事情。好的，所以一旦我们调用这些东西，就可以获取一个钩子来检查栈帧。
+- en: '![](img/9a585a963414ed426c943fb97181173d_7.png)'
+  id: totrans-15
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_7.png)'
+- en: So you might say well what is the stack frame？ So the way the Python interpreter
+    works is you have some function foo let's say which calls。 a function bar which
+    calls a function baz which calls a function boo and so on。 And the interpreter
+    needs to keep track of the state of each function the local variables。 and what's
+    going on。 So it creates an object called the stack frame which we show here。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你可能会问，什么是栈帧？Python 解释器的工作方式是，你有一个函数 foo 假设它调用了一个函数 bar，而 bar 又调用了一个函数 baz，baz
+    调用一个函数 boo，依此类推。解释器需要跟踪每个函数的状态、局部变量以及发生的事情。因此，它创建了一个称为栈帧的对象，我们在这里展示。
+- en: The stack frame has a number of interesting things。 One of them is fback which
+    points to the caller stack frame so you know where your function。 got called from。
+    There's also fglobles which tells you which globals you can see。 There's a lot
+    of other useful things in there。 The one we're going to focus on here is fcode。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 栈帧包含许多有趣的东西。其中之一是 fback，它指向调用者栈帧，这样你就知道你的函数是从哪里被调用的。还有 fglobles，告诉你可以看到哪些全局变量。里面还有很多其他有用的东西。我们在这里要关注的是
+    fcode。
+- en: fcode is a code object which is shown in that elliptical feature there。 The
+    code object has a lot of information about exactly what code is running in that
+    frame。 It's got the co file name which tells you the file name where it was created。
+    Co first line number which is the number of the first line of the source。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: fcode 是一个代码对象，在那个椭圆特征中展示。代码对象包含关于在该帧中运行的代码的许多信息。它包含 co file name，告诉你它被创建的文件名。co
+    first line number 是源代码的第一行的行号。
+- en: A bunch of other interesting things and co name。 And co name is the one that's
+    most interesting for us because it gives us the name of the。 function that is
+    executing that stack frame。 So for a profiler you look in the stack frame。 you
+    look at the code object and you look at， the name and now you know what function
+    is executing and you can keep track of that。 Okay， so let me give you a diagram
+    of how the profiler works or how deterministic profiler， works。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有许多其他有趣的内容，co name 是对我们来说最有趣的，因为它给出了正在执行该栈帧的函数的名称。因此，对于性能分析器，你查看栈帧，查看代码对象，查看名称，现在你知道哪个函数在执行，并可以跟踪它。好吧，让我给你一个图示，展示性能分析器是如何工作的，或者说确定性性能分析器是如何工作的。
+- en: So you have your program。 It's in its main thread。 Let's say there's some loop
+    that's going to execute function one and function two and function。 three。 So
+    what happens is the interpreter enters function one and that immediately calls
+    that profiling。 function you've given to sys。set profile。 And then your function
+    will record the name of the function that's executing by looking。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你有你的程序。它在其主线程中。假设有一个循环将执行函数一、函数二和函数三。发生的事情是解释器进入函数一，并立即调用你提供给 sys.set_profile
+    的性能分析函数。然后你的函数将通过查看记录正在执行的函数的名称。
+- en: at the stack frame。 What time execution starts and then it'll pass control back
+    to the main interpreter which。 will execute your function one。 Then when function
+    one is done the system will call your profiling function again。 You record the
+    function name the end time and then you pass control back to the interpreter。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在栈帧中，执行开始的时间，然后它将控制权传回给主解释器，主解释器将执行你的函数一。当函数一完成时，系统将再次调用你的性能分析函数。你记录下函数名、结束时间，然后将控制权传回给解释器。
+- en: '![](img/9a585a963414ed426c943fb97181173d_9.png)'
+  id: totrans-22
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_9.png)'
+- en: And then the interpreter moves on to moves on to function two and similar things
+    happen。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后解释器继续移动到函数二，类似的事情发生。
+- en: '![](img/9a585a963414ed426c943fb97181173d_11.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_11.png)'
+- en: and moves on to function three and again your profiling function gets called
+    to record the， name。 the start time or whatever other things you want to record。
+    So the key idea here is that for each function call your profiling function gets
+    called or。 if you're using set trace for each line your trace function gets called。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后移动到函数三，再次调用你的分析函数以记录名称、开始时间或其他你想记录的内容。所以这里的关键是，对于每个函数调用，你的分析函数都会被调用；如果你在每一行使用
+    set trace，你的追踪函数也会被调用。
+- en: '![](img/9a585a963414ed426c943fb97181173d_13.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_13.png)'
+- en: So that's great。 It gives you really detailed information about what's going
+    on but the downside is it's slow。 These hooks have to run for each line or each
+    call。 So deterministic profiling is great but one of the drawbacks is it's slow。
+    Okay。 so what's another drawback？ Another drawback is scene number one。 It's slow
+    and it's really slow。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这很好。它能提供关于发生了什么的详细信息，但缺点是速度慢。这些钩子必须为每一行或每个调用运行。所以确定性分析非常好，但其中一个缺点就是速度慢。那么还有什么其他缺点呢？另一个缺点是场景一。它慢得令人吃惊。
+- en: And so this is important because it makes it difficult to use profiling in production。
+    Deterministic profiling in production。 So deterministic profiling is very useful
+    when you're in the development stage。 You want to run some tests， you want to
+    run some use cases， you want to see where the bottlenecks。 are， you optimize it，
+    you write great code， fantastic。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这很重要，因为在生产中使用分析会变得困难。确定性分析在生产环境中非常有用。确定性分析在开发阶段时非常有用。你想进行一些测试，想运行一些用例，想查看瓶颈在哪里，进行优化，写出优秀的代码，真是太棒了。
+- en: And then you deploy that in your production web server or your consumer application，
+    what。 have you and the users do all kinds of crazy things which you didn't expect
+    and they complain。 that your awesome program is slow。 And they often do that because
+    regular users may not be programmers so they're going to。 use it differently than
+    me。 And so that's a problem with the deterministic profiling。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后你将其部署在你的生产 web 服务器或消费应用中，用户会做各种你意想不到的事情，他们会抱怨你的精彩程序很慢。他们常常这样做，因为普通用户可能不是程序员，所以他们的使用方式会与我不同。这就是确定性分析的问题。
+- en: It's harder to get the production experience。 Another。 you could say draw back
+    or just kind of a difference in focus is that deterministic。 profiling usually
+    is not thread aware。 So this little blurb is from the documentation for a set
+    trace。 It says it must be registered using set trace for each thread being debugged
+    and there's。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更难以获得生产经验。另一个可以说是缺点或仅仅是关注点的不同是，确定性分析通常不是线程感知的。这段小文字来自于 set trace 的文档。它说明必须为每个被调试的线程使用
+    set trace 进行注册。
+- en: similar documentation for set profile。 So there's out of the box deterministic
+    profiling doesn't handle threads really well。 And it's not so much a drawback，
+    it's just kind of the way threading works which is imagine。 you're in some function
+    foo and your profiling function gets called and says okay we're in。 function foo
+    starting at 2pm。 And then there's a thread switch and the interpreter starts running
+    function bar and function bar。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于 set profile 的类似文档。开箱即用的确定性分析并不好好处理线程。这并不算是缺点，只是线程工作的方式，想象一下你在某个函数 foo 中，你的分析函数被调用并显示：“好的，我们在函数
+    foo 中，开始于下午2点。”然后发生了线程切换，解释器开始运行函数 bar。
+- en: takes a long time and then the interpreter switches back and now it's 205 and
+    function。 foo finishes and your deterministic profile says function two just took
+    five minutes to， run。 So function foo maybe is really fast。 So that makes profiling
+    thread code a little bit complicated。 You can do with deterministic profiling
+    but it is a little bit complicated。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要很长时间，然后解释器切换回来了，现在是205，函数 foo 完成，而你的确定性分析显示函数二刚刚运行了五分钟。所以函数 foo 可能真的很快。这使得分析线程代码变得有点复杂。你可以用确定性分析来做到这一点，但这有点复杂。
+- en: '![](img/9a585a963414ed426c943fb97181173d_15.png)'
+  id: totrans-33
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_15.png)'
+- en: Okay， so what we're going to talk about for the rest of the talk is statistical
+    profiling。 Now the way a statistical profiler works is you have your main thread，
+    you still have。 your function one， function two， function three just like before
+    but the statistical profiler。 is going to record a sample of which function is
+    running and it's only going to run occasionally。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，所以我们接下来要谈的是统计分析。统计分析器的工作方式是你有你的主线程，你仍然有函数一、函数二、函数三，就像之前一样，但统计分析器会记录哪个函数在运行，并且它只会偶尔运行。
+- en: to keep the overhead low。 So it doesn't slow down your production code you can
+    actually run it in production。 So here's a diagram of what it looks like。 So again
+    you have your main thread running and then you have a sampler thread which is。
+    either another thread in your Python program or maybe a completely separate program。
+    What the sampler thread does most of the time is time dot sleep so it does nothing。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了保持开销低。这样它不会减慢你的生产代码，你可以在生产中运行它。所以这里有一个它的示意图。所以你有你的主线程在运行，然后你有一个采样线程，它是你 Python
+    程序中的另一个线程，或者可能是一个完全独立的程序。采样线程大多数时间是 time.sleep，因此什么都不做。
+- en: Every once in a while it wakes up from the time dot sleep and it peaks in to
+    see what。 the main thread is doing， which function is it running and then it records
+    the name of。 that function and then it goes back to sleep again。 So it's basically
+    kind of waking up periodically and seeing what you're doing and going back。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每隔一段时间，它会从 time.sleep 中醒来，窥视一下主线程在做什么，它正在运行哪个函数，然后记录该函数的名称，然后再次回去睡觉。所以它基本上是周期性地醒来，看看你在做什么，然后再回去。
+- en: '![](img/9a585a963414ed426c943fb97181173d_17.png)'
+  id: totrans-37
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_17.png)'
+- en: to sleep。 Okay so how do we implement this sampler？
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 进行采样。好的，那么我们如何实现这个采样器呢？
+- en: There's a couple different ways and there's packages for each approach。 So one
+    thing you could do is use the POSIX timer。 So the POSIX timer is a low level timer
+    you can set it to wake up and interrupt your process。 and when you get that interrupt
+    you can check the call stack， see what the call stack is， doing。 what functions
+    are executing and keep track of things like that。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有几种不同的方式，并且每种方法都有相应的包。所以你可以做的一件事是使用 POSIX 定时器。POSIX 定时器是一个低级定时器，你可以设置它以唤醒并中断你的进程。当你得到那个中断时，你可以检查调用堆栈，查看调用堆栈在做什么，哪些函数正在执行，并保持跟踪这样的事情。
+- en: A couple of programs that use this are stat prof and plop so there's a great
+    programs。 They're not available on windows because this is a POSIX call。 Another
+    way you can implement a statistical profiler is something called P-Trace。 That
+    P-Trace is a really neat system call on POSIX。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用这个的几个程序是 stat prof 和 plop，所以它们是很好的程序。它们不支持 Windows，因为这是一个 POSIX 调用。实现统计分析器的另一种方法是
+    P-Trace。P-Trace 是一个在 POSIX 上非常巧妙的系统调用。
+- en: It lets you look at what some other thread is doing and control it or inspect
+    it or whatever。 you want and P-Trace can actually be called completely outside
+    of your own program。 So if you're familiar with something like GDB， GDB works
+    along these lines which is you have。 your program that's running perfectly fine，
+    it doesn't know anything's different and then。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它让你查看其他线程在做什么，并控制或检查它，或者你想做的任何事情。P-Trace 实际上可以完全在你自己的程序之外调用。所以如果你熟悉像 GDB 这样的东西，GDB
+    就是按照这些思路工作的，你有一个运行良好的程序，它并不知道有什么不同，然后。
+- en: some other program like GDB or Profiler will use P-Trace to reach into your
+    running program。 and pause it or see what's going on in the stack or otherwise
+    inspect it。 So that's how PyFlame works which is a very popular and nice statistical
+    profiler。 It's again it's not available on windows because this is a POSIX call。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其他一些程序如 GDB 或 Profiler 会使用 P-Trace 访问正在运行的程序，并暂停它或查看堆栈中的情况或以其他方式检查它。所以这就是 PyFlame
+    的工作原理，它是一个非常流行且优秀的统计分析器。它再次不支持 Windows，因为这是一个 POSIX 调用。
+- en: Okay so I've mentioned two approaches both of which are POSIX and so you might
+    say do。 we really care about non-posics？ I mean a lot of us use Linux， a lot of
+    service run on Linux。 why do we care？ So one answer is it's nice to have a portable
+    implementation that is all other things being。 equal it's nice to have something
+    that's pure Python that's easier to move around to different。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我提到了两种方法，这两种都是 POSIX 的，所以你可能会问，我们真的关心非 POSIX 吗？我的意思是，我们中的很多人使用 Linux，很多服务运行在
+    Linux 上。那我们为什么要关心呢？所以一个答案是，拥有一个可移植的实现是很好的，所有其他条件相同，拥有一个纯 Python 的东西更容易在不同环境中移动。
+- en: systems in case for example you want to use windows。 Another reason is using
+    only Python features makes it a little bit easier to understand for。 those of
+    us who are Python experts but maybe a little rusty in OS internals like set time。
+    or a P-Trace。 And in particular if the whole goal of using a statistical profiler
+    is so you have a low。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 系统，以便例如你想使用 Windows。另一个原因是，仅使用 Python 特性使其对我们这些 Python 专家来说稍微容易理解，但可能对操作系统内部知识有点生疏，比如设置时间或
+    P-Trace。而特别是，如果使用统计分析器的整个目标是让你有一个低。
+- en: overhead profiler that you can run in production it's nice to have an implementation
+    which。 is easy to understand it's pure Python so you can look at what's going
+    on and then we can。 get confidence that this statistical profiler using in production
+    is not going to mess。 up your code or if heaven forbid it does mess up your code
+    you can at least figure out。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个可以在生产环境中运行的开销分析器，拥有一个易于理解的实现是不错的，它是纯 Python，这样你可以查看发生了什么，然后我们可以确保这个在生产中使用的统计分析器不会搞砸你的代码，或者如果天哪，它真的搞砸了你的代码，你至少可以找出。
+- en: why and go yell at the maintainer。 The third reason is there actually is software
+    believe it or not that does run on windows。 One good example is games and there's
+    lots of other consumer software。 To take games as an example if you want to find
+    out why a game is going slow your Python。 implemented game or game server for
+    example and you put a deterministic profile on it it's。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么要去对维护者大喊大叫。第三个原因是，实际上确实有软件，相信与否，它们能在 Windows 上运行。一个好的例子是游戏，还有很多其他消费软件。以游戏为例，如果你想找出一个游戏运行缓慢的原因，比如你用
+    Python 实现的游戏或游戏服务器，并且给它加上一个确定性分析，就会发现。
+- en: going to slow down the game it's going to slow down the frame rate it's not
+    only going。 to make the game unplayable but it's going to make the user behavior
+    a lot different so。 it's going to be essentially impossible to figure out what
+    parts of something like a。 game or slow if you use a deterministic profile and
+    slow it down and so for that you'd like。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将减慢游戏的速度，也将减慢帧率。这不仅会使游戏变得不可玩，还会使用户行为大为不同。因此，实际上几乎不可能弄清楚像游戏这样的某些部分运行缓慢，如果你使用确定性分析并将其减慢，因此你希望。
+- en: to have something that works on windows。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一个在 Windows 上工作的东西。
+- en: '![](img/9a585a963414ed426c943fb97181173d_19.png)'
+  id: totrans-49
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_19.png)'
+- en: Okay so now let's get into how we're going to do this so there's really neat
+    function。 in the sys module called underscore current frames and the way you know
+    it's really neat。 is because it starts in an underscore in the sys module so something
+    special is going on， here。 So sys。current frame basically lists each thread's
+    current frame and so then you can。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，现在让我们来看看我们将如何做到这一点。sys 模块中有一个非常棒的函数，叫做 _current_frames，你知道它真的很特别，因为它在 sys
+    模块中以一个下划线开头，所以这里发生了特别的事情。因此，sys.current_frame 基本上列出了每个线程的当前帧，然后你可以。
+- en: peek into the frame and figure out what's going on。 So this is how p profile
+    works and also ox profile which is the profile I wrote and because。 these are
+    pure Python they work on windows which is nice。 So let's look at how this works
+    so again you have the main thread it's in say function。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 进入帧中看看发生了什么。这就是 p profile 的工作方式，还有我写的 ox profile，因为这些都是纯 Python，它们在 Windows
+    上工作，这很好。让我们看看这如何运作，所以再次你有主线程，它在某个函数中。
+- en: one you call sys。current frames which tells you the active frame isn't function
+    one you。 get that stack frame you look in the stack frame for the code object
+    you look at the。 code name and you get the function name and then you keep track
+    of it somehow。 And then if your program goes on another time you wake up and you
+    sample and you call， sys。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你调用 sys.current_frames，这告诉你活动帧不在函数一中，你获取该栈帧，查看栈帧中的代码对象，查看代码名称，然后获得函数名称，然后以某种方式跟踪它。如果你的程序再次运行，你醒来时采样并调用
+    sys。
+- en: current frames and it tells you programs in function two and so you record the
+    name， and you move on。 Later on you wake up maybe in function three repeat the
+    same process。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当前帧，它告诉你程序在函数二中，然后你记录下名字，继续进行。稍后你可能在函数三中醒来，重复同样的过程。
+- en: '![](img/9a585a963414ed426c943fb97181173d_21.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_21.png)'
+- en: Okay so I've told you some kind of high level thoughts about why you want to
+    just assist。 statistical profiling how you want to do it。 I'm going to give you
+    a concrete example here with ox profile and then I'm going to go。 into kind of
+    how it works and the logistics of the sys module。 So if you wanted to use ox profile
+    you would do pip install ox profile you would import。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我已经告诉你一些关于为什么你想要辅助统计分析的高层次想法，以及你想如何做到这一点。接下来我将给你一个具体的示例，使用`ox profile`，然后我会介绍它是如何工作的以及`sys`模块的细节。如果你想使用`ox
+    profile`，你需要执行`pip install ox profile`，然后导入它。
+- en: something from the module you would call a launch function to launch the profiler
+    and， that's it。 And then you just go on run your code as normal run start your
+    web server run your game call。 you know your URL functions and so on。 And then
+    at some point later when you want to see the profile you call profiler。show and，
+    it'll show you the profile and you'll see what's going on in your program and
+    then if you。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从模块中调用一个启动函数以启动分析器，就这样。然后你只需正常运行你的代码，启动你的网络服务器，运行你的游戏，调用你的URL函数等等。然后在某个时刻，当你想查看分析时，调用`profiler.show`，它会显示你的分析结果，你会看到你的程序发生了什么。
+- en: want to cancel it you call profiler。cancel。 So relatively easy to use。 Great
+    so how does it work？
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想取消它，可以调用`profiler.cancel`。所以相对容易使用。很好，那么它是如何工作的？
+- en: So this is an oversimplified illustration of the sampler loop。 So we have wild
+    one so we're going to loop forever and this is going to be in a separate。 thread
+    so it's not going to block your main program。 We're going to do time。sleep for
+    some interval and then we're going to call sys。currentframes。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这是一个简化的采样器循环示例。我们有一个无限循环，这将在一个单独的线程中运行，因此不会阻塞你的主程序。我们将进行时间休眠，持续一段时间，然后调用`sys.currentframes`。
+- en: which gives you back a dictionary and we're going to iterate over the IDs which
+    are the。 keys that's the thread IDs and the stack frames in there。 If reach stack
+    frame we'll look at frame。fcode。co name to get the name of the function that's。
+    executing and then in some dictionary we'll just increment a count。 So that's
+    it。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它会返回一个字典，我们将遍历其中的ID，这些是线程ID和其中的堆栈帧。如果到达堆栈帧，我们会查看`frame.f_code.co_name`以获取正在执行的函数的名称，然后在某个字典中我们只需增加计数。就这样。
+- en: So it's a statistical profiler and three in four lines of code which again you
+    know Python。 is a really neat language and these sys module functions are pretty
+    impressive that you can。 do something that at first might seem complicated in
+    four lines of code。 Couple things to mention here。 So the way you control the
+    overhead is through this interval so you can call profiler。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是一个统计分析器，只有四行代码，Python确实是一个非常简洁的语言，这些`sys`模块函数非常令人印象深刻，你可以用四行代码做一些起初看似复杂的事情。有几点需要提到。所以，你控制开销的方式就是通过这个间隔，你可以调用分析器。
+- en: set， interval and it'll change the sampling interval。 So for example if you
+    use something like a five second sampling interval it'll give。 you an extra overhead。
+    You won't even notice it。 And so what we have here is a tradeoff between various
+    goals which is accuracy。 collection， time and overhead。 So in a deterministic
+    profiler the profiler is always running and looking at each function。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 设置间隔，它会改变采样间隔。例如，如果你使用五秒的采样间隔，它会给你额外的开销。你甚至不会注意到。因此，在准确性、数据收集时间和开销之间存在一种权衡。在一个确定性的分析器中，分析器始终在运行并查看每个函数。
+- en: call and keeping track of what you're doing and that's why it slows you down
+    because it's。 doing something pretty much all the time。 Because if you set interval
+    to something really long like let's say 100 seconds almost all。 the time the statistical
+    profiler isn't doing anything。 As you bring that down from say 100 seconds to
+    five seconds you'll get more accurate sampling。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用并跟踪你正在做的事情，这就是为什么它会减慢你的速度，因为几乎一直在执行某些操作。如果你将间隔设置得很长，比如说100秒，那么大多数时间统计分析器是没有做任何事情的。当你将这个时间从100秒降低到五秒时，你会得到更准确的采样。
+- en: of your program。 As you bring it down to one second you'll get even more accurate
+    sampling。 As you bring it down to say 100 milliseconds you'll get super accurate
+    sampling。 And so what happens with the longer sampling times is you just have
+    to run the program for。 longer so that your sampler wakes up and sees all the
+    different parts of your program and。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在你的程序中。当你将其缩短到一秒时，你将获得更准确的采样。当你将其缩短到 100 毫秒时，你将获得超准确的采样。因此，长时间采样的情况是，你只需要更长时间地运行程序，以便你的采样器能够唤醒并看到程序的不同部分，并。
+- en: gives you an accurate estimate。 So you can tune that knob between accuracy and
+    overhead。 And in theory if you took the sampling interval all the way down to
+    zero you would go to become。 like a line profile which is constantly checking
+    what your program is doing。 Another comment to mention is you in some applications
+    you may want to add some random。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 给你一个准确的估计。因此，你可以在准确性和开销之间调整这个旋钮。从理论上讲，如果你将采样间隔缩短到零，你将变得像一个线性分析器，持续检查你的程序在做什么。另一个要提到的评论是，在某些应用中，你可能希望添加一些随机。
+- en: jitter in case you're worried about the statistical profiler waking up and somehow
+    giving synchronizing。 program and never seeing certain aspects of your program。
+    In general the Python threading tools tend to have enough randomness that you
+    probably。 don't need this but I mentioned it just in case you have some specialized
+    application。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你担心统计分析器唤醒并在某种程度上给出同步程序，而没有看到程序的某些方面，可能会有抖动。一般来说，Python 的线程工具往往有足够的随机性，因此你可能不需要这个，但我提到它是以防你有一些特殊的应用。
+- en: '![](img/9a585a963414ed426c943fb97181173d_23.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_23.png)'
+- en: Okay so what does the output look like？ So we call profiler。show and we get
+    this list。 It shows the function name and the module and the number of hits and
+    the percentage of。 the overall hits。 So you notice that this statistical profile
+    is a little bit different from the deterministic。 profiles that you see。 That
+    as we don't have the time each function takes instead we have a number of hits。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，那么输出看起来是什么样的呢？我们调用 `profiler.show`，得到这个列表。它显示了函数名称、模块、命中次数和整体命中的百分比。因此，你会注意到这个统计分析与您所看到的确定性分析有些不同。因为我们没有每个函数所需的时间，而是有一个命中次数。
+- en: How often we saw that。 There's how often when we woke up was a program running
+    a given function and through that you。 can get an estimate not of how long each
+    function takes but how much time of your program。 it's taking up。 So for example
+    in this case send is taking is where we wake up most often and see which。 function
+    is running it's taking 2。8% of the program hits。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们观察到的频率。就是当我们唤醒时，程序正在运行特定函数的频率，通过这个，你可以得到一个估计，而不是每个函数所需的时间，而是程序中占用的时间。例如，在这种情况下，`send`
+    是我们最常唤醒并看到哪个函数在运行的，它占据了程序命中的 2.8%。
+- en: So if you want to optimize something in this case you might want to optimize
+    send or you。 might look at other functions and see like oh you know such and connect
+    let's say is 1。5%。 of program hits maybe you expect that to be much lower and
+    so you can look at this statistical。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果你想要优化某个东西，在这种情况下你可能想优化 `send`，或者你可能查看其他函数，看看例如 `connect` 占程序命中的 1.5%。也许你希望它更低，因此你可以查看这个统计。
+- en: '![](img/9a585a963414ed426c943fb97181173d_25.png)'
+  id: totrans-70
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_25.png)'
+- en: profile to figure out where to focus on。 Okay so now let's talk about the basic
+    theory of sys。current frames。 So we start a thread that's doing mostly time。sleep。
+    Periodically we wake up and we call sys。current frames to get the stack frames
+    that are executing。 and record the info from the current stack frame and that's
+    it。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 分析来确定关注的重点。好的，现在让我们谈谈 `sys.current frames` 的基本理论。所以我们启动一个线程，主要执行 `time.sleep`。定期唤醒并调用
+    `sys.current frames` 来获取正在执行的栈帧，并记录当前栈帧的信息，就这样。
+- en: Really simple four line program we showed you earlier。 So in theory you can
+    write a simple statistical profile with just these。 Now in theory there's no difference
+    between theory and practice and that's just going， to work fine。 But in practice
+    there's a little bit of a difference。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 之前给你展示的非常简单的四行程序。因此，理论上你可以仅用这些来编写一个简单的统计分析。现在理论上，理论和实践之间没有区别，这将很好地工作。但在实践中，二者之间有一点差异。
+- en: Okay so let's go back to just the two line core about where you're showing you。
+    So we're going to call sys。current frames iterate over it and record。 Now I've
+    started to make a few changes here which is instead of having self。midb just be。
+    a dictionary maybe some other more complicated structure and you want to call
+    a record method。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，让我们回到你展示的两行核心部分。所以我们将调用`sys.current frames`进行迭代并记录下来。现在我开始做一些改变，即不再仅仅使用`self.midb`作为字典，可能会使用一些更复杂的结构，并且你想要调用一个记录方法。
+- en: just for you know generality and nice software engineering。 Instead of just
+    directly grabbing the code name from the frame maybe you want to call。 some function
+    called measure tool maybe you want to record some other things from the， frame。
+    That's not a big deal。 But the question you want to ask is okay what could go
+    wrong even with something as simple。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只是为了你知道的一般性和良好的软件工程。与其直接从帧中获取代码名称，不如调用一个名为`measure tool`的函数，也许你想从帧中记录一些其他内容。这不是大问题。但你想问的问题是，好的，即使是简单的情况，可能会出什么错。
+- en: as these two lines。 So you might want to think about it for 30 seconds。 Okay
+    so one thing that can happen is a thread context switch that is your sampler thread。
+    gets control it calls sys。current frames to look at what's going on it starts
+    iterating。 over the current frames that are active and then all of a sudden the
+    interpreter decides。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如这两行所示。所以你可能想考虑一下，给自己30秒。好吧，一件可能发生的事情是线程上下文切换，也就是你的采样线程获得控制权，调用`sys.current
+    frames`来查看发生了什么，开始迭代当前活动的帧，然后突然解释器决定。
+- en: okay I want to switch to different thread context。 So it goes to a different
+    thread maybe your main thread or some other sub thread and comes。 back five seconds
+    later and you continue iterating over the frames that you've got returned but。
+    now those frames maybe have gone away because the interpreter has moved on in
+    the other threads。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我想切换到不同的线程上下文。所以它切换到另一个线程，也许是你的主线程或其他子线程，五秒后回来，你继续迭代返回的帧，但现在那些帧可能已经消失，因为解释器在其他线程中已经移动了。
+- en: and so you try and read a stale frame and depending on your python version you
+    get a。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你尝试读取一个过时的帧，根据你的Python版本，你会得到一个错误。
+- en: '![](img/9a585a963414ed426c943fb97181173d_27.png)'
+  id: totrans-78
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_27.png)'
+- en: crash。 Okay so one thing we can do is we can add we can use this other function
+    called sys。get。 switch interval and sys。set switch interval。 So sys。set switch
+    interval will tell the interpreter look please don't switch away from。 my thread
+    for ten thousand seconds or whatever amount of time you give it。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我们可以做的一件事是使用另一个函数，称为`sys.get.switch interval`和`sys.set switch interval`。所以`sys.set
+    switch interval`会告诉解释器，请不要从我的线程切换，持续十秒或你给它的任何时间。
+- en: So here what we do is we get the current switch interval we set it to ten thousand
+    saying。 please don't switch away then we do our really quick iteration over the
+    frames and then we。 say set switch interval back to whatever it was before。 So
+    this will help reduce the problem of looking at a stale frame。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，我们做的是获取当前的切换间隔，将其设置为十秒，说明请不要切换，然后快速迭代帧，最后将切换间隔设置回之前的值。这将有助于减少查看过时帧的问题。
+- en: There's other ways you can do it but this is a nice way to illustrate switch
+    interval。 Okay great so now we're safer more robust to context switches now we'll
+    go on。 Well any time you're doing some kind of resource allocation you always
+    want to keep track of。 exceptions because if you had an exception here you it
+    would prevent switch interval from。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以通过其他方式实现，但这是一种很好的方式来说明切换间隔。好的，非常好，现在我们在上下文切换方面更安全、更稳健了，接下来我们继续。每当你进行某种资源分配时，总是想要跟踪异常，因为如果在这里发生异常，它会阻止切换间隔的正常工作。
+- en: being reset and then your threading might start to work strangely。 So you know
+    this isn't really so much specific to statistical profiling but in general when。
+    you're doing multi threaded code you want to be paranoid。 So here what you want
+    is a try finally so that no matter what happens even if there's。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 被重置后，你的线程可能会开始异常工作。所以你知道，这并不是特定于统计分析的，但一般来说，当你在做多线程代码时，你要保持警惕。所以这里你想要一个`try
+    finally`，以便无论发生什么，即使出现崩溃。
+- en: an exception you set the switch interval back to whatever it was originally。
+    Okay good。 So we're doing the we're trying to protect from a context switch we're
+    using try and finally。 okay what else could go on。 We are just getting started
+    in all the things that can go wrong in multi threaded program。 So I should say
+    I don't want to just discard you from doing multi threaded programming or。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦出现异常，你就将切换间隔恢复到原来的状态。好的，那很好。所以我们在尝试保护上下文切换，使用 try 和 finally。好的，还有什么其他情况呢？我们才刚刚开始探讨多线程程序可能出现的各种问题。我应该说，我并不想阻止你进行多线程编程。
+- en: statistical profiling。 These things are reasonably robust but you just need
+    to be careful of all the things that。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 统计剖面。这些东西相对稳健，但你需要小心所有可能出现的问题。
+- en: '![](img/9a585a963414ed426c943fb97181173d_29.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_29.png)'
+- en: could go wrong when there's multiple threads。 Okay so let's look at recording
+    a sample。 So we have this simple function record which gets a measurement and
+    it's going to look。 in a dictionary to see do have we have we seen the name of
+    that function before and then。 we're going to increment and if not we start with
+    the count of zero and then we increment。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在有多个线程时可能会出错。好的，所以让我们看看记录一个样本。所以我们有这个简单的函数记录，它获取一个测量，并将在字典中查看是否以前见过这个函数的名称，然后我们会递增计数，如果没有，我们从零开始计数，然后递增。
+- en: the count by one。 Okay great so we're looking at a dictionary increment on the
+    count by one it's a two line。 function surely nothing can go wrong here right。
+    So what can go wrong。 Well one thing that can go wrong is imagine that you're
+    calling this record or the interpreters。 calling this record method when it's
+    sampling a frame at the same time that the sampling。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 计数增加一个。好的，很棒，所以我们要查看字典中计数增加一个的操作，这是一段两行的函数，肯定不会出错，对吧？那么可能会出错的情况是什么呢？好吧，一种可能出错的情况是，想象一下你在采样帧时同时调用这个记录器或解释器的记录方法。
+- en: thread is sampling a frame somebody calls profiler。show to see the profile right
+    now or。 some other way they decide to access the self。mydb dictionary。 Then you've
+    got one thread modifying the dictionary while another thread thread is reading
+    the。 dictionary iterating over it。 And Python gets really upset if you have two
+    threads one of which is modifying a dictionary。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程正在采样帧时，有人调用 profiler.show 来查看当前的配置文件，或者以其他方式访问 self.mydb 字典。那么你就有一个线程在修改字典，而另一个线程在读取这个字典并遍历它。如果有两个线程，其中一个在修改字典，Python
+    会非常不高兴。
+- en: another one which is iterating over it。 So depending on your Python version
+    you'll get a crash。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个正在遍历它的线程。所以根据你的 Python 版本，你可能会遇到崩溃。
+- en: '![](img/9a585a963414ed426c943fb97181173d_31.png)'
+  id: totrans-90
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_31.png)'
+- en: So what you want to do is you want to use a thread lock in this case I'm using
+    threading。 dot lock with a context manager and then you make sure all the code
+    that accesses mydb。 uses the same thread lock so that nobody accesses the dictionary
+    at the same time。 Okay so we've got switch the context interval we've got use
+    try and finally we've got use。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你要做的是在这种情况下使用线程锁，我使用 threading.dot lock 作为上下文管理器，然后确保所有访问 mydb 的代码都使用相同的线程锁，以便没有线程在同一时间访问字典。好的，所以我们有切换上下文的间隔，我们使用
+    try 和 finally，我们使用。
+- en: thread locks seems like we're being pretty paranoid here for multi-threading
+    so what else。 could go on。 No guesses？ I don't know what else could go on。 There's
+    always unknown unknowns so one other thing I would suggest anytime you're doing
+    multi-thread。 programming is use fault handler。 So fault handler is this nifty
+    little module that if you call fault handler dot enable。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程锁，似乎我们对多线程过于谨慎了，那么还有什么其他的情况呢？没有猜测吗？我不知道还有什么其他的情况。总会有未知的未知，所以我建议在进行多线程编程时使用故障处理程序。故障处理程序是一个巧妙的小模块，如果你调用
+    fault handler dot enable。
+- en: when you start your program if you have some really bizarre crash it'll still
+    pronounce。 some basic debugging information。 Now you're all probably used to having
+    something go wrong and you see that nice stack trace。 of the exception and then
+    you're like oh okay it was functioned through the cause that let。 me go debug
+    that。 If you're doing multi-threaded code sometimes what you'll have happen is
+    you'll corrupt the。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你启动程序时，如果有一些非常奇怪的崩溃，它仍然会输出一些基本的调试信息。现在你们可能都习惯了出现问题时，看到异常的漂亮堆栈跟踪，然后你会想，哦，好吧，是函数出了问题，那让我去调试一下。如果你在编写多线程代码时，有时会发生损坏。
+- en: memory like if you read a stale stack frame or try and modify a dictionary while
+    iterate。 over it or do some other funky stuff and if you corrupt memory you might
+    corrupt the entire。 stack and so when you get an exception instead of printing
+    out that nice stack trace you'll。 get a core dump or some other really ugly crash
+    which won't tell you what's going on。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内存就像你读取一个过时的栈帧，或者在迭代时尝试修改一个字典，或者做一些其他奇怪的事情。如果你损坏了内存，可能会损坏整个栈，因此当你遇到异常时，不会打印出漂亮的堆栈跟踪，而是会得到一个核心转储或一些其他非常糟糕的崩溃，这不会告诉你发生了什么。
+- en: and then you'll start pulling your hair out saying like well where did it crash
+    why did。 it crash whereas if you use fault handler dot enable when you get any
+    type of crash it won't。 allocate any new memory it'll immediately print some really
+    basic stuff so that even。 if your memory is corrupted you'll still get something。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后你会开始抓狂，想知道崩溃发生在哪里，为什么会崩溃；而如果你使用`fault_handler.enable`，当你遇到任何类型的崩溃时，它不会分配任何新内存，而是会立即打印一些非常基本的信息，这样即使你的内存被损坏，你仍然会得到一些信息。
+- en: Okay so let me mention some additional issues so in this sampler thread that
+    we're using。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我想提到一些额外的问题，所以在我们使用的这个采样线程中。
+- en: '![](img/9a585a963414ed426c943fb97181173d_33.png)'
+  id: totrans-97
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_33.png)'
+- en: and in general for threading you want to set this to be a demon thread。 If you
+    don't set it to be a demon thread then when your main program exits your sampler。
+    thread would still be alive and it would prevent your program from exiting whereas
+    if you set。 it to self that demon equals true for your sampler thread then when
+    your main thread exits。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常，对于线程，你希望将其设置为守护线程。如果你不将其设置为守护线程，那么当你的主程序退出时，采样线程仍然会存活，这会阻止你的程序退出；而如果你将其设置为`self.demon
+    = true`，那么当你的主线程退出时，。
+- en: your demon thread will also exit。 Another thing to keep in mind is that so I
+    mentioned before that in theory if you have。 the sampling interval going all the
+    way down to zero then your statistical profiler is going。 to turn into a deterministic
+    profiler so that's true in theory but time dot sleep currently。 has some minimum
+    granularity of like one to ten milliseconds。
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的守护线程也会退出。另一个需要记住的事情是，我之前提到过，从理论上讲，如果你的采样间隔降到零，那么你的统计分析器将变成一个确定性分析器。理论上这是正确的，但`time.sleep`目前有一个大约一到十毫秒的最小粒度。
+- en: It's not really a big deal unless you're doing super high frequency trading
+    or something。 where you can execute code really fast but just worth keeping in
+    mind。 So I want to mention flask here so if you're using flask and you want to
+    use aux profile。 you can use this in a very simple way to plug it in you import
+    a blueprint you do app dot。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除非你在进行超高频交易等事情，否则这其实并不算什么大问题，因为你可以非常快速地执行代码，但值得记住。因此我想在这里提到Flask，如果你正在使用Flask并希望使用辅助配置，你可以非常简单地将其插入，你导入一个蓝图，调用`app.`。
+- en: register blueprint for aux profile and you configure some admin users and with
+    just those。 three lines you can start using this profiler in flask。 It will provide
+    you four end points one is unpause which will turn on the profiler so。 the statistical
+    profiler even though it's low overhead it doesn't turn on by default。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为辅助配置注册蓝图，并配置一些管理员用户，只需这三行，你就可以在Flask中开始使用这个分析器。它将为你提供四个端点，其中一个是取消暂停，这将开启分析器，因此尽管统计分析器的开销很小，但默认情况下并不会开启。
+- en: you have to turn it on。 You can use pause to pause the profiler so it's not
+    affecting production you can call status。 to show the current profile and the
+    status of the results and you can use set interval。 to change the sampling frequency。
+    So again one of the main motivations for using statistical profilers is you have
+    some website。 or you have a lot of websites or application services or something
+    that's deployed in production。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你必须将其开启。你可以使用`pause`来暂停分析器，这样就不会影响生产环境，你可以调用`status`来显示当前的分析状态和结果状态，并且可以使用`set_interval`来更改采样频率。因此，再次提到，使用统计分析器的主要动机之一是，你有一些网站，或者有很多网站，或应用服务，或者在生产环境中部署的其他东西。
+- en: and you want to see what's slow or what's the bottleneck or what's the program
+    doing。 in real operation with real users。 So to do that it's nice to be able to
+    have a statistical profiler inside there either。 is an endpoint or in some other
+    manner。 Okay let's look at some additional uses。 So what else can you do with
+    sys。current frames？ So again I want to say again like how awesome this function
+    is。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你想要了解什么地方慢，或瓶颈在哪里，或者程序在真实用户操作时做了什么。为了做到这一点，能够在其中拥有一个统计分析器是很有用的，可能是一个端点或其他方式。好的，让我们看一些额外的用法。那么，关于`sys.current_frames`你还能做什么呢？我想再强调一下这个功能有多么棒。
+- en: So if there's any core maintainers in the room right now please don't take away
+    this。 function because it's just really neat。 So I'm going to give you some other
+    thoughts of ideas you could do to have fun。 So what else can you do with sys。current
+    frames？ So first of all you can use some major damage that's really hard to track
+    down。 So be careful because it lets you look into every thread that's running
+    and mess with， them。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果现在房间里有任何核心维护者，请不要取消这个功能，因为它真的很有趣。我将给你一些其他的想法和创意，让你可以玩得开心。那么，关于`sys.current_frames`你还能做什么呢？首先，你可以使用一些很难追踪的重大损害。所以要小心，因为它允许你查看正在运行的每个线程并干扰它们。
+- en: Okay more seriously one thing you could do is you could take a data snapshot
+    that is you。 could use sys。current frames to look at the active frames and you
+    could periodically snapshot。 not just code name but something like frame。f locals
+    that is you could take a snapshot of。 what are all the local variables that are
+    active in some given function。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更严肃地说，你可以获取数据快照，使用`sys.current_frames`查看活动的帧，并定期快照，不仅仅是代码名称，还有像`frame.f_locals`这样的内容，也就是说你可以快照某个给定函数中所有活动的局部变量。
+- en: And particularly if you're dealing with a lot of third party libraries and just
+    want。 to know what's going on that's kind of a nifty way without having to rewrite
+    those third。 party libraries to write a simple tool that can peak at what's happening
+    in your program。 You could even modify f locals。 You could go into f locals and
+    you could add one to every integer you find or multiply it。
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尤其是当你处理很多第三方库时，只想知道发生了什么，这是一种不错的方式，而无需重写这些第三方库，可以编写一个简单的工具来窥探程序中发生的事情。你甚至可以修改`f_locals`，进入`f_locals`并对每个找到的整数加一或乘以它。
+- en: by two or do some other crazy stuff。 Now why would you do this besides wanting
+    to cause major damage which I'm obviously。 not advocating。 Well if you're running
+    your tests you might have invariance or assertion checks or other。 kind of things
+    in your tests。 Those tests are great for your test cases but if you can go and
+    randomly modify f locals。 it's testing your code in a different way which could
+    be kind of interesting。
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过这些或者做一些其他疯狂的事情。除了显然不提倡造成重大损害，你为什么要这样做呢？如果你在运行测试，你可能会有不变性或断言检查或其他类型的测试。这些测试对你的测试用例很有帮助，但如果你能够随机修改`f_locals`，那就是以不同的方式测试你的代码，这可能会很有趣。
+- en: Another thing you could do is you could do something like a statistical debugger
+    where。 you periodically snapshot some debug information like a full stack trace
+    and all the locals。 and either dump those to a log or save those so in case there's
+    a crash maybe you have。 a random snapshot of like 10 or 20 functions that were
+    called recently。
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以做的另一件事是实现一个统计调试器，其中你定期快照一些调试信息，比如完整的堆栈跟踪和所有局部变量，并将其转储到日志中或保存，以便在崩溃时或许能够获得最近调用的10或20个函数的随机快照。
+- en: You could use statistical code coverage just like coverage。py but turn it on
+    periodically。 and record which lines are being executed and then turn off so you
+    don't incur much overhead。 but you can track which lines of code are being actually
+    covered in your real use cases。 So let me summarize。 So profiling is designed
+    to find bottlenecks and improve your code。
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以像使用`coverage.py`一样使用统计代码覆盖率，但定期开启并记录执行的行，然后关闭，以避免产生太多开销，但你可以跟踪在实际用例中哪些代码行被覆盖。总结一下，性能分析旨在发现瓶颈并改善代码。
+- en: You can use deterministic profiles for that but they can be slow so you can
+    use a statistical。 profiler to sample your code periodically and let you use your
+    statistical profiler in production。 to see what real users are doing without providing
+    too much overhead。 You can use OX profile which is open source on GitHub or you
+    can write your own and really。
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以使用确定性分析来解决这个问题，但它们可能会很慢，所以你可以使用统计分析器定期采样你的代码，并让你在生产环境中使用统计分析器，看看真实用户的操作而不带来太多开销。你可以使用开源的
+    OX profile，或者自己编写，实际上。
+- en: not that many lines provided you're careful of a few things。 The key functions
+    here are set profile。 set trace and sys。current frames which lets you， peek into
+    what the interpreter is doing or have the interpreter call your function periodically。
+    It's simple in theory but any time you're using threads be careful， use try finally，
+    use locks。 maybe use a switch interval and use fault handler。
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只要你注意一些事情，提供的行数并不多。这里的关键函数是 set profile、set trace 和 sys.current frames，这让你可以窥视解释器正在做什么，或者让解释器定期调用你的函数。理论上很简单，但每当你使用线程时要小心，使用
+    try finally，使用锁，也许使用切换间隔并使用故障处理程序。
+- en: So that concludes the main talk and ready for Q and A。 [applause]。 We've got
+    a few minutes for questions now。 If you have a question just use one of the microphones
+    here。 Hello， here we go。 My question is with regard to statistical profiling in
+    the example you gave where the。 number of hits kind of tells you what to go look
+    at for potential improvement。
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这总结了主要讨论，现在准备进行问答。[掌声]。我们现在有几分钟时间可以提问。如果你有问题，可以使用这里的麦克风。你好，我们开始吧。我的问题是关于你给出的例子中，命中次数如何告诉你需要关注哪些潜在改进。
+- en: How do you differentiate the fact that that number of hits may be due to just
+    the fact。 that that particular program let's say a web crawler would obviously
+    have a huge percentage。 of hits on like request。get or whatever versus that number
+    of hits suggesting that those particular。 function calls are slow or need improvement。
+    \>\> Let me rephrase what I think you're asking。
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你如何区分命中次数可能仅仅是因为特定程序，比如说网络爬虫，显然在像 request.get 上会有很大的命中率，而不是说这些命中次数表明这些特定的函数调用慢或者需要改进。
+    \>\> 让我重新表述一下我认为你在问什么。
+- en: I think what you're saying is what if you have something like request。get which
+    is not。 really slow in CPU terms but it's slow in the sense of time that you just
+    have to wait。 for things to go back and forth in the network。 So it's not CPU
+    bad but it's still slow and the statistical profile would be telling you。 like
+    it's slow most of the time in your program you're waiting in this particular function。
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想你想问的是，如果你有像 request.get 这样的东西，在 CPU 上并不慢，但在时间上却很慢，因为你必须等待网络中数据的往返。它在 CPU 上并不好，但仍然慢，而统计分析会告诉你在你的程序中，大多数时间你都在这个特定的函数中等待。
+- en: One thing you can do is if you know that's the case you can just ignore that
+    line and。 go down and look at the other things。 There's not a ton of stuff you
+    can do because the fact that the Python interpreter is sitting。 there waiting
+    in there is going to be hard to figure out in a profiler because it really。 is
+    a slow function。 Does that answer your question or does that get at what you're
+    saying？
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以做的一件事是，如果你知道情况是这样的，你可以忽略那一行，然后往下看其他内容。由于 Python 解释器在那里等待，这在分析器中很难判断，因为它确实是一个慢函数。那样回答你的问题了吗，或者有没有更准确地表达你的意思？
+- en: \>\> Sort of， yeah。 It was more how do you request that get was just an obvious
+    example but really what I'm。 getting at is how based on what you're seeing from
+    a statistical profiler what clues do you。 have that can help you differentiate
+    that a function called actually needs improvement。 versus that it's just used
+    a lot in the program。 \>\> So that's a good question。
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 有点是的。更多的是你如何请求，这只是一个明显的例子，但实际上我想问的是，基于你从统计分析器看到的内容，哪些线索可以帮助你区分一个函数调用是否真正需要改进，还是只是程序中被调用得很多。
+    \>\> 这是个好问题。
+- en: So it's not so much a statistical versus deterministic profile question。 It's
+    just a question of how do you know if something is slow or it's just called a
+    lot。 So that's a profiler can't help you so much with that that's more something
+    you have to。 figure out and so the way to think about a profile is not necessarily
+    what's the so you。
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这并不是一个统计与确定性分析的问题。这只是一个如何知道某个东西是慢还是只是被调用很多的问题。因此，分析器在这方面帮不上太多忙，这更是你需要自己判断的方式，因此思考分析的方式不一定是。
+- en: can look at what's the top hit or what's the slowest function and the more you
+    can speed。 that up the better your program will be or you can look for what functions
+    seem to be taking。 a lot more time than I expect and you can use that to drive
+    what you look at。 \>\> Thank you。 \>\> Maybe on this side。 \>\> Yeah。 \>\> Have
+    you any experience with running a statistical profile or inside a Docker pod？
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以查看哪个是最高的命中率或哪个是最慢的函数，你越能加速这些，程序就会越好，或者你可以查找哪些函数似乎比我预期的花费了更多时间，然后你可以利用这一点来驱动你的关注点。
+    \>\> 谢谢。 \>\> 也许在这边。 \>\> 是的。 \>\> 你有没有在Docker pod内部运行统计分析的经验？
+- en: \>\> Inside of what？ \>\> Docker。 \>\> Docker。 \>\> Kubernetes。 \>\> So it should
+    work just fine and so statistical profiler should work just fine in Docker or。
+    Kubernetes because it's running inside the Python interpreter and it's just telling
+    you。 when the interpreter is running what function is it in most often。
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 在什么里面？ \>\> Docker。 \>\> Docker。 \>\> Kubernetes。 \>\> 所以它应该可以正常工作，统计分析器在Docker或Kubernetes中也应该可以正常工作，因为它在Python解释器内部运行，只是告诉你在解释器运行时，哪个函数最常被调用。
+- en: Does that answer your question or did you mean something different that I misunderstood？
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这回答了你的问题吗，还是你指的是我误解的其他内容？
+- en: \>\> I was wondering if the fact that you're really faking that you're on a
+    process， you're。 on one processor but you're really sharing a processor does that
+    change your statistics？
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 我在想，既然你实际上是在假装你在一个进程上，你在一个处理器上，但实际上你是在共享一个处理器，这是否会改变你的统计数据？
+- en: \>\> It won't change your statistics。 If for some reason your particular Docker
+    process gets shoved to the slide while other。 things run then that could be an
+    issue of course。 But that's not really a problem you can solve with the profiles。
+    Back to this side？ \>\> I'm just going on the same note。 First of all， great talk。
+    This is really educational。 Also in terms of messing with things such as context
+    watching。
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 这不会改变你的统计数据。如果出于某种原因，你的Docker进程被移到一边，而其他东西在运行，那当然可能会是一个问题。但这不是你能用分析工具解决的问题。回到这边？
+    \>\> 我也是同样的主题。首先，演讲非常好。这真的很有教育意义。还有在处理上下文监控等方面。
+- en: is that how far down is， that propagated down？ Is that just propagated down
+    to the Python interpreter？
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到底传播了多深？只是传播到Python解释器吗？
+- en: Would it， if it's running on a virtual machine or with the hypervisors and stuff
+    involved。 like it's not safe to go against that， right？ \>\> Good question。 The
+    set switch interval is only going to protect you from a context switch happening。
+    in the Python interpreter。 It won't protect you from the operating system deciding
+    which process gets to run。
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果它在虚拟机上运行或涉及到虚拟机监控程序，这样做是否安全？ \>\> 好问题。设定切换间隔只会保护你免受Python解释器中的上下文切换影响。它不会保护你免受操作系统决定哪个进程运行的影响。
+- en: That's true。 The thing that we're worried about in that example is that if the
+    Python interpreter switches。 away and then switches back to you， you've now got
+    stale stack frames potentially。 You're looking at stale memory and so that'll
+    cause potentially a crash。 There's other ways you can try and check if those stack
+    frames are live or stale。
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是真的。我们担心的事情是，在那个例子中，如果Python解释器切换走然后再切换回来，你现在可能有过期的栈帧。你在查看过期的内存，这可能会导致崩溃。还有其他方法可以尝试检查这些栈帧是活跃的还是过期的。
+- en: But that's one simple example。 Back to the side。 \>\> Hi。 Thank you for the
+    talk。 Two questions。 First， have you had a chance to measure the performance implications，
+    say with a 100 millisecond。 sampling and second question， have you considered
+    recording， let's say， if a function A equals。 function B and you ended up seeing
+    that the function B was cold， that also implies that。
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这只是一个简单的例子。回到这边。 \>\> 嗨。谢谢你的讲座。两个问题。首先，你有没有机会测量性能影响，比如`100毫秒`的采样？第二个问题，你是否考虑过记录，比如说，如果函数A等于函数B，而你最终发现函数B是冷的，那也意味着什么。
+- en: function A was cold。 So the counter for the function A should also be incremented。
+    And that might address one of the first questions there was。 \>\> Excellent question。
+    I'm glad you asked that。 So let me answer this。 So let me take that in order。
+    So if you set the sampling interval down to 100 milliseconds， the sampler is going
+    to run。
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 函数A是冷的。所以函数A的计数器也应该被递增。这可能会解决最初的问题之一。 \>\> 很好的问题。我很高兴你问了这个。让我来按顺序回答这个。如果你将采样间隔设定为`100毫秒`，采样器就会运行。
+- en: more often。 It's hard to say anything concrete because if you're running on
+    a 15-year-old laptop。 running it every 100 milliseconds is going to mean a lot
+    more than if you're running it。 on a top-end Xeon server or something。 Now， the
+    actual time for the sampler to run is relatively small。 But that's what matters。
+    How long does it take the sampler to run relative to the sampling interval？
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更频繁地运行。很难说出具体的东西，因为如果你是在一台 15 年前的笔记本电脑上运行，每 100 毫秒运行一次将比在一台高端 Xeon 服务器上运行要重要得多。现在，采样器运行的实际时间相对较小。但这才是重要的。采样器运行所需的时间相对于采样间隔是多少？
+- en: And that's how much overhead you're going to have。 Okay。 So the second question
+    was。 what if function A calls function B calls function C？
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是你将会有多少开销。好的。第二个问题是，如果函数 A 调用函数 B，B 又调用函数 C，会怎样？
+- en: '![](img/9a585a963414ed426c943fb97181173d_35.png)'
+  id: totrans-130
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_35.png)'
+- en: So let me go back to a diagram we had earlier right here。
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我回到之前的一个图表。
+- en: '![](img/9a585a963414ed426c943fb97181173d_37.png)'
+  id: totrans-132
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_37.png)'
+- en: So we have a foo called bar called BaaS called boot。 So because we have F back。
+    what you can do is you can say， okay， I'm in frame number， four， which is boot。
+    but that was called by BaaS， which is called by bar， which is called， by foo。
+    So one thing you can do in your statistical profilers is say， don't just count
+    the function， I'm in。
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们有一个名为 bar 的 foo，调用了名为 BaaS 的函数，BaaS 又调用了 boot。因此，因为我们有了 F，您可以说，好的，我在第 4
+    帧，这就是 boot。但这是由 BaaS 调用的，BaaS 又是由 bar 调用的，bar 又是由 foo 调用的。因此，您可以在统计分析器中做的一件事就是，不仅要计算我所在的函数。
+- en: also add a hit to each of the callers。 So I didn't show that just to keep things
+    simple。 but in OX profile， you can't not just， the function you're in but all
+    the callers。 So you'll capture that if there's some top level function calling
+    everybody。 Thank you。 Do we have time for more or are we done？ One more。 Okay。
+    That's all the questions I think。 Sorry。
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还需要对每个调用者添加一次命中。所以我没有显示这个只是为了保持简单。但在 OX 配置文件中，你不能只查看你所在的函数，还要查看所有调用者。因此，如果有某个顶层函数调用了所有函数，你就会捕捉到这一点。谢谢。我们还有时间吗，还是结束了？再来一个。好的。我想这就是所有的问题。抱歉。
+- en: I'll be outside in the hall if there's more questions。 Thanks， Emi。 [APPLAUSE]。
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果还有更多问题，我会在外面的走廊。谢谢，Emi。[鼓掌]。
+- en: '![](img/9a585a963414ed426c943fb97181173d_39.png)'
+  id: totrans-136
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/9a585a963414ed426c943fb97181173d_39.png)'
+- en: (applause)。
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: （鼓掌）。

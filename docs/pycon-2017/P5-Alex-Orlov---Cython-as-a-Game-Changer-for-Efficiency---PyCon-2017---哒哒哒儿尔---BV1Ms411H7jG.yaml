@@ -1,0 +1,690 @@
+- en: P5：Alex Orlov   Cython as a Game Changer for Efficiency   PyCon 2017 - 哒哒哒儿尔
+    - BV1Ms411H7jG
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P5：Alex Orlov   Cython 作为效率的游戏规则改变者   PyCon 2017 - 哒哒哒儿尔 - BV1Ms411H7jG
+- en: lecture today。 We know Python is a great language for everything but speed。
+    But how do we deal with it？ Anyway， we can solve this problem。 You will find the
+    answer in the next talk。 Let's welcome Alex for the side-on as a game changer
+    for efficiency。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 今天的讲座。我们知道 Python 是一门适合所有事情的伟大语言，但速度除外。那我们该如何应对呢？无论如何，我们可以解决这个问题。你将在接下来的演讲中找到答案。让我们欢迎
+    Alex 来讨论 Cython 作为效率的游戏规则改变者。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_1.png)'
+- en: Hello everybody。 Thank you for coming。 Today we're going to talk about Python
+    efficiency in general and more specifically we're going to talk about Python。
+    So let's start with Python。 It's a great language that you probably love and you
+    can probably name zillion of reasons。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家好。感谢你们的到来。今天我们将讨论 Python 的效率，特别是关于 Python 的内容。让我们从 Python 开始。这是一门你可能非常喜欢的伟大语言，你可能能列出无数个理由。
+- en: why do you like it。 My favorite is listed here。 So it's speed of development，
+    code readability。 great ecosystem of libraries and of course community。 And actually
+    I work with different programming languages， but， whenever I switch back to Python。
+    I always feel kind of relief and always getting surprised how fast and easy development
+    is。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你为什么喜欢它？我最喜欢的原因列在这里。所以是开发速度、代码可读性、优秀的库生态系统，当然还有社区。实际上，我使用不同的编程语言，但每当我切换回 Python
+    时，总会感到一种释然，并且总是惊讶于开发的快速和简单。
+- en: But let's admit that Python is probably not the most efficient programming language
+    in the world。 It's definitely quite efficient in terms of developer velocity。
+    but not that good in terms of CPU usage or memory usage。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们必须承认，Python 可能不是世界上最有效率的编程语言。它在开发者效率方面确实相当高效，但在 CPU 使用率或内存使用率方面就不那么好了。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_3.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_3.png)'
+- en: But the real question here is how much do you care？
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但真正的问题是，你有多在乎？
+- en: If you're a backend engineer in typical web company and your company experiences
+    grows。 it's quite likely that majority of your challenges will be somehow related
+    to。 scaling issues of databases or cache consistency or something like that。 But
+    your web tier， it's。 quite likely that it will stay simple。 Usually it's a stateless
+    web server and all you need to do in order to scale is to add more boxes as。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你是一名典型网络公司的后端工程师，且你的公司正在扩展，那么很可能你面临的大多数挑战都与数据库的扩展问题、缓存一致性或类似问题有关。但你的 web 层，很可能会保持简单。通常它是一个无状态的
+    web 服务器，扩展时你只需增加更多的机器。
+- en: simple as that。 But at some point a number of machines that you edit might become
+    insane or at least big enough for you to consider to save some money for your
+    company and。 reduce number of boxes。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这么简单。但在某个时候，你所管理的机器数量可能会变得疯狂，或者至少足够大，让你考虑为公司节省一些资金并减少机器数量。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_5.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_5.png)'
+- en: Even then， Python execution speed itself might not be a real concern。 Your web
+    tier can be CPU bound， memory bound， IO bound and all those are different type
+    of issues。 although sometimes they're correlated。 But let's say that you're in
+    the same boat as Instagram and you also have some CPU issues。 First thing that
+    you actually need to do is， profiling。 According to Pareta principle。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 即便如此，Python 的执行速度本身可能并不是一个真正的关注点。你的 web 层可能是 CPU 绑定、内存绑定、IO 绑定，这些都是不同类型的问题，尽管有时它们是相关的。但假设你和
+    Instagram 处于同样的境地，你也面临一些 CPU 问题。你首先需要做的就是进行性能分析。根据帕累托原则。
+- en: 20% of work usually responsible for 80% of results。 Or in our case。 we should
+    expect 20% of codebase to be responsible for 80% of global CPU footprint。 And
+    in our case。 that's actually true。 So try to avoid premature chaotic optimizations
+    and figure out what piece of code you really need to optimize。 So let's say you
+    found critical code。 The next thing that you want to do is read your code。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 20% 的工作通常会占据 80% 的结果。或者在我们的案例中，我们应该预期 20% 的代码库会负责 80% 的全球 CPU 使用率。在我们的情况下，这实际上是正确的。因此，尽量避免过早的混乱优化，弄清楚你真正需要优化的代码部分。假设你找到了关键代码。接下来你要做的就是阅读你的代码。
+- en: So it's quite likely that， it just performs unnecessary actions or there is
+    some misuse of data structure or some Python specific stuff like imports inside
+    of functions。 For example here we have list comprehension that potentially generates
+    huge list and。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以很可能，代码只是执行了不必要的操作，或者存在数据结构的误用，或者一些 Python 特有的内容，比如函数内部的导入。例如，这里我们有一个列表推导式，它可能生成一个巨大的列表。
+- en: then we have for loop and inside of that for loop we check if element is present
+    in the list。 Looks good。 Looks like normal code。 But the problem is that list
+    data structure is not designed for this type of queries。 So we actually have ON
+    square algorithm here， which is fine for many cases。 But if it's critical code
+    pass then even for relatively small n it might become an issue。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们有一个 for 循环，在这个循环内部检查元素是否存在于列表中。看起来不错。看起来像正常的代码。但是问题是，列表数据结构并不是为这种查询设计的。所以我们实际上有了
+    O(N²) 算法，这在很多情况下是可以的。但如果代码是关键路径，即使对于相对较小的 n，它可能也会成为一个问题。
+- en: Fortunately， it's easy to fix。 If you change list comprehension to set comprehension
+    you'll reduce complexity to linear and。 problem solved。 So my point is before
+    applying any dramatic changes and optimizations。 Try to read your code first and，
+    check your algorithm。 But let's say that you did it and your code looks sane，
+    but it's still slow。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，修复起来很简单。如果你将列表推导式改为集合推导式，复杂度就会降低到线性。问题解决。所以我的观点是，在进行任何戏剧性的更改和优化之前，先尝试阅读你的代码，并检查你的算法。但假设你做到了，你的代码看起来正常，但仍然很慢。
+- en: Don't worry at this point。 You also have multiple options。 Option A， microservices。
+    So you can take your critical piece of code and if it's easy for you to decouple
+    it from the rest of your app and。 if you're using service or into architecture，
+    you can probably create separate microservice。 We've read it in any programming
+    language that you consider to be more performance in Python and。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时别担心。你也有多种选择。选项 A，微服务。所以你可以将关键代码部分提取出来，如果你能轻松将其与应用程序的其余部分解耦，并且如果你在架构中使用服务或微服务，你可能可以创建一个单独的微服务。我们可以用你认为比
+    Python 性能更好的任何编程语言来实现它。
+- en: yeah。 So it should work， but it has obvious downsides。 So first of all it sounds
+    like non-trivial amount of work like to take a bunch of code and rewrite it in
+    completely different programming language。 And also if you're not using service
+    area into architecture。 it will add complexity to your system in terms of maintenance，
+    deployment。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是的。所以它应该能工作，但显然有缺点。首先，这听起来像是非平凡的工作量，比如将一堆代码重写为完全不同的编程语言。如果你不在架构中使用服务区域，这会在维护和部署方面给系统增加复杂性。
+- en: capacity playing and whatnot。 So hold on。 Option B， classic C extensions。 Again。
+    you can take your code， rewrite it in C or C++。 And create the engine。 create
+    as a separate library and then just create Python binding for it。 It works。 It
+    works perfectly well。 And as a matter of fact， that's how many libraries that
+    we use are written。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 容量的变化等等。那么等一下。选项 B，经典的 C 扩展。同样，你可以将你的代码重写为 C 或 C++，并创建一个引擎，作为一个单独的库，然后为它创建 Python
+    绑定。它可以工作，并且效果很好。实际上，我们使用的许多库都是这样编写的。
+- en: But you'll have to write in C++， which is arguably not the most friendly language
+    to write。 especially if you're product engineer and if you don't have relevant
+    experience。 Option C。 you can change Python runtime。 So Python is a programming
+    language。 is obstruction and C Python that you probably use is concrete implementation
+    of that obstruction。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是你必须用 C++ 编写，这可以说并不是最友好的编程语言，尤其是如果你是产品工程师，而没有相关经验的话。选项 C，你可以改变 Python 运行时。Python
+    是一种编程语言，是抽象的，而你可能使用的 C Python 是该抽象的具体实现。
+- en: But there are multiple options。 So there is PyPy， which is probably the most
+    popular one。 There's a PyStomp from Drumbox， a grandpa from Google， so a lot of
+    good stuff。 And each of them has pros and cons on its own， so we won't stop here。
+    But let's just say that switching Python runtime is not that easy as it sounds。
+    For example。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但有多种选择。比如 PyPy，可能是最流行的一个。还有 Drumbox 的 PyStomp，以及来自 Google 的 Grandpa，很多优秀的东西。它们各自都有优缺点，所以我们不会在这里停留。但可以说，切换
+    Python 运行时并不像听起来那么简单。例如。
+- en: if you want to move to PyPy and you depend or code that you use， depend on libraries
+    that you use。 depend on multiple C extensions， then migration might be tricky。
+    And one more option。 you can update Python。 So as you probably heard， we migrated
+    from Python 2 to Python 3。 and it improved overall CPU usage of our system by
+    12%。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想迁移到PyPy，并且依赖于你使用的代码或库，依赖于多个C扩展，那么迁移可能会比较棘手。还有一个选择，你可以更新Python。正如你可能听说的，我们已经从Python
+    2迁移到Python 3，这提高了我们系统的整体CPU使用率12%。
+- en: So there's actual ongoing work related to performance。 And if it's feasible
+    for you to update Python， why not just do it？
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在性能方面确实有持续的工作。如果你可以更新Python，为什么不直接去做呢？
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_7.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_7.png)'
+- en: And finally， you can use Python。 So what is Python？ According to Wikipedia，
+    Python is super， OK。 I don't see it。 Oh， Python is super set of the Python programming
+    language designed to give select performance with code。 which is mostly written
+    in Python。 So in short， Python is programming language。 which is basically the
+    same stuff as a Python。 But with optional extra syntax that you may or may not
+    use up to you。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，你可以使用Python。那么，什么是Python呢？根据维基百科，Python很强大，没错。我不太明白。哦，Python是为提高性能而设计的Python编程语言的超集。大部分代码是用Python编写的。所以简而言之，Python就是编程语言，基本上和Python是一回事。但是它有可选的额外语法，是否使用取决于你自己。
+- en: it compiles to C or C++， and it works perfectly well with your existing runtime。
+    So no changes in infrastructure are required at all。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它编译为C或C++，并且与现有的运行时完美兼容。因此，完全不需要对基础设施进行更改。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_9.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_9.png)'
+- en: Let's consider a following example。 Don't worry， you don't have to read this
+    code。 So that's Django URL dispatcher， basically piece of Django that takes URL
+    and figures out what view or controller it needs to execute。 So once we noticed
+    that this model started consuming 4% of global CPU in our system。 And as a first
+    step， we just compiled it with Python。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们考虑以下示例。别担心，你不需要阅读这段代码。这是Django的URL调度器，基本上是Django的一部分，它接收URL并确定需要执行哪个视图或控制器。所以当我们注意到这个模型开始消耗我们系统4%的全球CPU时，作为第一步，我们只是用Python编译了它。
+- en: And this simple action gave us 3x performance boost for this model。 And reduced
+    overall CPU consumption of this model from 4% to 1 each percent。 And if you think
+    about it， that's actually not bad。 because so far we still don't know what Python
+    is。 We didn't have to learn any syntax。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个简单的操作为该模型提供了3倍的性能提升，并将该模型的整体CPU消耗从4%减少到每个1%。如果你想想，这其实并不差，因为到现在为止我们仍然不知道什么是Python。我们不需要学习任何语法。
+- en: And we didn't even have to read Django source code， so easy win。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们甚至不需要阅读Django的源代码，这真是轻松的胜利。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_11.png)'
+  id: totrans-30
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_11.png)'
+- en: So on this slide， we didn't change any line。 So Python was able to apply some
+    optimizations。 but it can do much better job if we somehow tell it what are we
+    trying to do。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在这个幻灯片上，我们没有更改任何一行代码。Python能够应用一些优化，但如果我们以某种方式告诉它我们想要做什么，它可以做得更好。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_13.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_13.png)'
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_14.png)'
+  id: totrans-33
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_14.png)'
+- en: Let's consider this example。 So here we have transformation function that takes
+    x and just squares it。 And a plot function which takes n and it has 4 loop。 And
+    inside of that 4 loop。 it just accumulates results of transformation into local
+    variable。 So if you compile this code。 it will run 2。5x faster， which is， quite
+    similar to what we experienced before。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们考虑这个例子。在这里我们有一个转换函数，它接受x并对其进行平方运算，还有一个绘图函数，它接受n并有4个循环。在那4个循环内部，它将转换的结果累积到局部变量中。所以如果你编译这段代码，它将运行得快2.5倍，这与我们之前的体验非常相似。
+- en: But Python allows us to add types。 Okay， so this code now looks slightly different
+    from normal Python。 But actually what we changed here， we changed signature functions。
+    For example。 now it's defapplier in the end。 Which means that our function only
+    accepts integer arguments。 And also we declared type of local variables inside
+    of body of second function。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但Python允许我们添加类型。好吧，这段代码现在看起来和普通的Python稍有不同。但实际上我们在这里改变的，是函数的签名。例如，现在它的名称是defapplier。这意味着我们的函数只接受整数参数。同时，我们在第二个函数的主体内声明了局部变量的类型。
+- en: So if you compile this code for relatively large and like more than thousand。
+    it will run 200x faster。 And all thanks to static typing。 To be fair。 there are
+    multiple optimizations that you that Python provides。 But if your goal is to optimize
+    existing Python code。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果你为相对较大的代码编译，比如超过一千行，它的运行速度会快 200 倍。这一切都归功于静态类型。公平地说，Python 提供了多种优化。但如果你的目标是优化现有的
+    Python 代码。
+- en: then adding types is all you need to do in majority of cases。 So let's take
+    a step back and take a brief dive into。 Python syntax that you probably should
+    learn if you want to optimize existing Python code。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在大多数情况下，添加类型就是你所需要做的一切。所以让我们退一步，简要深入了解一下 Python 语法，如果你想优化现有的 Python 代码，你可能应该学习。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_16.png)'
+  id: totrans-38
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_16.png)'
+- en: Main keyword that Python introduces is cdev。 It's used to declare type of variable。
+    For example。 here we have three variables， integer variable i， empty string s
+    and empty list data。 Okay。 it may look weird， but should be quite simple to understand。
+    Same applies to function signature。 You can specify return type of function as
+    well as type of arguments。 And when I say you can。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python 引入的主要关键字是 cdev。它用于声明变量的类型。例如，这里我们有三个变量，整数变量 i，空字符串 s 和空列表 data。好吧，它可能看起来很奇怪，但应该很容易理解。同样适用于函数签名。你可以指定函数的返回类型和参数类型。当我说你可以的时候。
+- en: it means you can， but you probably should， but you don't have to。 If you don't
+    specify some particular type， it will default to the most generic type that Python
+    has。 which is Python object type。 So， Python won't be able to apply some optimizations。
+    but your code will still be good to go。 Another thing that I should mention is
+    that there are three different ways to declare functions in Python。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着你可以，但你可能应该，但你并不必然需要。如果你不指定某种特定的类型，它会默认使用 Python 最通用的类型，即 Python 对象类型。所以，Python
+    将无法应用某些优化，但你的代码仍然可以正常运行。另一个我应该提到的是，Python 有三种不同的方式来声明函数。
+- en: Dev， cdev， and cpdev。 Dev functions are normal Python functions。 Exactly what
+    you can expect。 But there is also cdev declaration。 Basically， Python will compile
+    your code into native c function and as a result。 you won't be able to call it
+    from normal Python code。 Only from Python or from c。 But on the bright side， it
+    won't have any Python function called overhead。 For example。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Dev，cdev 和 cpdev。Dev 函数是普通的 Python 函数。正如你所期待的那样。但还有 cdev 声明。基本上，Python 会将你的代码编译为本地的
+    C 函数，因此你无法从普通的 Python 代码调用它。只能从 Python 或 C 调用。但好的一面是，它不会有任何 Python 函数调用的开销。例如。
+- en: it doesn't need to do marshaling from Python object type and to Python object
+    type。 So。 calls to those functions are considered to be much， much cheaper。 And
+    for functions in your basic modules in your system， it might be quite critical。
+    And there is also cpdev declaration， which is intersection of two worlds。 So。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它不需要在 Python 对象类型和 Python 对象类型之间进行数据转换。因此，调用这些函数被认为是非常非常便宜的。对于你系统中基本模块的函数，这可能相当关键。同时，还有
+    cpdev 声明，它是两个世界的交集。所以。
+- en: Python will generate native c function that will be used inside of Python。 But
+    you will still be able to call it from external Python code。 because Python will
+    also generate thin wrapper。 Few words about type system。 And Python has support
+    for all primitive c types， such as int， long， float， double， char。 Of course。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python 会生成用于 Python 内部的本地 C 函数。但你仍然可以从外部 Python 代码调用它，因为 Python 还会生成一个薄包装器。关于类型系统的几句话。Python
+    支持所有基本的 C 类型，比如 int，long，float，double，char。当然。
+- en: it has support for strings， both byte strings and Unicode strings。 And by the
+    way。 Python works perfectly well with both Python 2 and Python 3。 So， for example，
+    Stair。 Stair type here will be Unicode type in Python 3 and byte string in Python
+    2。 And also。 Python has support for all Python collections that we love， such
+    as least， said dictionary tuple。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它支持字符串，包括字节字符串和 Unicode 字符串。顺便提一下，Python 在 Python 2 和 Python 3 中都能完美运行。所以，例如，Stair。在这里的
+    Stair 类型在 Python 3 中将是 Unicode 类型，而在 Python 2 中是字节字符串。此外，Python 还支持我们喜欢的所有 Python
+    集合，比如列表、字典和元组。
+- en: And again， in majority of cases， if you want to squeeze performance like 2x，
+    5x。 that's all you need to use。 But sometimes， if you want to squeeze even more
+    performance。 you can go deeper and start using low level types。 So， that is scary
+    but unnecessary slide。 So。 Python has support for such low level types as C arrays
+    or row pointers。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次强调，在大多数情况下，如果你想挤压 2 倍、5 倍的性能。这就是你所需的一切。但有时，如果你想获得更高的性能。你可以深入挖掘，开始使用低级类型。因此，这有点吓人，但不必要的滑动。所以，Python
+    支持低级类型，例如 C 数组或行指针。
+- en: You probably should be very careful with those。 Also， it has support of enums，
+    C structures， unions。 And for example， if you're a big fan of C++ Tundar to play
+    library as I am， then。 and if you always wanted to use vector in your code or
+    tree based map。 Now you have option to do that。 For example， CDF vector into data
+    will declare empty vector of integers。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能应该对此非常小心。此外，它支持枚举、C 结构和联合体。例如，如果你和我一样是 C++ Tundar play 库的忠实粉丝，且一直想在代码中使用向量或基于树的映射。那么，现在你有了这样做的选项。例如，CDF
+    向量声明一个空的整数向量。
+- en: So， it may look unusual and even slightly scary， but again。 those type of optimizations
+    you will probably apply in rare cases。 Another source of optimizations that you
+    probably should use are extension types。 They look quite similar to normal Python
+    classes。 So， for example。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，它可能看起来不寻常，甚至有点吓人，但再说一次。这些类型的优化你可能只会在少数情况下应用。另一个你应该使用的优化来源是扩展类型。它们看起来与普通 Python
+    类相似。所以，例如。
+- en: here we defined PyCon speaker class。 It has three attributes， name， age， biography。
+    and there is some constructor and there is some property。 So， as you can see。
+    code here looks exactly almost the same as normal Python。 Only one difference
+    here is that we declared explicit CDF block and inside of that block。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里我们定义了 PyCon 演讲者类。它有三个属性，名称、年龄、传记。并且有一些构造函数和一些属性。因此，正如你所看到的。这里的代码几乎与普通 Python
+    完全相同。唯一的区别是我们声明了显式的 CDF 块，并在该块内。
+- en: we listed all attributes as well as their types。 So， behind the scenes。 Python
+    will use the typed C structure instead of dynamic Python dictionary to store attributes
+    of this class。 So， as a result， they consume much less memory。 They have faster
+    attribute lookup。 They have faster method access。 You can declare some methods
+    as CDF。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们列出了所有属性及其类型。因此，在幕后。Python 将使用类型化的 C 结构来存储该类的属性，而不是动态 Python 字典。因此，结果是，它们消耗的内存少得多。它们的属性查找速度更快。它们的方法访问速度更快。你可以将一些方法声明为
+    CDF。
+- en: And what is most important is they can be used as valid type for a site and
+    static type system。 Because for Python， any Python custom defined class is a black
+    box。 Because Python is a dynamic language and you can override everything。 So。
+    Python should be safe and it doesn't make any assumptions on internal structure
+    of your objects。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最重要的是，它们可以作为网站和静态类型系统的有效类型使用。因为对于 Python，任何自定义定义的类都是一个黑箱。由于 Python 是一种动态语言，你可以覆盖所有内容。所以，Python
+    应该是安全的，并且不会对对象的内部结构做出任何假设。
+- en: And last but not least， they work perfectly fine with your existing runtime。
+    You can create them and even more， you can even create your new Python class and
+    inherit it from Python one。 So， overall， your optimization workflow with Python
+    should consist of following steps。 First。 you detect critical modules and you
+    compile it， compare performance numbers。 If it's good enough。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后但同样重要的是，它们与现有运行时完美兼容。你可以创建它们，甚至可以创建新的 Python 类并从 Python 类继承。因此，总的来说，你的 Python
+    优化工作流程应包括以下步骤。首先，你检测关键模块并进行编译，比较性能数据。如果性能足够好。
+- en: you can stop there。 If not， you will have to add some types， then compile。 run
+    performance comparison again， then add even more types and so on。 Until you either
+    get performance that you want or it's also possible that everything will be typed。
+    but you'll still want to get even more performance。 In this case。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以在这里停下。如果不可以，你将不得不添加一些类型，然后编译。再次运行性能比较，然后添加更多类型，依此类推。直到你获得所需的性能，或者也有可能所有内容都会被类型化，但你仍然希望获得更高的性能。在这种情况下。
+- en: probably you want to take a look into more low-level pictures of Python。 But
+    that's a rare case。 For example， you can replace Python data structures with like
+    C data structures or C++ data structures。 So， a few words about to link。 During
+    compilation， you have option to specify annotation flag。 It will generate such
+    beautiful HTML。 Here， yellow lines indicate interaction with Python virtual machine。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能想深入了解Python的底层情况。但这是一种罕见的情况。例如，你可以用C数据结构或C++数据结构替换Python数据结构。关于链接，有几句话。在编译过程中，你有选项可以指定注解标志。这将生成如此美丽的HTML。在这里，黄色线条表示与Python虚拟机的交互。
+- en: As you can see， there are different shades of yellow。 So bold yellow indicate
+    most expensive interaction with Python VM。 You can click on any particular line
+    and you will see generated C code。 If you're not very comfortable with C or C++，
+    probably this code will go on top of your head。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如你所见，有不同深浅的黄色。明亮的黄色表示与Python虚拟机的最昂贵交互。你可以点击任何特定的行，查看生成的C代码。如果你对C或C++不太熟悉，可能这段代码会让你感到困惑。
+- en: But at least you will figure out what parts of Python C API are considered to
+    be expensive。 Just want to share with you some Instagram results that we have
+    so far。 So far。 we converted only 10-ish， probably now it's closer to 15 modules
+    to Python。 And when I say modules。 it actually means files。 So， and it already
+    reduced global CPU consumption of our Webstack by 30%。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但至少你会弄清楚哪些部分的Python C API被认为是昂贵的。我想和你分享一些我们目前在Instagram上获得的结果。到目前为止，我们只将大约10个模块转换为Python，现在可能接近15个模块。当我说模块时，实际上是指文件。因此，它已经将我们Webstack的全球CPU消耗减少了30%。
+- en: And we just started。 So we still see a lot of opportunities and places in our
+    code base that we can optimize and reclaim even more CPU。 Funny fact is that when
+    we first experienced issues with CPU， Python wasn't obvious option。 And overall，
+    I had impression that Python is quite popular in open source community。 but it's
+    mainly used for following to use cases to wrap existing C code or to optimize
+    projects in data science space。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们刚开始。因此，我们仍然看到很多机会和代码库中可以优化的地方，进一步回收更多的CPU。有趣的是，当我们第一次遇到CPU问题时，Python并不是明显的选择。总体来说，我的印象是，Python在开源社区中相当受欢迎，但它主要用于以下两种情况：包装现有的C代码或优化数据科学领域的项目。
+- en: But as you can imagine， Instagram is quite typical web service。 And as you can
+    see。 we were able to reclaim a good chunk of CPU with a little effort。 Okay。 to
+    recap what we have so far， first of all， don't be concerned about Python execution
+    speed too early。 As you can see， it took Instagram a while before it became an
+    issue。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但如你所想，Instagram是一个相当典型的网络服务。正如你所见，我们能够以少量的努力回收大量的CPU资源。好的，回顾一下我们目前的情况，首先，不要过早担心Python的执行速度。如你所见，Instagram在成为问题之前花了一段时间。
+- en: maybe a few hundred million users。 So that's definitely a good problem to have。
+    Once you get there。 first thing that you want to do is profiling。 It might sound
+    obvious。 but practice shows that developers tend to optimize everything。 I think
+    your code base should be similar to ours in a sense that you will be able to find
+    some low hanging fruits。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能有几亿用户。所以这绝对是一个好问题。一旦你达到这个目标，首先要做的就是分析性能。听起来很明显，但实践表明，开发者往往会优化一切。我认为你的代码库在某种程度上应该和我们相似，你会找到一些容易解决的问题。
+- en: That you will be able to optimize and reclaim massive amount of CPU。 And for
+    optimizations。 you can use multiple tools， but we recommend you to consider Python。
+    And the reason is。 it will help you to avoid massive code rewrite。 It also allows
+    you to gradually optimize your code。 So you can start with compiling existing
+    code， then adding some types， then adding even more types。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以优化并回收大量的CPU资源。对于优化，你可以使用多种工具，但我们建议你考虑Python。原因是，这将帮助你避免大规模重写代码。它还允许你逐步优化代码。因此，你可以从编译现有代码开始，然后添加一些类型，接着再添加更多类型。
+- en: And so it will preserve Python syntax。 So you don't have to learn new language。
+    That's basically Python just with types and maybe a few more weird constructions。
+    And last but not least， it will preserve existing runtime。 So you will be able
+    to keep using C Python and no changes in infrastructure are required。 Okay。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样可以保留Python语法。因此，你不必学习新的语言。基本上，这就是带有类型的Python，也许还有一些奇怪的构造。最后但同样重要的是，它将保留现有的运行时。因此，你将能够继续使用C
+    Python，无需对基础设施进行更改。好的。
+- en: that's probably it。 You can go to cyton。org and check the documentation。 It's
+    pretty good。 And I'm not sure why I put Instagram reference here， but go to instagram。com。
+    This is it。 Questions？
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能就是了。你可以访问cyton.org并查看文档。文档做得不错。我不确定为什么我在这里放了Instagram的链接，但可以去instagram.com。这就是了。有什么问题吗？
+- en: Yeah， please。 So I went to an earlier talk about type annotations in C Python。
+    And I was wondering if there's anybody thinking about making it so that when you
+    do that。 you automatically get these kinds of benefits。 Are there new projects
+    like them？ So first of all。 cyton is a good citizen。 So as I mentioned， it supports
+    almost all features。 It's slightly behind。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是的，请。于是我参加了一个关于C Python中类型注解的早期讲座。我在想是否有人考虑过这样做，当你这样做时，你会自动获得这些好处。是否有像这样的新项目？首先，cyton是一个好公民。正如我提到的，它支持几乎所有功能。虽然稍微滞后。
+- en: but it supports all features that normal Python has。 But now it will just ignore
+    all type annotations that you provided。 So the reason is that two type systems，
+    myPY type system and cyton type systems are not very compatible。 And they were
+    designed for different reasons。 So cyton type system is designed more for optimization。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但它支持正常Python的所有功能。但现在它会忽略你提供的所有类型注解。原因是两个类型系统，myPY类型系统和cyton类型系统并不太兼容。它们是出于不同的原因设计的。因此，cyton类型系统更多是为优化而设计。
+- en: basically for workflow and to map to more primitive types。 While myPY type system
+    is designed for different reasons。 it's more for developer velocity and to keep，
+    you know better than me， probably。 So and types that myPY system has right now，
+    they're not very convertible。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基本上是为了工作流程并映射到更基本的类型。虽然myPY类型系统是出于不同的原因设计的，更偏向于开发者的效率，让你知道你可能比我更清楚。所以myPY系统现在的类型并不是很可转换。
+- en: And there's not much that cyton can use from it。 For example， list int。 Of course。
+    we can safely assume that it's a list， but we cannot take a lot of advantage of
+    this list of integers。 Or for example， if you put iterable int， cyton doesn't
+    actually need to do that。 If you in your function iterate through that object。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且cyton从中可以利用的东西并不多。例如，list int。当然，我们可以安全地假设这是一个列表，但我们不能充分利用这个整数列表。或者例如，如果你放入可迭代的int，cyton实际上不需要这么做。如果在你的函数中遍历那个对象。
+- en: cyton can automatically understand that it's iterable without any type annotations。
+    So you can argue that you can use it for primitive types such as integers and
+    strings。 But even then， it's not quite safe to map Python int to see int because
+    you can， I don't know。 for example， if input is more than 32 bit integer， you'll
+    probably have a bad time。 So right now。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: cyton可以自动理解它是可迭代的，而无需任何类型注解。因此你可以争辩说可以将其用于基本类型，例如整数和字符串。但即便如此，将Python int映射到C
+    int并不是很安全，因为你可能会，嗯，我不知道。例如，如果输入超过32位整数，你可能会遇到麻烦。因此现在来说。
+- en: I don't think there are plans to merge them。 Okay， thank you。 Can cyton release
+    the gill inside of Python？ Yes， that's another feature。 You can actually have
+    fair threads inside of cyton and you can release gill。 And it actually takes care
+    of one trick there is that you cannot work with any Python objects。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我不认为有计划将它们合并。好的，谢谢。cyton可以释放Python中的gill吗？是的，那是另一个特性。实际上，你可以在cyton内部拥有公平的线程，并且可以释放gill。实际上，它解决了一个技巧，那就是你不能与任何Python对象进行工作。
+- en: But actually， cyton provides ways to keep you safe and to explicitly flag you
+    that no。 you cannot mark， you cannot release gill here because we do some stuff
+    with Python objects here。 So yeah， it can release gill。 Does cyton add steps to
+    building or distributing packages or to， like。 a CI toolchain to get it to compile
+    the code？ So when you compile code。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但实际上，cyton提供了保持安全的方法，并明确标记你不可以的地方。你不能在这里释放gill，因为我们在这里处理一些Python对象。所以是的，它可以释放gill。cyton是否在构建或分发包的过程中增加了步骤，或者像CI工具链那样使代码编译？因此，当你编译代码时。
+- en: it will produce a so file that you will be able to use as a normal shared library。
+    or almost the same as it will be a pi file。 And how you distribute your code base
+    to production machines。 that's totally up to you。 So it has nice tools that can
+    simplify compilation， but for example。 we built our own pipeline。 And then you
+    just distribute the objects separately。 Thank you。 Okay。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它将生成一个so文件，你可以像使用普通共享库一样使用它。或者几乎是一样的，它将成为一个pi文件。至于如何将你的代码库分发到生产机器上，这完全取决于你。因此，它有很好的工具可以简化编译，但例如，我们构建了自己的管道。然后你可以单独分发这些对象。谢谢。好的。
+- en: So slightly related was one of your examples was about the Django routing system
+    and compiling that bit。 So how do you deal with compiling just a tiny bit of one
+    library and not the rest of it and how do you ship that？
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以稍微相关的是你提到的一个例子是关于 Django 路由系统和编译那一部分。那么你是如何处理只编译一个库中的一小部分而不是其余部分，并且如何交付它的呢？
+- en: You can compile files。 So we just took one file that inside of that file contained
+    all critical functions that were heavily。 that used to heavily CPU。 Like， basically
+    don't use the pip package for Django anymore。 No， no， no。 We still use Django。
+    On import stage， we just patch one particular file。 Oh， interesting。 So we moved
+    this file to our code base， compiled it and just --， Oh， just that。 Okay。 Cool。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以编译文件。所以我们只取了一个文件，这个文件包含了所有重度使用的关键函数。基本上，不再使用 Django 的 pip 包。没有，没有，我们仍然在使用
+    Django。在导入阶段，我们只修补一个特定的文件。哦，有趣。所以我们把这个文件移动到我们的代码库，编译它，然后——哦，就这样。好的。酷。
+- en: Thank you。 We didn't compile whole Django。 I've got a couple of the questions。
+    Do you know roughly how many engineers you've spent so far on converting things
+    to this Python？
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谢谢。我们没有编译整个 Django。我有几个问题。你大概知道到目前为止有多少工程师在把东西转换成这个 Python 吗？
+- en: Much less than migration to Python 3。 So usually optimization of one particular
+    module takes a few hours。 And then I was also wondering if you could talk a bit
+    about what the biggest problems you ran into were when trying to convert to Python。
+    Like old and stupidity。 So sometimes I assume that my function accepts particular
+    type of arguments。 but it doesn't。 For example， once I assume that it's integer。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 比迁移到 Python 3 少得多。所以通常优化一个特定模块需要几个小时。我也想知道你能否谈谈在尝试转换到 Python 时遇到的最大问题是什么。像旧的问题和愚蠢的问题。所以有时我假设我的函数接受特定类型的参数，但实际上并不是。例如，有一次我假设它是整数。
+- en: but it's actually float and I caused a bad situation with our website。 Yeah。
+    Rather than that， well。 you should be careful with raw pointers， but as I said，
+    you don't actually use it。 We actually use it only a few times， maybe two times。
+    Thanks。 Okay。 Hi。 Thank you。 Great talk。 I had a question about the kind of C
+    extensions that it creates。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但实际上它是浮动类型，我导致了我们网站的一个糟糕情况。是的。除此之外，你应该小心原始指针，但如我所说，你实际上并不使用它。我们实际上只用过几次，也许两次。谢谢。好的。嗨。谢谢。演讲很棒。我有一个关于它创建的
+    C 扩展的问题。
+- en: Is it the C types base C extension or can you also have CFFI based extension
+    that works with other virtual machines？
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是 C 类型基础的 C 扩展，还是你也可以有与其他虚拟机一起工作的 CFFI 基础的扩展？
+- en: So I'm not sure that I'm very capable to answer this question。 but Python by
+    itself is a tool to write extensions。 So can， for example。 can those extensions
+    work with PyPy， for example？ Oh， for PyPy。 Yeah， it has support for PyPy。 Yeah。
+    It has。 But it explicitly added the support。 It's not like。 Yeah。 Thank you。 It
+    has。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我不确定我是否有能力回答这个问题。但是 Python 本身是一个编写扩展的工具。比如说，这些扩展能和 PyPy 一起工作吗？哦，对于 PyPy。是的，它支持
+    PyPy。对，它是有的。但这是明确添加的支持。并不是说……是的。谢谢。它是有的。
+- en: I'm curious why if you did a 3x improvement on the dispatcher。 why wouldn't
+    you just run it on all of Django？ What's the surely some downside？ What's there？
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我很好奇，如果你在调度器上提高了 3 倍的性能，为什么不在整个 Django 上运行？肯定有一些缺点？是什么呢？
+- en: Why don't you run all of Django through Python？ If just one module will get
+    you a bit more improvement。 Okay。 Is there some downside to doing all of it or？
+    Yeah。 That's a really long topic。 If you want。 we can try to fly in。 But first
+    of all， compilation takes a lot of time。 So we usually recompile everything on
+    every， like， or a lot。 And to answer your question。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么不让 Django 完全通过 Python 运行？如果只有一个模块能让你获得更多的改进。好吧，做所有这些有什么缺点吗？是的。这是一个非常长的话题。如果你想，我们可以尝试深入。但首先，编译需要很长时间。所以我们通常在每次，或者很多次时重新编译所有东西。来回答你的问题。
+- en: we didn't have to -- Django doesn't consume much CPU on our machines right now。
+    So it was one particular module that consumed a lot。 So we just compiled that
+    one。 The last thing you didn't talk about that I know exists。 there are a bunch
+    of essentially compiler flags that you can put in。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不需要——Django 在我们的机器上消耗的 CPU 不多。所以只有一个特定模块消耗了很多。所以我们只编译了那个。你没有谈到的最后一件事是，我知道存在的一堆本质上是编译器标志的东西，你可以放进去。
+- en: Are you making use of any of those things？ I mean。 I remember you could turn
+    off type checking and various things and make it much more see-like。 We probably
+    need to check out。 No， I don't remember。 Probably for you。 Again， we can follow
+    up。 Okay。 Thanks for this very heat discussion。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你是否在利用这些东西？我是说。我记得你可以关闭类型检查和各种功能，让它看起来更像是。我们可能需要检查一下。不，我不记得了。可能是为了你。再说，我们可以后续讨论。好的。谢谢你进行如此热烈的讨论。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_18.png)'
+  id: totrans-81
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_18.png)'
+- en: Thanks again。 (applause)。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次感谢。（掌声）。
+- en: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_20.png)'
+  id: totrans-83
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/c5321deb2f5eda5bb669a7f6e804e96b_20.png)'
+- en: (applause)。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: （掌声）。

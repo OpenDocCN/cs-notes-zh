@@ -1,0 +1,750 @@
+- en: P13：J. Henry Hinnefeld - Measuring Model Fairness - PyCon 2019 - leosan - BV1qt411g7JH
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P13：J. Henry Hinnefeld - 衡量模型公平性 - PyCon 2019 - leosan - BV1qt411g7JH
+- en: Hello again everyone。 This talk is measuring model fairness with Henry。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家好。这个演讲是关于与Henry一起衡量模型公平性。
+- en: '![](img/64ca1a582e8d4cb297978c0807fcb406_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/64ca1a582e8d4cb297978c0807fcb406_1.png)'
+- en: Hennifield。 Please give him a warm welcome。 [Applause]， Well thank you。 Hi everyone。
+    My name is Henry Hennifield。 I'm a data scientist at。 Civis Analytics and today
+    I'm going to talk to you about measuring model。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Hennifield。请热烈欢迎他。[掌声]谢谢你。大家好。我叫Henry Hennifield。我是**Civis Analytics**的数据科学家，今天我将和大家讨论衡量模型。
+- en: '![](img/64ca1a582e8d4cb297978c0807fcb406_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/64ca1a582e8d4cb297978c0807fcb406_3.png)'
+- en: fairness。 Before we jump right into it I'll start with an outline of where we're，
+    headed。 I'm going to start by motivating the problem a little bit and the problem。
+    I'm talking about here is specifically measuring model fairness， not model， fairness
+    writ large。 There was a really great talk earlier today about that so。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 公平性。在我们深入探讨之前，我会先简单概述一下我们的方向。我将首先激励这个问题，特别是衡量模型公平性，而不是整体的模型公平性。今天早些时候有一个关于这方面的精彩演讲。
+- en: I encourage you to go find a video for that later if you're interested。 But
+    today。 I'm specifically talking about the problem of measuring the fairness of
+    a， model's predictions。 This is actually a pretty tricky problem so next I'll
+    talk。 through some of the subtleties that make this hard and then talk through
+    a case。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你感兴趣，我鼓励你稍后找个视频来看。但今天，我特别要讨论的是如何衡量模型预测的公平性问题。这实际上是一个相当棘手的问题，接下来我将讨论一些使这个问题复杂的细微差别，然后讲解一个案例。
+- en: study using some real-world data that shows how these subtleties show up in，
+    practice。 Finally I'll talk about some Python tools， some open-source tools you。
+    can use to address these problems in your own work and end with some， concluding
+    remarks。 So at this point I think it's pretty commonly accepted that。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个研究使用了一些现实世界的数据，展示了这些细微差别如何在实践中体现。最后，我将讨论一些Python工具，一些你可以在自己的工作中使用的开源工具，并以一些总结性发言结束。因此，在这一点上，我认为大家普遍接受。
+- en: machine learning models can have a big impact on people's lives。 Things like。
+    credit scoring models can determine whether or not you can buy a home。 Advertising
+    models can affect what kind of job offers you're exposed to， what kind。 of credit
+    products you see。 And models can even affect how long you spend in jail。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 机器学习模型可以对人们的生活产生重大影响。比如，信用评分模型可以决定你是否能够购买房屋。广告模型可以影响你接收到的工作机会类型，以及你看到的信用产品种类。模型甚至可以影响你在监狱中待多久。
+- en: Now as machine learning models have made their way into these really socially。
+    impactful domains a consensus has emerged that it's really important that we。
+    make sure the predictions of these models are fair。 Unfortunately that's kind
+    of。 where the consensus ends because there are many different ways to define，
+    fairness。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，随着机器学习模型进入这些真正具有社会影响力的领域，已经达成共识，确保这些模型的预测是公平的非常重要。不幸的是，达成共识的地方也仅此而已，因为定义公平性的方法有很多种。
+- en: many different ways to measure the fairness of model predictions。 And this。
+    last example is actually a really illustrative case for that so a quick。 show
+    of hands how many of you all have heard of the compass recidivism model， controversy。
+    That's pretty good response。 For those of you who are not familiar。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 衡量模型预测公平性的方式有很多种。而这个最后的例子实际上是一个很有启发性的案例，所以请问一下大家，有多少人听说过**COMPAS**再犯模型的争议？反应不错。对于那些不熟悉的人来说。
+- en: there is a model called compass which is used to predict recidivism so to predict。
+    the likelihood that a person convicted of a crime will go on to。 reoffend when
+    they're released so go on to be convicted of future crimes。 This。 model is used
+    pretty widely across the country in making parole decisions and。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一个名为COMPAS的模型，用于预测再犯，即预测被定罪的人在获释后再次犯罪的可能性。这个模型在全国范围内广泛用于做出假释决定。
+- en: so a little while ago this organization called ProPublica which is an。 independent
+    investigative journalism outfit found out about this and went out。 and collected
+    some data first about the scores that this model was generating and。 second about
+    the actual outcomes so about whether people actually did go on to， recidivate。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不久前，一个名为**ProPublica**的独立调查新闻机构发现了这一点，并收集了一些数据，首先是关于这个模型生成的评分，其次是关于实际结果，即人们是否真的重新犯罪。
+- en: And what they found when they analyzed this data was that the models。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当他们分析这些数据时发现，模型…
+- en: '![](img/64ca1a582e8d4cb297978c0807fcb406_5.png)'
+  id: totrans-14
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/64ca1a582e8d4cb297978c0807fcb406_5.png)'
+- en: error rates were different for people of different races so the chart I have
+    here。 is comparing the false positive rates and the false negative rates for white
+    and。 black defendants so the false positive rate is the the fraction of people
+    that。 the model labeled as high risk but who actually did not go on to reoffend。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不同种族的人群的错误率不同，所以我这里的图表比较了白人被告和黑人被告的假阳性率和假阴性率。假阳性率是模型标记为高风险的但实际上没有再犯罪的人的比例。
+- en: Similarly the false negative rate are the people that the models said had a
+    low。 risk of reoffending but did go on to reoffend and if you look at these error。
+    rates for the compass models well the false positive rate that people falsely。
+    labeled as high risk that error rate is about 24% for white defendants and about。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同样，假阴性率是指模型认为某人有低的再犯罪风险，但实际上他们却再犯了。如果你查看这些错误率，对于 compass 模型，错误的阳性率，即被错误标记为高风险的人群，白人被告的错误率约为
+    24%。
+- en: 45% for black defendants and on the other hand the false negative rate the。
+    people that the model falsely said were at a low risk of reoffending that error。
+    rate is about 48% for white defendants and about 28% for black defendants so。
+    ProPublica went out collected this data did this analysis and on the basis of
+    this。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 黑人被告的真实阳性率为 45%，而另一方面，模型错误地认为有低再犯罪风险的白人被告的错误率约为 48%，黑人被告的错误率约为 28%。因此，ProPublica
+    收集了这些数据，进行了分析，并基于此…
+- en: analysis wrote a report saying this model used in parole decisions is biased。
+    against black defendants seems pretty cut and dried so far right well the。 second
+    half of the story is that the company which makes this model which。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 分析写了一份报告，称在假释决定中使用的该模型对黑人被告存在偏见，似乎到目前为止这是相当明确的。但是故事的后半部分是，制造该模型的公司…
+- en: '![](img/64ca1a582e8d4cb297978c0807fcb406_7.png)'
+  id: totrans-19
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/64ca1a582e8d4cb297978c0807fcb406_7.png)'
+- en: makes this product the company North Point put out a rebuttal where they。 showed
+    that the overall accuracy so the overall error rate or source I'm sorry。 the overall
+    just accuracy of this model is very similar for white defendants and。 black defendants
+    so the overall accuracy is about 63% for both groups so this。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这款产品由北点公司发布，他们提出了反驳，显示该模型的总体准确性（即整体错误率，抱歉，是总体准确性）在白人被告和黑人被告中非常相似，因此总体准确性对于这两个群体约为
+    63%。
+- en: leaves us with a question is this model fair who's right which is the appropriate。
+    way to measure the fairness of this model of this model's predictions intuitively。
+    you might think well let's just satisfy both conditions let's make sure that the。
+    error rates are balanced and let's make sure that the overall accuracy is also。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这给我们留下了一个问题：这个模型公平吗？谁对？哪种方式是衡量这个模型及其预测公平性的适当方法？直觉上，你可能会认为，嗯，干脆满足这两个条件，让错误率保持平衡，并确保总体准确性也…
+- en: balanced unfortunately that's not possible as this controversy was coming out。
+    some academics took a look at the problem and proved mathematically that。 except
+    in very contrived cases cases where for example your model is a hundred。 percent
+    correct it just gives you the right answer every single time except。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可惜这是不可能的，随着这场争论的出现，一些学者查看了这个问题并在数学上证明，除非在非常虚构的案例中，例如你的模型每次都完全正确，才能得到每次都正确的答案。
+- en: in contrived cases like that it's mathematically impossible to satisfy both。
+    of these definitions of fairness at the same time so we're left with this。 question
+    of how do you decide what is an appropriate way to define fairness for。 your machine
+    learning modeling problem how do you how do you define this and how。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这样的虚构案例中，同时满足这两个公平性定义在数学上是不可能的，因此我们面临的问题是，如何为你的机器学习建模问题定义公平性的适当方式，你如何定义这个，以及如何做到。
+- en: do you measure it this is a really tricky problem with a lot of subtleties so。
+    next I'm going to talk through three of these subtleties and how they impact this。
+    problem the first subtlety is that different groups can have different。 ground
+    truth positive rates so to illustrate this with an example say you。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你如何衡量这个问题，这是一个非常棘手的问题，涉及许多细微之处。接下来，我将讨论这三个细微之处及其如何影响这个问题。第一个细微之处是，不同群体可能具有不同的真实阳性率。为了用一个例子来说明，假设你…
+- en: are trying to make a model that predicted diagnoses of breast cancer well。 men
+    and women are diagnosed with breast cancer at very different rates for women。
+    it's approximately one in eight so something like twelve percent over the。 course
+    of a lifetime and for men it's something like one in a thousand so。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 都试图建立一个能很好预测乳腺癌诊断的模型。男性和女性被诊断为乳腺癌的比率差异很大。女性的比率大约为八分之一，终身约为十二个百分点，而男性的比率大约为千分之一，所以。
+- en: point one percent so there is a very different incidence rate a very different。
+    true positive rate in the ground truth between men and women for this type of。
+    problem well this is this makes measuring fairness tricky because certain。 fairness
+    metrics make assumptions about the balance of ground truth between。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 百分之零点一，因此在这种类型的问题中，男性和女性之间的真实阳性率差异很大。这使得衡量公平性变得棘手，因为某些公平性指标对真实情况的平衡做出了假设。
+- en: groups one of these metrics which is very popular one is called disparate impact。
+    and the what in words what disparate impact is measuring is the ratio of the。
+    probability of a positive classification between two different groups so that's。
+    this equation down here the probability that you get a yes or a positive。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 群体中的一个非常流行的指标叫做不同影响，而不同影响所衡量的内容是两组之间正分类概率的比率。所以下面的这个方程是你获得“是”或正面的概率。
+- en: classification for different groups and because this is a ratio you want it
+    to be。 very close to one according to this definition of fairness but if we think。
+    back to our breast cancer modeling problem you can see how this definition。 of
+    failure just falls on its face because the ground truth positive rate is very。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 针对不同群体的分类，因为这是一个比率，你希望它接近于一，根据这种公平性的定义，但如果我们回顾我们的乳腺癌建模问题，你可以看到这个定义的失败显而易见，因为真实阳性率非常。
+- en: different between our two groups and so that conflicts with an assumption that。
+    this fairness metric has baked in so subtlety number one there can be。 legitimate
+    differences in the ground truth positive rate between different。 groups that you're
+    looking at subtlety number two is that you don't know what。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的两个群体之间存在差异，这与该公平性指标所内置的假设相冲突。因此，微妙之处一是不同群体之间可能存在真实阳性率的合法差异。微妙之处二是你不知道什么。
+- en: ground truth is you only know what your data says and your data is a bias。 representation
+    of ground truth there's a quote from the statistician George Box。 that I like
+    a lot which is that all models are wrong some models are useful and I。 think you
+    can kind of paraphrase that into the data context by saying all。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 真实情况是你只能知道你的数据所显示的内容，而你的数据是对真实情况的一个偏见表示。有一句我很喜欢的统计学家乔治·博克斯的名言是“所有模型都是错误的，有些模型是有用的。”我认为你可以将其转化到数据上下文中，换句话说就是所有。
+- en: data sets are biased some data sets are useful so you always are after remember。
+    that your data isn't an exact representation of the real world of ground。 truth
+    data can be non-representative in a couple different ways and one of those。 ways
+    is that it can contain label bias so label bias is when a protected attribute。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据集存在偏差，有些数据集是有用的，所以你总是要记住，你的数据并不是对现实世界或真实情况的精确表示。数据可以以几种不同的方式不具代表性，其中一种方式是它可能包含标签偏差，因此标签偏差是指受保护属性。
+- en: affects the way individuals are assigned labels people from different groups
+    get。 assigned labels differently in your data set as an example of this consider
+    this。 quote from an analysis of school discipline in this paper the authors found。
+    that students from African American and Latino families were more likely than。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 影响个体被赋予标签的方式，不同群体的人在你的数据集中被赋予的标签是不同的。以此为例，考虑一下这篇论文中对学校纪律的分析的引用，作者发现来自非洲裔美国人和拉丁裔家庭的学生比其他学生更有可能被。
+- en: their white peers to receive expulsion or suspension for the similar for similar。
+    problem behavior so if you are using this data set and trying to predict。 student
+    problem behavior but your label was has been suspended then you're working。 with
+    a data set that has label bias because different groups are being assigned。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们的白人同龄人在类似行为问题上更容易被开除或停学。因此，如果你使用这个数据集并试图预测学生的问题行为，而你的标签是“已经被停学”，那么你所处理的数据集就存在标签偏差，因为不同群体被赋予的。
+- en: labels differently this is a problem for measuring fairness because some。 fairness
+    metrics are based on your agreement with the labels and if your。 labels are biased
+    then making sure that your predictions agree with those labels。 is just perpetuating
+    the bias that was in your data set in the first place a。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 标签是不同的。这是一个**衡量公平性**的问题，因为一些公平性指标是基于你与标签的一致性。如果你的标签是有偏见的，那么确保你的预测与这些标签一致仅仅是延续了你数据集中的偏见。
+- en: popular example of one of these metrics is called equal opportunity and equal。
+    opportunity is comparing the true positive rate between different groups so。 this
+    is given that in the data set you are labeled as a one what is the。 probability
+    that the model classifies you as a one and looking at the difference。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些指标的一个流行例子被称为**平等机会**，平等机会是在比较不同群体之间的**真实正率**。因此，假设在数据集中你被标记为1，模型将你分类为1的概率是多少，并查看这个差异。
+- en: in that rate between the two different groups that you care about but again
+    here。 you're optimizing for agreement with these labels and if the process that。
+    generated the labels themselves is biased then all you're doing is。 perpetuating
+    the bias that generated your data in the first place another way your。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在你关心的两个不同群体之间的比例，但再次强调，你在这些标签上优化了一致性。如果生成标签的过程本身是有偏见的，那么你所做的就是**延续**生成你数据的偏见。换句话说，你的。
+- en: data can be non-representative is that it can contain sample bias sample bias
+    is。 when different groups are sampled into your data set in different ways so
+    as an。 example of this consider this quote from an analysis of the NYPD stop-and-frisk。
+    policy and in this analysis they found that people of African and Hispanic。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据可能是**非代表性的**，因为它可能包含样本偏差。样本偏差是指不同群体以不同方式被抽样到你的数据集中。例如，考虑这段关于**纽约警察局停止与盘问**政策的分析中的引用，在这个分析中，他们发现非洲裔和西班牙裔的人。
+- en: descent were stopped more frequently than white people even controlling for。
+    various other factors so if you were trying to build a model on top of this。 data
+    set you would be working with something that had sample bias because。 whether
+    or not a person shows up in your data set in the first place is different。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 被停留的**比例比白人更高**，即使控制了其他各种因素。因此，如果你试图在这个数据集上建立模型，你所处理的就是一个有**样本偏差**的问题，因为一个人是否出现在你的数据集中是不同群体间存在差异的。
+- en: for different groups the sampling process is different for different groups。
+    I think you see where this is going this is a problem for measuring fairness。
+    because some metrics look at classification ratios between groups so here I'll
+    go。 back to disparate impact this was the first metric we talked about the one。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不同群体的抽样过程是不同的。我想你明白这个问题的所在，这对**衡量公平性**是一个问题，因为一些指标查看不同群体之间的**分类比率**。所以在这里，我会回到**不平等待遇**，这是我们讨论的第一个指标。
+- en: that's comparing the ratio of the positive classification between groups well
+    if。 you're sampling the groups differently than the things that you're comparing
+    in。 this ratio is not an apples-to-apples comparison if you're sampling for。 example
+    only high-risk individuals in one group but then an entire population。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是比较不同群体之间的**正分类比率**。如果你以不同的方式抽样这些群体，那么你比较的东西在这个比率中就不是一种**公正的比较**。例如，如果你只在一个群体中抽样高风险个体，而在另一个群体中则是整个群体。
+- en: uniformly in another group when you do that ratio you're not getting an accurate。
+    assessment of how your model is treating those different groups because the。 populations
+    aren't sampled the same way it's not an apples-to-apples comparison so。 to recap
+    so far subtlety number one there can be legitimate differences in the。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在另一个群体中，当你做这种比率时，你并没有得到一个准确的评估，**你的模型如何对待这些不同的群体**，因为这些群体的人口并没有以相同的方式被抽样，这不是一种**公正的比较**。所以到目前为止，总结一下，细微之处一是可能存在**合法的差异**。
+- en: ground truth positive rate between classes sample number two your data is a。
+    biased representation of ground truth subtlety number three is that the。 consequences
+    of your model matter I can see an argument where if your model is。 punitive so
+    the consequences of your model is negative it's handing out。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类别之间的真实正率样本数量两个，你的数据是一个**偏差的真实代表**。细微之三是你模型的**后果**很重要。我可以看到一个论点，即如果你的模型是惩罚性的，那么模型的后果是负面的，它是随机分配的。
+- en: something like more jail time then you might care more about false positives
+    you。 might care more about the cases where your model is assigning someone a。
+    punishment that they don't deserve on the flip side if your model is assistive
+    if。 your model is handing out a benefit to people who need it I can see an argument。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像更多的监禁时间一样，你可能更关心误报，你可能更在意你的模型将某人判处不应得的惩罚的情况；相反，如果你的模型是辅助性的，如果你的模型在给予需要帮助的人一些好处，我可以看到一个论点。
+- en: where you care more about false negatives about where your model says a person。
+    doesn't need this benefit but they really do and they aren't getting it as a。
+    consequence I'm not arguing that this is the only way to think about assisted。
+    assistive and punitive models I'm just saying you have to think about these。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你更关心假阴性，即你的模型说某人不需要这种好处，但他们实际上需要，而他们未能获得这项好处的后果。我并不是说这是思考辅助性和惩罚性模型的唯一方式，我只是说你必须考虑这些问题。
+- en: questions this takes me to what is actually the main point of this talk if。
+    you don't remember anything else from this this is what I want you to come away。
+    with you can't math your way out of having to think about fairness you still。
+    need a human person to think about the ethical implications of your model of the。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这让我想到这个演讲的主要观点，如果你从中不记得其他任何东西，这就是我希望你记住的，你不能仅仅依靠数学来逃避思考公平性，你仍然需要一个人来考虑模型的伦理影响。
+- en: tool that you're building when machine learning and this kind of modeling。 approach
+    first started being applied to these different types of domains at the。 beginning
+    there was kind of a common impulse to think well models are just。 math so they
+    must be fair you know it's just it's just numbers it's just。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当机器学习和这类建模开始应用于不同类型的领域时，你所构建的工具。起初，有一种共同的冲动认为模型就是数学，所以它们一定是公平的，你知道的，这仅仅是数字，仅此而已。
+- en: algorithms it's math of course it's fair at this point I think that attitude
+    is。 pretty thoroughly debunked but there's a temptation to take the same kind
+    of。 reasoning and apply it just one step farther down the modeling chain it's
+    not。 models are math so they must be fair it's I'm gonna add this extra constraint
+    to。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 算法是数学，当然是公平的，在这一点上，我认为这种态度已经被彻底驳斥，但有一种诱惑是将同样的推理应用于建模链中的下一步，模型是数学，所以它们必须是公平的，我将添加这个额外的约束。
+- en: my math and it will automatically be fair and that's still not automatically。
+    true you need a human person thinking about what does fairness mean in my。 context
+    what does it mean what are the consequences you need that person doing。 that thinking
+    before you can say this constraint makes my model fair so these。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将自动公平，但这仍然不是自动成立的，你需要一个人来思考在我的背景下公平意味着什么，意味着什么，后果是什么，你需要那个人在你能说这个约束使我的模型公平之前进行思考。
+- en: are some of the ways it can be tricky so far this has all been kind of a。 theoretical
+    so next I'm gonna walk through a case study that uses some real。 world data from
+    once from one of civics's consulting engagements to show how these。 kind of effects
+    can show up in practice so the way this this case study is set up。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，这些方法可能很棘手，这一切都是理论性的，接下来我将通过一个案例研究，使用来自公民咨询项目的真实世界数据，展示这些效果如何在实践中显现，所以这个案例研究的设置方式是。
+- en: is we start with some real-world data from one of our consulting engagements
+    the。 the features we have here are mostly demographic things and like socio。 economic
+    status indicators and the outcome in the original raw data set is。 the probability
+    that a person will sign up for the services of a state agency so。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们从一次咨询项目中开始使用一些现实世界的数据，这里有的特征主要是人口统计信息和社会经济状态指标，而原始数据集中结果是一个人注册国家机构服务的概率。
+- en: each row in the data set is a person and the outcome is the likelihood they
+    sign。 up for this agency and we're going to investigate racial bias so look at。
+    fairness for white people versus black people in this data set and the way we're。
+    going to proceed is we're going to generate hypothetical worlds that match。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据集中的每一行都是一个人，结果是他们注册该机构的可能性，我们将调查种族偏见，因此关注这个数据集中白人和黑人之间的公平性，接下来的方式是生成匹配我数学的假设世界。
+- en: these different subtleties I've been talking about so we'll generate a。 hypothetical
+    world where ground truth is balanced and another hypothetical world。 where ground
+    truth isn't balanced to make the ground truth balanced we take only。 the white
+    people in the original data set and then randomly reassign race。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我一直在讨论的这些不同细微之处，因此我们将生成一个基础真实值平衡的假设世界和一个基础真实值不平衡的假设世界。为了使基础真实值平衡，我们只取原始数据集中的白人，然后随机重新分配种族。
+- en: labels so in that hypothetical world ground truth is totally balanced we also。
+    take the original data set where white people were much more likely to sign up。
+    for the services of this agency as a hypothetical world where ground truth is。
+    not balanced so remember this is subtlety number one ground truth isn't always。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在那个假设世界中，基础真实值是完全平衡的，我们还取了原始数据集，其中白人更可能注册这个机构的服务，作为基础真实值不平衡的假设世界。所以请记住，这是第一种细微之处，基础真实值并不总是。
+- en: balanced subtlety number two was that your data can be a biased representation。
+    of ground truth so within each of these hypothetical worlds that we've generated。
+    we're going to generate some new data sets where we inject known types of。 these
+    different biases so for example we generate a data set where we inject。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 平衡的细微之处是，您的数据可能是基础真实值的偏见表现。因此，在我们生成的每个假设世界中，我们将生成一些新的数据集，注入已知类型的不同偏见。例如，我们生成一个注入这些不同偏见的数据集。
+- en: sampling bias by preferentially sampling white people and black people。 differently
+    from that hypothetical world so we sample white people with a high。 score with
+    a high likelihood sample white people with a low score with a low。 likelihood
+    and then sample black people uniformly so by this by this process。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过优先抽样白人和黑人来引入抽样偏见。与那个假设世界不同，我们对白人进行高得分、高可能性抽样，对低得分的白人进行低可能性抽样，然后对黑人进行均匀抽样，因此通过这个过程。
+- en: we're generating a data set that we know has sample bias and similarly we can
+    do。 a related kind of thing where we take those original probabilities and turn。
+    them into binary labels but we do that differently for the different groups so。
+    this way we introduce label bias so we use a threshold of point three for white。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们正在生成一个我们知道存在抽样偏见的数据集，同样，我们可以做一种相关的事情，我们将这些原始概率转化为二元标签，但我们对不同组的处理方式有所不同。因此，我们引入了标签偏见，因此我们对白人使用0.3的阈值。
+- en: people and a threshold of point seven for white people so at this point we have。
+    two hypothetical worlds one where ground truth is balanced one where it's not
+    and。 we have a number of different data sets where we know there's different types
+    of。 bias in the data set then what we do is we train models on those different
+    data。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 人和白人的阈值为0.7，因此在这一点上我们有两个假设世界，一个是基础真实值是平衡的，一个不是，我们有一些不同的数据集，知道其中存在不同类型的偏见，然后我们在这些不同数据标签上训练模型。
+- en: sets in those hypothetical worlds and then apply the two fairness metrics I've。
+    been talking about so far disparate impact which is that ratio one and equal。
+    opportunity which is that difference one we apply those two metrics two models。
+    trained on these different data sets and see what the fairness metrics tell us
+    so。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在那些假设世界中应用这两种公平性指标，我一直在讨论的不同影响，即比率1，以及机会平等，即差异1。我们将这两个指标应用于在这些不同数据集上训练的模型，并看看公平性指标告诉我们的信息。
+- en: first when ground truth is balanced this is the hypothetical world where ground。
+    truth is totally balanced things look pretty good so to explain this figure I。
+    have on can you say my arrow yeah on the left over here is disparate impact so。
+    this is the ratio one so that means a value close to one indicates no measured。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，当基础真实值平衡时，这是一个假设世界，基础真实值完全平衡，情况看起来相当不错。为了说明这个图，我有……能否说一下我的箭头？左侧是不同影响，所以这是比率1，这意味着接近1的值表示没有测量到的。
+- en: unfairness over here on the right is equal opportunity this is the difference
+    one。 so valued close to zero means no measured unfairness and then the different
+    bars。 are different data sets that we generated so on the far left is one where
+    we。 haven't done either of these bias injecting processes then the next one is。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 右侧的不公平性等于机会平等，这就是它们之间的区别。因此，接近零的值意味着没有测量到的不公平，然后不同的条形图代表我们生成的不同数据集。最左侧的是一个我们尚未进行这两种偏见注入过程的情况，然后下一个是。
+- en: where we injected sample bias where we injected label bias and where we injected。
+    both types of bias and so what you can see here is that both of these metrics。
+    measure no unfairness in the case where we haven't added bias to the data set
+    and。 as we start adding these different types of bias into the data set the metrics。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们注入了样本偏差、标签偏差，以及其他偏差。因此，你可以看到这两个指标在未向数据集中添加偏差时均未测量到不公平性。而当我们开始向数据集中添加这些不同类型的偏差时，指标。
+- en: report more measured unfairness so so far so good the metrics are doing what
+    we。 want the situation is a lot less rosy in the hypothetical world where ground。
+    truth is imbalanced so here we're saying this is a hypothetical world where。 there's
+    a legitimate difference between different groups think back to the breast。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 报告更多的测量不公平性，目前为止，一切良好，指标正在做我们想要的事情，但在假设的情况下，真实情况是不平衡的，所以在这里我们说这是一个假设的世界，不同组之间存在合法差异，想想乳腺癌的例子。
+- en: cancer example and now these are the the same plots the same interpretation
+    so a。 value of one over here on the left plot means no measured unfairness a value
+    of。 zero over here on the right plot means no measured unfairness now both of
+    these。 metrics are detecting significant unfairness even in the case where our
+    data is。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在这些是相同的图表和解释，因此左侧图上的值为一表示没有测量到不公平性，而右侧图上的值为零也表示没有测量到不公平性。现在这两个指标甚至在我们的数据不平衡的情况下都检测到了显著的不公平性。
+- en: totally represented of the real world we haven't injected any of these biases
+    our。 data is just the real world but these metrics are telling us that our model
+    is。 very very unfair and also you'll notice the label bias this is when different。
+    labels are assigned different labels differently is very hard to detect and。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们并未注入任何偏见，我们的数据仅仅是现实世界，但这些指标告诉我们我们的模型非常不公平。此外，你还会注意到标签偏差，即不同标签被分配时的差异，这很难被检测到。
+- en: that's because in this case where ground truth is imbalanced it's really hard
+    to。 tease apart where differences and labels are between biased data generating。
+    process and just the ground truth so the point I want you to take away from this。
+    case study is that it's really hard to interpret these fairness measures in a。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是因为在真实情况不平衡的情况下，很难理清标签之间的差异，偏见的数据生成过程和真实情况之间的区别。因此，我希望你从这个案例研究中了解到的是，在完全代表真实世界的情况下，很难解释这些公平性度量。
+- en: vacuum if you are doing this kind of analysis if you are trying to measure。
+    the fairness of your models predictions you don't get all four of these bars or。
+    all eight of these bars you don't get to see like well this is what it would look。
+    like in this case this is what it would look like in this case you just get one。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你正在进行这种分析，尝试测量模型预测的公平性，你不会看到所有四个条形或所有八个条形，你只能看到一个。
+- en: of these numbers and you have to interpret that number by thinking about。 the
+    world you're trying to model and the process that generated your data you have。
+    to think about is ground truth balanced in this problem I'm trying to model you。
+    have to think about where did my data come from is it possible that the labels。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你需要通过思考你试图建模的世界以及生成你数据的过程来解释这些数字。你需要思考在我试图建模的问题中，真实情况是否平衡。你还要考虑我的数据来源是什么，标签是否可能以偏见的方式生成，采样是否在这两个组之间存在差异。
+- en: are being generated in a biased way is it possible that the sampling is different。
+    between these two groups you have to think about all of these questions when you。
+    go to interpret the numbers of these that these fairness metrics generate for
+    you。 so that's kind of how this works in practice next I'm gonna give you a couple。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你去解释这些公平性指标生成的数字时，必须思考所有这些问题。这就是实践中的运作方式。接下来，我将给你几个。
+- en: tools from the Python ecosystem that you can use to do these kind of。 measurements
+    to apply to you know measure the fairness of your predictions。 the first of this
+    is called equitas this is a tool out of the University of。 Chicago it's a Python
+    library and also a web front-end and the way it works is you。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来自Python生态系统的工具可用于进行这些测量，以评估预测的公平性。第一个工具叫做**Equitas**，这是芝加哥大学开发的一个Python库，同时还有一个网页前端，它的工作方式是你。
+- en: provide some data within that data you select what the protected group is so
+    if。 you're interested in looking at race or gender or age or disability status
+    something。 like that then you select which fairness metric is appropriate for
+    your context。 which metric makes sense for the problem that you're working on
+    and then the tool。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提供一些数据，在这些数据中选择受保护群体，如果你对种族、性别、年龄或残疾状态等感兴趣，那么你需要选择适合你情境的公平性指标。哪个指标对你正在解决的问题有意义，然后这个工具。
+- en: will go off and tell you according to the data that you provided and the model。
+    scores you provided and the fairness metrics that you set are relevant how do。
+    those metrics evaluate on your data set pros of this tool is that it's easy to
+    use。 the con is that it comes with a non-standard license so it's from University。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它会根据你提供的数据、你提供的模型评分和你设定的相关公平性指标告诉你，这些指标在你的数据集上如何评估。这个工具的优点是易于使用，缺点是它带有非标准许可，因此来自某大学。
+- en: of Chicago it has an academic license which isn't one of the standard MIT GPO。
+    whatever another tool comes from IBM and this is called the AI Fairness 360。 open-source
+    toolkit the pro here is it's very comprehensive it has implementations。 of many
+    many different fairness metrics along with lots of documentation。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 芝加哥大学的这个工具有学术许可，这不是标准的MIT GPO。另一个工具来自IBM，称为AI Fairness 360开源工具包，优点是非常全面，实施了许多不同的公平性指标，并附有大量文档。
+- en: tutorials Jupiter notebooks that will walk you through the use of them the con
+    is。 that it's probably more comprehensive than you need there is a ton of stuff
+    in。 here also implementations of some research papers and it also comes with。
+    lots of dependencies so if you're trying to bundle this into a production。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 教程Jupyter笔记本将指导你如何使用它们，缺点是它可能比你所需的更全面，这里有大量的内容，还有一些研究论文的实现，也附带很多依赖项，因此如果你试图将其打包到生产环境中。
+- en: environment it might be a heavier import than you want and finally another class。
+    of tools are things that you can use to interpret models I'll mention these in。
+    passing because they're a whole nother topic and I don't have time to go into。
+    them here but if you're interested in understanding why a model is making a。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能会带来比你想要的更大的影响，最后，另一类工具是你可以用来解释模型的工具，我将在此稍微提及，因为这是另一个主题，我没有时间详细讲述，但如果你对理解模型为何做出某种预测感兴趣。
+- en: particular prediction I suggest you look into these tools lime and chap so。
+    finally some concluding thoughts there's no one-size-fits-all solution to this。
+    problem other than think hard about your inputs and your outputs think hard about。
+    the world you're trying to model about the problem you're trying to model think。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于特定的预测，我建议你查看这些工具lime和chap。最后一些总结性思考，这个问题没有一刀切的解决方案，唯一的建议是认真考虑你的输入和输出，认真思考你试图建模的世界和问题。
+- en: hard about the process that's generating the data that you're using and then
+    think。 hard about the consequences of your model downstream where are these scores。
+    going what kind of decisions are being made based on the output of this tool。
+    that you're building these metrics can help and others but you have to use them。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 深入思考生成你所用数据的过程，然后认真思考模型下游的后果，这些评分将去往何处，基于你构建的这个工具的输出，做出什么样的决策。这些指标可以帮助你和其他人，但你必须使用它们。
+- en: carefully second use a diverse team to create these models and do this thinking。
+    throughout the course of this talk I've tried to emphasize how important it is。
+    to have a human person doing this kind of thinking but if all the people doing。
+    that thinking come from the same background the same social context the。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其次，使用多样化的团队来创建这些模型并进行思考。在整个讲座中，我试图强调，进行这种思考的人类的重要性，但如果所有参与思考的人来自相同的背景和社会环境。
+- en: same lived experiences then you're gonna have blind spots so when you're doing。
+    this kind of ethical inspection of your models do that with a diverse team so
+    you。 have different perspectives on on the question and finally just know your
+    data。 and think about your consequences I'll leave you with this quote from。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果有相同的生活经历，那么你将会有盲点。因此，在对你的模型进行这种道德检查时，最好有一个多样化的团队，以便你对问题有不同的视角。最后，了解你的数据并考虑其后果，我将以这句话结束。
+- en: Cathy O'Neill's book weapons of mass destruction about how it's the job of all。
+    of us who build these kind of models and build these kind of tools to do this。
+    ethical introspection you know your your data is not the truth and even if it。
+    were the truth is it the kind of truth that you want to see in the world that's。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 凯西·奥尼尔的书《大规模毁灭武器》探讨了我们所有人都有责任，构建这种模型和工具，进行伦理反思。你知道，你的数据并不是真相，即使它是，是真相吗？你希望在这个世界上看到的那种真相？
+- en: a deeply human question and you really need people thinking about it thank you。
+    we have about five minutes left I'm happy to take questions if people want to。
+    step up and I'll also be up in the front if we get cut off for time。 I have a
+    question so basic like you seem like a very civic-minded person and I。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个深具人性的问题，你真的需要人们对此进行思考，谢谢。我们还有大约五分钟的时间，如果有人想问问题，我很乐意接受。若因时间原因被打断，我也会在前面。
+- en: was just wondering how do you deal with push by so first of all have you ever。
+    experienced like pushback in your workplace when you kind of say that like。 all
+    right you know we need to think about this fairness and then you get kind。 of
+    the reaction yeah well you know you know math is fair it's objective this。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我有一个问题，基本上你看起来是个非常关心公共事务的人，我只是想知道，你如何应对反对意见？首先，你是否曾在工作场所经历过反对意见，当你说“我们需要考虑公平”时，得到的反应是“数学是公平的，它是客观的”。
+- en: isn't really the place for politics and secondly so first of all have you。 encountered
+    that and secondly how do you respond to that to your first point I'm。 fortunate
+    to work at a place where I think these kind of ideas have a lot of。 currency so
+    I don't get a lot of institutional pushback on just like。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 政治并不适合这个场合。首先，您是否遇到过这种情况，其次，您如何回应？对于你的第一个观点，我很幸运能在一个这样的地方工作，在这里，这种想法是有价值的，因此我在这种问题上没有很多机构反对。
+- en: raising the issue in the first place as to how I would address it I think there。
+    there are a couple different tax you can take one you can try and take an。 education
+    type tack where if someone does come in with the perspective the。 models are just
+    math of course they're fair then you can try to kind of。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于如何提出这一问题，我认为可以采取几种不同的方法。你可以尝试采取教育的方式，如果有人持“模型就是数学，当然是公平的”这样的观点，你可以尝试去。
+- en: present some of this kind of reasoning to say well that's actually not quite。
+    accurate and try to educate whatever stakeholder is pushing back if it's a。 case
+    where people understand the problem but don't want to like make the profit。 sacrifice
+    that's just a much harder kind of interpersonal corporate dynamics kind。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以提出这种推理，说明这其实并不准确，并试图教育任何抵制的利益相关者。如果人们理解问题，但不想做出利润上的牺牲，那就涉及到更复杂的人际和公司动态。
+- en: of problem and the best I can tell you is that you just have to advocate for
+    it。 thank you that was a really fucking awesome talk thank you thank you on the。
+    right side given the issues with ground truth， ground truth rates being different
+    depending on what sort of what sort of。 labels you're looking at is it possible
+    to normalize them while possibly while。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 问题的关键是，你只能为其辩护。谢谢你，那真是一次非常棒的演讲，谢谢你，谢谢你。考虑到与真实情况有关的问题，真实情况的比例取决于你所查看的标签类型，是否有可能在某种程度上对其进行标准化？
+- en: possibly controlling for any sort of sampling bias there definitely approaches。
+    you can take in that direction so there's actually a pretty substantial body of。
+    like academic literature around how you can do this kind of rebalancing data。
+    sets or rewading data sets to try to remove some of these issues I think。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在控制任何采样偏差方面，确实有一些可以采取的方式。因此，实际上有相当 substantial 的学术文献，讨论如何进行这种数据集的再平衡或重新加权，以试图消除一些问题。
+- en: there's promising work in that direction but with the caveat that you。 really
+    have to do this thinking ahead of time you can't throw your data set into。 a algorithm
+    that like translates it in such a way that now everything is。 independent of gender
+    or something without thinking ahead of time about the。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个方向上有一些有希望的工作，但前提是你真的必须提前考虑这个问题。你不能把数据集投入一个算法中，然后让一切与性别无关，而不事先考虑这个问题。
+- en: problem you're trying to model and whether that kind of approach makes sense。
+    so short answer yes there are mathematical approaches in that direction。 but you
+    have to use them carefully thank you that answer your question okay。 how does
+    compass compared to just human judgment I mean I presume compass is。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你试图建模的问题，以及这种方法是否有意义。所以简短的回答是，是的，确实有朝着那个方向的数学方法，但你必须小心使用它们，谢谢，能回答你的问题吗？好的，“Compass”与单纯的人类判断相比如何？我想“Compass”是。
+- en: replacing human judgment in these matters I think compass is one element that。
+    judges use in making their decisions I don't know offhand of comparison I can。
+    give you of like the decisions judges make with and without the compass input。
+    that's a good question but I don't have a good answer for you so you mentioned
+    a。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这些问题上替代人类判断，我认为“Compass”是法官在做出决定时使用的一个元素。我不太清楚可以与法官在有和没有“Compass”输入的情况下做出的决定进行比较。这个问题很好，但我没有好的答案。你提到一个。
+- en: couple of times that you need a human to consider this equation and consider。
+    possible biases and how to manipulate or how to how to work with your data in。
+    the in light of that I'm curious if you like there isn't a formula for that I'm。
+    curious if there are resources you know of that provide something in the。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有几次你需要人类考虑这个方程，并考虑可能的偏见，以及如何操纵或如何处理你的数据。对此我很好奇，因为没有一个公式，我好奇你知道的资源是否提供类似的内容。
+- en: direction of a formula or at least a starting place where people for people。
+    for issues that people should consider when approaching these problems so I'm。
+    not familiar with this tool myself but the earlier fairness talk today mentioned。
+    this Dion checklist which was presented as like a checklist for ethical。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个公式的方向，或者至少是一个起点，让人们考虑在处理这些问题时应该注意的问题。因此，我自己对这个工具并不熟悉，但今天早些时候的公平性演讲提到了这个“Dion清单”，被介绍为一个伦理检查清单。
+- en: questions when you're building a model I'm a little hesitant to recommend it。
+    having not read it myself but that sounds like something in the direction。 of
+    what you're asking about is that fair yeah okay I think we're about at the。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在构建模型时提问，我有点犹豫推荐它，因为我自己没有读过，但这听起来像是与你所问的问题相关的方向，这样说公平吗？好的，我想我们大约到了。
+- en: '![](img/64ca1a582e8d4cb297978c0807fcb406_9.png)'
+  id: totrans-93
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/64ca1a582e8d4cb297978c0807fcb406_9.png)'
+- en: end of time but I'm happy to stand up front and keep taking questions so thank。
+    you for your attention， (applause)， (applause)。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 时间的尽头，我很高兴能站在前面继续回答问题，感谢大家的关注，（掌声），（掌声）。
+- en: '![](img/64ca1a582e8d4cb297978c0807fcb406_11.png)'
+  id: totrans-95
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/64ca1a582e8d4cb297978c0807fcb406_11.png)'

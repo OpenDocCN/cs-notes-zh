@@ -1,0 +1,720 @@
+- en: P48：Talk - Juan Gonzalez_ Improving App Performance with Snapshots - VikingDen7
+    - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P48：演讲 - 胡安·冈萨雷斯_通过快照提高应用性能 - VikingDen7 - BV1f8411Y7cP
+- en: And thank you very much for coming to the last set of sessions， actually it's
+    the last。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非常感谢大家参加最后一组会议，实际上是最后一场。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_1.png)'
+- en: session for the day。 Our presenter today will be Juan Gonzalez I think， right
+    Juan Gonzalez。 And the title of his talk is Improving App Performance with Snapshots。
+    All your fun。 Hey everyone。 thank you so much for being here， my name is Juan
+    and I'm here to talk。 to you about improving your app performance with Snapshots。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 今天的会议是为大家准备的。我们的演讲者是胡安·冈萨雷斯，我没错吧，胡安·冈萨雷斯。他的演讲标题是通过快照提高应用性能。大家好。非常感谢你们的到来，我叫胡安，今天我来跟大家谈谈如何通过快照来提高应用性能。
+- en: I am a staff engineer at CDER and CDER is a digital health startup。 Our mission
+    is to make the patient and billing experience a lot better， a lot smoother and。
+    a lot more transparent。 And a big part of that is making sure that we have a very
+    reliable app。 And if you want to have a reliable app， a big part of that is having
+    an app that performs。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我是 CDER 的员工工程师，CDER 是一家数字健康初创公司。我们的使命是使患者和账单体验更好、更顺畅、更透明。确保我们有一个非常可靠的应用程序是其中的重要部分。如果想要一个可靠的应用程序，那么性能是一个关键因素。
+- en: pretty well。 So this is a very important topic for us。 Now I'll be honest with
+    you。 every application is unique and because every application is。 unique I cannot
+    give to you today one perfect， golden bullet to solve all of your performance。
+    issues。 Every application's performance issues are going to have a different unique
+    solution to， it。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相当不错。所以这是一个对我们非常重要的话题。老实说，每个应用程序都是独特的，因此我今天无法给你一个完美的解决方案来解决所有的性能问题。每个应用程序的性能问题都需要不同的独特解决方案。
+- en: So at best what I can try to do to you is give you some advice from my own anecdotal
+    experience。 and from what I've experienced for a lot of applications that have
+    been started up in。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我能为你做的最好事情就是根据我自己的经验给你一些建议，以及我在很多应用程序启动过程中所经历的事情。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_3.png)'
+  id: totrans-7
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_3.png)'
+- en: a very fast way and are starting to experience scale for the first time， they'll
+    often realize。 that their database is actually their bottleneck。 And if they're
+    not seeing that then it's a good chance that in a few days or a few weeks。 or
+    a few months that they will actually realize that their database is actually now
+    their bottleneck。 And the reason for that is pretty simple。 A lot of applications
+    start off with a single server database model。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当他们以非常快的方式开始体验规模时，他们通常会意识到数据库实际上是瓶颈。如果他们没有意识到，那么在几天、几周或几个月内，他们会发现数据库现在实际上是瓶颈。这很简单，许多应用程序都是以单服务器数据库模型开始的。
+- en: meaning your database， becomes a single point of failure。 And it's just so easy
+    to set up a database that way and it's just also a really good。 idea to start
+    your database that way and not overcomplicate it。 But another reason why is because
+    databases themselves they have tons of I/O that they。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着你的数据库成为了单点故障。这样设置数据库非常简单，这也是一个很好的想法，不要过于复杂化。但是，另一个原因是数据库本身有大量的输入/输出操作。
+- en: have to go through。 And I/O is just a notoriously slow set of operations to
+    deal with。 So it's not uncommon to realize for the first time， hey my application
+    is slow and you realize。 oh wait， it's actually my database。 So today I want to
+    kind of get us to focus on improving your databases performance。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 必须经历的事情。输入/输出操作本身就是 notoriously slow 的操作集。因此，第一次意识到“嘿，我的应用程序很慢”，然后意识到“哦，等一下，实际上是我的数据库。”今天我想让大家关注如何提高数据库的性能。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_5.png)'
+  id: totrans-11
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_5.png)'
+- en: And that's what I kind of want to focus this talk about。 And there's really
+    kind of two different categories for improving your databases performance。 One
+    of them is database scaling。 And there's kind of two different ways you can do
+    that。 One way is vertically scaling your database。 And that's the approach of
+    taking your single database and basically beefing it up。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这正是我想专注的主题。改善数据库性能大致可以分为两类。其中一类是数据库扩展，扩展有两种方式。一种是垂直扩展数据库。这种方法是将你的单一数据库进行增强。
+- en: That could be improving at CPU， increasing at RAM， increasing your databases'
+    disk speed。 That all falls into the category of vertical scaling。 Another way
+    you can do it is horizontal scaling。 Horizontal scaling is the approach of taking
+    your database and basically splitting it up。 You can do that in a few ways。 You
+    can add other databases to handle all the reads in your database or you can split
+    your。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可以通过改善CPU、增加RAM、提高数据库的磁盘速度来实现。这些都属于垂直扩展的范畴。另一种方法是水平扩展。水平扩展是将数据库基本上拆分开来的方法。你可以通过几种方式做到这一点。你可以添加其他数据库来处理你数据库中的所有读取，或者你可以将自己拆分开来。
+- en: database up in ways such that different reads go to different databases， aka
+    database shorting。 But they all fall under the same category of horizontal scaling。
+    And that's basically infrastructure scaling。 But there's another way to do this
+    and it's actually query turning。 So for some of you， you may not know what I mean
+    when I say query turning。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将数据库以不同的方式排列，使得不同的读取请求发送到不同的数据库，也就是数据库分片。但它们都属于水平扩展的同一类别。这基本上就是基础设施扩展。但还有另一种方法来实现这一点，那就是查询优化。所以对于你们中的一些人来说，当我说查询优化时，你可能不知道我是什么意思。
+- en: And what I'm basically talking about here is the process of taking your SQL
+    and basically。 cleaning it up。 So what that means is you're taking your queries
+    and you're finding ways to rewrite them so。 that they are doing the same jobs
+    but doing them in a much more efficient way so that。 you don't have to actually
+    improve your infrastructure of your database and you can actually just。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我在这里所谈论的基本上是处理你的SQL并进行清理的过程。这意味着你正在对查询进行改写，以便它们完成相同的工作，但以更高效的方式进行，这样你就不必实际改善数据库的基础设施，而是可以实际改进你的应用代码。
+- en: improve your application code itself。 And query turning is great but unfortunately
+    it's actually really hard to do。 Surprisingly horizontal scaling and vertical
+    scaling， two complicated tasks themselves have。 many step-by-step instruction
+    guides for how to accomplish them。 And actually nowadays there's tons of tools
+    built into cloud infrastructure or your databases。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查询优化非常好，但不幸的是，这实际上真的很难做。令人惊讶的是，水平扩展和垂直扩展这两个复杂的任务本身都有许多逐步指导的说明。而实际上，现在有许多工具内置于云基础设施或你的数据库中。
+- en: themselves to help you out with this process of vertically scaling or horizontally
+    scaling。 But query tuning on the other hand is not easy。 There's no step-by-step
+    guide for query tuning because every application like I said is unique。 So the
+    issues with an application is the queries are going to be different for every
+    application。 and it's going to require tons of research to figure out what is
+    the issue。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来帮助你进行垂直扩展或水平扩展的过程。但查询优化另一方面并不简单。没有逐步指导的查询优化，因为正如我所说的，每个应用都是独特的。所以应用中的问题是查询对每个应用来说都是不同的，这需要大量的研究才能找出问题所在。
+- en: So it's not an easy task。 But with that said， it's actually quite worth it。
+    Horizontal scaling and vertical scaling that requires you to actually spend more
+    money to。 accomplish the same tasks of improving your database performance whereas
+    query tuning is。 actually a process that actually reduces that infrastructure
+    cost because you're actually。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这并不是一项简单的任务。但话虽如此，这实际上是非常值得的。水平扩展和垂直扩展都需要你花费更多的钱来完成改善数据库性能的相同任务，而查询优化实际上是一个过程，它能够减少基础设施成本，因为你实际上。
+- en: putting less load on your database。 And hopefully also reducing complexity because
+    it could end up with queries themselves that。 are easier to understand but also
+    less of them in general。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 减轻数据库的负担。并希望也能降低复杂性，因为这可能最终会导致查询本身更易于理解，而且总体上也会减少查询的数量。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_7.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_7.png)'
+- en: So query tuning is hard。 We understand that but there's another complex。 there's
+    another complications of this all。 We are at a Python conference so it's easy
+    to guess that applications we're talking about。 here are Python applications。
+    And because they're Python applications if they are dealing with a database they're
+    probably。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以查询优化是困难的。我们理解这一点，但这还有其他复杂性。我们在一个Python会议上，所以很容易猜测我们谈论的应用是Python应用。而且因为它们是Python应用，如果它们正在处理数据库，它们可能。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_9.png)'
+  id: totrans-22
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_9.png)'
+- en: using an ORM and in case you don't know what an ORM is or what it does， an ORM
+    is basically。 a tool to help you deal with your databases operations in a way
+    that is object oriented。 And that allows you to do things such as define all your
+    tables as classes， fetch all the rows。 of table data as objects in memory and
+    also just offer some tactics for joining together。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用ORM，如果你不知道ORM是什么或者它的作用，ORM基本上是一个工具，帮助你以面向对象的方式处理数据库操作。这使你能够定义所有的表作为类，将表中的所有行作为内存中的对象提取出来，并且还提供了一些连接的策略。
+- en: data that are related to each other。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相关数据。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_11.png)'
+  id: totrans-25
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_11.png)'
+- en: And ORMs are great。 They are very popular for a reason。 We use a mess leader
+    but they also make query tuning harder。 And it's kind of hard to explain without
+    giving an example of why。 Sorry， catching a rough here。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ORM非常棒。它们因某种原因而非常受欢迎。我们使用它们来处理很多事务，但它们也使查询调优变得更加困难。没有给出为什么的例子，很难解释这一点。抱歉，让我喘口气。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_13.png)'
+  id: totrans-27
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_13.png)'
+- en: So yeah， ORMs make query tuning harder and I'm going to try to explain this
+    to you by example。 So imagine that you are working for a company and this company
+    has made the perfect restaurant， app。 It's an app that's made for restaurants
+    to download and for eaters that enjoy their times。 that these restaurants to download
+    as well。 And it's supposed to make a perfect little synergize experience for restaurants
+    and consumers alike。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是的，ORM使查询调优变得更加困难，我将尝试通过示例向你解释这一点。想象一下你在一家公司工作，这家公司开发了完美的餐厅应用程序。这个应用是为餐厅下载的，吃货们也可以下载，旨在为餐厅和消费者创造完美的协同体验。
+- en: And you are newly hired site reliability engineer for this company and the company
+    has experienced。 tons of growth。 But unfortunately with that growth they're experiencing
+    tons of database performance problems。 So you come in and you are now becoming
+    the savior to try to fix all these problems。 And you learned that this application
+    is written in Django which is a very popular ORM。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你是这家公司的新聘网站可靠性工程师，这家公司经历了巨大的增长。但不幸的是，随着增长，他们也遇到了大量的数据库性能问题。因此，你进来并成为了试图修复所有这些问题的救世主。你了解到这个应用程序是用Django编写的，而Django是一种非常流行的ORM。
+- en: But unfortunately you are not very familiar with Django。 You do not know yet
+    that Django has some issues that are going to make query tuning harder， for you。
+    So you naively agree to tune these queries in this ORMs code and you run it to
+    three problems。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，你对Django并不熟悉。你还不知道Django存在一些问题，这将使查询调优对你来说更加困难。因此，你天真地同意在这个ORM代码中调优这些查询，并且你遇到了三个问题。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_15.png)'
+  id: totrans-31
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_15.png)'
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_16.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_16.png)'
+- en: along the way。 One of the problems you run into are ORMs code can look very
+    different from SQL that is。 executed by that ORM。 You know， ORMs are basically
+    just translators of Python code to SQL。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个过程中，你遇到的一个问题是，ORM的代码与由该ORM执行的SQL看起来非常不同。你知道，ORM基本上只是将Python代码翻译成SQL的工具。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_18.png)'
+  id: totrans-34
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_18.png)'
+- en: And what you see is not always what you get or to someone who's not experienced
+    at least。 is what can be the experience。 And I'll kind of show you an example
+    of this。 So here on the right this is some Django code that allows me to see every
+    dish that is ordered。 by this customer named Juan。 It looks like very clean Python
+    code maybe。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你所看到的并不总是你所获得的，或者对于那些没有经验的人来说，至少是这样的体验。我将给你展示一个例子。在右侧，这是一些Django代码，允许我查看这个名为Juan的客户所订购的每一道菜。这看起来像是非常干净的Python代码。
+- en: If you're familiar with Django you might know exactly what's going to happen。
+    But if you're not familiar with Django you might be very surprised to see that
+    that Python。 code that you just saw produced this query here which was operating
+    on three different， tables。 four different tables because the Python code itself
+    almost suggested it was。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你熟悉Django，你可能会知道会发生什么。但如果你对Django不熟悉，你可能会非常惊讶地发现，刚才看到的Python代码产生了这个查询，这个查询操作了三个不同的表，甚至四个不同的表，因为Python代码本身几乎暗示了这一点。
+- en: acting on just this dish table。 So that's the first problem you run it to and
+    you find that to be very annoying。 But you start to learn the ins and outs of
+    Django and how it produces SQL。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仅对这道菜的表进行操作。这是你遇到的第一个问题，你发现这非常烦人。但你开始学习Django的方方面面，以及它是如何生成SQL的。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_20.png)'
+  id: totrans-38
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_20.png)'
+- en: But you run it to the second problem as well。 Even after you understand Django
+    you're working in a Python application。 So you start to realize there's another
+    problem here。 The Python code is written in such a way that functions call other
+    functions and those functions。 call other functions and they call them for different
+    reasons。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但你也面临第二个问题。即使在理解 Django 后，你仍在一个 Python 应用程序中工作。所以你开始意识到这里还有另一个问题。Python 代码的书写方式使得函数调用其他函数，而那些函数又调用其他函数，原因各不相同。
+- en: And you're having a hard time understanding exactly when and where these ORMs
+    are actually。 triggering query execution and why。 And what you would really love
+    to see is like a stack trace explaining what exact line of。 code is actually triggering
+    these query executions。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你很难理解这些 ORM 实际上何时何地触发查询执行以及原因。你真正希望看到的是一个堆栈跟踪，解释到底是哪一行代码触发了这些查询执行。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_22.png)'
+  id: totrans-41
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_22.png)'
+- en: So as an example if you're not familiar with Django you might look at this code
+    and wonder。 how many queries are being executed here。 So on the first line you
+    might notice hey there's orders maybe we're dealing with all。 the orders in this
+    table are we executing a query there to grab every object from the， orders table。
+    On the second line you're doing an annotation is that we're running a query。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 举个例子，如果你不熟悉 Django，你可能会看看这段代码，想知道这里执行了多少个查询。在第一行，你可能会注意到“嘿，有订单，也许我们正在处理这个表中的所有订单，我们是否在执行查询以获取订单表中的每个对象。”在第二行，你正在进行注释，表明我们正在运行一个查询。
+- en: Is that we're finally running our first query or is it on the next few lines
+    or is it at， the end。 And if you're familiar with Django you'll probably know
+    right away is actually at the。 very end here。 This is the first and only place
+    where a query is actually executed but then again you may。 not， you may be surprised
+    to see that this is the actual query that gets executed。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们究竟是在这里运行第一个查询，还是在接下来的几行中，或者在最后。如果你熟悉 Django，你可能会立即知道实际上是在这里的最后。这是唯一一个实际执行查询的地方，但你可能会惊讶地发现这就是实际执行的查询。
+- en: It's something very complicated。 But that's really the second problem you start
+    to notice。 You're not sure where and why things are happening because you're not
+    an expert on this。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一件非常复杂的事情。但这真的是你开始注意到的第二个问题。你不确定事情发生的地点和原因，因为你不是这个领域的专家。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_24.png)'
+  id: totrans-45
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_24.png)'
+- en: yet。 And then the final problem really kind of you know really kind of grinds
+    your gears here。 and that's that there's this n plus one queries problem which
+    technically is not unique to。 an orums but can happen in orums much easier than
+    the application that was written in pure， SQL。 And that's because an oracle makes
+    it easy to fetch related objects from another one。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，最后一个问题真的让你感到很烦，这就是有一个 n 加一查询问题，这在技术上并不是独特的，但在 ORM 中发生的可能性远大于用纯 SQL 编写的应用。这是因为
+    Oracle 使从另一个对象中获取相关对象变得容易。
+- en: And unfortunately this can make it extremely easy to accidentally query one
+    table many times。 when you could have actually created it exactly once to fetch
+    all these different objects。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，这可能会让你非常容易地意外多次查询一个表，而实际上你可以只创建一次以获取所有这些不同的对象。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_26.png)'
+  id: totrans-48
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_26.png)'
+- en: And as in a sample here we have some bad code that is trying to get all the
+    orders that。 include addition and code be beef。 And at the end of that once we
+    have all these orders we want to get the customer name for。 each of those orders。
+    Now if you're familiar with Django you might realize this is bad code because
+    what's going。 to happen is you're going to do an additional query for every single
+    order to grab the customer。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，这里有一些坏代码，试图获取所有包括附加和代码为牛肉的订单。在我们拥有所有这些订单之后，我们希望获取每个订单的客户名称。如果你熟悉 Django，你可能会意识到这段代码不好，因为你会为每个订单执行额外的查询以获取客户。
+- en: name on that order。 And to see that in pure SQL here's what happens。 You do
+    one query to get all the code be beef orders and then for each of those orders
+    you're。 going to query the customer table to get the name for the first customer
+    in that order。 and then you're going to get the customer for the second order
+    and then you're going。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于该订单的名称。在纯 SQL 中，这样会发生。你执行一次查询以获取所有的牛肉订单，然后对于每个订单，你将查询客户表以获取该订单中第一个客户的名称。然后你将获取第二个订单的客户，接着你会继续这样做。
+- en: to get the customer for the third order。 So you just set a bunch of unnecessary
+    queries on this same customer table that you could。 have gotten in actually one
+    execution。 And that's a pretty bad problem。 The better code is to select all the
+    customers at once when you're grabbing all the orders， as well。 And that's what
+    using this nice and tactical function on your original query set to select。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了获得第三个订单的客户。所以你在同一个客户表上设置了一堆不必要的查询，实际上你可以只用一次执行就得到。这是个相当糟糕的问题。更好的代码是一次性选择所有客户，同时获取所有订单。这就是在你原始查询集上使用这个不错且战术性函数的原因。
+- en: all the related customers when you grab all the orders。 And that's going to
+    actually produce a very。 it's going to produce a much more performant， query execution
+    where you do actually just one query。 The problem with that is that you have to
+    basically be an expert in Django to know that's。 the case and even still it may
+    not be obvious after the fact that you wrote code that actually。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你获取所有订单时，所有相关客户会被抓取。这实际上会生成一个更高效的查询执行，你实际上只需执行一次查询。问题在于你基本上需要成为 Django 的专家才能知道这是事实，即使如此，事后也可能并不明显你写的代码实际上。
+- en: did this the right way。 So you see this and you think that you might have taken
+    on this task prematurely and you。 kind of just come to the conclusion that query
+    tuning is probably too hard open or。 am you may even think hey maybe the team
+    should just stop using orms altogether and you may。 think that the active query
+    tuning is not a worthwhile endeavor。 It's basically impossible。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们是以正确的方式来做的。所以你看到这一点，可能会觉得自己提前承担了这个任务，并得出结论认为查询调优可能太难了，或者你甚至会想，也许团队应该完全停止使用
+    ORM，你可能会认为主动查询调优不是值得追求的目标。基本上是不可能的。
+- en: You should always just scale your infrastructure and call it a day。 But that's
+    unfortunate because in reality， query tuning is actually， it can actually be。
+    pretty easy。 The problem is that there aren't enough tools to really help this
+    problem。 And that story I just gave to you， it kind of hits very close to home
+    procedure because。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你总是应该扩展你的基础设施，完成这件事。但这很不幸，因为实际上，查询调优实际上可以是相当简单的。问题在于没有足够的工具来真正帮助解决这个问题。刚才我给你的故事，实际上和实际程序非常贴近。
+- en: in 2019 we were experiencing tons of growth and our database was the bottleneck
+    for us。 And we did do infrastructure scaling。 We introduced Ruby replicas。 We
+    scaled our database horizontally。 We beefed up our database， made it stronger
+    vertically。 But we still wanted to find a problem to this query tuning problem。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 2019 年，我们经历了大量增长，而我们的数据库成为了我们的瓶颈。我们确实进行了基础设施扩展。我们引入了 Ruby 副本。我们水平扩展了数据库。我们垂直增强了数据库，使其更强大。但我们仍然想找到解决查询调优问题的办法。
+- en: So one of our models is no mediocrity。 So we didn't want to just settle with
+    the idea of having a non-performant or M code。 We wanted to kind of find an answer
+    for this problem。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们的一个原则是拒绝平庸。因此我们不想仅仅满足于拥有一个性能不佳的 M 代码。我们想找到这个问题的答案。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_28.png)'
+  id: totrans-57
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_28.png)'
+- en: And so we kind of introduced this concept of queries and have shots。 And what
+    we wanted from it was kind of simple。 What we wanted was a way to see every query
+    that we were executing in our M code。 And we also wanted to understand exactly
+    where those queries were executing。 And we also wanted to actually isolate the
+    Python code that was triggering those queries。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们引入了查询和快照的概念。我们想要的其实很简单。我们希望能够看到我们在 M 代码中执行的每个查询。我们也想要了解这些查询到底在哪里执行。我们还想要实际隔离触发这些查询的
+    Python 代码。
+- en: very quickly。 And we wanted to get this info at basically every stage of local
+    development。 And it's important to make that to kind of pause in this one statement
+    here。 There are tons of tools available today where you can actually do query
+    inspection。 A popular one is Django debug toolbar， which lets you do this deep
+    dive of queries that。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望在本地开发的每个阶段都能获得这些信息。值得暂停一下，在这一声明中，有很多工具可以进行查询检查。一个流行的工具是Django调试工具栏，它让你深入分析浏览器页面上执行的查询。
+- en: are being executed on a browser page。 But you have to do everything from a browser。
+    So that's kind of what I mean by you want it to be able to use this at any stage
+    in local。 development。 So it's a terminal in the browser and middleware and tests
+    basically everywhere。 And because we have a model of no mediocrity， no mediocrity，
+    we also wanted this to have。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但你必须从浏览器进行所有操作。这就是我所说的希望能够在本地开发的任何阶段使用它。因此，它是在浏览器中的终端和中间件，以及几乎无处不在的测试。由于我们有一个“不平庸”的模型，我们也希望它有更多功能。
+- en: a very simple and intuitive interface as well。 And what we ended up doing was
+    we created this tool called Snapchat queries。 which is now， today an open source
+    or an query capture。 And I'm going to kind of show you what it looks like。 So
+    it is out of the box a context manager。 What it does is it lets you look at --
+    it lets you capture every query that any block。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们最终创建了一个叫做Snapchat queries的工具，它现在是开源的查询捕获工具。我将向你展示它的样子。因此，它是一个上下文管理器，默认情况下让你查看并捕获任何代码块执行的每个查询。
+- en: of Python code that is using Django or SQLAlchemy is executing。 So on the right
+    here。 all you have to do to use it is run this little snapshot queries， context
+    manager。 And what gets returned back to you is a list of all the queries that
+    were executed。 So on the right here， what I would expect is after this block of
+    code exits， I would。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用Django或SQLAlchemy执行的Python代码。所以在这里，使用它所需做的就是运行这个小的快照查询上下文管理器。返回给你的是执行的所有查询的列表。在这里，我希望在这段代码块退出后，我会得到一个非常简单直观的界面。
+- en: see all the queries that were executed to grab this customer in a one to see
+    the query。 that was executed to create this order for one and to see all the queries
+    that were executed。 to add all these different dishes to his order。 And that's
+    right out of the boxes which you get from this tool。 And that's great as is。 But
+    after we introduced this tool， we also started to enhance it。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查看所有执行的查询，以获取这个客户的所有信息，以及执行的查询以创建该订单，并查看执行的查询以添加所有不同的菜品到他的订单中。这些功能是该工具提供的，非常棒。但在我们引入这个工具后，我们也开始对其进行增强。
+- en: added more features， to it。 And I kind of want to talk to you about the top
+    five features that were added to this because。 I can't go over all of them in
+    probably in time。 So I just want to highlight the top five。 So feature number
+    five is kind of what I described to you。 You get to see every query that is executed。
+    But not just the query itself。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想和你谈谈添加到这个工具的五个主要功能，因为我可能没时间详细讲解所有功能。所以我想强调这五个功能。第五个功能就是我向你描述的功能。你可以看到每个执行的查询，但不仅仅是查询本身。
+- en: You get to see the query SQL which is probably pretty obvious to you all。 You
+    get to also see very quickly all the Python code that was executed to trigger
+    that query。 Sorry。 when I say Python code， I mean the line of Python code that
+    was executed to trigger， that query。 And then you also get to see exactly how
+    long it took to execute that query。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以看到查询的SQL，这对你们来说可能很明显。你还可以非常快速地查看触发该查询的所有Python代码。抱歉，当我说Python代码时，我是指执行触发该查询的那一行Python代码。然后你也能看到执行该查询花费的确切时间。
+- en: Which from my own personal experience when I was in 2019 helping us figure out
+    ways to。 reduce our sites impact on our database， just to use three features alone
+    were extremely。 useful for me as always doing local enhancements to our code to
+    make it a lot faster。 But it's still number five。 So that means that there's four
+    better features than just this alone。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据我在2019年的个人经验，帮助我们找到减少数据库影响的方法，单单使用三个功能对我来说非常有用，因为我总是在进行本地代码优化以提高速度。但这仍然是第五个功能。这意味着还有四个功能比这个更好。
+- en: Number four is right out of the bat when you use this tool， when you have this
+    list of。 queries that are executed， there is a method on this object that lets
+    you display a beautiful。 summary of every query that was executed for you。 And
+    it gets printed to the terminal with nice formatting and also nice coloring to
+    kind。 of just give you a quick snapshot of all the information that is probably
+    going to be relevant。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第四个功能是当你使用这个工具时，执行的查询列表会直接展示。有一个方法可以让你显示每个执行查询的漂亮摘要。它以良好的格式和颜色打印到终端，迅速给你一个可能相关的信息快照。
+- en: to you。 An example of this is on the right here we have an output from this
+    query executed。display。 call。 The first thing you're going to see is the amount
+    of time it took to run this first query。 you're going to see the actual line of
+    Python code that triggered it。 You're going to see the actual code itself that
+    triggered it。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个例子，右侧是从这个查询执行中获得的输出。你首先会看到运行第一个查询所花费的时间，你会看到触发它的实际Python代码行，以及触发它的实际代码。
+- en: And you're going to see the SQL statement printed in a nice formatted way for
+    you。 And that's just out of the box。 It's a pretty great feature。 I use it a ton
+    network when I'm just trying to debug something or trying to figure out。 what's
+    going on with code。 So number four， so there's three better features than just
+    this。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会看到SQL语句以优美的格式打印出来。这是开箱即用的功能，非常棒。我在调试或试图弄清楚代码的运行时使用它很多。因此，第四个功能还有三个更好的功能。
+- en: Number three。 Like I said before， the stack trace is really important if you
+    want to know exactly where。 code is called because knowing where a function that
+    is used throughout your code base is。 not enough if you need to also understand
+    how you got to that path because code is complicated。 code calls other code and
+    that calls code that code calls other code and et cetera， et， cetera。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第三个功能。正如我之前所说，堆栈跟踪非常重要，如果你想确切知道代码是在哪里被调用的，因为知道一个在代码库中使用的函数的位置并不足够，你还需要理解如何到达那个路径，因为代码是复杂的，代码会调用其他代码，进而调用其他代码，依此类推。
+- en: This to me is one of the top features because in the beginning when I just saw
+    the lines。 of code that were being executed to run queries since our code is pretty
+    non -- it's pretty， dry。 Just seeing the code itself wasn't enough。 I had to get
+    a full detail of the entire stack trace where these queries are being executed。
+    to get a full of picture of what was going on。 So I consider this to be the third
+    best feature because it's just us so much for us when we're。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我看来，这是最重要的功能之一，因为一开始我看到的只是执行查询的代码行，我们的代码相当干燥。光是看到代码本身是不够的。我需要获取整个堆栈跟踪的详细信息，以全面了解发生了什么。所以我认为这是第三个最佳功能，因为它对我们来说非常重要。
+- en: trying to optimize our queries themselves。 So not the top feature。 So a better
+    feature than that is this one here。 This is an answer to the N plus one selects
+    problem that I think is pretty neat。 What it does for you is that query executed
+    object that I showed before。 It has a method called similar and what it will do
+    for you is group together all the。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们尝试优化查询本身。这不是顶级功能。比这个更好的功能是这里提到的，这是对N加1选择问题的一个很好的解决方案。它为你做的是，之前提到的查询执行对象有一个名为“similar”的方法，它会将所有相似的查询组合在一起。
+- en: queries that look similar to each other and display them out to you if you want
+    to or。 you can just loop over them。 And what we mean by similar are any queries
+    that have the same SQL besides the parameters。 themselves。 So in this example
+    here from this output that you would see from the top。 you can see that， there
+    are two similar queries that have been detected。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相似的查询会被检测到并展示给你，或者你可以简单地遍历它们。我们所说的相似是指任何除了参数之外SQL相同的查询。在这个例子中，从顶部输出可以看到，检测到有两个相似的查询。
+- en: The first query is similar to the second query because the queries themselves
+    only differ。 on the customer ID。 So for us， in this simple example you just see
+    two queries but for us when we ran this。 in production。 Sorry， when we ran this
+    on our code locally。 we started to see tons of info about queries， that were similar
+    that gave us a lot of insight on potential areas of our code base because。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个查询与第二个查询相似，因为查询本身只在客户 ID 上有所不同。所以对我们来说，在这个简单的例子中你只看到两个查询，但当我们在生产中运行这个时，抱歉，当我们在本地运行这个代码时，我们开始看到很多类似查询的信息，这为我们提供了很多关于我们代码库潜在问题的洞察。
+- en: again you can see the lines of code themselves to try to figure out， hey， this
+    might be a。 place where we're doing the N plus one selects problem and let's figure
+    out a way to fix， it。 And this is the top feature。 It may seem there's not a lot
+    of details here。 I wish I could fit more details on this slide because it's actually
+    quite a lot to unpack， here。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以再次看到代码行，试着弄明白，嘿，这可能是一个地方，我们遇到了 N+1 查询问题，让我们找个方法来解决它。这是最重要的特性。这里似乎没有太多细节。我希望我能在这个幻灯片上放更多的细节，因为实际上这里有很多内容需要
+    unpack。
+- en: So this feature is something that we use all the time at work。 In 2019 when
+    we were improving our apps performance， we were improving the load times of our
+    home。 pages or the pages that customers go to to see all their bills， things of
+    that nature。 We did tons of work using this library to help figure out what was
+    going on but we were。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，这个特性是我们在工作中一直使用的。在 2019 年，当我们改善我们应用的性能时，我们在改善主页的加载时间，或者客户查看所有账单的页面，类似的事情。我们使用这个库进行了大量工作，以帮助我们搞清楚发生了什么，但我们。
+- en: very afraid that this work would eventually undo itself because we can't always
+    be there。 to improve your app， eventually get to stop and you have to get back
+    to do other things。 So we came up with this solution here。 So how many of you
+    are familiar with HTML snapshot testing？
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我非常担心这项工作最终会自我抵消，因为我们不能总是在那里改进你的应用，最终你得停下来，回去做其他事情。所以我们想出了这个解决方案。那么，有多少人熟悉 HTML
+    快照测试？
+- en: Okay， so not a lot of you are。 So let me kind of give a brief explanation of
+    what that is because I'll give a lot of insight。 on what this will do。 So for
+    a lot of apps that render HTML。 it's hard to verify the HTML that's getting output。
+    So a common strategy is to have your tests render the HTML with some specific
+    inputs。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，所以你们中不太多人知道。那么让我简单解释一下这是什么，因为我会给出很多关于这将做什么的洞察。对于许多渲染 HTML 的应用来说，很难验证输出的 HTML。因此，一种常见策略是让你的测试使用一些特定输入来渲染
+    HTML。
+- en: save a snapshot of that HTML to some local file and then on each subsequent
+    test run。 the HTML will be re-rendered and then compared with that snapshot。 If
+    the snapshot changes。 you can see a very quick diff to understand what has changed
+    or。 nothing has changed and if there is a difference it will fail explaining why。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将该 HTML 的快照保存到某个本地文件中，然后在每次后续测试运行中，HTML 将重新渲染，然后与该快照进行比较。如果快照发生变化，你可以看到一个非常快速的差异，以了解发生了什么变化，或者什么都没有变化，如果有差异，它将失败并解释原因。
+- en: And that's called HTML snapshot testing。 It's a very common strategy for front-end
+    development。 And I thankfully have some experience with front-end development
+    and when we were doing， this。 we're dealing with this issue of performance enhancement，
+    we got this idea to capture every。 query in our code that was particularly hot，
+    it had a lot of performance problems。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是所谓的 HTML 快照测试。这是前端开发中一种非常常见的策略。幸运的是，我在前端开发方面有一些经验，当我们在做这件事时，我们面临性能提升的问题，我们想到要捕获我们代码中每一个特别热门的查询，它有很多性能问题。
+- en: Capture those queries to a file， save the output including where those queries
+    were executed。 into that file so that when something changed on that particular
+    hot piece of code， we would。 get a test that failed explaining exactly why with
+    a diff so that the code owners of that。 test would be able to inspect the difference
+    and understand why it changed and give the。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将这些查询捕获到一个文件中，保存输出，包括这些查询执行的位置，放入该文件中，这样当某个热点代码发生变化时，我们会得到一个失败的测试，准确解释原因并显示差异，以便该测试的代码拥有者能够检查差异并理解为何发生变化。
+- en: okay or the thumbs down if there was actually a new， you know， performance problem
+    being。 introduced。 And that's what we call query snapshot testing。 And I call
+    it our top feature because it's a feature that we use the most。 It's a thing that
+    we kind of take for granted that runs every day on our code base， we run。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，如果确实有新的性能问题被引入，就给个差评。这就是我们所称的查询快照测试。我称之为我们的顶级特性，因为这是我们使用最多的特性。这是我们每天在代码库上运行的一个理所当然的事情。
+- en: it in all of our tests and it has made the burden of maintaining quality a lot
+    easier。 so we can sleep at night better because of it。 And that is the query snapshot
+    testing tool that we have at CDER。 It helped us script through 2019 really well。
+    I'm happy to say today we are performing a lot better。 The problem with query
+    tuning seems like a much less daunting task for us。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们所有的测试中，这使得维护质量的负担变得容易得多。因为这个原因，我们晚上可以更安心地睡觉。这就是我们在CDER使用的查询快照测试工具。它帮助我们在2019年非常顺利地进行脚本编写。今天我很高兴地说，我们的表现要好得多。查询调优的问题对我们来说似乎不再是那么令人生畏的任务。
+- en: And we're still obviously dealing with performance issues as we get bigger and
+    bigger。 But this is I think a very big win for us。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随着我们越来越大，我们显然仍在处理性能问题。但我认为这是我们的一大胜利。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_30.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_30.png)'
+- en: And it is available for you to try out。 We have a that URL that QR code there
+    should actually reach through our GitHub page for。 it。 It is very recently open
+    source。 So if you guys want to take a snapshot of that and just take a look at
+    it。 if you want， to improve it， test it out yourself， give us ideas of how we
+    can make it better or give。 us ideas of what tools have done this better if you
+    can find any。 We would love that。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它可以供你尝试。我们有一个URL，那个二维码实际上应该指向我们的GitHub页面。如果你们想要查看它，它最近刚开源。所以如果你们想要拍个快照，看看它，或者想要改进它，自己测试一下，给我们一些意见，告诉我们如何可以做得更好，或者告诉我们有哪些工具做得更好，如果你能找到的话。我们非常欢迎。
+- en: And if you have any questions about CDER as well and you are interested in maybe
+    joining， us。 you can take a look at cedar。com。 And if you scan up your code because
+    you're interested in joining us。 you can see our， careers page and see what is
+    available for us for you to join us。 And that is my talk。 Thank you all for being
+    here。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你对CDER有任何问题，并且有兴趣加入我们，可以查看cedar.com。如果你扫描你的二维码，因为你有兴趣加入我们，你可以看到我们的职业页面，看看有哪些机会可以加入我们。这就是我的演讲。感谢大家的到来。
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_32.png)'
+  id: totrans-88
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_32.png)'
+- en: '[applause]， [applause]。'
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[掌声]，[掌声]。'
+- en: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_34.png)'
+  id: totrans-90
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/faf5b5e608cd2d14ed531d4ae9063afb_34.png)'

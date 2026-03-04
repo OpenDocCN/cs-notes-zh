@@ -1,0 +1,744 @@
+- en: P13：TALK _ Randall Hunt, Mike Ruberry _ From NumPy to PyTorch, A Story of API
+    Compat - VikingDen7 - BV19Q4y197HM
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P13：讲座 _ 兰德尔·亨特，迈克·鲁伯里 _ 从NumPy到PyTorch，API兼容的故事 - VikingDen7 - BV19Q4y197HM
+- en: '[Music]。'
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[音乐]。'
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_1.png)'
+- en: Hi， PyCon 2021。 I'm Mike Rubery， a technical lead on Facebook's PyTorch team。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗨，PyCon 2021。我是迈克·鲁伯里，Facebook PyTorch团队的技术负责人。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_3.png)'
+- en: And this talk from NumPy to PyTorch is all about how PyTorch has translated。
+    and continues to translate operators from NumPy。 Here's the talk outline。 It's
+    got five parts。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本次关于NumPy到PyTorch的讲座主要讨论PyTorch如何翻译并持续翻译NumPy中的操作符。以下是讲座大纲，共分为五个部分。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_5.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_5.png)'
+- en: In the first part， we'll have a couple minutes on NumPy and operating on tensors。
+    Then we'll talk about PyTorch， hardware accelerators， autograd， and computational
+    graphs。 Using that context， we'll look at how NumPy operators have been and continue
+    to be added to PyTorch。 Then we'll talk about a few places where PyTorch is different
+    than NumPy and why we think that's okay。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在第一部分，我们将花几分钟讨论NumPy和张量的操作。然后我们将讨论PyTorch、硬件加速器、自动求导和计算图。在这个背景下，我们将探讨NumPy操作符是如何被添加到PyTorch中的，并继续被添加的。接着我们会谈论几个PyTorch与NumPy不同的地方，以及我们为什么认为这没问题。
+- en: And we'll finish with lessons learned from adding these operators and plan future
+    work。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将以从添加这些操作符中获得的经验教训结束，并计划未来的工作。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_7.png)'
+  id: totrans-9
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_7.png)'
+- en: So let's dive in with NumPy and use that to very briefly introduce operations
+    on multi-dimensional arrays。 which NumPy simply calls arrays， but since PyTorch
+    refers them as tensors。 I'll refer them as tensors in this talk。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么让我们从NumPy开始，简要介绍多维数组的操作，NumPy称之为数组，但由于PyTorch称其为张量，我将在本次讲座中将其称为张量。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_9.png)'
+  id: totrans-11
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_9.png)'
+- en: A simple sample NumPy program shown here can help us get started。 This program
+    starts by creating a matrix， a two-dimensional tensor。 And tensors are interesting
+    because they can represent a tremendous amount of data。 including images and text，
+    and they can be efficiently manipulated by modern hardware。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里展示的一个简单的NumPy程序可以帮助我们入门。该程序首先创建一个矩阵，一个二维张量。张量很有趣，因为它们可以表示大量数据，包括图像和文本，并且可以被现代硬件高效地操作。
+- en: They're critical for modern scientific computing and the basis for modern deep
+    learning。 In the middle snippet， another matrix is created and the matrices are
+    added element-wise together。 And in the final snippet， the two matrices are matrix
+    multiplied。 Of course。 NumPy can do much more than what we just saw。 Here， for
+    example。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 张量对于现代科学计算至关重要，是现代深度学习的基础。在中间的代码片段中，创建了另一个矩阵，并对两个矩阵进行了逐元素相加。在最后一个代码片段中，对两个矩阵进行了矩阵乘法。当然，NumPy的功能远不止于此。这里，例如。
+- en: are some more complicated domain-specific snippets。 In the first snippet。 a
+    fast Fourier transfer is performed， and in the second snippet。 the Scholesky decomposition
+    of a complex matrix is computed。 Obviously。 this talk won't be going over all
+    of NumPy's thousand plus functions。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有一些更复杂的特定领域代码片段。在第一个代码片段中，执行了快速傅里叶变换；在第二个代码片段中，计算了复杂矩阵的Scholesky分解。显然，本次讲座不会涵盖NumPy的千余个函数。
+- en: but it supports a tremendous amount of functionality。 Behind the scenes， NumPy
+    operators are。 conceptually。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但它支持大量功能。从概念上讲，NumPy操作符在后台运作。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_11.png)'
+  id: totrans-16
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_11.png)'
+- en: implemented either as composites， which are composed of other NumPy operations，
+    or primitives。 which have their own kernels。 A kernel is just a special name for
+    a function that operates directly on a tensor's values。 The distinction between
+    composites and primitives is important from an implementation perspective。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些操作符实现为复合型（composites），由其他NumPy操作组成，或原始型（primitives），它们有自己的内核（kernels）。内核是直接作用于张量值的函数的特殊名称。从实现的角度来看，复合型和原始型之间的区别非常重要。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_13.png)'
+  id: totrans-18
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_13.png)'
+- en: A composite NumPy operation， like the sink operation shown at left。 is typically
+    implemented in NumPy using Python。 The mathematical definition of the sink operation
+    appears at top。 and the Python implementation in NumPy at bottom。 Primitive operations，
+    however。 are implemented in C++。 Here's part of the implementation of NumPy's
+    copy-sign operator as an example。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个复合 NumPy 操作，例如左侧显示的 sink 操作，通常使用 Python 在 NumPy 中实现。sink 操作的数学定义出现在顶部，而底部是
+    NumPy 的 Python 实现。然而，基本操作是用 C++ 实现的。这里是 NumPy copy-sign 操作符实现的一部分作为示例。
+- en: When operations are implemented in C++， there's generated glue or binding code。
+    that connects the Python function copy-sign to its C++ implementation。 Unfortunately。
+    there's some overhead associated with this binding， and we'll briefly revisit
+    that topic later。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当操作在 C++ 中实现时，会生成连接 Python 函数 copy-sign 和其 C++ 实现的胶水或绑定代码。不幸的是，这种绑定会带来一些开销，我们稍后会简要回顾这一主题。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_15.png)'
+  id: totrans-21
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_15.png)'
+- en: Now that we've had an extremely brief tour of NumPy as a Python package。 with
+    tensor operations that's written in both Python and C++。 let's switch over to
+    PyTorch and expand our discussion to include hardware accelerators， autograd。
+    and computational graphs。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经对作为 Python 包的 NumPy 进行了极为简短的概述，包括用 Python 和 C++ 编写的张量操作。让我们切换到 PyTorch，并扩展讨论内容，以包括硬件加速器、自动求导和计算图。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_17.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_17.png)'
+- en: Like NumPy， PyTorch is also a popular Python package for operating on tensors。
+    and its user interface is extremely similar to NumPy's。 Let's see that by translating
+    our simple NumPy program to PyTorch。 In the first snippet。 we just need to swap
+    the word array for tensor。 In the second snippet， nothing changes。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像 NumPy 一样，PyTorch 也是一个流行的 Python 包，用于操作张量，其用户界面与 NumPy 的极为相似。让我们通过将简单的 NumPy
+    程序翻译为 PyTorch 来看看这一点。在第一个代码片段中，我们只需将单词 array 替换为 tensor。在第二个代码片段中，没有任何变化。
+- en: except we're now using the torch namespace， and the same is true in the third
+    snippet。 So here's our simple PyTorch program， a drop-in replacement for the original
+    NumPy program。 That suggests that in PyTorch and NumPy are basically equivalent
+    for simple programs。 but what about more complicated examples？ Well， here's our
+    complicated NumPy snippets。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除非我们现在使用 torch 命名空间，并且在第三个代码片段中也是如此。所以这是我们简单的 PyTorch 程序，原始 NumPy 程序的替代品。这表明在
+    PyTorch 和 NumPy 中对于简单程序基本是等效的，但更复杂的示例呢？好吧，这里是我们复杂的 NumPy 代码片段。
+- en: and here's the same snippets in PyTorch。 We can actually see that printing prints
+    a few less digits in PyTorch by default。 but that's actually customizable。 Otherwise，
+    we have the same operations。 PyTorch doesn't just implement many of NumPy's operators
+    either。 PyTorch and NumPy tensors can actually be converted between the two frameworks，
+    as shown here。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是 PyTorch 中相同的代码片段。实际上，我们可以看到 PyTorch 中的打印默认打印的数字少了一些，但这实际上是可以自定义的。除此之外，我们的操作是相同的。PyTorch
+    也并不只是实现了许多 NumPy 的操作符。PyTorch 和 NumPy 张量实际上可以在两个框架之间转换，如此处所示。
+- en: where a PyTorch tensor is passed to NumPy， added with a NumPy tensor。 and then
+    the result is translated back to PyTorch。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，一个 PyTorch 张量被传递给 NumPy，并与一个 NumPy 张量相加。然后结果又被翻译回 PyTorch。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_19.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_19.png)'
+- en: Our discussion so far might suggest that PyTorch implements every NumPy operator。
+    but that's not the case。 NumPy is more than a thousand operators， but many of
+    them are rarely used。 have only niche application， are deprecated， or are in need
+    of deprecation。 In fact。 NumPy's maintainers are probably the first people to
+    tell you， that NumPy has too many operations。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们的讨论可能会暗示 PyTorch 实现了每个 NumPy 操作符，但情况并非如此。NumPy 有超过一千个操作符，但其中许多操作不常使用，只有小众应用，已被弃用或需要弃用。事实上，NumPy
+    的维护者可能是第一个告诉你，NumPy 有太多操作的人。
+- en: So PyTorch doesn't implement them all， and I don't know of any framework other
+    than NumPy。 which does。 But PyTorch does have hundreds of NumPy operators。 and
+    we've focused on implementing those our community cares about。 I'll elaborate
+    more on the community aspect of this later。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以 PyTorch 并不是全部实现，我也不知道有哪个框架可以做到这一点，除了 NumPy。不过，PyTorch 确实有数百个 NumPy 操作符，我们专注于实现社区关心的那些。关于社区方面的内容，我会稍后详细说明。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_21.png)'
+  id: totrans-31
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_21.png)'
+- en: Now let's start to talk about how PyTorch is different from NumPy。 because it's
+    being identical to NumPy would be pointless。 We already have NumPy to be identical
+    to NumPy。 So PyTorch has several features。 like hardware accelerator support，
+    that NumPy doesn't have。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在让我们开始讨论 PyTorch 与 NumPy 的不同之处，因为与 NumPy 完全相同是没有意义的。我们已经有 NumPy 来做到这一点。所以 PyTorch
+    有几个特性，比如硬件加速器支持，这是 NumPy 所不具备的。
+- en: Here's our simple snippets with the tensors and computations performed on a
+    CUDA device。 Close observers may have noticed one small hitch with this program。
+    In line five。 the tensors are now converted to the float D-type for the matrix
+    multiplication。 We haven't talked much about tensor data types so far。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们在 CUDA 设备上执行的张量和计算的简单代码片段。细心的观察者可能注意到这个程序的一个小问题。在第五行，张量现在被转换为用于矩阵乘法的浮点 D
+    类型。到目前为止，我们还没有谈论太多关于张量数据类型的内容。
+- en: but operations on different devices sometimes support different data types。
+    In this case。 the CUDA matrix multiplication uses a math library。 and that math
+    library doesn't accept integer tensors as inputs。 Importantly though。 even though
+    data type support might vary slightly between device types。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是不同设备上的操作有时支持不同的数据类型。在这种情况下，CUDA 矩阵乘法使用一个数学库，而这个数学库不接受整数张量作为输入。重要的是，尽管设备类型之间的数据类型支持可能略有不同。
+- en: the semantics of PyTorch programs remain the same， either run on a CPU device，
+    a CUDA device， a TPU。 or another hardware accelerator。 In addition to support
+    for hardware accelerators。 PyTorch also has built-in autograd support。 This short
+    snippet shows the computation of a gradient for a tensor。 after it's been point-wise
+    multiplied with another。 Although not the subject of this talk。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: PyTorch 程序的语义保持一致，无论是在 CPU 设备、CUDA 设备、TPU 还是其他硬件加速器上运行。除了对硬件加速器的支持，PyTorch 还内置了自动求导支持。这个简短的代码片段展示了在与另一个张量逐点相乘后，计算张量的梯度。虽然这不是本次讨论的主题。
+- en: autograd is especially useful when training neural networks。 PyTorch also supports
+    the construction and optimization of computational graphs。 If we go back to the
+    sync function， we can pretend for a moment that PyTorch didn't have its own implementation。
+    and we were writing one in Python。 We could tell PyTorch's TorScrip compiler to
+    read the Python implementation of the function。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自动求导在训练神经网络时特别有用。PyTorch 还支持计算图的构建和优化。如果我们回到同步函数，我们可以暂时假设 PyTorch 没有自己的实现，而是我们在
+    Python 中编写了一个实现。我们可以告诉 PyTorch 的 TorScrip 编译器去读取该函数的 Python 实现。
+- en: and create a computational graph for it。 The computational graph on this slide
+    actually hints at how operators and PyTorch are implemented。 but the important
+    takeaway for us now is that these graphs allow for cross-operator optimizations。
+    and they can reduce the overhead of moving between Python and C++。 by invoking
+    the series of operations from Python one time。 In addition to TorScripch， as shown
+    here。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并为其创建一个计算图。这个幻灯片上的计算图实际上暗示了操作符和 PyTorch 的实现方式，但目前对我们来说重要的是，这些图允许跨操作符的优化，并且它们可以通过从
+    Python 一次性调用一系列操作，减少在 Python 和 C++ 之间移动的开销。除了 TorScripch，如此展示。
+- en: PyTorch also supports creating and optimizing computational graphs with its
+    TorchedoutFX package。 and the XLA deep learning compiler， which is also used by
+    the TensorFlow and Jax frameworks。 Support for hardware accelerators， autograd
+    and computational graphs make PyTorch great for deep learning。 and PyTorch is
+    its own state-of-the-art neural network library。 In this very brief snippet。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: PyTorch 还支持使用其 TorchedoutFX 包和 XLA 深度学习编译器创建和优化计算图，该编译器也被 TensorFlow 和 Jax 框架使用。对硬件加速器、自动求导和计算图的支持使得
+    PyTorch 适合深度学习，而 PyTorch 本身是一个最先进的神经网络库。在这个非常简短的代码片段中。
+- en: we just see the construction and use of a single linear layer。 which is a common
+    component of many neural networks。 So while PyTorch doesn't have every NumPy operator。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们看到的是单个线性层的构造和使用，这是许多神经网络的常见组件。所以，虽然 PyTorch 并没有每一个 NumPy 操作符。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_23.png)'
+  id: totrans-40
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_23.png)'
+- en: those it does implement we can think of as NumPy plus additional features like
+    accelerator support and autograd。 And to be clear， PyTorch also has additional
+    operators that NumPy doesn't。 particularly operators from SciPy。 So that's a bit
+    of what PyTorch looks like to users。 but behind the scenes， PyTorch operators
+    are almost always implemented in C++ or a mix of C++ and device-specific code。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它实现的那些可以看作是NumPy加上额外功能，比如加速器支持和自动求导。要明确的是，PyTorch还有NumPy没有的额外操作符，特别是来自SciPy的操作符。这就是PyTorch在用户眼中的样子，但在幕后，PyTorch操作符几乎总是用C++或C++与特定设备代码的混合实现。
+- en: This would include CPU intrinsics and CUDA， for example。 It also supports executing
+    operators as computational graphs。 and differential operators get autograd formulas。
+    Let's look at PyTorch's implementation of sync to make this more concrete。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这包括CPU内置和CUDA。例如，它还支持将操作符作为计算图执行，并且微分操作符获得自动求导公式。让我们看一下PyTorch的同步实现，以便更具体化。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_25.png)'
+  id: totrans-43
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_25.png)'
+- en: As a reminder， here's the definition of the sync operation and its implementation
+    in NumPy。 Now here's the implementation of that operator in PyTorch for the CPU。
+    There's a lot of supporting architecture that we don't have time to review here。
+    but line 6 through 10 are the heart of the kernel which computes this operation。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提醒一下，这里是同步操作的定义及其在NumPy中的实现。现在，这里是该操作符在PyTorch中的CPU实现。有很多支持架构我们没有时间在这里审查，但第6到第10行是计算该操作的内核核心。
+- en: Since the CUDA kernel looks very similar to the CPU kernel。 let's skip ahead
+    to the autograd formula for sync， which is actually written in Pythonic YAML。
+    More complicated autograd formulas can be directly implemented in C++。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于CUDA内核看起来与CPU内核非常相似，让我们跳到同步的自动求导公式，它实际上是用Python风格的YAML编写的。更复杂的自动求导公式可以直接用C++实现。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_27.png)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_27.png)'
+- en: With that background on NumPy and PyTorch， let's look at what's involved in
+    adding a NumPy operator to PyTorch。 and why we think it's important to add NumPy
+    operators。 To port a NumPy operator to PyTorch。 we typically need three things。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有了NumPy和PyTorch的背景，让我们看看将NumPy操作符添加到PyTorch中涉及的内容，以及我们认为添加NumPy操作符的重要性。要将NumPy操作符移植到PyTorch，我们通常需要三样东西。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_29.png)'
+  id: totrans-48
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_29.png)'
+- en: We need to write a C++ implementation， and if the operation is a primitive op，
+    a CPU。 and a CUDA kernel。 We need to write an autograd formula if the op is differentiable。
+    and we need to write comprehensive tests that validate the operator works correctly。
+    Since that's no small amount of work， it's reasonable to ask why we bother at
+    all。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要编写一个C++实现，如果操作是原始操作，则需要一个CPU和一个CUDA内核。如果操作是可微分的，我们需要编写一个自动求导公式，并且需要编写全面的测试，以验证操作符是否正确工作。考虑到这项工作量不小，问我们为什么要这样做是合理的。
+- en: Why does PyTorch think implementing NumPy operators is important？
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么PyTorch认为实现NumPy操作符很重要？
+- en: One way we know it's important to implement NumPy operators is that our community
+    often asks us to。 On this slide， I've included some requests for NumPy and SyPy
+    functionality。 Even better than asking for NumPy operators， however。 the PyTorch
+    community has helped implement dozens of them。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道实现NumPy操作符的重要性的一种方式是我们的社区经常向我们提出请求。在这张幻灯片中，我列出了一些对NumPy和SciPy功能的请求。然而，更令人振奋的是，PyTorch社区帮助实现了数十个NumPy操作符。
+- en: Here's a portion of one of our GitHub tracking issues。 Most of the GitHub names
+    here are community members。 One surprise when we engaged the community was not
+    just how eager they were for more NumPy functionality。 but also how frustrated
+    they were with the few cases where PyTorch's behavior was divergent from NumPy's。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们GitHub跟踪问题的一个部分。这里大多数GitHub名字都是社区成员。当我们与社区互动时，一个惊喜是，他们不仅渴望更多的NumPy功能，而且对PyTorch在少数情况下与NumPy行为不一致感到沮丧。
+- en: Here's a comment from one community member on the same issue we just saw。 They
+    were so irked by PyTorch diverging from NumPy in a few places that they were thinking
+    of switching to a different framework。 I'll come back to this point again later。
+    Our communities made it really clear that faithful implementations of NumPy operators
+    are important。 Given that， how can we best facilitate porting operators from NumPy
+    to PyTorch？
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是一位社区成员关于我们刚刚看到的同一问题的评论。他们对 PyTorch 在几个地方与 NumPy 的差异感到非常恼火，甚至考虑切换到不同的框架。我稍后会再次回到这一点。我们的社区明确表示，忠实实现
+    NumPy 操作符非常重要。鉴于此，我们如何才能最好地促进将操作符从 NumPy 移植到 PyTorch？
+- en: We already briefly saw that there was some supporting architecture for writing
+    a kernel in PyTorch。 and we saw that autograd formulas can simply be expressed
+    as Pythonic yaml。 But that still leaves us with test to write。 PyTorch has a huge
+    test matrix。 If every test had to be written by hand， then it would be harder
+    to write our tests than our operators。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经简要看到在 PyTorch 中编写内核的一些支持架构，并且我们看到自动微分公式可以简单地表达为 Pythonic yaml。但这仍然让我们面临编写测试的问题。PyTorch
+    有一个庞大的测试矩阵。如果每个测试都必须手动编写，那么编写我们的测试将比编写操作符更困难。
+- en: To simplify testing， we've developed our own test generation framework that
+    works with both PyTest and UnitTest。 Since I don't have the time today to elaborate
+    on each of these three systems。 I'll just describe more of our test framework
+    since it's implemented in Python。 A little more detail on PyTorch's test matrix。
+    When testing PyTorch operators。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了简化测试，我们开发了自己的测试生成框架，可以与 PyTest 和 UnitTest 一起使用。由于我今天没有时间详细阐述这三种系统中的每一种，我会描述更多我们的测试框架，因为它是用
+    Python 实现的。关于 PyTorch 测试矩阵的更多细节。当测试 PyTorch 操作符时。
+- en: we need to account for different tensors and a variety of PyTorch systems。 Doing
+    so is challenging for two reasons。 One， handwriting all of these test variants
+    would be hundreds of lines of code。 and two， developers would need to be familiar
+    with these different systems and device types。 Requiring developers write all
+    that code and that they'd be familiar with so many systems is not a real option。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要考虑不同的张量和各种 PyTorch 系统。这是有挑战性的，原因有两个。一是手动编写所有这些测试变体将需要数百行代码；二是开发人员需要熟悉这些不同的系统和设备类型。要求开发人员编写所有这些代码并且对这么多系统都熟悉并不是一个现实的选择。
+- en: So that means we can either give up on test coverage or we can start generating
+    tests automatically。 and PyTorch shows the latter approach。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着我们要么放弃测试覆盖，要么开始自动生成测试，而 PyTorch 显示了后者的方法。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_31.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_31.png)'
+- en: The heart of PyTorch's new test framework are op-infos。 These are Python classes
+    that describe an operator， its test directives。 and include a sample inputs function
+    that can return valid inputs to the operation。 Here's the op-info from Mole or
+    Multiply in NumPy。 In fact。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: PyTorch 新测试框架的核心是 op-infos。这些是描述操作符及其测试指令的 Python 类，并包含一个可以返回有效输入的示例输入函数。这是来自
+    NumPy 的 Mole 或 Multiply 的 op-info。事实上。
+- en: we can see that NumPy name is alias to the original PyTorch operation。 This
+    op-info describes which data types the operation supports on lines 3。 and then
+    points to its sample inputs function on line 4。 Here the sample inputs for Mole
+    are the same as for other binary element-wise operations， that is。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以看到 NumPy 名称是原始 PyTorch 操作的别名。这个 op-info 描述了操作在第三行支持的数据类型，然后指向第四行的示例输入函数。在这里，Mole
+    的示例输入与其他二元逐元素操作相同。
+- en: functions that operate on two tensors in an element-wise fashion。 In addition
+    to the base op-info class， we also have subclasses with additional metadata。 Here's
+    an op-info for the sign operator， which is actually a unary u-funk， that is。 a
+    function that accepts a single tensor and operates on it element-wise。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在逐元素操作两个张量的函数。除了基本的 op-info 类，我们还有带有额外元数据的子类。这是符号操作符的 op-info，实际上是一个一元 u-funk，即一个接受单个张量并逐元素操作的函数。
+- en: Instead of being the op-info base class， it's actually the unary u-funk info
+    subclass。 Note the reference NumPy function on line 2。 That reference pointer
+    and the structure of unary element-wise operations actually lets us automatically
+    generate every test we need for Torx。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它实际上是一个一元 u-funk 信息子类，而不是 op-info 基类。请注意第二行的 NumPy 函数引用。这个引用指针和一元逐元素操作的结构实际上让我们能够自动生成
+    Torx 所需的每个测试。
+- en: sign， and we can validate that it works just like it's NumPy reference to。 Op-infos
+    alone don't generate tests of course， because they're just simple Python classes。
+    So for that we use the ops decorator， which takes a sequence of operations to
+    review when instantiating a test template。 Here's one test template that supports
+    unary u-funks like sign。 It accepts a device， data type。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: sign，并且我们可以验证它的工作方式与NumPy参考一致。当然，op-info本身并不能生成测试，因为它们只是简单的Python类。因此，我们使用ops装饰器，在实例化测试模板时，它接受一系列操作进行审核。这里有一个支持unary
+    u-funks（如sign）的测试模板。它接受设备和数据类型。
+- en: and the op-being tested， and then it validates that the result of the operation
+    is the same。 whether its inputs are contiguous or not。 The actual test isn't so
+    important here。 What is important is to understand that this test is designed
+    to run on every unary u-funk。 not just sign。 Before the tests are actually run
+    by PyTest or Unitest。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正在测试的运算符，然后验证操作的结果是否相同，无论其输入是否连续。实际的测试在这里并不重要。重要的是要理解这个测试旨在针对每个unary u-funk运行，而不仅仅是sign。在PyTest或Unitest实际运行测试之前。
+- en: these test templates need to be instantiated。 The instantiated tests for this
+    template and the sign operation are shown here。 The test names include the name
+    of the operation， the device type。 and the data type that are passed to the test。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些测试模板需要被实例化。此模板和sign操作的实例化测试如图所示。测试名称包括操作名称、设备类型和传递给测试的数据类型。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_33.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_33.png)'
+- en: Some of PyTorch's automated op-info tests validate the operator's autograd formula。
+    support for Torx Script and Torx。fx， and the consistency of its function， method。
+    and in place variance。 The one thing the basic op-info class can't do is test
+    that the operator actually computes what it should。 Although， as I mentioned，
+    in special cases， like the unary u-funks。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: PyTorch的一些自动op-info测试验证了运算符的autograd公式。支持Torx脚本和Torx.fx，以及其函数、方法和就地方差的一致性。基本的op-info类无法测试运算符是否实际计算其应有的内容。尽管如我所提到的，在特殊情况下，如unary
+    u-funks。
+- en: we've written tests that exploit the operator's structure and a reference function
+    to validate it。 In most cases， we don't understand the operator enough to know
+    what it should do。 Some features of our test generator are。 It works with both
+    PyTest and Unitest。 It dynamically identifies available device types when running
+    the test suite。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们编写了利用运算符结构和参考函数进行验证的测试。在大多数情况下，我们对运算符的理解不足，无法确切知道它应该做什么。我们的测试生成器有一些功能，它支持PyTest和Unitest。运行测试套件时，它会动态识别可用的设备类型。
+- en: So if you have a machine that doesn't have a CUDA device， for example。 CUDA
+    variance of test templates won't be instantiated。 It allows for device type setup
+    and tear down。 So we can do different things when setting up a CUDA device。 like
+    checking for memory leaks， then we do with the CPU。 It's extensible by other packages。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果你有一台没有CUDA设备的机器，例如，CUDA模板的变体将不会被实例化。它允许设备类型的设置和拆卸。因此，在设置CUDA设备时，我们可以做不同的事情，比如检查内存泄漏，而不是在CPU上。它可以被其他包扩展。
+- en: The PyTorch XLA package， for example， adds XLA devices to the test framework
+    programmatically。 The op-info repository acts as a single source of truth for
+    all our operator's functionality。 And it's easy to write new tests that run on
+    every PyTorch operator。 or on a more structured subset of those operators。 Systematic
+    testing of new features。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，PyTorch XLA包通过编程方式将XLA设备添加到测试框架中。op-info库作为我们所有运算符功能的单一真实来源。编写在每个PyTorch运算符上运行的新测试是很简单的，或者在这些运算符的更结构化的子集上运行。新特性的系统测试。
+- en: like PyTorch's support for complex tensors， has been made tremendously easier
+    with our op-info pattern。 New data types can just be added to the list of data
+    types and operator supports。 and they'll automatically be tested。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像PyTorch对复数张量的支持，通过我们的op-info模式变得极为简单。新的数据类型可以直接添加到数据类型和运算符支持列表中，它们会自动进行测试。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_35.png)'
+  id: totrans-72
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_35.png)'
+- en: So far we've talked about how PyTorch is like NumPy， but with extra stuff。 But
+    now let's look at a few cases where PyTorch has chosen to be different than NumPy。
+    These discrepancies are rare， and most of them are small。 but there are a few
+    places where PyTorch is loudly divergent。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们讨论了PyTorch与NumPy相似的地方，但现在让我们看看PyTorch在某些情况下选择与NumPy不同的地方。这些差异是少见的，而且大多数都是微小的，但也有一些地方PyTorch表现出明显的不同。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_37.png)'
+  id: totrans-74
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_37.png)'
+- en: So here's a simple difference to get us started。 This is a change that we wanted
+    to make for consistency with the rest of PyTorch's UX。 and it's with the return
+    type of the reciprocal function。 Reciprocal is an element-wise operation that
+    competes the reciprocal of each value in a tensor。 In NumPy， as seen at left，
+    the reciprocal of integers is computed using integer division。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一个简单的区别可以让我们开始。这是我们想要为与 PyTorch 其余用户体验一致性而做的更改，涉及到倒数函数的返回类型。倒数是一个逐元素操作，计算张量中每个值的倒数。在
+    NumPy 中，如左侧所示，整数的倒数是通过整数除法计算的。
+- en: or truncation division， so the result is zero for every number other than one。
+    We thought that behavior was inconsistent with division in Python， PyTorch。 and
+    actually NumPy itself， because in those systems one divided by two is typically
+    a half。 So we changed the behavior in PyTorch for consistency， and you can see
+    that at right。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者截断除法，因此除了 1 以外的每个数字的结果都是零。我们认为这种行为与 Python、PyTorch，实际上也是 NumPy 中的除法不一致，因为在这些系统中，1
+    除以 2 通常是 0.5。因此，我们在 PyTorch 中更改了这一行为以保持一致性，右侧可以看到这一点。
+- en: Another example of a small difference between NumPy and PyTorch is the iG function。
+    which competes the eigenvalues and eigenvectors of a matrix。 At left。 we can see
+    that NumPy has returned to real-valued tensors。 Well， at right。 PyTorch returned
+    to complex tensors for the same input。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: NumPy 和 PyTorch 之间的另一个小区别是 iG 函数，它计算矩阵的特征值和特征向量。在左侧，我们可以看到 NumPy 返回了实值张量，而在右侧，PyTorch
+    对同一输入返回了复数张量。
+- en: It turns out that the eigenvalues and eigenvectors of a real-valued matrix can
+    be either real-valued or complex。 and NumPy returns them as complex， only when
+    necessary。 PyTorch， on the other hand。 always returns complex tensors。 This change
+    was actually motivated by PyTorch's support for computational graphs。 who want
+    to infer the shape and data type of an operation's outputs from the shapes and
+    data types of an operation's inputs。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，实值矩阵的特征值和特征向量可以是实值的或复数的，而 NumPy 只有在必要时才返回复数，另一方面，PyTorch 始终返回复数张量。这个变化实际上是受
+    PyTorch 对计算图支持的推动，旨在根据操作输入的形状和数据类型推断操作输出的形状和数据类型。
+- en: The NumPy version of this operation wouldn't allow this。 because two matrices
+    with the same shape and data type can end up producing either floating point tensors
+    or complex tensors。 Now let's look at a larger discrepancy。 In NumPy， complex
+    tensors have maximums and can be sorted。 But in PyTorch， we throw a runtime error
+    when a user attempts either of these operations。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: NumPy 版本的这个操作不允许这样，因为具有相同形状和数据类型的两个矩阵可能会产生浮点张量或复数张量。现在让我们看看一个更大的差异。在 NumPy 中，复数张量具有最大值且可以排序。但在
+    PyTorch 中，当用户尝试这两种操作时，我们会抛出运行时错误。
+- en: This is because complex numbers don't belong to any totally ordered field。 so
+    there's no mathematically intuitive way to say one is greater than another。 We
+    didn't think sorting like NumPy does， based on the real value and then the complex
+    value would be intuitive for users who didn't come from NumPy。 But we also knew
+    that we couldn't implement another comparator without being too different from
+    NumPy that people would notice。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是因为复数不属于任何完全有序域，因此没有直观的数学方法来判断一个数是否大于另一个数。我们认为像 NumPy 那样，基于实值然后是复值的排序对没有 NumPy
+    背景的用户来说并不直观。但我们也知道，如果不想和 NumPy 太不同而被人注意，我们不能实现另一个比较器。
+- en: So in this case， we decided to simply throw a runtime error and inform the user
+    that these operations aren't supported。 It's important that in all three of these
+    cases， the change from NumPy was principled。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在这种情况下，我们决定简单地抛出一个运行时错误，告知用户这些操作不受支持。重要的是在这三种情况下，从 NumPy 的更改都是有原则的。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_39.png)'
+  id: totrans-82
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_39.png)'
+- en: It was motivated by a desire to be more consistent。 While we saw it earlier
+    that users want faithful implementations of NumPy operators。 it turns out that
+    these principal discrepancies are okay。 In fact。 PyTorch has systemic discrepancies
+    with NumPy that pass with little or no comment from our community。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是出于追求更一致性的愿望。虽然我们之前看到用户希望忠实实现 NumPy 操作，但事实证明这些主要差异是可以接受的。实际上，PyTorch 与 NumPy
+    之间存在系统性差异，这些差异在我们的社区中几乎没有任何评论。
+- en: Our type promotion behavior， for example， is different because PyTorch prefers
+    the floating point data type。 while NumPy prefers the default of the more precise
+    double data type。 Also in PyTorch。 functions and method always compute the same
+    operation， but in NumPy they can be slightly different。 And as the sharp-eyed
+    may have spotted in an earlier snippet， NumPy sometimes returns scalars。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，我们的类型提升行为是不同的，因为 PyTorch 更偏好浮点数据类型，而 NumPy 则更偏好默认的更精确的双精度数据类型。此外，在 PyTorch
+    中，函数和方法始终计算相同的操作，但在 NumPy 中它们可能会稍有不同。正如敏锐的观察者在早期片段中所发现的，NumPy 有时会返回标量。
+- en: while PyTorch consistently returns tensors。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而 PyTorch 始终返回张量。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_41.png)'
+  id: totrans-86
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_41.png)'
+- en: Let's take a minute to recap， then talk about what we've learned from porting
+    NumPy operators to PyTorch and discuss future work。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们花一点时间回顾一下，然后谈谈我们从将 NumPy 操作移植到 PyTorch 中学到了什么，并讨论未来的工作。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_43.png)'
+  id: totrans-88
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_43.png)'
+- en: So here's the whole talk so far， in case you just walked into the room。 NumPy
+    and Python are popular Python packages。 They operate with tensors。 PyTorch implements
+    many of NumPy's operators， but not all。 and it extends them with support for hardware
+    accelerators and systems like AutoGrad。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是到目前为止的整个演讲，以防你刚刚走进房间。NumPy 和 Python 是流行的 Python 包。它们与张量一起操作。PyTorch 实现了许多
+    NumPy 的操作，但不是全部，并且它通过支持硬件加速器和 AutoGrad 等系统进行扩展。
+- en: The PyTorch community wants faithful implementations of NumPy operators。 but
+    it's also okay with principal differences as long as they keep PyTorch consistent
+    with itself。 To make implementing NumPy operators tractable， PyTorch has developed
+    a variety of supporting architectures。 Given that recap， what should we learn
+    from this talk？ First。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: PyTorch 社区希望 NumPy 操作的实现保持一致，但只要保持 PyTorch 内部的一致性，主要的差异也是可以接受的。为了使 NumPy 操作的实现变得可行，PyTorch
+    开发了多种支持架构。考虑到这一回顾，我们应该从这个演讲中学到什么？首先。
+- en: do the work to engage your community and listen to what they tell you。 When
+    PyTorch started refocusing on NumPy operators over a year ago。 it wasn't clear
+    whether the community just wanted the functionality from NumPy or fidelity to
+    NumPy。 And they've now made it clear that they want faithful implementations of
+    NumPy operators。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 进行工作以吸引你的社区，并倾听他们的反馈。当 PyTorch 在一年多前开始重新聚焦于 NumPy 操作时，社区并不清楚他们是否只是想要 NumPy 的功能，还是希望忠实于
+    NumPy。现在他们已经明确表示，他们希望 NumPy 操作的实现能够保持一致性。
+- en: but they want those implementations to be consistent with PyTorch's UX。 Second。
+    focus on developer efficiency。 Supporting architecture like PyTorch's test framework
+    has saved years of developer time。 Third， be clear about your own principles，
+    especially when implementing a user experience from another project。 Blindly implementing
+    NumPy operators would have led to a really inconsistent PyTorch experience。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是他们希望这些实现与 PyTorch 的用户体验保持一致。其次，专注于开发者效率。支持像 PyTorch 的测试框架这样的架构节省了多年的开发时间。第三，要清楚你自己的原则，尤其是在实现来自其他项目的用户体验时。盲目地实现
+    NumPy 操作将导致 PyTorch 体验的不一致。
+- en: In the future， we plan to focus more on deprecating Word Word divergent with
+    NumPy instead of adding new NumPy operators。 We're also interested in adding more
+    operators from SciPy。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在未来，我们计划更多地关注淘汰与 NumPy 不一致的 Word Word，而不是添加新的 NumPy 操作。我们也有兴趣添加更多来自 SciPy 的操作。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_45.png)'
+  id: totrans-94
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_45.png)'
+- en: Thank you for coming and listening to this talk， and I hope you enjoy the rest
+    of PyCon 2021。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 感谢你们的到来，聆听这个演讲，希望你们享受 2021 年 PyCon 的剩余时间。
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_47.png)'
+  id: totrans-96
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_47.png)'
+- en: '[BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]，
+    [BLANK_AUDIO]。 [BLANK_AUDIO]。'
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]，
+    [BLANK_AUDIO]。 [BLANK_AUDIO]。'
+- en: '![](img/a02b99cc0e634507dfe987092c67d214_49.png)'
+  id: totrans-98
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/a02b99cc0e634507dfe987092c67d214_49.png)'

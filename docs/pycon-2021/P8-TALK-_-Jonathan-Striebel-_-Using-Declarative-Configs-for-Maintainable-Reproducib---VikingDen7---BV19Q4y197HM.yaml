@@ -1,0 +1,496 @@
+- en: P8：TALK _ Jonathan Striebel _ Using Declarative Configs for Maintainable Reproducib
+    - VikingDen7 - BV19Q4y197HM
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P8：谈话 _ 乔纳森·斯特里贝尔 _ 使用声明式配置进行可维护的可重现性 - VikingDen7 - BV19Q4y197HM
+- en: '[MUSIC]。'
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[音乐]。'
+- en: '![](img/653290599afbe20edf764ce6a6535ff6_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/653290599afbe20edf764ce6a6535ff6_1.png)'
+- en: '![](img/653290599afbe20edf764ce6a6535ff6_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/653290599afbe20edf764ce6a6535ff6_2.png)'
+- en: Hello everyone。 I'm very happy to welcome you to my talk about declarative conflicts
+    for。 a maintainable reproducible code。 My name is Jonathan and you can write me
+    an email or follow me on Twitter。 I'm working for Scalable Minds， a software company
+    in Potsdam， Germany。 We're working on image analysis tools and services。 Before
+    diving into the topic in detail。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家好。我很高兴欢迎你们来到我关于可维护的可重现代码的声明式冲突的演讲。我叫乔纳森，你可以给我发邮件或在Twitter上关注我。我在德国波茨坦的Scalable
+    Minds公司工作。我们专注于图像分析工具和服务。在深入讨论主题之前。
+- en: I'd like to give you an overview of the domain I'm working in and the problems
+    we are facing。 At Scalable Minds， we've built webmasters， an open source online
+    tool that allows you to view and。 annotate 3D volumetric image data。 What you
+    see here is a 3D scan of brain tissue from a microscope。 The different cells are
+    segmented as shown by the color and。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想给大家概述一下我所在领域的工作以及我们面临的问题。在Scalable Minds，我们构建了webmasters，这是一个开源在线工具，允许你查看和注释3D体积图像数据。这里展示的是从显微镜获取的脑组织的3D扫描。不同的细胞通过颜色进行分割。
+- en: one cell is rendered in 3D at the bottom center。 If you want to try it for yourself。
+    you could go to webnossos。org or use this QR code。 We are also automating the
+    annotation of such cells， which is what I'm working on most of the time。 For that，
+    we are running experiments。 It starts with multiple terabytes of grayscale image
+    data。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个细胞在底部中心以3D形式渲染。如果你想亲自尝试，可以访问webnossos.org或使用这个二维码。我们还在自动化这些细胞的注释，这也是我大部分时间的工作。为此，我们正在进行实验。这开始于多个TB的灰度图像数据。
+- en: On that， we train machine learning systems to detect where the cell boundaries
+    are。 Therefore。 we manage the training data and evaluation data， which was acquired
+    manually via webnossos before。 The training usually takes up to weeks。 Afterwards。
+    we are running segmentation and agglomeration algorithms。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此基础上，我们训练机器学习系统以检测细胞边界。因此，我们管理训练数据和评估数据，这些数据之前通过webnossos手动获取。训练通常需要几周的时间。之后，我们会运行分割和聚合算法。
+- en: The result is then a dense 3D reconstruction of all neurons in the data。 which
+    is then used for biological analysis by our clients。 Since we were working with
+    massive data and computation heavy algorithms。 we run this pipeline paralyzed
+    in high-performance computing clusters。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最终结果是所有神经元的密集3D重建，供我们的客户进行生物分析。由于我们处理的是大量数据和计算密集型算法，我们在高性能计算集群中并行运行这个流程。
+- en: This is just an overview of a single experiment。 Since the domain is very much
+    researched driven。 we constantly iterate on our pipeline。 We might run an experiment
+    with dataset 1 and develop a feature A to improve the results。 Additionally， we
+    start with dataset 2。 On the first dataset。 we add feature B and figure out that
+    we should replace feature A with feature C after some time。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这只是单个实验的概述。由于该领域非常依赖研究，我们不断迭代我们的流程。我们可能会使用数据集1进行实验并开发特征A以改善结果。此外，我们还会开始使用数据集2。在第一个数据集上，我们添加特征B，并在一段时间后发现应该用特征C替换特征A。
+- en: Also， we apply feature B and a new feature D on the second dataset。 and afterwards
+    also use D on dataset 1。 This happens with many more in-between steps on a time
+    scale of months and years。 and might give you an idea of the problems we run into。
+    We need to keep an overview of the features we use for each dataset in experiment。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，我们在第二个数据集上应用特征B和新特征D，然后也在数据集1上使用D。这在几个月和几年的时间尺度上发生了许多更多的中间步骤，并可能让你了解到我们面临的问题。我们需要保持对每个实验数据集所用特征的概述。
+- en: and be able to really run an experiment maybe a year later， but with the up-to-date
+    pipeline。 so that we can simply switch on the feature that we just developed yesterday。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并能够在一年后真正运行一次实验，但使用最新的流程，这样我们就可以简单地启用我们昨天刚开发的特征。
+- en: '![](img/653290599afbe20edf764ce6a6535ff6_4.png)'
+  id: totrans-12
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/653290599afbe20edf764ce6a6535ff6_4.png)'
+- en: Those challenges motivate this talk。 We need to keep our application hierarchy
+    maintainable。 and at the same time reproducible。 Reproducible not only in the
+    sense of pinning the code and the packages of a specific experiment。 but being
+    able to rerun that old experiment with the current codebase。 Therefore。 we have
+    four main points that helped us to accomplish this。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些挑战激励了这次演讲。我们需要保持应用程序层次结构的可维护性，同时又能复现。复现不仅是指锁定特定实验的代码和包，还能够用当前的代码库重新运行旧实验。因此，我们有四个主要要点帮助我们实现这一目标。
+- en: '![](img/653290599afbe20edf764ce6a6535ff6_6.png)'
+  id: totrans-14
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/653290599afbe20edf764ce6a6535ff6_6.png)'
+- en: First， we separate our feature flags and parameters， the configuration， from
+    the rest of the code。 This splits the structure of the experiments and the evolving
+    pipeline。 and gives us the notion of the experiment hierarchy I've just shown
+    before。 Second。 we want to verify the configuration of an experiment against the
+    available features。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们将特性标志和参数的配置与其余代码分开。这将实验的结构和不断演变的管道分开，并给我们提供了之前展示的实验层次结构的概念。其次，我们希望验证实验的配置与可用功能的一致性。
+- en: but also the other way around， verifying that the code only uses available configuration
+    parameters。 Finally， since the configurations might change over time。 we want
+    to have automated migrations or evolutions in place。 First。 I'd like to give you
+    an overview about the options to implement this。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但也反过来验证代码仅使用可用的配置参数。最后，由于配置可能会随着时间而变化，我们希望有自动迁移或演变的机制。首先，我想给你一个关于实现选项的概述。
+- en: before then diving into the actual code。 For this talk。 I've prepared a toy
+    example that is much more simple than our usual experiments。 but the mechanisms
+    are basically the same。 In the example， we load a dataset in this case。 the linear
+    root dataset about sport exercises。 You can see different sport exercises and
+    the numbers of repetitions that a person could do。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后再深入实际代码。在这次演讲中，我准备了一个玩具示例，远比我们通常的实验简单，但机制基本相同。在这个例子中，我们加载一个数据集，这个数据集是关于运动练习的线性根数据集。你可以看到不同的运动练习和一个人能做的重复次数。
+- en: in the different rows。 We perform outlier detection on it。 and then plot the
+    data where an outlier here is marked in orange。 For the plot。 we have to select
+    two of the available columns for the different axes。 In this case， we have chins。
+    sit-ups， and chumps available in the dataset， and plot the chumps and the chins。
+    Here。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在不同的行中。我们对其进行异常值检测，然后绘制数据，其中异常值在这里用橙色标记。对于绘图，我们必须选择可用列中的两个作为不同的轴。在这个例子中，我们在数据集中有引体向上、仰卧起坐和跳跃，绘制引体向上和跳跃。
+- en: you can see that one person can do much more chumps， than the others。 and therefore
+    is marked as an outlier here in the top。 The code for this experiment would look
+    roughly like this。 We load the data from some path。 find the outliers， where we
+    might have to specify a threshold in this case 10。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以看到一个人能做的跳跃次数远高于其他人，因此在顶部被标记为异常值。这个实验的代码大致如下。我们从某个路径加载数据，找出异常值，在这种情况下，我们可能需要指定一个阈值为10。
+- en: and plot the data using two specific axes。 Now， when we extract the configuration。
+    we have to extract， in this case， the path， the threshold， and the two axes for
+    the plot。 You could。 of course， simply write a function with a four parameters，
+    but instead。 I recommend to keep this completely separate of your code， using
+    a declarative configuration。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并使用两个特定的轴绘制数据。现在，当我们提取配置时，我们必须提取路径、阈值和用于绘图的两个轴。当然，你可以简单地写一个具有四个参数的函数，但我建议将其与代码完全分开，使用声明式配置。
+- en: Declarative means that only data can be specified here， in contrast to imperative
+    programming。 such as with a Python programming language， which can use if clauses
+    or for loops。 The benefit of separating this and using a declarative config。 that
+    this forces you to keep a simple configuration。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 声明式意味着只能在这里指定数据，与可以使用 if 条件或 for 循环的命令式编程（如 Python 编程语言）相对。将其分开并使用声明式配置的好处是，这迫使你保持一个简单的配置。
+- en: and it cannot contain any logic that instead must be specified in your application。
+    So。 we need a declarative input format for the configuration。 Then this needs
+    to be represented in our code base。 And to turn this input format into the representation。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它不能包含任何逻辑，逻辑必须在你的应用程序中指定。因此，我们需要一个用于配置的声明式输入格式。然后，这需要在我们的代码库中表示。为了将这个输入格式转化为表示。
+- en: we need some sort of de-serialization in between。 Let's have a look what our
+    options for those are。 For the input format， a typical choice is to use arguments
+    for a command line interface。 Therefore。 all configuration must be supplied on
+    the command line。 which doesn't work too well if you have a lot of parameters。
+    It's great for a few parameters though。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要某种形式的反序列化。让我们看看我们的选项是什么。对于输入格式，典型的选择是为命令行界面使用参数。因此，所有配置必须在命令行上提供，如果你有很多参数，这就不太好用。不过，对于少量参数来说，这非常棒。
+- en: The usual choice is to use the Python build in ArcPERS to load the arguments。
+    But here。 nothing prevents you from accessing a round key of your configuration。
+    which would result then in a runtime error。 Therefore， I prefer to use the external
+    package-typer。 which allows you to specify the expected parameters and data types
+    as function arguments。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常的选择是使用Python内置的ArcPERS来加载参数。但在这里，没有什么可以阻止你访问配置的错误键，这将导致运行时错误。因此，我更喜欢使用外部包typer，它允许你将期望的参数和数据类型作为函数参数指定。
+- en: which then can also be type-checked， more about that in a second。 Another alternative
+    is to use environment variables for the input， which can be accessed via OS。enviren
+    in Python。 What I prefer for large configs is to extract them into a separate
+    file。 In general， we use YAML for that， but there's many other choices like JSON，
+    Tumble or any。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也可以进行类型检查，稍后会详细说明。另一个选择是使用环境变量作为输入，可以通过OS.enviren在Python中访问。对于大型配置，我更喜欢将其提取到单独的文件中。一般来说，我们使用YAML，但还有很多其他选择，如JSON、Tumble或其他格式。
+- en: To load a YAML file， you need a third-party library， such as PyYAML。 which gives
+    you a Pythonic representation of that file。 This representation consists of the
+    basic Python types， such as dictionaries， lists， integers， etc。 The problem here
+    is again that we could access the wrong key， which would result in a runtime error。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要加载YAML文件，你需要一个第三方库，比如PyYAML，它为你提供该文件的Python表示。这种表示由基本的Python类型组成，如字典、列表、整数等。这里的问题是，我们可能会访问错误的键，导致运行时错误。
+- en: Since our experiments run for days， this needs to be cached earlier， for example
+    in tests。 an additional possibility that we use is， to turn the configuration
+    into a class。 The class then defines the different parameters and their types
+    as their attributes。 To get the init method and other helper methods， we use the
+    utter library。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于我们的实验持续几天，这需要提前缓存，例如在测试中。我们使用的另一种可能性是将配置转换为类。该类定义不同的参数及其类型作为属性。为了获取初始化方法和其他辅助方法，我们使用utter库。
+- en: which adds them automatically。 Now we access the parameters of the config object
+    as usual attributes。 This allows us to use a tag checker before running the code。
+    which catches the wrong usage beforehand。 Since loading a YAML file into Python
+    gives us the basic Python structure we have on the left。 we need a tool to convert
+    this into the object of the class on the right。 For this。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它会自动添加这些参数。现在我们像访问普通属性一样访问配置对象的参数。这使我们可以在运行代码之前使用标签检查器，提前捕获错误使用。由于将YAML文件加载到Python中提供了我们左侧的基本Python结构，我们需要一个工具将其转换为右侧的类对象。为此。
+- en: we can directly use the see address library， which provides converters for many
+    data types and can also be adapted with custom converters。 Before diving into
+    the code， let's have a look at the landscape of possibilities you have if you。
+    want to implement a similar system。 I've shown three different options how you
+    can supply your。 config data to your application。 Then this needs to be represented
+    in your code。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以直接使用see address库，它提供了许多数据类型的转换器，也可以用自定义转换器进行调整。在深入代码之前，让我们看看如果你想实现类似系统，你有哪些可能性。我展示了三种不同的选项，如何将配置数据提供给你的应用程序。然后这需要在你的代码中表示。
+- en: for which you have many options。 If you want to add type information to a plain
+    dictionary。 there is typing。type。dict。 We rather using objects of custom classes
+    as shown before。 To automate the special methods of those classes， you can use
+    named tuples or data classes。 which are part of Python。 If you have more complex
+    scenarios， you might want to use the third party。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于此，你有很多选择。如果你想给普通字典添加类型信息，可以使用`typing.type.dict`。我们更倾向于使用之前展示的自定义类的对象。要自动化这些类的特殊方法，你可以使用命名元组或数据类，这些都是Python的一部分。如果你有更复杂的场景，可能需要使用第三方库。
+- en: party library， such as pedantic， which is great， or in our case， attors。 I'm
+    not providing a detailed comparison here， this would be just too much for this
+    talk。 To create an object of such a class， you also need a converter。 Typeload
+    is a popular library。 that side is specifically for data classes， pedantic comes
+    with built-in converters for。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第三方库，例如 pedantic，非常出色，或者在我们的案例中使用 attors。我在这里没有提供详细的比较，因为这对本次演讲来说太多了。要创建这样一个类的对象，你还需要一个转换器。Typeload
+    是一个流行的库，专门用于数据类，而 pedantic 带有内置的转换器。
+- en: its classes， and then there's see address， which I prefer， because you can write
+    custom。 structures for your own classes。 Finally， I'd recommend to use a type
+    checker to validate。 the usage of the config objects in your code， such as myPy
+    or PyType。 So let's see how this would look like in code。 Here I've prepared the
+    example I've shown you before。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其类别，然后是地址，我更喜欢这种方式，因为你可以为自己的类编写自定义结构。最后，我建议使用类型检查器来验证代码中配置对象的使用，例如 myPy 或 PyType。那么我们来看看这在代码中是怎样的。我在这里准备了之前展示过的例子。
+- en: in a TruePider notebook。 In this case， we're loading another dataset， the Iris
+    dataset。 which is about flowers。 We also perform outlier detection， this time
+    with a slightly different。 threshold， and then plot the data where we choose two
+    axes。 In this case， the data consists of。 four columns with different attributes
+    about sizes of the flowers。 Also， we have specified here。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 TruePider 笔记本中。在这种情况下，我们加载另一个数据集，鸢尾花数据集，关于花朵的信息。我们还执行离群值检测，这次使用稍微不同的阈值，然后绘制数据，我们选择两个轴。在这种情况下，数据包含四列，不同属性关于花朵的大小。此外，我们在这里指定了。
+- en: already which of the rows is an outlier or not。 Then we see the result for the
+    two different axes。 in the plot below。 Also， I have another example， the one I've
+    just shown before。 with the linear root dataset and another outlier factor here
+    of 10。 We use， of course。 two different axes to plot。 Again， the chins and the
+    chumps and this results in just the plot you've。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 已经知道哪些行是离群值，哪些不是。然后我们查看两个不同轴的结果，如下图所示。此外，我还有另一个例子，就是我刚刚展示过的，使用线性根数据集和另一个离群值因子为10。我们当然使用两个不同的轴进行绘图。同样，肘部和山丘的情况，这就是你所看到的图。
+- en: seen before。 When we want to convert this code into a code where we supply a
+    split configuration。 we can start by just writing this config file。 In this case，
+    for the first example， we would。 specify the dataset Iris in this case。 We specify
+    50 for the outlier factor and the two different。 axes for the plot。 We can do
+    the same for the other example where we have another config。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 之前看到的。当我们想将这段代码转换为提供分割配置的代码时，我们可以通过编写这个配置文件开始。在这个例子中，我们将指定数据集为鸢尾花。我们指定离群值因子为50，和用于绘图的两个不同轴。我们也可以对另一个示例做同样的操作，在那里我们有另一个配置。
+- en: this time with the linear root dataset， another parameter and two other axes
+    for the plot。 If we want to use this in our two-pider notebook here， we have to
+    specify a class。 as I have shown before。 In this case， it's the config schema
+    class where we have a dataset。 We look into the dataset type in a second and the
+    outlier number， which is an integer。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这次使用线性根数据集，另一个参数和两个用于绘图的轴。如果我们想在这里的两位数笔记本中使用这个，我们必须指定一个类，正如我之前展示过的那样。在这种情况下，它是配置模式类，其中我们有一个数据集。我们稍后再查看数据集类型和离群值数量，后者是一个整数。
+- en: and the two axis parameters that are strings。 So the dataset parameter here
+    is an enum。 In this。 case， we can just have two options for this enum， linear
+    root and Iris。 So to load now this configuration， into an object of this config
+    schema class。 we have to first load the file when we have opened the file， here。
+    We load it with yaml load。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以及两个作为字符串的轴参数。因此，这里的数据集参数是一个枚举。在这种情况下，我们可以为这个枚举设置两个选项，线性根和鸢尾花。因此，要将这个配置加载到该配置模式类的对象中，我们必须首先加载文件，打开文件后，这里使用
+    yaml load 加载它。
+- en: which gives us a dictionary with just the structure of the file。 Then we can
+    use c-adgers。 which I've presented before， to structure this dictionary into an
+    object， of this class。 the config schema。 So in the end， the result is the config
+    here below。 with just the data we've supplied in our config file。 This now can
+    be used to adapt the code that。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这给了我们一个字典，里面仅有文件的结构。然后我们可以使用 c-adgers，我之前介绍过，来将这个字典结构化为该类的对象，即配置模式。因此，最后的结果就是下面的配置，里面只有我们在配置文件中提供的数据。这现在可以用于调整代码。
+- en: we've seen before， we just check which of the two datasets we have。 Then we
+    use the parameter。 from the configuration for the outline detection， and also
+    the two axis we've supplied。 Now。 instead of having the two experiments in the
+    notebook， we can simply use the different。 configuration。 Now， this is now for
+    the configuration with the linear dataset。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们之前已经看到，我们只需检查我们有哪两个数据集。然后我们使用来自配置的轮廓检测参数，以及我们提供的两个轴。现在，不再在笔记本中有两个实验，我们可以简单地使用不同的配置。这是针对线性数据集的配置。
+- en: We load this configuration， and rerun this part and generate the fitting plot
+    here。 Now。 if you've made a mistake and you， supplied here instead of plot y，
+    plot z。 you can check this ahead of running this using myPY， the static type checker。
+    In this case。 using nbqa， which can run this on notebooks， we start myPY， using
+    this notebook。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们加载此配置，重新运行这一部分并生成此处的拟合图。如果你犯了一个错误，并且在这里提供了 plot z 而不是 plot y。在运行之前，你可以使用 myPY，静态类型检查器来检查这一点。在这种情况下，使用
+    nbqa，它可以在笔记本上运行，我们启动 myPY，使用这个笔记本。
+- en: We have to save it before， obviously。 And can now see that we have an error
+    because we can't use plot z。 which isn't part of our schema， but instead have
+    to use y or x。 So if we fix this again。 we're back to no error。 So what you've
+    seen now is that we can separate our config and code using a declarative。 yaml
+    config in this case。 We can verify our configuration since we loaded into our
+    defined schema class。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然，我们必须在之前保存它。现在可以看到我们有一个错误，因为我们不能使用 plot z，它不在我们的模式中，而必须使用 y 或 x。因此，如果我们再次修复这个，我们就没有错误了。所以你现在看到的是，我们可以使用声明式的
+    yaml 配置分离我们的配置和代码。在这种情况下，我们可以验证我们的配置，因为我们已经加载到我们定义的模式类中。
+- en: using sea others。 And we can verify then the usage of this configuration in
+    our code using myPY。 Let's have a look how this would be in a more complex use
+    case。 In this case。 we are not only plotting a simple scatterplot of the data，
+    but we want to add more。 possibilities for plotting。 So if we have a plot now，
+    instead of only using x and y， we also define。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 sea others。然后我们可以使用 myPY 验证在代码中使用此配置的情况。让我们看看在更复杂的用例中会是怎样。在这种情况下，我们不仅绘制数据的简单散点图，还希望添加更多绘图的可能性。因此，如果我们现在绘制，不仅使用
+    x 和 y，我们还定义。
+- en: the C attribute， which is optional， since we still can do 2D plots。 Another
+    alternative to have instead of the scatterplot is now a heatmap plot。 which just
+    uses x and y。 Since we can only supply one of the two plotting possibilities。
+    which has to define a union of those， which basically means that an object of
+    the union of the plot schema is either a scatterplot schema。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: C 属性是可选的，因为我们仍然可以进行 2D 绘图。散点图的另一种替代方案现在是热图绘图，它仅使用 x 和 y。因为我们只能提供两种绘图可能性之一，这必须定义这些的联合，这基本上意味着联合绘图模式的对象要么是散点图模式。
+- en: or a heatmap schema。 And you can see which of those it is by looking at the
+    kind which either is。 scatter， in this case， it just can be the scatter string
+    or heatmap。 Then just as before。 we can use this in our config schema。 So we have
+    a nested schema here in our。 config schema just for the plot。 The data is just
+    the same as before， we have an enum here。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或热图模式。你可以通过查看种类来判断这是什么，可能是散点图，在这种情况下，它可以是散点字符串或热图。然后和之前一样，我们可以在我们的配置模式中使用它。所以在我们的配置模式中，我们有一个嵌套模式，仅用于绘图。数据和之前一样，我们在这里有一个枚举。
+- en: and we have the integer for the outliers。 But this now is the union of the two
+    schemata we defined here。 above。 So now we have to adapt our configuration。 In
+    this case， we still take the linear data set。 we use still the same number for
+    the outlier detection， we do a scatterplot， and then if we。 just supply chains
+    and sit ups， this results in exactly the same as before。 Code is a bit more。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还有一个用于异常值的整数。但现在这是我们在上面定义的两个模式的联合。因此，我们现在必须调整我们的配置。在这种情况下，我们仍然使用线性数据集，我们仍然使用相同的异常值检测数字，进行散点图绘制。如果我们只提供链和仰卧起坐，这将产生与之前完全相同的结果。代码更复杂一点。
+- en: complex。 Now， since we have if clauses for the different plotting possibilities。
+    So here。 just have the same scatterplot as before。 Now we can also add the optional
+    Z parameter。 And we reload this。 And see in the end， now we have the 3d version
+    of the plot。 How does this。 work in detail again？ So because here we are using
+    the scatterplot schema。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: complex。现在，由于我们有不同绘图可能性的 if 条件。因此，这里只是与之前相同的散点图。现在我们还可以添加可选的 Z 参数。然后我们重新加载它。最后，我们得到了绘图的
+    3D 版本。这是如何工作的？所以因为我们在这里使用的是散点图模式。
+- en: with this time supplied the， set attribute， and in the if part here below。 we
+    find out if z is defined or not。 And since it is， defined， we're doing now a scatterplot。
+    So let's say， okay， we want to do the heatmap this time。 So again。 we just use
+    the heatmap parameter from here， supplied in the config。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这次使用了设置属性，在下面的 if 部分我们找出 z 是否被定义。由于它被定义了，我们现在进行散点图。所以我们说，好吧，这次我们想做热图。因此再次，我们只使用这里从配置中提供的热图参数。
+- en: reload the config and run our code。 And now we get an error， because we couldn't
+    parse this。 configuration， since C was defined。 Since C is not part of the 2d
+    heatmap， we have to remove it。 and can rerun this。 And simply verifying this config
+    can also be done easily ahead of time。 So in this time， we just get a heatmap。
+    Now， we've adapted the configuration for B manually。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 重新加载配置并运行我们的代码。现在我们遇到了一个错误，因为我们无法解析这个配置，由于 C 已被定义。由于 C 不是 2D 热图的一部分，我们必须将其移除，然后可以重新运行。提前验证这个配置也可以很容易地完成。因此这次，我们只得到一张热图。现在，我们手动调整了
+    B 的配置。
+- en: but instead of adapting this manually every time， we just want to have an evolution。
+    So we still have， the configuration of a， and we want to run this old configuration
+    also with a。 So for this， I've， prepared here an evolution。 Could look simply
+    like this。 we load the dictionary of the config， called a draw config in this
+    case。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们不想每次都手动调整，而是希望进行演变。因此我们仍然有 A 的配置，并希望也使用这个旧配置。因此，我在这里准备了一个演变。可以简单地看起来像这样：我们加载配置的字典，在这种情况下称为绘制配置。
+- en: then we look if there's a version defined。 So here， you'd have， to say， okay。
+    the new config also has a version key。 This would be two in this case， and the
+    default。 version for our old versions for our old version conflicts are simply
+    one。 And if we have an old。 config， we just run our evolution， which then transforms
+    those two plots into the plotting。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们查看是否定义了版本。因此在这里，你需要说，好的。新配置也有一个版本键。在这种情况下，这将是 2，而我们旧版本冲突的默认版本仅为 1。如果我们有一个旧配置，我们只需运行演变，它会将这两个图形转换为绘图。
+- en: possibilities that we have now。 So now instead of loading the new configuration，
+    below here。 we start with the old configuration and run evolution。 And can now
+    use just the old experiment with the updated code， where the configuration is。
+    migrated automatically。 So what we have are the config files that are transferred
+    into the。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们所拥有的可能性。因此现在，不是加载新的配置，而是从旧配置开始并运行演变。现在可以使用旧实验与更新的代码，其中配置会自动迁移。因此，我们拥有的是转化为的配置文件。
+- en: dictionaries， which are then transferred into the objects。 So we always have
+    an up-to-date schema class， for our newest code。 And now what I've just shown
+    before is to use an evolution。 where we have versioned config files and do the
+    evolutions on the dictionaries。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 字典被转化为对象。因此，我们总是拥有最新的模式类，以适应我们最新的代码。现在我刚才展示的是使用一种演变，其中我们有版本化的配置文件，并对字典进行演变。
+- en: So we know it only the simple schema class of the current code。 As an alternative。
+    you can also do the evolutions on your structured objects， but then you also need
+    to keep all the。 old schema classes that you had defined before。 So I've shown
+    you this overview before， you might。 miss some more libraries here which are built
+    to track experiments。 Those are sacred， for example。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们知道只有当前代码的简单模式类。作为替代方案，你也可以在结构化对象上进行演变，但那样你还需要保留之前定义的所有旧模式类。因此我之前给你展示了这个概述，你可能会错过一些专门用于跟踪实验的库。例如，神圣的库。
+- en: an L flow or a guild， and they are great to tag your experiments and can be
+    combined with。 the configuration mechanisms I've described here， but they don't
+    have the same possibilities on their。 own， such as type checking or evolutions。
+    They are especially useful to track metrics across your experiments。 So to summarize，
+    I've also now shown you two ways to evolve your configs so that you can run and。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个 L 流或一个指导，它们非常适合标记你的实验，并可以与我在这里描述的配置机制结合使用，但它们本身没有相同的可能性，例如类型检查或演变。它们特别有助于跟踪你实验中的指标。因此总结一下，我也向你展示了两种演变配置的方法，以便你可以运行。
+- en: migrate old experiments with a backwards compatible application。 Let's have
+    a look at our goals again。 First， the maintainability。 The separation of the declarative
+    config helps us to keep an overview of。 our experiments and the config and code
+    verification helps us that those work as expected in our pipeline。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用向后兼容的应用程序迁移旧实验。让我们再看一下我们的目标。首先，维护性。声明性配置的分离帮助我们保持对实验的总体概览，配置和代码验证帮助我们确保这些在我们的流程中按预期工作。
+- en: Also， this verification together with a migration system also ensures that old
+    experiments are。 reproducible with our ever evolving pipeline。 So feel free to
+    contact me if you have any questions。 and I'm very happy to discuss any of those
+    topics in detail。 I hope that this gave you some useful。 input for maintainable
+    and reproducible applications。 Thank you very much。 (Silence)， (Silence)。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，这种验证结合迁移系统还确保旧实验可以在我们不断发展的流程中可重现。因此，如果您有任何问题，请随时与我联系，我很高兴详细讨论这些主题。希望这能为您提供一些关于可维护和可重现应用程序的有用信息。非常感谢。（沉默），（沉默）。
+- en: (Silence)， (Silence)， (Silence)， (Silence)， (Silence)， [ Silence ]。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: （沉默），（沉默），（沉默），（沉默），（沉默），[ 沉默 ]。
+- en: '![](img/653290599afbe20edf764ce6a6535ff6_8.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/653290599afbe20edf764ce6a6535ff6_8.png)'

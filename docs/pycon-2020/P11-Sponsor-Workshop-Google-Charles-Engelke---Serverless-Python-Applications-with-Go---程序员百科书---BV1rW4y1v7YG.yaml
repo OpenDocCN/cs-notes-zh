@@ -1,0 +1,2817 @@
+- en: P11：Sponsor Workshop Google Charles Engelke - Serverless Python Applications
+    with Go - 程序员百科书 - BV1rW4y1v7YG
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P11：赞助工作坊谷歌查尔斯·恩格尔克 - 使用Go构建无服务器Python应用 - 程序员百科书 - BV1rW4y1v7YG
+- en: Hello。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你好。
+- en: '![](img/d75a7af45610ca4b253c770090edc225_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_1.png)'
+- en: Welcome to our workshop at Virtual PyCon 2020。 This workshop is how to build
+    a distributed serverless application。 I'm Charlie Engelke。 I'm a developer programs
+    engineer for Google Cloud。 That means I work on samples and examples on how to
+    use various Google Cloud products。 specifically serverless products。 This workshop
+    was built together with Lori White。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欢迎参加我们在虚拟PyCon 2020的工作坊。本次工作坊讲解如何构建一个分布式无服务器应用。我是查尔斯·恩格尔克。作为谷歌云的开发者项目工程师，我致力于展示如何使用各种谷歌云产品，特别是无服务器产品。本次工作坊是与洛丽·怀特共同创建的。
+- en: who's a developer advocate also in， Google Cloud working with higher education。
+    The slides and exercises for this can all be done on your own afterwards， even
+    without。 following these videos if you're interested。 All of them are available
+    at the website serverlessworkshop。dev。 Feel free to share this with others， even
+    if they're not at Virtual PyCon。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谁是开发者倡导者，亦在谷歌云从事高等教育相关工作。这些幻灯片和练习之后你可以独立完成，即使不跟随这些视频，如果你感兴趣的话。所有内容都可以在网站serverlessworkshop.dev上找到。即使他们不在虚拟PyCon上，也可以随意与他人分享。
+- en: What we're going to do in this workshop is actually build a loosely coupled，
+    event-driven。 distributed serverless system today。 So you're going to do this
+    on your own laptops。 Get them ready。 We're going to talk first about what we're
+    going to build。 The idea here is we're going to create something to manage a programming
+    contest。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个工作坊中，我们实际上将构建一个松耦合、事件驱动的分布式无服务器系统。所以你将在自己的笔记本电脑上进行操作。准备好吧。我们将首先讨论我们要构建的内容。这里的想法是，我们将创建一些东西来管理编程竞赛。
+- en: We'll talk a little bit about that more in detail。 But the contestants are going
+    to build things that play games。 And we're going to use a very dumb game because
+    we want to cover the concepts of how to build。 the application and use the environment
+    less on how to create the logic of a good game player。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将更详细地讨论这个问题。但参赛者将构建能玩游戏的东西。我们将使用一个非常简单的游戏，因为我们想要涵盖如何构建应用程序的概念，而不是如何创造一个优秀游戏玩家的逻辑。
+- en: But the same idea could be used with other games and with other kinds of things
+    other。 than games and programming contests。 We're going to talk about what serverless
+    is， what it means。 and why it can be useful， for this。 Describe the problem in
+    a little bit more detail and then talk about what our solution will。 look like，
+    the general architecture， before we get deeper into it and hands-on。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但同样的思路可以用于其他游戏和其他种类的事物，而不仅仅是游戏和编程竞赛。我们将讨论什么是无服务器，它的含义，以及它为何有用。详细描述一下问题，然后谈谈我们的解决方案会是什么样子的，整体架构，然后再深入探讨并进行实践。
+- en: We'll then give an overview of the tool we're going to use， which is Google
+    Cloud， primarily。 through the Google Cloud console， a website that you'll be able
+    to work with hands-on。 And then we're going to do the hands-on solutions。 There
+    are three main parts to the programming contest solution。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们将概述一下我们将使用的工具，主要是通过谷歌云控制台，一个你可以动手操作的网站。接下来我们将进行动手解决方案。编程竞赛解决方案有三个主要部分。
+- en: And we have a separate hands-on code lab for each of those three parts。 Finally。
+    we'll finish with a bit of a recap。 So if you're ready， let's go take a look。
+    The game that we're going to be having the programming contest players build is
+    a number。 guessing game。 We wanted to keep the simplest possible thing。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于这三个部分，我们有各自的动手代码实验室。最后，我们将以一个小总结结束。所以，如果你准备好了，让我们来看看。我们将要让编程竞赛选手构建的游戏是一个数字猜测游戏。我们想保持尽可能简单。
+- en: So the game will be asked to guess a number。 It'll be given a lower and upper
+    bound。 And also it'll be given maybe a history of previous guesses。 So the first
+    time around it may ask。 hey， guess a number from 10 to 50。 And it'll come back
+    and guess， I don't know， 17。 The next time through we'll say guess a number from
+    10 to 50， you already guessed 17， but。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这个游戏将被要求猜一个数字。它会给定一个下限和上限。还可能会给出以前猜测的历史记录。第一次它可能会问：嘿，猜一个从10到50的数字。它会回来猜，我不知道，17。下次我们会说，猜一个从10到50的数字，你已经猜过17，但。
+- en: the answer is higher than that。 The programming contest solution will come back
+    and say， well。 maybe it's 38 then。 And then the next time through we'll say guess
+    a number from 10 to 50。 Your previous guesses were 17， but the real answer is
+    higher and 38， but the real answer， is lower。 And we'll keep going until either
+    the game playing program comes up with the correct。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 答案比那个高。编程比赛的解决方案会回来问，可能是 38。然后下次我们会说猜一个 10 到 50 的数字。你之前的猜测是 17，但真正的答案更高是 38，但真正的答案更低。我们将继续进行，直到游戏程序得出正确答案。
+- en: answer or crashes， fails to answer at all， or in some cases the judging system
+    just gets。 tired of asking。 We've asked you a hundred times to guess a number
+    and you still haven't guessed it。 We're not going to ask anymore。 The first thing
+    we're going to do here is have you build and deploy the serverless。 guesser， the
+    kind of thing a contestant would do。 Then we're going to look at the overall system
+    on how we actually judge the submissions。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 答案或崩溃，完全无法回答，或者在某些情况下，评判系统只是厌倦了询问。我们已经问过你一百次来猜一个数字，但你仍然没有猜对。我们不打算再问了。我们在这里要做的第一件事是让你构建并部署无服务器的猜测器，这正是参赛者会做的事情。然后我们将查看我们实际上如何评判提交的整体系统。
+- en: how， we keep track of standings， how we authenticate users， all of that's going
+    to be built in an。 entire contest judging scoring system。 That's going to involve
+    multiple serverless components that are loosely connected via。 messaging and we're
+    going to keep persistent information in a no SQL data store。 There'll be code
+    labs for every part of the above。 We're going to do this with serverless computing。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们如何跟踪排名，如何验证用户，这些都将建立在一个完整的比赛评判评分系统中。这将涉及多个通过消息传递松散连接的无服务器组件，我们将把持久信息保存在无 SQL
+    数据存储中。上述每个部分都会有代码实验室。我们将使用无服务器计算来完成这项工作。
+- en: At this point we always get some people bring up the fact that there are still
+    servers。 That's the case。 Other people like to say there's no such thing as serverless
+    computing。 it's just other people's， computers。 Well， that's kind of true too
+    but that's the whole point of serverless computing。 There are still servers。 They're
+    not your problem。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时，我们总是会有一些人提到仍然存在服务器。这是事实。其他人喜欢说没有无服务器计算，这只是别人的计算机。好吧，这种说法也有一定的道理，但这就是无服务器计算的全部意义。仍然有服务器，但它们不是你的问题。
+- en: They're the problem of the infrastructure provider you're dealing with。 In this
+    case it's going to be Google Cloud Platform。 You don't have to provision them。
+    You don't have to back them up。 You don't have to manage them。 You don't have
+    to monitor them。 You don't have to scale them。 You don't have to do any of that
+    stuff which means going from figuring out what you want。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些是你所处理的基础设施提供商的问题。在这种情况下，它将是 Google Cloud Platform。你不必配置它们。你不必备份它们。你不必管理它们。你不必监控它们。你不必扩展它们。你不需要做任何这些事情，这意味着从确定你想要的开始。
+- en: the software to do until you've actually got it deployed and running reliably
+    is very。 very quick compared to other solutions。 Not only that。 a lot of serverless
+    options scale down to zero。 So if you've got something that is often idle or has
+    very bursty usage。 you're only， paying for the actual usage and when it's not
+    being used you're paying little or nothing。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在你实际部署并可靠运行之前，所需的软件与其他解决方案相比是非常快速的。不仅如此，许多无服务器选项可以缩减到零。因此，如果你有一些经常闲置或使用非常突发的应用，你只需为实际使用付费，而在未使用时几乎不需要付费。
+- en: There are a couple of major different flavors of serverless computing。 A lot
+    of them are based on using containers where you create containers in the serverless。
+    platform managing scaling them， launching them as needed， replacing them when
+    they're。 unhealthy and so forth。 The other flavor is fully managed。 You just bring
+    your application code。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无服务器计算有几种主要不同的类型。许多基于使用容器的方式，你在无服务器平台上创建容器，管理它们的扩展，根据需要启动它们，替换不健康的容器等。另一种类型是完全托管的。你只需带来你的应用程序代码。
+- en: Nothing else。 The environments and all of that are managed by the platform。
+    Managed serverless computing is what all of the solutions today are going to be
+    built on。 You're going to be responsible for the application code。 Write your
+    own programs。 The cloud platform is going to handle everything else。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有其他选择。环境等都由平台管理。托管无服务器计算是今天所有解决方案将基于的内容。你将负责应用程序代码。编写自己的程序。云平台将处理其他所有事情。
+- en: Keeping an up-to-date programming language environment including all your programming，
+    libraries。 keeping all the tools and APIs you need healthy， scaling your platform
+    up， or down， backing it up。 All that kind of stuff is going to be handled by the
+    platform。 One thing you need to remember though is that your code may be unloaded，
+    reloaded or。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 保持最新的编程语言环境，包括你的所有编程和库。保持所有工具和API的健康，按需扩展或缩减你的平台，进行备份。这类事情都将由平台来处理。然而，你需要记住的是，你的代码可能会被卸载、重新加载或。
+- en: loaded in multiple hosts at any time。 One thing that you may be used to doing
+    when you build solutions is keeping track of state。 in memory or on disk。 You're
+    not going to be able to do that with serverless computing because there may be
+    a。 lot of instances each with their own memory and their own disk and you can't
+    rely on them。 to know what you did on your last time through。 You're going to
+    have to keep any of that information externally to your software。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随时在多个主机上加载。你在构建解决方案时可能习惯于跟踪内存或磁盘中的状态。你无法在无服务器计算中做到这一点，因为可能有很多实例，每个都有自己的内存和磁盘，你不能依赖它们来知道你上次操作的内容。你需要将任何信息外部保存。
+- en: You also have to deal with the fact that sometimes when a new machine needs
+    to be launched to。 run your serverless because you're scaling up or scaling from
+    zero， there may be a little。 bit of startup latency。 Although that's usually not
+    too bad and every serverless platform works all the time to。 reduce it so that
+    it's not going to be a problem in most cases。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你还必须应对这样一个事实，即当需要启动一台新机器来运行你的无服务器时，因为你正在扩展或从零开始，可能会有一点启动延迟。尽管通常这并不太糟糕，而且每个无服务器平台都在努力减少这个问题，以确保在大多数情况下不会成为问题。
+- en: When we're talking about serverless computing， we're talking about software
+    that has some。 common characteristics。 It's got to be stateless， as I already
+    mentioned。 You're going to need to use an external data store if you need to keep
+    track of anything。 from one invocation of your software to the next。 It tends
+    to consist of a lot of pieces loosely coupled。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们谈论无服务器计算时，我们讨论的是具有一些共同特征的软件。正如我已经提到的，它必须是无状态的。如果你需要在每次调用软件时跟踪任何内容，就需要使用外部数据存储。它通常由许多松散耦合的部分组成。
+- en: Each piece is going to handle one well-defined problem and then when that problem's
+    done。 it's going to do something that may trigger other pieces to deal with other
+    parts of it。 You don't have to sit there and think about every single piece you're
+    writing as being。 the end-to-end solution， just dealing with one task。 It's event
+    driven in most cases。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个部分将处理一个明确定义的问题，当该问题解决后，它将执行某些操作，可能触发其他部分来处理它的其他部分。你不必坐在那里考虑你所写的每一个部分都是终端到终端的解决方案，只需处理一个任务。在大多数情况下，它是事件驱动的。
+- en: When something happens like a web request coming in as a very common event，
+    but perhaps。 somebody updates something in storage or sends a message， your software
+    is going to be launched。 and run to handle that event。 It often relies on asynchronous
+    communications。 Unlike a web request。 where the request comes in， the software
+    deals with it， responds， and， then goes away。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当发生某些事件时，比如一个常见的网络请求，或者有人在存储中更新了某些内容或发送了消息，你的软件将被启动并运行以处理该事件。它通常依赖于异步通信。与网络请求不同，请求进来后，软件处理它、响应，然后消失。
+- en: often a message will come in or an event will happen， the software will， deal
+    with it。 but nobody's waiting for it to finish。 Whatever sent that message just
+    relies on the fact that it'll be handled eventually and。 when it goes and needs
+    to deal with the result， it'll check to see if it's actually finished。 or not。
+    It happens asynchronously， which means we've got a lot looser coupling among these
+    components。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常会有一条消息进来或发生一个事件，软件将处理它，但没有人等待它完成。发送该消息的任何人只依赖于它最终会被处理的事实，当它需要处理结果时，将检查它是否实际上已经完成。它是异步发生的，这意味着这些组件之间的耦合更加松散。
+- en: So the problem we're going to solve today is that of a programming contest，
+    the kind。 of thing that a high school or undergraduate program might run。 A lot
+    of you in your earlier days likely participate in a programming contest。 And the
+    way they work is a bunch of programming problems are written up and they're given
+    to。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们今天要解决的问题是编程竞赛的问题，这种事情可能是高中或本科课程会举办的。你们中的很多人在早期的日子里可能参加过编程竞赛。它们的运作方式是编写一堆编程问题并交给。
+- en: the contestants to create their own solutions。 And the problems tend to be given
+    this source file。 do this kind of calculation or processing， and produce output，
+    which we will then judge。 We'll create a bunch of， as the judges， we're going
+    to create a bunch of different source， files。 We'll test your software against
+    them and see if you produce the right output。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 参赛者要创建自己的解决方案。这些问题通常会给出源文件，执行某种计算或处理，并生成输出，我们将对其进行评判。作为评审，我们会创建一堆不同的源文件。我们将测试你的软件，看看你是否能生成正确的输出。
+- en: Contestants write their own solutions。 They test it with the sample data that's
+    given out in the problem and if they're really。 good， they actually write some
+    additional sample data to test it， not just rely that they work。 on the simple
+    cases。 And then they turn the solutions in。 In the early days。 that was on physical
+    media like diskets or CDs or memory keys。 Nowadays。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 参赛者编写自己的解决方案。他们用问题中给出的样本数据进行测试，如果他们很优秀，他们会编写一些额外的样本数据来测试，而不仅仅依赖于简单的案例。然后他们将解决方案提交。在早期，这些提交是通过物理介质，如软盘、光盘或存储键进行的。而如今。
+- en: it's probably going to be through email or uploading into a web form。 Regardless。
+    the judges get these solutions。 They have to compile and run them against all
+    their different test cases and then mark。 whether they succeeded or failed or
+    crashed。 And then there's another system that keeps track of all that and scores
+    it based on when。 it was turned in and how many problems were solved correctly，
+    that kind of thing。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能通过电子邮件或上传到网页表单完成。不管怎样，评审会收到这些解决方案。他们必须将其编译并运行所有不同的测试用例，然后标记是否成功、失败或崩溃。接着还有另一个系统跟踪所有这些，并根据提交时间和解决的问题数量进行评分。
+- en: Contestants find out whether their submission worked or not。 If it didn't。 they
+    can go ahead and try again。 If you've ever worked on the judging side of this。
+    you know that managing these submissions， is a complete and total mess。 You've
+    got to keep track of what contestants submitted， what solutions and when they
+    were。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 参赛者发现他们的提交是否有效。如果无效，他们可以继续尝试。如果你曾参与评审工作，你会知道管理这些提交是一团糟。你必须跟踪参赛者提交了什么解决方案，以及它们的提交时间。
+- en: submitted， especially if physical media is involved。 And you've got to avoid
+    malicious code messing up your test beds。 In fact。 it's not even necessarily malicious
+    code。 It can just be dangerously buggy code that makes your test beds unreliable
+    and the next。 time you go to score a solution， it may fail even though there's
+    nothing wrong with that。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提交，特别是如果涉及物理介质。你必须避免恶意代码干扰你的测试环境。实际上，这甚至不一定是恶意代码。它可能只是危险的错误代码，使你的测试环境不可靠，下次你评分解决方案时，即使没有问题，它也可能失败。
+- en: solution is the previous test has just left your system in a bad state。 And
+    you've also got to deal with different machine configurations。 The contestants
+    may be running their stuff on different operating systems with different。 versions
+    of your programming language or libraries or even totally different languages。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 解决方案是之前的测试可能将你的系统置于不良状态。此外，你还必须处理不同的机器配置。参赛者可能在不同操作系统上运行他们的代码，使用不同版本的编程语言、库，甚至完全不同的语言。
+- en: You've got to have all those on your own machines and match them up pretty well。
+    The solution that we're going to use is to say， hey， it's hard to deal with submitted，
+    programs。 so don't submit programs。 Instead， after the contestant writes their
+    program。 have the contestant provide the infrastructure， that the judge is going
+    to use as well。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你需要在自己的机器上保存所有这些内容，并将其匹配得相当好。我们要使用的解决方案是，嘿，处理提交的程序很麻烦，所以不要提交程序。相反，在参赛者编写程序后，让他们提供评审将使用的基础设施。
+- en: We're going to run the solutions on the contestants own infrastructure。 When
+    we look at how the problems are written， here's an input file， process it and
+    produce。 an output file。 That's how HTTP request works。 So that's what we're going
+    to do。 The contestants will write their solutions and deploy them to a web server
+    and just tell。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在参赛者自己的基础设施上运行解决方案。当我们查看问题的编写方式时，输入文件，处理并生成输出文件。这就是HTTP请求的工作方式。所以这就是我们要做的。参赛者将编写解决方案并将其部署到Web服务器上，然后告知。
+- en: the judges， here's the URL。 In order to test my assignment。 take your input
+    file and send it as a post request to， my web server。 My program will run and
+    it'll return as its result， the return page or return data at any。 rate is going
+    to be my solution to the problem。 So if my program doesn't work or messes things
+    up。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 向评委提供这个URL，以测试我的作业。将你的输入文件作为POST请求发送到我的网络服务器。我的程序将运行，返回的结果将是返回页面或返回数据，无论如何，都是我问题的解决方案。因此，如果我的程序不工作或搞砸了。
+- en: as a contestant， I'm messing up my infrastructure， not the judge's infrastructure。
+    The judges have a much easier job keeping track of stuff。 They can also hit that
+    web server multiple times with all sorts of different scenarios。 and different
+    test files。 They probably will want to randomize their test out a little bit so
+    a contestant that。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为参赛者，我在搞乱我的基础设施，而不是评委的基础设施。评委的工作要简单得多，可以更好地跟踪所有事物。他们还可以用各种不同的场景和测试文件多次访问该网络服务器。他们可能会希望对测试进行一些随机化，以防某个参赛者。
+- en: can't figure out the solution doesn't end up just hard coding a response given
+    an input， file。 Let's take a look at a high level system diagram。 The contestant
+    is doing their work on their own laptop。 After they get a solution that they think
+    is correct， they deploy that solution to their。 own web server， which gives them
+    a URL that's available to anybody on the internet。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 解决方案无法确定的参赛者，最终只会根据输入文件硬编码一个响应。让我们看一下高级系统图。参赛者在自己的笔记本上进行工作。在他们得到一个认为正确的解决方案后，他们将该解决方案部署到自己的网络服务器，这样就能获得一个任何人都能访问的URL。
+- en: They submit that URL to the judging system probably through a web form。 The
+    judging system then talks to that web server and does all the necessary testing
+    and。 updates its standings and scores。 The contestant at any point can go look
+    at the judging system standings page and see。 the status of all their submissions
+    and how they stand relative to everybody else。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们通过网页表单将该URL提交给评判系统。评判系统然后与该网络服务器进行通信，进行所有必要的测试，并更新其排名和得分。参赛者可以随时查看评判系统的排名页面，了解自己所有提交的状态，以及与其他参赛者的相对位置。
+- en: We're going to build， first of all， the contestant solution。 That's the smallest。
+    easiest part of this overall problem。 So we're going to get a simple start to
+    serverless computing using what we expect contestants。 to be able to do。 We're
+    then going to look at the bigger judging system。 which has a lot more concepts
+    that， we need to apply on how we have multiple components interacting with one
+    another to build a good。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们将构建参赛者的解决方案。这是整个问题中最小、最简单的部分。因此，我们将使用我们期望参赛者能够做到的，简单开始无服务器计算。然后我们将查看更大的评判系统，其中有更多概念，我们需要应用，以便实现多个组件之间的良好交互。
+- en: serverless distributed solution。 You've got to ask if you've ever done programming
+    contests whether this is practical。 You've got these contestants busily writing
+    their solutions。 Can we expect them to manage and deploy their own web servers
+    as well？
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无服务器分布式解决方案。你得问问自己，是否曾参与编程竞赛，这是否实际可行。参赛者正忙着编写他们的解决方案。我们能期待他们管理和部署自己的网络服务器吗？
+- en: And if managing and deploying their own web servers means they provision and
+    create a machine。 put it on the internet， install web server software， configure
+    each of their solutions。 is a different path in that web server。 The answer to
+    that is basically no。 Programming contests are fairly short。 Students are focused
+    on just the problems。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果管理和部署自己的网络服务器意味着他们需要配置和创建机器，放到互联网，安装网络服务器软件，配置他们每个解决方案，那将是一个不同的方向。对此的回答基本上是否定的。编程竞赛相对较短，学生们专注于解决问题。
+- en: That's not going to work。 But if they're using a lightweight managed serverless
+    platform。 it is very feasible as， we're going to see。 It's not going to be a difficult
+    hurdle for students to pass。 In fact， the platform we're going to use for the
+    students， for the contestants， is one。 that gives you the shortest possible path
+    from something working on my machine to something。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这行不通。但如果他们使用轻量级的托管无服务器平台，这是非常可行的，正如我们将看到的。这对学生来说不是一个难以逾越的障碍。事实上，我们将为学生和参赛者使用的平台，提供从我的机器上运行到某种东西的最短路径。
+- en: deployed and running successfully on the internet。 That's why we're going to
+    start the workshop with that part of the problem。 The contestant writes and deploys
+    a solution to the web。 Then we're going to get to the bigger system after that。
+    We're going to use Google Cloud Platform。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 部署并成功运行在互联网上。这就是我们为什么要从问题的这一部分开始研讨会。参赛者编写并将解决方案部署到网络上。然后我们将进入更大的系统。我们将使用 Google
+    Cloud Platform。
+- en: Well， that's who I work for。 That's what I'm most familiar with。 But other Cloud
+    platforms could do all the same kind of thing。 Any of the major Cloud platforms
+    has similar capabilities to the ones we're going to use。 on Google Cloud。 The
+    steps and details would be quite different。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，这就是我工作的地方。这是我最熟悉的。但其他云平台也能做同样的事情。任何主要的云平台都有类似的功能，可以在 Google Cloud 上使用。步骤和细节会有所不同。
+- en: The effort involved would be somewhat different， but it still should be doable。
+    All of our code for this workshop is on GitHub， and we're going to give you the
+    URL in a minute。 So feel free to fork that repository and adapt it to another
+    platform and let us know。 We'd be very interested。 The resources you're going
+    to need today are just a laptop with an internet connection。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这项工作的努力会有所不同，但仍然应该是可行的。我们这次研讨会的所有代码都在 GitHub 上，我们马上会给你提供网址。所以请随意分叉那个仓库，并将其适配到其他平台，并告诉我们。我们会非常感兴趣。你今天需要的资源只是一台带有互联网连接的笔记本电脑。
+- en: and a modern web browser。 Everything's going to be done through the web browser。
+    You're not going to have to install any other software on your local laptop。 You
+    can use any modern standards based web browser。 Google Chrome， of course， will
+    work。 but so will Firefox， Safari， Edge， and probably， some other browsers I don't
+    even know about that are nevertheless modern and standards based。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以及一个现代的网页浏览器。所有操作都将在网页浏览器中完成。你不需要在本地笔记本上安装任何其他软件。你可以使用任何现代标准的网页浏览器。当然，谷歌浏览器可以使用，但
+    Firefox、Safari、Edge，甚至可能还有一些我不太了解的现代标准浏览器也可以使用。
+- en: You're also going to need a Google account。 Now if you've got a Google account
+    through your university or work。 what we call a G Suite， account， it may well
+    work。 It can work。 but the administrator of your overall university or company
+    system can turn off， this capability。 So if you have any issues trying to use
+    your work or school account， instead go ahead and。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你还需要一个 Google 帐户。如果你通过大学或工作有 Google 帐户，也就是我们所说的 G Suite 帐户，那可能有效。它可以工作，但你整体大学或公司系统的管理员可以关闭此功能。所以如果你在使用工作或学校帐户时遇到任何问题，最好去。
+- en: set up a plain vanilla account， Gmail account， and use that for these examples。
+    The materials are all online。 The slides are at serverlessworkshop。dev/slides。pdf。
+    The source codes on GitHub at Google Cloud Platform， serverless game contest，
+    and the， code labs。 step-by-step instructions for each of the three sessions we're
+    going to， go through。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 设置一个普通的 Gmail 帐户，并在这些示例中使用它。所有材料都在线。幻灯片在 serverlessworkshop.dev/slides.pdf。源代码在
+    Google Cloud Platform 的 GitHub 上，服务器无关的游戏比赛，以及代码实验室。我们将逐步讲解我们要经历的三个环节的说明。
+- en: are also available on serverlessworkshop。dev。 So one thing to remember throughout
+    this is that you can get the latest state of all the。 resources we're working
+    with and share them with others as well if you want at serverlessworkshop。dev。
+    We can take a short break right now and when you come back in the next part we're
+    going。 to go over how to get stuff up and running on Google Cloud Platform and
+    then we're going。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些资源也可以在 serverlessworkshop.dev 获取。所以在此期间需要记住的一点是，你可以获取我们正在使用的所有资源的最新状态，并与其他人分享，如果你愿意的话，地址是
+    serverlessworkshop.dev。我们现在可以稍微休息一下，等你回来后，我们将讨论如何在 Google Cloud Platform 上启动和运行内容。
+- en: to solve the first part of the problem， the contestant writes a game-playing
+    solution and。 deploys it on the internet using a serverless tool。 Thanks。 Well。
+    with that introduction out of the way， let's go ahead and start with the first
+    hands， on piece。 the game player that each contestant will write。 We're going
+    to work with his hands on and all the materials you're going to need are again。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了解决问题的第一部分，参赛者编写一个游戏解决方案，并使用无服务器工具将其部署到互联网上。谢谢。好吧，介绍完毕，让我们开始第一部分的动手操作。每位参赛者将编写的游戏玩家。我们将实际操作，所有你需要的材料再次提供。
+- en: available online at serverlessworkshop。dev。 In order to do this work we're going
+    to have to build a GCP project。 a Cloud Platform project， and that's because all
+    of the Cloud Platform resources live inside of a project。 You've got one account
+    and that one Google account can have many projects in it and you。 can share ownership
+    of projects with other Google accounts。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在线可用的地址是 serverlessworkshop.dev。为了进行这项工作，我们需要构建一个 GCP 项目，一个云平台项目，因为所有的云平台资源都存在于项目内。你有一个账户，而这个
+    Google 账户可以拥有多个项目，你也可以与其他 Google 账户共享项目的所有权。
+- en: Resources in the same project usually can interact with one another but you
+    can enable。 resources in different projects to interact and you can also restrict
+    resources in the。 same project from interacting。 One of the nicest things about
+    Google Cloud projects is that when you're done using a。 set of resources you can
+    just delete the project and all the resources go away there's no chance。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同一个项目中的资源通常可以相互交互，但你可以启用不同项目中的资源进行交互，也可以限制同一项目中的资源不进行交互。Google Cloud 项目中最好的一个特点是，当你完成使用一组资源后，可以直接删除项目，所有资源都会消失，没有任何遗留。
+- en: of getting any future billing showing up by surprise。 Now in the real world
+    in this programming contest each contestant would have their own。 project and
+    the management system would be a separate project and probably the judging。 programs
+    would be separate projects as well all owned by different entities but to keep。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了避免未来的账单意外出现。在现实世界中，在这个编程竞赛中，每个参赛者都会有自己的项目，管理系统会是一个单独的项目，评审程序也可能是单独的项目，所有这些项目都由不同的实体拥有，但为了保持。
+- en: things simple we're going to just use one project for everything in the workshop
+    we're。 going to talk about when you might have to do extra work if they were in
+    separate projects。 Turns out there's not many places where that comes out to be
+    an issue because of how we're。 architecting this system。 We're going to do the
+    work with the Google Cloud developer console that's at cloud。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们会将一切简化，仅使用一个项目来进行工作坊的所有内容。我们将讨论如果将它们放在不同的项目中，可能需要额外工作的时候。事实证明，因我们如何构建这个系统，实际上并没有很多地方会出现这个问题。我们将使用
+    Google Cloud 开发者控制台来完成工作，网址是 cloud。
+- en: com。 We're going to go and do that hands-on once we start the actual code lab。
+    In that console you'll need to build a new project there's a drop-down at the
+    top of。 the console where you select a new project you click for the selection
+    and click on new。 project rather than selecting an existing one。 The system may
+    already have created a dummy project for you and you can use that if you。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: com。我们将在开始实际代码实验室后进行动手操作。在控制台中，你需要构建一个新项目，控制台顶部有一个下拉菜单，你可以选择新项目，点击选择并点击新项目，而不是选择现有项目。系统可能已经为你创建了一个虚拟项目，如果你需要，可以使用那个。
+- en: want。 When you create the new project you give it a name and you can call it
+    anything but its。 ID will probably be based on the name but it won't exactly equal
+    the name unless your。 name is globally unique across all of the cloud platform。
+    So if you call your project serverless workshop the project ID is probably going
+    to turn out。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你创建新项目时，你需要给它一个名字，可以随意命名，但其 ID 可能会基于这个名字，除非你的名字在整个云平台中是全球唯一的，否则 ID 不会完全等于名字。因此，如果你把项目命名为无服务器工作坊，项目
+    ID 可能会变成。
+- en: to be something like serverless workshop some long random number。 I tend to
+    call my project something with my name at the beginning because it's pretty。 rare
+    so if you call the project angle key serverless workshop well you'd get a randomly。
+    selected number at the end of it because I've already done that but I was able
+    to get that。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能是像 serverless workshop 这样的名称加上一些随机数字。我倾向于把我的项目命名为以我的名字开头，因为这相当少见，所以如果你把项目叫做角键无服务器工作坊，你会在最后得到一个随机选择的数字，因为我已经做过了，但我能够得到那个。
+- en: name and ID coming out to be the same。 One thing you need to be careful of is
+    the project name is going to be in URLs so if you。 want to share somebody share
+    the URL with somebody so that they can actually invoke your。 program that you're
+    creating you want to create a name that you're not embarrassed to， share。 So we're
+    going to start simple。 This first code lab is going to be building the contestants
+    game player。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 名字和 ID 可能会相同。你需要注意的是，项目名称将出现在 URL 中，所以如果你想与他人分享 URL，以便他们能够实际调用你正在创建的程序，你要创建一个不会让你感到尴尬的名称。因此，我们将从简单的开始。这个第一个代码实验室将构建选手的游戏玩家。
+- en: We're going to take the role of a contestant and we're going to write a program
+    that accepts。 a web request representing the current game state and we're going
+    to respond with a single， move。 We're going to deploy that program to the internet，
+    submit the program for judging by providing。 the URL through a web form and the
+    judging programs are going to invoke our program over。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将扮演选手的角色，编写一个接受表示当前游戏状态的网络请求的程序，并将以单一步骤进行响应。我们将把该程序部署到互联网，通过网络表单提交程序供评审，并且评审程序将调用我们的程序。
+- en: and over again。 They're going to invoke our program with the first move and
+    then based on the response they'll。 maybe make another request for the second
+    move and so forth。 We're going to talk about how all those other parts work later。
+    So recall our high level system diagram。 We're going to do our work on our own
+    laptop and one as a contestant anyway。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们将一遍又一遍地调用我们的程序，首先进行第一步，然后根据响应再可能请求第二步，依此类推。我们稍后会讨论这些其他部分如何运作。所以回顾一下我们的高层系统图。无论如何，我们会在自己的笔记本电脑上工作，一名选手也是如此。
+- en: When we're ready we're going to deploy our program to a web server and then
+    we're going。 to submit the URL to the judging system which will test our program
+    in the web server and。 eventually update the standings so we can see where we
+    are relative to everybody else。 For this code lab we're going to work with the
+    player。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们准备好时，将把程序部署到网络服务器，然后提交网址给评审系统，后者将在网络服务器上测试我们的程序，并最终更新排名，以便我们可以看到自己与其他人相比的位置。在这个代码实验中，我们将与玩家一起工作。
+- en: The program is deployed to our own web server。 The platform we're going to use
+    is Google Cloud Functions。 This is a managed serverless program where we just
+    provide a program， our source code。 and there are a variety of languages supported
+    including Python which is what we'll be using， today。 Python is extremely well
+    supported in Cloud Functions and in fact throughout Google Cloud。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 程序被部署到我们自己的网络服务器上。我们将使用的平台是谷歌云函数。这是一个托管的无服务器程序，我们只需提供程序和源代码，并且支持多种语言，包括今天我们将使用的Python。Python在云函数中得到了极好的支持，实际上在整个谷歌云中也是如此。
+- en: We don't only have to provide our program we also have to say what event should
+    trigger。 our program being run。 In this case it's going to be one web request
+    comes in run our program and then the platforms。 are responsible for listening
+    for web requests to that URL when one comes in it will trigger。 our program and
+    send the response from our program back to whoever made the original request。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不仅需要提供程序，还必须说明什么事件应该触发程序的运行。在这种情况下，来自一个网络请求时将运行我们的程序，然后平台负责监听该网址的网络请求，当请求到达时，它将触发我们的程序，并将响应从我们的程序发送回最初发起请求的用户。
+- en: A big benefit of using this Cloud Function platform is we don't have to do any
+    system。 administration at all。 We just write our program。 The program is going
+    to scale as needed。 If all of a sudden we have thousands of people wanting to
+    play this game against us our program。 will scale up to handle it。 The more likely
+    situation is our program is going to go idle for a long time where nobody's。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用这个云函数平台的一个重大好处是我们完全不需要进行任何系统管理。我们只需编写程序。程序将根据需要进行扩展。如果突然之间有成千上万的人想要与我们进行这个游戏，我们的程序将会扩展以应对。更有可能的情况是我们的程序会长时间闲置，没有人进行交互。
+- en: interacting with it and in that case the platform is going to be able to scale
+    it down to zero。 not incurring costs。 The judging system is going to then play
+    a game against our program by first setting。 the initial game state to the player
+    and the player is going to look at that and say okay。 I'm going to make my first
+    move and respond with that move。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与其交互时，平台能够将其缩减到零，从而不产生费用。评审系统将首先设置初始游戏状态，然后与我们的程序进行游戏，玩家将查看并说好的，我将进行我的第一步，并对此作出响应。
+- en: The judging system will update the game state maybe make a move of its own if
+    it's a two。 player game and then it will send the new game state for the next
+    move and the player is going。 to respond with that move。 One after another。 Notice
+    that the player does not have any memory in this case。 The only component here
+    that's keeping track of the history of the game play is in the judging。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 评审系统将更新游戏状态，如果是双人游戏，可能还会进行自己的移动，然后将新的游戏状态发送给玩家进行下一步，玩家将对此作出响应。一个接一个地进行。请注意，在这种情况下，玩家没有任何记忆。唯一跟踪游戏历史的组件是在评审系统中。
+- en: system not the player。 That means our player doesn't have to keep track of who's
+    making the request so when it。 gets one request after another they could be coming
+    from different people or the same person。 playing a different game our player
+    system doesn't need to know that。 It's told what the game has been so far and
+    asked for what the next move is。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 系统而不是玩家。这意味着我们的玩家不需要跟踪谁在发出请求，所以当它接收到一个又一个请求时，这些请求可能来自不同的人，也可能来自同一个人玩不同的游戏，我们的玩家系统不需要知道这一点。它只需被告知到目前为止游戏的进展，并被询问下一步该怎么做。
+- en: Let's do an example of that with a game everybody knows tic tach toe。 The initial
+    game state for tic tach toe is an empty board a three by three grid with a。 bunch
+    of empty squares and we're going to represent that in Jason as a dictionary with。
+    a field called Mark so far that's an array of all the marks that have been put
+    on the。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们用大家都知道的游戏“井字棋”来举个例子。井字棋的初始游戏状态是一个空棋盘，一个三乘三的网格，有很多空方格，我们将用 JSON 表示它，作为一个带有“Mark”字段的字典，到目前为止，这个字段是一个包含所有标记的数组。
+- en: board and they're having been any at the beginning and then what the next mark
+    should。 be your mark when we're talking to the player and the first mark should
+    always be an X when。 you're playing tic tach toe so the player is going to take
+    that game state and respond。 with its move and pretty much everybody always makes
+    the first move by putting their X in。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 棋盘的初始状态是空的，并且在开始时没有任何标记，然后下一个标记应该是什么。当我们与玩家交流时，第一标记应该始终是 X，当你玩井字棋时，因此玩家将接受该游戏状态并回应他们的移动，几乎每个人总是通过把他们的
+    X 放在。
+- en: the middle of the grid。 Row two column two our game numbers and get rows and
+    columns one two and three。 The judging system is going to process that move and
+    then make a move of its own so the。 second request coming from the judging system
+    may be something saying here's an array of。 the mark so far there's an X in row
+    two column two and there's an O in row one column one。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 网格的中间。第二行第二列，我们的游戏编号为一、二和三。评判系统将处理该移动，然后进行自己的移动，因此来自评判系统的第二个请求可能会是某个数组，表示到目前为止的标记，其中第二行第二列有一个
+    X，第一行第一列有一个 O。
+- en: the upper right hand corner。 It's your turn your mark is an X where you're going
+    to put the X and the player is going。 to respond with a Jason representation of
+    where they want to put that X in this case it's。 going to be the middle of the
+    top row row one column two and this is going to continue。 until the player can't
+    make a move or until the player wins or until the player completely。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 右上角。轮到你了，你的标记是 X，你将把 X 放在哪里，玩家将以 JSON 的形式响应他们想放置 X 的位置，在这种情况下是顶部一行的中间，即第一行第二列，这将持续进行，直到玩家无法移动，或者玩家获胜，或者玩家完全失去。
+- en: loses or even crashes。 Any of those outcomes are possible。 One thing we want
+    to look at when we're dealing with a distributed application like what we're。
+    building is how tightly are the different components coupled how much do we have
+    to know。 what the opposite part of the system is doing in order to write our part
+    of the system and。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输掉游戏或甚至崩溃。这些结果都是可能的。当我们处理像我们正在构建的分布式应用程序时，我们想要关注的一点是不同组件之间的耦合有多紧密，我们需要了解系统的对立部分在做什么，以便编写我们自己的系统部分。
+- en: in this case we have very very little coupling between the player and the judging
+    system。 The only connection between them is that the judging system makes HTTP
+    requests over the。 public internet to the player so there's no issue of sharing
+    resources dealing with permissions。 just a matter of can I send a request and
+    can I respond to that request。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，玩家与评判系统之间的耦合非常非常小。它们之间唯一的联系是评判系统通过公共互联网向玩家发送 HTTP 请求，因此没有共享资源和处理权限的问题。这只是一个能否发送请求以及能否响应请求的问题。
+- en: That's important because every contestant is building a completely separate
+    player and。 we don't want them to have to coordinate with one another to avoid
+    stepping on each other's。 toes with resource sharing。 We also don't want them
+    sharing resources with the judging system which could even be。 a security problem。
+    In general not just for a contest like this but for pretty much any kind of distributed。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这很重要，因为每个参赛者都在构建一个完全独立的玩家，我们不希望他们相互协调以避免在资源共享上互相踩到脚。我们也不希望他们与评判系统共享资源，这甚至可能成为安全问题。一般来说，不仅仅是像这样的比赛，而是几乎任何类型的分布式系统。
+- en: system。 Minimizing coupling between components makes that system design， deployment
+    and maintenance。 a lot more flexible and secure。 We're going to keep that in mind
+    throughout not just this first part。 Our game is going to be much simpler than
+    tic-tac-toe because we don't want to spend our time talking。 about how the game
+    play should work we want to talk about how a system gets architected。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最小化组件之间的耦合使得系统设计、部署和维护更加灵活和安全。我们将贯穿始终地牢记这一点，而不仅仅是这第一部分。我们的游戏将比井字棋简单得多，因为我们不想花时间讨论游戏玩法应该如何进行，我们想谈谈系统是如何架构的。
+- en: So we created what we think is pretty much the simplest possible game。 Well
+    we didn't really create it everybody's done this before。 The guess and number
+    game。 We give the contestant a minimum a maximum number and a history of guesses
+    so far and。 the contestant comes back and makes a guess a whole number。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们创建了我们认为几乎是最简单的游戏。好吧，我们并没有真正创造它，大家以前都做过。猜数字游戏。我们给参赛者一个最小值、最大值和到目前为止的猜测历史，然后参赛者返回并进行一个整数的猜测。
+- en: We don't worry about the judging system we just have to write the player but
+    if you want。 after we're done building this and we'll come back to this at that
+    point you can actually。 submit your solution to our example judging system at
+    serverless workshop demo。appspot。com。 Well the game is going to be played by the
+    judging system sending a web request to our。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不担心评判系统，我们只需要编写玩家，但如果你愿意，在我们完成构建之后，我们会回到这个点，你实际上可以将你的解决方案提交给我们的示例评判系统，网址是serverlessworkshop.demo.appspot.com。好吧，游戏将由评判系统通过发送网络请求到我们的玩家来进行。
+- en: player and the web request is going to be a JSON representation of the state
+    of the game， so far。 Well at the beginning we may say guess a number from one
+    to ten and that would be represented。 by the JSON object with a minimum of one
+    a maximum of ten and an empty history。 No guesses so far。 The playing system is
+    going to respond with its guess also in JSON。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 网络请求将是游戏状态的JSON表示。到目前为止。好吧，一开始我们可能会说猜一个从一到十的数字，这将通过JSON对象表示，最小值为一，最大值为十，历史为空。到目前为止没有猜测。游戏系统将以JSON格式响应它的猜测。
+- en: For example it may just return six and yes six is the JSON representation of
+    a whole number。 We don't need any quotation marks or curly braces or anything
+    like that just six for our， guess。 The second time around the judging system is
+    going to say make another guess of a number。 between one and ten you previously
+    guess six but the real answer is higher than that and。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，它可能只是返回六，是的，六是一个整数的JSON表示。我们不需要任何引号、花括号或其他东西，只需六作为我们的猜测。第二次，评判系统将说再猜一个从一到十的数字，你之前猜了六，但真实答案比那高。
+- en: the game is going to come back and make its next guess。 Ideally it will be seven
+    eight nine or ten but we don't know how smart our player is maybe。 it'll guess
+    eight thousand。 It doesn't matter it's going to continue until the judging system
+    gets tired of letting。 the player make guesses or until the player guesses a correct
+    number。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 游戏将会重新开始并进行下一次猜测。理想情况下，它会猜测七、八、九或十，但我们不知道我们的玩家有多聪明，也许它会猜测八千。没关系，它将继续进行，直到评判系统厌倦了让玩家进行猜测，或者直到玩家猜对一个正确的数字。
+- en: So let's go ahead and build and deploy this solution。 There's a hands-on code
+    lab available again the link is available from serverlessworkshop。dev。 and the
+    particular link for this is serverlessworkshop。dev/player。 So here is the code
+    lab。 It's a step by step move through how to build a game。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么让我们继续构建并部署这个解决方案。这里有一个动手编码实验室，链接可以在serverlessworkshop.dev找到，具体链接是serverlessworkshop.dev/player。这里是编码实验室。它是一步步讲解如何构建一个游戏。
+- en: It explains a background that we've already been covering。 You've got to create
+    a solution called a player as a web service to make one move at a time。 We explain
+    what the game is。 The game we give examples of the JSON input and the JSON output
+    and describe what we're。 going to build。 We're going to build a game a cloud function
+    that looks at the request to see what the。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这解释了我们已经涵盖的背景。你需要创建一个称为玩家的解决方案作为一个网络服务，以便一次进行一步。我们解释了这个游戏是什么。我们给出了JSON输入和JSON输出的示例，并描述了我们要构建的内容。我们将构建一个游戏，一个查看请求以了解状态的云函数。
+- en: state of the game so far is and makes a guess and return that single integer。
+    We're going to write this using Python 3。7 although if you're watching this workshop
+    fairly。 far in the future we may instead be supporting Python 3。8 nothing about
+    what we're going to。 do will really change much at that point and we're going
+    to see how to test that cloud， function。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目前游戏的状态是进行猜测并返回一个整数。我们将使用 Python 3.7 编写这个代码，虽然如果你在未来观看这个研讨会，我们可能会支持 Python 3.8，但我们要做的事情在那时不会有太大变化，我们将看到如何测试云函数。
+- en: In order to do this you're going to need a modern web browser such as Chrome
+    or Firefox。 or Safari or Microsoft Edge any modern web browser can do this work
+    and you're going to。 have to have some basic understanding of the Python programming
+    language。 So in order to get set up we need to build a GCP project。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了做到这一点，你需要一个现代的网络浏览器，例如 Chrome、Firefox、Safari 或 Microsoft Edge，任何现代网络浏览器都能完成这项工作，并且你需要对
+    Python 编程语言有一些基本的了解。因此，为了设置，我们需要构建一个 GCP 项目。
+- en: This is the first part of the game playing system you've ever worked on so we're
+    going。 to create a project for it and we're going to use that project for all
+    the other parts， later on。 You go to console。cloud。google。com。 Let's take a look
+    at that console。 Here I've already created a project called serverless workshop
+    angle key or I could have。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是你第一次接触的游戏系统的第一部分，因此我们要为其创建一个项目，并且我们将把这个项目用于后续的所有其他部分。你可以访问 console.cloud.google.com。让我们来看看这个控制台。在这里，我已经创建了一个名为无服务器研讨会角钥匙的项目。
+- en: called it angle key serverless workshop。 You can see the project name and in
+    this case a project ID are the same。 There's also a system generated project number。
+    We're going to work using the cloud shell which is a command line available through
+    the。 web browser that runs on a virtual machine uniquely created for you in cloud
+    shell。 You just click this activate cloud shell button。 It takes a minute to start
+    the cloud shell virtual machine。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们称之为角钥匙无服务器研讨会。你可以看到项目名称，在这个情况下，项目 ID 是相同的。还有一个系统生成的项目编号。我们将使用云终端，它是一个通过网络浏览器可用的命令行，在云终端中为你唯一创建的虚拟机上运行。你只需点击激活云终端按钮。启动云终端虚拟机需要一分钟。
+- en: There's no charge for this virtual machine。 It's very nice。 It's a Linux command
+    line。 You could do all this on your local machine and Mac windows are Linux but
+    you have to install。 some software all of which is already installed in cloud
+    shell。 Alright now that we're in cloud shell what are we going to do？
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个虚拟机是免费的。这很不错。它是一个 Linux 命令行。你可以在本地机器上进行所有这些操作，无论是 Mac、Windows 还是 Linux，但你需要安装一些软件，而这些软件在云终端中已经安装好了。好吧，现在我们在云终端中，我们该做什么？
+- en: Well the first thing we're going to do is get the source code。 That's on github
+    and so we need to issue a git clone command。 And again all the software we need
+    in this case the git clone command is already built。 in to our cloud shell environment。
+    So let's paste this with control V and it does the clone and if we do an LS we
+    see that。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，我们要做的第一件事是获取源代码。这在 GitHub 上，所以我们需要发出 git clone 命令。而且，在这种情况下，我们需要的所有软件，包括
+    git clone 命令，已经内置在我们的云终端环境中。所以让我们使用控制 V 粘贴这个命令，它会执行克隆，如果我们执行一个 LS 命令，我们可以看到结果。
+- en: it has downloaded all the stuff from that github repository。 We're going to
+    want to take a look at this。 So let's go ahead and open the cloud shell editor。
+    The look and feel of this has changed over time and it may change again if you're
+    dealing。 with this a few months down the road but basically you're going to have
+    the same thing where。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它已经从那个 GitHub 仓库下载了所有内容。我们想看看这个内容。所以让我们打开云终端编辑器。它的外观和感觉随着时间而变化，如果几个月后你使用这个，可能还会再变化，但基本上你会看到类似的界面。
+- en: you've got a command line cloud shell and the ability from there to click to
+    open interactive。 easy to use web editor。 The first time you open it can take
+    a minute。 And here we are we see our editor we can go and look at the player and
+    we've got a variety。 of different python programs that can play the game。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你拥有一个命令行云终端，并可以从那里点击打开交互式的、易于使用的网页编辑器。第一次打开时可能需要一点时间。现在我们看到我们的编辑器，我们可以查看玩家，并且我们有多种不同的
+    Python 程序可以玩这个游戏。
+- en: It's a very very simple program to play a very very simple game。 Okay let's
+    go take a look at the code lab and see what we should be doing next。 We're going
+    to create test and invoke a cloud function to play the game。 So again we need
+    to go back to the console and we can open another instance so we can。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个非常简单的程序，用于玩一个非常简单的游戏。好的，让我们去看看代码实验室，看看接下来应该做什么。我们将创建测试并调用一个云函数来玩游戏。所以我们需要回到控制台，可以打开另一个实例。
+- en: not have to go back and forth between different parts of it all the time。 That's
+    something I really prefer to do rather than keep navigating forward and back just。
+    open another tab。 So we're going to have the console at console。cloud。google。com。
+    We need to collect select our project and create a new function by going to the
+    cloud。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不必总是来回切换不同的部分。这是我更喜欢的做法，而不是一直向前和向后导航，只需打开另一个标签页。因此，我们将访问 console.cloud.google.com。我们需要选择我们的项目并通过进入云创建一个新功能。
+- en: function section of the compute component。 So when we look at the console over
+    here we have a menu icon we click on it and we have。 all the different things
+    we can do in the console broken down into general categories。 In this case we're
+    looking at the compute category and we want to look at cloud functions。 The first
+    time we ever go to this we may have to wait a minute for it to initialize the
+    environment。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 计算组件的函数部分。因此，当我们在这里查看控制台时，我们有一个菜单图标，点击它后我们可以看到控制台中所有不同的操作，按一般类别划分。在这种情况下，我们正在查看计算类别，并且我们希望查看云函数。第一次访问时，可能需要等一会儿让环境初始化。
+- en: but fairly soon we're going to have the ability to create a new function。 Okay
+    we've got a form to create the function let's step back to the code lab to see
+    how。 we should fill this form out。 We need to name the function player we need
+    to decide what kind of trigger we are and。 we're going to need to put in our source
+    code。 So let's take a look at that again。
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但很快我们将能够创建一个新功能。好的，我们有一个创建功能的表单，让我们回到代码实验室，看看我们应该如何填写这个表单。我们需要命名这个功能为 player，需要决定我们要什么样的触发器，并且我们需要输入我们的源代码。让我们再看看这个。
+- en: Let's call this function player we can call it anything。 I always leave the
+    amount of memory at the default unless I know I need more or less。 What you pay
+    depends on how long your functions are running times the amount of memory you're。
+    using。 How we're going to trigger this function what kind of events can cause
+    this function to， run。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们称这个功能为 player，可以叫任何名字。除非我知道需要更多或更少的内存，否则我总是将内存量保持为默认值。你支付的费用取决于你的函数运行的时间和使用的内存量。我们将如何触发这个功能，什么样的事件可以使这个功能运行。
+- en: You can see there's quite a variety of different kinds of events that can be
+    handled by functions。 We're going to do the simplest one handle an incoming web
+    request。 It shows us the URL that our function is going to be advertised at。 We
+    do want to allow unauthenticated invocations。 That's because we want the judging
+    system to be able to ask our function to play a game。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以看到有各种不同类型的事件可以被函数处理。我们将处理最简单的一个，处理一个传入的网络请求。它向我们展示了我们的函数将被宣传的 URL。我们确实希望允许未身份验证的调用。这是因为我们希望评测系统能够请求我们的函数来玩游戏。
+- en: without having to have an account we've already authorized。 We're going to do
+    our work with the inline editor and we're going to do Python 3。7 and。 you'll notice
+    it already fills in a sample Python program。 I'm going to expand this editor window
+    so we can see it more completely。
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无需拥有已授权的账户。我们将使用内联编辑器进行工作，并使用 Python 3.7。你会注意到它已经填充了一个示例 Python 程序。我将扩展这个编辑器窗口，以便我们能更全面地看到它。
+- en: The sample program has a single function in it called Hello World。 It's invoked
+    with a request object and that is a flask framework request object if you're。
+    familiar with the Python flask framework。 That request object has a variety of
+    methods on it one of which is get JSON。 So if the request comes in with a body
+    that is JSON this will let us get a dictionary。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 示例程序中有一个名为 Hello World 的单一函数。它通过请求对象被调用，这是一个 Flask 框架的请求对象，如果你熟悉 Python Flask
+    框架的话。这个请求对象有多种方法，其中之一是 get JSON。如果请求携带一个 JSON 格式的主体，这将让我们获得一个字典。
+- en: that is loaded from the JSON object。 If it's got a message in it we go ahead
+    and just return the message。 So this is kind of a weird sample program but it
+    is a decent sample program。 We're going to completely replace this program with
+    our own。 Let's go back to the tab that has the editor open。 Here is the program
+    skipping all of the comments。
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从 JSON 对象加载。如果它里面有消息，我们就直接返回该消息。因此，这算是一个奇怪的示例程序，但它是一个不错的示例程序。我们将完全用自己的程序替换这个程序。让我们回到打开编辑器的标签页。这里是程序，跳过所有注释。
+- en: Let's select it all。 We're going to be able to see it and replace everything
+    in here。 I guess I have to do control V and that's our function。 We need to import
+    the JSON module because we're actually going to be just working with。 JSON namely
+    for our response。 So our function is called make guess。 It's sent a request object。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们全选。我们将能够看到并替换这里的所有内容。我想我得按控制 V，这就是我们的函数。我们需要导入 JSON 模块，因为我们实际上将要处理 JSON，即我们的响应。因此，我们的函数叫做
+    make guess。它被发送了一个请求对象。
+- en: We get the JSON out of it and we look at the field called minimum and that's
+    what we guess。 We're not a very smart playing function。 If you ask me if it's
+    to guess a number between one and ten I'm going to say one。 If you tell me you
+    previously asked five and it really should be higher than that I'm。 still going
+    to say one。 Nothing ever said we had to be smart just so we have to follow the
+    rules。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们从中获取 JSON，并查看名为 minimum 的字段，这就是我们的猜测。我们并不是一个很聪明的猜测函数。如果你问我在一到十之间猜一个数字，我会说一。如果你告诉我你之前问过五，而且它实际上应该高于那个，我仍然会说一。并没有说我们必须聪明，只需要遵循规则。
+- en: We also need to fill in the requirements。txt which is a list of any libraries
+    that are not。 standard on this platform。 JSON is built in standard so we don't
+    have to put anything in the requirements。txt file。 We then need to tell it that
+    the function it should invoke because there might be a lot。 of different functions
+    in here。 The function invoked by the platform may call others。
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还需要填写 requirements.txt，其中列出了任何在这个平台上不标准的库。JSON 是内置标准，因此我们不需要在 requirements.txt
+    文件中放入任何东西。然后我们需要告诉它应该调用哪个函数，因为这里可能有很多不同的函数。平台调用的函数可能会调用其他函数。
+- en: We need to say which one the platform should invoke and it's going to be make
+    guess。 We can also fill in environment variables a lot of other stuff none of
+    which we particularly。 need right now。 We can set up firewalling all sorts of
+    interesting things。 However we're just going to go ahead and click create to create
+    our function。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要说明平台应该调用哪个函数，这将是 make guess。我们还可以填写环境变量和许多其他内容，但目前我们并不特别需要这些。我们可以设置防火墙和各种有趣的事情。不过，我们将直接点击创建来创建我们的函数。
+- en: It comes up we have a little spinner showing that the work is happening that
+    spinner should。 eventually turn into a green check mark。 If instead it turns into
+    a red X you'd be able to look at the log for messages for what。 went wrong。 For
+    example one thing that happens to me a lot is I use a non-standard Python library。
+    and forget to include it in the requirements。txt。 It's pretty clear from the error
+    message that that's what I've done。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 出现后，我们有一个小的旋转图标，显示工作正在进行中，那个旋转图标最终应该变成一个绿色的对勾。如果变成红色的 X，你可以查看日志中的消息，看看出了什么问题。例如，我经常遇到的一个问题是使用非标准的
+    Python 库，并忘记将其包括在 requirements.txt 中。从错误消息中可以很清楚地看出，这是我做的事。
+- en: While we're waiting for that to finish initializing let's go back and look at
+    our code lab to see。 what we're going to do next。 Next thing we're going to want
+    to do is test the function。 We're going to test it with an event that asks us
+    to guess a number between 1 and 10。 with no history。 Let's go ahead and select
+    that JSON body that should be sent to it to test。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在等待初始化完成时，让我们回去看看我们的代码实验室，看看接下来要做什么。接下来我们想做的是测试函数。我们将用一个事件来测试它，要求我们猜一个在 1 到
+    10 之间的数字，没有历史记录。让我们选择应该发送给它以进行测试的 JSON 主体。
+- en: Let's see if our console is ready yet。 It is。 It's going green so let's go ahead
+    and click on the name of it and we see that there are。 four different， pardon
+    me， five different tabs here。 Something in general telling us about how many invocations
+    it's had， none yet。 A page telling us how we trigger it， the URL for it。
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看控制台是否准备好了。准备好了。它变成绿色了，所以我们可以点击它的名字，我们看到这里有四个不同，抱歉，是五个不同的标签。一般性页面告诉我们它有多少次调用，目前没有。一个页面告诉我们如何触发它，及其
+    URL。
+- en: If we open that right now with a web browser we'd get an error message。 In fact
+    let's go ahead and do that。 The reason we got an error message is we did not write
+    our function to handle a regular。 get with no body。 We wrote our function to deal
+    with a request that includes a JSON body and the web browser。 can't send a JSON
+    body。 We're going to have to test it another way。
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们现在用网页浏览器打开它，我们会收到一个错误消息。实际上，让我们继续这样做。我们收到错误消息的原因是我们没有编写我们的函数来处理没有主体的常规GET请求。我们编写的函数处理的是包含JSON主体的请求，而网页浏览器无法发送JSON主体。我们需要用另一种方式进行测试。
+- en: We can look at the source code and if we want to change the source code we're
+    going to have。 to click the edit button which I generally take about five minutes
+    trying to type in here。 before I realize I've got to click the edit button first。
+    We can set the permissions。 Maybe this is only useful if we say require authenticated
+    requests only。
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以查看源代码，如果我们想更改源代码，我们需要点击编辑按钮，而我通常需要花大约五分钟在这里输入，才意识到我首先得点击编辑按钮。我们可以设置权限。也许这仅在我们要求只进行身份验证的请求时有用。
+- en: In this case we're not going to do that。 We're going to let anybody make a request。
+    And finally testing。 We can fill in the JSON object that should be sent as part
+    of that event。 So we're going to paste what we copied， guess a number from one
+    to ten with no history and。 click test the function。 And the function needs to
+    be initialized since it's never been running presumably and it。
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，我们不会这样做。我们会让任何人发出请求。最后进行测试。我们可以填写作为该事件一部分应发送的JSON对象。所以我们将粘贴我们复制的内容，从一到十猜一个数字，不带历史记录，然后点击测试函数。由于函数从未运行过，显然需要进行初始化。
+- en: comes back and makes a guess of one。 It takes a few minutes。 The logs always
+    lag a little bit but eventually log entries of that invocation will show up。 So
+    we've tested it， seems to work。 Let's test it with a more complicated environment
+    where we actually send it a history。 So we go back in here， paste the more complicated
+    JSON and say test the function and it gives。
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 返回并做出一个猜测。这需要几分钟。日志总是稍微滞后，但最终该调用的日志条目会显示出来。所以我们进行了测试，似乎有效。让我们在一个更复杂的环境中测试它，实际上我们发送一个历史记录。所以我们回到这里，粘贴更复杂的JSON，并说测试函数，它给出了结果。
+- en: us one again。 The reason the source code is called badplayer。py is it's a very
+    bad player。 Okay。 now we've tested the function。 It seems to be working but we
+    don't really know if it's working when called over the internet。 We know when
+    it's working when handled in the testing environment provided by the cloud， platform。
+    So let's go ahead and test it over the internet。 So we're going to use the code
+    editor create a file called game。
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再来一次。源代码被称为badplayer.py的原因是它是一个非常糟糕的玩家。好吧，现在我们已经测试了这个函数。它似乎工作正常，但我们并不确切知道在通过互联网调用时是否有效。我们知道在云平台提供的测试环境中处理时它是有效的。所以让我们继续在互联网上测试它。我们将使用代码编辑器创建一个名为game的文件。
+- en: json with either of these， JSON objects in it。 So let's go back and look at
+    this editor。 Let's create that game。json and say new file under player and paste
+    in the test environment。 and it will save automatically although you can do control
+    S to force it to if you're like。 me and wondering is it really saving fast。 And
+    then let's go back to the command line to run our test。
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: json，里面包含这两种JSON对象。所以让我们回到这个编辑器。创建那个game.json，并在player下新建文件，然后粘贴测试环境的内容，它会自动保存，尽管如果你像我一样，想知道它是否真的保存得很快，你可以按控制键加S强制保存。然后我们再回到命令行运行我们的测试。
+- en: We see， let's see， we've got to go into the player subdirectory and we see the
+    game。json。 that we just created。 We're going to use a curl command to make a request
+    over the internet to our cloud function。 So is a general purpose command line
+    tool that can make pretty much any kind of web request。 In this case we're going
+    to make a poster quest。 We're going to send a header that says our poster quest
+    should have a header saying the。
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们看到，我们得进入player子目录，看到我们刚刚创建的game.json。我们将使用curl命令通过互联网向我们的云函数发出请求。这是一个通用命令行工具，可以发出几乎任何类型的网络请求。在这种情况下，我们将发出一个POST请求。我们将发送一个头部，说明我们的POST请求应该包含一个头部。
+- en: content type is applications that slash JSON because the data we're sending
+    from the file， game。json is in the JSON format。 We then have got to put the URL
+    of our function in there。 So let's go take a look right now at the command line。
+    Place that， whoops。 I didn't copy the command first。 Let's copy that curl command。
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内容类型是applications/json，因为我们从文件game.json发送的数据是JSON格式。然后我们必须将函数的URL放进去。所以让我们现在看看命令行。放置那个，哎呀。我没有先复制命令。让我们复制那个curl命令。
+- en: not including the whole placeholder for the URL。 We'll get the real URL in a
+    second。 And the real URL is available from our function console under trigger。
+    So let's copy that link address， go back to our cloud shell， paste it， and now
+    we're。 going to make an actual request over the internet to our cloud function。
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不包括整个URL的占位符。我们稍后会获取真实的URL。真实的URL可以在我们的函数控制台的触发器下找到。所以让我们复制那个链接地址，返回到我们的云终端，粘贴它，现在我们将实际通过互联网向我们的云函数发出请求。
+- en: And it didn't take very long to come back。 You might not be obvious that it
+    did come back。 but there is the one。 We sent the JSON representation of the integer
+    one。 which is just the integer one。 No new lines， no character turns， nothing
+    like that。 So curl printed it and then we immediately see the prompt for the second
+    request。 Well。
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它没有花太长时间就返回了。你可能不会明显察觉到它已经返回，但它确实返回了。我们发送了整数一的JSON表示形式，实际上就是整数一。没有换行，没有字符回车，没有其他内容。所以curl打印了它，然后我们立即看到了第二个请求的提示。好吧。
+- en: it's working over the internet the way we want it to。 Okay let's take a minute
+    to go and look at another way to create a cloud function。 Instead of creating
+    it through the cloud console GUI， we could create it from the command， line。 And
+    again， that command line could be on our own machine if we had installed the necessary。
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它按照我们希望的方式在互联网上工作。好吧，让我们花点时间看看创建云函数的另一种方法。我们可以从命令行创建，而不是通过云控制台GUI创建。而且，这个命令行如果我们安装了必要的工具，也可以在我们自己的机器上。
+- en: software， but we're going to do it from the command line in the cloud shell。
+    So we're going to go to the player directory and in order to do the deploy using
+    the deploy。 using the gcloud command line interface， we're going to have to have
+    the function we're deploying。 called main。py。 Right now that's just the way the
+    gcloud function works。
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 软件，但我们将通过云终端的命令行来执行。所以我们将前往播放器目录，为了使用部署进行部署。使用gcloud命令行界面，我们需要有我们要部署的函数，名为main.py。现在这就是gcloud函数的工作方式。
+- en: It looks for a function called main。py。 So we're going to take our okay player
+    and copy it to main。py and then we're going to， deploy the function with this
+    command。 So let's copy the command for right now。 Let's go back to our cloud shell
+    and let's copy the okay player to main。py。 And we see there are lots of other
+    programs， but the only programs that are actually being。
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它查找名为main.py的函数。所以我们将我们的okay player复制到main.py，然后用这个命令部署函数。现在让我们复制这个命令。让我们返回到我们的云终端，并将okay
+    player复制到main.py。我们看到还有很多其他程序，但实际上唯一被使用的程序是。
+- en: used by the cloud deploy function are main。py and requirements。text。 By the
+    way。 let's take a look at what we're sending for requirements。text。 Nothing at
+    all。 And let's write our gcloud command。 Before we invoke it， take a look at the
+    pieces of it。 gcloud is the name of the tool that's used for interacting with
+    cloud platform pretty， much overall。
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 云部署功能使用的文件是main.py和requirements.text。顺便提一下，让我们看看我们发送的requirements.text。什么也没有。现在让我们写出gcloud命令。在调用之前，看看它的组成部分。gcloud是用于与云平台交互的工具的名称，几乎是整体的。
+- en: Functions is the sub command saying we're going to work with functions as opposed
+    to。 all the other kinds of resources available in Google Cloud。 What we're going
+    to deploy。 we're going to deploy this to a new function called or an。 existing
+    function that we're going to call okay player。 Remember through the UI。
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Functions是子命令，表示我们将处理函数，而不是Google Cloud中可用的所有其他类型的资源。我们将部署这个函数，或者是一个名为okay player的新函数，或是一个现有的函数。请记住通过UI。
+- en: we created something called just plain player。 This is going to be called okay
+    player。 We specify what runtime we want， namely Python 3。7， how we want it to
+    be triggered with a。 web request， where the source code is， in this case is going
+    to be in the current directory。 where we're running this command。 What the entry
+    point is， that is when a request comes in。
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们创建了一些叫做plain player的东西。这将被称为OK player。我们指定了想要的运行时，即Python 3.7，如何通过web请求触发它，源代码在哪里，在这种情况下将是在当前目录，也就是我们运行这个命令的地方。入口点是什么，即当请求到来时。
+- en: what function in this program should， be invoked， we only wrote one function。
+    but still we have to tell it that the function， is called make guess。 And we want
+    to allow unauthenticated requests so anybody can play the game against this function。
+    And it can take a little while to deploy the function。 Once it finishes。
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个程序中应该调用哪个函数，我们只写了一个函数，但仍然必须告诉它该函数叫做make guess。我们希望允许未经身份验证的请求，这样任何人都可以与这个函数进行游戏。部署函数可能需要一些时间，一旦完成。
+- en: we can see it in the console。 Let's go look at the function list。 And we can
+    see it's being deployed right now。 After it's deployed。 we can test it through
+    the console the way we did before， but we'll。 go back to the command line and
+    we're going to test it with the curl command again。
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以在控制台中看到它。让我们去查看函数列表。我们可以看到它正在被部署。部署后，我们可以像之前那样通过控制台进行测试，但我们将回到命令行，再次用curl命令进行测试。
+- en: So while we're waiting， let's recap what we've done。 We created a cloud function。
+    which was pretty simple to use。 We just wrote Python source code in the console。
+    We pasted that into a form and we said， run， deploy this function。 It tells us
+    the URL it's going to be at and we can then invoke it over the web。
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在我们等待时，让我们回顾一下我们所做的。我们创建了一个云函数，这个过程相当简单。我们只是在控制台中编写Python源代码。我们将其粘贴到一个表单中，然后说，运行，部署这个函数。它告诉我们它将位于的URL，然后我们可以通过网络调用它。
+- en: We've just done it with the command line instead of the interactive editor。
+    And we want to invoke it。 We're going to use the same curl command we used before
+    with one change。 The URL， if we go look at our functions console for OK player，
+    the trigger is almost exactly。 the same， but the tail part of it is called OK
+    player instead of just player。
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们刚刚用命令行完成了，而不是交互式编辑器。我们想要调用它。我们将使用之前用过的相同curl命令，只改变一处。URL，如果我们查看OK player的函数控制台，触发器几乎是一样的，但后面的部分叫做OK
+    player，而不仅仅是player。
+- en: So let's go back and recall that previous command has just changed it to OK
+    player。 And see what it says。 Now this player is a little bit smarter。 So we gave
+    it a history。 We told it guess it number 21 and 10， but we told it was higher
+    than 5 and lower than， 8。 So let's see what OK player actually comes back and
+    guesses。
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们回顾一下，之前的命令只是把它改成了OK player。看看它说了什么。现在这个玩家聪明了一点。我们给它一个历史记录。我们告诉它猜数字21和10，但我们说这个数字大于5且小于8。所以让我们看看OK
+    player实际猜的结果。
+- en: Let me scroll up a little so it's easier to see。 It came back with a 6， which
+    is a legal。 possibly correct guess。 And we could go ahead and make more and more
+    guesses and eventually OK player would win。 If we want to look at the source code
+    of that， we can go back to the editor and that was， main。py we deployed。 You can
+    see it's much longer source code。
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我稍微向上滚动一下，这样更容易看。它返回了6，这是一个合法且可能正确的猜测。我们可以继续进行更多的猜测，最终OK player会获胜。如果我们想查看源代码，可以回到编辑器，那是我们部署的main.py。你可以看到源代码要长得多。
+- en: It gets the minimum value and it goes through the history and it guesses the
+    minimum value。 and every time the history says， hey， it's higher or lower than
+    a number， it either raises。 or lowers the guess so that it's just barely legal，
+    just inside the range。 So if we wanted to make a guess from 1 to 10， it might
+    take up to 10 moves。
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它获取最小值，遍历历史并猜测最小值。每当历史显示“嘿”，这个数字更高或更低时，它就会相应提高或降低猜测，以确保其合法，刚好在范围内。所以如果我们想从1猜到10，可能需要最多10步。
+- en: If we wanted to make a guess between 1 and a trillion， it might take up to a
+    trillion， moves。 It's not a real smart player。 It's just an OK player。 OK， we're
+    done with that cloud function。 Again， serverlessworkshop。dev has links to all
+    these other code labs as well as the slides。 Let me bring up the slides again。
+    If after you build your function， you want to try them out。
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们想在1到一万亿之间进行猜测，可能需要多达一万亿次移动。这不是一个真正聪明的玩家。它只是一个还不错的玩家。好的，我们完成了那个云函数。再次说明，serverlessworkshop.dev
+    上有指向所有这些其他代码实验室以及幻灯片的链接。让我再把幻灯片调出来。如果你构建完函数后想要尝试它们。
+- en: go ahead and point your web， browser at serverlessworkshopdemo。appspot。com。
+    There'll be a form there for you to paste your URL in and a name so it'll stand
+    out。 in the standings as to what name is actually running this。 And you can submit
+    the player and look at the responses。 So again。
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请将你的网页浏览器指向 serverlessworkshopdemo.appspot.com。那里会有一个表单让你粘贴你的 URL 和一个名称，以便在排名中突出显示实际运行这个名称的内容。你可以提交玩家并查看响应。所以再次说明。
+- en: we have a game where the player does one simple thing， make one move given，
+    the existing game state。 The player doesn't keep track of any of that state， which
+    means a lot of different systems。 can be playing this game against it at one time
+    without interfering with one another because。 the judging systems are actually
+    keeping the state。
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一个游戏，玩家只需根据现有游戏状态做出一个简单的移动。玩家不跟踪任何状态，这意味着很多不同的系统可以同时对其进行游戏，而不会相互干扰，因为评审系统实际上保持着状态。
+- en: These are made in response to a web request and the cloud function platform
+    invokes the。 code whenever a request arrives。 We don't have to manage a web server
+    or anything like that。 Before we go on to the next part， just want to make you
+    aware of a possible gotcha that。 once in a while gets people。 Even though we wrote
+    an entire program。
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些是响应网页请求而创建的，云函数平台在请求到达时调用代码。我们不需要管理网页服务器或类似的东西。在继续下一部分之前，我想让你注意一个可能的陷阱，偶尔会让人困惑。尽管我们写了一个完整的程序。
+- en: I mentioned several times that we need to tell， the cloud platform which method
+    in our program to run。 So one mental model that you could develop in one point
+    I had is that every time a request。 comes in， the platform runs our program and
+    invokes that function。 But that's not true。 If the program's already been run
+    and is already loaded in a live instance， the cloud platform。
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我多次提到我们需要告诉云平台在我们的程序中运行哪个方法。因此，你可以发展出一个心理模型，我曾经有过这个模型，每当请求到达时，平台就会运行我们的程序并调用该函数。但事实并非如此。如果程序已经运行且已加载到实时实例中，云平台。
+- en: doesn't start it up again， it just invokes our function。 Which means if we've
+    got global initialization code or global variables from one run to a， next。 they
+    can interfere with one another。 So be careful of that。 I know somebody who actually
+    tried to create a complicated gaming system that used a binary。
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不会再次启动它，只会调用我们的函数。这意味着如果我们有全局初始化代码或从一个运行到下一个的全局变量，它们可能会相互干扰。所以要小心。我知道有人实际上尝试创建一个复杂的游戏系统，使用了二进制。
+- en: Python library that had an awful lot of global state in it and was never able
+    to make it。 work as a cloud function because each request interfered with what
+    happened in that global。 state for other requests。 So again， remember that your
+    code needs to be stateless。 That completes the player， we're now going to move
+    on to the more complicated environment。
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一个 Python 库，里面有很多全局状态，从来没有能够作为云函数运行，因为每个请求都会干扰其他请求的全局状态。所以再次提醒，你的代码需要是无状态的。玩家部分完成了，我们现在将转向更复杂的环境。
+- en: the judging system after a break。 Now that we've built a sample game playing
+    submission， the player。 it's time to look， at the larger， more complex and frankly
+    more interesting aspect of the game playing system。 Remember， as we go through
+    building the judging system that all the slides and exercises we're。 going to
+    be dealing with are online at serverlessworkshop。dev。
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在休息后，我们来看看评审系统。既然我们已经构建了一个示例游戏的提交，玩家。是时候关注游戏系统中更大、更复杂、确实更有趣的方面了。请记住，在构建评审系统的过程中，我们要处理的所有幻灯片和练习都在线上，网址是
+    serverlessworkshop.dev。
+- en: Recall the high level system diagram of what we're trying to build。 The contestant
+    does the work on their own laptop and when their solution is ready， they。 deploy
+    it to a web server， a Google Cloud function web server that's under their control。
+    Once they do that， they have a URL that they submit via a web form。
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回忆一下我们试图构建的高层系统图。参赛者在自己的笔记本电脑上完成工作，当他们的解决方案准备好时，他们将其部署到一个由他们控制的谷歌云函数网络服务器上。一旦他们这样做，他们就有了一个通过网络表单提交的网址。
+- en: The judging system is responsible for testing that game playing program in a
+    variety of scenarios。 and eventually keeping track of the scores， updating the
+    overall standings and making。 that available for anybody to look at on a web page。
+    This looks like a monolith。 It's in there just as a box。 Judging system does everything。
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 评判系统负责在各种场景下测试游戏程序，并最终跟踪分数，更新总体排名，并将其提供给任何人查看网页。这看起来像一个整体。它仅仅作为一个盒子存在。评判系统做所有事情。
+- en: The traditional approach might be to implement this as a single web server application。
+    What does it do？ Well， it interacts with contestants through web pages。 It plays
+    games against submitted solutions by making web requests and attracts scores。
+    in persistent data somehow。 But if we built this as a single monolith。
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 传统的方法可能是将其实现为单一的网络服务器应用程序。它的作用是什么？它通过网页与参赛者互动。它通过发出网络请求来与提交的解决方案对战，并以某种方式吸引持久数据的分数。但如果我们将其构建为一个单一的整体。
+- en: we'd be ignoring the fact that there are different。 communities building different
+    pieces of this and that we can make these pieces more。 loosely coupled and farm
+    out the work more simply。 We don't want to restrict the flexibility in the design
+    and future expansion by making。
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们会忽略有不同社区在构建这些不同部分的事实，我们可以使这些部分更加松散耦合，并更简单地分配工作。我们不想通过制作来限制设计和未来扩展的灵活性。
+- en: this one thing where if we change anything about the contest， we've got to change
+    the， core system。 Instead， we're going to recognize that the judging components，
+    the things that exercise。 the submissions are often written by the judges who've
+    written the problem statements， not。 by the people who run the overall contest。
+    That way， if we want to judge a different game。
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们对竞赛的任何内容进行更改，我们必须更改核心系统。相反，我们将意识到评判组件，即执行提交的东西，通常是由编写问题陈述的评审员编写的，而不是由负责整体竞赛的人编写的。这样，如果我们想评判不同的游戏。
+- en: we don't have to rebuild the whole system。 We just have to build the single。
+    we build a single judging component。 The other problem here is that if we made
+    this a single web system。 when somebody made a， submission， they'd have to wait
+    for a response to come back until the submission was processed。 meaning all of
+    the sample games were played， which would be a delay unless we ran a more。
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不需要重建整个系统。我们只需要构建一个单一的评判组件。另一个问题是，如果我们将其作为一个单一的网络系统，当有人提交时，他们必须等待响应，直到提交处理完毕，这意味着所有样本游戏都已进行，这将导致延迟，除非我们运行更多。
+- en: complicated system that handles background processing or concurrency。 All that
+    could be done。 but it's a lot easier to do this in a distributed serverless environment。
+    So let's look at what we need to build one thing at a time。 Let's pull out the
+    first piece。 which is something needs to play this game against， the submitted
+    solutions。
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理后台处理或并发的复杂系统。所有这些都可以做到。但在分布式无服务器环境中执行这项工作要简单得多。因此，让我们逐一看看我们需要构建的内容。让我们先提取出第一部分，即需要与提交的解决方案进行对战的东西。
+- en: We're going to call this something the questioner。 The questioner is going to
+    go ahead and ask the player， in this case， guess a number。 And it's going to keep
+    a track of what the guesses were， and it's going to then ask again。 with the updated
+    history over and over again。 And in fact。
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将把这称为提问者。提问者将继续询问玩家，在这种情况下，猜一个数字。它将跟踪猜测，并会在更新历史后不断询问。实际上。
+- en: there might be a lot of questioners that are simultaneously hitting this game
+    for。 different situations， different scenarios。 In order to do that。 the questioner
+    needs to know how to talk to the game player。 It needs to know the URL。 It will
+    then play the game against the player。 And when it's all done， it's going to have
+    a result。
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能会有很多提问者同时进行游戏，针对不同的情况、不同的场景。为此，提问者需要知道如何与游戏玩家交流。它需要知道网址。然后，它将与玩家进行游戏。当一切完成后，它将得到一个结果。
+- en: It needs to know what to do with the result。 So we're going to build this questioner
+    as an independent component。 We're going to give it the URL for the player。 And
+    in terms of what to do with the result。 we're going to say， hey， when you've got
+    the， result。 put it in a JSON object and post it to a particular address， somebody
+    else will。
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它需要知道如何处理结果。因此，我们将把这个提问者构建为一个独立的组件。我们将给它播放器的 URL。至于如何处理结果，我们将说，嘿，当你得到结果时，将其放入
+    JSON 对象并发布到特定地址，其他人会处理。
+- en: handle keeping track of it。 And again， we're going to punt this problem。 Take
+    it down the road。 Let it be somebody else's issue on how to keep track of the
+    results。 The questioner is going to just deal with playing the game。 It's going
+    to be easy to run multiple questioners against each submission that way。
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理跟踪它。而且我们将再次推迟这个问题。将其留给其他人来处理如何跟踪结果。提问者将只处理玩游戏。这样可以轻松对每个提交运行多个提问者。
+- en: And we're going to use an asynchronous request to trigger the start of play。
+    So that when it comes time to ask the questioner to play the game， we just send
+    that off and， say。 please play the game。 When you're all done， here's where to
+    send the result。 We aren't going to wait for you to finish this。 We don't care。
+    We just trust that once we ask you。
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用异步请求来触发游戏的开始。因此，当我们要请求提问者玩游戏时，我们只需发送该请求，并说，请玩游戏。当你完成时，这里是发送结果的地方。我们不会等你完成这个。我们不在乎。我们只是相信一旦我们问你。
+- en: you'll eventually get the job done。 Once again， we're going to choose Cloud
+    Functions as our platform。 We could use any compute service probably， but Cloud
+    Functions are a good fit because。 this is a single well-defined task that is triggered
+    by an event， the event being the。 judging system saying， hey， judge this submission。
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你最终会完成这个工作。再一次，我们将选择云函数作为我们的平台。我们可能可以使用任何计算服务，但云函数是一个合适的选择，因为这是一个由事件触发的单一明确定义的任务，事件是评审系统说，嘿，评审这个提交。
+- en: Now we're going to do that not by the judging system sending a web request，
+    but by the judging。 system triggering it asynchronously。 Cloud Functions have
+    a lot of different ways you can trigger them。 What we saw with the player was
+    triggering them with a web request。 But we want to trigger this one on an asynchronous
+    message being sent to it。
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们要做到这一点不是通过评审系统发送网络请求，而是通过评审系统异步触发。云函数有很多不同的触发方式。我们看到播放器是通过网络请求触发的。但我们想在接收到异步消息时触发这个。
+- en: A message being published to a pub/sub topic by the rest of the judging system。
+    Now what is this pub/sub？ Google pub/sub is a reliable messaging system。 And really
+    every cloud platform has these kinds of messaging systems。 They're core to distributed
+    computing where when one component needs something else to， be done。
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过评审系统的其余部分向 pub/sub 主题发布的消息。那么，这个 pub/sub 是什么？Google pub/sub 是一个可靠的消息传递系统。实际上，每个云平台都有这类消息传递系统。它们是分布式计算的核心，当一个组件需要其他东西被完成时。
+- en: they don't make a request and wait for it to come back。 They just send a message
+    saying。 do this job， we trust you'll get it done。 The messages that are being
+    sent in Google Pub/Sub belong to topics。 And when somebody wants to send a message，
+    we say they publish that message to the topic。 So there might be a topic saying，
+    play games and you'd send a message saying， play a game。
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们不会发出请求并等待响应。他们只是发送一条消息说，做这个工作，我们相信你会完成。发送到 Google Pub/Sub 的消息属于主题。当有人想发送消息时，我们说他们将消息发布到该主题。因此可能会有一个主题说，玩游戏，你就会发送一条消息说，玩一个游戏。
+- en: against this URL， sending the results to this other URL。 And the program subscribed
+    to a topic to get all the messages。 So every one of these questioners would subscribe
+    to that play game topic。 And they get triggered every time anybody publishes a
+    message to it。 This can be one to one。
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过这个 URL，将结果发送到另一个 URL。程序订阅了一个主题以接收所有消息。因此每个提问者都会订阅那个玩游戏的主题。每次有人向其发布消息时，他们都会被触发。这可以是一对一。
+- en: one to many， or many to many。 Pub/Sub is asynchronous reliable delivery。 Messages
+    are guaranteed to be delivered to every subscriber。 But they're only guaranteed
+    to be delivered at least once。 They could be delivered more than once。 In this
+    case， that's not a big problem because it just means we waste our time judging
+    the。
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一对多，或多对多。Pub/Sub 是异步可靠传递。保证消息将交付给每个订阅者。但它们只保证至少交付一次。它们可能会交付多于一次。在这种情况下，这并不是一个大问题，因为这只是意味着我们浪费时间在评审上。
+- en: same problem more than once but in the exact same conditions and presumably
+    get the exact。 same result。 Also the delivery order is not guaranteed which for
+    our purposes doesn't particularly。 matter。 If people submit three problems and
+    we judge them in a different order from what they're。 submitted， eventually it
+    all comes out in the wash。 It doesn't really make a difference。
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同样的问题可能会在完全相同的条件下多次出现，并且大概会得到完全相同的结果。此外，交付顺序并不保证，这对于我们的目的并不特别重要。如果人们提交了三个问题，而我们以不同的顺序进行评审，最终结果都是一样的。这并没有真正的区别。
+- en: So if we want to trigger this via Pub/Sub， the way it works is there's a topic
+    called， play game。 The judging system when a new submission comes in just publishes
+    a message to that topic。 And in this case we might have three different questioners
+    that judge the problem under three。 sets of scenarios all subscribed to that topic。
+    They're all triggered when the message comes in at basically the same time。
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果我们想通过 Pub/Sub 来触发这一点，其工作方式是有一个叫做“玩游戏”的主题。当有新提交时，评审系统会向该主题发布消息。在这种情况下，我们可能有三个不同的提问者，在三个不同的场景下评审这个问题，所有人都订阅了这个主题。当消息到达时，他们几乎同时被触发。
+- en: They all talk to the same player but their independent web requests with independent
+    histories。 that each questioner is tracking。 So it doesn't， they don't interfere
+    with one another。 And eventually when they're all done we've told them hey post
+    adjacent object with your。 results to this URL。 Somebody else will handle it from
+    there on。
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们都与同一个参与者沟通，但它们是独立的网页请求，具有独立的历史记录，每个提问者都在跟踪。因此，它们彼此之间并不干扰。最终，当它们全部完成时，我们告诉他们，将结果与这个
+    URL 的相邻对象发布。其他人将从那时起处理。
+- en: Which leads to the question of why don't we just send HTTP requests。 The reason
+    is basically that they're synchronous。 When you send a request you wait for a
+    response and we don't want to have to wait。 Now you could say hey， well send a
+    request， we'll have the thing immediately respond but。 then keep working。 But
+    in fact if you're going to use Google Cloud Platform that isn't going to work。
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这引出了一个问题，为什么我们不直接发送 HTTP 请求。原因基本上是它们是同步的。当你发送请求时，你在等待响应，而我们不想等待。你可以说，嘿，发送请求，我们会立即响应，但然后继续工作。但实际上，如果你打算使用
+    Google Cloud Platform，这样是行不通的。
+- en: Because Cloud Platform is intended to run the code to respond to a request。
+    If you've got a function that is triggered by a web request once it sends the
+    response。 the platform decides that function's done and it stops giving it any
+    CPU cycles so it。 can't keep running。 Pub/Sub is a synchronous。 When an invoker
+    wants to send a message they give it to Pub/Sub and get it。
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为云平台旨在运行代码以响应请求。如果你有一个函数，它在发送响应后由网页请求触发，平台会认为该函数完成并停止给它任何 CPU 资源，因此它无法继续运行。Pub/Sub
+    是同步的。当调用者想要发送消息时，他们将其交给 Pub/Sub 并接收。
+- en: Pub/Sub saying， okay I've got it。 They don't then wait around for Pub/Sub to
+    actually deliver it and for the people that。 it's delivered to to actually execute
+    what you're asking。 So we're going to start by factoring out the questioners from
+    this system。 And when we look at the overall picture what had been that one monolithic
+    block for a judging。
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Pub/Sub 会说，好的，我收到了。他们并不会等待 Pub/Sub 实际交付消息，并且等待收到消息的人真正执行你所请求的操作。因此我们将首先将提问者从这个系统中剥离出来。当我们查看整体图景时，原本是一个单一的评审块。
+- en: system is now several pieces。 We still have some unknown set of components that
+    interact with the contestant。 That the contestant can use a web form to submit
+    a URL and can go look at a web page。 to see the results and standings。 But what
+    the judging system does with that URL is hey I need somebody to judge this problem。
+    submission so all it does is publish some message to a topic and one or more questioners。
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 系统现在由几个部分组成。我们仍然有一组未知的组件与参赛者互动。参赛者可以使用网页表单提交 URL，并查看网页以查看结果和排名。但是评审系统对这个 URL
+    的处理是，嘿，我需要有人来评审这个问题的提交，因此它所做的只是向一个主题发布一些消息，以及一个或多个提问者。
+- en: subscribe to that topic and play the game。 When they're all done they post the
+    response somewhere presumably that's another part of。 the judging system we're
+    going to have to get to how that works sooner or later。 The message body that
+    we're going to post these to include the URL of the player。 In other words play
+    a game against the player at this URL。
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 订阅那个主题并进行游戏。当他们完成后，他们会把响应发布到某个地方，这大概是评判系统的另一部分。我们需要尽快了解这个系统的运作。我们将要发布的消息体将包含玩家的URL。换句话说，和这个URL上的玩家进行游戏。
+- en: It needs to include a URL for where to send the result to。 So when you're all
+    done send the result here。 So we're going to need to keep track of which submission
+    that questioner was testing。 If you've got five people submitting solutions we
+    don't want to get five results and not。 know which result with what solution。
+    So we're going to have a random ID that we create called a contest round every
+    time somebody。
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要包含一个URL以发送结果。因此，当你完成后，将结果发送到这里。因此，我们需要跟踪提问者正在测试的提交。如果有五个人提交解决方案，我们不想得到五个结果却不知道哪个结果对应哪个解决方案。因此，我们将创建一个叫做竞赛轮次的随机ID，每次有人提交时生成。
+- en: submits a solution and that needs to go in the message as well。 And finally
+    because they're going to send that result back in a URL we want to know that。
+    when somebody gives something to us it's somebody we asked to give that to us。
+    In other words we don't want somebody else able to just spam the result URL with
+    fake， results。
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提交一个解决方案，这也需要包含在消息中。最后，因为他们会通过URL返回结果，我们想要知道。当有人给我们东西时，是我们请求他们给我们的。换句话说，我们不希望其他人能用虚假的结果来刷结果URL。
+- en: So we send the message to somebody to a questioner telling that questioner to
+    play a game we're。 going to include a secret just for that one message that we
+    keep track of so when the。 results come back our system can somehow make sure
+    it's from the person we asked to have。 run it or actually the function we asked
+    to have run it。
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们向某个提问者发送消息，告诉他进行游戏，我们会为该条消息包含一个秘密，以便跟踪，这样当结果回来时，我们的系统可以确保是我们请求的人运行的，或者实际上是我们请求运行的功能。
+- en: We always want to look at the coupling that we're invoking when we add these
+    greater components。 because every piece of coupling means that a changed one has
+    to be reflected in what's。 on the other side of that。 There's coupling between
+    the questioner and the player that is the coupling we already。 talked about when
+    we were looking at the player side。 It's web requests and responses。
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们始终要关注在添加这些更大组件时引发的耦合，因为每个耦合意味着一个的更改必须反映在另一边。提问者和玩家之间存在耦合，我们在查看玩家端时已经讨论过。那是网络请求和响应。
+- en: Very loose coupling。 For the bigger part of the judging system and the questioner
+    components there's a little。 bit tighter coupling in that they're coupled by sharing
+    a pub sub topic。 The judging system has to be able to publish messages to that
+    topic and the questioners。 need to be able to subscribe to that topic to receive
+    the messages。
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 连接非常松散。对于评判系统和提问者组件的大部分，连接稍微紧密一些，因为它们通过共享一个发布-订阅主题来耦合。评判系统必须能够向该主题发布消息，而提问者需要能够订阅该主题以接收消息。
+- en: Fairly loose not quite as loose as just sending web requests。 And finally results
+    have to be sent somewhere。 That coupling is again going to be a web request。 The
+    questioner is going to send the result by making a web request a post object with。
+    a JSON object in its payload to the provided URL。 So it's time to build and deploy
+    the solution。
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 连接相对松散，不如直接发送网络请求那么松散。最后，结果必须发送到某个地方。那种耦合再次是一个网络请求。提问者将通过发出一个POST对象，携带一个JSON对象到提供的URL来发送结果。因此，是时候构建和部署解决方案了。
+- en: We have a hand-on code lab at serverlessworkshop。dev/questioner。 So let's go
+    over to that code lab and take a look at it。 We begin with an introduction。 You
+    can see there's a lot more steps in there where for just the player。 We describe
+    the game that's going to be played。 We've already gone over that。
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在 serverlessworkshop.dev/questioner 有一个动手代码实验室。现在让我们去那个实验室看看。我们以介绍开始。你可以看到那里有更多步骤，专门针对玩家。我们描述了将要进行的游戏。我们已经讨论过这个。
+- en: The input and the output， the example of how the questioner interacts with the
+    player。 We talked about that in depth when we were building the player。 And how
+    the questioner is going to be told what to do。 It's going to receive a message
+    with this JSON information。 The URL of the player function。
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输入和输出，展示提问者如何与玩家互动的示例。当我们构建玩家时，我们深入讨论过这个。提问者将会收到一条包含JSON信息的消息，包含玩家功能的URL。
+- en: Some URL to send the result to。 Unique ID for the contest round and a random
+    unguessable secret for sending that result back。 When it plays the game it will
+    see the result and when it's all done it's going to have。 to send the result back
+    to the URL it was asked for the result URL。 That when it sends it back it's going
+    to have to identify which questionnaire it is。
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一些URL用于发送结果。比赛轮次的唯一ID以及一个随机不可猜测的密钥，用于发送结果。当它进行游戏时，将看到结果，并在完成后必须将结果发送回请求的结果URL。发送时，它将需要标识出是哪一位提问者。
+- en: Because we may have asked three different questioners to play the game against
+    a submission。 Those questioners all have different scenarios。 When the results
+    come back we want to know which scenario we're getting the result for。 So each
+    questioner is going to pick a name for itself so that we can identify which is，
+    which。 The questioner is also going to tell us what contest round they're reporting
+    a result for。
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我们可能已经请求了三个不同的提问者与提交进行游戏。这些提问者都有不同的场景。当结果返回时，我们想知道我们正在获取哪个场景的结果。因此，每个提问者将为自己选择一个名称，以便我们能够识别出哪个是哪个。提问者还将告诉我们他们报告的是哪个比赛轮次的结果。
+- en: You're going to have to include that secret so we know that somebody isn't just
+    spamming， us。 That is somebody that received our original message and knows what
+    the secret is。 And then they're going to have to tell us the result。 In this case
+    one loss tied hung crashed whatever it happens to be。
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你必须包含那个密钥，以便我们知道不是有人在骚扰我们。那是某个收到我们原始消息并知道密钥的人。然后，他们将需要告诉我们结果。在这种情况下，可能是一个失败、平局、悬挂、崩溃，或者其他任何情况。
+- en: And we're interested in how many moves it took。 In this case how many guesses
+    it took to get there。 So in this tutorial you're going to build a computer program
+    that will act as a questioner。 and it's going to set up the game state， ask the
+    player to make a move， update the game， state。 ask the player to make another
+    move and so forth until there's a result。
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们对需要多少步感兴趣。在这种情况下，猜测多少次才能到达目的地。因此，在本教程中，你将构建一个作为提问者的计算机程序，它将设置游戏状态，要求玩家进行移动，更新游戏状态，继续询问玩家进行下一步，直到得出结果。
+- en: Either the player is finally guess the correct answer or the player just stopped
+    responding。 or we just get tired of asking the player。 Maybe we gave it a thousand
+    guesses and it still hasn't guessed we're just not going。 to keep asking it。 Whatever
+    that limit is。 And that's up to the questioner how patient it's willing to be。
+    We're going to invoke this questioner by sending a message to a pub subtopic and
+    it's going。
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要么玩家最终猜对了答案，要么玩家停止响应，或者我们厌倦了询问玩家。也许我们进行了千次猜测，它仍然没有猜到，我们就不打算继续问了。无论这个限制是什么，这取决于提问者的耐心程度。我们将通过向一个发布订阅主题发送消息来调用这个提问者。
+- en: to report the result via URL in that message。 So we need a web browser that
+    we've been using up till now and basic knowledge of the Python。 programming language。
+    To get set up we need to go to the project we've already created in Google Cloud
+    console。
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过消息中的URL报告结果。因此，我们需要一个到目前为止一直在使用的网络浏览器和Python编程语言的基本知识。为了设置，我们需要去Google Cloud控制台中已经创建的项目。
+- en: at console。cloud。google。com and we're going to need to select the project and
+    we're going。 to have to open the cloud shell and fetch our code。 We did all that
+    when we were dealing with the player we don't have to repeat those steps。 if we've
+    already done the player steps。 Now we're going to trigger this by a message sent
+    to the pub subtopic。
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在console.cloud.google.com，我们需要选择项目，打开云终端并获取我们的代码。我们在处理玩家时已经完成了这些步骤，如果已经完成玩家步骤，就不需要重复了。现在我们将通过向发布订阅主题发送消息来触发这一过程。
+- en: So before we can write a questioner we have to create the topic that's going
+    to trigger， it。 In the real world the people managing the contest would probably
+    create these topics。 and then tell everybody to write the questioners。 But the
+    order we're going through we're ready to quit a questioner we need a topic let's。
+    go ahead and create one。 We need to go to the pub sub section of the cloud console
+    and we're going to select pub。
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，在我们可以编写提问者之前，我们必须创建一个将触发它的主题。在现实世界中，管理比赛的人可能会创建这些主题，然后告诉大家编写提问者。但是我们按照的顺序是准备退出提问者，我们需要一个主题，让我们继续创建一个。我们需要去云控制台的
+    pub/sub 部分并选择 pub。
+- en: sub from the big data section。 So let's go ahead and open a new tab so we don't
+    have to keep going back and forth too。 much。 We already have a tab open for keeping
+    track of the functions and keeping track of the。 cloud shell。 In this tab we're
+    going to look at the pub subtopics。 So we pull down the menu once the page finishes
+    loading。 And whoops let me try that again。
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从大数据部分的 pub/sub。因此，让我们打开一个新标签，以便不必来回切换太多。我们已经打开一个标签以跟踪函数和云 Shell。在这个标签中，我们将查看
+    pub/sub 主题。因此，一旦页面加载完成，我们下拉菜单。哎呀，让我再试一次。
+- en: And we have to scroll down until we get to the pub sub section which happens
+    to be near。 the bottom under big data。 Pub sub。 If it's the first time we've done
+    it we may have to wait for the pub sub system to initialize。 but eventually we'll
+    be able to go ahead and create the topic we're going to need by clicking。 create
+    topic。 Let's look again at the code lab to see how we should fill this in。
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们必须向下滚动，直到到达位于底部的 pub/sub 部分。大数据下的 pub/sub。如果这是我们第一次这样做，我们可能需要等待 pub/sub 系统初始化，但最终我们将能够通过点击创建主题来创建我们需要的主题。让我们再次查看代码实验室，看看我们应该如何填写。
+- en: We basically just need to give this topic a name we're going to call it play
+    a game and。 tell it whether we're going to manage the keys or Google will manage
+    it。 The main reason you'd create your own key and provide it which is more work
+    is if you。 want to keep control of that completely in your own company perhaps
+    for security or compliance。
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们基本上只需要给这个主题一个名字，我们将称之为玩游戏，并告知它我们是否要管理密钥，或者让 Google 管理。创建自己的密钥并提供它的主要原因是，如果您想完全控制它在自己的公司中，可能出于安全或合规原因，这样做更费事。
+- en: reasons。 We don't have either of those here。 It's very secure to let Google
+    contain the keys。 So we're going to say play a game。 Notice it creates a complete
+    name that's globally unique for that topic that includes。 the project it's in
+    as well as the name of the topic and say create topic。 Alright it says a new topic
+    has been created。 We can publish messages to that topic。
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 原因。我们这里没有这两者。让 Google 存储密钥是非常安全的。因此，我们将说玩一个游戏。注意，它为该主题创建了一个全球唯一的完整名称，包括所在的项目以及主题名称，并说创建主题。好吧，它说一个新主题已被创建。我们可以向该主题发布消息。
+- en: We can trigger cloud functions from that topic etc。 All those things we need
+    to do。 Let's take a look at the code lab to see what we're going to do next。 We're
+    going to create the first questioner。 So it's going to be creating a cloud function
+    similar to what we did before but we're going。 to see there's going to be an important
+    difference in what triggers it。
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以从那个主题触发云函数等。我们需要做的所有事情。让我们看看代码实验室，以了解接下来要做的事情。我们将创建第一个提问者。因此，这将创建一个类似于我们之前所做的云函数，但我们将看到触发它的方式有一个重要的区别。
+- en: Let's go back to our cloud functions section。 Go to the list of all cloud functions
+    and create a new function。 We need to give it a name。 It doesn't matter other
+    than for us keeping track of stuff。 We'll call it easy questioner。 This is one
+    that's going to ask it in our case guess a number from 1 to 10。 Nothing terribly
+    hard。 But we're not going to trigger it by a web request。
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们回到云函数部分。去查看所有云函数的列表并创建一个新函数。我们需要给它一个名字。除了帮助我们跟踪信息之外，这并不重要。我们将称之为简单提问者。这将要求猜一个
+    1 到 10 的数字。没有什么特别困难的。但是我们不会通过 web 请求触发它。
+- en: We're going to trigger it by a message from cloud pub sub。 If we do that we
+    need to say which topic is going to trigger it and we've only created。 the one
+    topic。 So it's pretty easy to pick the one we want。 We're going to use the inline
+    editor and we're going to write this in Python。
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将通过云 pub/sub 的消息来触发它。如果这样做，我们需要说出哪个主题将触发它，而我们只创建了一个主题。因此，选择我们想要的主题非常简单。我们将使用内联编辑器，并将用
+    Python 编写这段代码。
+- en: And here let's expand this。 Here's an example。 We're going to have a function
+    that is triggered by the platform that's going to send it the。 published event
+    and the context for the event。 In our case we're really only going to care about
+    the event which is a payload the body。
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，让我们展开这个。这是一个示例。我们将有一个由平台触发的函数，它将发送发布事件和事件的上下文。在我们的情况下，我们实际上只关心事件，这是有效负载的主体。
+- en: of the message。 The context is metadata about the event which we do sometimes
+    care about such as when it。 was sent， how long it's been waiting and so forth。
+    Let's replace this code with the code we have in our editor under questioners。
+    Easy questioner。 Main。py。 So here we see the code we want。 Let's go select all
+    the code。 There's a lot more to it。
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 消息的上下文是关于事件的元数据，我们有时会关心这些，例如它何时发送，等待了多长时间等等。让我们用在编辑器中的代码替换掉这段代码，来自问题者。简单问题者。Main.py。这里我们看到了想要的代码。让我们选择所有代码。还有更多内容。
+- en: And copy it。 And go paste it here。 Replace what's there。 Whoops。 The paste didn't
+    seem to include everything。 Let me try this again。 It chopped off the bottom part。
+    Whoops。 Or did it。 Nope it just was part of my scrolling。 Nothing I like better
+    than having two scroll bars that wants to keep track of where I happen， to be。
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 复制它。然后粘贴到这里。替换掉那部分。哎呀，粘贴似乎没有包含所有内容。让我再试一次。它截断了底部部分。哎呀，还是怎么回事。没有，只是我的滚动的一部分。没有什么比同时有两个滚动条更让我喜欢的了，它们让我想跟踪我发生的事情。
+- en: Now the other thing we need to include is the requirements。text。 And here we
+    see we're using three modules base64。json and the request module。 Request is not
+    typically standard in Python but it is standard in the functions framework。 so
+    we're not going to have to include it。 Let's make sure of that by taking a look
+    at the requirements。
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们需要包含的是要求文本。我们看到我们使用了三个模块 base64、json 和请求模块。请求在 Python 中通常不是标准的，但在函数框架中是标准的。因此我们不需要包含它。让我们通过查看要求来确保这一点。
+- en: text that was put here。 And we see again we don't have any special modules we
+    can leave requirements。text blank。 Okay。 Now we have to say which function to
+    execute。 Which one is going to be triggered with the message。 And one we're going
+    to trigger is question player。 You can look here and see how that works。
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里放置了文本。我们再次看到，没有任何特殊模块可以留下要求。文本留空。好的。现在我们必须说出要执行哪个函数。哪个函数会被消息触发。我们将要触发的是问题播放器。你可以看看它是如何工作的。
+- en: The events are generally passed in base64 encoding in case they're binary or
+    have other。 data so we generally are going to have to base64 decode it and then
+    we can load that into。 a dictionary because our message is Jason。 Then we look
+    at get the fields we want out of it。 The player and you result URL。 The contest
+    round in the secret。
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事件通常以 base64 编码传递，以防它们是二进制或有其他数据，因此我们通常需要进行 base64 解码，然后可以将其加载到字典中，因为我们的消息是
+    JSON。然后我们查看获取我们想要的字段。玩家和你结果的 URL。比赛回合和秘密。
+- en: And then we call a function that will play the game and tell us the outcome
+    of the moves。 And then we call a function to report the score。 Those are pretty
+    straightforward。 Let's create that function。 With luck we put everything in right
+    and that's going to change to a green check mark。 While we're waiting for that
+    let's go look at how it works。
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们调用一个函数来玩游戏并告诉我们移动的结果。接着我们调用一个函数来报告分数。这些都很简单。让我们创建那个函数。希望我们把一切都放对了，这将变成一个绿色的对勾。在等待的同时，我们来看看它是如何工作的。
+- en: So again when a message comes in the cloud function framework will invoke the
+    question。 player procedure with the event and the context。 The event has data
+    that is our Jason object。 It's encoded in base64 by convention so what we do is
+    we take the data of the event， decode， it。 That gives us a byte string。 If we're
+    going to do load it into Jason we've got to convert it into UTF-8 and load that。
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以当消息到达时，云函数框架将用事件和上下文调用问题播放器过程。事件包含我们的 JSON 对象数据。按照惯例，它以 base64 编码，因此我们所做的是获取事件的数据，解码它。这会给我们一个字节字符串。如果我们要将其加载到
+    JSON 中，我们必须将其转换为 UTF-8 并加载。
+- en: into our message， pull out the fields we need， play the game and report the
+    score。 Okay let's take a look and see if it looks like everything's okay。 That
+    the function is going to be sitting there ready to run and again the trigger is
+    via a。 topic not via a URL。 We want to test it。 So to test it instead of sending
+    it a web request we're going to just go ahead and use。
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 进入我们的消息，提取所需的字段，玩游戏并报告分数。好的，让我们看看一切是否正常。这个功能将处于待命状态，准备运行，再次强调，触发是通过主题，而不是通过网址。我们想要测试它。因此，为了测试，而不是发送网络请求，我们将直接使用。
+- en: the testing function right now or in fact we're going to go ahead and publish
+    a message。 to the topic。 So we're going to publish a Jason object that tells the
+    URL to play the game against。 where， to put the results to， the contest round
+    and the secret。 So let's go ahead and put that stuff in properly under Pub/Sub，
+    publish a message。
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目前的测试功能，实际上我们将发布一条消息到主题。因此，我们将发布一个JSON对象，告诉游戏对抗的URL，结果放置的位置，比赛轮次和秘密。因此，让我们正确地在Pub/Sub下发布消息。
+- en: Now before we go ahead and say publish it， it says there's no subscriptions
+    but there。 is one it just hasn't been updated。 We do have to put the URL of the
+    actual function to invoke。 So let's go back to our functions。 Let's look at the
+    list of functions and we're going to go ahead and play it against the。 okay player
+    so let's get its URL。 Copy that address。 The result URL has not been written yet。
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在在我们说发布之前，它显示没有订阅，但实际上有一个，只是尚未更新。我们确实需要输入要调用的实际功能的URL。那么，让我们回到我们的功能。查看功能列表，我们将把它应用于OK玩家，所以让我们获取它的URL。复制该地址。结果URL尚未写入。
+- en: We haven't built the judging system to send the results to so we've set up a
+    simple little。 website that tracks everything that's posted to it and it displays
+    the last 10 or 20 things。 that have been posted。 So we're going to just have this
+    Jason object posted there and we're going to go then be。 able to look at that
+    website and see what it looked like。
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还没有建立将结果发送到的评判系统，因此我们设置了一个简单的网站，跟踪所有发布的内容，并显示最后10或20条发布的内容。所以我们将把这个JSON对象发布到那里，然后我们可以查看那个网站，看看它的样子。
+- en: For the contest round I'm going to call this angle key， PyCon， just something
+    that will help。 me recognize that the result is my result and then some secret。
+    Since this isn't going to the real judging system we don't have to include a secret
+    it's。 not going to actually be saved anywhere。 Let's publish it and see what happened。
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于比赛轮次，我将称之为角键，PyCon，只是一些可以帮助我识别结果的内容，然后是某个秘密。由于这不会发送到真正的评判系统，我们不需要包含秘密，它实际上不会被保存到任何地方。让我们发布看看会发生什么。
+- en: Well if we go back to the player function we can look at its logs was it just
+    triggered。 Again these logs made lag by a minute or two。
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们回到玩家功能，我们可以查看它的日志，看看它是否刚刚被触发。这些日志可能会延迟一两分钟。
+- en: '![](img/d75a7af45610ca4b253c770090edc225_3.png)'
+  id: totrans-201
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_3.png)'
+- en: Right now it's 351 and sure enough it was triggered several times which makes
+    sense because it's。 going to say make a guess and then based on that it's going
+    to say okay here your previous。 guess is make another guess repeated over and
+    over again and it's been triggered many， times。 Let's go take a look at that ECHOER
+    website that we posted our results to。
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在是351，果然触发了几次，这很合理，因为它将说出一个猜测，然后基于这个猜测，它将说“好吧，你的上一个猜测是”，再进行一次猜测，反复进行，这已经触发了很多次。让我们去看看我们发布结果的ECHOER网站。
+- en: '![](img/d75a7af45610ca4b253c770090edc225_5.png)'
+  id: totrans-203
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_5.png)'
+- en: And we see here that at 2251 UTC which is the time that we used for this it
+    received an。 application JSON object that consists of something saying it's the
+    easy questioner that。 the contest round is for angle key PyCon a contest round
+    identifier the secret and it。 one and seven moves。 So we're able to test things
+    in fairly good isolation that way。
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们看到在UTC时间2251，也就是我们用于此测试的时间，它接收了一个应用JSON对象，内容是“这是简单提问者”，还有比赛轮次的角键PyCon，比赛轮次标识符，秘密和一到七的移动。所以我们能够以相当好的隔离测试事情。
+- en: Now let's create another questioner it's going to be pretty much the exact same
+    questioner。 but with three different values instead of guessing from one to ten
+    it's going to guess。 from one to it looks like a billion and the target is going
+    to be a million and you're。 going to have to guess it within a hundred guesses。
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在让我们创建另一个问题触发器，它将是基本相同的，但有三个不同的值，而不是从1猜到10，而是从1猜到看起来像十亿，目标将是百万，你需要在一百次猜测内猜到它。
+- en: Let's go to our functions we need to create a new one let's go back to the functions
+    list。 create a new function called hard questionnaire， here again by a pub subtopic
+    the same topic in Python。 and let's look at our source code and let's scroll down
+    and grab the source code for the。 hard questioner instead of the easy questioner，
+    go back to our function replace the sample source code with this code and again
+    let's。
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们去我们的函数，我们需要创建一个新的，返回函数列表，创建一个名为hard questionnaire的新函数，这里同样是通过pub/sub主题，在Python中使用相同的主题。让我们查看源代码，向下滚动并获取hard
+    questioner的源代码，而不是easy questioner，返回我们的函数，将示例源代码替换为这段代码，再次向下滚动确保一切都在这里，唯一的区别是猜测范围，其他方面是相同的。
+- en: scroll down to make sure we got everything the only difference here is the range
+    of guesses。 other than that it's the same。 Okay the function to invoke is going
+    to be question player create it。 and once that's ready we can go ahead and test
+    both of them at once by sending one message。 to the topic it should trigger both
+    of these functions let's give it a minute。
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，调用的函数将是question player，创建它，一旦准备就绪，我们可以通过向主题发送一条消息同时测试这两个函数，给它一分钟时间。
+- en: it's basically the same topic as we had before as our function finished deploying
+    not quite。 yet let's start setting up the other it is let's set up the topic and
+    message publish。 a new message and again we need to replace the player URL with
+    the correct URL jumping。 around quite a bit here let's use the okay player let's
+    see is there a shortcut to get。
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这基本上与我们之前的主题相同，因为我们的函数尚未完成部署，让我们开始设置其他内容，设置主题和消息发布，发布一条新消息，我们需要用正确的URL替换播放器URL，这里跳来跳去的，让我们使用OK播放器，看看有没有快捷方式可以获取。
+- en: that trigger no so I'm going to drill into it and click the trigger tab put
+    that in my。 topic give it another name so I can keep track of it and publish it
+    let's go take a look。 at the echo or see if anything new has appeared there yes
+    the easy question has reported the。 result the hard questioner hasn't yet and
+    the reason for that is that the hard questioner。
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那个触发没有，所以我要深入研究并点击触发器选项卡，把它放在我的主题中，给它另一个名字，以便我可以跟踪它并发布，让我们去看看回声，看看是否有什么新内容出现，是的，简单问题已报告结果，而困难问题尚未报告，原因是困难问题。
+- en: will let them do a hundred steps and until the hundred stuff is up it won't
+    give up so。 it'll take a little bit longer and there it is the hard questioner
+    came out and it was。 failed after a hundred moves it did not guess because it
+    was always guessing the lowest possible。 number and it was going to take a million
+    guesses to get there okay we have now deployed。
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将让它进行一百步，直到一百步完成才会放弃，所以它会花一点时间，难的问题触发器出现了，但在一百次尝试后失败了，因为它总是猜测最低的数字，达到那里需要一百万次猜测。好的，我们现在已经部署完毕。
+- en: two questioners triggered by the same thing we now can go take a look again
+    at what we've。 completed so we're going to build we've built and deployed the
+    solution now let's take a。 recap we've built another event driven cloud function
+    it was triggered asynchronously pub。 sub let us send one message that hit many
+    questioners the questioners create the result。
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 两个问题触发器被同一事件触发，我们现在可以再次查看我们完成的内容，因此我们将构建并部署解决方案，现在让我们回顾一下，我们构建了另一个事件驱动的云函数，它是异步触发的pub/sub，让我们发送一条消息，触发多个问题，问题生成结果。
+- en: that need to be saved but they're not responsible for saving it they just send
+    it somewhere somebody。 else's problem again reducing system coupling now dealing
+    with all of that is the remaining。 part of the judging system and we're going
+    to deal with that in the next step the judging。 system part two after a break
+    welcome back to the workshop for building a distributed。
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要保存但并不负责保存它的东西，他们只是把它发送到某个地方，别人的问题又一次减少了系统耦合，现在处理所有这些是评审系统剩下的部分，我们将在下一步的评审系统第二部分中处理这个，欢迎回来参加构建分布式系统的研讨会。
+- en: serverless application using google cloud platform the first part talked about
+    the background。 for the application the second part of the workshop showed how
+    to build the contestants。 portion of the application that is a program that played
+    a game that would be judged by the。 system as a whole the third part the previous
+    part to this one actually built the part that。
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 Google Cloud Platform 的无服务器应用程序，第一部分讨论了应用程序的背景，研讨会的第二部分展示了如何构建参赛者部分的应用程序，这是一个玩游戏的程序，系统将对其整体进行评审。第三部分实际上是在前一部分的基础上构建的。
+- en: judged the submissions now we're going to do the final part which is the administrative。
+    center of the overall system the thing that manages contestants being able to
+    submit their。 solution showing standing asking the judging systems to actually
+    do the judging and so forth。 remember you can do all of this on your own later
+    if you want the slides and exercises。
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对提交进行了评审，现在我们将进行最后一部分，这部分是整个系统的行政中心，管理参赛者提交解决方案、显示排名、请求评审系统实际进行评审等。请记住，如果您想要，可以稍后自己完成所有这些内容，包括幻灯片和练习。
+- en: are all online at the serverless workshop dot dev website that side also includes
+    my email。 address and an email address for sending in requests in general about
+    this workshop well。 the system so far that we've looked at consists of the contestants
+    part of the system a laptop。 where they do their work at a web server where they
+    deploy their solution and then the judging。
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有内容都可以在 serverless workshop dot dev 网站上找到，该网站还包括我的电子邮件地址以及一个用于发送有关本研讨会请求的电子邮件地址。到目前为止，我们所研究的系统由参赛者部分组成，参赛者在笔记本电脑上进行工作，将他们的解决方案部署在网络服务器上，然后进行评审。
+- en: system the part where the contestants amidst the URL of the website the judging
+    system uses。 the questionnaire that was developed in the last part one or more
+    questioners to actually。 play the game they report their results back to the judging
+    system which is still kind of。 a black box and contestants can at any time go
+    to that website and view the results and。
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 系统的部分是参赛者在网站的 URL 中输入的部分，评审系统使用在最后一部分开发的问卷，或者一个或多个问卷来实际进行游戏，他们将结果反馈给评审系统，而评审系统仍然是一个黑箱，参赛者可以随时访问该网站查看结果和。
+- en: standings we're focusing on the remaining unknown part of the system that question
+    mark box this。 is something we're going to call the manager going forward because
+    it's the administrative。 center of the whole thing the managers responsible for
+    a few things first of all anybody in the。 contest or probably anybody anywhere
+    can go to that website and they'll look at all the。
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们关注的是系统中剩余的未知部分，这个问号框。我们将其称为管理者，因为它是整个系统的行政中心。管理者负责几件事，首先，比赛中的任何人，或者可能是任何地方的人，都可以访问该网站，他们将查看所有的。
+- en: current standings of all the submissions and how people are doing relative to
+    one another。 it's also where the consultants will go and get a web form that they
+    use to submit the。 URL of their solutions so that they can then be judged and
+    put into the standings the managers。 responsible for asking the questioners to
+    judge the submissions they do that just by publishing。
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有提交的当前排名，以及人们之间的相对表现。咨询人员也会在这里获取一个网页表单，用于提交他们解决方案的 URL，以便进行评审并进入排名。负责询问评审提交的管理人员通过发布来进行评审。
+- en: a message to a particular pub subtopic and all the different questioners that
+    do the judging。 themselves subscribe to that topic so they're all triggered by
+    that submission and finally。 when those questioners have finished judging a submission
+    they've got a result they've。 got to do something with it they're told here's
+    a URL please send the results there and somebody。
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 向特定的 pub sub 主题发送消息，所有执行评审的不同问卷订阅该主题，因此它们都因该提交而被触发。最后，当这些问卷完成对提交的评审时，他们得到了结果，需要处理这些结果，他们被告知这是一个
+    URL，请将结果发送到那里，并且有人。
+- en: will be responsible for it well the manager is the thing that's going to be
+    responsible。 for it so we have to handle receiving those results let's see can
+    we partition this further。 so far we've really focused heavily on doing divide
+    and conquer so each component we built。 has been pretty small can we make this
+    smaller by breaking it into different pieces that do。
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 管理者将对此负责。我们必须处理接收这些结果，看看我们是否可以进一步划分。目前为止，我们确实非常专注于分而治之，因此我们构建的每个组件都相对较小。我们能否通过将其拆分为不同的部分来使其更小？
+- en: different things well if we look at it we see that two of these four responsibilities
+    of。 the manager are building a website that interacts with people either showing
+    a person the standings。 or giving the person a form to submit a request to have
+    a problem judged one of the parts。 accepts the results from questioners that is
+    it needs to interact with software not with。
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不同的事情。如果我们看看，我们会发现这四个管理职责中的两个是构建一个与人互动的网站，或展示一个人的排名。或者给这个人一个表单以提交请求来让问题进行评审。其中一个部分接受来自提问者的结果，也就是说，它需要与软件互动，而不是与。
+- en: people because it's the questioners the software programs that are sending these
+    results in。 so we're going to break it down into those parts we're going to have
+    a web application。 a standard website that people interact with and we're going
+    to have a web service something。 intended as an API that programs interact with
+    that will accept the results from the。
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 人们因为这是提问者，软件程序正在发送这些结果。所以我们将把它分解成几个部分，我们将有一个网络应用程序，一个标准的网站供人们互动，我们还将有一个网络服务，作为一个程序间互动的API，将接受来自提问者的结果。
+- en: questioner software these two parts are only going to be connected by one shared
+    piece of。 infrastructure and that's going to be a database the database it keeps
+    track of all the submissions。 and all the results because the web application
+    needs to show the stuff from that database。 and it also needs to say there's a
+    new submission in that database and the web service needs。
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提问者软件，这两个部分将仅通过一个共享的基础设施连接，那就是数据库。数据库跟踪所有提交和所有结果，因为网络应用需要从该数据库中显示内容。它还需要说数据库中有一个新提交，而网络服务也需要。
+- en: to tell the result of every judging run so when we look at the system as a whole
+    and。 see how the different parts of component are connected we see that we have
+    a manager app。 that's the website that uses a database in order to keep track
+    of all the scores and what's。 been submitted we also see that there's a manager
+    service that's responsible for updating that。
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以告知每次评审运行的结果。因此，当我们从整体上看这个系统，看到各个组件的不同部分如何连接时，我们会发现有一个管理应用。那是使用数据库来跟踪所有分数和提交的内容的网站。我们还看到有一个管理服务，负责更新这一点。
+- en: database with the reported scores from the questioners the questioners themselves
+    are。 invoked by subscribing to a pub subtopic the manager app is responsible for
+    publishing。 those requests as messages to that topic the questioners interact
+    with the manager service。 simply by sending a web request over the internet and
+    the questioners interact with the players。
+  id: totrans-225
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据库记录提问者报告的分数，提问者通过订阅一个发布/订阅主题被调用，管理应用负责将。那些请求作为消息发布到该主题。提问者通过互联网发送网络请求与管理服务互动，提问者也与玩家互动。
+- en: simply by sending a web request over the internet as well the manager service
+    and the players。 themselves don't directly interact so these are the different
+    components there are four。 parts they're connected by either the internet or sharing
+    a database or getting messages through。 a pub subtopic we're going to add one
+    more piece to this that is optional we're going。
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同样通过互联网发送网络请求，管理服务和玩家本身并不直接互动。这些是不同的组件，有四个部分，通过互联网、共享数据库或通过发布/订阅主题获取消息连接在一起。我们将添加一个可选的额外部分。
+- en: to cover this at the very end but that is user authentication because our manager
+    app can。 simply let anybody say please run my submission by the way my name is
+    Jay and then that person。 come back and say well please submit run my new submission
+    but my name now is Mark and。 somebody else can come along and say run my submission
+    but my name is Jay and overwrite。
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在最后谈到这一点，但用户认证很重要，因为我们的管理应用可以。简单地让任何人说“请处理我的提交，顺便说一下，我的名字是杰伊”，然后那个人。可以再回来并说“请处理我的新提交，但我现在的名字是马克”，然后。其他人可以说“处理我的提交，我的名字是杰伊”，并覆盖。
+- en: the other Jay submissions by having front end user authentication we can make
+    sure that although。 somebody can come in and say whatever nickname they want they
+    can't change it and they can't。 impersonate somebody else that's a really nice
+    feature called identity aware proxy that we。 can do with very minimal changes
+    to the rest of our application so what have we got to deploy。
+  id: totrans-228
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过前端用户认证来处理其他杰伊的提交，我们可以确保尽管。有人可以进来随便说出他们想要的昵称，但他们无法更改它，也无法。冒充其他人。这是一个很好的功能，称为身份感知代理，我们可以通过对其余应用程序进行极少的更改来实现。那么我们需要部署什么呢？
+- en: well the two new components the manager application that is a website the manager
+    service which。 is a web service then the database it connects those two pieces
+    we also will at the very end。 put the identity or proxy in front of the manager
+    app so that requests only reach our website。 if they've already been authenticated
+    and they're going to have a header added to them telling。
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两个新组件是管理应用程序，它是一个网站，管理服务是一个网络服务，然后是连接这两个部分的数据库。最后，我们将在管理应用程序前放置身份或代理，以便只有在已验证身份的情况下，请求才能到达我们的网站，并且它们将添加一个头部，告知。
+- en: who the authenticated user is so let's go ahead and build and deploy the solution
+    we have a。 hands-on code lab that we're going to go through this and it's available
+    at serverless， workshop。dev/manager so let's take a look at that we got some background
+    which we've now。 seen in two other code labs explaining the overall problem and
+    describing what the managers。
+  id: totrans-230
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 身份验证用户是谁，所以让我们开始构建和部署解决方案，我们有一个实践代码实验室，我们将进行这个实验，它可以在 serverless，workshop.dev/manager
+    上找到。让我们来看一下，我们有一些背景信息，这在之前的两个代码实验室中已经解释了整体问题，并描述了管理者所做的。
+- en: are responsible for doing it records the fact that somebody's made a submission
+    sends a。 message to a pub subtopic so that those questioners all judge the submission
+    and then accept the。 results back from those questioners so it can update its
+    database we're going to build。 the database and we're going to use Firestore which
+    is a no SQL database that also scales。
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 负责记录有人提交的信息，向 pub/sub 主题发送消息，以便这些问题者评估提交结果，然后将结果反馈给这些问题者，这样它就可以更新其数据库。我们将构建数据库，并将使用
+    Firestore，这是一种无 SQL 数据库，也具有可扩展性。
+- en: to zero just like our various computing solutions do so if nobody's interacting
+    with the database。 you pay for storage but you don't pay for compute time a cloud
+    function that's used for the web。 service that's going to be triggered by the
+    questioners sending the results into it and。 a web application and we're going
+    to use App Engine for that App Engine is a serverless。
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 和我们各种计算解决方案一样，如果没有人使用数据库，你只需为存储付费，而不必为计算时间付费。一个用于网络服务的云函数将由问题者触发，将结果发送到其中，以及一个网页应用程序，我们将为此使用
+    App Engine。App Engine 是一个无服务器平台。
+- en: platform it's actually the first serverless platform that Google Cloud provided
+    and it's。 optimized for creating interactive websites which is exactly what we
+    need and finally we're。 going to put the identity where proxy in front of that
+    optionally so that requests only reach。 that App Engine web app once they've been
+    authenticated and those requests have the authenticated information。
+  id: totrans-233
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 平台实际上是谷歌云提供的第一个无服务器平台，它针对创建交互式网站进行了优化，这正是我们所需的。最后，我们将选择在前面放置身份代理，以便请求只有在经过身份验证并且拥有经过身份验证的信息后，才能到达该
+    App Engine 网络应用。
+- en: added as headers to the request so we're going to see how to do all of those
+    things create。 the Firestore database once again we're going to deploy a cloud
+    function just like we've。 done in the previous two labs we're going to deploy
+    an App Engine application and we're。 going to see how to restrict access to that
+    application all you're going to need for this。
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为请求的头部添加的内容，所以我们将看到如何完成所有这些工作，创建 Firestore 数据库。我们将再次部署一个云函数，就像在之前的两个实验室中那样，我们将部署一个
+    App Engine 应用程序，并看到如何限制对该应用程序的访问。你所需要的就是这个。
+- en: is a modern web browser and basic knowledge of the Python programming language
+    so to get。 set up we're going to need to create a project and open the console
+    of that project we've。 already done that as part of our previous two code labs
+    we're also going to need to get。 the source code which we've already also received
+    so let's go and take a look at our。
+  id: totrans-235
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用现代网络浏览器和基本的 Python 编程语言知识。所以为了设置，我们需要创建一个项目并打开该项目的控制台。我们已经在之前的两个代码实验室中完成了这一操作，我们还需要获取源代码，而这些我们也已经获得了。让我们去看看我们的。
+- en: console we see in our console that we have the source code available here the
+    questioners。 the source code for the manager components and so forth and if we
+    want we can go to the。 terminal and we can run commands there with all of the
+    necessary software already pre-installed。 the first thing we're going to do now
+    is create a database a Firestore database cloud Firestore。
+  id: totrans-236
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 控制台中我们看到这里有源代码可用，问题者是管理组件等的源代码。如果我们愿意，我们可以去终端并运行命令，所有必要的软件都已经预先安装。我们现在要做的第一件事是创建一个数据库，一个
+    Firestore 数据库。
+- en: is a no SQL database that we're going to use for our shared persistent data
+    remember all。 of our computing components are stateless they can't remember any
+    information from one。 web request or one event to the next so if they want to
+    remember anything they've got。 to store it externally and this is where they're
+    going to store it。
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是一个无SQL数据库，我们将用于共享持久数据，记住我们所有的计算组件都是无状态的，它们无法从一个网络请求或一个事件记住任何信息，因此如果它们想记住任何东西，就必须将其存储在外部，这就是它们存储的地方。
+- en: Firestore works on collections of documents now a document doesn't mean a paper
+    a person。 reads a document in this case just means a structured chunk of data
+    something like a Python。 dictionary so we're going to have a collection of documents
+    one for each submitted contestants。 request we're going to call those submissions
+    rounds contest rounds the contestant comes。
+  id: totrans-238
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Firestore基于文档集合工作，而文档并不意味着一个人阅读的纸质文件，这里指的是结构化的数据块，类似于Python字典。因此，我们将拥有一个文档集合，每个提交的参赛者请求一个，我们将称之为提交回合竞赛回合。
+- en: and says here's a new submission please judge it that will be a round in our
+    collection。 the round is going to tell us who submitted it it's going to create
+    a unique ID for that。 round it's going to keep track of the URL that needs to
+    be judged and then it's going to。 have a sub collection of runs every questionnaire
+    that runs this judging round well actually does。
+  id: totrans-239
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且说这是一个新的提交，请判断它，这将是我们收藏中的一个回合。这个回合将告诉我们谁提交了它，并为其创建一个唯一的ID。它将跟踪需要被评判的URL，然后会有一个子集合，记录每个运行此评判回合的问卷。
+- en: a judging run is going to report back its scores and those scores are going
+    to be in。 the runs collection each of those is going to say which questioner did
+    this and what。 the outcome was and how many moves it took。 Turns out that these
+    things are very easy to work with and Python the API is quite simple。 we'll take
+    a look at it when we examine the source code we're going to deploy。
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个评判运行将报告它的分数，这些分数将记录在运行集合中，每个都会说明是哪个问卷进行了此评判，结果是什么，以及用了多少次移动。事实证明，这些在Python中非常易于处理，API相当简单。当我们检查源代码时，我们会看一下它，我们将部署。
+- en: Now in order to use cloud firestore it's got to be enabled you can enable it
+    with the G。 cloud command line interface or you can simply go into the cloud console
+    let's go ahead and。 do that go into the cloud console and we want to go to the
+    cloud firestore section so I'm。 going to open a new instance of it in a new tab
+    so I don't have to keep going back and。
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了使用云Firestore，它必须被启用，你可以通过G云命令行接口启用它，或者你可以直接进入云控制台。让我们去做吧，进入云控制台，我们想要去云Firestore部分，因此我将打开一个新的实例，在新标签页中这样我就不必一直返回去。
+- en: forward and it's going to take a minute for this instance of the console to
+    open up and。 once it does I'm going to use the menu in this upper corner to go
+    to the cloud firestore， section。 Cloud Firestore is data well data storage so
+    we have here firestore notice that there's。 also file store which is totally different
+    it's got one entire letter difference。
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 向前推进，这个控制台实例会打开，等它打开后，我会使用右上角的菜单进入云Firestore部分。Cloud Firestore是数据存储，所以我们在这里有Firestore，注意还有文件存储，它们是完全不同的，只差一个字母。
+- en: Now one thing about cloud firestore is it actually has two modes and that's
+    because originally。 there was another known as kill database on Google cloud called
+    data store。 Now it's still available but it's provided simply by putting a different
+    interface in。 front of firestore so you have to choose one or the other。
+  id: totrans-243
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在关于云Firestore的一件事是它实际上有两种模式，这因为最初在谷歌云上有一个叫做数据存储的数据库。现在仍然可用，但仅仅是通过在Firestore前放置一个不同的接口来提供，所以你必须选择其中一个。
+- en: We're going to choose firestore in native mode instead of having it behave like
+    data。 store so select native mode。 This is a choice that we can't go back on we've
+    got to pick it and if we want to use。 something different we'd have to create
+    a new project。 We now have to say where our database should be stored we can either
+    store it in multi-region。
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将选择原生模式的Firestore，而不是让它像数据存储那样工作，因此选择原生模式。这是一个无法回退的选择，我们必须做出决定，如果想使用不同的东西，我们就得创建一个新项目。我们现在必须指定数据库的存储位置，可以选择在多区域存储。
+- en: with five nine's SLA or a single region with only four nine's SLA。 There's a
+    very high free tier available for firestore it's unlikely we're going to exceed。
+    it anyway so even though multi-region would cost more we're probably not going
+    to incur。 any costs anyway so we're going to go ahead and choose the United States
+    multi-region。
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 具有五个9的服务水平协议，或单一区域的四个9服务水平协议。Firestore有一个非常高的免费层，超出使用的可能性不大。因此，即使多区域会更贵，我们可能也不会产生任何费用，所以我们将选择美国多区域。
+- en: and create that database。 It's going to take a few minutes to go ahead and build
+    nothing will be in it so let's go。 on to the next steps。 We need to create a cloud
+    function that's going to be our web service that will accept。 results from the
+    questioners and update the firestore database in order to include those， results。
+    So we're going to go into the cloud section section of the console and create
+    an HTTP triggered。
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建该数据库。构建将需要几分钟时间，里面不会有任何内容，所以让我们继续进行下一步。我们需要创建一个云函数，这将是我们的网络服务，用于接受调查员的结果，并更新Firestore数据库以包含这些结果。所以我们将进入控制台的云部分，创建一个HTTP触发的函数。
+- en: web service called manager。 So again let's go over to our console open another
+    instance so we don't have to use the。 back arrow too much。 It takes a minute for
+    this to come up depending on how fast your current internet connection。 is。 Things
+    are busy right now。 Once it finishes coming up we can go where we've been several
+    times before go into the。 compute section and choose cloud functions which now
+    has some questioners and some players。
+  id: totrans-247
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 名为管理器的网络服务。所以让我们再次转到控制台，打开另一个实例，这样我们就不需要太多使用返回箭头。根据你当前的互联网连接速度，打开这个需要一分钟时间。现在事情很繁忙。一旦它完成启动，我们可以去我们之前去过几次的地方，进入计算部分，选择云函数，现在有一些调查员和一些玩家。
+- en: Let's go ahead and create another function。 This one is going to be the manager
+    that receives results。 We're going to trigger it with a web request。 We're going
+    to allow unauthenticated invocations because otherwise we would have to provide
+    credentials。
+  id: totrans-248
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们继续创建另一个函数。这个函数将是接收结果的管理器。我们将通过网络请求触发它。我们将允许未认证的调用，因为否则我们就需要提供凭据。
+- en: to every questioner so that they could send us results。 That might be nice and
+    more secure but it also would be harder to manage and create coupling。 We're going
+    to have a different way that we keep unauthenticated users from talking to， us。
+    This is going to be Python again。 Let's make this bigger。
+  id: totrans-249
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让每个调查员都能向我们发送结果。这可能会更好和更安全，但管理和创建耦合会更困难。我们将有不同的方式来防止未认证的用户与我们交谈。这将再次使用Python。让我们把这个放大。
+- en: Then let's look at source code for the manager function。 Scroll down， select
+    it all。 Maybe it into a buffer and replace the current function code with that。
+    Again we have the weird outcome that we have nested scroll bars so it's a little
+    tricky。 to make sure everything got copied。 If we take a look at this this is
+    a save result。
+  id: totrans-250
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后让我们查看管理器函数的源代码。向下滚动，选择全部内容。也许将其放入一个缓冲区，并用该内容替换当前的函数代码。我们又遇到了嵌套滚动条的奇怪结果，所以确保所有内容都被复制有点棘手。如果我们看看，这是一个保存结果。
+- en: It's set the web request。 It's going to get the JSON information for the result
+    into a dictionary and pull out the。 five pieces of data that are set to us as
+    a result。 It's then going to look up the contest round that this result is for。
+    If it doesn't exist if there is no such round it will say a 404 not found。
+  id: totrans-251
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它设置了网络请求。它将把结果的JSON信息获取到一个字典中，并提取出。五个作为结果提供给我们的数据。然后它将查找该结果所属的比赛轮次。如果不存在，如果没有这样的轮次，它将返回404未找到。
+- en: Then if it does exist it's going to check that the request includes the secret
+    that。 the manager originally set up for this contest round's reports。 If the secret
+    doesn't match it's going to return forbidden。 That's how we're going to keep people
+    from sending fake results to our system。
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后如果它确实存在，它将检查请求是否包含管理器最初为此比赛轮次的报告设置的密钥。如果密钥不匹配，它将返回禁止。这就是我们阻止人们向我们的系统发送假结果的方法。
+- en: When we send the message to the questioner we include a secret。 When the questioner
+    reports results it's got to give us the same secret。 Now notice in order to actually
+    interact with the database the Firestore database it's。 very very simple。 We create
+    a collection object for rounds that either may already exist or may have had to。
+  id: totrans-253
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们向提问者发送消息时，我们包含了一个秘密。当提问者报告结果时，必须给我们相同的秘密。请注意，为了与 Firestore 数据库实际交互，过程是非常简单的。我们创建一个可能已经存在或可能需要创建的轮次集合对象。
+- en: create a new one and then we get the document for the current contest round
+    value that was。 sent to us in the web request。 Now when we get that it may not
+    exist。 There's a method that tells us that。 But if it does exist we can convert
+    that round to a dictionary and get any field out of it。 and we want to get the
+    secret field to make sure it matches。
+  id: totrans-254
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建一个新的，然后我们获取当前比赛轮次的文档值，该值是通过网络请求发送给我们的。现在当我们获取这个值时，它可能不存在。有一个方法可以告诉我们这一点。但如果存在，我们可以将该轮次转换为字典并获取其中的任何字段。我们想要获取秘密字段以确保它匹配。
+- en: If it does match then we're going to add to the sub collection runs。 So this
+    particular document the contest round can have one or more collections here we
+    have。 a collection name run and we're going to add a dictionary with the outcome
+    the number of。 moves and what questioner and acknowledge that that succeeded。
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果匹配成功，我们将添加到子集合运行中。所以这个特定的文档比赛轮次可以有一个或多个集合，在这里我们有一个集合名称运行，我们将添加一个包含结果、移动次数和提问者的字典，并确认这次操作成功了。
+- en: In order to do this we're not only going to have to use the standard JSON module
+    we're。 going to have to use the non-standard Google Cloud Firestore module。 So
+    that's going to have to be put in the requirements。txt file。 So let's go back
+    to our source code take a look at the necessary requirements。txt and。
+  id: totrans-256
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了实现这一点，我们不仅需要使用标准的 JSON 模块，还需要使用非标准的 Google Cloud Firestore 模块。因此，这个模块必须放入
+    requirements.txt 文件中。让我们回到源代码，看看必要的 requirements.txt。
+- en: we see we need to use a recent version of the Google Cloud Firestore library。
+    Okay。 the function that will actually be executed is save result and let's go
+    ahead and create。 that new function。 While we wait for that check mark to come
+    in or come in as a red X if something goes wrong。 let's see if our Firestore database
+    is finished being set up。 It is。
+  id: totrans-257
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们看到需要使用最新版本的 Google Cloud Firestore 库。好的。实际执行的函数是保存结果，让我们继续创建这个新函数。在等待勾选标记到来或如果出现错误显示为红色
+    X 时，让我们看看 Firestore 数据库是否已经完成设置。确实完成了。
+- en: We can create our own collections but we'll let the software do that。 So the
+    function is going to be used by sending a post request with a JSON object。 We
+    looked at that when we actually built the questioners how we send that request
+    and then。 as we showed it's going to extract the data and update the database。
+  id: totrans-258
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以创建自己的集合，但我们会让软件来做。所以这个功能将通过发送一个包含 JSON 对象的 POST 请求来使用。我们在构建提问者时就看过这个请求是如何发送的，然后正如我们所展示的，它将提取数据并更新数据库。
+- en: The Firestore is really easy to work with from Python。 We now want to test the
+    function and we're going to test it by filling in a trigger with。 a JSON object
+    that represents a request to make a move。 So let's go ahead and copy that JSON。
+    Go back to our Cloud function which still hasn't quite finished initializing。
+  id: totrans-259
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从 Python 与 Firestore 一起工作非常简单。我们现在想要测试这个函数，将通过填入一个表示移动请求的 JSON 对象来进行测试。所以让我们复制这个
+    JSON。返回到我们的 Cloud 函数，它仍然没有完全初始化。
+- en: Once it does we can go into the test tab and test it。 Alright。 Click on manager。
+    Go into the testing tab。 Replace the triggering event with the one from the code
+    lab which says we're reporting。 results for a contest round called one。 The secret
+    that we were told to use to report it is not very。 The name of the questioner
+    is the program that's actually doing the submission is easy， questioner。
+  id: totrans-260
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦匹配成功，我们可以进入测试标签进行测试。好的。点击管理器。进入测试标签。用来自代码实验室的触发事件替换原有的，那个说我们正在报告一个名为“一个”的比赛轮次的结果。我们被告知用于报告的秘密并不复杂。提问者的名称是实际提交的程序，它很简单，提问者。
+- en: When it ran this submission one the game in ten moves。 So let's go ahead and
+    test the function and we get a 404 not found because there is no。 contest round
+    in our database for contest round one。 We asked for that to be judged so we're
+    not going to store any results for it to come， in。
+  id: totrans-261
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当它运行这个提交时，游戏在十次移动内完成。所以让我们测试这个函数，但我们得到了404未找到，因为在我们的数据库中没有比赛轮次一。我们请求对此进行评判，因此我们不会存储任何结果。
+- en: So let's fix that problem by actually having a contest round in the database
+    for one。 So go to our data firestore say we want to start a collection。 The collection
+    is going to be called rounds。 The first document is going to be called one and
+    we're going to put fields in it right。 now let's just put in a field for the secret。
+    Let's say the secret ish。
+  id: totrans-262
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们通过在数据库中实际创建一个比赛轮次来解决这个问题。去我们的数据Firestore，表示我们想要开始一个集合。这个集合将被称为“rounds”。第一个文档将被称为“one”，我们现在将其添加字段。现在我们先放一个“secret”字段。我们可以说，秘密是“shh”。
+- en: I think that is the only field we need。 Let's take a look at the code lab。 Yep，
+    save it。 And we now have a collection with one document for contest round one。
+    It has one field in it called secret whose value is shh。 Let's test our function
+    again。 Now we get a 403 forbidden and that's because the secret we're providing
+    not vary doesn't。
+  id: totrans-263
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我认为这是我们所需的唯一字段。让我们看看代码实验室。没错，保存它。现在我们有一个包含一个文档的集合，属于第一轮比赛。它里面有一个字段叫做“secret”，其值为“shh”。让我们再次测试我们的函数。现在我们得到一个403禁止，这是因为我们提供的秘密并不变。
+- en: match the secret in the database which is shh。 S with 3H is an explanation point。
+    So let's go ahead and change that secret to match the one that supposedly would
+    have。 been given to it and test the function one more time。 And with luck there
+    201 means created。 It actually supposedly created something。 Let's see if that's
+    telling the truth。
+  id: totrans-264
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使数据库中的秘密与“shh”匹配。“S”与“3H”以及一个感叹号。让我们更改这个秘密，使其与理论上应该给定的匹配，并再测试一次函数。希望这次返回201意味着已创建。它确实应该创建了某些东西。让我们看看这是否属实。
+- en: Let's look at our one document。 Refresh this page because we want to see if
+    there's a sub collection there。 It will often refresh itself but sometimes there's
+    a lag。 So let's force it to refresh。 And we see that for rounds there is one document
+    called one that has a field called secret。 and his value is shh。 And it has a
+    sub collection called runs。
+  id: totrans-265
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看我们的一个文档。刷新这个页面，因为我们想看看是否那里有一个子集合。它通常会自动刷新，但有时会有延迟。所以让我们强制刷新一下。我们看到，轮次中有一个名为“one”的文档，里面有一个字段叫做“secret”，其值为“shh”。它还有一个名为“runs”的子集合。
+- en: Runs has one document in it that was given a random ID by the system since we
+    didn't provide， an ID。 And that random ID has a document with three values in
+    it。 The three values that we sent to it in our JSON file。 So the function does
+    seem to be working the way we want it to work。
+  id: totrans-266
+  prefs: []
+  type: TYPE_NORMAL
+  zh: “Runs”中有一个文档，由系统分配了一个随机ID，因为我们没有提供ID。这个随机ID对应的文档包含三个值。我们在JSON文件中发送的三个值。因此，函数似乎按我们希望的方式工作。
+- en: And just to keep things clean let's go back into the runs collection and delete
+    that one。 document that we could put in there manually。 It's going to also delete
+    all of its child sub collections。 Okay。 Now let's go ahead and create the web
+    application using App Engine。 We're going to go ahead and look into the App Engine
+    section and let's go ahead and just。
+  id: totrans-267
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了保持整洁，让我们回到“runs”集合中，删除那个可以手动放入的文档。这样也会删除它所有的子集合。好的。现在让我们继续使用App Engine创建网络应用程序。我们将进入App
+    Engine部分，然后继续。
+- en: open a new tab for the console。 And we'll go into App Engine。 And we're going
+    to see that things are going to be a little bit different for this than everything。
+    else we've done with the console。 And that's because we cannot create App Engine
+    apps through the console。 We have to do that from the command line。 There are
+    simply too many pieces to have a good console experience。
+  id: totrans-268
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为控制台打开一个新标签页。我们将进入App Engine。我们会发现这与我们在控制台中做的其他事情略有不同。这是因为我们无法通过控制台创建App Engine应用。我们必须从命令行执行这个操作。因为涉及的部分太多，无法在控制台中提供良好的体验。
+- en: And let's go in here to App Engine。 The first time we do that it may take a
+    minute to initialize but it says okay welcome to App。 Engine。 There's an empty
+    App Engine app but there's been nothing deployed to it yet。 Let's see how to deal
+    with that。 We need to go into the serverless game contest source code the manager
+    App Engine subdirectory。 And let's take a look at what's in there。 Here App Engine
+    we have our actual program main。
+  id: totrans-269
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们进入App Engine。第一次执行时，可能需要一分钟来初始化，但它会显示欢迎来到App Engine。这里有一个空的App Engine应用，但还没有任何部署。让我们看看该如何处理。我们需要进入无服务器游戏比赛源代码中的管理App
+    Engine子目录。让我们看看里面有什么。在这里，App Engine包含我们的实际程序主文件。
+- en: py and it is a flask web app。 You can read about flasks elsewhere but basically
+    what it does is it lets you decorate different。 functions with the paths that
+    should be given to it to handle。 So let me go on up here。 I overscrolled past
+    it。 Here we see if somebody makes a request to slash request round with a post。
+    It's going to go ahead and pull stuff out of the form and check who submitted
+    it。
+  id: totrans-270
+  prefs: []
+  type: TYPE_NORMAL
+  zh: py是一个flask网络应用程序。你可以在其他地方阅读flask的相关内容，但基本上，它允许你用应该处理的路径装饰不同的函数。所以让我在这里向上滚动。我滚得有点过头了。这里我们看到，如果有人向斜杠请求轮次发起POST请求，它将提取表单中的内容并检查是谁提交的。
+- en: Update the database if there's been a requested round。 Let me scroll down。 It'll
+    then use Pub/Sub to send the message to all the questioners to actually play the，
+    game。 Even if we scroll up we see that if somebody makes a request to that same
+    path request round。 but with a get it's going to just return the form。
+  id: totrans-271
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果有请求的轮次，更新数据库。让我向下滚动。然后它将使用Pub/Sub将消息发送给所有提问者，以实际进行游戏。即使我们向上滚动，我们也会看到，如果有人对同一路径请求轮次，但使用get方法，它将仅返回表单。
+- en: And if it makes a request to the root the slash page with a get it will go through
+    the。 database build a data structure with all of the results from all the rounds
+    and then it。 will render a template filling in the data from those results。 So
+    if the user will see what the current standings are。
+  id: totrans-272
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果它向根目录的斜杠页面发起GET请求，它将遍历数据库，构建一个包含所有轮次结果的数据结构，然后渲染一个模板，填充这些结果中的数据。这样用户就能看到当前的排名。
+- en: And then there are some helper functions for keeping track of the user nicknames。
+    Fairly straightforward。 There are several different Python modules that are nonstandard
+    that need to be included。 so it also has a requirements。txt file。 Even if we don't
+    have any nonstandard modules app engine is going to require we have a。 requirements。txt
+    file。 It can be empty but it has to exist。
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后有一些辅助函数用于跟踪用户的昵称。相当简单。有几个不同的非标准Python模块需要包含，因此它还有一个requirements.txt文件。即使我们没有任何非标准模块，应用引擎也会要求我们有一个requirements.txt文件。它可以是空的，但必须存在。
+- en: And the one big new thing in app engine is app。yaml。 A yaml file that says which
+    of the many app engine run file times and other environment。 selections you have
+    to make。 In order to do Python 3。7 all we have to have in there is one line。 This
+    is a runtime it's a runtime for Python 3。7。 We have a couple of templates that
+    are used to build the web pages。
+  id: totrans-274
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用引擎中一个重要的新特性是app.yaml。这个yaml文件说明了你需要选择的多个应用引擎运行时和其他环境选项。为了使用Python 3.7，我们只需在其中添加一行。这是一个运行时，它是Python
+    3.7的运行时。我们有几个模板用于构建网页。
+- en: We simply fill in the blank templates for the home page and the page with the
+    form。 And we have some minimal testing。 Basically something that just checks it
+    when we ask for the home page。 We get a home page that has word standings in it。
+    Probably it would be nice to be more thorough with this。 Okay that's what the
+    source code looks like。 In order to deploy it we're going to have to go ahead
+    and use a command line。
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们只需填写主页和表单页面的空白模板。然后我们进行一些最基本的测试。基本上就是在我们请求主页时检查一下。我们会得到一个包含文字排名的主页。或许对此进行更全面的检查会更好。好的，这就是源代码的样子。为了部署它，我们需要使用命令行。
+- en: Gcloud command from our cloud shell。 Before we deploy it though there's one
+    line we need to update in our source code and that。 is the line saying where the
+    manager function that we just created is。 That's because when this function sends
+    a message to all the questioners to do their testing。 they're actual checking
+    submitted runs。 It's got to tell them what URL to send the results back to。
+  id: totrans-276
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从我们的云终端运行gcloud命令。不过在部署之前，我们需要更新源代码中的一行，那就是说明我们刚创建的管理函数所在位置的那一行。这是因为当这个函数向所有提问者发送消息进行测试时，他们实际上是在检查提交的轮次。它必须告诉他们将结果发送回哪个URL。
+- en: And that's going to be the URL of the function we just created。 So let's go
+    ahead and change that one line in our source code for main。py。 Result。url= and
+    we need to put in our manager functions URL。 Well that's going to be over here
+    in the functions tab。 The trigger is right there。
+  id: totrans-277
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将是我们刚创建的函数的URL。那么让我们在main.py的源代码中更改那一行。Result.url=，我们需要输入我们管理函数的URL。这个URL会在函数选项卡中找到。触发器就在那儿。
+- en: We'll copy its address。 And put that in our source code。 Again it will be saved
+    automatically but just because of how it I tend to do control S anyhow。 Alright
+    now that it's ready we can deploy the app and it's really really simple to do。
+    after all that preparation。 Go back to our console。 Go to the terminal。
+  id: totrans-278
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将复制其地址。并将其放入我们的源代码中。同样，它会自动保存，但由于我习惯性地进行控制S，所以还是这样做吧。好的，现在准备好了，我们可以部署应用，这真的很简单。在所有准备工作之后，返回控制台，进入终端。
+- en: Change the correct directory。 And say Gcloud app deploy。 All of the necessary
+    account credentials and project definition and everything that is。 needed for
+    this to work are built into the cloud shell environment。 Alright we're asked is
+    this what you really want to deploy？
+  id: totrans-279
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更改正确的目录。然后输入Gcloud app deploy。所有必要的账户凭证、项目定义以及实现这一功能所需的一切都已内置于云端环境中。好的，我们被问到，这真的是你想要部署的吗？
+- en: This yaml and source file to this target project and it tells us the URL that
+    it's going to。 end up with。 And yes let's go ahead and do that。 It uploads our
+    files and then it's going to go ahead and update and create the new version。 and
+    update it。 That's going to take a few minutes so let's read ahead to what's going
+    to happen next。 Well we've already looked over the code so we have a sense of
+    how it works。
+  id: totrans-280
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个yaml和源文件指向目标项目，并告诉我们最终的URL。是的，我们继续这样做。它上传我们的文件，然后将更新并创建新版本。更新将需要几分钟，所以让我们提前看看接下来会发生什么。我们已经审阅过代码，因此对其工作原理有一定了解。
+- en: The one thing that's a little bit tricky is what the nicknames are doing and
+    we're going。 to talk about that really when we talk about identity or proxy but
+    there's a little bit。 of background here。 If we put identity or proxy in front
+    of our app engine app then every request that gets。 sent to the app is going to
+    be first filtered through the identity or proxy。
+  id: totrans-281
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一点稍微复杂的是昵称的作用，我们将在谈论身份或代理时详细讨论，但这里有一些背景。如果我们在应用引擎应用前面加上身份或代理，那么发送到应用的每个请求都会首先通过身份或代理进行过滤。
+- en: And it's only going to let requests through if it's already authenticated the
+    person making。 the request。 If it has authenticated that person it is going to
+    include a header with information about。 that person's Google email address and
+    a unique Google ID code。 All that kind of stuff that we're going to use if we
+    need to use it。
+  id: totrans-282
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只有在已经验证请求者身份的情况下，才会允许请求通过。如果已验证该请求者，它将包含一个带有请求者Google邮箱地址和唯一Google ID代码的信息头。这些都是我们在需要时将使用的内容。
+- en: So get nickname is going to look in the form。 If it doesn't have anything that's
+    already been saved in the database for the nickname。 So get nickname when we see
+    a user we check to see if we know that user。 If we don't already know that user
+    we'll get the nickname out of the form。 We'll save it otherwise we'll say hey
+    we need to have a nickname。
+  id: totrans-283
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以获取昵称将查看表单。如果数据库中没有已保存的昵称。获取昵称时，我们查看用户是否已知。如果我们不认识该用户，我们将从表单中获取昵称。否则我们会说，嘿，我们需要一个昵称。
+- en: Again we're going to talk about exactly how that works when we get to identity
+    or proxy。 We now should be able to go ahead and run this app。 Let's actually take
+    a look。 Have we finished the deployment？ Usually by now it would be ready。 While
+    we're waiting again look ahead。 All we need to do is a Gcloud app browse and it
+    will show us the URL and we can open。
+  id: totrans-284
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次，我们将在谈到身份或代理时详细讨论其工作原理。现在我们应该能够运行这个应用。让我们实际查看一下。我们完成部署了吗？通常到现在为止应该准备好了。在等待时再看看。我们只需要输入Gcloud
+    app browse，它将显示URL，我们可以打开。
+- en: the page to see the URL。 Go ahead and give it a try。 Let's step ahead while
+    we're waiting for it to deploy and take a look at how it uses identity。 or proxy。
+    Okay。 In order to use identity or proxy we're going to have to enable it。 We'll
+    go through those steps when we get finished deploying and testing it。
+  id: totrans-285
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查看页面以获取URL。请尝试一下。在等待部署的同时，让我们前进一步，看看如何使用身份或代理。好的。为了使用身份或代理，我们需要先启用它。完成部署和测试后，我们会详细介绍这些步骤。
+- en: But once it's deployed and we've said that we are going to allow anybody to
+    use our app。 What it will do is when you go to the home page you're going to be
+    forced to log in first。 That login doesn't go to your app it goes to identity
+    or proxy but from that point on。 every time you make a request that request is
+    going to include some headers。 Let's scroll down here。
+  id: totrans-286
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是一旦部署了，我们就表示会允许任何人使用我们的应用。当你访问主页时，系统会强制你先登录。该登录信息不会传递到你的应用，而是转到身份或代理，之后每次你发出请求时，该请求都会包含一些头信息。让我们往下滚动。
+- en: The headers include the authenticated users email， a user ID code that's unique
+    to that。 user and a digitally signed assertion that has that information as well
+    if you want to。 make sure that nobody could have somehow slipped you bad headers。
+    That's not really possible in the simple architecture we've created where we don't
+    have any other。
+  id: totrans-287
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 头信息包括经过身份验证的用户电子邮件，一个独特的用户ID代码，以及一个数字签名的声明，其中包含该信息，如果你想确保没有人以某种方式给你错误的头信息。在我们创建的简单架构中，这实际上是不可能的，因为我们没有其他人。
+- en: programs that can bypass the identity or proxy。 Once we use those information
+    that information the app is going to remember the nickname。 The first time is
+    shown it and it's going to do that by getting the user ID from the。 header and
+    saving it in a nickname collection。 That's all。 If a person says my name is Mary
+    it's going to save okay user Mary exists for this Google。
+  id: totrans-288
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以绕过身份或代理的程序。一旦我们使用那些信息，应用将记住昵称。第一次显示时，它将通过从头信息中获取用户ID并将其保存在昵称集合中来实现。这就是全部。如果某人说我的名字是玛丽，系统将保存“好的，用户玛丽在谷歌上存在”。
+- en: unique user ID。 That's all it needs to do。 And then get nickname later when
+    we come along and say hey when we see a new page do we know。 who this user is
+    already。 It's going to look up that authenticated user ID header and if it's there
+    it's going to look。
+  id: totrans-289
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 唯一的用户ID。这就是它需要做的。然后稍后获取昵称，当我们到来时，我们会说“嘿，当我们看到新页面时，我们是否已经知道这个用户是谁”。它将查找该经过身份验证的用户ID头，如果存在，它将进行查找。
+- en: up the nickname in the database and it's going to ignore whatever nickname the
+    user submits， again。 So the user is not going to be able to say hey I'm Mary in
+    one submission and then say。 I'm Susan in the next。 We're going to know that that's
+    not going to work。 So have we finished the deployment？ Yes we have。 So Gcloud
+    app browse comes says go to this URL so click it。
+  id: totrans-290
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在数据库中更新昵称时，它将忽略用户提交的任何昵称。因此，用户不能在一次提交中说“嘿，我是玛丽”，然后在下一次提交中说“我是在苏珊”。我们将知道这行不通。那么我们完成了部署吗？是的，完成了。所以Gcloud应用浏览器显示去这个网址，点击它。
+- en: '![](img/d75a7af45610ca4b253c770090edc225_7.png)'
+  id: totrans-291
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_7.png)'
+- en: '![](img/d75a7af45610ca4b253c770090edc225_8.png)'
+  id: totrans-292
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_8.png)'
+- en: And our application is run and we don't have any contest standings yet。 We can
+    request a new contest round。 So I can say hey I'm John Doe and for the URL let
+    me go to my functions tab and pick one。 of my players and give it that URL。 Let's
+    give it the okay player and see what its URL is that's trigger。 So let's go back
+    to our request to contest round。 Once it's around and it's going to return us
+    it's already put the fact that there's been。
+  id: totrans-293
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的应用程序正在运行，但我们还没有任何比赛排名。我们可以请求新的比赛轮次。所以我可以说，嘿，我是约翰·多。我可以去我的函数标签，选择我的一个玩家并给它那个网址。让我们给它好球员，看看它的触发网址。现在让我们回到请求比赛轮次的内容。一旦轮次开始，它将返回已请求的事实。
+- en: around requested。 I mean just gorgeous formatting here I know but who requested
+    it and when。 And once those results have been submitted back they'll be in the
+    database and we'll be。 able to see that hey the easy questionnaire is finished
+    running and our solution one。 Remember the hard questionnaire asks you to guess
+    the number one million in the range。
+  id: totrans-294
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里的格式真是太美了，我知道，但谁请求了以及何时请求的。一旦这些结果被提交回去，它们将存储在数据库中，我们将能够看到轻松问卷已经完成运行，而我们的解决方案一。记住，困难问卷会让你猜测一百万的数字范围。
+- en: one to a billion and since our okay player just always guesses one more than
+    the last。 time it's going to take a while before it fails。 Did a hundred moves。
+    So we see the contest standings that's the overall system。 Let's now go in and
+    turn on identity where proxy which will let us finish this。
+  id: totrans-295
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从一到十亿，由于我们的好球员总是比上一次多猜一次，它会在失败之前花费一些时间。进行了百次移动。因此我们看到比赛排名，这就是整体系统。现在让我们打开身份或代理，这将让我们完成这个。
+- en: So we've got to go to the I am for identity and account management admin slash
+    identity。 where proxy。 So let's again open a new instance of the console。 And
+    unfortunately we're going to see there are a few annoying steps that are necessary。
+    in order to keep people from selecting information unknowingly from other users。
+  id: totrans-296
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们得去身份和账户管理的管理员/身份，那里是代理。所以让我们再次打开控制台的新实例。不幸的是，我们会看到有一些烦人的步骤是必要的，以防止人们无意中选择其他用户的信息。
+- en: You're not going to be able to get Google to tell you a user's email address
+    without。 the user knowing that accessing your app is going to make that occur。
+    So we pull down the menu choice for I am an admin identity where proxy and the
+    first。 time we do it we have to enable it and then it's going to tell us that
+    we have to set up。
+  id: totrans-297
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你不能让Google告诉你用户的电子邮件地址，而不让用户知道访问你的应用会发生这种情况。因此我们下拉菜单选择“我是管理员身份”，第一次我们必须启用它，然后系统会告诉我们需要设置。
+- en: a permission page a page that tells the user who's doing it。 So let's go to
+    identity where proxy we have to configure a consent screen。 And that simply is
+    something that's going to be shown when the user logs in so the user。 knows who's
+    asking for my credentials and what are they going to use it for。
+  id: totrans-298
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个权限页面，一个告诉用户谁在进行操作的页面。所以让我们去身份的代理，我们必须配置同意屏幕。这只是当用户登录时会显示的内容，以便用户知道谁在请求我的凭据以及他们将用于什么。
+- en: So this set the OAuth consent screen requires a few pieces of information。 If
+    we were making this available to just one G Suite domain we could say internal
+    but we're。 going to make this external。 That's going to have to be reviewed before
+    we can use it widely but we can use it on small。 scale at first。 The application
+    name， programming contest， a logo that's optional。
+  id: totrans-299
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，设置OAuth同意屏幕需要一些信息。如果我们只是让它对一个G Suite域可用，我们可以说内部，但我们将使其外部。这需要在广泛使用之前进行审查，但我们可以在小规模上先使用。应用名称，编程竞赛，一个可选的徽标。
+- en: The support email for somebody who wants to ask any requests we've got to put
+    in a known。 email or it will use an email created by our particular solution。
+    What information we're going to ask a user for and by default we're going to ask
+    a user。 for minimal information their email address and their user ID。
+  id: totrans-300
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 支持电子邮件用于希望提出请求的人员，我们必须提供一个已知的电子邮件，否则将使用我们特定解决方案创建的电子邮件。我们将要求用户提供什么信息，默认情况下，我们将要求用户提供最少的信息，即他们的电子邮件地址和用户ID。
+- en: We can ask for more information and it will tell the user that we're asking
+    for that so。 the user will know。 What domains？ Well we're going to have to tell
+    it just the domains for our application。 So let's go to our App Engine app and
+    we can see that its domain is serverless workshop， anglekey。uc。r etc。 Then we're
+    going to be asked for the home page link。 Whoop。 Okay， did I press enter？
+  id: totrans-301
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以请求更多信息，它会告知用户我们在请求，因此用户会知道。哪些域名？我们将必须告诉它仅我们应用的域名。所以让我们去我们的App Engine应用，看到它的域名是serverless
+    workshop，anglekey.uc.r等。然后我们将被要求提供主页链接。哇。好的，我是不是按了回车？
+- en: Apparently yes。 The home page is going to be at HTTPS， that domain。 Privacy
+    policy。 I'm going to just use the same link even though I haven't created one
+    yet。 And the terms of service are optional。 So let's save that。 Okay。 now that
+    we've created the consent screen we can go back to the tab and refresh。
+  id: totrans-302
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然是的。主页将会在HTTPS下，那个域名。隐私政策。我会继续使用相同的链接，即使我还没有创建一个。服务条款是可选的。所以我们保存它。好的。现在我们已经创建了同意屏幕，可以返回标签并刷新。
+- en: it and it should let us go ahead and turn on IAP。 Okay， there we go。 We can
+    restrict access to HTTPS resources or actually SSH。 We're going to restrict web
+    access to our App Engine app。 We're going to turn it on。 And if we then try and
+    go to our website we're going to be asked to authenticate and then。
+  id: totrans-303
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它应该让我们继续开启IAP。好的，我们可以限制对HTTPS资源的访问，或者实际上是SSH。我们将限制对我们App Engine应用的网络访问。我们将开启它。如果然后我们尝试访问我们的网站，会要求我们进行身份验证，然后。
+- en: we're not going to be allowed access because we haven't told it who if anybody
+    can actually。 access it。 So let's go ahead and show the info panel。 Select that
+    line and add members who are allowed to access our application。 And we're going
+    to add all authenticated users。 And we're going to give them the IAP permission
+    to be a web app user to connect to our web。
+  id: totrans-304
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将无法访问，因为我们还没有告诉它谁可以访问。如果有人可以访问。那么让我们展示信息面板。选择那一行，添加允许访问我们应用的成员。我们将添加所有经过身份验证的用户，并授予他们成为连接到我们网页的Web应用用户的IAP权限。
+- en: app。 That's going to allow public access。
+  id: totrans-305
+  prefs: []
+  type: TYPE_NORMAL
+  zh: app。这将允许公共访问。
+- en: '![](img/d75a7af45610ca4b253c770090edc225_10.png)'
+  id: totrans-306
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_10.png)'
+- en: Our policy has been updated。 It may take a minute to fully replicate but let's
+    go ahead and see if it's replicated yet。 by going back to our application and
+    trying to request the home page again。 We're being made to sign in。 And it hasn't
+    propagated yet that I am allowed to sign in。 And this is going to take about five
+    minutes。 But once it is signed in it will then pass through to our application
+    and let me access。
+  id: totrans-307
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的政策已更新。可能需要一分钟才能完全复制，但让我们继续看看它是否已经复制，通过返回我们的应用程序并再次尝试请求主页。我们需要登录。而且尚未传播我被允许登录的信息。这将需要大约五分钟。但是一旦登录，它将通过我们的应用程序让我访问。
+- en: the app and it will know who I am。 Okay。 Come on。 One thing I may need to do
+    is go into the debugger console which lets me empty my cache。 and do a hard reload。
+    And there we go。 It finally reloaded the page。 I could have closed and reopened
+    my browser to do this。 But what did that do？
+  id: totrans-308
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个应用程序将知道我是谁。好的，来吧。我可能需要做的一件事是进入调试控制台，让我清空缓存并进行硬重载。就是这样。页面终于重新加载了。我本可以关闭并重新打开浏览器来做到这一点。但这做了什么？
+- en: Let's go take a look at our database and refresh it。 And we should see a database
+    of nicknames showing up。 Well the name will show up after I ask for a run。 So
+    I don't think we're going to have them yet。 Right。 But if I go ahead and ask for
+    a run， let's request the same function as before。 Okay。
+  id: totrans-309
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们去看看我们的数据库并刷新它。我们应该会看到昵称的数据库显示出来。嗯，名字将在我请求运行后显示出来。所以我想我们还不会有它们。对吧。但是如果我继续请求运行，让我们像之前一样请求相同的功能。好的。
+- en: If I now request a new contest round it's going to already know I'm Bill。 And
+    even if I was able to change this which in a web browser if you know how you can
+    override。 the read on the attribute it will ignore my new change because of the
+    way the code has。 been written。 So that keeps people from behaving badly。 While
+    still remaining anonymous。
+  id: totrans-310
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我现在请求一个新的比赛轮次，它已经知道我是Bill。即使我能够更改这个，在网页浏览器中，如果你知道如何覆盖属性，它将忽略我的新更改，因为代码的写法方式。这可以防止人们不当行为，同时仍然保持匿名。
+- en: And again our data if we look at it now should have a list of the nicknames
+    that have accessed， it。 And that list is not going to have email addresses because
+    we didn't need that and we don't want。 to store any more personal information
+    we absolutely need。 Instead it's going to just have that Google unique ID code。
+    So nicknames。
+  id: totrans-311
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次查看我们的数据，现在应该有一个访问过的昵称列表。而且这个列表不会包含电子邮件地址，因为我们不需要这个信息，也不想存储任何额外的个人信息。相反，它只会有那个Google唯一的ID代码。所以是昵称。
+- en: We should see a single nickname in there for the ID code that Google created
+    that tells。 us that ID is Bill。 Alright that completes this code lab。 It lets
+    us get through all of the major steps and build our solution。
+  id: totrans-312
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们应该能在这里看到一个由Google创建的ID代码的单一昵称，它告诉我们这个ID是Bill。好的，这完成了这个代码实验室。它让我们经历了所有主要步骤，并构建了我们的解决方案。
+- en: '![](img/d75a7af45610ca4b253c770090edc225_12.png)'
+  id: totrans-313
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_12.png)'
+- en: To a quick recap we created a distributed serverless system that has different
+    portions。 that can be owned by different identity entities。 The player。 the manager
+    and questioners each different groups and it used quite a few serverless， tools。
+    And we have a lot of options as a service which is to say cloud functions。
+  id: totrans-314
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 简单回顾一下，我们创建了一个分布式的无服务器系统，具有不同的部分，可以由不同的身份实体拥有。玩家、管理者和提问者每个不同的组，使用了相当多的无服务器工具。我们有很多作为服务的选项，也就是说云函数。
+- en: Platform is a service which is App Engine， reliable messaging， Pub/Sub and a
+    no SQL database。 and Firestore。 And we optionally put user authentication as a
+    service in front of it。 Thank you for your attention and time。 I hope this has
+    been useful。 Again。 all these resources are available for you at serverlessworkshop。dev
+    and there you。
+  id: totrans-315
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 平台是作为服务提供的，包括应用引擎、可靠消息传递、Pub/Sub和NoSQL数据库，以及Firestore。我们可以选择在前面放上用户身份验证作为服务。感谢你的关注和时间。希望这对你有用。再次声明，所有这些资源都可以在serverlessworkshop.dev上获得。
+- en: can either get my individual email address or you can use this alias to send
+    us any kind。 of questions or comments you have。 Appreciate your time once again
+    and have a good virtual picon。 Thank you。 and we'll see you next time。 and we'll
+    see you next time。 [BLANK_AUDIO]。
+  id: totrans-316
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以获得我的个人电子邮件地址，或者使用这个别名向我们发送任何问题或评论。再次感谢你的时间，祝你有个愉快的虚拟体验。谢谢，我们下次再见。[BLANK_AUDIO]。
+- en: '![](img/d75a7af45610ca4b253c770090edc225_14.png)'
+  id: totrans-317
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d75a7af45610ca4b253c770090edc225_14.png)'

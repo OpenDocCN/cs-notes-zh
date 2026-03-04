@@ -1,0 +1,867 @@
+- en: P11：Pieter Hooimeijer - Types Deeper Static Analysis and you - PyCon 2018 -
+    哒哒哒儿尔 - BV1Ms411H7Hn
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P11：Pieter Hooimeijer - 类型、深度静态分析和你 - PyCon 2018 - 哒哒哒儿尔 - BV1Ms411H7Hn
+- en: \>\> Hello everyone。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 大家好。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_1.png)'
+- en: Hi。 So welcome to the talk on types， deep static analysis and you。 Please welcome
+    Peter who will be presenting this awesome topic。 \>\> Thank you。 How's my audio？
+    Yeah？
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗨。欢迎参加关于类型、深度静态分析和你的演讲。请欢迎 Peter 来介绍这个精彩的主题。 \>\> 谢谢。我的音频怎么样？可以吗？
+- en: '![](img/d10160d6f0349309f46ae833710c063c_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_3.png)'
+- en: \>\> [inaudible]， \>\> Got it。 All right。 How's my audio now？ Not just the front
+    row。 Yeah。 All right。 So my slides are going to be a little stretched， but mostly
+    followable。 So that's a plus。 Title of the talk is types， deeper static analysis
+    and you。 So before I go into what that means a little about me。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> [听不清]， \>\> 明白了。好的。我的音频现在怎么样？不仅仅是前排。好的。所以我的幻灯片会有点拉伸，但大部分内容是可跟随的。这是一个积极的方面。演讲的标题是类型、深度静态分析和你。在我讲解这是什么意思之前，先说说我自己。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_5.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_5.png)'
+- en: I'm Peter at FB。com in case you need to contact me after Peter， with an extra
+    I。 And I work in the product security team at Facebook。 This is basically Facebook's
+    app sec team。 So we care about the security of all of our different code bases，
+    including Facebook itself。 obviously， but also Instagram， messenger， Oculus and
+    so on。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我是 Peter，邮箱是 FB.com，万一你需要联系我。Peter，多了一个 I。我在 Facebook 的产品安全团队工作。这基本上是 Facebook
+    的应用安全团队。因此，我们关心所有不同代码库的安全性，包括 Facebook 自身，显然，还有 Instagram、Messenger、Oculus 等等。
+- en: I've been at Facebook for about six years。 There's a couple of things that I've
+    worked on that are relevant。 So in 2012， I worked on the hack type checker for
+    PHP。 So we had a lot of PHP at that time and we managed to add。 types to that
+    code base and build a performing type checker， for that code base back in the
+    day。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我在 Facebook 工作了大约六年。有几件事情是我做过的，与此相关。所以在 2012 年，我为 PHP 工作了 hack 类型检查器。那时我们有很多
+    PHP，我们设法为那个代码库添加了类型，并在当时构建了一个高效的类型检查器。
+- en: More recently， I've been involved with the Pyre check project。 Pyre is a performance
+    type checker for Python， that we open sourced about two days ago。 And the sort
+    of hack and pyre reference are relevant here。 because this talk will be about
+    some of the cool things。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最近，我参与了 Pyre 检查项目。Pyre 是一个 Python 的性能类型检查器，我们大约两天前将其开源。这里提到的 hack 和 pyre 是相关的，因为这次演讲将讨论一些很酷的东西。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_7.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_7.png)'
+- en: you can build on top of a type checker like that。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以在这样的类型检查器上构建。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_9.png)'
+  id: totrans-12
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_9.png)'
+- en: So this talk will basically be an experience report explaining。 some of the
+    stuff that we've built internally at Facebook。 and Instagram and how you might
+    benefit from this as well。 And I'll explain later what I mean by stuff like deep
+    static。 analysis tool or deeper in the talk title。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这次演讲基本上是一个经验报告，解释我们在 Facebook 和 Instagram 内部构建的一些东西，以及你如何从中受益。我稍后会解释我所说的深度静态分析工具或演讲标题中的“深度”是什么意思。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_11.png)'
+  id: totrans-14
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_11.png)'
+- en: So talk outline。 High level， it's this context that you need to know in order。
+    to get to the exciting part， which is two。 And then three。 I'll talk a little
+    bit about our deployment， of this stuff at Facebook and Instagram。 like why you
+    should believe me。 What are your actual results type stuff？
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以演讲大纲。高层次来说，这是你需要知道的上下文，以便进入激动人心的部分，即第二部分。然后第三部分。我会谈一谈我们在 Facebook 和 Instagram
+    部署这些东西的情况，比如你为什么应该相信我。你们的实际结果是什么类型的内容？
+- en: So my context bit starts with an example。 And this is an example of a piece
+    of code that。 exhibits a security problem。 It's like an actual thing that happened。
+    You have very likely used a product that， had a security problem like this。 And
+    I've kind of whinowed it down to a couple of lines， of Django-esque Python。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我的上下文部分从一个例子开始。这是一个代码片段的例子，展示了一个安全问题。这就像一个实际发生的事情。你很可能使用过一个有这样安全问题的产品。我把它缩减到了几行，类似于
+    Django 的 Python。
+- en: So if you literally add HTTP to request and response here， didn't fit on the
+    slide。 that would probably， make this a valid endpoint within a Django web app。
+    So imagine this code is related to Facebook groups or a forum， where there's groups
+    of users。 and they can sort of create， their own little cordon off area that other
+    users。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果你字面上在请求和响应中添加HTTP，虽然在幻灯片上没法显示。这可能会使其成为Django web应用中的有效端点。想象一下，这段代码与Facebook小组或论坛有关，那里有用户组，他们可以创建自己的小区域，其他用户无法进入。
+- en: don't have access to。 That's basically what this code will belong to。 So step
+    one。 it gets the group ID from a get， parameter in the request。 Step two， it needs
+    to double check。 that the currently logged in user has access to this group。 So
+    it will load some data pertaining to the group， using the authenticated user。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们没有访问权限。这基本上是这段代码的归属。所以第一步，从请求中的get参数获取组ID。第二步，需要再次检查当前登录用户是否可以访问这个组。因此，它将加载一些与组相关的数据，使用经过认证的用户。
+- en: And the assumption is that somewhere inside of load， there will be a privacy
+    check。 Can this user see this group？ And then if everything goes well， we render，
+    let's say。 maybe this is the thumbnail image belonging to this group， or something
+    like that。 So so far。 there's not a whole lot to argue with， in terms of this
+    code， except for the error handling。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设在加载过程中，会进行隐私检查。这个用户能看到这个组吗？然后如果一切顺利，我们渲染，也许这是属于这个组的缩略图，或者类似的东西。所以到目前为止，除了错误处理之外，代码没有太多可以争论的地方。
+- en: So if the data is none， we throw a 404， with an indicative error message of
+    sadness in this case。 And this is problematic because the data is user controlled。
+    The user can provide arbitrary group IDs， and sort of check whether a currently
+    logged in user。 on Facebook。com， for example， might be in a particular group。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以如果数据为空，我们抛出404，并带有表示悲伤的错误消息。这是个问题，因为数据是用户控制的。用户可以提供任意的组ID，检查当前登录的用户在Facebook.com，例如，是否在某个特定小组中。
+- en: So the user controls this branch prevent the C's， exclamation point。 So this
+    is an example of vulnerability that， occurred for realties in real products。 The
+    way you would exploit this is by having your own evil。com， and putting an image
+    tag on it that。 hits this endpoint with a particular group ID， and then has an
+    onload and an on error event handler。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以用户控制这个分支，防止C的感叹号。这是一个在实际产品中发生的漏洞示例。你可以通过拥有自己的evil.com，并在上面放置一个图像标签，命中这个端点并带有特定的组ID，然后设置一个onload和onerror事件处理程序来利用这个漏洞。
+- en: This is how you distinguish between the current user。 visiting your site has
+    access to this group or not。 And this is an interesting sort of privacy oracle。
+    that is externally accessible and kind of leaks information。 So I've included
+    a URI here。 If you hit me up later， I can send it to you， that has sort of the
+    full description of how。 this type of problem affected real products。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是你如何区分当前用户。访问你网站的用户是否可以访问这个组。这是一个有趣的隐私预言，外部可访问并且有点泄露信息。因此我在这里包含了一个URI。如果你稍后联系我，我可以把它发给你，上面有关于这个问题如何影响实际产品的完整描述。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_13.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_13.png)'
+- en: a couple of years ago。 So now the idea is， wouldn't it be great。 if we could
+    detect this sort of problem statically？ Like we know this is an issue now。 Can
+    we find all occurrences in our code base？ And that's basically the underlying
+    premise of this talk。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 几年前的事情了。所以现在的想法是，若我们能静态检测这种问题不是很好吗？我们现在知道这是个问题。我们能找到代码库中所有的出现吗？这基本上是这次演讲的基本前提。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_15.png)'
+  id: totrans-25
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_15.png)'
+- en: So I haven't defined yet what I mean by static analysis。 And this basically
+    means many different things， two different people。 And I want to be fairly precise。
+    I don't want you to take away that there's。 this super formal thing that won't
+    work， or that this is static analysis in terms of something。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我还没有定义我所说的静态分析。这基本上对不同的人意味着很多不同的事情。我想要比较精确。我不希望你误以为这是一个不会有效的超级正式的东西，或者这是某种形式的静态分析。
+- en: that isn't relevant to your interest。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这与您的兴趣无关。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_17.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_17.png)'
+- en: So let's be precise。 I'm going to show you a spectrum of static analysis tools。
+    On the left。 I'm going to put fast， easy to use， and simple tools。 And then you
+    can kind of guess where this is going。 On the right， let's put slow， hard to use。
+    and complex stuff。 All right， so I'm going to start on the right， because that
+    is the fun part。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们精准一点。我将展示一系列静态分析工具。在左侧。我将放置快速、易于使用和简单的工具。然后你可以大致猜测接下来的内容。在右侧，我们放置慢、难以使用和复杂的东西。好吧，我将从右侧开始，因为那是有趣的部分。
+- en: Let's talk about formal verification。 Formal verification is a type of static
+    analysis。 where the imports are basically your code， but also a full formal description
+    of the property that。 needs to be proven and so on。 And then you write a very
+    long proof script。 and then you have verified that your code completely。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们谈谈正式验证。正式验证是一种静态分析，其中导入基本上是你的代码，但也是需要证明的属性的完整正式描述等等。然后你写一段非常长的证明脚本，然后验证你的代码是完全的。
+- en: matches the specification or something along those lines。 And it requires a
+    PhD or two to use。 You'll need grad students as well。 That's sort of your process
+    here。 In the black box。 barely readable， I've included an excerpt of an actual
+    proof that I've written。 The relevant bit of that is that I， wrote about 1，300
+    lines of proof script。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 符合规范或类似的东西。这需要一个或两个博士学位才能使用。你还需要研究生。这就是你的流程。在黑箱中。几乎无法阅读，我包含了一段我写的实际证明的摘录。相关部分是，我写了大约1,300行证明脚本。
+- en: to verify five lines of code。 This is not super practical in its current form。
+    So let's go to the other side of the spectrum。 I've put grep。 I think grep is
+    a static analysis tool， in the sense that it looks at your code。 It's actually
+    language agnostic， too。 It only looks at the bytes of your code。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于验证五行代码。这在当前形式下并不十分实用。那么，让我们转向光谱的另一端。我放了grep。我认为grep是一种静态分析工具，因为它查看你的代码。它实际上也是语言无关的。它只查看你代码的字节。
+- en: So you can grep for something like dangerous in your code， and find all occurrences
+    of it。 It's not very precise， but it's very usable。 If you're a security engineer。
+    you could use this all the time， and it would get you at least a start for where。
+    to start looking if you're interested in where a particular。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你可以在代码中grep某些像“危险”的东西，找到所有出现的地方。它不太精准，但非常实用。如果你是安全工程师，你可以一直使用它，它至少可以给你一个起点，看看你感兴趣的特定内容。
+- en: function is called or something like that。 And you might build frameworks that
+    actually。 have the word dangerous in them， like dangerously， set in our HTML or
+    something along those lines。 So this is not totally not useful， but it's not great
+    for finding flows of information。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 函数被调用或类似的东西。你可能会构建实际上包含“危险”一词的框架，比如“危险地”设置在我们的HTML中或类似的东西。所以这并不是完全无用，但对于找到信息流来说并不理想。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_19.png)'
+  id: totrans-35
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_19.png)'
+- en: in code as in the example。 So let's go a little bit more in the middle of this
+    spectrum。 There's a bunch of linters。 So you could use pylint and flake8。 and
+    they're typically much better abstractions than grep。 for writing checks that
+    you might care about。 They give you typically point checks。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在代码中，如示例所示。让我们再深入一点这个光谱的中间。这里有一堆linters。所以你可以使用pylint和flake8。它们通常比grep更好，适合编写你可能关心的检查。它们通常给你精确的检查点。
+- en: based on an abstract syntax tree or something， along those lines。 They let you
+    write relatively low noise checks， for relatively straightforward properties。
+    Still not quite good enough， though， to find flows of information。 So moving right
+    along。 what about types？ So types are a little bit more work。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基于抽象语法树或类似的东西。它们让你可以为相对简单的属性编写相对低噪声的检查。不过，这仍然不够好，无法找到信息流。那么，接下来谈谈类型？类型的工作量稍微大一些。
+- en: You have to annotate your code somewhat consistently， to get a benefit from
+    it。 You can run my py or py or and they will give you type errors。 Still not quite
+    good enough to find flows of information， though。 So the premise of the next section
+    of the talk， is that we can build security focused data flow analysis tools。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你必须在某种程度上一致地注释你的代码，以获得收益。你可以运行my py或py或，它们会给你类型错误。不过，仍然不够好，无法找到信息流。因此，下一部分演讲的前提是，我们可以构建安全关注的数据流分析工具。
+- en: that find this kind of flow of information， that we care about by leveraging
+    only the existing types。 So I don't want the full formal verification thing where。
+    I need a giant proof script just to help the analyzer。 I just want to take advantage
+    of the fact。 that we already have a code base with types in it。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过仅利用现有类型，找到我们关心的信息流。所以我不想要那种完整的形式验证东西，在这种情况下，我需要一个巨大的证明脚本来帮助分析器。我只想利用这一事实，即我们已经有一个带有类型的代码库。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_21.png)'
+  id: totrans-40
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_21.png)'
+- en: and build on top of that。 So in order to explain that， I need。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并在此基础上进行构建。因此，为了解释这一点，我需要。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_23.png)'
+  id: totrans-42
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_23.png)'
+- en: to go into some of the details behind how， our type checkers work。 So hack and
+    py are very similar in this regard。 So I wanted to explain it at a somewhat high
+    level focusing。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 进入我们类型检查器背后的某些细节。因此，`hack`和`py`在这方面非常相似。所以我想在一个较高的层面上解释一下，重点放在。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_25.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_25.png)'
+- en: on their architecture。 So let's type check some code。 I have two functions，
+    foo and bar。 They both have a parameter。 They both have a return type。 You can
+    read it as I talk。 What needs to happen for the type checker， to verify that there
+    is a problem in this code？
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在他们的架构上。那么让我们进行一些代码类型检查。我有两个函数，`foo`和`bar`。它们都有一个参数，都有一个返回类型。你可以在我说话时阅读它。那么，类型检查器需要发生什么，以验证这段代码中存在问题？
+- en: So start by analyzing the expression bar of x。 So in order to verify this， I
+    need。 to make sure that the type of x matches the parameter for bar。 So I need
+    to look up the type of x。 which， is defined in the signature for foo。 And I need
+    to look up the type of the first parameter of bar。 and make sure that they match。
+    So this is kind of like a consistency check。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以从分析表达式`bar(x)`开始。为了验证这一点，我需要确保`x`的类型与`bar`的参数匹配。所以我需要查找`x`的类型，它在`foo`的签名中定义。并且我需要查找`bar`的第一个参数的类型，确保它们匹配。这有点像一致性检查。
+- en: And that's sort of the nature of type checkers in general。 Next。 I need to check
+    the full return type， make sure that returning the result of bar of x。 matches
+    the return type of bar。 In this particular case， that's where the type area is。
+    Bar returns an int， foo is supposed， to return a string without some type of cast
+    or conversion。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这大致是类型检查器的一般性质。接下来，我需要检查完整的返回类型，确保返回`bar(x)`的结果与`bar`的返回类型匹配。在这种情况下，这就是类型错误所在。`bar`返回一个整数，`foo`应该返回一个字符串，而没有某种类型的转换。
+- en: This is not good code。 And then there's a bunch of other stuff that I need to
+    do。 So if I wanted to check bar itself， I would need to compare its return type
+    to its signature。 and so on。 There's an interesting observation here， which is
+    that to check the body of bar。 I don't need access to any of the information that
+    I used， to check the body of foo。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这不是好的代码。而且还有一堆其他我需要做的事情。如果我想检查`bar`本身，我需要将它的返回类型与它的签名进行比较，等等。在这里有一个有趣的观察，即为了检查`bar`的主体，我并不需要访问用于检查`foo`主体的任何信息。
+- en: except for the signature of foo。 So I can actually type check a lot。 of these
+    different functions in parallel fairly easily。 They don't depend on each other
+    at all。 The high level steps in the type checker， are something like parse every
+    function。 resolve the method call。 So I need to know which bar is getting called。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了`foo`的签名。因此，我实际上可以并行地对这些不同的函数进行类型检查，而相对容易。它们完全不相互依赖。类型检查器中的高级步骤类似于解析每个函数，解析方法调用。所以我需要知道调用的是哪个`bar`。
+- en: so that I can look up its signature， and then do these consistency checks。 And
+    the observation here is that you， can do a lot of these steps in parallel。 Not
+    all of them depend on each other。 So the parallelization in both of these type
+    checkers。 works something like fire up some number of processes N。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样我就可以查找它的签名，然后进行这些一致性检查。这里的观察是，你可以并行进行很多这些步骤。并不是所有步骤相互依赖。因此，这两个类型检查器的并行化，工作方式就像启动一些数量的进程N。
+- en: or something like that and distribute the work。 So in other words。 if there's
+    100 files to type check， and I have 20 processes to do it。 they each get five
+    files to type check， or parse at least initially。 One particular insight behind
+    the hack type checker， back in the day was that we can share work。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或类似的事情，然后分配工作。换句话说，如果有100个文件需要进行类型检查，而我有20个进程来处理，它们每个都得到五个文件进行类型检查，或者至少最初进行解析。早期`hack`类型检查器背后的一个重要见解是我们可以共享工作。
+- en: between these processes relatively easily。 So if I need the signature for some
+    function。 there's one of two things to do。 One is get it from the cache。 If it's
+    not there。 just parse that function， and put it in the cache for later use。 The
+    dot dot dot here leads to--。 but don't coordinate too much。 Sorry。 In other words，
+    we actually will redo a bunch of work。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这些过程中，相对容易地实现。因此，如果我需要某个函数的签名，有两件事要做。第一是从缓存中获取。如果没有，就解析该函数，并将其放入缓存以备后用。这里的省略号意味着——但不要过多协调。抱歉。换句话说，我们实际上会重新做很多工作。
+- en: if there are two functions that need to be--， if there's a function that needs
+    to be parsed。 by two different processes， we might end up doing that。 Because
+    it's more expensive to coordinate。 between the processes than it is to occasionally
+    duplicate work。 So those are kind of the pros and cons here。 This is a very high
+    level overview。 I apologize。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果有两个函数需要——如果有一个函数需要被两个不同的进程解析，我们可能会这样做。因为在进程间协调的成本比偶尔重复工作更高。所以这里有利有弊。这是一个非常高层的概述，我对此表示歉意。
+- en: I wish I had more time to go into tons and tons of detail。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我希望我有更多时间去深入细节。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_27.png)'
+  id: totrans-55
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_27.png)'
+- en: about how this works。 But we need to move on to building an actual analyzer。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于这如何运作。但我们需要继续构建一个实际的分析器。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_29.png)'
+  id: totrans-57
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_29.png)'
+- en: on top of this。 So let's get back to the example。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此基础上。所以让我们回到这个例子。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_31.png)'
+  id: totrans-59
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_31.png)'
+- en: So I sort of use this red thing on the very left， to highlight the path that
+    I care about。 But I haven't really formally explained， what is the property that
+    I care about here。 So let's do that。 So basically， I want branches that throw
+    HTTP 404。 that are based on a privacy decision， because that's what makes this
+    a leak。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我在最左边用这个红色的东西来突出我关心的路径。但我还没有正式解释，我在这里关心的属性是什么。让我们来解释一下。基本上，我想要基于隐私决策的抛出 HTTP
+    404 的分支，因为这使得它成为一个泄露。
+- en: That in turn are based on something， that is user controlled input， because
+    that's。 what makes this an exploitable privacy leak。 So typically， in a sort of
+    static analysis parlance。 we call this chain tracking。 It's like a variable becomes
+    tainted。 and then stays that way unless you sanitize it， or something like that。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些步骤又是基于某些东西，那是用户控制的输入，因为这使得它成为一个可利用的隐私泄露。因此，通常在静态分析术语中，我们称之为链跟踪。就像一个变量被污染，除非你对其进行清理，否则它将保持这种状态。
+- en: And in the context of this particular example， the branches that throw would
+    be the sink。 the place where information goes that we don't want。 And the user
+    controlled input would be the source， some terminology。 So to build an analyzer
+    like this， there's basically three steps where I've。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个特定示例的上下文中，抛出异常的分支是汇聚点，也就是我们不想要的信息流去的地方。而用户控制的输入将是源头，这是一种术语。所以要构建这样的分析器，基本上有三个步骤。
+- en: code all the way on the left。 That's the code we're analyzing。 I have shown
+    you very roughly what a parallel type checker looks， like。 and now there's two
+    additional things。 There's the actual taint analysis， the taint tracking。 step
+    all the way on the right。 And then before that， there's building a call graph。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最左边的代码。这是我们正在分析的代码。我粗略地向你展示了一个并行类型检查器的样子。现在还有两个额外的东西。实际上是污染分析，也就是污染跟踪，位于最右边。在此之前，还有构建调用图的步骤。
+- en: And I'm going to show you how we do the call graph stuff。 before explaining
+    why you actually need one。 And then there's an aside。 which is that it would be
+    great， if we could make both the call graph construction。 and the static analysis
+    itself parallelizable as well。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我将向你展示我们如何处理调用图的内容。在解释你为什么需要它之前，有一点额外说明，如果我们能让调用图的构建和静态分析本身都能并行处理，那就太好了。
+- en: Because that would make this actually feasible from A。 Does it run quickly enough
+    to get you results before the code， is already shipped point of view？
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为这从 A 的角度来看是可行的。它是否能快速运行，以在代码已经发布之前就给你结果？
+- en: So let's focus on the call graph stuff。 So it's sort of traditional when you
+    talk about call graphs。 to draw lots of dots on the slide and then lots of arrows。
+    I don't know if you've ever tried visualizing， a large code base this way。 It
+    gets real messy really quickly。 So I've just sort of left it at this。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们关注调用图的内容。谈到调用图时，传统上会在幻灯片上绘制很多点和箭头。我不知道你是否尝试过以这种方式可视化一个大型代码库。它会迅速变得非常混乱。所以我就留在这里了。
+- en: This is my best effort call graph。 I'll give you a formal definition， though。
+    It's an over-approximation of all function calls， that can happen in the code
+    base。 So what do I mean by over-approximation？ Essentially。 it is not feasible
+    to statically say exactly which， calls will and will not happen。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我尽力而为的调用图。我会给你一个正式的定义。这是对代码库中所有可能发生的函数调用的过度近似。那么我所说的过度近似是什么意思呢？本质上，静态地说确切哪些调用会或不会发生是不切实际的。
+- en: especially with class hierarchies， and dynamic dispatch。 So in practice。 we
+    want to create an edge between two， functions in the call graph if we think there
+    might be a call。 even though in practice it might never happen at runtime。 Let
+    me give you an example。 Suppose I have three classes， A， B， and C。 A， defines
+    a method。 It's called get data。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 特别是在类层次结构和动态调度方面。因此在实践中，如果我们认为可能会有调用，即使在运行时实际上可能永远不会发生，我们想在调用图中创建两个函数之间的边。让我给你一个例子。假设我有三个类，**A**，**B**和**C**。**A**定义了一个方法，称为**get
+    data**。
+- en: It returns data。 And it's abstract。 B and C have sort of glossed over the details。
+    but let's assume they also implement get data。 And then I have a function foo，
+    which。 takes a B as input and calls get data on it， and passing the result to
+    bar。 So what does a call graph look like for this bit of code？ Looks like this。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它返回数据。它是抽象的。**B**和**C**已经略过了一些细节，但我们假设它们也实现了**get data**。然后我有一个函数**foo**，它接收一个**B**作为输入并在其上调用**get
+    data**，并将结果传递给**bar**。那么这段代码的调用图是什么样的呢？看起来像这样。
+- en: So I'm not going to like fancily step you， through the animation or anything。
+    but definitely foo calls bar。 We can see that。 It might call B。getData if X is
+    an instance of B。 But because C is a subtype of B， it could also be C。getData，
+    if we pass X as a C。 So that's roughly what a call graph looks， like at a super
+    high level very quickly。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我不会像花哨地带你逐步了解动画或其他的东西，但**foo**确实会调用**bar**。我们可以看到这一点。如果**X**是**B**的一个实例，它可能会调用**B.getData**。但因为**C**是**B**的子类型，如果我们将**X**作为**C**传递，它也可以调用**C.getData**。所以这大致上就是调用图在一个超级高层次上的样子。
+- en: We need this to make the analysis both precise and also， to make it fast。 So
+    onto that。 So what is taint analysis？ This is the other term in addition。 to call
+    graph that I've sort of used before actually defining it。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要这个来使分析既精准又快速。那么，什么是污点分析？这是我之前提到的与调用图相关的另一个术语。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_33.png)'
+  id: totrans-72
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_33.png)'
+- en: The key insight is that instead of parsing signatures， which。 is what a type
+    checker does or analyzing them， we want to compute function summaries。 And one
+    way to look at a summary is， as like a very elaborate fancy type that。 is different
+    from the type that you've annotated in your code， and has a lot more detail。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关键的见解是，与解析签名（这就是类型检查器所做的）或分析它们不同，我们希望计算函数摘要。看待摘要的一种方式是，将其视为一种非常复杂的类型，与您在代码中注释的类型不同，并且包含更多的细节。
+- en: And for this particular problem specifically， it contains two things。 One is
+    how data flows from sources to out of the callable。 Two is how data flows from
+    the arguments。 into any dangerous things。 This is the information that we want
+    for every single function。 in the codebase。 And then we can stitch together paths
+    of data that。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于这个特定的问题，它包含两个方面。一个是数据如何从源头流向可调用对象，另一个是数据如何从参数流入任何危险的事物。这是我们想要的每个函数在代码库中的信息。然后我们可以拼接数据路径。
+- en: look risky or dangerous and show them to security engineers。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看起来很危险或有风险，并将其展示给安全工程师。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_35.png)'
+  id: totrans-76
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_35.png)'
+- en: So I've yet another example， another foo。 I have PUC as the input here that
+    stands for potentially user。 controlled。 It calls sync on that and it returns
+    a value from source。 So it's sort of the shortest possible example that， has two
+    of the interesting properties。 let's say。 So let's compare its signature to its
+    summary。 The signature is right there in the code。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我还有另一个例子，另一个 `foo`。我这里的输入是 PUC，代表潜在的用户控制。它对其调用同步，并从源中返回一个值。因此，这是一个具有两个有趣特性的最简单示例。让我们将其签名与摘要进行比较。签名就在代码中。
+- en: Takes a parameter string， returns a string。 Let's talk about the summary though。
+    It will basically consist of two parts， which I've called the in summary and the
+    out summary。 in this case。 The in summary says that the first argument flows into
+    sync。 The out summary says that source gets returned， from this function， potentially
+    in some cases。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接受一个参数字符串，返回一个字符串。不过我们来谈谈摘要。它基本上由两个部分组成，我称之为输入摘要和输出摘要。在这个例子中，输入摘要表示第一个参数流入同步。输出摘要表示源值从这个函数返回，可能在某些情况下。
+- en: if there's multiple returns。 We have to simplify。 So this is what this looks
+    like for a single function。 And now you might ask， how does that actually， translate
+    to useful results？
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果有多个返回值，我们必须简化。因此，这就是单个函数的样子。现在你可能会问，这实际上是如何转化为有用的结果的？
+- en: So I'm going to put up an assertion， which is that this works for any depth
+    call stack。 You can stitch together the summaries， from different functions that
+    call each other。 using the call graph。 And figure out longer flows of information。
+    So I'll give you a brief example。 In this case， foo， bar， and buzz， each call
+    each other， in turn。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我将提出一个断言，即这适用于任何深度的调用栈。你可以利用调用图将不同函数的摘要拼接在一起，找出更长的信息流。所以我会给你一个简要的例子。在这个例子中，`foo`、`bar`
+    和 `buzz` 互相调用。
+- en: The original user controlled string， flows from the top function into the bottom
+    one。 and eventually into a sync。 So this is what we want to catch across function
+    calls。 So I'm going to give you only the in summary parts， for brevity。 And I'm
+    going to start with buzz at the bottom。 So the first argument flows into sync。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 原始的用户控制字符串从顶层函数流向底层函数，并最终流入一个同步。这就是我们想在函数调用之间捕捉到的内容。所以为了简洁起见，我将只给出摘要部分。我会从底部的
+    `buzz` 开始。因此，第一个参数流入同步。
+- en: That is the full summary or the in summary for buzz。 The summary for bar is
+    basically a forward reference， to the summary for buzz。 So I say the first argument
+    flows into whatever， is the in summary for buzz and its first argument。 And I
+    can repeat that trick。 So the first argument for foo is the in summary for bar。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是 `buzz` 的完整摘要或输入摘要。`bar` 的摘要基本上是对 `buzz` 摘要的前向引用。所以我说第一个参数流入 `buzz` 的输入摘要及其第一个参数。我可以重复这个技巧。因此，`foo`
+    的第一个参数是 `bar` 的输入摘要。
+- en: at the first argument。 So if I analyze these functions in the right order， though。
+    I can establish that there's a dangerous flow of information。 all the way from
+    foo into bar into buzz， into a dangerous sync， something along those lines。 There's
+    a couple of design consequences here。 One is that the order in which you analyze
+    functions。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在第一个参数处。所以如果我按正确的顺序分析这些函数，我可以确定信息有危险的流动， 从 `foo` 到 `bar` 再到 `buzz`，然后是一个危险的同步，大致如此。这里有几个设计后果。一个是分析函数的顺序。
+- en: matters and that we need basically a somewhat， sophisticated scheduler to decide
+    when these functions get。 analyzed in turn。 You can analyze them theoretically
+    in an arbitrary order。 And your analyzer would take the lifetime， of the universe
+    to finish。 If you find the right order using a scheduler， it can finish in 2B
+    pronounced later。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这很重要，我们基本上需要一个稍微复杂的调度程序来决定这些函数何时依次被分析。你可以在理论上以任意顺序分析它们。否则，分析器将耗费宇宙的生命来完成。如果使用调度程序找到正确的顺序，它可以在稍后宣布的
+    2B 内完成。
+- en: So that is roughly what an analyzer pipeline looks like。 Each of the stages
+    within themselves are highly parallel。 And the output of one stage sort of flows
+    into the next。 You need a call graph specifically。 because it informs the scheduler
+    in terms， of how it runs the taint analysis。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这大致就是分析器管道的样子。每个阶段本身都是高度并行的。而一个阶段的输出大致流入下一个阶段。你需要一个调用图，特别是因为它会通知调度程序如何运行污点分析。
+- en: So looking back on our frame of reference here。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以回顾一下我们的参考框架。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_37.png)'
+  id: totrans-87
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_37.png)'
+- en: basically what we've done here is we've， taken gradual type annotations and
+    we benefit from type checking。 by itself。 But we can also find deeper stack analysis
+    properties。 And I guess one thing I forgot to mention， is this is called bottom
+    up stack analysis。 because you analyze sort of one function at a time。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基本上我们所做的是，采用渐进式类型注释，我们从类型检查中受益。单独来看。但我们也可以发现更深层次的栈分析属性。我想我忘记提到的是，这被称为自下而上的栈分析，因为你一次分析一个函数。
+- en: and stitch together results as you look at sort of fake call， stacks。 So this
+    doesn't require any new annotations。 It just requires a security engineer。 to
+    tell you which sources and things you're interested in。 All right。 so I will now
+    talk a little bit about our results。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并在查看假调用栈时拼接结果。因此这不需要任何新的注释。只需要一个安全工程师告诉你你感兴趣的哪些来源和内容。好的。现在我将谈谈我们的结果。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_39.png)'
+  id: totrans-90
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_39.png)'
+- en: '![](img/d10160d6f0349309f46ae833710c063c_40.png)'
+  id: totrans-91
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_40.png)'
+- en: and sort of why you should believe me in any way。 So Instagram has a million
+    or so lines of Python。 we'll call it millions。 And we use PyR for type checking
+    as of a couple of weeks ago。 PyR takes about a minute to start up a little bit
+    less。 and it produces up 200 milliseconds incremental updates。 So if you change
+    some code。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以及为什么你应该相信我。所以Instagram大约有一百万行Python代码。我们称之为百万行。几周前，我们开始使用PyR进行类型检查。PyR大约需要一分钟启动，稍微少一点，并且产生200毫秒的增量更新。如果你更改了一些代码。
+- en: save it in your editor， you'll get quick type error results。 The taint analysis
+    stuff of this is TBD Smiley face。 That's what we're hoping to work on next。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将其保存在编辑器中，你将快速获得类型错误结果。这个污染分析的内容待定笑脸。我们希望下一步能在这方面进行深入探讨。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_42.png)'
+  id: totrans-94
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_42.png)'
+- en: However， we have built this on top of hack for PHP。 Hack type checks tens of
+    millions of lines of code。 It's a little bit bigger。 And we have built internal
+    tools for security analysis。 So this is used every day by our security engineers。
+    not because we make them but because they want to。 And runs on every code change。
+    So I've used the terminology diff here， which is Facebook speak for every update。
+    to every requested change， even prior to commit。 And it takes about 20 minutes
+    wall time。 Checks a ton of properties， takes about 20 minutes end to end。 That's
+    without caching enabled。
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，我们在PHP的hack之上构建了这一点。Hack类型检查数千万行代码。这个稍微大一点。我们为安全分析构建了内部工具。因此，这每天都被我们的安全工程师使用，并不是因为我们强迫他们，而是因为他们想要。并且在每次代码更改时运行。我在这里使用了“diff”这个术语，这是Facebook对每次更新的说法。对于每次请求的更改，即使在提交之前。大约需要20分钟的实际时间。检查大量属性，端到端大约需要20分钟。这是在未启用缓存的情况下。
+- en: which is fairly spectacular。 And it finds and prevents issues regularly。 So
+    I can't go into a great amount of detail here， but I would sort of point to the
+    fact。 that our security engineers prefer， to use this over grep in order to find
+    security issues。
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这相当壮观。并且它定期发现并防止问题。所以我不能在这里详细说明，但我想指出，我们的安全工程师更倾向于使用这个工具而不是grep来查找安全问题。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_44.png)'
+  id: totrans-97
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_44.png)'
+- en: So in conclusion， in my talk abstract， if you've seen it。
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以总结一下，在我的演讲摘要中，如果你看过的话。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_46.png)'
+  id: totrans-99
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_46.png)'
+- en: I mentioned how to take a type checker， bolt on an inter-procedural static analyzer。
+    and delight your security team with high quality results。 I feel like I've covered
+    most of this。 The TLDR is we've built some of this for hack and PHP。 We're hoping
+    to build it for Python as well。 And we're very excited to do some of that in the
+    open。
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我提到如何将类型检查器与过程间静态分析器结合，并让你的安全团队获得高质量的结果。我觉得我已经涵盖了大部分内容。总结一下，我们为hack和PHP构建了一些这些功能。我们也希望为Python构建这一点，并且非常期待在公开场合做一些工作。
+- en: in the form of the Pyre type checker and sort of its extensions。 If you would
+    like to talk super shop with people。
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以Pyre类型检查器及其扩展的形式。如果你想和人们深入探讨。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_48.png)'
+  id: totrans-102
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_48.png)'
+- en: in terms of technical detail， this is the Pyre team。 And they're all here。 So
+    Dominic， Marco。 Shannon， and Sonon， actually did the technical work to make some
+    of this possible。 I'm just here to sort of talk about it。 And you can find us
+    on GitHub as well。 And that's my talk。 and I have a few minutes for questions。
+    [APPLAUSE]， Hey， everyone。
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从技术细节上讲，这是 Pyre 团队。他们都在这里。所以 Dominic、Marco、Shannon 和 Sonon 实际上做了技术工作，使得这一切成为可能。我只是来谈谈这个。你也可以在
+    GitHub 上找到我们。这就是我的演讲，我还有几分钟的时间回答问题。[掌声]，嗨，大家好。
+- en: We have five minutes for questions， so bring them on。 We have a mic up front。
+    Do you find that because it has to expand， the possible call stack to be the most
+    conservative possible。 large set that it sometimes detects flow problems that。
+    don't ever actually occur because the functions， aren't ever really called in
+    that order？ Yeah。
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有五分钟时间提问，尽管问吧。前面有一个麦克风。你是否发现，由于必须扩展调用栈为可能的最保守集合，有时会检测到从未实际发生的流问题，因为函数并不真的是按照那个顺序调用的？是的。
+- en: so the precision of the call graph， is critically important to make the results
+    precise as well。 And that affects performance as well。 So if your call graph is--。
+    all functions can call all functions， which， is technically befitting of the definition。
+    then your analysis would be both very imprecise and also， very slow。
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用图的精确性对于结果的准确性至关重要。这也影响性能。如果你的调用图是——所有函数都可以调用所有函数，从技术上讲，这符合定义。那么你的分析将既非常不精确，又非常慢。
+- en: So we put a lot of work into the details， for making sure that the call graph
+    is very accurate。 Thank you。 So I was wondering how you deal with functions。 that
+    will modify some sort of shared state， because in Python， you might say。 save
+    something that you should it as an instance attribute。 Yeah， makes sense。
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们在细节上投入了很多工作，以确保调用图非常准确。谢谢。所以我想知道你如何处理会修改某种共享状态的函数，因为在 Python 中，你可能会说，保存一些应该作为实例属性的东西。是的，明白了。
+- en: So this is where the talk is a lie。 There's more to it than just the in summaries
+    and out summaries。 And we use an abstraction called access paths， to define the
+    sort of out of a function。 in addition to its return， which can， be sets this
+    instance variable on the current object。 or any sort of number of dereferences
+    away， to a particular value and whether that is tainted or not。
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是演讲的谎言所在。实际上，比摘要和输出摘要更复杂。我们使用一个抽象概念称为访问路径，来定义函数的输出，除了其返回值之外，这可以是设置当前对象上的实例变量，或者是通过任意数量的解引用到达特定值，以及该值是否被污染。
+- en: That's actually surprisingly challenging。 There are other static analysis projects。
+    that Facebook has built that focus specifically， on the separate problem of what
+    does the heap look like。 in the form of infer and shape analysis。 So this is something
+    that we need less for the security。 specific problems that we're interested in
+    here。 So we've sort of iterated on this。
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这实际上出乎意料地具有挑战性。Facebook 还有其他静态分析项目，专注于堆的具体问题，像 infer 和 shape 分析。因此，这对于我们在这里关注的安全特定问题的需求较少。所以我们在这方面进行了反复迭代。
+- en: and come up with the level of fanciness that， helps us without being so expensive
+    that it becomes。 infeasible。 Thank you。 Thank you。 Hey there。 I was wondering。
+    do you have any references or material， about the scheduler？
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们设法达到一种复杂度水平，帮助我们而又不会花费过高，以至于变得不可行。谢谢。谢谢。嗨，我在想，你是否有任何关于调度器的参考资料或材料？
+- en: Because I actually experienced that problem you mentioned。 Yeah。 So the short
+    answer is no。 unfortunately， we haven't published that SAC and Als is work yet。
+    However。 I can say that that has taken a bunch of engineers， a bunch of work in
+    order to get right。 especially， for our Facebook code base。 In terms of figuring
+    out， hey， there's。
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我实际上经历过你提到的问题。是的。因此，简短的回答是，不，遗憾的是，我们尚未发布那个 SAC 和 Als 的工作。不过，我可以说，这已经让一群工程师花费了很多精力去正确处理，尤其是针对我们的
+    Facebook 代码库。在了解的过程中，嘿，还有。
+- en: these large cycles of methods and you kind of， need to analyze all of them concurrently。
+    So one unit of work is much larger than other units of work。 So we preemptively
+    schedule those first。 So there's actually some hard coding。 that we get away with
+    because it's an analyzer that's， designed for a single code base。 [INAUDIBLE]。
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些大规模的方法循环，你需要同时分析它们。因此，一个工作单元比其他工作单元大得多。因此，我们会优先安排这些工作。所以实际上，有一些硬编码是可以被接受的，因为它是为单一代码库设计的分析器。[听不清]。
+- en: Hello。 Thank you for this inspiring talk。 I was wondering， are there any similarities。
+    between taint analysis and profiling？ And is there an overlap？
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你好。感谢你的鼓舞人心的演讲。我想知道，污点分析和性能分析之间是否有相似之处？是否有重叠？
+- en: And is there a way to get profiling for free when， doing taint analysis or vice
+    versa？ Yeah。 that's a good question。 So there have been projects in the past，
+    including at Facebook。 if I remember correctly， where， we do the equivalent of
+    this， but at runtime。 So we somehow stick an extra bit of information onto a variable，
+    that has an object type。
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有没有办法在进行污点分析时免费获取分析数据，或者反之？是的，这是个好问题。我记得以前在Facebook有过这样的项目，我们在运行时做等价的事情。我们以某种方式将额外的信息附加到一个对象类型的变量上。
+- en: Like we rewrite the code so that it has an extra field to just， so that we can
+    say it's tainted。 And then we look at that at runtime。 This is super challenging
+    in practice。 It's kind of scary to rewrite your production code and then。 sort
+    of trust the rewritten version that no one has seen。
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们重写代码，使其有一个额外的字段，这样我们可以说它是被污染的。然后我们在运行时查看这个。这在实践中是非常具有挑战性的。重写你的生产代码，然后有点信任这个没人见过的重写版本，令人有些害怕。
+- en: visually or code reviewed to work correctly。 But we have done that in the past
+    for catching performance。 problems as well as security problems。 But it has sort
+    of a different set of challenges。 Thank you。 Thanks。 All right。 Thanks for coming
+    in。 And a big round of applause for you。 Thank you。 [APPLAUSE]。 Thanks。 And thank
+    you for opening this empire。
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要可视化或代码审查才能正常工作。但我们过去也这样做过，以捕捉性能问题和安全问题。不过，这有不同的挑战。谢谢。谢谢大家。感谢你们的到来。给你们一个热烈的掌声。谢谢。[掌声]。谢谢。感谢你开启这个帝国。
+- en: '![](img/d10160d6f0349309f46ae833710c063c_50.png)'
+  id: totrans-116
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/d10160d6f0349309f46ae833710c063c_50.png)'
+- en: (clapping)。
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: (鼓掌)。

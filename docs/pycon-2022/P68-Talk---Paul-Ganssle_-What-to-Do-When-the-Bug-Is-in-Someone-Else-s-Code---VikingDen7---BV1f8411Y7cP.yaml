@@ -1,0 +1,818 @@
+- en: P68：Talk - Paul Ganssle_ What to Do When the Bug Is in Someone Else's Code -
+    VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P68：演讲 - 保罗·甘塞尔_当 bug 出现在别人代码中时该怎么做 - VikingDen7 - BV1f8411Y7cP
+- en: So we're about to start the second talk of the session。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们即将开始本场会议的第二场演讲。
+- en: '![](img/11eb9fc727230ac9346c52d93cda4808_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/11eb9fc727230ac9346c52d93cda4808_1.png)'
+- en: '![](img/11eb9fc727230ac9346c52d93cda4808_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/11eb9fc727230ac9346c52d93cda4808_2.png)'
+- en: This will be Paul Ganssell。 And he will tell us what to do when the bug is in
+    someone else's code。 Stay tuned。 All right。 [ Applause ]， Thanks everyone。 It's
+    really great to be back at PyCon。 Jonah said， my name is Paul Ganssell。 I'm a
+    software engineer at Google and also a contributor to many open source projects。
+    Among other things， I'm a core developer of Python， where I've worked on daytime
+    and， zone info。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这位是保罗·甘塞尔。他将告诉我们当 bug 出现在别人代码中时该怎么做。敬请关注。好吧。[掌声]，感谢大家。能再次回到 PyCon 真是太好了。乔纳说，我的名字是保罗·甘塞尔。我是谷歌的软件工程师，同时也是许多开源项目的贡献者。除此之外，我还是
+    Python 的核心开发者，我在 daytime 和 zone info 上工作过。
+- en: And I've maintained libraries like Date You Tale and setup tools and got involved
+    in。 a lot of packaging things。 I don't recommend that last part。 I mean， go to
+    the packaging summit。 It's going to be really fun。 As someone who primarily develops
+    libraries。 I'm obviously a fan of shared code。 But I recognize that there are
+    risks to taking on dependencies。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我还维护过像 Date You Tale 和 setup tools 这样的库，并参与了许多打包的工作。我不推荐最后那部分。我是说，去打包峰会。那会真的很有趣。作为一个主要开发库的人，我显然是共享代码的支持者。但我也意识到承担依赖关系是有风险的。
+- en: whether that's a third party， dependency or just like an internal dependency
+    on some other team in your organization。 And one of those risks is the topic of
+    today's talk， which is when something you depend on。 has a bug or other incompatibility。
+    It's not as easy to fix as it would be if it was a bug in your own code。 But first
+    thing to start with a warning。 This talk deals with a number of strategies for
+    handling bugs in your dependencies。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论是第三方依赖，还是在你组织中某个其他团队的内部依赖。其中一个风险是今天演讲的主题，那就是当你依赖的某个东西出现 bug 或其他不兼容性时。修复它并不像修复自己代码中的
+    bug 那么简单。但首先，我想先警告一下。这次演讲涉及多种处理依赖中的 bug 的策略。
+- en: But it's organized as a series of strategic retreats away from the right thing
+    to do。 So we're going to start out with the right tool to hammer in this nail。
+    And then we're going to go to more sort of hacky and even dangerous things as
+    we move， along。 So what do we mean by a bug in someone else's code？ So here's
+    an example that I encountered at work。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但它被组织成一系列从正确做法中战略性撤退的过程。所以我们将从合适的工具开始，来敲这个钉子。然后随着进展，我们会转向更“黑客式”的，甚至是危险的做法。那么我们所说的在别人代码中的
+    bug 是什么意思呢？这是我在工作中遇到的一个例子。
+- en: This is just a minimal reproducer。 So the way this function is supposed to work
+    is that you have data frame。 it takes AAG， and it's supposed to pass this function
+    F。 And AAG itself takes two parameters。 It takes the function and then it takes
+    the access。 And then it's supposed to pass all the additional positional and keyword
+    arguments to the function。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这只是一个最小的重现示例。所以这个函数应该工作的方式是，你有一个数据框，它接受 AAG，并且应该传递这个函数 F。而 AAG 本身接受两个参数。它接受函数，然后接受访问。然后它应该将所有额外的位置和关键字参数传递给这个函数。
+- en: that you passed。 Right？ So what this is supposed to do is it's supposed to apply
+    F to every row and it's just going。 to pass to F the row and then the number three。
+    In PANDAS 1。1。3。 which was the most recent version when I first wrote this talk，
+    this， actually raised an error。 Some kind of weird thing about the access parameter
+    was being passed twice。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你通过了，对吧？所以这应该做的就是将 F 应用于每一行，并将这一行和数字三传递给 F。在 PANDAS 1.1.3 中，当我第一次写这个演讲时，实际上引发了一个错误。某种奇怪的事情是访问参数被传递了两次。
+- en: So that's kind of strange。 So we can check the documentation。 make sure that
+    I understood how to use the function correctly。 And you can see yes。 PANDAS did
+    indeed intend for you to use it this way， but it doesn't work。 So this is a bug
+    in PANDAS or it's a bug in their documentation， one or the other。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这有点奇怪。所以我们可以检查文档，确保我理解如何正确使用这个函数。你可以看到，是的，PANDAS 确实打算让你以这种方式使用它，但它并不工作。所以这是
+    PANDAS 中的一个 bug，或者是它们文档中的 bug，两者之一。
+- en: So what should I do about this？ The right thing to do is to tell PANDAS about
+    it because how are they going to fix it unless。 they know about it。 And if you're
+    feeling adventurous， you can submit a patch and fix it upstream。 In this case，
+    it was fairly easy to do and crucially， it was fairly easy to review that， patch。
+    So this was merged just like a couple days after I made the pull request。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那我该怎么办呢？正确的做法是告诉PANDAS，因为他们怎么会修复它，除非他们知道。如果你想尝试一下，可以提交一个补丁并在上游修复它。在这种情况下，做起来相当简单，关键是，这个补丁也很容易审核。因此，在我提交拉取请求后，仅仅几天就合并了。
+- en: And then it was scheduled for release in 1。144。 So all I had to do is wait for
+    the release to come out。 And just as an aside， this all seems very standard for
+    me because I do like a million open source。 things。 But I can understand if it's
+    sort of intimidating to think like， oh。 I'm going to make this open， source pull
+    request and ask someone to take my patch。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后它被安排在1.144版本中发布。所以我所要做的就是等待发布的到来。顺便说一下，这对我来说似乎很正常，因为我涉及了很多开源项目。但我能理解，如果考虑到我要提交一个开源拉取请求并请别人采纳我的补丁，这可能让人感到害怕。
+- en: I don't have time to get into exactly what you should do and the practical aspects
+    of， it。 But I gave a talk in 2018 at PiData about exactly this。 So if you look
+    at the slides there on my website and stuff， you can find that talk if you're。
+    interested in that。 So so far， this is all looking like a great open source success
+    story， right？
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我没有时间详细讲解你应该做什么以及实际的方面。但我在2018年在PiData做了一个关于这个话题的演讲。如果你在我网站上查看幻灯片，可能会找到那个演讲。如果你对此感兴趣，目前看起来这是一个很棒的开源成功故事，对吧？
+- en: I just have to wait for the updated version and then updated in production and
+    we're good， to go。 So what can go wrong？ Well， for one thing， maybe I don't want
+    to wait until PANDAS makes a release because。 my boss is saying， hey， on Friday
+    we have to deploy this and you have bugs in your code。 And I can't be like， well，
+    I've fixed it upstream。 So ask them。 You know？
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我只需等待更新版本，然后在生产中更新，就可以开始了。那么可能会出什么问题呢？首先，也许我不想等到PANDAS发布，因为我的老板说，嘿，星期五我们必须部署这个，而你的代码里有bug。我不能说，嗯，我已经在上游修复了它。所以请问他们。你知道吗？
+- en: There's also such thing as long upstream release cycles， right？
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也有长时间的上游发布周期，对吧？
+- en: Maybe PANDAS is releasing every week。 But in just a couple of years ago in C
+    Python。 they shortened the release cycle from 18 months， to one year。 So the short
+    release cycle is one year。 You may not have a year to wait for your features to
+    get in。 And of course， I don't know how many of you get to deploy Python the day
+    it comes out。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许PANDAS每周发布一次。但就在几年前，C Python缩短了发布周期，从18个月缩短到一年。所以短发布周期是一年。你可能没有一年时间来等待你的功能上线。当然，我不知道有多少人能在Python发布的当天进行部署。
+- en: the newest version， right？ But probably there's going to be a fairly long QA
+    process after that。 like six months， to a year before you get to use the latest
+    version of C Python。 So basically。 you're probably going to have to wait if you
+    want to do this。 So what do you do in the meantime？
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最新版本，对吧？但在那之后可能会有相当长的QA过程，比如六个月到一年，才能使用最新版本的C Python。所以基本上，如果你想做这个，你可能得等。那么在这段时间里你该怎么办？
+- en: Well， probably the best thing you can do is to just sort of work around it。
+    In this case。 it's fairly trivial to work around this because all I have to do
+    is instead。 of passing this by position， I can just pass it by keyword。 So I could
+    just change it to pass by keyword， maybe leave a little to-do comment or a comment。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗯，你能做的最好的事情就是绕过这个问题。在这种情况下，绕过这个问题相当简单，因为我所要做的就是不再按位置传递，而是按关键字传递。所以我可以直接将其改为按关键字传递，可能留下一个待办事项评论或注释。
+- en: saying this is written this way because I was working around it。 And then we
+    can be done。 And this sort of thing works just fine if you hit the bug in exactly
+    one place。 And if the workaround is fairly simple， so it's just changed one little
+    thing。 And it's also especially good if you're indifferent between the bug triggering
+    code and the work。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这段话是因为我在处理这个问题时写的。然后我们就可以完成。如果你在一个地方碰到这个错误，这种做法是完全可行的。如果解决方法相对简单，只需更改一个小地方。如果你对触发错误的代码和解决方法没有偏好，这样的做法特别好。
+- en: around code。 Like I really don't care in this case whether it's positional or
+    keyword。 So I maybe don't even need that to do comment。 If some of these things
+    don't hold。 it might be good to sort of wrap your workaround into， a wrapper function。
+    So here I've sort of just taken that little workaround and I've made it a little
+    more generic。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 周围的代码。我在这种情况下并不关心它是位置参数还是关键字参数。所以我可能甚至不需要做那个注释。如果这些事情不成立，最好将你的解决方法封装到一个包装函数中。因此，我在这里稍微将那个小解决方法进行了通用化处理。
+- en: and I've wrapped it in a function that is kind of a drop-in replacement for
+    data frame。 for data frames ag function。 And what that does is it just sort of
+    takes whatever。 it takes arguments the way that we're， expecting the arguments
+    to work and then all the positional arguments。 it turns them into， keyword arguments
+    and passes them to dataframe。ag。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我把它封装在一个函数中，这个函数可以作为 `dataframe` 的 `dataframe.ag` 函数的替代品。它的作用是接收我们期望的参数方式，然后将所有位置参数转换为关键字参数，并将它们传递给
+    `dataframe.ag`。
+- en: So this is useful because it can help you encapsulate any like complicated workaround，
+    logic。 It also provides an easy target for removal。 So what you can do is you
+    take all the places in your code where you're calling dataframe。ag， and you replace
+    them with dataframe_ag。 And then later when you fix the bug in 1。1。4 is your main
+    thing。 You go and you do a search and replace and you put back the original code。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这很有用，因为它可以帮助你封装任何复杂的解决方法和逻辑。它还提供了一个简单的删除目标。你可以做的是，把你代码中调用 `dataframe.ag` 的所有地方替换为
+    `dataframe_ag`。然后，稍后当你在 1.1.4 修复了主要问题时，你去搜索并替换，恢复原始代码。
+- en: Okay， so we can all say that we're going to clean up this technical debt that
+    we've just。 incurred but in reality this workaround function is going to last
+    forever。 Or maybe。 So one strategy you can use to sort of make it less of a hack
+    and to minimize the scope。 is what I'm calling opportunistic upgrading。 And the
+    idea here is that in our wrapper function instead of just unconditionally applying
+    this。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，我们都可以说我们要清理刚刚产生的技术债务，但实际上这个解决方法函数可能会永远存在。或者可能。你可以使用的一种策略是将其变得不那么 hack，并最小化范围，我称之为机会升级。这里的想法是，在我们的包装函数中，而不是无条件地应用这个。
+- en: hack I will just write a little function or something that says if this pandas
+    bug is。 currently active do this otherwise just return the original thing。 So
+    now we have this sort of thing which says we're applying our workaround if and
+    only if。 the bug is present。 And I would say that there are two broad strategies
+    for determining whether or not the bug is。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我只需写一个小函数，或者其他东西，说明如果这个 pandas bug 目前活跃，就执行这个；否则，返回原始内容。所以现在我们有这样的东西，说明如果且仅如果
+    bug 存在，我们才应用我们的解决方法。我认为有两种广泛的策略来判断这个 bug 是否存在。
+- en: present。 One is by feature detection。 So you can in this case it's fairly easy
+    to trigger this bug so I just have this minimal。 reproducing I can just run it
+    and if I've triggered the bug I return true and if I didn't。 trigger the bug I
+    return false。 I actually only have to run this one time because the pandas version
+    is not going to change。 the bug is just there or it's not there。 So I can just
+    actually cache this。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在。一个方法是通过特征检测。在这种情况下，触发这个 bug 是相当简单的，所以我只需有这个最小的复现。我可以直接运行它，如果我触发了 bug，就返回
+    true；如果没有触发 bug，就返回 false。实际上我只需运行一次，因为 pandas 版本不会改变，bug 要么存在，要么不存在。所以我可以实际缓存这个。
+- en: I can also you can also check the version because in this case I know that the
+    bug is， fixed in 1。1。4 and I also happen to know that the bug wasn't present in
+    1。1。0 so I can。 just check the versions and then I'll know whether or not the
+    bug is present。 So there's pros and cons for both of these。 I tend to prefer the
+    feature detection version because it doesn't require knowledge of exactly。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我还可以检查版本，因为在这种情况下，我知道这个 bug 在 1.1.4 中已经修复，而我也恰好知道这个 bug 在 1.1.0 中并不存在，所以我可以检查版本，这样我就知道这个
+    bug 是否存在。这两者都有利有弊。我倾向于更喜欢特征检测版本，因为它不需要确切的知识。
+- en: which versions are affected most of the time you don't know that you've got
+    a released。 bug fix up somewhere and you can just opportunistically upgrade when
+    the version hits a certain。 number you just sort of are like well if they ever
+    fix it this will start to work。 You may not always also have accurate version
+    information and also the bug might be simple。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大多数情况下，你并不知道哪些版本受到影响，你可能在某个地方有一个发布的错误修复，只需在版本达到某个数字时机会性地升级。你可能会想，如果他们最终修复了这个问题，这将开始有效。你可能也并不总是拥有准确的版本信息，而且这个错误可能很简单。
+- en: to check for like in this case but it might be hard to describe in terms of
+    versions and。 platforms so if you really want it tightly scoped and you're only
+    triggering it on Debian。 on 64 bit architectures with Python 3。9。7 and Pandas
+    1。1。4 this is a lot to try and encapsulate。 into your into your version detection
+    and it's quite easy to just trigger the bug。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下进行检查，但在版本和平台方面可能难以描述，因此如果你真的想要严格限制，并且仅在 64 位架构的 Debian 上触发它，使用 Python
+    3.9.7 和 Pandas 1.1.4，这很难封装到你的版本检测中，并且很容易触发错误。
+- en: Whereas the version checking version works when the bug is kind of hard to detect
+    so if。 the bug is a memory leak right you're not just gonna like wait until your
+    computer runs out。 of memory and you're like oh yeah I should use the workaround
+    and you know if it's a。 seg fault that's not something you can recover from and
+    the other advantage of this is it's。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而版本检查功能在一些难以检测的错误时才能发挥作用，所以如果错误是内存泄漏，你不会只是等到计算机内存耗尽后才意识到，哦对，我应该使用解决方法。如果是段错误，那是无法恢复的，另外这一点的优势在于。
+- en: relatively simple to implement especially if the minimal reproducer can be a
+    little complicated。 So once you've written your opportunistic upgrading function
+    you can either incorporate。 it into the wrapper function or you can actually conditionally
+    define the wrapper function based。 on whether the bug is triggered right。 So if
+    it's cheap enough to call hasPANAsBug at import time you can say define this wrapper。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相对简单的实现，尤其是如果最小重现者可能有点复杂。因此，一旦你写好了你的机会升级函数，可以将其纳入包装函数，或者根据是否触发错误有条件地定义包装函数。如果在导入时调用
+    `hasPANAsBug` 的成本足够低，你可以说定义这个包装函数。
+- en: function if the bug is present otherwise define the wrapper function to be the
+    original function。 that I'm replacing and then and then you're good to go and
+    this really minimizes the scope。 because you're not even defining an unusual function。
+    So for each of these strategies I'm gonna give a couple real life examples where
+    they're。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果错误存在，则定义包装函数为我正在替换的原始函数，然后你就可以开始使用了，这样确实最小化了范围，因为你甚至不需要定义一个不寻常的函数。所以，对于这些策略中的每一个，我将给出几个现实生活中的例子。
+- en: applied probably the most prominent thing that you would see these in is something
+    like。 feature backports so import live resources is only in Python it started
+    in Python 3。9 almost。 everything in the backport names face these are basically
+    wrapper functions or workarounds。 right because you you want new features from
+    something that exists in a future version and。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用的可能性，最显著的地方就是在特性回归中，例如 `import lib.resources` 只存在于 Python 中，它始于 Python 3.9，几乎所有的回归名称基本上都是包装函数或解决方法。因为你想要从未来版本中获取新特性。
+- en: you can use these backports to to sort of simulate and most of the time these
+    do use。 opportunistic upgrading right it's a very common idiom to say like try
+    import import， lib。resources except import error import import lib_resources。
+    Six the package many of you are probably familiar with was used extensively to
+    make Python 2。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以使用这些回归版本来模拟，而大多数情况下它们确实会使用。机会升级，没错，这是一种非常常见的说法，比如尝试导入 `lib.resources`，除了导入错误，导入
+    `lib_resources`。许多人可能熟悉的 Six 包曾广泛用于使 Python 2。
+- en: and 3 compatible that used essentially the same strategy and when I first wrote
+    this talk。 it was number two on the on the most downloaded pipi packages interestingly
+    in the two years。 since then it has now dropped to nine so maybe my little joke
+    about that we're never going。 to remove our to do comments is not quite accurate
+    so thank you all for stopping using， Python 2。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与 3 兼容的策略基本上是一样的，当我第一次写这个演讲时，它在下载量最多的 pipi 包中排名第二。有趣的是，在这两年中，它现在已经降到第九位，所以我关于我们永远不会删除待办事项注释的小笑话并不完全准确，所以感谢大家停止使用
+    Python 2。
+- en: The last example is just kind of a pitch so I'm not going to talk about it but
+    check out。 the slides and you can you can check out pi tz deprecation shim if
+    you want to know more。 about that。 Alright so let's get into the next strategy
+    and this is where we start getting into properly。 like dangerous and hacky territory
+    and that's monkey patching。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后一个例子只是一种推销，所以我不打算详细讲解，但请查看幻灯片，如果你想了解更多，可以查看 pi tz 废弃 shim。好了，现在让我们进入下一个策略，这就是我们开始进入真正危险和
+    hacky 的领域，那就是猴子修补。
+- en: So the way monkey patching works is that so Python most modules and classes
+    in Python。 are mutable and they live in a global namespace so you can actually
+    just dynamically modify。 the code that you want to that you want to patch at runtime。
+    So here's an example where we decide that the apps function is like a bit stodgy
+    you。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 猴子修补的工作原理是，Python 中大多数模块和类都是可变的，并且它们存在于一个全局命名空间中。所以你实际上可以在运行时动态修改你想要修补的代码。这是一个例子，我们决定
+    apps 函数有点死板。
+- en: know it's always returning positive numbers and so we want to be like let's
+    be a little。 bit more chaotic okay so 20% of the time we're going to return a
+    negative number so what。 we can do is we define that function and then because
+    we want everyone to use our。 apps we take dunder built in dot abs and we replace
+    it with our function which we've。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道它总是返回正数，所以我们希望更混乱一些。好吧，20% 的时间我们会返回负数。我们可以定义那个函数，然后因为我们希望每个人都使用我们的 apps，我们取
+    dunder built-in 的 abs，并用我们的函数替换它。
+- en: called six pack because it's an upgraded abs and and you can see when I when
+    I when I。 print the return value for abs like about 20% of the time it's a negative
+    number and this。 affects not just that local name space it affects everyone using
+    the name space so evidently。 the fraction object uses abs somewhere in its hash
+    calculation and so if I just generate。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 称为六包，因为它是升级版的 abs，当我打印 abs 的返回值时，大约 20% 的时间是负数。这不仅影响那个局部命名空间，还影响所有使用该命名空间的人。因此，显然
+    fraction 对象在其哈希计算中某处使用了 abs，所以如果我生成。
+- en: a hundred copies of one fraction object and I hash them I'll get two different
+    values。 So how does this help us right it's super cool that we can break the hash
+    function of。 fraction objects but that's not exactly fixing a bug so let's jump
+    back to our pandas example。 right so instead of implementing our our our workaround
+    as a wrapper we can implement it。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一百个相同的 fraction 对象，哈希它们时我会得到两个不同的值。那么这对我们有什么帮助呢？很酷的是我们可以打破 fraction 对象的哈希函数，但这并不算是修复
+    bug。所以让我们回到我们的 pandas 示例，实际上我们可以这样实现。
+- en: like this where we use our opportunistic upgrading strategy very critical when
+    monkey。 patching and and we can instead of trying to replace all the call sites
+    with data frame。 underscore AG we can just replace the AG method on data frame
+    with our wrapper function so。 what this will do is it'll like globally and transparently
+    fix the issue for everyone in。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们使用我们的机会升级策略，这在猴子修补时非常关键。我们不需要尝试用数据框下划线 AG 替换所有调用站点，而是可以用我们的包装函数替换数据框上的 AG
+    方法。这样会全球性地、透明地为每个人修复问题。
+- en: the name space which is kind of important which is kind of useful when someone
+    else is calling。 AG and you're calling that person so if they have some 200 line
+    function and they have。 one place where they're using agron you can't really patch
+    their just a little a single。 line in their function you definitely can't monkey
+    patch it and you can't you don't have。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 命名空间非常重要，当别人调用 AG 而你在调用那个人时，这会非常有用。如果他们有一个 200 行的函数，并且在某个地方使用了 agron，你无法只修补他们函数中的一小行，你绝对无法猴子修补它，也没有权限。
+- en: any control over it it's just another one of these someone else's bug problems
+    right。 so what you can do is you can patch the AG function when you're calling
+    their when before。 you call their function and then they and their function will
+    be fixed so now we're。 going to move on to why this is a terrible idea most of
+    these strategies at this point。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于它的任何控制权，这只是另一个他人的 bug 问题。所以你可以在调用他们的函数之前对 AG 函数进行修补，这样他们的函数就会被修复。现在我们要讨论的是为什么这是一个糟糕的主意，目前这些策略大多如此。
+- en: are kind of terrible ideas so there's going to be large sections like this so
+    one problem。 is this is sort of action at a distance what you're sort of dynamically
+    modify I mean it。 should be obvious right like you dynamically modifying code
+    no one is really expecting。 you to do this right and because they're not expecting
+    you to do this they're not going。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有些想法真是糟糕透顶，因此会有大量类似的内容，所以一个问题就是这种远程操作你可以动态修改。我是说，这应该很明显吧，像你动态修改代码，没人真的期望你这么做。
+- en: to code with your workaround in mind they're not going to be trying to keep
+    compatible。 with it it's obviously going to it's obviously going to break if so
+    if they start making changes。 that you're relying to implementation details that
+    you're relying on and in fact you usually。 tightly coupled to implementation details
+    when you're using monkey patching one example。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在编码时考虑你的变通办法，他们不会努力保持与之兼容，显然如果他们开始更改你所依赖的实现细节，这显然会崩溃，实际上，当你使用猴子补丁时，你通常会紧密耦合于实现细节，这是一个例子。
+- en: of how you tend to be tightly coupled to implementation details is that it's
+    very important。 to to scope your patch correctly so here's an example where we've
+    got two almost identical。 versions of the same module and they just tell you what
+    pie over two is and we've decided， that 3。14159 whatever has too many digits we're
+    just going to call pie three and so we're。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你与实现细节紧密耦合的方式非常重要，因此正确缩小你的补丁范围，这里有一个例子，我们有两个几乎相同的模块版本，它们告诉你`pie`除以`2`的结果，我们决定`3.14159`太多位数了，我们就叫`pie`为`3`，所以我们。
+- en: going to patch math。py to be three and critically we've done that after we've
+    imported the pie。 module and pie module two so the first version of pie module
+    returns 1。5 so the patch is。 taking effect the second one it's clear that the
+    patch didn't take effect and the reason。 for that is that in the first module
+    every single time you call this function it looks。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将补丁应用于`math.py`中的`3`，关键是我们在导入`pie`模块之后进行了补丁，而`pie`模块的第一个版本返回`1.5`，因此补丁生效了，第二个版本很明显补丁没有生效，原因是每次你调用这个函数时，它都会查找。
+- en: up the pie attribute on math resolves that to a number and then returns that
+    in the second。 version at import time it looks up what pie is on math stores that
+    as a variable and then。 every time you call the function it calls whatever it's
+    stored right so if you want to。 patch pie module 2 you actually have to patch
+    it in the pie module 2 namespace so it's。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在导入时，`math`上的`pie`属性解析为一个数字，然后返回到第二个版本，它查找`math`上的`pie`，将其存储为一个变量，然后每次调用该函数时，它调用存储的内容。因此，如果你想补丁`pie
+    module 2`，实际上你必须在`pie module 2`命名空间中进行补丁。
+- en: not actually quite as global as you would hope you have to patch it if people
+    are doing。 these this kind of important you have to patch it on the module that
+    you need that you want。 to change so after all this reasoning like you decide
+    alright it's kind of a terrible。 idea but I still want to use it I would highly
+    recommend that you scope it as tightly as。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上并没有你希望的那么全局，如果人们在做这些重要的事情，你必须在你需要更改的模块上进行补丁，所以经过所有这些推理后，你决定好吧，这种想法有点糟糕，但我仍然想用它，我会强烈建议你尽量缩小范围。
+- en: possible if you really only need to apply the patch for a short period of time
+    or just during。 one function or one section of a function you can use a context
+    manager to do this right。 so you can imagine we'll have a function that patches
+    the code and then another function。 that fixes that restores the patch and you
+    can just write a little function like this。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你真的只需要在短时间内应用补丁，或者只是一个函数或函数的一部分，你可以使用上下文管理器来做到这一点。因此你可以想象我们有一个修补代码的函数，然后另一个函数修复并恢复补丁，你可以像这样写一个小函数。
+- en: using contextlib。contextManager and you can use a context manager to say alright
+    I'm calling。 someone else's function I want them to have the patch version of
+    it and then I'm going。 to restore the original one so I don't create too much
+    chaos everywhere and you can use that。 either as a context manager or as a decorator
+    right you say during this affected function。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`contextlib`中的上下文管理器，你可以使用上下文管理器来说明好吧，我在调用别人的函数，我希望他们有补丁版本，然后我将恢复原版，这样我就不会在各处造成太多混乱，你可以把它作为上下文管理器使用，也可以作为装饰器使用。
+- en: I want the patch applied but I know other time so let's move on to real life
+    examples。 a lot of the rest of the examples come from packaging and I don't know
+    if that's just。 familiarity or because they like to do this kind of stuff or both
+    but it may be a little。 disturbing for people who think that it's all rock solid
+    up there so setup tools this is。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想应用补丁，但我知道其他时间。所以我们继续讲真实生活的例子，剩下的许多例子来自打包，我不知道这是否仅仅是熟悉，还是因为他们喜欢做这种事情，或者两者都有，但这可能对那些认为一切都是坚如磐石的人有些令人不安。
+- en: really a cautionary tale as an example it's not like six where six was a godsend
+    setup。 tools extensively patches distute hill and it does it on import so when
+    you import setup。 tools it actually like fixes a bunch of bugs in distute hills
+    and I guess at the time this。 was this was useful and good and it was fixing things
+    in people's code that you didn't control。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这真是一个警示故事的例子，它并不像六号那样是一个福音的设置。工具广泛地修补了distute hill，当你导入setup工具时，它实际上会修复distute
+    hills中的一堆错误，我想在那个时候这很有用且不错，它修复了你无法控制的人的代码中的问题。
+- en: when you're trying to build their packages and so pip started to like this and
+    so when。 they were running your setup。py they would invoke the monkey patch even
+    if you didn't。 import setup tools so then people started to depend on distute
+    hills features that were。 actually setup tools features even though they never
+    thought they were depending on。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你尝试构建他们的包时，pip开始对此感兴趣，因此当他们运行你的setup.py时，即使你没有导入setup tools，它们也会调用猴子补丁，因此人们开始依赖distute
+    hills的功能，尽管他们从未认为自己在依赖这些功能。
+- en: setup tools it became a huge morass so this was expedient at the time but setup
+    tools。 have taken like years to unravel this and it's still not totally unraveled
+    like it's。 caused lots of problems so this is one real life example I mean I guess
+    I could have just。 told you like mock。patch works with monkey patching and that's
+    something that people。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: setup tools变成了一团糟，所以在那个时候这是权宜之计，但setup tools花了好几年才理顺这一切，而且仍然没有完全理顺，这造成了很多问题。这是一个真实生活的例子，我想我可以告诉你mock.patch与猴子补丁是如何工作的，这也是人们关心的事情。
+- en: kind of like but this one's more fun okay so now we'll move on to the next strategy
+    which。 is vendoring so Webster's dictionary defines vendoring as the word you
+    have entered isn't。 in the dictionary but really that's just because the fat cats
+    at the dictionary don't want。 you to know about this strategy but I'm here to
+    tell you the truth so vendoring is when。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有点像，但这个更有趣。好的，现在我们进入下一个策略，即供应商策略。韦氏词典将供应商定义为你输入的单词不在字典中，但这实际上只是因为字典里的胖猫们不想让你知道这个策略，但我在这里告诉你真相。
+- en: you include a copy of one or more of your dependencies in the project source
+    code I don't。 know why that was so secret so the way this works is you just sort
+    of take the source code。 of the of the dependency you have and you copy it into
+    your project tree somewhere and then。 say the thing you're trying to vendor is
+    called squalene you would take all the references。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你在项目源代码中包含一个或多个依赖项的副本，我不知道为什么这会如此保密。它的工作原理是，你只需将你拥有的依赖的源代码复制到你的项目树的某个地方，然后说你想供应的东西叫squalene，你会把所有的引用都拿来。
+- en: to squalene and you would change them to be my project underscore vendor dot
+    squalene。 and if you need to apply some patches to this vendor copy you would
+    apply them to your local。 copy so the advantage here is that there's no chance
+    that your hack will break if the。 dependency is upgraded it has a lot of the same
+    problems as monkey patching except that。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到squalene，你会把它们改为my project underscore vendor dot squalene。如果你需要对这个供应商副本应用一些补丁，你会将它们应用到你的本地副本，因此这里的优势在于，如果依赖升级，你的黑客不会崩溃，它有很多和猴子补丁相同的问题，只是。
+- en: here you're not modifying the global namespace so it's just scope to your package
+    and you。 don't have to worry about the dependency breaking your your patch is
+    because you control when。 the dependency gets upgraded this is also useful because
+    it allows two packages to use。 otherwise incompatible versions of a shared dependency
+    so like if your library depends。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里你并没有修改全局命名空间，所以它仅限于你的包的范围，你不必担心依赖关系会破坏你的补丁，因为你可以控制依赖何时升级，这也很有用，因为它允许两个包使用不兼容的共享依赖版本。
+- en: on library A and then library B also depends on library A but B needs version
+    two and you。 need version one you can vendor version one and let B use the the
+    global version of it。 so the crotions here are for one thing if you have these
+    two versions coexisting things。 may get a little weird right so if you can imagine
+    squalene has this object called magnitude。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 库 A 上，然后库 B 也依赖于库 A，但 B 需要版本二，而你需要版本一。你可以供应商化版本一，并让 B 使用全局版本。因此，这里的缩影是，对于某种情况，如果你有这两个版本共存，情况可能会变得有点奇怪。如果你能想象
+    squalene 有一个叫做 magnitude 的对象。
+- en: and magnitude implements comparison if you're comparing between two versions
+    from the the。 global package things will work great if you're comparing two versions
+    from the the。 vendor version it looks great but if you mix and match all of a
+    sudden they're like well。 what is this vendor magnitude thing I don't know anything
+    about that no type error this。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且 magnitude 实现了比较，如果你在全局包中比较两个版本，事情会很好，如果你在供应商版本中比较两个版本，看起来很棒，但如果你混合使用，突然之间就会出现“这个供应商
+    magnitude 是什么，我对此一无所知”的类型错误。
+- en: isn't going to happen and this is actually compounded by the fact that references
+    to the。 package's top level name within the vendor package will still hit the
+    global package but。 then also relative imports will hit the vendor package so
+    if you have if squalene is doing。 some mix they're they're going to have some
+    mix of functions from the global package and。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这不会发生，而这实际上是由于在供应商包内对包顶层名称的引用仍然会触及全局包，而相对导入则会触及供应商包。因此，如果你有 squalene 正在进行一些混合，它们将会混合使用全局包和。
+- en: from the vendor package and to solve this you need to do something like either
+    patch the。 whole source code to remove all references to the top level package
+    or you do something。 with import hooks or you mess around with the path none of
+    these things sound like a fun。 leisurely activity for your weekend so the downsides
+    here it's kind of hard to implement。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从供应商包中获取数据。为了解决这个问题，你需要做一些事情，比如修补整个源代码以移除对顶层包的所有引用，或者使用导入钩子，或者修改路径。这些事情听起来都不像是你周末的轻松活动，因此这里的缺点是实现起来相当困难。
+- en: correctly at least it's hard to maintain and as a tendency to be like leaky
+    in one way。 or the other we saw one example but there's like a million because
+    the import system was。 not really built with vendor in mind and this also doesn't
+    work well for any dependency。 that's part of the public API right if you're if
+    you're returning data frames you can't。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 至少这样做是困难的，而且往往有泄漏的倾向。我们看到一个例子，但实际上有无数个，因为导入系统并没有真正考虑到供应商的问题，这对任何公共 API 部分的依赖也不太有效。如果你返回数据框，你无法。
+- en: be returning data frames that were defined in your weird vendor version of pandas
+    that。 has a fixed AG function right you have to be returning them from the global
+    namespace。 so this only works for things internally that are using the vendor
+    API so this tends to。 be more useful in like applications so real life examples
+    oh look pip and setup tools are。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 返回你在奇怪的供应商版本 pandas 中定义的数据框，而这个版本有一个固定的 AG 函数。你必须从全局命名空间中返回它们，因此这仅适用于使用供应商 API
+    的内部内容，因此这在应用程序中更有用，所以实际生活中的例子是哦，看看 pip 和 setup 工具在。
+- en: back on the list so pip and setup tools vendor all their dependencies and this
+    is actually。 one of the weird ones where it kind of makes sense right because
+    they're at the they're。 at the base of the dependency tree so they do it to avoid
+    bootstrapping issues they don't。 do any patching and they kind of get it to work
+    by manipulating the namespace resolution。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 重新回到列表中，所以 pip 和 setup 工具将它们所有的依赖项进行了供应商化，这实际上是其中一种奇怪的情况，似乎是合理的，因为它们位于依赖树的底层，所以这样做是为了避免引导问题。它们不进行任何补丁处理，而是通过操作命名空间解析来使其工作。
+- en: they do it in like incompatible ways so it's not great but you know it seems
+    to work there's。 a there's a an application called invoke the vendors all its
+    dependencies and this is a。 cautionary tale because you can see there even though
+    they've been updated kind of recently。 the invoke has none of the dependencies
+    been upgraded in over five years and I think some。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们以不兼容的方式实现，所以这并不好，但你知道，似乎有效。有一个叫做 invoke 的应用程序供应商化了它的所有依赖，这就是一个警示故事，因为即使它们最近有更新，invoke
+    也有超过五年没有升级任何依赖项，我认为其中一些。
+- en: of them have CVEs on them so it's not great and in a little bit of irony this
+    talk itself。 is an example of it so reveal that JS and Jekyll reveal JS I've entered
+    them into the source。 so it's going to be easier to reproduce this talk in five
+    years when I've totally forgotten。 about it and Jekyll reveal even carries a patch
+    because when I was first putting this。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它们都有 CVE 存在，所以并不好，有点讽刺的是，这个演讲本身就是一个例子，所以我将 JS 和 Jekyll reveal 的 JS 输入到源代码中。这样，五年后我完全忘记时，重现这个演讲会更容易。
+- en: talk together I found a bug in Jekyll reveal and I tried to upstream it but
+    there wasn't。 enough time so I just modified my local copy of it and now it's
+    almost two years later。 and nothing's been merged I'm not sure if this package
+    is still active or anything but now。 I'm just kind of maintaining a fork reveal
+    Jekyll reveal inside of my inside of my talk。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在一次讨论中，我发现了 Jekyll reveal 的一个错误，我尝试提交到上游，但没有足够的时间，所以我只是修改了我的本地副本。现在快两年了，什么都没有合并，我不确定这个包是否仍然活跃，但现在我只是维护一个
+    Jekyll reveal 的分支。
+- en: repo which brings us to the last option maintaining a fork so the last option
+    is basically when。 you are deploying and maintaining a patched version of the
+    library or the dependency in。 your production distribution right so the difference
+    between vendoring is that this is global rather。 than using an unmodified version
+    of upstream you would just take the patched version of。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这引出了最后一个选项：维护一个分支。最后一个选项基本上是当你在你的生产环境中部署和维护一个修补过的库或依赖版本时。与 vendoring 的区别在于，这种方式是全球性的，而不是使用未修改的上游版本，你只需取用修补后的版本。
+- en: your of the thing and put it in your production pipeline whether that's your
+    Linux distribution。 or or a mono repo or your own mirror of pi pi or you're serving
+    a patched wheels unfortunately。 in my experience people will take this as their
+    first option because kind of like just。 patching your local version before deployment
+    is relatively easy and the cost for this really。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 把它放进你的生产流程，无论是你的 Linux 发行版，还是 mono repo，或者你自己的 pi pi 镜像，或者你提供的修补过的 wheels。不幸的是，根据我的经验，人们会把这作为他们的第一个选择，因为在部署前修补本地版本相对简单，而这样做的成本确实很低。
+- en: comes later on down the road so if you do want to do this it tends to be done
+    mostly。 the way I've seen done is you you take the original code and you store
+    a tarball of that。 and then you store a series of patches that are going to be
+    applied to it before it before。 it gets built most people I've seen use quilts
+    for this and I don't have really time to go。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这会在后面的时间中出现。如果你想这样做，通常是这样做的：你拿到原始代码，存储一个 tarball，然后存储一系列将在构建之前应用的补丁。我见过的大多数人会使用
+    quilt，我真的没有时间去做。
+- en: into like how to use quilt but I found this blog post which does a much better
+    job of explaining。 how to use quilt than I would be able to in you know the 30
+    seconds that I have and if。 this is too complicated for very simple cases you
+    can also just sort of like use like said。 or other little search and replace at
+    build time you know for for simple patches like the。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于如何使用 quilt，我找到了这篇博客文章，比我在30秒内能解释的要好得多。如果对于非常简单的情况，这太复杂了，你也可以在构建时使用像 `sed`
+    这样的简单搜索和替换，来处理简单的补丁。
+- en: path here is in this thing to deploy is wrong and I'm just gonna I just want
+    to globally。 replace it this this idiom seems fairly common to me from what I've
+    seen in the arch Linux。 distribution where they have a fairly strong cultural
+    norm against carrying patches on their。 on the things they distribute so when
+    they do carry patches they tend to be very simple。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里的路径在这个部署过程中是错误的，我只是想要全局替换。这种习惯在我从 Arch Linux 发行版中看到的似乎相当常见，他们有一种强烈的文化规范，反对在分发的东西上携带补丁，因此当他们确实携带补丁时，通常会非常简单。
+- en: things that can be executed just with said so back to the downsides because
+    I really don't。 like this strategy the downside is that you're maintaining a fork
+    that your upstream doesn't。 know about right so when they don't know about it
+    there's a good chance that they're going。 to make decisions that are incompatible
+    with the things that you're patching right and then。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回到缺点，因为我真的不喜欢这个策略，缺点是你维护一个上游不知道的分支。因此，当他们不知道时，他们很可能会做出与你正在修补的东西不兼容的决策。
+- en: every time they make a change this is going to add a bunch of friction to your
+    upgrade。 process because you go to upgrade and then your patches don't cleanly
+    apply or you know。 you have to rewrite large sections of the patches because your
+    approach was different。 than their approach you know and then they're certainly
+    not making any guarantees of compatibility。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次他们做出更改时，这将给你的升级过程增加很多摩擦，因为你去升级，然后你的补丁无法干净地应用，或者你需要重写大量补丁的内容，因为你的方法与他们的方法不同，而且他们当然不会对兼容性作出任何保证。
+- en: if you file a bug that's like my patch doesn't apply right they'll be like why
+    are you carrying。 a patch why didn't you submit that upstream so you know and
+    the worst case scenario here。 is that the other people in your organization who
+    are using this start to depend on your。 version or specific details of it and
+    then you can't pull back your your your patches。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你提交一个bug，类似于“我的补丁无法应用”，他们可能会问“你为什么要携带一个补丁，为什么不提交给上游？”所以你知道，最糟糕的情况是你组织中的其他人开始依赖你的版本或具体细节，然后你无法撤回你的补丁。
+- en: and now you have just a whole ecosystem that's built on this alternate fork
+    and you're increasingly。 unable to pull from upstream so I hardly have to mention
+    any real life examples like every。 Linux district does this it's incredibly common
+    in industry it it it's almost a default in。 some ways but I'm going to take this
+    time to mention a success story which is when I first。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你拥有一个完全基于这个替代分支构建的生态系统，而你越来越无法从上游拉取更新，所以我几乎不需要提到任何现实生活中的例子，比如每个Linux发行版都是如此，这在行业中是极其常见的，某种程度上几乎是默认的。但我想利用这个时间提到一个成功的故事，那就是当我第一次。
+- en: got to Google I took on the task of helping to keep adders up to date but we
+    had a whole。 bunch of patches that we were that we were carrying on adders just
+    little things and one。 by one I was able to remove all of them except for one
+    which was that adders relied on soap。 for their tests because they wanted to make
+    sure that soap worked with adders which is。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我到谷歌后，承担了帮助保持adders更新的任务，但我们有一堆补丁，这些补丁是我们在adders上携带的小改动，最终我能够逐一移除所有补丁，除了一个，那就是adders依赖于soap进行测试，因为他们想确保soap与adders的兼容性。
+- en: great but we don't use soap anywhere and I didn't really want to package and
+    deploy。 soap just for the purpose of running the adders test which had no effect
+    so that was。 our one patch and so I actually made a pull request I thought it
+    was a long shot to say。 we'll mix open optional dependency and amazingly Hennick
+    accepted it and I got the last patch。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 很好，但我们哪里也不使用soap，我也不想仅仅为了运行adders测试而打包和部署soap，这没有任何意义。所以那是我们的一个补丁，因此我实际上提交了一个pull
+    request，我认为这是一条长路，提出将其作为可选依赖项的想法，令人惊讶的是Hennick接受了它，我得到了最后一个补丁。
+- en: off and it's like a breeze to upgrade adders now so let's go to a recap of the
+    strategies。 that we covered so patching upstream that's that's the gold standard
+    right you fix the。 bug for everyone there's nothing for you to maintain I mean
+    there might be for the maintainer。 but you know hopefully this would actually
+    improve your relationship with the maintainers。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 升级adders现在轻而易举，所以让我们回顾一下我们所覆盖的策略，修补上游，这就是黄金标准，你为大家修复了bug，没有什么需要你来维护的。我是说，可能会有维护者需要维护，但你知道，希望这实际上会改善你与维护者之间的关系。
+- en: because they're there they're seeing that you're you're willing to fix bugs
+    for them。 the downsides here is you know delays right you have to and also you
+    have to convince。 someone to accept your patch I've shown some success stories
+    I've also shown at least one。 failure story right the Jekyll reveal did not accept
+    my patch if you can't patch upstream。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为他们看到你愿意为他们修复bug。这里的缺点是，你知道，可能会有延迟，你必须说服某人接受你的补丁。我展示了一些成功的案例，同时也展示了至少一个失败的案例，Jekyll的维护者没有接受我的补丁。如果你无法修补上游。
+- en: or in the meantime while you're waiting for your patch to deploy wrapper functions
+    I think。 are a perfectly acceptable way to do workarounds right they help maintain
+    compatibility they're。 easy to remove and then you can deploy them immediately
+    the downside is you can't always。 apply this strategy right there's there just
+    times when you need something else so when。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者在等待你的补丁部署的同时，包装函数我认为是进行变通的一个完全可以接受的方式，它们有助于保持兼容性，易于移除，而且你可以立即部署。缺点是你并不总能应用这种策略，因为有时候你需要其他东西。
+- en: we move into the more dangerous strategies there's monkey patching which allows
+    you to。 make more targeted global fixes and it doesn't have any problems it doesn't
+    introduce the。 same packaging and deployment problems that the other strategies
+    do but it can be hard。 to reason about and can cause all the issues that I mentioned
+    there's vendoring which can。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们转向更危险的策略时，猴子补丁允许你进行更有针对性的全局修复，它不会引入其他策略所面临的相同打包和部署问题，但它可能很难理解，并且会导致我提到的所有问题，还有供应管理，这可能会…
+- en: unblock your dependency resolution issues and isolate your changes from the
+    wider system。 but it's you know it has a lot of the same problems as monkey patching
+    and then there's。 maintaining a fork which I did put a pro column on this even
+    though I didn't like it it is。 relatively easy to implement and there are a lot
+    of tools that exist for this so that is。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 解锁你的依赖解析问题，并将你的更改与更广泛的系统隔离开来。但这有许多与猴子补丁相同的问题。接下来是维护一个分支，尽管我对这一点并不喜欢，但我在此列出了优点，它相对容易实现，而且有很多工具可以帮助实现。
+- en: '![](img/11eb9fc727230ac9346c52d93cda4808_4.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/11eb9fc727230ac9346c52d93cda4808_4.png)'
+- en: the end of my that is the end of my talk I'm gonna leave you with a couple of
+    final thoughts。 the first one is that I really think that patience is an underrated
+    virtue here each。 of these strategies involves incurring some technical debt and
+    some of them involve imposing。 technical debt on your entire organization so you
+    should consider developing organizational。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我演讲的结束就是我的演讲结束，我想给大家留下几个最后的思考。第一个是我真的认为耐心是一种被低估的美德。每一种策略都涉及到一些技术债务，其中一些还涉及到对整个组织施加技术债务，所以你应该考虑制定一些组织策略，让你能耐心等待上游的修复部署。
+- en: strategies that would allow you to patiently wait for upstream to to for upstream
+    fixes。 to be deployed and some of those strategies could be strategies for making
+    it faster right。 so developing good relationships with your with the maintainers
+    of your dependencies so。 that you can get your patches in and the last thought
+    I'll give you is that it's very tempting。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中一些策略可能是加速的策略。因此，建立与依赖项维护者的良好关系，以便你能及时提交你的补丁。最后我想给你们的思考是，尽可能快地解决问题是非常诱人的。
+- en: to say well we're in for a penny in for a pound right we're already patching
+    this this。 is a thing and that's not going away so we may as well patch a whole
+    bunch of other things。 as well but you should consider that the that each one
+    of these hacks represents technical。 debt you should accrue it thoughtfully and
+    not too much of it you should pay it down。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想说，我们已经开始了，就应该继续下去，对吧？我们已经在修补这个问题了，这个问题不会消失，所以我们不妨也修补其他许多问题。但是你应该考虑到，每一个这样的破解都代表着技术债务，你应该谨慎地积累，不要过多，并且要偿还它。
+- en: as quickly as possible so with that I will leave you with those thoughts I will
+    I'm gonna。 run to another talk right after this but I'll be around the conference
+    for all the way。 until the end of sprints so find me anytime I'd be happy to talk
+    about this or D times。 or anything else you'd like。 [Applause]， (applause)。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我将这些思考留给大家，我接下来要赶去另一个演讲，但在会议期间我会一直在场，直到冲刺结束，所以随时找我，我很乐意和你谈论这个或是D时间，或者你想讨论的其他任何事情。[掌声]（applause）。

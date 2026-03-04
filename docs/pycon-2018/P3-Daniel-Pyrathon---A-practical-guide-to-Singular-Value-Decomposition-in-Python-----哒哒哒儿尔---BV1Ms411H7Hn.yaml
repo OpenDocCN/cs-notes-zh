@@ -1,0 +1,763 @@
+- en: P3：Daniel Pyrathon - A practical guide to Singular Value Decomposition in Python
+    - - 哒哒哒儿尔 - BV1Ms411H7Hn
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P3：Daniel Pyrathon - Python中奇异值分解的实用指南 - - 哒哒哒儿尔 - BV1Ms411H7Hn
+- en: \>\> Hey， everyone。 Welcome to the talk on a practical guide to singular value
+    decomposition。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 大家好。欢迎参加关于奇异值分解的实用指南的演讲。'
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_1.png)'
+- en: in Python。 Please welcome Daniel， who is an organizer for Pi Bay， a regional
+    Python conference。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Python中。请欢迎Daniel，他是Pi Bay的组织者，一场区域Python大会。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_3.png)'
+  id: totrans-4
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_3.png)'
+- en: in Bay Area。 All right。 [ Applause ]， Hello。 Thank you for coming。 So today
+    I want to cover two main things。 First of all。 I want to cover what is SVD most
+    important in the context of recommendations。 And then。 the second thing is， obviously，
+    how can we do SVD using Python？ But before we start， let。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在湾区。好的。[掌声]，你好。感谢你的到来。今天我想讨论两个主要内容。首先，我想介绍在推荐系统中SVD的重要性。然后，第二个内容显然是，我们如何用Python来实现SVD？但在开始之前，让。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_5.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_5.png)'
+- en: me ask you two questions。 Have you ever wondered why you binge watch Netflix？
+    Or maybe？ How。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我问你两个问题。你有没有想过为什么你会狂看Netflix？或者，也许？怎么。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_7.png)'
+  id: totrans-8
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_7.png)'
+- en: did Spotify found out that secret love for Taylor Swift？ In fact， there is something。
+    about these services such as Spotify， such as Netflix， that make them so， so intimate。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Spotify是如何发现对Taylor Swift的秘密热爱的？实际上，这些服务如Spotify和Netflix之所以如此亲密，是因为某种原因。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_9.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_9.png)'
+- en: and so， so personal。 Why is that？ The answer is recommendations。 Let me tell
+    you why I'm， here。 So I work for an online dating company called Coffee Meets
+    Bagel。 Who knows Coffee， Meets Bagel。 Hey， right。 Brilliant。 Okay。 Hope you haven't
+    had bad experiences。 It's a， great dating app。 So。 and I recently moved from a
+    traditional software engineering role。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，这样的个性化。为什么会这样？答案就是推荐。让我告诉你为什么我在这里。所以我在一家名为Coffee Meets Bagel的在线约会公司工作。谁知道Coffee
+    Meets Bagel？嘿，对吧。太棒了。希望你没有糟糕的经历。这是一个很好的约会应用程序。所以，我最近从传统的软件工程角色转变过来。
+- en: to a machine learning engineering role。 And most importantly， I did so with
+    very， very。 little scientific background。 And I know what you're thinking。 That's
+    a terrible idea。 But， today。 what I want to tell you is what I want to show is
+    how Python really helped me learn。 and get up to speed with some of the learning
+    algorithms that we run at Coffee Meets Bagel。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 转向机器学习工程师的角色。最重要的是，我在几乎没有科学背景的情况下做到这一点。我知道你们在想什么。这真是个糟糕的主意。但是，今天。我想告诉你的是，我想展示的是Python如何真正帮助我学习，并让我跟上我们在Coffee
+    Meets Bagel运行的一些学习算法。
+- en: Most importantly， some of these algorithms are a lot more easier and logical
+    to understand。 when you're looking at Python source code， when they're implemented
+    in Python。 And today。 I want to show you an example of one of these。 So before
+    we start， I just want to make sure。 we're on the same page。 What is a recommendation
+    engine？ Many of you that probably have not。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最重要的是，这些算法有很多更容易理解和逻辑性。当你查看用Python实现的源代码时。今天，我想给你展示一个这样的例子。所以在我们开始之前，我想确保我们在同一页上。什么是推荐引擎？你们中很多人可能还没有。
+- en: heard of recommendation engines have probably heard of search engines。 And search
+    engines。 are just think of these as like black boxes where you insert some parameters
+    and you get。 some search results。 Recommendation engines are similar to search
+    engines， but they're， personal。 It's just like having one search engine for every
+    user in your application。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 听说过推荐引擎的人可能听说过搜索引擎。搜索引擎。可以把这些看作是黑匣子，你输入一些参数就会得到一些搜索结果。推荐引擎与搜索引擎类似，但它们是个性化的。就像在你的应用程序中为每个用户有一个搜索引擎。
+- en: What are the benefits of search engines？ Well， because they're personalized
+    for every user。 in your application， they give more personal results。 They give
+    those intimate results。 that we were speaking about previously。 But most importantly，
+    they learn over time。 As。 your user explores the application， as your user interacts
+    with the items and resources。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 搜索引擎的好处是什么？因为它们为每个用户提供个性化服务。在你的应用程序中，它们提供更个性化的结果。它们提供那些我们之前提到的亲密结果。但最重要的是，它们随着时间的推移不断学习。当你的用户探索应用程序时，当你的用户与项目和资源互动时。
+- en: that you have in your application， our recommendation engine will learn。 And
+    it will give better results。 Again， there are many benefits。 I just want to point
+    out two。 The first one is engagement。 So there's a huge increase in engagement
+    if you use a recommendation engine compared。 to a traditional search engine。 And
+    then the second one is also diversity of recommendations。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在你的应用中，推荐引擎会学习并提供更好的结果。再次说明，有许多好处。我想指出两个，第一个是参与度。如果使用推荐引擎，参与度会大幅提升，相较于传统搜索引擎。第二个也是推荐的多样性。
+- en: So if your user is treated personally in your application， there also is a lot
+    more sort。 of engagement and diversity in the results that that user gets。 And
+    if that wasn't enough。 let's look at some stats。 35% of Amazon's revenue is actually
+    generated by some level。 of recommendation engines。 And Netflix has over 75% of
+    movies that are actually based。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果用户在你的应用中被个人化对待，他们所获得的结果的参与度和多样性都会显著提升。如果这还不够，我们来看一些统计数据。亚马逊的35%收入实际上是通过某种程度的推荐引擎生成的。Netflix有超过75%的电影实际上是基于。
+- en: on the recommendations。 This is really huge。 And so today， what I want to do
+    is I want to。 cover only a specific subset of what a recommendation engine is。
+    Effectively。 it's a really big talk， and it's huge。 And what I want to talk about
+    is a common strategy to perform recommendations。 which is called collaborative
+    filtering。 In order to understand collaborative filtering。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于推荐，这是非常重要的。因此，今天我想做的是只覆盖推荐引擎的一部分。实际上，这是一个非常大的话题。我想讨论的是一种执行推荐的常见策略，称为协同过滤。要理解协同过滤。
+- en: we need to first focus on the free main ingredients that compose collaborative
+    filtering。 Users。 ratings， and products。 The users are effectively the actors
+    in your system。 They rate products。 and you can think of the users as the readers
+    of your blog， the customers of your online。 grocery store。 Effectively， most of
+    us assume some -- we assume to be a user in some application。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首先需要关注组成协同过滤的三个主要成分：用户、评分和产品。用户实际上是你系统中的参与者。他们对产品进行评分，你可以将用户视为博客的读者，或在线杂货店的顾客。实际上，我们大多数人假设在某个应用中都是用户。
+- en: Users rate products， which is the far right of this slide。 And the products
+    are again very。 domain specific。 They could be， in case of maybe Spotify， they
+    could be songs or in Netflix。 maybe they could be movies。 Now， ratings are the
+    glue that connect the users and the products。 Effectively， just think of the rating
+    as a number to somehow quantify how well， how good。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户对产品进行评分，这张幻灯片的最右侧。产品再次是非常特定于领域的。在Spotify的情况下，它们可以是歌曲；在Netflix的情况下，它们可能是电影。评分是连接用户和产品的粘合剂。实际上，可以将评分视为一个数字，以某种方式量化用户与产品之间的互动程度。
+- en: an interaction was between a user and a product。 And this number can be as granular
+    as saying。 four out of five， or it can be as simple as saying thumbs up or thumbs
+    down。 It's up。 to you as a developer。 Now， for the simplicity of these slides，
+    I'm only going to be focusing。 on movies as products。 So from now on， we're only
+    going to be speaking about movies。 But， remember。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个数字可以是非常细致的，比如说四分之五，或者可以简单地说是点赞或点踩。选择权在于你作为开发者。为了简单起见，这些幻灯片中我将只专注于电影作为产品。从现在开始，我们只会讨论电影。但请记住。
+- en: products can be whatever you want。 And so， let's try and answer this question。
+    What is collaborative filtering？ So， effectively， collaborative filtering is a
+    way to provide。 recommendations by leveraging the existing ratings of the users
+    that are similar to you。 And probably the best way to understand it is with this
+    matrix here on the right。 This。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 产品可以是你想要的任何东西。那么，让我们来回答这个问题：什么是协同过滤？实际上，协同过滤是一种通过利用与您相似的用户的现有评分来提供推荐的方法。理解它的最好方式就是看右侧的这个矩阵。
+- en: is a user to， this is a user to movie， ray tricks。 Every row here is a unique
+    user。 And。 every column here is a unique movie。 And the cell between a user and
+    a movie identifies。 the rating that that user gave to that movie。 And so， as you
+    can see， there are two main， ratings。 Thumbs up means purchase the movie and thumbs
+    down maybe means like， you know。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个用户到电影的矩阵，每一行都是一个独特的用户，每一列都是一个独特的电影。单元格中的内容表示该用户对该电影的评分。因此，可以看到有两个主要的评分，点赞表示购买电影，而点踩可能表示“喜欢”，你知道的。
+- en: give the movie back or something。 Or dislike the movie。 This is our mini Netflix，
+    right？
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 给电影回报或者不喜欢这部电影。这就是我们的迷你Netflix，对吧？
+- en: We only have five users and four movies。 So it's a very limited catalog。 And
+    so， let's。 say our user five here logs into our mini Netflix。 And the mini Netflix
+    asks our collaborative。 filtering engine， can you provide a recommendation for
+    the blue movie？ Well， how do we do that？
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们只有五个用户和四部电影，所以这非常有限。假设我们的用户五在迷你Netflix上登录。迷你Netflix询问我们的协同过滤引擎，能否为蓝色电影提供推荐？那么，我们该如何做到呢？
+- en: The first step in collaborative filtering is finding users similar to our user
+    five here。 that have also rated that blue movie。 Let's take it。 Let's look at
+    an example。 So， user。 two and user five both rated positively the green movie
+    and rated negatively the red movie。 the orange movie。 User free and user five
+    both rated positively the red movie and also rated。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 协同过滤的第一步是找到与用户五相似的用户，他们也对蓝色电影进行了评分。让我们来看一个例子。因此，用户二和用户五都积极评价了绿色电影，而对红色电影和橙色电影的评价则是负面的。用户免费和用户五都积极评价了红色电影。
+- en: positively the green movie。 Most importantly， both user two and user free have
+    also rated。 the blue movie， which is what we're trying to predict。 So let me ask，
+    any brave soul want。 to answer this question。 What will user five think about
+    the blue movie？ Boo。 All right。 Fantastic。 Yes， that's correct。 So as you can
+    see， we leveraged existing user's information。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 积极评价绿色电影的用户二和用户免费也对蓝色电影进行了评分，而我们正是试图预测这一点。那么，让我问一下，是否有勇敢的人愿意回答这个问题。用户五对蓝色电影会有什么看法？哇。好吧。太棒了。是的，答案正确。所以你可以看到，我们利用了现有用户的信息。
+- en: to generate this recommendation， right？ We collaboratively found the answer。
+    And so， again。 I want to go one step down the funnel。 There are many different
+    ways to provide a collaborative。 filtering。 Today， I'm going to focus on one specific。
+    Another value decomposition。 It's one of the most well-known algorithms in industry
+    today， for providing collaborative filtering。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了生成这个推荐，对吧？我们协作找到了答案。所以，我想再深入一步。提供协同过滤的方法有很多。今天，我将专注于一种特定的方法。另一种值分解。这是目前行业中最著名的协同过滤算法之一。
+- en: It's highly adopted in industry。 It's actually， used by many companies。 People
+    like companies like Spotify have also written about their， implementation and
+    it's very。 very scalable， actually。 And just to show you how widely this， algorithm
+    is used。 this is a picture from the Netflix prize。 So the Netflix prize is this。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个算法在行业中被广泛采用。实际上，许多公司都在使用它。像Spotify这样的公司也曾讨论过他们的实现，它非常可扩展。为了展示这个算法的广泛使用，这是来自Netflix奖的一张图片。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_11.png)'
+  id: totrans-30
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_11.png)'
+- en: competition that was created by Netflix in 2009。 It's an open competition that
+    basically。 called all engineers and researchers around the world to compete to
+    somehow try and increase。 Netflix's recommendation engine。 Well， the winner of
+    this competition， which are these。 people over here， actually one using variance
+    of the SVD algorithm to increase Netflix's。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个比赛是由Netflix在2009年创建的。这是一个开放的比赛，基本上召集了全世界的工程师和研究人员，试图提升Netflix的推荐引擎。这个比赛的获胜者，也就是这些人，实际上使用了SVD算法的变种来提升Netflix的性能。
+- en: accuracy by 10%。 That's huge。 And just to show you the prize， these people got
+    $1 million。 using SVD。 So listen to this talk。 Listen to this talk。 Hopefully
+    by now I've tried to convince you that SVD is a cool thing。 But in order to。 understand
+    how SVD actually works， the most important things， I want to explain to you。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 准确率提升了10%。这可是巨大的。为了说明奖项，这些人获得了100万美元。使用SVD。所以听听这个演讲。希望到现在为止，我已经试图说服你SVD是个很酷的东西。但为了理解SVD实际如何运作，最重要的事情我想向你解释。
+- en: how SVD actually predicts these new recommendations。 Effectively， SVD is an
+    algorithm that creates。 these things called latent features for every user and
+    every movie in our ratings database。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: SVD如何预测这些新的推荐。实际上，SVD是一种算法，它为我们的评分数据库中的每个用户和每部电影创建了所谓的潜在特征。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_13.png)'
+  id: totrans-34
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_13.png)'
+- en: But in order to understand what latent features are， let's first understand
+    what features are。 just to make sure。 So features in the context of machine learning
+    are the metadata that we。 as scientists or engineers attribute or associate to
+    our users and our products。 So for example。 in the context of Netflix， what would
+    be the attributes that we would associate to our， user？
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但为了理解什么是潜在特征，我们首先要理解什么是特征。只是为了确认。因此，在机器学习的上下文中，特征是我们作为科学家或工程师赋予或关联给用户和产品的元数据。例如，在Netflix的上下文中，我们会将什么属性与我们的用户关联起来？
+- en: Maybe their age， the region they're in or their gender。 And what about the movies？
+    Well。 the release date maybe， the director somehow matters， the duration of the
+    movie。 These are all really informative features for us as humans。 In fact， we
+    assume that the。 rating that maybe this user gives to this beautiful green movie
+    is somehow impacted by。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许是他们的年龄、所在地区或性别。那么电影呢？好吧，发行日期也许，导演在某种程度上是重要的，电影的时长。这些对于我们人类来说都是非常有信息量的特征。事实上，我们假设这个用户给这部美丽绿色电影的评分在某种程度上受到影响。
+- en: these features that we define。 Probably the best way to understand this is if
+    you got。 like past ratings of maybe IMDB or something like that and you actually，
+    you could actually。 use these features to generate some statistics。 Like maybe
+    males in their 20s are more， are。 rates higher， Western or some movies than males
+    in their 40s。 Something like this， statistically。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们定义的这些特征。理解这一点的最佳方式可能是，如果你获得了过去IMDB的评分或类似的东西，并且实际上，你可以使用这些特征生成一些统计数据。例如，也许20多岁的男性比40多岁的男性对西部电影的评分更高。类似这样的统计数据。
+- en: And so what we do is we generate these features so that then we can feed them
+    in some kind。 of learning algorithm that somehow identifies the importance or
+    the weight of every one。 of these features。 But again， there's one fault here，
+    which is these features are generated。 by us as humans。 And as humans， we can
+    only define features that are somehow directly observable。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们所做的是生成这些特征，以便我们可以将它们输入某种学习算法，这样可以识别每一个特征的重要性或权重。但再说一次，这里有一个错误，那就是这些特征是由我们人类生成的。作为人类，我们只能定义那些在某种程度上是直接可观察的特征。
+- en: things that we assume are important。 But most of the times， there's a set of
+    features that。 are not is not directly observable， but is a lot more impactful
+    in predicting a rating。 In fact。 there's a class of algorithms like SVD that learn，
+    create out of nothing these， new features。 which we call latent features， just
+    like age， region and gender that are somehow。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们认为重要的东西，但大多数时候，有一组特征并不是直接可观察的，但在预测评分时更具影响力。事实上，有一类算法像SVD，从无到有地学习，创造出这些我们称之为潜在特征的新特征，就像年龄、地区和性别。
+- en: not directly observable。 We can't point out saying the first latent feature
+    identifies。 I don't know， the users， users that have blonde eyes or something
+    like this。 We cannot do that。 But all we know is that these features can be used
+    and are highly informative in the context。 of recommendations in predicting a
+    rating between a user and a movie。 And so SVD as an algorithm。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些特征并不是直接可观察的。我们不能指出第一个潜在特征识别的。我不知道，拥有金发眼睛的用户或类似的东西。我们无法做到这一点。但我们所知道的是，这些特征可以被使用，并且在用户与电影之间的推荐预测中是高度信息化的。因此，SVD作为一种算法。
+- en: runs on these data sets and generates these features。 And what do these features
+    look， like？
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这些数据集上运行并生成这些特征。那么这些特征看起来像什么？
+- en: Sorry about the picture， but they're very ambiguous。 There's no way to actually，
+    describe them。 And this is my creativity in trying to describe the features。 They're
+    not。 really something that you can actually point out。 These are very abstract。
+    But again， we。 can use these features in our data sets。 So now let's try to actually
+    understand how。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 抱歉关于这张图片，但它们非常模糊。实际上没有办法描述它们。这是我努力尝试描述这些特征的创造力。它们并不是你可以明确指出的东西。这些都是非常抽象的。但再说一次，我们可以在数据集中使用这些特征。那么现在让我们尝试真正理解这一点。
+- en: can we use these latent features？ How are these features actually generated？
+    Let's start from。 there。 So again， let's take our Netflix， a mini Netflix example
+    before。 This is a mini。 mini Netflix and even smaller， right？ We used to have
+    other two users while they turned。 So now we have only three users and four movies。
+    Most important， as you can see here， I'm not。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以使用这些潜在特征吗？这些特征实际上是如何生成的？让我们从这里开始。所以，再次以我们的Netflix，一个迷你Netflix的例子为例。这是一个迷你，迷你的Netflix，甚至更小，对吧？我们以前有两个用户，但他们已经不再使用了。所以现在我们只有三个用户和四部电影。最重要的是，正如你在这里看到的，我不再使用点赞和点踩。
+- en: using thumbs up and thumbs down anymore。 I'm actually using a number。 Remember，
+    the。 higher the rating， the more relevant。 So for example， here， user two rated
+    very highly。 the red movie here， but rated very poorly the blue movie。 Because
+    four is obviously bigger。 than one。 Now， let's just put this matrix over here
+    one second。 So it turns out that there。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我实际上使用的是一个数字。记住，评分越高，相关性就越强。例如，在这里，用户二给红色电影的评分非常高，但给蓝色电影的评分非常低。因为四显然大于一。现在，让我们先把这个矩阵放在这里一秒钟。所以结果是有一种算法叫做矩阵分解，这个技术。
+- en: is this algorithm which is called matrix factorization， this technique。 What
+    matrix factorization。 does is it gets one big matrix and it creates two smaller
+    matrices out of this big matrix。 In a way in which we could take those two matrices
+    that we create and in a second moment， we。 could recompose the original matrix。
+    It's a bit hard to understand， but let's try to visualize， it。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 矩阵分解所做的就是获取一个大的矩阵，并从这个大矩阵中创建两个较小的矩阵。通过这种方式，我们可以将创建的两个矩阵在稍后的时刻重新组合成原始矩阵。这有点难以理解，但让我们尝试可视化一下。
+- en: Okay。 SVD is an implementation， an algorithm that uses matrix factorization。
+    So decomposes。 these two matrices in a way in which we only retain the most informative
+    features， the most。 informative factors from these two matrices， the ones that
+    have most important， biggest， importance。 And the number of features that we actually
+    extract is something that us as。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的。SVD是一种实现算法，使用矩阵分解。因此，分解。这两个矩阵的方式是我们只保留最有信息的特征，即这两个矩阵中最重要的、最大的重要性特征。我们实际提取的特征数量是我们所要的。
+- en: developers or scientists define。 We tell SVD how many features we want from
+    this dataset。 So let's say we wanted to run SVD on this matrix here and we only
+    wanted to output two， features。 What would this look like？ As you can see here，
+    we have every user has these。 two latent features here and every movie has two
+    latent features。 And if you somehow believe， me。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 开发者或科学家定义。我们告诉SVD我们想从这个数据集中提取多少个特征。所以假设我们想在这个矩阵上运行SVD，并且我们只想输出两个特征。这看起来会是什么样的？正如你在这里看到的，每个用户都有这两个潜在特征，每部电影也有两个潜在特征。如果你相信我，
+- en: you could get these two matrices and re-multiply them together and you would
+    get an approximation。 the nearest approximation to that center matrix。 Minus the
+    question marks， which basically。 means that you can actually generate new predictions。
+    Now， what about these features？ Why are they。 I only use two latent features here
+    simply for illustration purpose。 But， in your real example。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以获得这两个矩阵并重新相乘，你将得到一个近似值，即最接近那个中心矩阵的近似值。减去问号，这基本上意味着你实际上可以生成新的预测。那么，这些特征呢？它们为什么存在？我在这里只使用两个潜在特征，仅仅是为了说明。但是，在你的真实例子中，
+- en: you'll probably want to use more than those。 The more latent features， you generate。
+    the more information you're actually extracting from the original matrix。 The
+    more。 latent features you extract， the more computationally expensive your SVD
+    is going to take。 So that。 is a number that you are going to describe。 So now，
+    we have these latent features。 What。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能会想使用比这些更多的特征。你生成的潜在特征越多，你实际上从原始矩阵中提取的信息就越多。提取的潜在特征越多，你的SVD所需的计算成本就会越高。所以这是一个你将要描述的数字。那么现在，我们有这些潜在特征。我们可以用它们做什么？
+- en: can we do with them？ Well， today I want to show two use cases of how we can
+    use these。 latent features。 The first one is to predict new scores。 Effectively，
+    once we generate these。 latent features， we can predict the rating between any
+    combination of user and movie。 So let's take an example here。 Let's say we had
+    our user one and we wanted to predict。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，今天我想展示如何使用这些潜在特征的两个用例。第一个是预测新的评分。实际上，一旦我们生成了这些潜在特征，我们可以预测任意用户和电影组合之间的评分。让我们举个例子。假设我们有用户一，我们想预测。
+- en: what user one would think about the blue movie。 So we just perform a dot product
+    between the。 latent features of user one and the latent features of the blue movie。
+    So we multiply。 latent feature one of user one with latent feature one of blue
+    movie。 And then we sum latent feature， two of user one with latent feature two
+    of blue movie。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户一会认为蓝色电影怎么样。因此，我们只需在用户一的潜在特征与蓝色电影的潜在特征之间执行点积。我们将用户一的潜在特征一与蓝色电影的潜在特征一相乘。然后将用户一的潜在特征二与蓝色电影的潜在特征二相加。
+- en: Result here is 3。52。 So effectively， user one would pretty much enjoy the blue
+    movie based on this example。 And let's look， at another way in which we can actually
+    use these vectors。 And this is the way I actually， like most。 Which is effectively。
+    once we generate these latent features， we can compare users。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 结果是3.52。因此，根据这个例子，用户一会非常喜欢蓝色电影。让我们看看另一种使用这些向量的方式。这是我最喜欢的方式。实际上，一旦我们生成了这些潜在特征，我们就可以比较用户。
+- en: with other users and movies with other movies。 We can actually find similarity
+    between two。 users or two movies by identifying the similarity of their vectors。
+    And there are many different。 ways to measure similarity。 Today I'm going to be
+    using cosine similarity， which effectively。 measures the angle， the cosine of
+    the angle between these two vectors。 And so in this example。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与其他用户和其他电影之间。我们实际上可以通过识别它们向量的相似性来找到两个用户或两个电影之间的相似性。测量相似性的方法有很多种。今天我将使用余弦相似度，它有效地测量这两个向量之间的角度，角度的余弦。因此在这个例子中。
+- en: you could probably say that if user user free here is more closer in terms of
+    tastes。 to user one is more similar to user one than user free to user two。 What
+    that effectively。 means is that user free is more likely to agree with the with
+    the tastes， the ratings of user。 one than user two。 And so hopefully this will
+    be fun， but what I want to show you now is。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能会说，如果用户free在口味上与用户一更接近，那么用户free与用户二的相似度就更低。这实际上意味着用户free更可能同意用户一的口味和评分，而不是用户二。因此，希望这会很有趣，但我现在想展示的是。
+- en: a small demo。 Effectively， what we're going to do is we are going to， we are
+    going to。 be training an SVD using a library called surprise SVD。 It's a really
+    great library。 It's， very。 very simple to use。 And what we are going to be doing
+    is we're going to be downloading。 and exploring this data set， which is called
+    movie lens。 And once we've explored this data， set。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个小演示。实际上，我们将使用一个名为surprise SVD的库来训练一个SVD。这是一个非常好的库，非常简单易用。我们将下载并探索这个名为movie
+    lens的数据集。一旦我们探索了这个数据集。
+- en: we are going to train an SVD using very， very few steps。 You're going to go
+    back home。 today and you can do this on your own data set。 And then finally， those
+    two ways that。 I was showing you before， generating recommendations by reconstructing
+    the result by performing。 the dot product between a user and a movie and similarity
+    between movies， we're actually。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用非常少的步骤来训练一个SVD。你今天回家后可以在自己的数据集上进行操作。最后，我之前向你展示的两种方式，通过重建结果生成推荐，执行用户与电影之间的点积以及电影之间的相似度，实际上我们正在。
+- en: going to be able to do that using this example。 So let's start by speaking about
+    movie lens。 So movie lens is a great open source data set。 It's pretty famous。
+    It's using a lot of competitions。 And it has a lot of different ratings and a
+    lot of unique movies and users。 I built a。 small function here called load movie
+    lens that simply converts the CSV file to a data， frame。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将通过这个例子来做到这一点。让我们先谈谈电影Lens。电影Lens是一个很棒的开源数据集。它相当有名，常用于许多竞赛。它包含了许多不同的评分，以及大量独特的电影和用户。我在这里构建了一个小函数，称为load
+    movie lens，它简单地将CSV文件转换为数据框。
+- en: a panist data frame。 And as you can see here， every row is a pass rating。 Right？
+    And so。 for example， if you take the first row， this user 742 rated Jeremy McGuire
+    with， a rating of four。 And again， the ratings go in scale from one to five inclusive。
+    As you， can see here。 there are three columns to this to this data frame。 The
+    first column is a user， ID。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建一个评分数据框。如你所见，每一行都是一个评分，对吗？例如，如果你看第一行，这位用户742对《杰瑞·麦奎尔》的评分是4。而且，评分的范围从1到5，包括1和5。正如你所见，这个数据框有三列。第一列是用户ID。
+- en: The second column is the movie title。 And these are strings。 They can be whatever，
+    you want。 Your users and your items and your items in your product can be whatever
+    data， structure you want。 The important thing is that the rating is a number。
+    Right？ Remember， it needs to be quantifiable。 So how can we train an SVD using
+    four simple steps？ The first。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二列是电影标题。这些都是字符串。它们可以是你想要的任何内容。你的用户和你的产品中的项目可以是你想要的任何数据结构。重要的是评分必须是一个数字。对吗？记住，它需要是可量化的。那么我们如何通过四个简单步骤来训练一个SVD呢？第一步。
+- en: step is we obviously import surprise SVD。 And we define something called a reader。
+    And。 a reader is effectively a component inside of -- it's a class inside of surprise
+    that。 defines the lower and upper bounds of your ratings。 Remember， you can choose
+    whatever。 lower and upper bound you want。 The important thing is that you define
+    it up front and you。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 步骤显然是导入surprise SVD。我们定义一个叫做reader的东西。reader实际上是surprise内部的一个组件——它是一个类，定义了你评分的下限和上限。记住，你可以选择任何下限和上限。重要的是，你要事先定义好。
+- en: tell surprise。 So in this case， MovieLance has a great open source documentation
+    which。 tells us that the ratings go from one to five。 So this is what I'm going
+    to define。 The first step is we initialize a dataset instance。 And just think
+    of the dataset as， a loader。 Effectively what it does is it prepares the data
+    for performing SVD。 Data。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 告诉surprise。因此，在这种情况下，MovieLance有很好的开源文档，它告诉我们评分范围从1到5。所以这就是我将要定义的。第一步是我们初始化一个数据集实例。可以把数据集看作是一个加载器。实际上，它的作用是为执行SVD准备数据。数据。
+- en: set accepts two parameters。 The first one is the MovieLance dataset -- the MovieLance。
+    data frame that we defined previously。 And remember， this needs to have -- this
+    needs。 to be a pandas data frame which has three columns in this specific order。
+    User ID， product。 ID and rating。 It's very important。 And the second parameter
+    is that reader。 Now， as a， first step。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 设置接受两个参数。第一个是MovieLance数据集——我们之前定义的MovieLance数据框。记住，这需要是一个包含三个特定顺序的列的pandas数据框。用户ID、产品ID和评分。这一点非常重要。第二个参数是reader。现在，作为第一步。
+- en: what we want to do is we want to retain some amount of the dataset for testing，
+    purposes later。 Today， I'm actually not going to show you how to perform the testing。
+    But。 if you download my notebook， you'll actually find some hidden slides to perform
+    that。 Finally。 the moment we've all been waiting for is we initialize a new SVD
+    instance and we fit our， dataset。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们想做的是保留一定数量的数据集用于后续的测试目的。今天，我实际上不会告诉你如何进行测试。但是，如果你下载我的笔记本，你会发现一些隐藏的幻灯片来执行这个操作。最后，我们期待已久的时刻是初始化一个新的SVD实例，并适配我们的数据集。
+- en: And here， as you can see， the SVD accepts one argument in its constructor which。
+    is number of factors。 This is the number of latent features we want to use。 Remember。
+    this is -- here I chose 100 as an arbitrary number。 It just worked well with my
+    examples。 But you can choose whatever number you want， whatever number you feel
+    confident。 With the。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，正如你所看到的，SVD在其构造函数中接受一个参数，即因素的数量。这是我们想要使用的潜在特征的数量。记住，我在这里选择了100作为一个任意的数字。这个数字在我的例子中效果很好。但你可以选择任何你想要的数字，任何你觉得自信的数字。
+- en: dataset that I've been using， with the movie lens dataset， if you just take
+    the good subset。 for example， in this example you will be using， it will take
+    very， very little to train。 It's。 not a computationally -- it's not a very expensive
+    in this example。 So， once we've trained -- once。 we've trained that SVD instance，
+    remember what happens， the SVD creates those two matrices。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我使用的数据集是电影镜头数据集，如果你仅仅使用好的子集。例如，在这个例子中，它将需要很少的时间来训练。这在计算上并不是很昂贵。因此，一旦我们训练完这个SVD实例，记住会发生什么，SVD会创建这两个矩阵。
+- en: the user matrix and the movie matrix。 And every one of these matrices has all
+    these latent。 features。 So， where are these matrices now？ Well， it turns out that
+    there's this attribute。 called QI on top of the model that gets created once the
+    SVD is run。 And as you can see， this。 model has 596 rows and 100 columns。 So，
+    why is that？ Well， there are 596 unique movies。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户矩阵和电影矩阵。这些矩阵都有这些潜在特征。那么，这些矩阵现在在哪里呢？其实，运行SVD后，会在模型顶部生成一个叫做QI的属性。正如你所看到的，这个模型有596行和100列。那么，为什么会这样呢？因为有596部独特的电影。
+- en: in our ratings。 And every movie will now have these 100 latent features。 So，
+    now you may。 be asking -- you may be want to ask， well -- sorry， something weird
+    has happened。 Oh， okay。 So。 we have all these latent features， but how do we map
+    every vector back to its movie？ Well。 it turns out that there's this hidden attribute
+    which is called raw two inner ID。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的评分中。现在每部电影都将拥有这 100 个潜在特征。所以，现在你可能会问——你可能想问，嗯——抱歉，有些奇怪的事情发生了。哦，好吧。所以，我们有所有这些潜在特征，但我们如何将每个向量映射回它的电影？好吧。结果证明有一个隐藏属性，叫做
+    raw to inner ID。
+- en: items which is a dictionary。 And this dictionary effectively maps every item，
+    every movie in。 the way we define it， in this case is a string， to the row index
+    that corresponds to the row。 index of the latent features。 So， let's take an example。
+    Let's say you wanted to identify。 toy story。 The first thing that we do is we
+    index -- we find the row index of toy story。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 项目是一个字典。这个字典有效地将每个项目、每部电影映射到我们定义的方式，在这种情况下是字符串，映射到对应的潜在特征的行索引。所以，让我们举个例子。假设你想识别《玩具总动员》。我们要做的第一件事是索引——找到《玩具总动员》的行索引。
+- en: by using the name。 And then once we have that row index， we can actually find
+    all the latent。 features by indexing the QI matrix at that particular row。 You're
+    going to get the entire， row back。 And that's going to be 100 latent features
+    in this example。 So， now we've learned。 how to train an SVD。 And we've learned
+    how to identify where these latent features actually。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过使用名称。然后一旦我们有了行索引，我们可以通过在该特定行索引 QI 矩阵来找到所有潜在特征。你将得到整个行的返回。在这个例子中将有 100 个潜在特征。所以，现在我们已经学会了如何训练
+    SVD。我们也学会了如何识别这些潜在特征的具体位置。
+- en: are hidden。 So， it's time to show you two great examples。 The first one is predicting。
+    a new rating between any combination of user and movie。 This is very， very simple。
+    As a， refresher。 this is what our movie lens data frame looks like。 Our user IDs
+    are defined， as strings here。 user 4， 3， 7。 And the movie title here also defined
+    as strings。 So， surprise。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是隐藏的。所以，现在是时候给你展示两个很好的例子。第一个是预测用户和电影之间的新评分。这非常简单。作为复习，这是我们的电影镜头数据框的样子。我们的用户
+    ID 在这里定义为字符串：用户 4，3，7。而电影标题同样定义为字符串。所以，惊喜。
+- en: SVD makes it really simple。 There is a predict API。 And this predict API accepts
+    two parameters。 the user and the movie。 And the output here is going to be a prediction
+    object， which will。 give you this -- inside the prediction object， you'll have
+    this EST attribute， which will。 effectively tell you the predicted rating。 In
+    this case， EST is 4， which means pretty， high。 Right？
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: SVD 让事情变得简单。这里有一个预测 API。这个预测 API 接受两个参数：用户和电影。输出将是一个预测对象，里面有一个 EST 属性，它将有效地告诉你预测的评分。在这种情况下，EST
+    是 4，这意味着相当高。对吧？
+- en: So， I mean， everyone loves toy story， but this user in particular。 Now， the。
+    moment we've all been waiting for。 Recommendations by comparing items。 This， in
+    my opinion， is。 the most fun part。 So， remember， as a refresher， two movies， two
+    products are similar when the。 cosine distance is as near to zero as possible。
+    So， what we're going to do here is we're going。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，我的意思是，每个人都喜欢《玩具总动员》，但这个用户尤其如此。现在，我们都期待的时刻到了。通过比较项目来推荐。这在我看来是最有趣的部分。所以，记住，作为复习，当两个电影、两个产品的余弦距离尽可能接近零时，它们是相似的。我们要做的是。
+- en: to fetch vectors for free movies。 The first one is the original Star Wars。 The
+    second one。 is Return of the Jedi。 And the third one is Aladdin。 First， I'm going
+    to measure the distance。 between the Star Wars vector and the Return of the Jedi
+    vector。 As you can see， the distance， is 0。26。 Oh， sorry， 0。29。 And let's say
+    I wanted to perform the same distance between。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来获取免费的电影向量。第一个是原版《星球大战》。第二个是《绝地归来》。第三个是《阿拉丁》。首先，我将测量《星球大战》向量和《绝地归来》向量之间的距离。如你所见，距离是
+    0.26。哦，抱歉，0.29。假设我想在这之间执行相同的距离计算。
+- en: Star Wars and Aladdin。 Well， our distance here is 0。85。 So， effectively， what
+    that means。 is that Star Wars， the original Star Wars， is a lot more similar to
+    Return of the Jedi。 than Star Wars to Aladdin。 And we didn't， I remember， these
+    were generated without any， information。 any metadata of the original features。
+    There was no concept of a director。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 《星球大战》和《阿拉丁》。好吧，我们的距离是 0.85。所以，这有效地意味着原版《星球大战》与《绝地归来》的相似度要远高于《星球大战》与《阿拉丁》的相似度。而且我记得这些是在没有任何信息的情况下生成的，没有原始特征的任何元数据。没有导演的概念。
+- en: There was no concept of a genre。 Nothing。 Just through the ratings。 So， now，
+    what if。 we wanted to find similar movies by performing ranking？ Right？ In fact，
+    what we could do is。 we could build one small function which would accept a movie
+    title and it would generate。 the similarity between that movie title and all the
+    other movies in our system and then。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有类型的概念。什么都没有。仅仅通过评分。那么，现在，如果我们想通过执行排名找到类似的电影呢？对吧？实际上，我们可以构建一个小函数，它接受一个电影标题，并生成该电影标题与我们系统中所有其他电影之间的相似度，然后。
+- en: rank those movies by similarity。 What would this look like？ Let's say I wanted
+    to generate。 similarities for Star Wars。 First result， obviously Star Wars because
+    it's itself。 Empire Strikes。 Back， Return of the Jedi， Raiders of the Lost Ark。
+    These are shockingly， these are shockingly。 accurate。 And remember， there was
+    no information at all about potentially the same director。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 按相似度对电影进行排名。这看起来会是什么样子？假设我想为《星球大战》生成相似度。第一个结果，显然是《星球大战》因为它是自己。《帝国反击战》，《绝地归来》，《夺宝奇兵》。这些令人震惊，这些是令人震惊的准确。请记住，根本没有关于潜在相同导演的信息。
+- en: or the same saga or any of that。 Let's look at Pulp Fiction。 Okay。 Edward， Trainspotting。
+    from Dustholdon。 And so， what effectively this also turns out in a concept of
+    rating。 is maybe you have users that enjoyed Pulp Fiction and if they enjoyed
+    Pulp Fiction， well， why。 don't you see one of these movies？ Because they are shockingly
+    similar and people rate。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或同一系列或任何其他。让我们看看《低俗小说》。好吧。爱德华，《猜火车》。来自 Dustholdon。因此，这实际上也在评分的概念中显示出来，也许你有喜欢《低俗小说》的用户，如果他们喜欢《低俗小说》，那么，为什么不看看这些电影呢？因为它们非常相似，人们评分。
+- en: them in the same way。 So， this is also another way of providing recommendations
+    to your users。 So。 in conclusion， SPD is a really powerful technique to provide
+    those recommendations。 Once you generate these latent features， you can use them
+    in so many ways。 You can even。 use them as features for your classification algorithms
+    after。 And most importantly， if。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以相同的方式推荐给他们。这也是向用户提供推荐的另一种方式。因此，总之，SPD 是提供这些推荐的一种非常强大的技术。一旦你生成这些潜在特征，你可以用多种方式使用它们。你甚至可以将它们用作你分类算法的特征。而且最重要的是，如果。
+- en: you want to get into SVD but you do not have a scientific background， really
+    try some。 of these libraries because Python makes the barrier of entry so low
+    for you and you can。 really learn as an engineer how these things actually work。
+    That's all。 Thank you very。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你想了解 SVD，但没有科学背景，真的可以试试这些库，因为 Python 让你入门的门槛非常低，你可以真正以工程师的身份深入了解这些东西是如何工作的。这就是全部。谢谢你。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_15.png)'
+  id: totrans-80
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_15.png)'
+- en: much。 [ Applause ]， \>\> Hey， if you guys have questions， there's a mic up front。
+    We can probably take three。 \>\> Hi。 I was wondering how resilient SVD is against
+    the curse of dimensionality？
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 很多。[掌声]， >> 嘿，如果你们有问题，前面有一个麦克风。我们可能可以接三个人。 >> 嗨。我在想 SVD 对维度灾难的抵抗力有多强？
+- en: \>\> Yes， that's great。 So， yeah， I did try -- I wanted to cover Pearson in
+    this example。 but I found cosine similarity just a very， very simple and more
+    visual way to actually。 show this difference。 But， yeah， you could use -- and
+    you could also use Pearson。 \>\> So。 I was wondering， if you're launching a new
+    product and you basically have a very。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '>> 是的，这很好。所以，是的，我确实尝试了——我想在这个例子中介绍 Pearson，但我发现余弦相似度只是一种非常简单且更直观的方式来展示这种差异。但是，是的，你也可以使用
+    Pearson。 >> 所以。我在想，如果你要推出一款新产品，而你基本上有一个非常。'
+- en: poorly populated sparse matrix， at what point do you get where the training
+    of the SVD becomes。 actually feasible， right？ If in your example of the three
+    by four， you only have two ratings。 then it's not going to be that helpful。 \>\>
+    Yeah， that's a great question。 So。 SVD is luckily a very parallelizable algorithm。
+    And， in fact。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在人口稀少的稀疏矩阵中，在哪个点上 SVD 的训练变得实际上可行，对吧？如果在你提到的三乘四的例子中，你只有两个评分，那么这就不会那么有帮助。 >> 是的，这是个很好的问题。所以。幸运的是，SVD
+    是一种非常可并行化的算法。实际上。
+- en: there are different implementations of this concept of matrix factorization。
+    One。 of them is called ALS， alternately squares， which has really great parallel
+    implementations。 One of them is actually present in PySpark， and it's also one
+    of them that we actually。 use in production at Coffee Me's Bagel。 And although
+    there -- we have found that SVD is。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 矩阵分解的这个概念有不同的实现。其中一个叫做 ALS，交替最小二乘法，实际上有很好的并行实现。其中一个实际上存在于 PySpark 中，这也是我们在 Coffee
+    Me's Bagel 生产中实际使用的之一。尽管如此，我们发现 SVD 是。
+- en: more accurate under some aspects， ALS is a very parallelizable algorithm that
+    will also。 work at scale。 Did I answer your question？ \>\> So， are you basically
+    saying that if in the three by four you had only two of those。 squares populated，
+    ALS will be a better algorithm than SVD？ \>\> Oh， no， no。 So。 I just said that
+    as your data -- so， sorry， is your question like the。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在某些方面更准确，ALS是一个可以高度并行化的算法，也可以扩展。你问的问题我回答了吗？ \>\> 所以，你基本上是说如果在三乘四的矩阵中，只有两个方块被填充，ALS会比SVD更好？
+    \>\> 哦，不，不。所以。我刚才说的是，随着你的数据——抱歉，你的问题是像这样的。
+- en: more latent features -- the more latent features you generate， the more computation？
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 潜在特征越多——生成的潜在特征越多，计算量就越大？
+- en: \>\> I'm saying if -- like， what happens if you want to train your SVD in that
+    three by。 four and you only have two things that are popularly？ \>\> Oh， yeah，
+    of course。 Good question。 So。 it's still going to work， but the results， are going
+    to be really bad。 So。 what you want to do is you want to measure the reconstruction，
+    of that matrix as your error， right？
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: \>\> 我是在说，如果——如果你想在那个三乘四的矩阵中训练你的SVD，而你只有两个流行的东西会怎样？ \>\> 哦，是的，当然。好问题。所以。它仍然会有效，但结果会很糟糕。所以，你要做的是测量那个矩阵的重建作为你的误差，对吗？
+- en: So， you can use， like， mean squared error or some other。 metric to actually
+    find the error between the reconstruction of the original matrix with。 your --
+    so， the more ratings you have， the more accurate it's going to be。 \>\> Actually。
+    we are running out of time now。 Let's just take the questions outside。 Is that，
+    okay？
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，你可以使用均方误差或其他某种指标来实际找到原始矩阵重建与之之间的误差——所以，评分越多，准确度就会越高。 \>\> 实际上，我们现在时间不多了。我们就把问题放到外面问。这样可以吗？
+- en: Thank you for also coming， and thank you， Daniel。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 感谢你也能来，谢谢你，丹尼尔。
+- en: '![](img/b4a69341a859a00d91aa4b3530a041cf_17.png)'
+  id: totrans-90
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/b4a69341a859a00d91aa4b3530a041cf_17.png)'
+- en: '[ Applause ]， (applause)。'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[掌声]，（applause）。'

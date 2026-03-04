@@ -1,0 +1,839 @@
+- en: P37：Talk - Graham Bleaney_Pradeep Kumar Srinivasan_ Securing Code with the Python
+    Ty - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P37：讨论 - 格雷厄姆·布莱尼_普拉迪普·库马尔·斯里尼瓦桑_用 Python 类型安全代码 - VikingDen7 - BV1f8411Y7cP
+- en: Hello everyone。 We are ready to start our next session。 I'm very happy to announce
+    that。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家好。我们准备开始我们的下一场会议。我很高兴地宣布。
+- en: '![](img/4c672171c7959b7ba3c42981c6d41476_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/4c672171c7959b7ba3c42981c6d41476_1.png)'
+- en: '![](img/4c672171c7959b7ba3c42981c6d41476_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/4c672171c7959b7ba3c42981c6d41476_2.png)'
+- en: we'll have Pradip and Graham talk about how we can use the Python typing system
+    to actually。 improve the security of our application。 Yeah， give a big shout out
+    to him and take it away。 Cool。 Thanks。 So today we're going to talk about securing
+    code with the Python type system。 Very briefly。 my name is Graham Bellini。 I'm
+    a security engineer at meta， the artist formerly， known as Facebook。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将让普拉迪普和格雷厄姆讨论我们如何利用 Python 类型系统来实际提高我们应用程序的安全性。好的，给他一个热烈的欢迎，接下来就交给他。酷。谢谢。今天我们将讨论如何用
+    Python 类型系统确保代码安全。非常简短。我的名字是格雷厄姆·贝利尼。我是 Meta 的安全工程师，之前被称为 Facebook。
+- en: And I focus on all things Python security。 I do security reviews， frameworks。
+    stack analysis and trainings for the Python security world。 I'm Pradip。 I do work
+    at meta。 I work on the Pyre type checker and the piece of security tool which
+    is run every day in。 Instagram on millions of lines of code to catch security
+    vulnerabilities。 The way this presentation。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我专注于所有与 Python 安全相关的内容。我进行安全审查、框架、堆栈分析以及针对 Python 安全世界的培训。我是普拉迪普。我在 Meta 工作。我在
+    Pyre 类型检查器和每天在 Instagram 上运行的安全工具上工作，处理数百万行代码以捕捉安全漏洞。这个演示的方式。
+- en: is going to run， we're going to have a quick introduction and we're going to
+    spend most。 of our time talking about security solutions that types enable。 After
+    that， hopefully you're。 going to be sold on the concept of types being useful
+    for security and you're going to want。 to be adding more or adding types for the
+    first time to your code and we're going to talk about。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当漏洞运行时，我们将进行快速介绍，并且我们将大部分时间用于讨论类型所启用的安全解决方案。之后，希望你会对类型在安全方面的实用性有信心，并希望你开始为你的代码添加更多类型或首次添加类型，我们将讨论。
+- en: how you can do that。 Then we're going to finish off with some conclusions。 So
+    to start off。 the introduction， we're going to talk about the concept of security
+    that we focus on at。 meta called shifting left。 The idea is there's this continuum
+    of bug badness， right？ And the。 rightmost side of the continuum is the worst place
+    to be。 It's when a bug is out there and。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你如何做到这一点。然后我们将以一些结论结束。所以首先，介绍部分，我们将讨论 Meta 关注的安全概念，称为向左移动。这个想法是，有一个漏洞恶性程度的连续体，对吗？而连续体的最右侧是最糟糕的地方。这是一个漏洞存在于外面的情况。
+- en: it's been exploited。 And that's awful， right？ Things have happened， use days
+    and compromise。 whatever。 We don't want that。 So we want to shift left。 And the
+    next best case scenario。 that's still pretty bad is the bug is never found。 So
+    we don't find it but the bad guys。 don't find it either。 Better than that is when
+    it's found externally by someone who。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它被利用了。这真糟糕，对吗？发生了一些事情，导致了数据泄露和危害。我们不想要那样。所以我们想要向左移动。下一个最佳情况，尽管仍然相当糟糕，是漏洞从未被发现。因此我们没有发现它，但坏人也没有找到。比这更好的情况是，当它被外部某人发现时。
+- en: reports it to us。 So through a bug bounty program or something like that。 Even
+    better after that。 is we find it ourselves through some kind of manual review。
+    So we've got a team of security。 engineers， they look at the code， they find the
+    bug and we get it fixed。 Even better than， that。 we're getting into like good
+    scenarios now is when it's found automatically。 So our。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 把它报告给我们。因此，通过漏洞奖励计划或类似的方式。更好的是，在此之后，我们通过某种手动审查自己发现了它。所以我们有一个安全工程师团队，他们查看代码，找到漏洞并修复它。比这更好的是，当它被自动发现时。所以我们的。
+- en: tooling finds the bug and tells us about it and a human doesn't need to be involved
+    to。 find that bug at all。 And then finally our absolute best case scenario is
+    we prevent the， bug。 We just make it impossible for that bug to exist。 And so
+    these sort of middle pieces， here。 The human review aspects were either done by
+    security engineer at the company or。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 工具可以发现漏洞并告诉我们，而人类根本不需要介入来找到这个漏洞。最后，我们的最佳情况是我们预防了这个漏洞。我们只需让这个漏洞根本不可能存在。因此这些中间环节，人工审核的部分要么由公司里的安全工程师完成，要么。
+- en: by like the external bug bounty program。 Those are necessary but they don't
+    scale， right？
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由外部漏洞奖励计划发现。这些是必要的，但它们并不能扩展，对吗？
+- en: You can't run that on billions of lines of code。 And you can't run that on all
+    the changes。 that happen every day too。 So the ideal state for us is always to
+    have all of our bugs either。 being prevented or found automatically。 And now if
+    we shift over and start thinking about。 a sort of a small security team， either
+    your open source project or a company that's not。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你无法在数十亿行代码上运行这个。你也无法在每天发生的所有更改上运行。所以我们理想的状态始终是让所有的错误要么被预防，要么自动发现。现在，如果我们转向思考一个小型安全团队，无论是你的开源项目还是一家不太。
+- en: you know tens of thousands of engineers， the only realistic place to be for
+    security is。 in the prevented and found automatically space。 I don't know how
+    many open source projects。 really have like a team of security engineers looking
+    at their code or a you know a robust。 bug bounty program that kind of thing。 So
+    we want to focus a talk on the prevention and。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你知道成千上万的工程师，安全的唯一现实空间是在自动预防和发现的领域。我不知道有多少开源项目真的有一支安全工程师团队在审查他们的代码，或者有一个健全的漏洞奖励计划之类的东西。所以我们想把讨论集中在预防上。
+- en: the automatic detection side of things。 And the thesis that we're going to present
+    in this。 talk is that type annotations can help continuously prevent and detect
+    vulnerabilities。 So you can。 be in those sort of left two spots where everyone
+    wants to be using type annotations。 And the。 goal is you're going to end up leaving
+    this talk， believing the thesis， and you're going。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自动检测的方面。我们将在本次讨论中提出的论点是，类型注解可以帮助持续预防和检测漏洞。这样你就可以处于大家都想使用类型注解的那种状态。目标是你将离开这次讨论时，相信这个论点，并且你会。
+- en: to want to adopt types in your project if you don't have them or critically
+    you're going。 to want to improve type annotations in your project if you've already
+    got them。 The way。 this talk is going to go is everything's going to be framed
+    around a sample application。 So。 a simple web server that lets you load photos
+    and look at them。 And it's just set up and contrived。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你的项目中没有类型，你会想要在项目中采用类型；或者，如果你已经有了类型，你将想要改进项目中的类型注解。这次讨论将围绕一个示例应用程序展开。所以这是一个简单的网络服务器，让你加载照片并查看它们。它的设置和构造是人为的。
+- en: such that there are some vulnerabilities in it and there are some ways that
+    you can detect。 those vulnerabilities。 The main two end points we're going to
+    talk about are pictures by。 user and it simply takes a request for a user name，
+    you're looking for Susan's photos。 and you get back a list of Susan's photos。
+    The other endpoint we're going to talk about。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样它就有一些漏洞，并且有一些方法可以检测这些漏洞。我们将讨论的两个主要端点是用户的照片请求。它简单地接受一个用户名的请求，你在寻找苏珊的照片，并返回苏珊照片的列表。我们将讨论的另一个端点是。
+- en: is picture by ID。 You're going to give it a picture ID for what you want to
+    load and you。 get that ID back。 So now I'm going to hand it off to talk about
+    the first security solution。 that's enabled by types。 Thanks， Graham。 So welcome
+    to the first talk of the morning。 I hope you all had some caffeine because we're
+    going to see a bunch of Python code on the。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是通过ID获取图片。你将提供一个图片ID以加载你想要的内容，然后你会得到那个ID。所以现在我将把它交给谈论第一个安全解决方案，这是由类型启用的。谢谢，格雷厄姆。欢迎来到今天早上的第一次演讲。希望大家都喝过咖啡，因为我们将看到一堆Python代码。
+- en: slides here。 So let's look at the first scenario here。 Let's say our toy website
+    becomes popular。 and celebrities start using it。 One day we might get a complaint
+    from a celebrity saying。 that their pictures have vanished。 Try to load pictures
+    for that celebrity and get a blank， screen。 Looks like an attacker somehow deleted
+    all their pictures。 How could that have happened？
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里的幻灯片。让我们来看一下第一个场景。假设我们的玩具网站变得流行，名人开始使用它。有一天，我们可能会收到一位名人的投诉，称他们的照片消失了。尝试加载那位名人的照片时，屏幕是空白的。看起来攻击者以某种方式删除了他们的所有照片。这是怎么发生的？
+- en: So a legitimate request for pictures looks like this。 You pass in the user name
+    for the。 celebrity and the code for that is basically something that builds a
+    SQL query which selects。 pictures where the user name matches the given user name
+    and you execute that SQL query and。 return it to the user。 Digging into the logs，
+    we see something like this where the attacker。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以对照片的合法请求看起来像这样。你传入名人的用户名，代码基本上构建一个SQL查询，选择用户名与给定用户名匹配的照片，然后执行该SQL查询并返回给用户。深入查看日志，我们看到类似的情况，攻击者。
+- en: passed in a weird user name and if you insert that into our SQL query， we get
+    something， like this。 In SQL， this is actually two commands。 One to select pictures
+    and the other to delete。 pictures for a celebrity。 So this is known as a SQL injection
+    attack where you're injecting。 the SQL into your existing command and thereby
+    the attacker is running arbitrary SQL commands。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 传入一个奇怪的用户名，如果你将其插入到我们的SQL查询中，我们会得到像这样的结果。在SQL中，这实际上是两个命令。一个是选择图片，另一个是删除某个名人的图片。因此，这被称为SQL注入攻击，你正在将SQL注入到你现有的命令中，从而攻击者可以运行任意的SQL命令。
+- en: or deleting or reading data that they're not supposed to。 In this talk， I'll
+    use SQL injection。 as an example because many of you are probably familiar with
+    it but what we see in this section。 will apply to things like shell command injection
+    and other kinds of vulnerabilities。 So SQL injection， has been known for decades
+    now but it's still widespread。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或删除或读取他们不该读取的数据。在这次讲座中，我将以SQL注入为例，因为你们中的许多人可能对此熟悉，但我们在这一部分看到的将适用于像shell命令注入和其他类型的漏洞。因此，SQL注入已经被人们认识了几十年，但它仍然广泛存在。
+- en: It's so widespread that the docs， explicitly warn you never， never。 never use
+    Python string concatenation or string interpolation， to insert variables into
+    your query。 not even at gunpoint。 So what they say is don't use。 F-strings like
+    this because it mixes the command with the data and allows the attacker to do。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这如此普遍，以至于文档明确警告你绝对不要，绝对不要。绝对不要使用Python字符串连接或字符串插值，将变量插入你的查询中，甚至在枪口下也不行。因此，他们说不要像这样使用F-strings，因为它将命令与数据混合，允许攻击者进行。
+- en: mischief。 What you're supposed to do is to separate the command and the data。
+    So the way。 you do that is that libraries usually have some way for you to substitute
+    parameters into your。 query。 So here it might be a question mark， you pass in
+    the data separately， the library。 guarantees that no matter what data you pass
+    in， the only command that is run is this one。 However。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恶作剧。你应该做的是将命令与数据分开。所以你做到这一点的方法是，库通常有一些方式让你将参数替换到你的查询中。因此，这里可能是一个问号，你单独传入数据，库保证无论你传入什么数据，运行的唯一命令就是这个。然而。
+- en: it's frankly more convenient to use the unsafe F-string approach。 New users
+    may not。 have let the docs， they may not know that a parameter substitution approach
+    exists or that。 F-strings are dangerous here。 So the point is it's not much good
+    having a best practice。 if the path of least effort is to do the unsafe thing。
+    So is there a way library authors can。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 坦白说，使用不安全的F-string方法更方便。新用户可能没有查看文档，他们可能不知道参数替换的方法存在，或者F-strings在这里是危险的。因此，关键是如果最简单的路径是不安全的做法，拥有最佳实践就没多大意义。那么，库的作者有没有办法。
+- en: somehow make the unsafe approach inconvenient？ So one option that you might
+    have heard about。 is a security linter。 You probably heard of tools such as Bandit。
+    So if you have unsafe。 code like this and you run the linter， it will warn you
+    saying that you're running potentially。 unsafe SQL change your code， which is
+    good。 However， in practice we found that these tools。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如何让不安全的方法变得不方便？你可能听说过的一个选项是安全linter。你可能听说过像Bandit这样的工具。如果你有像这样的不安全代码，并且运行linter，它会警告你说你正在运行潜在的不安全SQL，修改你的代码，这是好的。然而，在实践中，我们发现这些工具。
+- en: can be inflexible。 So for example， if you have harmless SQL code like this where
+    there's。 no user input going in， all you've done is just extract the query into
+    a local variable。 the linter will warn you about it， which is frustrating for
+    users because this is， this。 should be fine。 Likewise， you might check a flag
+    and then append say another part of the。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能不够灵活。例如，如果你有像这样的无害SQL代码，其中没有用户输入，所有你所做的只是将查询提取到一个本地变量中，lint工具会对此发出警告，这对用户来说是令人沮丧的，因为这是，这应该是可以的。同样，你可能会检查一个标志，然后附加另一个部分的查询。
+- en: query to the existing query。 Again， there's no user input going in， but the
+    linter will。 warn you about it， which is annoying for users。 So we wanted something
+    that is user friendly。 so that people trust our tools and keep using it。 So it's
+    not like library authors have no。 way to restrict how their API is used。 For example，
+    if you try to execute a query such。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查询到现有查询中。同样，没有用户输入，但linter会警告你，这对用户来说很烦人。所以我们希望有一些用户友好的东西，这样人们就能信任我们的工具并继续使用它。因此，并不是说库的作者没有办法限制他们的API使用。例如，如果你尝试执行一个查询。
+- en: as 42 and you run a type checker， so just Py or MyPy or PyRite， it will warn
+    you right。 away saying that a query must be a string， you can't just pass in an
+    integer。 So you've。 probably heard in the keynote where a type checker is just
+    like a powerful linter that。 runs all over your code and checks that the inputs
+    are always valid here。 How did the type。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为42，你运行类型检查器，例如Py或MyPy或PyRite，它会立即警告你，查询必须是一个字符串，你不能直接传递一个整数。因此，你可能在主题演讲中听说过，类型检查器就像一个强大的代码检查工具，它会遍历你的代码，检查输入是否始终有效。那么类型。
+- en: checker know that an integer was invalid？ How did it know that the string was
+    expected？ Well。 the library authors have specified that in the function signature。
+    So they've said。 query must be of type string。 So this is valid syntax in Python
+    3。 It essentially has。 no runtime effect， but tools such as type checkers can
+    use it to prevent misuse of this， function。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 检查器如何知道整数无效？它是如何知道字符串是预期的？好吧，库作者在函数签名中规定了这一点。他们表示，查询必须是字符串类型。因此，在Python 3中这是有效的语法。它基本上没有运行时效果，但诸如类型检查器之类的工具可以用它来防止滥用此函数。
+- en: So we wondered if we could use this to prevent SQL injection， for example。 So，
+    let's try that。 If we have the safe parameter substitution approach， the query
+    as we can， see is of type string。 So the type checker is okay with it， which is
+    good。 But then if。 we use the unsafe F string approach， the query is still a string
+    and the type checker。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们想知道是否可以用这个来防止SQL注入。例如，让我们试试。如果我们有安全参数替换方法，查询如我们所见是字符串类型。所以类型检查器对此是可以接受的，这很好。但如果我们使用不安全的F字符串方法，查询仍然是一个字符串，类型检查器。
+- en: still accepts it， which is not what we want。 We want to accept the first approach
+    and reject。 this unsafe approach。 So the problem here is that the string type
+    is too permissive。 We。 want something that is more discriminating。 So that end
+    we introduced a literal string。 type and recently added to Python。 You can import
+    it from the typing module if you're， on 3。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仍然接受它，这不是我们想要的。我们希望接受第一种方法并拒绝这种不安全的方法。所以这里的问题是字符串类型太宽松了。我们想要更具区分性的东西。因此，我们引入了一个文本字符串类型，并最近添加到了Python中。如果你在3中，可以从typing模块导入它。
+- en: 11 or from typing extensions if you're on earlier versions。 So what that represents。
+    is any string that is built purely out of literal strings。 So say you have a function。
+    called expect literal string， for example， if I call it with a pure literal string，
+    the。 type checker sees that this is what we expect。 So it's okay with it。 If I
+    call it with something。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 11或如果你在早期版本中使用typing扩展。那么这表示什么呢？它是由纯文本字符串构建的任何字符串。所以假设你有一个函数，称为期望文本字符串。例如，如果我用一个纯文本字符串调用它，类型检查器看到这是我们所期望的。所以它对此是可以接受的。如果我用其他内容调用它。
+- en: say if I try to add two little strings together， again， the type checker sees
+    that this is again。 built only out of literal strings。 If you try to pass it in，
+    it's okay with that， which， is good。 However， if you try to use input， the type
+    checker knows that this returns an， arbitrary string。 And if you try to pass that
+    into the function， it complains。 So you can。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我尝试将两个小字符串相加，类型检查器再次看到这只是由文本字符串构建的。如果你尝试传递它，类型检查器对此是可以接受的，这很好。但是，如果你尝试使用输入，类型检查器知道这返回一个任意字符串。如果你尝试将其传递给函数，它会抱怨。因此你可以。
+- en: probably already imagine how we might use this for SQL injection prevention。
+    So if you could。 change execute to expect a query that is a literal string， now
+    if we use the safe parameter。 approach， we see that the query is a literal string。
+    So the type checker accepted。 If we。 use an F string， for example， now we're inserting
+    name into this query name is an arbitrary string。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能已经想象到了我们如何使用它来防止SQL注入。因此，如果你可以将执行更改为期望一个纯文本字符串的查询，现在如果我们使用安全参数方法，我们看到查询是一个纯文本字符串。所以类型检查器接受了它。如果我们使用F字符串，例如，现在我们将名称插入到这个查询中，名称是一个任意字符串。
+- en: which means the entire query is an arbitrary string。 The type checker knows
+    that and it。 complains right away saying that this query was expected to be literal
+    string。 So thanks。 to the literal string type， we can prevent the SQL injection
+    as you're writing the code。 This extends to the earlier examples we saw as well。
+    So if you simply extract the query。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着整个查询是一个任意字符串。类型检查器知道这一点，并立即抱怨说该查询应该是文本字符串。因此，感谢文本字符串类型，我们可以在编写代码时防止SQL注入。这也扩展到了我们看到的早期示例。因此，如果你简单地提取查询。
+- en: the safe query in a local variable， the type checker sees that it's a type literal
+    string。 it remembers that。 And when you finally pass it into you execute， it's
+    okay with it。 That's。 not a problem at all。 Likewise， if you check a flag and
+    append another little string or use。 string or join where all the inputs are literal
+    strings， the type checker sees that it's a。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在一个局部变量中安全地查询，类型检查器看到这是一个类型字面字符串。它记住了这一点。当你最终将其传递到执行中时，类型检查器对此是可以接受的。这根本没有问题。同样地，如果你检查一个标志并附加另一个小字符串，或者使用字符串或连接所有输入都是字面字符串的情况下，类型检查器看到的就是一个。
+- en: valid input and it's okay with it。 So this is user friendly and people can use
+    it without。 getting in their way。 Overall， the advantage of using type annotations
+    like this is that。 it shifts the burden of security thinking from the library
+    user to the library author。 So we're not depending on the user to have read the
+    docs or kept up on later security。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有效输入并且类型检查器对此是可以接受的。这是用户友好的，人们可以在不妨碍他们的情况下使用它。总体而言，像这样使用类型注解的好处在于，它将安全思考的负担从库用户转移到了库作者身上。因此，我们不再依赖用户阅读文档或跟上最新的安全更新。
+- en: vulnerabilities。 And by shifting control to the library author， we could prevent
+    a variety。 of command injection vulnerabilities across the ecosystem。 We're not
+    limited to the ones。 that the user knows about。 So I mentioned SQL injection as
+    an example， but this applies。 to things like shell command injection where you
+    have a shell command， you're inserting。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 漏洞。通过将控制权转移到库作者，我们可以在生态系统中防止各种命令注入漏洞。我们不再局限于用户知道的漏洞。因此，我提到SQL注入作为一个例子，但这同样适用于诸如shell命令注入这样的情况，你有一个shell命令，你正在插入。
+- en: user input into it， which allows attackers to run arbitrary shell commands or
+    server site。 template injection where you have web application and you're inserting
+    user input unsafely into。 your ginger templates and that leads to arbitrary code
+    execution and so on。 So using the single。 feature， you could prevent this vulnerability
+    across a variety of libraries。 Finally， if。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户输入到其中，这允许攻击者运行任意的shell命令或服务器端模板注入，其中你有一个网络应用程序，并且你将用户输入不安全地插入到你的Ginger模板中，这导致任意代码执行等。因此，通过使用这个单一特性，你可以在各种库中防止这种漏洞。最后，如果。
+- en: you want to detect this continuously， you need to use a type checker just like
+    you use。 other linters such as flake。 So people usually set it up in the GitHub
+    CI so that no one。 can check in bad code。 You can also run it in your terminal
+    and IDE so that you get。 this direction as you're writing code。 And finally， a
+    constraint is that type checking。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想要持续检测这一点，你需要使用类型检查器，就像你使用其他的静态分析工具（如flake）一样。因此，人们通常会在GitHub CI中设置它，以便没有人可以提交坏代码。你也可以在终端和IDE中运行它，这样在编写代码时就能获得这种指导。最后，一个限制是类型检查的有效性。
+- en: is only as useful as a type annotations you add。 If you don't use type annotations，
+    you。 won't be able to get the benefit of this。 Overall， we hope that more library
+    authors。 use literal string type in their sensitive APIs so that programmers like
+    you and me don't。 have to worry as much about command injection。 So we saw one
+    security solution enabled by， types。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仅与您添加的类型注解一样有用。如果你不使用类型注解，你将无法获得这方面的好处。总体而言，我们希望更多的库作者在他们的敏感API中使用字面字符串类型，以便像你我这样的程序员不必过多担心命令注入。因此，我们看到了一个由类型启用的安全解决方案。
+- en: Let's look at another scenario here。 So Graham mentioned another API called
+    picture。 by ID where we expect a picture ID and then return the picture corresponding
+    to that ID。 So the code for that is essentially you do JSON loads on the request
+    that you get。 You。 look up the picture ID field and then you go to the pictures
+    directory and look at the。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看另一个场景。Graham提到另一个API，称为通过ID获取图片，我们期望一个图片ID，然后返回与该ID对应的图片。因此，代码基本上是对你得到的请求进行JSON加载。你查找图片ID字段，然后你去图片目录查看。
+- en: file corresponding to that ID。 So here in this case， it might be picture slash
+    one， you read。 the file and return it to the user。 One day though， again， we might
+    find our server passwords。 being spread all over the internet。 So looking at the
+    logs again， we see a viewer request。 like this and apparently if you just run
+    this， all our server passwords could be written to。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与该ID对应的文件。所以在这个例子中，它可能是 picture slash one，你读取该文件并将其返回给用户。然而，总有一天，我们可能会发现我们的服务器密码在互联网上传播。因此再次查看日志，我们看到一个查看请求，就像这样，显然如果你只运行这个，所有的服务器密码可能都会被写入。
+- en: the user。 They could see any other file on our server essentially。 So how could
+    this work？
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户。他们基本上可以看到我们服务器上的任何其他文件。那么这怎么可能实现呢？
+- en: Once again， we do JSON loads on our request body。 We look up the picture ID
+    field。 Here。 it's not an integer。 It's a string like this。 And now when you try
+    to look up this ID under。 the pictures directory， we essentially return our HCPass
+    file。 So the attacker could traverse。 our file system and look up arbitrary files。
+    So this kind of vulnerability occurs when we。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们再次对请求主体进行 JSON 加载。我们查找图片 ID 字段。这里它不是整数，而是一个字符串。像这样。当你尝试在图片目录下查找这个 ID 时，我们基本上返回了我们的
+    HCPass 文件。因此，攻击者可能遍历我们的文件系统并查找任意文件。这种类型的漏洞发生在我们。
+- en: trust that user input matches our expectations， which means that they could
+    do unsafe things。 So the body is just a string。 We assumed that it would be a
+    JSON object。 It would have a。 picture ID field。 It would have a value as an integer。
+    The user passed in a string and。 then made our code do unsafe things。 So we want
+    to validate that our expectations are， being met。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 信任用户输入符合我们的预期，这意味着他们可能会做一些不安全的事情。因此，主体只是一个字符串。我们假设它是一个 JSON 对象。它应该有一个图片 ID 字段，值应为整数。但用户传入了一个字符串，然后让我们的代码做了不安全的事情。因此，我们想要验证我们的期望是否得到了满足。
+- en: You've probably seen code that does manual JSON validation。 So very briefly。
+    it looks something like you write a function called get picture ID。 You can take
+    a string。 use JSON loads。 Check that it's a dictionary。 If it's not a dictionary，
+    when you raise an， error。 you get the field that you care about。 You check that
+    it's an error。 If it's not an， end。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能见过手动进行 JSON 验证的代码。简而言之，它看起来像你写了一个名为 get picture ID 的函数。你可以接受一个字符串，使用 JSON
+    加载。检查它是否为字典。如果不是字典，你就引发一个错误。你获取你关心的字段。检查它是否是一个错误。如果不是，结束。
+- en: you raise an error and then you finally return it to the user。 So yes， if you
+    write。 all of this boilerplate， you will be able to prevent such an error and
+    raise an error。 when somebody tries to pass in a string。 But as you can imagine，
+    this gets really。 hairy for real-world JSON。 It's inconvenient to have to write
+    all of this boilerplate。 It's。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你引发一个错误，然后最终将其返回给用户。所以，是的，如果你写下所有这些样板代码，你将能够防止这样的错误，并在有人尝试传入字符串时引发错误。但正如你所想，这在现实世界的
+    JSON 中变得非常复杂。写所有这些样板代码确实不方便。
+- en: error prone。 You might miss some cases。 Once again， we see the pattern where
+    the unsafe。 approach of just using JSON loads seem to be much more convenient
+    than the safe approach。 So can type annotations help us prevent vulnerabilities
+    without this inconvenient boilerplate？
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 易出错。你可能会漏掉一些情况。我们再次看到，简单使用 JSON 加载的这种不安全方法似乎比安全的方法方便得多。那么，类型注解能否帮助我们在没有这种麻烦的样板代码的情况下防止漏洞呢？
+- en: Not surprisingly， the answer is yes。 Use runtime type validation。 So there are
+    a few libraries that do this。 I'll， use data class JSON as an example。 So you
+    pip install it， import from that library。 So。 we want a picture request that is
+    guaranteed to have a picture ID field that is an integer。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不出所料，答案是肯定的。使用运行时类型验证。因此，有一些库可以做到这一点。我将使用数据类 JSON 作为示例。你可以通过 pip 安装它，从那个库导入。因此，我们希望有一个保证包含一个整数类型的图片
+    ID 字段的图片请求。
+- en: So we say so in just as many words， we say picture request， picture ID colon
+    int。 Once。 you write this， instead of using JSON loads， you just use picture request
+    schema loads。 Now if someone passes in a legitimate request， we get back an object
+    that is guaranteed to。 have picture ID of type int。 But if someone tries the Etsy
+    password string hack， for example。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们用同样多的字来表达，我们说图片请求，图片 ID 冒号整数。一旦你写下这些，使用图片请求模式加载，而不是 JSON 加载。如果有人传入合法请求，我们会得到一个保证有类型为整数的图片
+    ID 的对象。但如果有人尝试像 Etsy 密码字符串这样的黑客攻击，比如。
+- en: you will get a validation error saying picture ID must be an integer。 So with
+    just a couple。 of lines of code， we're able to prevent this vulnerability and
+    keep things convenient。 This。 scales to arbitrary JSON。 This was just like a small
+    example。 Imagine you had JSON like， this。 which you don't need to go into。 It's
+    just something that has nested objects， lists。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会收到一个验证错误，提示图片 ID 必须是整数。因此，凭借几行代码，我们能够防止这种漏洞，并保持方便。这适用于任意 JSON。这只是一个小例子。想象一下你有这样的
+    JSON，而你不需要深入探讨。它只是包含嵌套对象和列表的东西。
+- en: optional fields， all kinds of crazy things。 The code to validate that is again
+    just a few。 lines of declarative code that states our intention and validates
+    that JSON matches our。 expectations。 So the benefit of using type annotations
+    here is that we could prevent。 vulnerabilities like external， unvalidated external
+    data without much boilerplate。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可选字段，各种疯狂的事情。验证的代码再次只是几行声明性代码，说明我们的意图并验证JSON是否符合我们的期望。在这里使用类型注解的好处是，我们可以防止未经过验证的外部数据造成的漏洞，而不需要太多的样板代码。
+- en: So type annotation， mean safe code doesn't have to be inconvenient。 It doesn't
+    have to be laborious。 And as we， saw， it scales gracefully to complex JSON。 It
+    also serves a documentation for future users， and developers， which means it's
+    good practice。 And in the real world， Instagram extensively， validates the inputs
+    to its Django HTTP APIs at runtime。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以类型注解意味着安全代码不必不方便。它不必繁琐。正如我们所看到的，它优雅地扩展到复杂的JSON。它也为未来的用户和开发者提供了文档，这意味着这是一种良好的实践。在现实世界中，Instagram在运行时广泛验证其Django
+    HTTP API的输入。
+- en: So there are thousands of them。 It validates them and which doesn't just help
+    with correctness。 but also helps prevent security， vulnerabilities like the ones
+    we saw。 So these are two examples of how types can help prevent， security vulnerabilities。
+    Of course。 there are many more can type them out， help there， out。 Or to grab
+    them。 Thanks。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以有成千上万的它们。它对这些数据进行验证，这不仅有助于正确性，还能防止我们看到的安全漏洞。因此，这两个示例展示了类型如何帮助防止安全漏洞。当然，还有许多其他类型可以帮助解决这个问题。谢谢。
+- en: So let's talk about a third kind， a third solution called。 data flow analysis
+    or for some who are more familiar with this from like a security perspective。
+    also a painful analysis。 We're going back to the idea of the photo。 You know，
+    this is。 Susan's photo that we talked about at the beginning。 And the way that
+    the API is to load， this work。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在让我们谈谈第三种解决方案，称为数据流分析，或者对某些从安全角度更熟悉的人来说，这也是一种痛苦的分析。我们回到照片的概念。你知道，这是我们一开始提到的苏珊的照片。API的加载方式就是这样的。
+- en: you know， Susan's friend is going to be sitting there and her phone is going。
+    to send a request to this API。 It's going to， we've left this out before， but
+    it's going。 to include like a user ID or something that identifies her。 And she's
+    going to get back。 up a list of Susan's photos。 But from everything we've described
+    so far， when， you know， some。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你知道，苏珊的朋友将坐在那里，她的手机会向这个API发送请求。我们之前省略了这一点，但它将包含用户ID或其他识别她的内容。她将获得苏珊照片的列表。但根据我们到目前为止描述的内容，当你知道某些事情时。
+- en: stranger on a train that Susan doesn't know， not her friend goes to load data
+    from this， API。 they'll send a different user ID， but everything else will be
+    the same。 And they're。 also going to get the photos back。 And there's kind of
+    something missing from this， right？
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一位在火车上的陌生人，苏珊不认识，不是她的朋友，试图从这个API加载数据。他们会发送不同的用户ID，但其他一切都是一样的。他们也会得到照片。但从这个过程中似乎缺少了一些东西，对吗？
+- en: Like a modern application has to have some concept of privacy built in。 Like
+    not everyone。 wants everyone else to be able to see their photos。 So this is the，
+    you know， the simple。 loading code。 And you can see that there's no privacy check
+    right now。 Like you have。 this query that you've seen before， SQL injection is
+    still there。 And it loads data from the。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现代应用程序必须内置一些隐私概念。并不是每个人都希望其他人能够看到他们的照片。所以这是简单的加载代码。你可以看到，目前没有隐私检查。像你之前看到的查询，SQL注入仍然存在。它从数据库加载数据。
+- en: database and it returns it back to the user。 What we really want is we want
+    some sort of。 like checking function， right？ This is a really contrived one。 But
+    we just want something that。 has this can view operation that says like， hey，
+    can the current user ID view the photos。 that belong to this user， Susan？ So that's
+    what we want our application to have。 And so。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据库并将其返回给用户。我们真正想要的是某种检查功能，对吧？这是一个非常牵强的例子。但我们只想要一些可以执行查看操作的东西，比如，嘿，当前用户ID能否查看属于这个用户苏珊的照片？这就是我们希望我们的应用程序具备的。
+- en: we're just going to talk about typing。 Let's think about types for a second。
+    Like the。 stranger sends this request， Susan's friend also sends this request。
+    They look pretty similar。 Only difference there is these are IDs。 But when we
+    talk about typing， like all the types。 are correct， right？ They're both integer
+    IDs at a type system level。 There's no difference。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将讨论类型。让我们先思考一下类型。比如，陌生人发送了这个请求，苏珊的朋友也发送了这个请求。它们看起来非常相似。唯一的区别在于这些是ID。但是当我们讨论类型时，所有类型都是正确的，对吧？它们在类型系统层面都是整数ID，没有区别。
+- en: between these。 So everything we've talked about so far can't help us solve this
+    problem。 And。 the problem we're really trying to solve is like answering this
+    question。 Are we returning。 data to the user without it passing through some kind
+    of privacy check？ One way we could。 try and solve this is through security reviews。
+    And as we talked about earlier， when we're。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这些之间。因此，到目前为止我们讨论的所有内容无法帮助我们解决这个问题。而我们真正要解决的问题是回答这个问题：我们在不经过某种隐私检查的情况下将数据返回给用户吗？我们可以尝试通过安全审查来解决这个问题。正如我们之前讨论的，当我们。
+- en: talking about shifting left security reviews are good defense in depth。 And
+    it's possible， that。 you know， a security review might be the thing that surfaced
+    this issue in our。 application initially and told us like， hey， you need to add
+    some concept to privacy or， whatever。 But it doesn't scale， right？ And when we're
+    constantly making changes， when。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 讨论向左转移的安全审查是良好的深度防御。而且，有可能你知道，安全审查可能是最初发现我们应用程序中这个问题的原因，并告诉我们，嘿，你需要增加一些隐私相关的概念或其他。但这并不可扩展，对吗？而且当我们不断进行更改时，
+- en: we're wanting to look at the whole app， security reviews just aren't going to
+    scale up here。 So we want to go back to this concept of like continuous prevention
+    and detection。 So to。 answer this question， we want a tool that can basically
+    detect a data flow， right？ We want。 a tool that can say like data went from database
+    all the way back to user and know that like。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望关注整个应用程序，安全审查在这里并无法扩展。所以我们想回到持续预防和检测的概念。因此，为了回答这个问题，我们需要一个工具，它可以基本上检测数据流，对吗？我们想要一个工具，可以追踪数据从数据库一路到用户，并且知道。
+- en: what a privacy check is and know that it didn't go through a privacy check。
+    The way that we。 do data flow analysis at meta is using a tool called PISA。 So
+    this is free and open source。 that's built on top of the pyrotech checker。 And
+    it tracks data as it goes through the， program。 So you start off and you have
+    some kind of data that you know you care about， right？
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 什么是隐私检查，并且要知道它没有经过隐私检查。我们在Meta进行数据流分析的方式是使用一个叫做PISA的工具。因此，这是免费的开源软件，建立在pyrotech检查器之上。它跟踪数据在程序中的流动。所以你开始时会有某种你知道你关心的数据，对吗？
+- en: So some source of data。 And it tracks it when it's assigned to a variable。 It
+    tracks。 it as you perform an operation to add something to it。 It tracks it as
+    you convert it to a。 string as it runs through different function calls and gets
+    returned by that function as it。 goes through an F string。 Pretty much any transformation，
+    any flow of data through the program。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以某些数据源。当它被分配给一个变量时，它会进行跟踪。当你对它执行某个操作以添加内容时，它会进行跟踪。当你将它转换为字符串，经过不同的函数调用并被该函数返回时，它也会进行跟踪。几乎所有的转换，任何数据在程序中的流动。
+- en: we want， to track that data as it goes。 And we want to see where it ends up。
+    Taking this and applying it to， our concept of this application where there's
+    no privacy check right now。 we want the source of， data that we track to be the
+    data from the database。 And the place where we care about it， ending up is where
+    the data is returned to the user。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们想要在数据流动的同时进行跟踪。我们想要看到它最终在哪里。将这个应用到我们目前没有隐私检查的应用概念中。我们希望跟踪的数据源是来自数据库的数据。而我们关心的地方是数据返回给用户的地方。
+- en: And so we apply the data flow analysis tool。 We run。 PISA or there are other
+    tools as well that can do this。 And we kind of want to track that and see it，
+    goes through this list comprehension， gets returned。 And eventually we say， oh，
+    it went where we cared， about like there's a data flow detected。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们应用数据流分析工具。我们运行PISA，或者还有其他可以做到这一点的工具。我们想跟踪这一过程，并查看它通过这个列表推导，最终返回。最后我们会说，哦，它到了我们关心的地方，检测到了数据流。
+- en: And this is an issue。 There's no privacy check in between here。 And also with
+    this tool then when we introduced that privacy check and code we were just talking。
+    about， we want to， we can tell the tool basically this is what a privacy check
+    looks like。 And oh。 well， also we've updated the code here just to call the privacy
+    check version。 And now when we do。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是一个问题。这里没有隐私检查。而且当我们引入那个隐私检查和代码时，我们刚才谈到的，我们想要的就是，我们可以基本上告诉工具这是什么样的隐私检查。哦，另外，我们在这里更新了代码，以调用隐私检查版本。现在当我们执行时。
+- en: the data flow analysis， similar things happening， right。 we're seeing the tape
+    flow or the data flow， going through that list comprehension and being returned
+    here。 But because we've taught the tool， that this function is doing a privacy
+    check。 it's going to stop propagating the data at that point。 And it's not going
+    to detect it。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据流分析，类似的事情正在发生，对吧。我们看到数据流或磁带流，经过这个列表推导，并在这里返回。但是因为我们已经告诉工具，这个函数是在做隐私检查。所以它将在那个点停止传播数据，而不会检测到它。
+- en: I've glossed over a bunch of details in depth here because this is， not a long
+    enough talk。 But you can teach a tool to do this。 And now we have a way to differentiate。
+    between a data flow that's problematic and one that's okay。 Now。 why do type annotations
+    matter here？ Like we've talked about this data flow analysis tool。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我在这里略过了一些细节，因为这不是一个足够长的演讲。但是你可以教一个工具来做这个。现在我们有了一种区分有问题的数据流和正常的数据流的方法。那么，类型注解在这里为什么重要？就像我们谈论过的数据流分析工具。
+- en: Maybe you think that's cool。 It's awesome。 But， like nothing I've told you so
+    far is anything to do with types。 So to kind of demonstrate this， we have， this
+    little piece of code， right？
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许你觉得这很酷。这很棒。但到目前为止，我告诉你的任何事情都与类型无关。所以为了演示这一点，我们有这一小段代码，对吧？
+- en: We're creating our SQL connection and then we're executing a query。 Now。 if
+    we import this Create SQL connection function， it's unambiguous。 Like， you know，
+    I know the。 type checker knows that we're calling the SQL， the Create SQL connection
+    function that we imported。 But what about this execute method？ So you and I probably
+    know there's going to be some SQL。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们创建了 SQL 连接，然后执行一个查询。如果我们导入这个 Create SQL connection 函数，它是明确的。就像，你知道的，类型检查器知道我们在调用我们导入的
+    Create SQL connection 函数。但是这个执行方法呢？所以你和我可能知道会有一些 SQL。
+- en: connection class and it's got an execute method。 But， you know， in our application。
+    there might also be， this task class that also has an execute method。 And the
+    type checker。 you know， from what we've seen， so far or what we're looking at
+    right now。 doesn't know which of those two execute methods would be， called on
+    this connection object。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 连接类有一个执行方法。但是，在我们的应用程序中，可能还有这个任务类，它也有一个执行方法。而类型检查器，从我们目前看到的或正在查看的内容，无法知道这两个执行方法中的哪一个会在这个连接对象上被调用。
+- en: What we really need is we need to know the type of the connection。 object in
+    order to be able to figure out which method is being called。 And so we need to
+    update。 the signature of Create SQL connection。 And then the type checker is able
+    to infer， okay。 the connection， type is a SQL connection。 And unambiguously。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们真正需要的是，我们需要知道连接对象的类型，以便能够搞清楚调用的是哪个方法。所以我们需要更新 Create SQL connection 的签名。然后类型检查器能够推断出，连接的类型是
+    SQL 连接，并且是明确的。
+- en: we're able to say it's the execute method is being called。 So at a really granular
+    level。 this is the kind of thing that makes a type checker and types and Python。
+    really important to enable data flow analysis。 Because then we can actually figure
+    out which。 method calls are going where。 That's at sort of a granular level， but
+    at a sort of a macro level。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们能够说执行方法正在被调用。所以在非常细微的层面上，这就是使类型检查器、类型和 Python 对于启用数据流分析变得非常重要的原因。因为这样我们实际上可以搞清楚哪些方法调用是到哪里去的。这是细节层面的情况，但在宏观层面上。
+- en: like running on a whole application， how important are type annotations？
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在整个应用程序中运行，类型注解有多重要？
+- en: So we took a web server and， it was like fully type-antated and sort of started
+    stripping out type annotations and measured how。 many data flows that we cared
+    about that we could detect。 And the effect was pretty dramatic。 So。 on the right
+    side there， you've got like 100% of the data flows we could find when it was fully。
+    annotated。 And just removing like 20% of annotations sort of randomly across the
+    application made us。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们拿了一个 Web 服务器，它完全有类型注解，然后开始去掉类型注解，测量我们关心的可以检测到的数据流数量。效果非常明显。所以在右侧，当它完全注解时，我们能够找到
+    100% 的数据流。仅仅随机去掉 20% 的注解就让我们。
+- en: able to detect more than 40% fewer data flows。 So at the scale of a whole web
+    application。 like type annotations and having really good type annotations enables
+    complex analysis like。 data flow analysis。 So doing something like this， having
+    a data flow analysis tool gives us this。 continuous detection that we talked about
+    for any kind of vulnerability that can be modeled as a。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 能够检测到超过 40% 更少的数据流。因此，在整个 Web 应用的规模上，类型注解以及良好的类型注解能够启用复杂分析，如数据流分析。所以，做这样的事情，拥有一个数据流分析工具为我们提供了我们之前讨论的持续检测，适用于可以建模为数据流的任何漏洞。
+- en: data flow。 Now， I talked about a sort of privacy issue here。 but so many security
+    vulnerabilities can， be modified， can be modeled as data flows。 You've got service
+    ed requests forgery， XML external entities， leaking secrets。 format string attacks，
+    the list goes on and on and on。 And in fact。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据流。现在，我在这里提到了一些隐私问题，但许多安全漏洞可以被修改，可以被建模为数据流。你有服务请求伪造、XML 外部实体、泄露秘密、格式字符串攻击等等，列表不胜枚举。实际上。
+- en: it can find some of the same vulnerabilities that we also talked about preventing
+    earlier in this talk。 As I mentioned， we do this at meta using PISA， a free and
+    open source tool。 It comes configured。 for all your kind of standard web servers
+    like Flash， Kngango。 as well as a bunch of common libraries， that do SQL， shell
+    commands， that kind of thing。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它能够找到我们在这次演讲中之前提到的某些相同的漏洞。正如我提到的，我们在 Meta 使用 PISA，这是一个免费且开源的工具。它为你所有的标准 Web
+    服务器（如 Flash、Kngango）进行了配置，还有一些常见库，能处理 SQL、Shell 命令等。
+- en: So it's able to kind of detect all your common， vulnerabilities on your common
+    web servers。 It's also available to run in your CI through a GitHub， action。 Now。
+    I don't want to oversell this tool to you without talking about limitations as
+    well。 The first limitation is that data flow analysis tends to be too slow for
+    interactive use cases。
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，它能够检测你常见 Web 服务器上的所有常见漏洞。它也可以通过 GitHub Action 在你的 CI 中运行。现在，我不想在没有谈及局限性的情况下过度推销这个工具。第一个局限性是，数据流分析对于交互式使用案例来说往往太慢。
+- en: So Pradeep was talking about type checking with Pyre， and that can run right
+    in your ID。 You type。 an error and almost instantly you're going to see a little
+    red underline that says this is bad。 With something like PISA， you're going to
+    have to run it in your CI and wait a couple minutes to。 get the results。 Next
+    thing is false positives and false negatives do happen。 We're essentially。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以 Pradeep 讨论了使用 Pyre 进行类型检查，这可以在你的 ID 中直接运行。你输入一个错误，几乎立刻就会看到一个小红下划线提示这不好。像
+    PISA 这样的工具，你必须在 CI 中运行，并等待几分钟才能获得结果。
+- en: trying to simulate an entire program， and it's hard to do that very accurately。
+    So sometimes you're。 going to miss things and sometimes you might find something
+    that's not actually a flow that you。 care about。 So you'll get results from a
+    tool like PISA right off the bat， but to get really good。 results and get really
+    tuned the way you want it， you need to invest a little bit of effort。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尝试模拟整个程序是很难做到非常准确的。因此，有时你会遗漏一些内容，有时你可能会发现一些实际上你并不关心的流程。因此，你将从像 PISA 这样的工具中立刻获得结果，但要获得真正好的结果，并使其调整到你想要的状态，你需要投入一些努力。
+- en: And finally， as the graph on the previous slide showed， type coverage is really
+    important。 So。 adding more type coverage is needed to get really good results。
+    But to sort of hopefully convince you， that this kind of thing can give you really
+    good results。 at meta more than 50% of the vulnerabilities， that our product's
+    QD team finds comes from tools like PISA。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来的问题是误报和漏报确实会发生。正如之前的幻灯片所示，类型覆盖率真的很重要。因此，增加更多的类型覆盖率是为了获得真正好的结果。但希望能说服你，这种方法确实能给你带来很好的结果，在
+    Meta，超过 50% 的漏洞是我们的产品 QD 团队从 PISA 这类工具中发现的。
+- en: So we don't just do it in Python， we do it， in hack and Java and a bunch of
+    other languages。 but this kind of data flow analysis tool finds， more than 50%
+    of the vulnerabilities that we find at meta。 Now， hopefully you're sold on the
+    idea， that there's a lot of different ways that types can add value and make your
+    code more secure。 So let's quickly touch on how you can add types easily。 Instagram
+    provides a really good case study。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不仅在Python中这样做，还在Hack、Java和其他许多语言中这样做。但是这种数据流分析工具发现了我们在Meta发现的超过50%的漏洞。现在，希望你能理解，类型可以以多种不同方式增加价值，使你的代码更安全。让我们快速谈谈如何轻松添加类型。Instagram提供了一个很好的案例研究。
+- en: Instagram went from no type annotations to having millions of lines of code
+    type annotated。 and there's sort of three different ways that they did it。 One
+    was using MonkeyType。 MonkeyType is。 an open source tool that grabs runtime type
+    information and saves that so that you can add。 it as static type information
+    after the fact。 Two is Pyre and Fur。 So once you've already got。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Instagram从没有类型注解到拥有数百万行类型注解的代码，他们是通过三种不同的方式实现的。第一种是使用MonkeyType。MonkeyType是一个开源工具，抓取运行时类型信息并保存，以便你可以在事后将其添加为静态类型信息。第二种是Pyre和Fur。因此一旦你已经有了。
+- en: some types in your code， Pyre and Fur is able to basically propagate that information
+    through your。 code and use its knowledge of what types are already there to figure
+    out what types aren't。 annotated but can be known to be a certain type。 And finally，
+    manual effort is still required。 You know， Instagram didn't get to all that type
+    coverage just by running tooling。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在你的代码中，如果有一些类型，Pyre和Fur能够基本上传播这些信息，通过你的代码，利用它对已存在类型的知识，来确定哪些未注解但可以被确定为特定类型的类型。最后，仍然需要手动努力。你知道，Instagram并不是仅通过运行工具就实现了所有的类型覆盖。
+- en: Sometimes people had to get in there and write some type annotations as well。
+    With that。 we're going to finish off with some conclusions。 As a reminder， the
+    thesis of the talk。 was that type annotations can help continuously detect and
+    prevent security vulnerabilities。 If you had to summarize this whole talk in one
+    slide and give you a real roadmap for what you should。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时人们必须进去写一些类型注解。基于此，我们将以一些结论结束。提醒一下，这次演讲的主题是类型注解可以帮助持续检测和防止安全漏洞。如果你要把整个演讲总结成一张幻灯片，并给你一个真正的路线图，你应该。
+- en: do when you leave this room， this is it。 The first and easiest thing you can
+    do is enforce types at。 your API layer。 So enforce the data coming into your system
+    is what you expect it to be。 Next。 you want to start making sure you have a type
+    checker running locally and in CI。 So。 something like Pyre but there's also lots
+    of other type checkers you can use。 When you've got。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你离开这个房间时，该做什么。这就是答案。你能做的第一件事是强化你的API层的类型。因此，确保进入系统的数据是你所期望的。接下来，你要确保本地和CI中都有一个类型检查器在运行。所以，像Pyre这样的东西，但你也可以使用许多其他的类型检查器。当你有。
+- en: that going， you want to make sure that either you or your libraries are using
+    literal string。 which helps enforce and prevent injection vulnerabilities。 Then
+    you've got your type coverage。 started。 You've got your type checker running。
+    You want to start expanding types as much as you。 can in your code base。 Using
+    Pyre and Fur， MonkeyType， manual work。
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你希望确保你自己或你的库在使用字面字符串，这有助于强制执行和防止注入漏洞。然后你有了你的类型覆盖。你开始运行类型检查器。你希望尽可能多地在代码库中扩展类型。使用Pyre和Fur，MonkeyType，手动工作。
+- en: whatever you've got to do to get， as good type coverage as you can。 And finally。
+    when you've got to the point， you've got some good， type coverage。 start running
+    PISA and start detecting the sort of more complex data flow based vulnerabilities。
+    And all of these add up to great layers of defense and depth will help make your
+    application。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不管你需要做什么，尽量获得尽可能好的类型覆盖。最后，当你达到了良好的类型覆盖时，开始运行PISA并开始检测更复杂的数据流基础漏洞。所有这些累积起来形成了很好的防御层，深度将帮助提升你的应用程序。
+- en: a lot more secure。 Thank you to so many people who helped make this talk possible
+    and who helped。 get PEP 675 landed as well。 Here are some resources and that's
+    the end of our talk。 We'll be hanging， out in the hallway afterwards for anyone
+    who wants to ask any questions。 [Applause]。
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更加安全。感谢许多帮助让这次演讲成为可能的人，以及帮助实现PEP 675的人。这是一些资源，这次演讲就到此结束。我们之后会在走廊里等，欢迎任何想问问题的人。[掌声]。
+- en: '![](img/4c672171c7959b7ba3c42981c6d41476_4.png)'
+  id: totrans-94
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/4c672171c7959b7ba3c42981c6d41476_4.png)'
+- en: '![](img/4c672171c7959b7ba3c42981c6d41476_5.png)'
+  id: totrans-95
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/4c672171c7959b7ba3c42981c6d41476_5.png)'

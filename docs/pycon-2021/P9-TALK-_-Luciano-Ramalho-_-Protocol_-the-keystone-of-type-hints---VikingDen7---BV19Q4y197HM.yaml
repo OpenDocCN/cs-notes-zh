@@ -1,0 +1,604 @@
+- en: P9：TALK _ Luciano Ramalho _ Protocol_ the keystone of type hints - VikingDen7
+    - BV19Q4y197HM
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P9：演讲 _ 卢西亚诺·哈马里奥 _ 协议_ 类型提示的基石 - VikingDen7 - BV19Q4y197HM
+- en: Hello everyone， my name is Luciano Hamalio and I am here to present a typing
+    protocol。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大家好，我的名字是卢西亚诺·哈马里奥，我在这里介绍一个类型协议。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_1.png)'
+- en: the keystone of Python's static type system。 First of all， I want to thank you
+    for watching this。 I want to thank the Python organizers for organizing this great
+    conference and I also。 want to thank TalkWorks， my employer， who is sponsoring
+    me as I prepare and deliver this， talk。 So you may know me as the author of Flint
+    Python。 The first edition was published in nine languages。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python 静态类型系统的基石。首先，我要感谢你们观看这个。我想感谢 Python 组织者举办这次精彩的会议，我还要感谢 TalkWorks，我的雇主，在我准备和发表这个演讲时赞助我。所以你可能知道我作为《Flint
+    Python》的作者。第一版已出版九种语言。
+- en: I am super happy about that and I am finishing， the second edition。 It has more
+    than 100 pages about type hints， including lots of annotated examples。 About two
+    thirds of the examples in the book are annotated。 There is New York's A Sync Await
+    content。 The draft is already available in the O'Reilly Learning platform and
+    the print book will。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我对此非常开心，我正在完成第二版。它有超过 100 页关于类型提示的内容，包括大量带注释的示例。书中大约三分之二的示例都有注释。还有纽约的异步等待内容。草稿已经在
+    O'Reilly Learning 平台上可用，印刷书籍也将。
+- en: be available at the end of the year。 So in this talk we are going to be learning
+    about protocols and also understanding Type。 Shed。 So Type Shed is a repository
+    in the Python organization on GitHub that has stub files。 Stub files are files
+    that have only type hints for functions that are defined elsewhere。 In the case
+    of Type Shed， the main mission of Type Shed is to maintain the annotations。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将在年底时可用。因此，在这个演讲中，我们将学习协议，并理解 Type Shed。因此，Type Shed 是 GitHub 上 Python 组织的一个存储库，里面有存根文件。存根文件是仅包含在其他地方定义的函数的类型提示的文件。在
+    Type Shed 的案例中，Type Shed 的主要任务是维护注释。
+- en: and the type hints for the functions in the Python standard library。 And as
+    I was studying this subject to write chapter eight of my book， I found this bug。
+    which then I helped fix and while doing it I learned a lot about protocols and
+    that's。 what I'm going to share with you。 But first let's talk about some principles。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以及 Python 标准库中函数的类型提示。当我研究这个主题以撰写我书的第八章时，我发现了这个错误。我随后帮助修复了它，并在这个过程中学到了很多关于协议的知识，这就是我将要与大家分享的内容。但首先，让我们谈谈一些原则。
+- en: I guess you should all be familiar with the concepts of static typing and dynamic
+    typing。 And this actually has to do with when type checks happen。 Static typing
+    is designed to allow static checking。 That is a tool like a front end of a compiler
+    or a linter or a standalone type checker like。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想你们都应该熟悉静态类型和动态类型的概念。这实际上与类型检查发生的时间有关。静态类型旨在允许静态检查。也就是说，像编译器的前端、代码检查器或独立类型检查器等工具。
+- en: mypike and look at the source code and find type errors without running the
+    program。 So that's what static typing allows。 Dynamic typing on the other hand
+    is when the type checking only happens at runtime。 So it has the downside that
+    you want to catch bugs later but it also provides a lot of flexibility。 and it
+    also makes languages easier to learn。 Another dimension is that issue of duck
+    typing。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: mypike 并查看源代码，找到类型错误而不运行程序。这就是静态类型允许的。另一方面，动态类型是在运行时才进行类型检查。因此，它有一个缺点，就是你希望在后期捕获错误，但它也提供了很多灵活性，同时也使语言更易于学习。另一个维度是鸭子类型检查的问题。
+- en: So Wikipedia mentions this message by Alex Martelli in the Python mailing list
+    in which。 he wrote in the year 2000 that you shouldn't check whether an object
+    is a duck but whether。 it quacks like a duck or walks like a duck depending on
+    what subset of duck like behavior， you need。 The subset here is key。 When you're
+    doing duck typing you're only interested in that particular method or those。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以维基百科提到亚历克斯·马泰利在 Python 邮件列表中发布的这条消息，他在 2000 年写道，你不应该检查一个对象是否是鸭子，而应该检查它是否像鸭子一样叫或走，具体取决于你需要的鸭子行为的哪个子集。这里的子集是关键。当你进行鸭子类型检查时，你只对那个特定的方法或那些感兴趣。
+- en: particular few methods that you need to operate on the object right now。 You
+    don't care about the whole interface of the object only about the behaviors that
+    are。 relevant to a particular piece of code。 So that's the idea of duck typing。
+    So this introduces another dimension to our graph which the vertical dimension
+    the top。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你现在需要在对象上操作的特定几个方法。你不关心对象的整个接口，只关心与特定代码片段相关的行为。这就是鸭子类型的理念。因此，这为我们的图引入了另一个维度，即垂直维度的顶部。
+- en: is structural types and the bottom is nominal type。 So structural types means
+    the types are defined by specific methods that the objects provide。 No it doesn't
+    matter what the class of the object is named， what is the class hierarchy。 Nothing
+    of that is relevant。 What's relevant is the methods that the object provides。
+    Only that。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 结构类型在底部是名义类型。因此，结构类型意味着这些类型是由对象提供的特定方法定义的。对象的类名、类层次结构并不重要。重要的是对象提供的方法。仅此而已。
+- en: And the opposite is nominal types which is when the type checker is looking
+    at declared， types。 types that are explicitly declared or sometimes inferred but
+    anyway there are。 appear in the source code explicitly somewhere。 If this was
+    a map we could call the northeast。 Python land and the southwest is Java land。
+    However there is also the southeast which is goose typing a term also invented
+    by Alex。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相反的是名义类型，也就是当类型检查器查看声明的类型时。那些显式声明的类型，或者有时推断出的类型，不管怎样，它们显现在源代码的某个地方。如果把它看作一张地图，我们可以称东北部为
+    Python 地带，西南部为 Java 地带。然而还有东南部，那是鹅类型，这个术语也是亚历克斯发明的。
+- en: Martelli and this is supported by abstract based classes in Python。 I don't
+    have time to talk about this。 The focus of this talk is static duck typing which
+    is when you have static checking of。 structural types。 When I didn't make up this
+    name the term is actually used in PEP 544 the PEP that introduced。 the protocol
+    feature in Python and is also used in the go community to talk about their。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Martelli 以及这点在 Python 的抽象基类中得到了支持。我没有时间讨论这个。此次演讲的重点是静态鸭子类型，也就是当你进行结构类型的静态检查时。当我创造这个名字时，这个术语实际上在
+    PEP 544 中被使用，这个 PEP 引入了 Python 的协议特性，也在 Go 社区中用来谈论他们的内容。
+- en: type system with interfaces which is very similar to what we now have in Python
+    with， protocols。 So Python has a very powerful function called max a built in
+    function probably everybody。 knows about it。 It accepts a single argument that
+    can be a iterable and then it will return the largest。 member of the iterable
+    or you can pass it several arguments and then it will give you。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类型系统与接口非常相似，这与我们现在在 Python 中所拥有的协议非常相似。因此，Python 有一个非常强大的函数叫做 max，这个内置函数大概每个人都知道。它接受一个可以是可迭代的单个参数，然后返回可迭代对象中最大的成员，或者你可以传递多个参数，然后它会给你。
+- en: the largest of those arguments。 There are other optional arguments that you
+    can pass but we don't have time to talk about。 that。 Let's consider a simplified
+    max or a simplified usage of max where I only pass two arguments。 But even this
+    is difficult to annotate with type hints because you have floats as the， arguments。
+    The second example is integers。 The third example is two fractions。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些参数中最大的一个。有其他可选参数可以传递，但我们没有时间讨论这个。让我们考虑一个简化的 max 函数，或者说 max 的简化用法，我只传递两个参数。但即便如此，用类型提示进行注解也很困难，因为你传入的是浮点数作为参数。第二个例子是整数。第三个例子是两个分数。
+- en: The fourth example is two strings and then lists and then sets and each time
+    the result。 has to do with how those objects of that type compare。 The issue that
+    started this story for me was that somebody reported this issue on my pi。 and
+    the issue was that this person declared a variable top in the middle of his code
+    there。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第四个例子是两个字符串，然后是列表，再然后是集合，每次结果都与这些类型的对象如何比较有关。这个故事的开端是，有人报告了我在我的 pi 上的这个问题。问题是这个人声明了一个变量
+    top 在他代码的中间部分。
+- en: The variable top of type optional int which means that it could be either an
+    int or none。 and then he assigned none to it and then he called print。 Print max
+    5 top will fail because Python cannot compare 5 with none。 So that fails at runtime。
+    But the issue was filed on my pi because the poster wanted would like for my pi
+    to warn。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 变量 top 的类型是 optional int，这意味着它可以是 int 或者 none。然后他将 none 赋值给它，接着他调用 print。打印
+    max 5 top 会失败，因为 Python 不能比较 5 和 none。因此，这在运行时失败了。但这个问题被提交到我的 pi，因为发布者希望我的 pi
+    能给出警告。
+- en: about a problem like that。 Then Jean-Yeusztre who is one of the biggest contributors
+    to Type Shed commented that this。 was not really a my pi problem but more a type
+    type shed problem because on Type Shed。 the annotation for max was too open at
+    the time。 It basically accepted arguments of type any which could be anything。
+    So I'm going to develop a solution to this problem。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于这样的问题。然后，Type Shed的最大贡献者之一Jean-Yeusztre评论说，这其实并不是一个my pi的问题，而是一个Type Shed的问题，因为在Type
+    Shed上，max的注释在当时过于宽泛。它基本上接受任何类型的参数，也就是任何东西。因此，我将开发一个解决这个问题的方案。
+- en: The solution that I eventually presented and I'm going to show you but we're
+    going to start， simple。 Let's talk about numbers first。 And talk about numbers。
+    I have these three examples。 Flots。 integers or fractions。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我最终提出的解决方案，我会展示给你，但我们要从简单的开始。先说数字。谈谈数字。我有这三个例子。浮点数、整数或分数。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_3.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_3.png)'
+- en: So how do we do with floats？
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那我们如何处理浮点数呢？
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_5.png)'
+  id: totrans-22
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_5.png)'
+- en: This is the simplest thing that we could do is to add annotations to max。 Here's
+    the thing。 max in the sender library is written in C。 I wrote a version in Python。
+    This is just the first iteration。 Then it has more code to deal with all the cases
+    that max handles。 And I did that because it was easier for me to test and see
+    the corner cases of the different。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以做的最简单的事情就是为max添加注释。事情是这样的。标准库中的max是用C写的。我写了一个Python版本。这只是第一轮。然后它有更多的代码来处理max所处理的所有情况。我这样做是因为我更容易测试并看到不同的边缘案例。
+- en: types of arguments。 But anyway， if I wanted to write a max function I would
+    annotate that only with floats I would。 annotate it like that。 A is of type floats，
+    B is of type floats and the return type is float。 And I wrote tests and the tests
+    pass but there is a painting issue。 One is example here when I analyze it with
+    my pi。 Here's the thing。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 参数的类型。不过，如果我想写一个max函数，我只会用浮点数来注释它。我会这样注释。A是浮点类型，B是浮点类型，返回类型是float。我写了测试，测试通过了，但存在一个绘图问题。这里有一个例子，当我用my
+    pi分析它时。事情就是这样。
+- en: My pi doesn't find problems with my implementations of my max。 See the first
+    line of the console at the bottom。 I ran my pi on my max。py which is the package
+    with my max function and also my max test。 But my pi didn't find any problems。
+    But it did find problems with this painting。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: My pi并没有发现我max的实现有问题。看看控制台底部的第一行。我在my max.py上运行了my pi，这是包含我max函数和我的max测试的包。但my
+    pi没有发现任何问题。但它确实发现了这个绘图的问题。
+- en: py because the problem here， you can see it's， complaining about line 22。 On
+    line 22 you see over there I have result equals， it's where I call result equals
+    my。 max a comma b。 And the problem is a and b are fractions。 And what my pi is
+    saying is that a fraction is not compatible with float which is the type。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: py，因为这里的问题，你可以看到它在抱怨第22行。在第22行，你看到那儿我有result equals，这是我调用result equals my max
+    a comma b的地方。问题是a和b是分数。而my pi所说的是分数与float（即类型）不兼容。
+- en: that I declared in the function。 So that's a problem。 So what is a possible
+    solution？
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我在函数中声明的内容。所以这是一个问题。那么，有什么可能的解决方案呢？
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_7.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_7.png)'
+- en: So Python has a number ABC in the standard library since Python 3。 This is actually
+    a misstep。 I included a few missteps here because I think they help you。 I hope
+    they will help you understand a little bit better how the Python static type system。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自Python 3以来，Python在标准库中有一个数字ABC。这实际上是一个失误。我在这里列出了一些失误，因为我认为它们对你有帮助。我希望它们能帮助你更好地理解Python静态类型系统。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_9.png)'
+  id: totrans-30
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_9.png)'
+- en: works。 So the implementation of this failed attempt is to use the number ABC
+    from the numbers package。 in the standard library to annotate the parameters a，
+    b and the return type。 And if I do that my pi immediately complains that I cannot
+    use online 5。 That's where I do the comparison between a and b。 I cannot use that
+    operand with number。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样。这个失败尝试的实现是使用标准库中的数字包里的数字ABC来注释参数a、b和返回类型。如果我这样做，我的my pi立刻就会抱怨我不能使用online
+    5。那是我比较a和b的地方。我无法使用那个运算符与数字。
+- en: And why not？ Because if you go look at the implementation or the declaration
+    of the number ABC in the。 numbers package it has no methods。 So this is only useful
+    for one time type checking using its instance or its subclass。 for objects in
+    the standard library and for classes in the standard library that are。 registered
+    as virtual subclasses of number。 But it doesn't work with static typing because
+    static typing needs to know what operations。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么不呢？因为如果你去查看numbers包中number ABC的实现或声明，它没有方法。所以这只对一次类型检查有用，使用它的实例或子类。对于标准库中的对象和注册为number虚拟子类的标准库中的类来说是如此。但它在静态类型中不起作用，因为静态类型需要知道什么操作。
+- en: I can do with the object given its type。 If I give。 if I tell my pi that an
+    object is of type number it can do anything with it。 This is a deep issue and
+    if you want to understand the questions around it take a look at this。 issue on
+    my pi with it。 So it's still open four years later。 Int is not a number。 Okay？
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我可以根据给定类型的对象进行操作。如果我告诉我的pi一个对象是number类型，它可以对其进行任何操作。这是一个深刻的问题，如果你想了解相关问题，可以查看这个关于我的pi的问题。所以四年后它仍然开放。Int不是一个number。好的？
+- en: Issue 3186 on my pi is a good read to understand the problems around using the
+    numbers ABCs。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我的pi上，问题3186是理解使用数字ABCs相关问题的好读物。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_11.png)'
+  id: totrans-35
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_11.png)'
+- en: A second attempt that also will not work would be to use an numeric union。 Let's
+    see how that would be and why it doesn't work。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二个尝试也不会有效的是使用numeric联合体。让我们看看那会是什么样子以及为什么它不起作用。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_13.png)'
+  id: totrans-37
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_13.png)'
+- en: So the idea is in this case on line 5 I declare my own type。 This is a type
+    alias。 I am telling my pi that numeric is a name I'm going to give to the union
+    of float decimal。 infraction。 Right？ So anything that's either a float decimal
+    or a fraction will be considered numeric。 So on line 8 I use the numeric type
+    alias that I just created and this satisfies my。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这个想法是在第5行我声明了自己的类型。这是一个类型别名。我告诉我的pi，numeric是我将给float decimal和infraction联合体的名称，对吧？所以任何float
+    decimal或fraction都将被视为numeric。所以在第8行我使用了刚创建的numeric类型别名，这满足了我的要求。
+- en: pi you see because all three of those types implement the greater than or equal
+    to operator。 So that's fine。 Now the problem is that the test doesn't work as
+    expected。 In this example on line 19 I am passing A and B which are both floats
+    and I know that。 the result will be a float because the result will be one of
+    them。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你看到的pi因为所有这三种类型都实现了大于或等于操作符，所以没问题。现在问题是测试没有按预期工作。在这个例子中，在第19行我传递A和B，它们都是float，我知道结果将是float，因为结果将是它们之一。
+- en: So that's how I declare it but then my pi tells me that the union of float decimal
+    infraction。 is not compatible with floats。 So the problem is that the return type
+    is too broad to be useful and additionally if for。 instance in this case I am
+    passing two fractions and so I know that the result will be a fraction。 Right？
+    However if I try on line 25 to access the numerator my pi complains that some
+    of those types in。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这就是我如何声明它，但我的pi告诉我float decimal infraction的联合体与float不兼容。所以问题在于返回类型太宽泛，不够实用，并且如果例如在这种情况下我传递两个分数，因此我知道结果将是一个分数，对吧？然而，如果我在第25行尝试访问numerator，我的pi抱怨某些类型存在问题。
+- en: the union don't implement numerator so it would be incorrect to access numerator
+    or， denominator。 Right？ And then the second part here is if type checking。 Type
+    checking is a constant that is only true when your program is not running。 It's
+    funny it's something that was invented to support the static type checker so the。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 联合体并未实现numerator，因此访问numerator或denominator是错误的，对吧？然后这里的第二部分是类型检查。类型检查是一个常量，只有在程序不运行时才为真。有趣的是，这是为了支持静态类型检查器而发明的。
+- en: static type checker considered this as true when it's reading your program and
+    then it。 will evaluate what's inside。 And inside is this review type function
+    which is also something magical of static type checking。 that is a function that
+    my pi knows about。 You don't import it anywhere and my pi you use it for debugging。
+    Basically what's doing there it's showing that the types of ABN results are see
+    on the。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 静态类型检查器在读取程序时将其视为真，然后它将评估内部内容。而内部是这个review类型函数，这也是静态类型检查的神奇之处。这个函数是我的pi所知道的。你在任何地方都不会导入它，而我的pi你用它进行调试。基本上它的作用是显示ABN结果的类型。
+- en: console down。 The notes in purple the first one is a fraction the second one
+    is a fraction the third design。 union。 Right？ So it tells you what the types are
+    according to the analysis that my pi did of your code。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 控制台向下。紫色的注释，第一个是一个分数，第二个是一个分数，第三个设计。联合，对吧？所以它告诉你，根据我的pi对你的代码的分析，类型是什么。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_15.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_15.png)'
+- en: Okay？ So a good solution actually to the numeric max would be using a restricted
+    type bar。 So how does that work？
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吗？因此，对数值max的一个好解决方案实际上是使用受限类型条。那么它是如何工作的？
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_17.png)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_17.png)'
+- en: So instead of a union I declare a type bar。 So type bar is a special class that
+    you import from typing and then you declare type bar and。 then the name of the
+    type bar which is in this case number T is a string and then afterwards。 you can
+    list different arguments that are the types that will be acceptable for this type，
+    bar。 Okay？ So what happens in this case is when I declare the arguments of max
+    of as being of type number。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我不是声明一个联合，而是声明一个类型条。因此，类型条是你从typing中导入的特殊类，然后你声明类型条，然后类型条的名称，在这种情况下是number
+    T，这是一个字符串，然后之后。你可以列出不同的参数，即将接受该类型条的类型。好的？那么在这种情况下，当我声明max的参数为类型number T时。
+- en: T this is a convention to use the T at the end for type bars。 So when I say
+    that ABN the result are number T and my pi is analyzing a specific call of， max。
+    Let's say I'm calling max with the decimal。 Then with the first argument is a
+    decimal。 Then at that time my pi will decide that， okay， a decimal is acceptable
+    because it's one。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: T是一个约定，使用T作为类型条的结尾。因此，当我说ABN结果是number T，而我的pi正在分析max的一个特定调用时。假设我用小数调用max。那么第一个参数是小数。那么那时我的pi会决定，好的，小数是可接受的，因为它是一个。
+- en: of the types listed in the type bar definition and from now on it's going to
+    consider the。 other occurrences of the same variable in this call。 The same type
+    variable in this call will be considered the same as the first one。 So B will
+    have to be a decimal and the result will be assumed to be a decimal as well。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 列在类型条定义中的类型，从现在起，它将考虑该调用中相同变量的其他出现。同一类型变量在此调用中将被视为与第一个相同。因此B必须是小数，结果也将被假定为小数。
+- en: So this works， the tests work， actually the tests have always worked。 The problem
+    with this implementation has never been the runtime behavior but more the problem。
+    of type checking。 Now my pi satisfies and shows that it correctly infers the types
+    of the three variables。 the， ABN the result， okay。 So how about deck typing？ All
+    right。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这有效，测试也有效，实际上测试一直都有效。这个实现的问题从来不是运行时行为，而是类型检查的问题。现在我的pi满足并显示它正确推断出三个变量的类型：ABN和结果，好的。那么类型推导如何呢？好的。
+- en: so what we did now was using a type bar we were able to solve the problem。 of
+    max with different numeric types， at least those three numeric types。 There are
+    more numeric types than that， for instance， NumPy has lots of other numeric。 types
+    but in addition even in Python， extended library we often use max with strings
+    and。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们现在所做的是使用类型条解决了最大值与不同数值类型的问题，至少是这三种数值类型。还有更多数值类型，例如，NumPy有很多其他数值类型，但即使在Python扩展库中，我们也经常使用max与字符串和。
+- en: with lists and sets and so how do we do that？ We need to use a protocol but
+    my first attempt to use a protocol is also a misstep。 So the first attempt is
+    this， but this is useful at least to show you the syntax of。 creating a protocol。
+    So on line four there you see that I import the class， I mean， I import。 when
+    I import the， class protocol from typing and on line four I create a subclass
+    of that and this subclasses。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用列表和集合，我们该如何做到？我们需要使用协议，但我第一次尝试使用协议也是一个失误。因此，第一次尝试是这样的，但这至少有助于向你展示创建协议的语法。在第四行，你看到我导入了类，我的意思是，我导入了。当我从typing中导入类协议时，在第四行我创建了它的子类，这个子类。
+- en: I write one or more methods。 Protocols usually should have few methods and often
+    they have only one method。 In this case is the Dundee LT method which means the
+    last then and there's this convention。 when a protocol implements or defines only
+    one method that you call it supports that method。 supports that method name。 So
+    what I'm saying here is the protocol supports less than is a type that is valid
+    for every。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我写一个或多个方法。协议通常应该有少量方法，通常只有一个方法。在这种情况下是Dundee LT方法，意味着最后一个，然后有这个约定。当一个协议只实现或定义一个方法时，你称其支持该方法。支持该方法名称。所以我在这里所说的是协议支持少于是有效类型的每个。
+- en: object that supports that implements the Dundee LT method with that signature
+    returning a Boolean。 Okay？ And so this is how you declare protocol。 You see those
+    ellipses。 the three dots after the bool， that's where the body of the method。
+    would be but you don't specify the method。 This is kind of like an abstract method，
+    right？
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现了 Dundee LT 方法并返回布尔值的对象。好的？这就是你如何声明协议。你看到那些省略号，bool 后面的三个点，那是方法体的位置，但你不指定方法。这有点像一个抽象方法，对吧？
+- en: So instead of using pass the convention in the static type system is to use
+    three dots。 which is the ellipses construct of Python。 So that's syntactically
+    valid and it means whatever。 It doesn't matter what the body is， the only thing
+    that matters is the signature of the， method。 And so now I declare the function
+    like that。 So A is anything that supports less than。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以不使用 pass，静态类型系统中的约定是使用三个点，这是 Python 的省略号构造。所以这是语法上有效的，它意味着任何事情。方法的主体并不重要，唯一重要的是方法的签名。现在我这样声明函数。所以
+    A 是支持小于的任何东西。
+- en: B is anything that supports less than and the， result will be something that
+    supports less than as well。 I have to do a change in the body of the function
+    because before I was using if A greater than。 and greater than or equal to B but
+    what I just said was that supports less than means。 to implement the less than
+    operator。 And why did I pick that one？
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: B 是支持小于的任何东西，结果也将是支持小于的东西。我必须在函数体中做一个改变，因为之前我使用的是 if A 大于和大于等于 B，但我刚才所说的支持小于意味着实现小于操作符。为什么我选择那个呢？
+- en: It was because I did some research and I discovered that in the Python standard
+    library everything。 that does sorting or ordering or comparison of greater than
+    less than or so on， they actually。 use less than as the core methods。 The others
+    are variations of that。 So that's the one that matters。 But anyway， since I declare
+    support length to implement only that。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是因为我做了一些研究，发现 Python 标准库中所有进行排序、排序或大于、小于等比较的东西，实际上都使用小于作为核心方法。其他的都是这种方法的变种。所以这就是重要的。但无论如何，既然我声明支持长度只实现那个。
+- en: I have to only use， that inside the body of the max function， line nine。 And
+    so now my pi。 the test pass and my pi also likes my tests and my package。 No problem。
+    The problem is when I use it。 So the problem when I use it and here the errors
+    are about two different tests but if。 you look at the code on the top left here
+    on the top right， what we have is online 38。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我必须只在 max 函数的体内使用它，位于第九行。所以现在我的 pi。测试通过了，我的 pi 也喜欢我的测试和我的包。没问题。问题出在我使用它的时候。这里的错误是关于两个不同测试的，但如果你看看左上角和右上角的代码，我们在第
+    38 行。
+- en: I try to take the result and call upper on it。 I know it will have upper because
+    I pass two strings so the result will be one of those。 strings。 But since I declared
+    the result type as support less than， my pi doesn't accept that I use。 the upper
+    method on the result。 Okay， so that's the problem。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我尝试获取结果并对其调用 upper。我知道它会有 upper，因为我传递了两个字符串，因此结果将是其中一个字符串。但由于我将结果类型声明为支持小于，我的
+    pi 不接受我在结果上使用 upper 方法。好的，这就是问题所在。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_19.png)'
+  id: totrans-60
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_19.png)'
+- en: And now finally we come to the solution。 So the solution is to use a protocol
+    plus a bound type var。 And that's why we had the detour to talk about type var
+    before and we also had the detour。 to talk about protocol just now because the
+    combination of those two things brings us the， solution。 The protocol definition
+    is like before， the type var here is new。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们终于到了解决方案。所以解决方案是使用协议加上边界类型变量。这就是为什么我们之前要绕道讨论类型变量，并且刚刚还要讨论协议，因为这两者的组合为我们带来了解决方案。协议定义像之前一样，这里的类型变量是新的。
+- en: The type var here uses bound equals support less than。 So that's different from
+    the other one。 The other one was the type var had several arguments。 It was called
+    the restricted type var。 So it was restricted to be one of those types。 In this
+    case， this is called a bounded type var。 A bounded type var can have any type
+    that is that type or a subtype of that。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里的类型变量使用边界等于支持小于。所以这与另一个不同。另一个类型变量有多个参数。它被称为限制类型变量。因此它被限制为这些类型之一。在这种情况下，这被称为边界类型变量。边界类型变量可以是该类型或其子类型的任何类型。
+- en: And when my pi analyzes it， it keeps the original type。 So for instance， when。
+    let's say I pass two max here， the first argument is a string。 And then， so my
+    pi will say， okay。 last t is defined like that。 A string is acceptable because
+    it's a subtype of supports less than because strings do implement。 the， the， the，
+    the， the， the， the， the， the， the， the， the， the， the variable is bound to， string。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我的 pi 分析它时，它保持原始类型。因此，比如说，当我传递两个 max 这里时，第一个参数是一个字符串。所以，我的 pi 会说，好吧。最后 t 被定义成那样。一个字符串是可接受的，因为它是支持小于的子类型，因为字符串确实实现了。
+- en: which means if we understand that B has to be a string and the result will be，
+    a string as well。 And that means that the test pass， my pi is happy。 Everything
+    works。 The actual solution of max is a bit more complicated because of all of
+    the variations in the， in。 in the signatures， the combination of the different
+    types and the different signatures force。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着如果我们理解 B 必须是一个字符串，结果也将是一个字符串。这意味着测试通过，我的 pi 很高兴。一切正常。max 的实际解决方案要复杂得多，因为签名中的所有变体、不同类型和不同签名的组合。
+- en: force does to write six overloads。 They don't have the time to explain this。
+    but this is basically the alternative type hints， for the same function。 It turned
+    out that supports less than was useful。 It's now used in the type hints for 14
+    functions in the standard library。 And to wrap up， so this is why I consider protocols，
+    the keystone of Python's type hints。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 强制写六个重载。他们没有时间解释，但这基本上是同一函数的替代类型提示。结果发现，支持小于是有用的。现在在标准库中的 14 个函数的类型提示中使用。总结一下，这就是为什么我认为协议是
+    Python 类型提示的基石。
+- en: because as initially proposed， the type hints were okay， but limited Python
+    to a Java style。 of programming， because they didn't allow us to annotate code
+    that used deck typing。 Now with PEP4。 I think we have a solid and complete and
+    useful type system。 Of course。 it's always possible to evolve it， but now I think
+    it's very usable。 To finish。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为最初提出时，类型提示是可以的，但限制了 Python 使用 Java 风格的编程，因为它们不允许我们对使用鸭子类型的代码进行注释。现在有了 PEP4，我认为我们有了一个稳固、完整且有用的类型系统。当然，它总是有可能进化，但现在我认为它是非常可用的。最后。
+- en: I'm going to quote Alan Kay who said that I'm not against types， but I don't。
+    know of any type of systems that aren't a complete pane， so I still like dynamic
+    typing。 I don't think Python's type system is a complete pane， but it is painful
+    sometimes， and there。 are things that are very complicated to annotate， and some
+    things that are still impossible。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想引用艾伦·凯，他说我并不反对类型，但我不知道有任何类型系统不是一个完全的负担，所以我仍然喜欢动态类型。我认为 Python 的类型系统不是完全的负担，但有时是痛苦的，而且有些东西很复杂，某些东西仍然不可能注释。
+- en: to annotate because the language is more expressive than the type system。 So
+    let's please embrace the fact that what we have in Python is gradual typing。 Python
+    is not a statically typed language or a dynamic typed language only。 It's actually
+    a gradually typed language， which means that we can use as much or as little。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于语言的表现力比类型系统更强，所以要进行注释。因此，请让我们拥抱 Python 中的逐步类型的事实。Python 既不是静态类型语言，也不是仅仅动态类型语言。它实际上是一种逐步类型语言，这意味着我们可以使用尽可能多或尽可能少的类型。
+- en: of static type hints as we like， or makes sense in the different contexts。 And
+    so please let's embrace and celebrate the fact that Python is a gradually typed
+    language。 and let's not try and make every code base 100% type check， because
+    if we do that， we。 are not going to be leveraging all the power that Python has
+    to offer。 Alright。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们喜欢的静态类型提示，或者在不同上下文中有意义的类型提示。因此，请让我们拥抱并庆祝 Python 是一种逐步类型语言的事实。让我们不要试图让每个代码库都进行
+    100% 的类型检查，因为如果这样做，我们将无法利用 Python 所提供的所有力量。好吧。
+- en: so thank you very much。 Please get in touch， and we are going to go for Q&A
+    now。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非常感谢你。请联系我，我们现在开始问答环节。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_21.png)'
+  id: totrans-71
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_21.png)'
+- en: Thank you。 [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]， [BLANK_AUDIO]，
+    [BLANK_AUDIO]。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谢谢。[BLANK_AUDIO]，[BLANK_AUDIO]，[BLANK_AUDIO]，[BLANK_AUDIO]，[BLANK_AUDIO]，[BLANK_AUDIO]。
+- en: '![](img/049b8aef205d3b9adf34c6d01a43f325_23.png)'
+  id: totrans-73
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/049b8aef205d3b9adf34c6d01a43f325_23.png)'

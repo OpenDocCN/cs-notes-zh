@@ -1,0 +1,797 @@
+- en: P51：Talk - Kevin Modzelewski_ Writing performant code for modern Python interpreters
+    - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P51：讲座 - Kevin Modzelewski_ 为现代Python解释器编写高效代码 - VikingDen7 - BV1f8411Y7cP
+- en: Welcome， everyone。 I have the pleasure of introducing Kevin。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欢迎大家。我很高兴介绍Kevin。
+- en: '![](img/5165d7baa6c620f50fac7a33077665ca_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5165d7baa6c620f50fac7a33077665ca_1.png)'
+- en: Motszelski from Anaconda and he will be giving the talk on writing。 performance
+    code for modern Python interpreters and he will take the questions at the end
+    of the talk。 \>\> Hi， everyone。 I condensed the title of the talk a little bit。
+    So it's now how to write fast modern Python code。 And my name is Kevin， Motszelski。
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Motszelski来自Anaconda，他将进行关于为现代Python解释器编写性能代码的讲座，并在讲座结束时回答问题。>> 大家好，我简化了一下讲座标题。现在是如何编写快速现代Python代码。我的名字是Kevin
+    Motszelski。
+- en: I'm an employee at Anaconda where I work on the piston optimized Python interpreter。
+    And today I want to focus on the word， modern。 There's a lot of Python tips out
+    there。 There's another talk across the hall that's also about Python performance。
+    And this talk。 I wanted to do this talk because there's a lot of work that's currently
+    going into optimizing Python that has downstream effects for what you as a Python
+    programmer can think about to make your code even faster。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我是Anaconda的员工，负责活塞优化的Python解释器。今天我想重点谈谈“现代”这个词。外面有很多关于Python的技巧。对面的讲座也是关于Python性能的。我想做这个讲座，因为目前有很多工作正在优化Python，这对你作为Python程序员思考如何让代码更快有着下游影响。
+- en: So some of the tips that have been around for a while are not quite as useful
+    anymore。 And there's some new ones that if you get onto these new systems。 you
+    might want to start thinking about。 So the structure of the talk is first I'm
+    going to talk a little bit about what makes Python slow。 what we're doing to speed
+    it up， and then spend the rest of the talk going into specific examples of how
+    those optimizations affect you as a programmer。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一些已有一段时间的技巧现在不再那么有用。还有一些新的技巧，如果你接触到这些新系统，你可能会想要开始考虑。因此，讲座的结构是，首先我会稍微谈谈是什么让Python变慢，我们在做什么来加速它，然后花剩下的时间深入探讨这些优化如何影响你作为程序员。
+- en: Why Python is slow is a bit of a divisive topic。 Everyone seems to give different
+    reasons。 This is my personal take on it。 The most common reason is that Python
+    is interpreted。 interpreted languages are slow， so Python is slow。 But in my personal
+    measurements on web servers。 the interpretation overhead is about 10% of the time。
+    So it's significant。 People don't want it。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么Python慢是一个有争议的话题。每个人似乎给出的理由都不同。这是我个人的看法。最常见的理由是Python是解释型语言，解释型语言慢，所以Python慢。但根据我个人在网络服务器上的测量，解释开销大约占10%的时间。所以这是显著的。人们对此并不满意。
+- en: But it doesn't explain why Python can be 10 to 100 times slower than C。 For
+    that you need to go to a different set of things which I'm generically calling
+    dynamic behavior。 Python is a very dynamic language as we know。 And I'm not going
+    to list all the ways it can be dynamic。 but I'm just going to call out a couple
+    today。 So the first is maybe the most obvious way of dynamic。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这并不能解释为什么Python比C慢10到100倍。为此，你需要考虑另一组东西，我称之为动态行为。正如我们所知，Python是一种非常动态的语言。我不会列出所有动态的方式，但今天我会提到几个。
+- en: which is you don't write types before variables。 So the interpreter doesn't
+    know what types any of the variables are。 And yes， there are static annotations，
+    but do you really want the interpreter to crash if your annotation is wrong？
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中最明显的动态方式是你在变量之前不写类型。所以解释器不知道这些变量的类型。是的，有静态注解，但如果你的注解错了，解释器真的要崩溃吗？
+- en: Those aren't used to optimize performance yet。 So this is slow because it means
+    that any time you want to do anything in Python。 you have to check what is the
+    type of this object， how do I do the operation I want on this object？
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些尚未用于优化性能。因此这很慢，因为这意味着每次你想在Python中做任何事情时，都必须检查这个对象的类型，如何对这个对象进行我想要的操作？
+- en: The second thing that I call slow here is dynamic variable lookups。 And this
+    is something that we might not even think about because it doesn't seem like it
+    should have to happen sometimes。 But say you have a print statement in print，
+    hello world or whatever。 Print isn't a special word in Python。 Print is just a
+    function。 And when the interpreter sees print。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我所称的第二个慢速问题是动态变量查找。这是我们可能甚至不会考虑的事情，因为有时候似乎不需要这样做。但假设你在打印“hello world”时使用了打印语句。打印在Python中并不是一个特殊的词。打印只是一个函数。当解释器看到打印时。
+- en: it says， okay， let's look up what this function is。 and it does this whole lookup
+    mechanism to see where that is。 In particular， it asks。 did anyone in this module
+    override what the print function is？
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它说，好吧，让我们查找这个函数是什么。它执行整个查找机制来查看这个函数的位置。特别是，它会问：这个模块中是否有人重写了打印函数？
+- en: And it has to do that every single time you want to print something。 every single
+    time you want to take the length of something， cast something to an integer。 All
+    of these words require expensive lookups。 And then the third thing I'm pointing
+    out here are dynamic attributes that even within a single class。 in general， don't
+    know in advance what attributes exist on that class。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而且每次你想打印某个东西，每次你想获取某个对象的长度，或者将某个对象转换为整数时，都必须这样做。所有这些操作都需要昂贵的查找。而且我指出的第三件事情是动态属性，即使在同一个类中，通常也不知道该类中存在哪些属性。
+- en: Which means that you need a dynamic representation of the attributes。 which
+    are pretty fast for what they are in Python。 but they're still much slower than
+    static languages。 So with that little primer on where we started。 there's three
+    projects that are sort of coming out in various forums either last year or this
+    year。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着你需要一个动态的属性表示，这在Python中相对较快，但仍然比静态语言慢。因此，在我们开始的这些背景下，有三个项目在去年或今年在各种论坛上发布。
+- en: The project I work on is piston。 It's a fork of CPython being run out of Anaconda。
+    There's the faster CPython project， which is working directly inside CPython。
+    and all that work is going to start showing up in 3。11 in October。 and that's
+    being run out of Microsoft。 And there's Cinder， which is out of Instagram。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我工作的项目是**Piston**。它是一个基于**Anaconda**运行的CPython分支。还有一个更快的CPython项目，直接在CPython内部工作。所有这些工作将在10月的3.11版本中开始出现，并且是由**微软**运营的。还有**Cinder**，它来自**Instagram**。
+- en: and is also a fork of CPython。 And these are all available right now in various
+    forums。 So this is going to be the controversial slide of my talk， which is why
+    it's not filled in。 because I'm going to go step by step with a lot of disclaimers。
+    This is going to be the set of projects in this space， and my benchmark numbers
+    for them。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也是**CPython**的一个分支。这些内容现在都可以在各种论坛上找到。所以这将是我演讲中有争议的幻灯片，因此它没有填充内容。因为我将逐步进行，附带许多免责声明。这将是这个领域的一组项目，以及我的基准数字。
+- en: So I think I'm going to get a lot of flack for this slide， so that's why I'm
+    disclaiming it a lot。 The first controversial thing is even choosing a set of
+    benchmarks for analyzing performance。 There's a very common semi-standard set
+    of benchmarks called Pi Performance。 And it's nice in a lot of ways。 It's like
+    well established。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我想这张幻灯片会引起很多反响，这就是我多次声明的原因。第一个有争议的事情是选择一组基准来分析性能。有一个非常常见的半标准基准集，叫做**Pi Performance**。在许多方面，它都很好，很成熟。
+- en: A lot of people present their numbers for it。 I personally think that it tends
+    to overstate performance benefits。 and so I tend to like to look at more application
+    code。 So I wrote a flask benchmark as well。 Flask is a web server for Python，
+    and maybe a web application library。 And it's one of the simpler ones， and I chose
+    a simple one so that I could get more projects working with it。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 很多人会展示他们的数据。我个人认为这往往会夸大性能优势，因此我更倾向于关注更多的应用代码。所以我也写了一个**Flask**基准。Flask是一个用于Python的网络服务器，也可以说是一个Web应用程序库。它是较简单的库之一，我选择了一个简单的，以便能够与更多项目合作。
+- en: The next controversial thing is the selection of a baseline to measure everything
+    against。 I picked Python 3。8 because that's what piston is based on。 And specifically
+    I picked the Ubuntu build of Python 3。8。 I didn't know this coming into this。
+    but actually different builds of Python can be pretty different speeds。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下一个有争议的事情是选择一个基线来进行比较。我选择了Python 3.8，因为**Piston**是基于它的。我特别选择了Ubuntu构建的Python
+    3.8。我在开始时并不知道这一点，但实际上不同的Python构建速度差异很大。
+- en: So like the same version of Python， but built in different ways， will be different
+    speeds。 So the Ubuntu build is a pretty fast build。 I believe the Mac and Windows
+    builds are slow builds。 So anyway， this is a Python 3。8 Ubuntu build。 And we're
+    measuring relative numbers here。 so it's the same speed as itself。 The next controversial
+    thing is I get to list my project first。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以同样版本的Python，但以不同方式构建，速度会不同。因此，Ubuntu构建是一个相当快的构建。我相信Mac和Windows构建是慢的构建。所以无论如何，这这是一个Python
+    3.8的Ubuntu构建。我们在这里测量相对数字，因此它的速度与自身相同。下一个有争议的事情是我首先列出了我的项目。
+- en: So piston， we show improvements on both of these benchmarks。 And you can see
+    the relative improvement is quite different between these two benchmarks。 So it
+    is not getting into which is a more accurate。 but it is important to choose which
+    benchmarks you use that are actually representative of your programs。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在piston中，我们在这两个基准上都显示了改进。你可以看到这两个基准之间的相对改进是非常不同的。所以并不是在争论哪个更准确，但选择那些真正代表你程序的基准是重要的。
+- en: So we'll get very different numbers either way。 The next is Python 3。11， alpha
+    7。 which includes most of the faster sleep Python work。 This came out， I think，
+    earlier in April。 And they also show good improvements on both of these numbers。
+    This is controversial because they say a different number for their pipe performance
+    numbers。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以无论哪种方式，我们都会得到非常不同的数字。接下来是Python 3.11，alpha 7，包含了大部分更快的sleep Python工作。这是在四月早些时候发布的。他们在这两个数字上也显示出良好的改进。这是有争议的，因为他们对管道性能的数字给出了不同的数字。
+- en: I don't know exactly where the difference is， but they say 25%。 But when I measured
+    it， I got 15%。 Then their cinder， they don't have releases， so I just grabbed
+    their GitHub and built it。 And very oddly， it was quite a bit slower than standard
+    CPython。 So I put question marks here because I don't really believe these are
+    real numbers。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我不确切知道差异在哪里，但他们说是25%。但当我测量时，得到了15%。然后他们的cinder没有发布，所以我直接抓取了他们的GitHub并构建了它。而且很奇怪，它比标准的CPython慢得多。所以我在这里放了问号，因为我真的不相信这些是实际数字。
+- en: They're using it internally。 And I think they're smart enough to not use something
+    that's slower。 I don't know what's going on here。 I think they didn't open source
+    all of it。 I'm not sure。 Now。 this is going to be a little controversial。 I put
+    pipy on here。 This is a little bit more of an established player in the Python
+    performance space。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他们在内部使用它。我认为他们足够聪明，不会使用更慢的东西。我不知道这里发生了什么。我认为他们没有开源所有的内容。我不确定。现在，这可能有点争议。我在这里放了pipy。这在Python性能领域稍微更为成熟。
+- en: But they make a very different set of trade-offs， which I think show up in these
+    numbers， which。 first they can't run PyPerformance， so they don't support all
+    of the dependencies of PyPerformance。 And then they're slower on this web serving
+    benchmark。 And the controversial thing here is I did not put a question mark after
+    their flask。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但他们做了一套非常不同的权衡，我认为这在这些数字中表现出来。首先，他们无法运行PyPerformance，因此不支持PyPerformance的所有依赖项。而且在这个Web服务基准上，他们的速度更慢。有争议的是，我在他们的flask后面没有放问号。
+- en: number because it is in line with other numbers I've seen of PyPy。 And then
+    I also took the time to benchmark pigeon。 I think it's a little bit less well-known。
+    but I still wanted to know how it did。 And I don't know what happened here， but
+    pigeon was 1。000 times slower。 So that gives us a double question mark。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为它与我见过的PyPy的其他数字一致。然后我也花时间对pigeon进行基准测试。我认为它不太知名，但我仍然想知道它的表现。我不知道这里发生了什么，但pigeon慢了1000倍。所以这给了我们双重问号。
+- en: I assume that that's not the behavior that they get， but I didn't have time
+    to sort all。 these things out before this talk， unfortunately。 So this is toward
+    the state of Python optimizers that aim to support all of Python。 There's lots
+    and lots of Python performance tools， but a lot of other ones fill more。 in nice
+    positions。 So in terms of going back to what makes Python slow。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我假设这不是他们得到的行为，但不幸的是，我没有时间在这次演讲之前理清所有这些事情。所以这是关于旨在支持所有Python的Python优化器的现状。虽然有很多Python性能工具，但其他很多工具在更好的位置上发挥作用。因此，回到是什么让Python变慢的话题。
+- en: we can start talking about what， these projects do for those things that I mentioned
+    are slow。 The first is interpretation overhead， which is kind of just gone now。
+    That a lot of these projects。 such as piston and cinder， add JIT compilers and
+    JIT stands， for just in time。 So it means that instead of compiling your code
+    during your development process， we will。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以开始谈论这些项目如何解决我提到的那些缓慢的特性。第一个是解释开销，这个问题现在几乎消失了。这些项目，比如piston和cinder，添加了JIT编译器，而JIT代表“即时编译”。这意味着，在你的开发过程中，而不是编译你的代码，我们会...
+- en: compile your code as it's running and convert your Python code into assemblies
+    of instructions。 that is your Python code。 And so this sort of definitely gets
+    rid of interpretation overhead。 I'm not going to really talk about this today
+    because it's really cool at a technical level。 and 10% is really nice to get。
+    It's not something that really you as a programmer can affect that much。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在代码运行时编译你的代码，并将你的Python代码转换为指令汇编。也就是说，这是你的Python代码。因此，这种方式确实消除了解释的开销。今天我不会详细讲这个，因为从技术角度来看，它真的很酷，而10%的提升也确实不错。但这并不是你作为程序员可以太多影响的事情。
+- en: You just kind of get it。 You're not going to really improve or diminish it in
+    any way。 So I'm not going to talk about it for this talk。 What I'm going to spend
+    the rest of the talk talking about are the dynamic features。 I listed a bunch
+    of projects and all these projects do a bunch of things。 But if I was going to
+    make a sweeping generalization。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你只是获得了这些特性。你不会以任何方式真正改善或减少它们。因此，我不会在这次演讲中谈论它。我接下来要讨论的是动态特性。我列举了一些项目，所有这些项目都做了很多事情。但如果我要做一个大致的概括...
+- en: I would say the sort of bread and butter technique。 that all these projects
+    are doing in many different areas is to use the combination of。 two theories。
+    The first is that most code does not use the full dynamic power that it could
+    at any point。 in time。 And the second idea is that we can quickly check if code
+    is using the dynamic power that。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我可以说，所有这些项目在许多不同领域所采用的基础技术是利用**两种理论**的结合。第一种理论是大多数代码在任何时刻都没有充分利用它所能具备的动态能力。第二个观点是，我们可以快速检查代码是否正在使用这种动态能力。
+- en: it could。 And so this lets us say that we can very quickly check to see that
+    nothing strange is happening。 right here and we can do something fast instead。
+    And this is pretty much the source of most of the speedups I showed you earlier。
+    So this is quite effective。 And this sounds great。 You know。 Python has dynamic
+    features but you're not paying for them if you're not using， them anymore。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这使我们能够快速检查，确保这里没有发生奇怪的事情，而我们可以做一些更快的事情。这基本上是我之前给你展示的绝大多数加速的来源。所以这非常有效。这听起来不错。你知道，Python有动态特性，但如果你不使用它们，就不需要为它们付费。
+- en: But if you kind of reverse that statement， it kind of says that you are paying
+    for dynamic。 features that you do use now。 That before they were kind of free
+    because you were paying for them whether or not you。 use them so it didn't matter
+    if you use them。 But now because you no longer pay for them when you're not using
+    them。 it is something， that you as a programmer could think about and speed up
+    your program even more。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是如果你反过来理解这个说法，就会发现你现在正在为你使用的动态特性付费。在此之前，这些特性有点像是免费的，因为无论你是否使用它们，你都在为它们付费，所以是否使用并不重要。但现在，因为在不使用它们时你不再为其付费，作为程序员的你可以考虑这个问题，并进一步加速你的程序。
+- en: To be clear， you don't need to。 Your stuff will be faster no matter what。 But
+    if you want to get the very best performance out of these new systems， thinking
+    about these。 things will make your code even faster。 All right， so the rest of
+    my talk is going into examples。 And the first one is that global variable and
+    I suppose built in variable case that I talked， about。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 明确来说，你不需要这样做。无论如何，你的代码都会更快。但如果你想从这些新系统中获得最佳性能，考虑这些因素会使你的代码更快。好吧，我接下来要讲的是一些例子。第一个是我提到的全局变量和内置变量的案例。
+- en: So say you have a print statement or you're printing out a bunch of things or
+    using when。 to get the links of things and you're looking up that name a whole
+    bunch of times。 In Python。 there's a， in the implementation of Python， there's
+    a very quick way to check。 where any global variables assigned since the last
+    time I did this lookup。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你有一个打印语句，或者你在打印一堆东西，或者在使用`when`来获取事物的链接，并且你查找那个名字很多次。在Python的实现中，有一种非常快速的方法来检查自上次查找以来，任何全局变量是否被赋值。
+- en: So you can very quickly check where any global variables assigned and if not，
+    then we know。 that the global lookup resolves to the same thing it did last time。
+    And I should be clear here about what it means to assign to a global variable。
+    I have two snippets of code here。 The one on the left assigns to the global variable。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你可以非常快速地检查是否对任何全局变量进行了赋值，如果没有，那么我们知道全局查找解析的结果与上次相同。关于对全局变量赋值的意义，我应该明确一下。我这里有两个代码片段。左侧的代码对全局变量进行了赋值。
+- en: It takes a new value and assigns it to the name of the global variable。 The
+    one on the right。 I would call that mutating a global variable and the one on
+    the right。 does not affect what I'm talking about。 That's fine。 But the one on
+    the left， that assignment。 L equals new list， will slow down the following， print
+    statement。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它接受一个新值并将其赋值给全局变量的名称。右侧的代码，我称之为对全局变量的变异，而右侧的代码并不影响我所谈论的内容。那没关系。但左侧的赋值，L等于新列表，将会减慢随后的print语句。
+- en: I put together a benchmark and the numbers in this table are the time it takes
+    to look。 up a global variable。 And the two columns are， I did a first benchmark
+    where we're sometimes also assigning to global。 variables in a second benchmark
+    where we're never assigning to the global variables after。 initialization。 And
+    you can see what I mean by you're not paying for dynamic features in Python 3。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我汇总了一个基准测试，表格中的数字是查找全局变量所需的时间。这两列分别是，我进行的第一次基准测试中，我们有时也会对全局变量赋值，而在第二次基准测试中，我们在初始化后从不对全局变量赋值。你可以看到我的意思，即在Python
+    3中你并没有为动态特性付出代价。
+- en: 8 because， these are the same speed。 It's doing the same amount of work。 It's
+    doing the full dynamic work each time regardless of whether this optimization
+    could。 be applied。 The story is very different with these modern implementations
+    that was pissed in especially。 it's six times faster in the not updated case。
+    I wouldn't take these numbers too literally。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 8，因为这些速度是一样的。它执行的工作量是相同的。无论是否可以应用此优化，它每次都在执行完整的动态工作。这些现代实现的故事就完全不同了，尤其是在未更新的情况下快了六倍。我不会过于字面地看待这些数字。
+- en: This table I think is going to evolve very rapidly。 I think I was surprised
+    a little by these numbers。 I think the faster C Python people have some ideas
+    from it。 So the exact numbers are going to change。 But I think the general conclusion
+    that the no reassignments case is almost always going。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我认为这个表格将会迅速演变。我对这些数字感到有些惊讶。我认为更快的C Python团队有一些想法。所以具体数字会有所变化。但我认为，通常情况下，无重新赋值的情况几乎总是会比重新赋值的情况快。
+- en: to be faster than the reassignments case is we'll hold up over time。 This leads
+    to a pretty simple tip that I'm giving out which is try not to reassign your。
+    global variables。 You might have performance might not be your primary concern
+    but if you're considering。 performance assigning to global variables will slow
+    things down。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这给出了一条非常简单的提示，就是尽量不要重新赋值你的全局变量。你的性能可能不是主要关注点，但如果你考虑到性能，对全局变量赋值会导致速度变慢。
+- en: And if you still want global mutable state then store it within an object as
+    an attribute。 on an object or in a dictionary or something like that。 The next
+    set of dynamic behavior are attributes that I talked about before。 As I said you
+    generally don't know what sets of attributes are going to be on an object。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你仍然想要全局可变状态，那么将其作为属性存储在一个对象中，或者放在字典中等地方。下一个动态行为集合是我之前提到的属性。正如我所说，你通常不知道对象上会有什么属性集合。
+- en: and this means that we use dictionaries in general。 There's lots of special
+    cases in Python but in general Python objects are backed by dictionaries。 otherwise
+    known as hash tables。 Python dictionaries are very fast as dictionaries come but
+    they're still much slower than say。 in C where it's just a direct pointer look
+    up in a single memory load。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着我们通常使用字典。Python中有很多特殊情况，但通常情况下，Python对象是由字典支持的，也称为哈希表。Python字典作为字典是非常快的，但它们仍然比在C中通过单个内存加载直接指针查找要慢得多。
+- en: So even though each individual access is not that slow because attribute access
+    is such。 a common operation a large part of the runtime does end up doing this。
+    So we're going to apply the same optimization to this which is we're going to
+    assume that。 you're not using the full dynamic power that you're not having your
+    objects of different。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然每次单独的访问并不算慢，因为属性访问是非常常见的操作，但大部分运行时确实会执行这一过程。因此，我们将对其应用相同的优化，即假设你没有完全利用动态能力，没有让你的对象不同。
+- en: shapes and changing the shapes all the time。 And we're going to say I'm saying
+    this a little vaguely because the exact technical restrictions。 are a little bit
+    involved but at a high level we say that if a repeated look up looks the。 same
+    as it did the previous time then we can execute it the same as we did the last
+    time。 And there's all these cases and all these special cases and different things
+    that that。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 形状不断变化。我们稍微模糊地说一下，因为确切的技术限制有点复杂，但在高层次上，我们可以说如果重复查找的外观与上次相同，那么我们可以像上次一样执行它。这里有很多情况和特殊情况。
+- en: can mean and it's actually quite complicated but at a high level that's what
+    we do。 And as I said there's a bunch of different things that lead to these technical
+    restrictions。 but I'm going to call it two as things that you might run into that
+    could affect this。 The first is what I'm calling different shapes so to snip it
+    on the left we have two objects。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着内容实际上相当复杂，但在高层次上就是这样。正如我所说，有许多不同的因素导致这些技术限制，但我将其称为两个可能影响的因素。第一个是我所称的不同形状，所以在左侧的片段中，我们有两个对象。
+- en: of this class and they have different attributes on them。 This forces a less
+    efficient representation of the class's objects because we can no longer。 say
+    all the objects of this class have a single shape。 So once you do this。 this snip
+    it on the left， accessing attributes on those objects will。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个类的对象有不同的属性。这迫使类的对象以较低效的方式表示，因为我们不能再说这个类的所有对象都有单一的形状。一旦这样做，左侧的这个片段，访问这些对象的属性将会。
+- en: be slow for the rest of your program。 The other case that it hurts is what I'm
+    calling type mutated which is when you change。 attributes on the class of an object。
+    You can see here in the second case we have an object。 we send an attribute on
+    it and， then we change an attribute on the class。 And the reason this is really
+    difficult for performance is the class has a lot of ways。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能会让你程序的其余部分变慢。另一个受影响的案例是我称之为类型变异，当你改变对象的类上的属性时。你可以在第二个案例中看到，我们有一个对象，给它发送一个属性，然后我们改变类上的一个属性。这个对性能而言确实很困难的原因是类有很多方式。
+- en: that it can intercept attribute lookups on its objects。 And generally they're
+    not used but so we have a very fast way of saying did the class decide， sorry。
+    We can say we know in the past the class did not intercept them and nothing changed
+    on。 the class so now it's still not intercepting them。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它可以拦截其对象的属性查找。通常这些不常用，但我们有一种非常快速的方法来判断类是否决定了这个，抱歉。我们可以说在过去类没有拦截它们，类上没有变化，所以现在仍然没有拦截它们。
+- en: If you change something on the class we no longer know if you might have changed
+    something that。 could now intercept attribute accesses。 So we have to do the expensive
+    check。 I made a benchmark and the third column is what I call the happy case where
+    all the technical。 restrictions are met and the fast path can be taken。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你对类做了更改，我们就无法知道你是否可能更改了一些现在能够拦截属性访问的内容。因此，我们必须进行昂贵的检查。我做了一个基准测试，第三列是我所称的快乐案例，所有技术限制都满足，可以采用快速路径。
+- en: And you can see from this example that again in Python 3。8 you're not really
+    paying your。 cost for your objects being different shapes， you're doing a full
+    hash table look up no matter。 what and it's the same cost。 You already were in
+    Python 3。8 I think it goes quite a bit back beyond that you were。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从这个例子中可以看到，在Python 3.8中，你实际上并没有为对象的不同形状支付额外的成本，无论如何，你都在进行完整的哈希表查找，成本是一样的。在Python
+    3.8之前，情况也差不多。
+- en: paying a cost for updating your classes because that does invalidate a bunch
+    of caching。 And now in the optimized interpreters the happy case gets way faster
+    but the other cases。 not so much。 And again the exact squares that are good are
+    going to change over time but the general。 idea here is that having your objects
+    of different shapes or changing the types will。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更新类的代价是需要支付的，因为这会使一堆缓存失效。而现在，在优化的解释器中，快乐的情况变得更快，但其他情况则不然。而且，好的确切方形会随着时间而改变，但总体思路是，拥有不同形状的对象或改变类型将。
+- en: generally tend to have the effect of slowing down your attribute lookups。 So
+    the tip here is basically just don't do either of those things if you can avoid
+    it。 especially the shape one。 In looking at some code I've seen code that doesn't
+    has objects of different shapes and。 they were doing that I think to save memory
+    by not assigning variables they didn't need。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一般来说，这会导致你的属性查找变慢。因此，这里的建议基本上是，如果可以避免的话，就不要做这两件事，尤其是形状方面。在查看一些代码时，我看到了一些具有不同形状的对象的代码。我认为他们这么做是为了通过不分配不需要的变量来节省内存。
+- en: but that's also not a great tip anymore because by having different shapes you're
+    using this。 less efficient representation and using more memory in general。 So
+    in general you want to set the same attributes in the same order。 I'm not going
+    to get it into it in this talk but if you know what slots are those are now。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但这也不再是一个很好的建议，因为通过拥有不同的形状，你使用的是这种效率较低的表示法，通常会使用更多内存。因此，通常你希望以相同的顺序设置相同的属性。我在这个演讲中不会深入讨论，但如果你知道什么是插槽，现在。
+- en: the fastest way to do attributes in Python they don't guarantee good performance
+    but。 they give you the best chance they resolve a bunch of the technical aspects
+    that I didn't。 really go into in this example。 There's a special case of attribute
+    lookups which is where you look up in an attribute。 and then you immediately call
+    that attribute object。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Python 中处理属性的最快方法并不能保证良好的性能，但它们给你提供了最佳的机会，解决了我在这个例子中并没有详细说明的许多技术方面。有一个特殊的属性查找情况，就是你查找一个属性，然后立即调用那个属性对象。
+- en: I'm calling this method calls and so that's sort of a two-step process you look
+    up the。 attribute you take that object and then you call that object and there's
+    this common。 piece of advice that if you're doing that a lot in a loop you should
+    try to do the attribute。 lookup only once outside the loop and then call the object
+    inside the loop and that looks。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我把这称为方法调用，这是一种两步过程：你查找属性，获取那个对象，然后调用该对象。有一个常见的建议是，如果你在循环中经常这样做，你应该尝试在循环外部只查找一次属性，然后在循环内调用该对象。这看起来。
+- en: something like this where you might say we want to append a bunch of things
+    to a list。 let's forget about list comprehensions and whatever else and just say
+    we want to append。 a bunch of things we're going to cache this list out of pen
+    method and just call that。 attribute inside the loop inside the for loop。 And
+    doing a benchmark in Python 3。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类似这样的情况，你可能会说我们想要将一堆东西追加到一个列表中。让我们忘记列表推导式和其他任何东西，仅仅说我们想要追加。我们将使用缓存的方法来处理这个列表，并在循环中的`for`循环内调用这个属性。并在
+    Python 3 中进行基准测试。
+- en: 8 this is decent advice if performance is what you're。 looking for this does
+    improve performance by about 66% in this case。 The problem now in 2022 with these
+    smart optimizers is the optimizers want to see more of your。 code at once to optimize
+    more of it especially in this particular case that this particular。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是不错的建议，如果你在寻找性能，这在这种情况下确实能提高大约66%的性能。问题在于，2022年这些智能优化器希望能一次看到更多你的代码，以便优化更多的代码，尤其是在这个特定情况下。
+- en: case is very special of fetching an attribute and calling it and there are a
+    lot of special。 optimizations just for that case but by caching the method and
+    separating them those optimizations。 will no longer apply and now with these modern
+    Python implementations caching this method actually。 slows down your code by a
+    fair amount。 So the situation is getting pretty complicated so to be clear this
+    is just for functions on。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种情况非常特殊，涉及到获取一个属性并调用它，并且有很多专门针对这种情况的优化，但通过缓存方法并将其分离，这些优化将不再适用。而如今，随着这些现代 Python
+    实现，缓存这个方法实际上会显著减慢你的代码。因此，情况变得相当复杂，所以要明确这只是针对函数的。
+- en: built-in types like list if we look at Python types the numbers are a little
+    bit different。 it was a little bit less of an improvement before versus the built-in
+    type but the improvement。 is even smaller now as basically as attribute accesses
+    get faster the benefits of this approach。 gets smaller。 I looked at another case
+    which is not exactly the same but looks very similar which is where。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内置类型比如列表，如果我们看看 Python 类型，数字会稍微有点不同。与内置类型相比，之前的改进稍微少了一些，但随着属性访问变得更快，这种方法的好处变得更小。我看了另一个案例，虽然不完全相同，但看起来非常相似。
+- en: you're calling functions of modules and I picked the function that I could find
+    that。 does the least amount of work I think math。square root there's a square
+    root instruction so this。 is a single instruction everything else is overhead
+    so this is the maximum amount of。 improvement that you'll ever see from this case。
+    In Python 3。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你正在调用模块的函数，我选择了一个我能找到的，执行工作量最少的函数，我认为是数学中的平方根。平方根有一个平方根指令，因此这只是一个单一的指令，其他都是开销，所以这是你在这种情况下能看到的最大改进。在
+    Python 3 中。
+- en: 8 it was pretty big and in these new implementations it is considerably smaller。
+    maybe you consider 15% to be enough but it is quite a bit smaller than before。
+    As I said math。square root was picked because it is the fastest function I could
+    find。 If we look at a more typical function say OS。path。join the improvement was
+    much smaller。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 8 之前相当大，而在这些新实现中则显著缩小。也许你认为 15% 是足够的，但这确实比之前小了很多。正如我所说，数学中的平方根被选中是因为这是我能找到的最快的函数。如果我们看看一个更典型的函数，比如
+    OS.path.join，改进要小得多。
+- en: before and again the improvement has decreased a lot。 Now you're talking about
+    a 。4 to 2% improvement by doing this。 I shouldn't use four different cases there's
+    different numbers for them sometimes it helps。 a decent amount sometimes it helps
+    a tiny amount sometimes it hurts。 What is the takeaway？
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此之前，再次强调，改进已经大幅减少。现在你谈论的是通过这样做可以获得 0.4% 到 2% 的改进。我不应该使用四种不同的情况，对于它们来说数字是不同的，有时这会有相当大的帮助，有时只会帮助很少，有时则会造成伤害。结论是什么？
+- en: What should you do？ My personal advice now is just don't cash methods anymore。
+    I think it's not worth the mental overhead I don't think it's worth the readability。
+    hit I think the improvement will get smaller and smaller as the implementations
+    get smarter。 and smarter。 I think you don't have to rewrite it if you already
+    did it but I think in general this。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你应该怎么做？我个人的建议是现在就不要再缓存方法了。我认为这不值得付出心理上的开销，也不值得牺牲可读性。我认为随着实现变得越来越智能，改进会越来越小。我觉得如果你已经做过，就不必重写，但总体上这是一个。
+- en: is something that we can leave behind as the implementations get smarter。 In
+    this side I'm calling out a couple other dynamic features I'm not going to go
+    into。 them a lot but the point I want to make here is these unlike the ones I
+    talked about before。 these were already expensive before but now these particular
+    features are getting even。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随着实现变得更智能，这是我们可以抛弃的东西。在这一点上，我提到了其他几个动态特性，我不会深入讨论，但我想要强调的是，与我之前谈到的不同，这些特性之前就已经很昂贵，但现在这些特性变得更加昂贵。
+- en: more expensive because they inhibit other optimizations。 So not just are they
+    expensive when you use them but they might affect other parts of your。 code that
+    can no longer be optimized。 In particular a problem that we need to solve as a
+    community is attaching a profiler to this。 optimized code at least in piston I
+    don't know about faster C Python and cinder will。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，当你使用它们时，它们不仅很昂贵，还可能影响你代码的其他部分，从而无法再进行优化。特别是作为一个社区，我们需要解决的问题是如何将分析器附加到这个优化的代码上，至少在
+    Piston 中，我不知道更快的 C Python 和 Cinder 会。
+- en: tend to just disable almost all of the optimizations。 So the code that you end
+    up profiling might look very different than the code that you。 meant to profile
+    with optimizations on。 And this is in general a hard problem and we might need
+    a new profiling API I don't know。 exactly what it will take but this is an unfortunate
+    part of the situation。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我倾向于几乎禁用所有的优化。因此，你最终分析的代码可能与你打算分析的、开启优化的代码看起来非常不同。一般来说，这是一个难题，我们可能需要一个新的分析 API，我不知道具体需要什么，但这是情况不幸的一部分。
+- en: The last thing I wanted to talk about is the situation of C extensions versus
+    pure Python。 that generally C extensions are thought of while either as bindings
+    to another language。 or as a way to speed up Python code。 A common piece of advice
+    is use Python converted to a C extension stuff like that but this situation。 is
+    getting pretty murky now because all of the optimizations that I've talked about
+    today。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想谈的最后一点是C扩展与纯Python的情况。通常C扩展被认为是对另一种语言的绑定，或者是加速Python代码的一种方式。一个常见的建议是使用Python转换为C扩展之类的东西，但这个情况现在变得相当模糊，因为我今天提到的所有优化。
+- en: they only currently only apply to Python code。 So this means that C extensions
+    do certain set of optimizations。 The Python interpreter does a different set of
+    optimizations and is very dependent on your。 code which set of optimizations helps
+    your code more。 And unfortunately it's very hard to give a good rubric for this
+    case you definitely should。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目前这些优化仅适用于Python代码。这意味着C扩展会执行某些特定的优化。Python解释器会执行不同的优化，且这些优化非常依赖于你的代码，哪一组优化对你的代码帮助更大。不幸的是，给出一个好的评估标准是非常困难的，你确实应该。
+- en: do it and see this case you should definitely do it in Python。 But to illustrate
+    this I did I took the benchmark from before the attribute lookup benchmark。 If
+    you remember this was this 18。4 nanoseconds was the amount of time it took before。
+    And I used Python to convert this benchmark to a C extension and then I ran it
+    in Python， 3。8。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，你肯定应该在Python中进行。但为了说明这一点，我用了之前的属性查找基准。如果你还记得，这个时间是18.4纳秒。这是之前所需的时间。我使用Python将这个基准转换为C扩展，然后在Python
+    3.8中运行它。
+- en: And indeed it does make it a fair bit faster and so that advice was good before
+    that converting。 it to a C extension is good。 But if you remember the side of
+    the other numbers the other implementations sped up the。 benchmark much more than
+    Python did。 And then also the optimizations that these implementations do don't
+    help Python at all。 So Python could adopt all of these same optimizations。
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 的确，它确实让速度快了很多，因此这个建议在转换成C扩展之前是正确的。但如果你记得其他实现的数字，其他实现的基准速度提升远超过Python。而且这些实现所做的优化对Python完全没有帮助。因此，Python可以采用所有这些相同的优化。
+- en: I don't think there's a technical reason that they couldn't。 I think it's just
+    I think it will probably happen over time but they currently don't。 So this means
+    that if you're particularly hitting the optimizations I've talked about。 today
+    you might actually be better in Python。 As I said there's not a really clear cut
+    rubric for when it's better one or the other。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我不认为他们无法做到这一点的技术原因。我认为这可能会随着时间的推移而发生，但目前还没有。所以这意味着，如果你特别关注我今天所提到的优化，你在Python中可能实际上会更好。正如我所说，没有一个非常明确的标准来判断哪个更好。
+- en: If I had to say I would say that object oriented code is going to be helped
+    a lot more by the。 new interpreters and numeric code is going to still stay best
+    in C code。 But this is something that you're going to have to verify for yourself
+    because as I said。 it's fairly complicated at this point in time。 Which means
+    me to my last point which is that unfortunately there's not a lot of help that。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我必须说，我会说面向对象的代码将会受到新的解释器更多的帮助，而数值代码仍然在C代码中表现最佳。但这点你需要自己验证，因为如我所说，目前的情况相当复杂。这引出我最后一点，不幸的是，没有太多帮助。
+- en: you're going to get with these kinds of issues。 You know I'm trying to give
+    you the best tips I can now but these things are changing rapidly。 There's all
+    these corner cases and there aren't tools that will say hey this was slow because。
+    you did this over here and so this optimization was turned off。 That stuff doesn't
+    exist yet。 So your only method of telling how to optimize your code is you're
+    going to have to benchmark。
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你将面临这些类型的问题。你知道我现在正在尽力给你最好的建议，但这些事情变化很快。存在许多特殊情况，并且没有工具能够告诉你，嘿，这个慢是因为你在这里做了这个，因此这个优化被关闭了。这些工具还不存在。因此，你唯一判断如何优化代码的方法是进行基准测试。
+- en: it and see what works and what doesn't。 So to wrap up my talk as I said in the
+    beginning the general idea is that we're trying to make。 Python programmers not
+    pay for dynamic features they're not using。 And this is great but it adds this
+    new complexity that you get rewarded if you are if you do。 think about these dynamic
+    features and trying to not use them。 I put the GitHub links up on there。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以为了总结我的发言，正如我一开始所说的，总体思路是我们试图让Python程序员不为他们不使用的动态特性付费。这很好，但这增加了新的复杂性，如果你考虑这些动态特性并尝试不使用它们，你就会得到奖励。我把GitHub链接放在上面。
+- en: You can find all these projects they're already available in different forms。
+    And I believe that these are also the best ways to get in touch with the relevant
+    teams。 And so I work on piston if you want to reach out to me online you can go
+    to that the piston。 GitHub page and then I will also be hanging around here after
+    this talk。 Thank you。 [Applause]。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以找到这些项目，它们已经以不同形式可用。我相信这些也是与相关团队取得联系的最佳方式。因此，如果你想在线联系我，可以访问Piston的GitHub页面，我在这次讲座后也会在这里待一会儿。谢谢。[掌声]
+- en: Thank you Kevin。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谢谢你，Kevin。
+- en: '![](img/5165d7baa6c620f50fac7a33077665ca_3.png)'
+  id: totrans-77
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5165d7baa6c620f50fac7a33077665ca_3.png)'
+- en: I would now like to invite questions from the audience。 Do you think the rest
+    extensions will be any different than the C extensions given like。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我想邀请观众提问。你认为Rust扩展和C扩展会有什么不同吗？
+- en: '![](img/5165d7baa6c620f50fac7a33077665ca_5.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/5165d7baa6c620f50fac7a33077665ca_5.png)'
+- en: cryptography starting to use rest libraries underneath？ I don't think so。 I
+    think the only thing might be I think these optimizations are probably too much
+    work for。 individual C extension writers or rust extension writers to do。 If I
+    were to guess at how they would start appearing in C extensions it would be that。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 加密学开始使用底层的Rust库了吗？我认为没有。我觉得这些优化可能对个别C扩展或Rust扩展的编写者来说工作量太大。如果我猜测它们如何开始出现在C扩展中，那就是这样。
+- en: a intermediary tool like Python would adopt them。 So in that sense unless Python
+    can generate rust extensions it might be a little bit slower。 going to rust but
+    at a technical sense there wouldn't be any difference。 Would it make sense to
+    move your dynamic features in a different file or a different。 class and the not
+    so dynamic ones somewhere else can separate the concerns or give the。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像Python这样的中介工具会采用它们。因此，从这个意义上说，除非Python能生成Rust扩展，否则可能会稍微慢一些。转向Rust在技术上没有任何区别。将你的动态特性移到不同的文件或类中，是否有意义？不那么动态的特性放在其他地方，可以分离关注点。
+- en: optimizes more way to do so just move your everything is dynamic to one place
+    and not。 the other place instead of mixing them。 Would it help？
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 优化更多的方法是将所有动态内容集中到一个地方，而不是混合到其他地方。这样会有帮助吗？
+- en: I'm not sure exactly what you're proposing but I think the general idea is very
+    much， happening。 We're not doing it in piss-in because we don't want people to
+    change their code but。 cinder has this thing called static Python that might be
+    similar to what you're talking。 about where you sort of commit to not using certain
+    dynamic features and then the compiler。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我不太确定你具体提议的内容，但我认为总体思路是非常合理的。我们不在piss-in中这么做，因为我们不想让人们更改他们的代码。但是，Cinder有一个叫做静态Python的东西，可能与你所谈论的类似，你在某种程度上承诺不使用某些动态特性，然后编译器会处理它，并看看什么有效，什么无效。
+- en: is able to speed it up even more。 Is that what you're talking about？
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 能否进一步加速？这就是你在谈论的内容吗？
+- en: If you use one of the dynamic features that you kind of instead of one class
+    you have two。 classes one that use dynamic features the other than not that you
+    can speed up the one。 that doesn't。 Would it help？ If you can do this easily if
+    it just fits your if you have a design decision to make and。 it wouldn't be any
+    more work just to split in two classes for instance。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你使用某个动态特性，可能会导致从一个类变成两个类，一个使用动态特性，另一个不使用，这样你可以加速不使用动态特性的那个。这样会有帮助吗？如果你能轻松做到，并且这只是一个设计决策，而分成两个类不会增加额外工作量，比如说。
+- en: Yeah I guess that could work if you have some type that you need to update a
+    lot then。 I guess you could have a different type with instances that you look
+    up things a lot。 I think you probably have some trade-off with readability and
+    maintainability but for performance。 that I think that could work for sure。 What
+    is your thoughts on optimizations like using my pi c and stuff like that？
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是的，我想如果你有一些需要频繁更新的类型，那可能会有用。我想你可以有一个不同的类型，里面的实例是你经常查找的。我认为在可读性和可维护性之间可能会有一些权衡，但为了性能，我认为这肯定是可行的。你对像使用
+    my pi c 这样的优化有什么看法？
+- en: Like passing your programs into my pi c。 Yeah I'm not super familiar with my
+    pi c in general but as I kind of alluded to earlier。 in the talk there are a lot
+    of tools that there's sort of a spectrum of how much Python。 versus how fast they
+    are and so the more Python you support the less fast you can go and if。 you support
+    less Python you can go way faster and so it's kind of nice that there are options。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像将你的程序传递给 my pi c。是的，我对 my pi c 一般不是很熟悉，但正如我之前提到的，在演讲中有很多工具，它们在支持多少 Python
+    和运行速度之间有一个谱系。因此，支持的 Python 越多，运行速度就会越慢；如果支持较少的 Python，你就可以更快，因此有这样的选择是很好的。
+- en: all along that trade-off curve that you can use。 I assume that my pi c has some
+    sort of issue with supporting everything and that's why。 we don't just run everything
+    through my pi c all the time but that's a little bit of speculation。 on my part。
+    So I was wondering as far as typing is concerned as things get more static I know
+    in some languages。 like in Scala where types are sort of pseudo dynamic the type
+    inference engine can get。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在那个权衡曲线上都有可以使用的选项。我假设 my pi c 在支持所有功能方面有某种问题，这就是为什么我们不总是通过 my pi c 运行所有内容，但这只是我个人的推测。因此，我想知道关于类型方面的事情，随着事情变得更静态，我知道在一些语言中，比如
+    Scala，类型是伪动态的，类型推断引擎可能会得到。
+- en: pretty slow when things are sort of missing。 I was wondering if that's something
+    you know have you all seen any sort of performance。 issues in terms of the performance
+    or you know doing type inference on the fly？
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当某些东西缺失时，速度会很慢。我想知道你们是否在性能方面见过任何问题，或者在动态进行类型推断时是否遇到过问题？
+- en: I would say that we do very in piston talking just about piston now we do very
+    lightweight。 profiling which is basically for each bytecode what did we see happen
+    at that bytecode and。 it is quite cheap to do that there's no cross function analyzing
+    whole program analysis anything。 like that。 I don't know for the larger projects
+    in terms of like actually the type infincers or the。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想说，在讨论 piston 时，我们确实进行非常轻量级的性能分析，基本上是对于每个字节码，我们观察到在那个字节码上发生了什么。这是相当便宜的，没有跨函数分析或整体程序分析之类的东西。我不知道对于更大的项目，比如实际的类型推断器或。
+- en: static Python project that I mentioned but for us it's not really an issue。
+    Anyone else？
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我提到的静态 Python 项目对我们来说并不是一个问题。还有其他人吗？
+- en: If you have any other questions I would suggest talking to the speaker after
+    either outside。 this space。 Great， thanks。 Thank you。 [Applause]， (clapping)。
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你有其他问题，我建议在外面和演讲者交流。太好了，谢谢你。谢谢。[掌声]（鼓掌）。

@@ -1,0 +1,621 @@
+- en: P55：Talk - Maryanne Wachter_ Will it Blend_ Writing A Custom Constraint Solver
+    for B - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P55：演讲 - 玛丽安娜·瓦赫特_ 它能混合吗_ 为B - VikingDen7 - BV1f8411Y7cP
+- en: All right， hopefully this will advance my slides and I can move on。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，希望这能推进我的幻灯片，我可以继续下去。
+- en: '![](img/3c3974f3c5ba50851d48ba6ae3207320_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/3c3974f3c5ba50851d48ba6ae3207320_1.png)'
+- en: '![](img/3c3974f3c5ba50851d48ba6ae3207320_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/3c3974f3c5ba50851d48ba6ae3207320_2.png)'
+- en: Okay， so， yeah， my talk is entitled "Will It Blend？"。 And it's about writing
+    a custom constraint solver for Blender using Python。 So the agenda in terms of
+    what I'm going to cover is a bit of motivation and background。 about why I looked
+    at this particular problem and then go into the back end of why I chose。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我的演讲题目是“它能混合吗？”这讲的是如何使用Python为Blender编写自定义约束求解器。所以我将要讲的内容包括一些动机和背景，关于我为什么关注这个特定问题，然后再讲一下我选择的原因。
+- en: to use scythethon， looking at a toy problem for this going over the Python package
+    structure。 when you're using scytheon and then compiling scytheon packages and
+    then moving on to performance。 So how you can use scytheon to release the gill，
+    how you can profile scytheon， and then。 on the front end， why do I choose to use
+    Blender and then going into some information about。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用scythethon，考虑一个玩具问题，探讨Python包结构。当你使用scytheon时，编译scytheon包，然后进行性能测试。所以你如何使用scytheon释放gill，如何对scytheon进行性能分析，然后在前端，我为什么选择使用Blender，并且分享一些关于Blender开发和Blender插件的信息。
+- en: Blender developments and Blender add-ons。 So a little bit about me。 I used to
+    be a structural engineer， so I worked on some landmark transit projects and big
+    museums。 But for the past year， I've worked on software before that。 I've been
+    writing Python since 2015。 but I've made the switch to entirely just working on，
+    software。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于我一点。我曾经是一名结构工程师，参与了一些标志性的交通项目和大型博物馆的建设。但在过去的一年里，我在软件领域工作。在此之前，我从2015年开始编写Python，但我已经完全转向软件开发。
+- en: mainly focusing on full stack web applications， doing a lot of data visualization。
+    And you can find me at my blog。 I write about some of this kind of stuff and also
+    I'm on Twitter。 So I could do an entire talk about the state of software for structural
+    engineering， but。 the 32nd bit about it is that it's not great。 You model building
+    and commercial software to understand how it behaves under loads。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 主要专注于全栈Web应用程序，进行大量的数据可视化。你可以在我的博客找到我。我会写一些这类内容，同时我也在Twitter上。所以我可以做一个关于结构工程软件状态的完整演讲，但最重要的是，它的状况并不理想。你在商业软件中建模，以了解其在载荷下的表现。
+- en: You want it to move， but not too much。 And then you use an analysis program
+    that might have a way of doing design。 so how big， should a column be， how much
+    steel should you put in the floor。 But often in consulting design practices usually
+    go back to designing all this in Excel。 And then most often you're using proprietary
+    software to exchange data with other disciplines。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你希望它能移动，但不要太多。然后你使用一个分析程序，它可能有某种设计的方法。那么，柱子应该有多大，地板应该放多少钢筋。但在咨询设计实践中，通常会回到Excel中设计所有这些东西。然后大多数情况下，你会使用专有软件与其他学科交换数据。
+- en: so architectural， mechanical， electrical， and plumbing to basically figure out
+    how all of。 the structural stuff will fit together with all the other components。
+    So having worked on software for a while， I have a lot of issues with the state
+    of software。 in the built environment。 The UIs are usually super outdated and
+    also it's very difficult to get information without。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以建筑、机械、电气和管道基本上是为了弄清楚所有的结构如何与其他组件相配合。由于我在软件方面工作了一段时间，我对建筑环境中的软件状态有很多问题。用户界面通常非常过时，而且很难在没有的情况下获取信息。
+- en: pointing and clicking and going through a bunch of different sub-menus。 It's
+    very not developer friendly。 It's pretty expensive。 Standard structural analysis
+    software is usually about $10，000 a license， even with the terrible。 UI。 For reference，
+    the starting salary for structural engineering is somewhere between $60，000 and。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过点击和浏览不同的子菜单，这并不是很友好于开发者。成本也相当高。标准的结构分析软件许可证通常在$10,000左右，即使用户界面糟糕得很。作为参考，结构工程的起薪大约在$60,000和。
+- en: $70，000 a year。 In terms of how the software operates， it's pretty slow， I would
+    say。 There are a lot of matrix inversions required for the math behind structural
+    analysis， and。 there really isn't any immediate feedback loop。 You click on something，
+    you walk away。 you come back and you see the results。 Probably my biggest issue
+    with it is that it's all a black box。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每年 $70,000。就软件的操作而言，我会说它相当慢。结构分析背后的数学需要大量的矩阵反演，而实际上没有任何即时反馈循环。你点击某个东西，走开，再回来查看结果。可能我最大的问题是这完全是一个黑箱。
+- en: If you're lucky， you'll get a manual that will have simple test cases and validations。
+    but looking at the actual code is not possible。 Before we had computers。 some
+    of the most exquisite buildings constructed used physical。 modeling methods called
+    form finding。 The idea was that you could take a hanging weighted chain intention
+    and then invert it。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你运气好，你会得到一本包含简单测试用例和验证的手册，但查看实际代码是不可能的。在我们拥有计算机之前，一些最精美的建筑是使用名为形式发现的物理建模方法构建的。其理念是可以将一个悬挂的加重链条反转。
+- en: in order to find the form of a structure in prepared compression。 You might
+    be familiar with Antonio Gaudis still unfinished cathedral in Barcelona called
+    the。 Sagrada Familia， which actually used this technique as seen on the left with
+    his hanging。 chain model to find the prepared compression form of the building，
+    which is still unfinished。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了找到一个结构在预压缩状态下的形状。你可能熟悉安东尼·高迪在巴萨罗那尚未完成的教堂——圣家族大教堂，它实际上使用了这一技术，如左侧所示，利用他的悬链模型找到建筑的预压缩形式，该建筑仍然未完成。
+- en: and you can see on the right。 So today， the construction of the cathedral is
+    being undertaken using computational geometric。 techniques as well as computational
+    form finding。 So I also became interested in computer graphics a few years ago
+    as it's a field that's miles。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以在右侧看到。所以今天，教堂的建造正在使用计算几何技术以及计算形式发现进行。我几年前也对计算机图形学产生了兴趣，因为这个领域发展迅速。
+- en: ahead of structural analysis in terms of using real time simulation。 There was
+    one particular constraint solving algorithm for form finding and real time physics。
+    that actually has made it into built environment software through two plug-in
+    implementations。 and a commercial three modeling software called rhinoceros。
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在实时仿真中领先于结构分析。有一个特定的约束求解算法用于形式发现和实时物理，它实际上已经通过两个插件实现进入了建筑环境软件，以及一个名为犀牛的商业三维建模软件。
+- en: The examples shown here are from the original implementation of the algorithm
+    called shape， up。 which was developed at EPFL， but the one that's widely commercially
+    used now is called。 kangaroo too。 So you might ask if these always already exist，
+    why would I rewrite it？
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里展示的示例来自于名为 shape up 的算法的原始实现，该算法是在 EPFL 开发的，但现在广泛商用的是叫做 kangaroo 二。你可能会问，如果这些已经存在，为什么我还要重写它？
+- en: My issues with this are that I still don't think the UI is great for that particular
+    software。 It's based on visual programming， which is really great for rapid prototyping，
+    but it's。 not great for documentation or having reproducible processes。 Even in
+    this interface， it's not free。 Rhino costs about $1，000 a license， which might
+    put it out of reach for hobbyists。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我对这方面的疑虑在于，我仍然认为这个特定软件的用户界面并不好。它基于可视化编程，这对快速原型设计非常好，但不利于文档记录或可重复过程。即使在这个界面中，它也不是免费的。犀牛软件的许可证费用约为
+    $1,000，这可能让爱好者难以承受。
+- en: These implementations are not slow。 What you were seeing on the previous slide
+    was all real time。 but there's still a little， bit of a black box around the implementation
+    while shape up is open source。 It's kind of academic abandonware， but the physics
+    engine for kangaroo too is still。 not open source， but the constraint formulation，
+    all those geometric constraints that feed。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些实现并不慢。你在前一张幻灯片上看到的都是实时的，但在实现方面仍然存在一些黑箱问题，虽然 shape up 是开源的，但 kangaroo 二的物理引擎仍然不是开源的，所有的几何约束都在此。
+- en: into the engine are and they're written in C#。 With those caveats。 I wanted
+    to try my hand at implementing this algorithm myself in Python。 so to make it
+    open source accessible and extensible。 Moving on to the back end of how I built
+    this Python plugin， which I called Pymaxian。 Obviously。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引擎中的内容是用 C# 编写的。带着这些前提，我想尝试用 Python 实现这个算法，以使其开源、可访问和可扩展。接下来讲讲我如何构建这个 Python
+    插件，我称之为 Pymaxian。
+- en: the first stumbling block you get when you say you're going to build something。
+    in Python is the complaint about how slow it is。 So I turned to Python as a way
+    to keep Python syntax that I'm familiar with。 but improved， the speed significantly。
+    So there are several wrappers and ways to get C or C++ execution with Python as
+    printed。 In fact， you can generate Python bindings for shape up still using SWIG。
+    However。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你说要在Python中构建某样东西时，第一个障碍就是关于其速度的抱怨。因此，我转向Python，以保持我熟悉的Python语法，但显著提升速度。有几种包装器和方法可以在Python中获得C或C++的执行，实际上，你可以使用SWIG生成Python绑定以进行形状处理。然而。
+- en: this still means that if you want to extend constraints or change anything。
+    you're going to have to write them in C++ and compile them with Python bindings。
+    I wanted to write as little C++ as possible。 Some of these other libraries。 I
+    thought it would be a little bit more difficult to translate。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这仍然意味着，如果你想扩展约束或更改任何内容，你必须用C++编写并与Python绑定进行编译。我希望尽可能少写C++。我认为这些其他库可能会更难翻译。
+- en: the constraints because they're very matrix operation-heavy。 So basically。 I
+    wanted to create a general framework that I could build upon and keep。 the look
+    and feel of a Python package。 Most critically。 I wanted to be able to write functions
+    that would release the global interpreter， lock in Python。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些约束因为非常依赖矩阵运算而存在限制。因此，基本上我想创建一个通用框架，便于构建并保持Python包的外观和感觉。最关键的是，我希望能够编写可以释放Python中全局解释器锁的函数。
+- en: the GIL， to gain significant speedups and also possibly use parallel computation。
+    So what is Python？
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: GIL可以获得显著的速度提升，也可能利用并行计算。那么，什么是Python？
+- en: It's an optimizing static compiler that allows you to wrap C or C++ libraries
+    in Python。 You can also compile Cython， which is a superset of Python to C or
+    C++。 And then that compiled library can be imported into a standard Python script
+    as an extension。 So to get myself started， I picked a pretty simple static analysis
+    problem， the loading。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个优化的静态编译器，允许你在Python中包装C或C++库。你还可以将Cython编译为C或C++，而Cython是Python的超集。然后，这个编译的库可以作为扩展导入到标准的Python脚本中。因此，为了开始，我选择了一个相当简单的静态分析问题，即加载。
+- en: of a cable at a midpoint。 So this is actually a pretty difficult problem to
+    solve by hand because the deformed shape。 of a cable changes significantly under
+    the load。 Fun fact。 most of structural analysis is based on assuming that deformations
+    are really small。 This problem only involves three types of constraints and there
+    are five constraints， in total。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在中点处的电缆。因此，这实际上是一个相当难以手工解决的问题，因为电缆在载荷下变形的形状会显著变化。有趣的是，大多数结构分析基于假设变形非常小。这个问题只涉及三种类型的约束，总共有五个约束。
+- en: You've got anchors that will keep points 0 and 2 from moving towards the center
+    as the。 load is applied。 The force itself is a constraint。 And then there's a
+    relationship between points 0 and 1 and points of 1 and 2 that are based。 on the
+    material properties of cable。 It's basically how stretchy it is because it wants
+    to snap back to its original length。
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你有锚点，这将防止点0和点2在施加载荷时向中心移动。力本身就是一个约束。然后，点0和点1之间以及点1和点2之间的关系是基于电缆的材料特性。基本上，它的拉伸程度决定了它想要恢复到原始长度的程度。
+- en: So what the shape off algorithm does is consider these constraints independently
+    and projects。 the ideal position at each point separately based on the constraint，
+    which is a local， solve。 The constraints are then weighted against each other
+    to find the position of the particle。 that best satisfies the constraints applied
+    and this is an iterative process。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，形状算法的作用是独立考虑这些约束，并根据约束分别投影每个点的理想位置，这是一个局部求解。然后，这些约束相互权衡，以找到最佳满足应用约束的粒子位置，而这是一个迭代过程。
+- en: The key feature of this algorithm is that the local solves for each constraint
+    can be applied。 independently of one another， which means that you could possibly
+    run this in parallel。 So ultimately what I ended up with for this small problem
+    was quite a large library， a。 large number of files。 So PXD and PYX file extensions
+    are unique to Cython。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该算法的关键特性是每个约束的局部求解可以独立应用，这意味着你可以并行运行。因此，最终我为这个小问题创建了一个相当大的库，许多文件。因此，PXD和PYX文件扩展名是Cython特有的。
+- en: Those PXD files are basically borrowing from C++ for header files and then classes
+    and。 methods are defined in the 。pyx file。 Okay， so I did end up writing a really
+    small geometry library in C++ rather than dealing。 with wrapping an existing one
+    and that's just because I didn't want to deal with all of。 the licensing issues
+    or large builds for some of the typical C++ like geometry libraries， like CGAL。
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些 PXD 文件基本上是借用 C++ 的头文件，然后类和方法在 .pyx 文件中定义。好吧，我最终确实在 C++ 中编写了一个非常小的几何库，而不是处理包装现有的库，这仅仅是因为我不想处理一些典型
+    C++ 几何库（如 CGAL）的所有许可问题或大型构建。
+- en: So the rest of the constraints were defined purely using Cython contracts， so
+    each one。 of those required a PXD and a PYX file。 So why do I need all those header
+    files？ In Cython。 if you're planning on importing a module， you have to have a
+    PXD file that， corresponds with it。 So one thing that did jump out to me in Cython
+    is that you can't just subclass all over the， place。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 剩下的约束完全是使用 Cython 合同定义的，因此每个都需要一个 PXD 和一个 PYX 文件。那么我为什么需要这些头文件呢？在 Cython 中，如果你打算导入一个模块，你必须有一个对应的
+    PXD 文件。所以 Cython 中让我意识到的一件事是，你不能随便子类化。
+- en: You only get one level of subclassing that was subclass can inherit from more
+    than one， superclass。 So for my purposes， this was fine because I could just set
+    that a constraint was the parent。 class and then each type of constraint， so those
+    anchors， those cables， those forces。 those are child class with its own calculate
+    implementation based on the constraint。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你只能有一层子类化，子类可以从多个超类继承。因此对于我的目的来说，这很好，因为我可以将约束设置为父类，然后每种约束类型，比如锚、缆绳、力，都是各自的子类，并根据约束具有自己的
+    calculate 实现。
+- en: So this is a typical header file for the parent constraint class with all of
+    the type declarations。 So each of these types are prefixed with CDF as they are
+    data types and methods that will。 be used for running a program without the gill，
+    which means that they can't be Python， objects。 So CDF methods also cannot be
+    called from Python。 If you'd either need to define a CP def method to do so。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是父约束类的典型头文件，包含所有类型声明。因此，每种类型都以 CDF 为前缀，因为它们是数据类型和方法，用于在没有全局解释器锁（GIL）的情况下运行程序，这意味着它们不能是
+    Python 对象。因此，CDF 方法也不能从 Python 调用。如果要这样做，你需要定义一个 CP def 方法。
+- en: so that's something that will run， either in Python or as a C extension。 or
+    you're going to have to write a Python wrapper around， that function。 So with
+    the actual methods for the general constraint class， the calculate method is。
+    going to be overwritten based on all of the constraints。 So it just has to have
+    the same signature。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这将以 Python 或 C 扩展的形式运行，或者你必须为该函数编写一个 Python 包装器。关于一般约束类的实际方法，calculate 方法将根据所有约束进行重写。因此，它必须具有相同的签名。
+- en: The sum moves method is common to all of the constraints because that's the
+    local solve。 per constraint。 So the calculate method for an anchor point is really
+    simple。 It's just a 3D vector in space that will return the point wherever it
+    is in space to。 the original anchor point。 The calculate method for a cable is
+    a bit more complex and you can think of it like the。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: sum moves 方法对所有约束都是通用的，因为这是每个约束的局部求解。因此，锚点的 calculate 方法非常简单。它只是空间中的一个 3D 向量，将返回其在空间中的位置到原始锚点。缆绳的
+    calculate 方法要复杂一些，你可以把它想象成。
+- en: forces from stretching a rubber band or the rubber band wants to return to its
+    original。 slack shape so it imposes opposite forces on the two points that you're
+    holding in the， system。 So getting back to my first slide with the XKCD joke，
+    you do have to compile Python。 I wrote a bunch of helper functions to make sure
+    that Python would properly identify all。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 力来自拉伸橡皮筋，或者橡皮筋想要回到其原始的松弛形状，因此它对你在系统中握住的两个点施加相反的力量。回到我第一张幻灯片上的 XKCD 笑话，你确实需要编译
+    Python。我写了一堆辅助函数，以确保 Python 正确识别所有内容。
+- en: of the different components in different directories as well as attaching some
+    extra compilation。 arguments to compile against OpenMP in case I wanted to use
+    OpenMP in the future for parallelization。 So by default， Python compiles the C
+    so I needed to specify C++ as the language。 For the actual build command， the
+    in place flag ensures that the compiled files are going。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不同目录中的不同组件，以及附加一些额外的编译参数，以便在未来如果我想使用 OpenMP 进行并行化时能够与 OpenMP 编译。因此，默认情况下，Python
+    编译 C，所以我需要指定 C++ 作为语言。对于实际的构建命令，in place 标志确保编译后的文件会。
+- en: to be in the same directory as the base files so that importing from the package
+    is really， clear。 It just looks like it would be if you were importing a standard
+    Python file。 So once you've compiled a Python package， you're going to get the
+    dynamic library files。 I'm building on a Mac so I've got an SO extension。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要与基础文件处于同一目录，以便从包中导入时非常清晰。看起来就像是在导入一个标准的Python文件。因此，一旦你编译了一个Python包，你将获得动态库文件。我在Mac上构建，所以我得到的是SO扩展名。
+- en: You're also going to get new C++ files that are at the same level and these
+    are giant files。 There's like thousands and thousands of lines of generated C++
+    code so not necessarily something。 you're going to want to go digging through。
+    So I tested this out。 It was significantly faster than the original only vanilla
+    Python， methodology that I used。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你还会得到与基文件同级的新C++文件，这些文件体积庞大。生成的C++代码有成千上万行，所以并不一定是你想要深入研究的内容。因此我进行了测试。它比我使用的原始纯Python方法显著更快。
+- en: But while it was faster， I wanted to know how much faster it。 could be and I
+    wanted to figure out what the best way was to profile Python code。 So I mentioned
+    wanting to use Python so I could release the guild to improve runtimes but there。
+    are a number of steps you have to do before you can run Python functions without
+    the guild。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是虽然它更快，我想知道到底能快多少，并且我想找出分析Python代码的最佳方法。因此，我提到想用Python来释放GIL以改善运行时间，但在你能够在没有GIL的情况下运行Python函数之前，还有许多步骤需要完成。
+- en: So you've seen this on previous slides a bit but static typing and variable
+    declarations。 are required。 Other things that you can play around with to improve
+    performance are taking。 some of the training wheels off on Python through adding
+    compiler directives at the top of your。 files。 So in this case I took a bounce
+    check and wrap around and turns those off。 You really。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你在之前的幻灯片中看到过一些内容，但静态类型和变量声明是必需的。你可以尝试其他一些方法来提高性能，例如通过在文件顶部添加编译器指令来去掉Python的一些训练轮。因此在这种情况下，我关闭了边界检查和环绕功能。你真的。
+- en: have to use these with caution because you'll get really funky errors if you
+    build it and。 then accidentally index something that would wrap around and this
+    might be difficult to。 debug because you're just going to crash Python。 And then
+    I also highly recommend writing Python wrappers for the functions that we'll compile。
+    just to see because otherwise you can't access them。 So you're going to have more
+    code but。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 必须小心使用这些，因为如果你构建它并意外索引了某个可能环绕的内容，你会遇到非常奇怪的错误，这可能会很难调试，因为你会让Python崩溃。而且我也强烈建议为我们要编译的函数编写Python包装器，以便查看，因为否则你无法访问它们。所以你将有更多代码，但。
+- en: it will be easier to debug and test out。 If you're not writing no-gil functions
+    you can。 just use a CP def function within Python and those can be called from
+    either C or Python。 So other items for no-gil functionality， you see def rather
+    than CP def or standard Python。 def functions。 Though if you're not trying to
+    optimize for no-gil you can absolutely。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将更容易进行调试和测试。如果你不编写无GIL函数，你可以在Python中使用CP def函数，这些函数可以从C或Python调用。因此，对于无GIL功能的其他项目，你会看到def而不是CP
+    def或标准Python的def函数。不过，如果你不打算为无GIL进行优化，你绝对可以。
+- en: mix these around in Python for other use cases。 Sython is pretty good about
+    warning you when it compiles if you have incompatible Python objects。 that are
+    still embedded in your code。 And for these CDF methods you'll also need to make。
+    sure that the signature matches in your pxd file and your pyx file so all of the
+    arguments。 as well as the no-gil flag。 One thing to note is that writing no-gil
+    in the signature。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Python中将这些混合使用于其他用例。Sython在编译时会相当好地警告你，如果你的代码中嵌入了不兼容的Python对象。而对于这些CDF方法，你还需要确保在你的pxd文件和pyx文件中签名匹配，因此所有参数以及无GIL标志都要一致。需要注意的一点是，在签名中写入无GIL。
+- en: of a method doesn't mean that it's automatically going to default to no-gil
+    when you run it。 You're just indicating that the method can be run without the
+    go。 One of the biggest lifesavers for this project was a feature in Sython that
+    lets you see inside。 each pyx file just how much Python is being called in the
+    method。 So if you pass the dash。
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 方法的定义并不意味着在运行时它会自动默认使用无GIL。你只是表明该方法可以在没有GIL的情况下运行。这个项目的一个最大救星是Sython的一个功能，它让你可以查看每个pyx文件中有多少Python代码被调用。所以如果你传递了dash。
+- en: a flag to the command line it will automatically generate an HTML file for whichever
+    file you're。 looking at and that file will highlight just how much of a method
+    is accessing Python objects。 So you can see in this block because I'm using NumPy
+    to create arrays that means that I'm。 creating Python objects。 So， end-to-erays
+    are Python objects。 How can I have arrays that。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对命令行添加一个标志，它会自动为你查看的文件生成一个HTML文件，该文件将突出显示一个方法访问Python对象的程度。因此，你可以在这个代码块中看到，因为我使用NumPy创建数组，这意味着我在创建Python对象。因此，`end-to-arrays`是Python对象。我怎么会有数组呢？
+- en: work without the go？ You can use memory views to access NumPy arrays and update
+    them within。 a no-gil block。 And so this was really useful for me to be able to
+    keep track of particle。 positions as a 3D position array that I could pass to
+    the calculate methods for each constraint。 Okay， so it's all this prep work and
+    once you've done that it's time to release the go。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有`go`能工作吗？你可以使用内存视图来访问NumPy数组，并在`no-gil`块内更新它们。因此，这对我来说非常有用，可以将粒子位置跟踪为一个3D位置数组，我可以将其传递给每个约束的计算方法。好吧，这些都是准备工作，一旦你完成了，就该释放`go`了。
+- en: All you have to do is add with no-gil to the part of the function that you want
+    to run with。 no-gil and you just have to make sure that any of the functions that
+    are called within。 that block are also designated as no-gil and you've checked
+    all of those previous steps。 So you should see serious speedups in your code。
+    I was able to see more than 100 times。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你需要做的就是在你想要运行的函数部分添加`no-gil`。同时，你必须确保在该代码块内调用的任何函数也标记为`no-gil`，并且你已经检查过之前的所有步骤。因此，你应该能在代码中看到显著的加速。我能够看到超过100倍的加速。
+- en: speedup once I released the go， which gave me near instant convergence for thousands。
+    of constraints。 I still wanted to try out profiling with scytheon so I turned
+    to PySpy。 which is a low overhead profiling option that's implemented in Rust。
+    So integrating。 this profiler into my code required a bit of setup， including
+    adding some additional flags。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦我释放了`go`，这让我在数千个约束条件下几乎瞬间收敛。我仍然想尝试使用`scytheon`进行性能分析，所以我转向了`PySpy`，这是一种在Rust中实现的低开销性能分析选项。因此，将这个分析器集成到我的代码中需要一些设置，包括添加一些额外的标志。
+- en: to my setup file to make sure that the generated C++ code from scytheon would
+    include line， numbers。 And then you also had to add it at the start of those compiler
+    directives in。 each PyX file to have line trace set to true。 My personal computer
+    is a Mac， which works。 fine for some of the functionality of PySpy， but you can't
+    profile native functions。 So。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我还需要在我的设置文件中确保从`scytheon`生成的C++代码包含行号。你还需要在每个PyX文件的这些编译指令开始处添加它，以将行跟踪设置为true。我的个人电脑是Mac，这对PySpy的一些功能运行良好，但你无法对本地函数进行性能分析。因此。
+- en: I ended up making a Docker container and ran PySpy with Linux。 This was kind
+    of fun to。 figure out how to make a container that would have the right permissions。
+    So that's what。 that first command is。 The second command is includes flags that
+    ensure that native sub。 processes are recorded and then all that is going to be
+    output for the results to a flame， graph。
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我最终创建了一个Docker容器，并在Linux上运行了`PySpy`。这有点有趣，弄清楚如何制作一个拥有正确权限的容器。因此，第一条命令就是这样。第二条命令包含确保记录本地子进程的标志，然后所有结果将输出为火焰图。
+- en: And then the last command is just copying the flame graph out of the Docker
+    container。 into my regular directory so that I can take down the container once
+    it's finished running。 And so what I was able to get was a flame graph that gave
+    me an idea of which processes。 during my simulation were taking the longest。 It
+    actually turned out the assembly of the。
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后最后一条命令只是将火焰图从Docker容器复制到我的常规目录，这样我可以在运行结束后关闭容器。因此，我得到的是一个火焰图，它让我了解到在我的模拟中哪些进程花费的时间最长。结果显示，装配过程是最耗时的。
+- en: particle system and translating all the Python objects to see， so basically
+    like initializing。 all of the objects。 That was what was taking the longest。 So
+    moving on to the front end。 this is great。 I've made something that runs fast，
+    but I can't see it。 So I don't have。 any nice visuals of simulation yet。 And I
+    didn't want to reinvent the wheel， so I decided。
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 粒子系统以及将所有Python对象转换为可视化，基本上就像初始化所有对象一样。这是最耗时的部分。因此，转到前端，这很好。我做了一个运行快速的东西，但我看不到它。因此，我还没有任何漂亮的模拟视觉效果。我不想重新发明轮子，所以我决定。
+- en: to integrate Pymaxian with a well-established open source 3D graphics program
+    called Blender。 This comic is going to make a little more sense in a few slides，
+    but needless to say。 there's a lot of fun with Blender Python versus system Python
+    versus a virtual and Python overhead。 So what is Blender？ As I mentioned， it is
+    free and open source with the new GPL license。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要将 Pymaxian 集成到一个成熟的开源 3D 图形程序 Blender 中。这个漫画在接下来的几张幻灯片中会更容易理解，但不用说，与 Blender
+    Python、系统 Python 和虚拟 Python 之间有很多乐趣。那么什么是 Blender？正如我提到的，它是免费的开源软件，采用新的 GPL 许可证。
+- en: I've only listed a few of the possibilities with Blender， which will exceed
+    the capabilities。 of Rhinoceros， which was the other three modeling program I
+    was familiar with。 The figure I。 had to do anything in Blender is like drinking
+    from a fire hose。 There are a lot of different。 things you can do with it。 I barely
+    scratched the surface with Blender with what I was doing。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我仅列出了与 Blender 一些可能性，这些可能性将超出我熟悉的另一个三维建模程序 Rhinoceros 的能力。在 Blender 中做任何事情就像是从消防栓里喝水。有很多不同的事情可以做。我在
+    Blender 的探索仅仅是触及了表面。
+- en: with Pymaxian because I was just mainly working with meshes。 Blender also has
+    a really well-developed， Python API that most of its underlying code is written
+    in C or C++。 So there's a very， robust Blender ecosystem of add-ons。 I've added
+    some of my favorites from the built environment。
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我主要在处理网格，使用 Pymaxian 也很方便。Blender 还有一个非常成熟的 Python API，其大部分底层代码是用 C 或 C++
+    编写的。因此，Blender 生态系统中有非常丰富的附加组件。我添加了一些我最喜欢的来自建筑环境的组件。
+- en: So Sverchock is more general purpose because it's a visual programming interface
+    that's。 similar to Grasshopper， which is really commonly used by architects with
+    Rhinoc。 So how do you get your newly minted scytheon package into the Blender
+    Python？ You're going。 to need to build scytheon against the same version of Blender
+    Python as Blender Python。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Sverchock 更加通用，因为它是一个可视化编程接口，类似于 Grasshopper，后者在使用 Rhinoc 的建筑师中非常常见。那么你如何将新创建的
+    scytheon 包放入 Blender Python 中呢？你需要针对与 Blender Python 相同版本的 Blender Python 来构建
+    scytheon。
+- en: You can interrogate everything about your Blender Python install from the scripting
+    tab。 There's an IPython interface to basically put in sys。path or sys。version
+    info。 I decided。 to sim link my scytheon package into the site packages for the
+    Blender Python install。 rather than copying it or building it with Blender Python。
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以通过脚本选项卡调查关于你的 Blender Python 安装的所有信息。实际上有一个 IPython 接口，可以输入 sys.path 或 sys.version
+    信息。我决定将我的 scytheon 包符号链接到 Blender Python 安装的站点包中，而不是复制或与 Blender Python 一起构建它。
+- en: And then so now Pymaxian is part of the Blender site packages， but I still need
+    to add how。 Blender is going to interact with that package through its UI and
+    operators。 So there's a。 lot of disagreement about what the best way to develop
+    with Blender is。 I've typically。 just created something to close and relaunch
+    Blender whenever I'm making changes because。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在 Pymaxian 是 Blender 站点包的一部分，但我仍然需要添加 Blender 将如何通过其 UI 和操作与该包进行交互。因此，对于使用
+    Blender 的最佳开发方式存在很多争议。我通常会在每次修改时创建一个新的实例并重新启动 Blender。
+- en: hot reloading doesn't always work。 And it's efficacy keeps changing as Blender
+    evolves。 like things that work in 2。9 for relot reloading don't necessarily work
+    in 3。1。 But at a minimum。 I do recommend adding Blender to launch from the command
+    line because then all of your outputs。 or like debugging is going to print to
+    a separate console window。 So I put my Blender package into。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 热重载并不总是有效。随着 Blender 的演变，它的有效性也在不断变化。例如，在 2.9 版中有效的重载方法在 3.1 版中不一定有效。但至少，我确实推荐从命令行启动
+    Blender，因为那样你所有的输出或调试信息都会打印到一个单独的控制台窗口中。所以我将我的 Blender 包放入了。
+- en: the add-ons directory also using a symbolic link。 Sorry。 Okay。 So this is the
+    typical file structure for a basic Blender add-on。 And on。 the right you can see
+    that there's this side menu and that's actually the menu that I created。 for the
+    Pymaxian interface for Blender。 The Blender context in which you can use Pymaxian。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 附加组件目录也使用符号链接。抱歉。好吧。这是基本 Blender 附加组件的典型文件结构。在右侧，你可以看到有一个侧边菜单，那实际上是我为 Blender
+    的 Pymaxian 接口创建的菜单。你可以在其中使用 Pymaxian 的 Blender 上下文。
+- en: is the object in editing context on one of the tabs。 So I have a number of buttons
+    that are part of this menu as well as some pop-out panels。 And the Blender operator
+    files where you're going to find all of your UI actions that call。 Pymaxian。 So
+    it has a specific Blender class structure in terms of attributes and methods。
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是编辑上下文中的对象，位于选项卡之一上。我有许多按钮是这个菜单的一部分，还有一些弹出面板。Blender操作符文件中，你会找到调用Pymaxian的所有UI操作。因此它在属性和方法方面有一个特定的Blender类结构。
+- en: And it also has a number of requirements for like unique labels。 So that's like
+    underscore， ID name。 underscore label。 And then you can see that I have to define
+    execute which is。 also has return a specific set of values。 So for all those nice
+    panels you have to have a specific prefix in order to the specific。 attributes。
+    Otherwise it won't register when you tell it to basically add your package。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它还有一些对唯一标签的要求，比如下划线、ID名称、下划线标签。然后你可以看到，我必须定义执行，也就是要返回一组特定的值。因此，对于所有这些漂亮的面板，你必须有特定的前缀来定义具体属性。否则当你告诉它基本上添加你的包时，它不会注册。
+- en: So within I've got these pop-out panels you have some additional attributes
+    that you can。 set basic values。 So in this case it's adding the strengths of the
+    constraints with a typical。 notation。 And all of these UI panels have a draw method。
+    So most typical add-ons also have a property file and you have to register every
+    single。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这些弹出面板中，你可以设置一些附加属性以设置基本值。在这种情况下，它增加了约束的强度，使用了典型的符号。这些UI面板都有一个绘制方法。因此，大多数典型的附加组件也有一个属性文件，并且你必须注册每一个。
+- en: constant that you use for those menus which in my case resulted in a lot of
+    code pretty， quickly。 So rather than using a properties file I decided instead
+    to put those constraints。 and basically they're bound so like all the options
+    for like how precise that value is。 going to be that the user can set。 So I put
+    that into a JSON file that basically groups。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你在这些菜单中使用的常量，这在我的情况下导致了相当多的代码生成，因此我决定不使用属性文件，而是将那些约束放入一个JSON文件中，基本上是绑定了所有选项，像是用户可以设置的值的精确度。因此我把它放入一个基本上进行分组的JSON文件中。
+- en: each set of values by the type of constraint。 And then within my actual menu
+    file for loading。 into Blender I was able to import and iterate through that JSON
+    file to automatically register。 each one of these properties so it's going to
+    be easier for me in the future to add on。 to this JSON file rather than having
+    to write a bunch of classes。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每组值由约束类型决定。然后在我实际的菜单文件中加载Blender时，我能够导入并迭代该JSON文件，以自动注册这些属性，这样未来添加内容到这个JSON文件会更容易，而不是需要编写一堆类。
+- en: And so what do I have after all that？ Pimaxian currently only supports a couple
+    of constraints。 as basically a proof of concept but I was able to replicate the
+    kind of hanging cloth。 form finding that I showed on that first few slides。 I'd
+    like to do more to make it。 more interactive。 You can use modal operators within
+    Blender to sort of allow for some interactivity。
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以经过这些，我现在得到的是什么？Pimaxian目前仅支持几个约束，基本上是一个概念证明，但我能够复制我在前几张幻灯片中展示的悬挂布料形态探索。我希望能做更多使其更具互动性。你可以在Blender中使用模态操作符，以允许一些交互性。
+- en: or I was looking into possibly using sockets that would be able to feed updated
+    geometry。 back so that the user can have more interaction with the simulation。
+    So in closing I'd really like to thank the Python software foundation and Pilates
+    for。 the opportunity to speak here。 Particularly the New York City Pilates group
+    who acted as。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我还在考虑可能使用套接字，这样能够反馈更新的几何体，以便用户可以与模拟进行更多交互。所以最后我真的很想感谢Python软件基金会和Pilates给我这个机会来这里发言。特别是纽约市的Pilates小组，他们起到了关键作用。
+- en: a sounding board for a much shorter version of this talk。 And I'd also like
+    to thank the。 Recur Center because I worked mainly on the Blender part of this
+    project when I was doing。 a retreat there last summer。 So thank you。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个更简短版本演讲的讨论平台。我还想感谢Recur Center，因为我在上个夏天的静修中主要参与了这个项目的Blender部分。所以谢谢你们。
+- en: '![](img/3c3974f3c5ba50851d48ba6ae3207320_4.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/3c3974f3c5ba50851d48ba6ae3207320_4.png)'
+- en: '[BLANK_AUDIO]。'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[BLANK_AUDIO]。'

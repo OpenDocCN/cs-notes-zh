@@ -1,0 +1,765 @@
+- en: P20：Talk - Anthony Shaw_ Write faster Python! Common performance anti patterns
+    - VikingDen7 - BV1f8411Y7cP
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: P20：演讲 - Anthony Shaw_ 编写更快的 Python！常见性能反模式 - VikingDen7 - BV1f8411Y7cP
+- en: Okay， we are ready for the last talk of the day。
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我们准备好今天最后一个演讲了。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_1.png)'
+  id: totrans-2
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_1.png)'
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_2.png)'
+  id: totrans-3
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_2.png)'
+- en: Please welcome Antony Shaw with his dog， Wright Foster Python with common performance
+    anti-patterns。 Big applause please。 Hi everybody， my name is Anthony Shaw。 welcome
+    to the trampoline and tumbling championships， regions 1 and 2。 I hope everyone
+    has got rid of their stretches and everything and it's all going well for， you。
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请欢迎 Antony Shaw 和他的狗，编写更快的 Python，常见性能反模式。请热烈鼓掌。大家好，我是 Anthony Shaw。欢迎来到地区 1
+    和 2 的蹦床和翻滚锦标赛。希望每个人都已经解决了他们的拉伸问题，一切进展顺利。
+- en: So I'm probably not going to talk about that today， I will talk about writing
+    faster Python。 There are parts of this talk which might cause some reactions from
+    people in terms of Python。 code which is shown。 Please save your questions for
+    the end as there are no questions。 So if you haven't seen this talk， I really
+    recommend you watch it。 This is a talk by James Murphy。
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我今天可能不会讨论这个，我将讨论如何编写更快的 Python。演讲中有些部分可能会引发一些人对展示的 Python 代码的反应。请将你的问题留到最后，因为没有提问。如果你还没有看过这个演讲，我真的推荐你去看。这是
+    James Murphy 的演讲。
+- en: he gave at Python last year。 He wrote a Nez emulator in pure Python and in the
+    talk he basically presents his code。 he shows the game not working， it gets to
+    three frames a second playing， not that game。 because that game is licensed， but
+    playing a game similar to that。 And basically he argued that in order to get it
+    from three frames a second to something。
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 他在去年 Python 大会上做的。他用纯 Python 编写了一个 Nez 模拟器，在演讲中，他基本上展示了他的代码。他展示了游戏无法运行的情况，播放的帧率达到每秒三帧，并不是那个游戏，因为那个游戏是有版权的，而是玩一个类似的游戏。基本上，他认为为了让它从每秒三帧提高到其他水平。
+- en: acceptable and playable you would need to siphonize the code base。 So I was
+    really curious about this after watching the talk and I've been working on a compiler。
+    project called Pigeon for the last couple of years and I was curious to see if
+    I gave。 it to Pigeon would Pigeon make it run any faster and it didn't make much
+    difference。
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可接受和可玩的，你需要对代码库进行抽取。因此，在观看演讲后，我对此非常好奇，并且过去几年一直在开发一个名为 Pigeon 的编译器项目，我想看看如果把它交给
+    Pigeon，Pigeon 是否会让它运行得更快，但实际上并没有太大差别。
+- en: And then I was curious as to why Python was running this so slowly and when
+    he siphonized。 things why did it make such a drastic difference。 And basically
+    what I did was go through and refactor the number of things in the application。
+    whilst keeping it Pythonic but making some very small changes and it's sped up
+    by four times。 which is a big difference but still not enough。 And I thought okay
+    that was a reasonably successful project。
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我很好奇为什么 Python 运行得这么慢，当他抽取东西时，为什么会有如此巨大的差异。基本上，我所做的就是对应用程序中的许多东西进行重构，同时保持
+    Pythonic 风格，但做了一些非常小的改变，速度提高了四倍。这是一个很大的差别，但仍然不够。我想，好吧，这是一个相对成功的项目。
+- en: an interesting experiment， but maybe I can learn from what I've just done and
+    see if I can apply those same principles。 or something else which doesn't need
+    a 30 times performance improvement it just needed two， or four。 So when you think
+    about trying to improve the performance of your applications I like to。 think
+    of it in terms of two axes so on the left hand side we've got the amount of impact。
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个有趣的实验，但也许我可以从我刚刚做的事情中学习，看看是否可以应用相同的原则，或者其他不需要 30 倍性能提升的东西，只需要两倍或四倍。因此，当你考虑提高应用程序性能时，我喜欢从两个轴来思考，所以在左侧是影响的程度。
+- en: that it has and across the bottom you've got a code changes that you would need
+    to make。 So I guess the most drastic one you could do would be to rewrite， siphonize
+    your code。 or write a P or C extension module。 So in terms of changes throwing
+    siphon out it wouldn't make an immediate difference you'd。 have to type it as
+    well so doing type siphon would give you both a dramatic improvement。
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它的底部是你需要进行的代码更改。因此，我想你能做的最极端的事情就是重写，抽取你的代码，或者编写一个 P 或 C 扩展模块。所以在更改方面，抛弃抽取不会立即带来差异，你也需要进行类型化，因此进行类型抽取将给你带来显著的提升。
+- en: in performance but also require you to make a number of changes。 And then on
+    the other side of the graph we've got the hardware engineers view of things。 which
+    is let's just throw more CPUs at this and more RAM at this。 So that doesn't require
+    any code changes and can make a dramatic difference。
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在性能方面，但也需要你进行一些更改。而在图表的另一边，我们有硬件工程师的观点，那就是让我们投入更多的CPU和更多的RAM。这不需要任何代码更改，并且可以产生显著的差异。
+- en: We've then got other approaches which are mixed。 Introducing caching tiers is
+    always something that I'd recommend especially in web applications。 and I say
+    tiers like from the front end from the view and then you have a caching beneath。
+    that a caching about the database and maybe even a caching level on the function。
+    Optimizing your database calls and any I/O operations， definitely a classic one
+    and also。
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有其他混合的做法。我总是建议引入缓存层，特别是在Web应用中。我说的层是从前端的视图，然后你在下面有一个缓存层，可能还有一个数据库缓存层，甚至是函数的缓存层。优化你的数据库调用和任何I/O操作，绝对是经典之作。
+- en: maybe implementing things in PyPy if it's required。 We've then got minor version
+    Python upgrades so moving from 3。8 to 3。9 or 3。9 to 3。10 each。 of those normally
+    comes with a 5 to 10 percent performance increase。 3。11 is looking like a 25 percent
+    performance gain on 3。10 which is awesome。
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许在需要时实现PyPy。接下来是Python的次要版本升级，所以从3.8迁移到3.9或3.9到3.10，每一个通常都带来5%到10%的性能提升。3.11看起来比3.10有25%的性能提升，这非常棒。
+- en: And then what I want to talk to you about is this last one which is optimize
+    existing。 code and we're going to talk about micro optimization to Python code。
+    I guess flexible as to where that box goes because you can make small changes
+    which is。 what we're going to talk about or you can go nuts and you can just refactor
+    your entire， code base。
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我想和你谈的是最后一点，即优化现有代码，我们将讨论Python代码的微优化。我想在这个框的放置上保持灵活，因为你可以进行小的更改，这就是我们将要谈论的，或者你可以疯狂地重构你的整个代码库。
+- en: But before you jump in there's some things you definitely want to do if you're
+    going。 to think about micro optimizing。 Definitely create a benchmark before you
+    start。 So what is the baseline？ What is the performance of the application like
+    today？
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但在你开始之前，有些事情你绝对想要做的，如果你打算考虑微优化。开始之前一定要创建一个基准。那么基线是什么？今天应用程序的性能如何？
+- en: Don't go in there and start making changes unless you know whether it's making
+    things。 better or worse。 When you do run a benchmark， a baseline think about the
+    inputs that you're testing it on。 Don't just give it dummy data。 Try and make
+    it as realistic as possible with what your production app looks like。 When you
+    do make changes try and keep them small and atomic so don't do a big refactor。
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要在这里开始做更改，除非你知道这是否会让事情变得更好或更糟。当你进行基准测试时，考虑你所测试的输入。不要只是提供虚假数据。尽量让它尽可能接近你生产应用的真实情况。当你进行更改时，尽量保持小而原子，不要做大规模重构。
+- en: all at once because then if you see things slow down in one area and speed up
+    in another。 it's hard to figure out what caused that。 And then when you are reproducing
+    improvements in speed you need to do that thousands of times。 So just running
+    a one off benchmark is not normally enough because CPUs have a lot of。 noise on
+    them so things can run slower for absolutely no reason or something outside。
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一次性做所有的更改，因为如果你发现某个领域变慢而另一个领域加速，很难找出造成这一现象的原因。而当你在重现速度提升时，你需要做到这一点成千上万次。所以仅仅运行一次基准测试通常是不够的，因为CPU上有很多噪声，可能会导致运行变慢，而没有任何理由或者是外部因素。
+- en: of your control。 If you don't believe me look on the Python speed site and sometimes
+    you see like there。 was a 2% performance improvement in this commit and the commit
+    was a change to a mark down， file。 So there's noise and you can ignore something
+    like that。 So don't assume that the impact that you're measuring will be the same
+    against minor Python。
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你不相信我，可以查看Python速度网站，有时你会看到在这个提交中有2%的性能提升，而这个提交只是对一个Markdown文件的更改。所以有噪声，你可以忽略这样的东西。因此，不要假设你测量的影响在次要Python版本上会是一样的。
+- en: versions。 So the stuff I'm showing you today is against Python 3。10 and we've
+    been having fun this。 week testing it against 3。11 alpha 7 as well。 So all of
+    the stuff I'm showing you today is relevant to 3。11 as well。 And I say also if
+    you see a performance gain of under 10% generally don't bother。 So a lot of that
+    is noise so you can give a take a couple of percent but a less than。
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我今天展示的内容是针对 Python 3.10 的，而我们这周也在乐趣地测试 3.11 alpha 7。因此，我今天展示的所有内容同样适用于 3.11。我还想说，如果你看到的性能提升低于
+    10%，通常就没必要在意。因此，很多情况下这都是噪声，所以你可以上下波动几个百分点，但少于这个幅度的。
+- en: 10% performance improvement is really not particularly helpful。 And most of
+    the stuff I'll show you is 30， 60， 80% gains。 So when I said to benchmark your
+    code first to do that you need to use a profiler。 There are two types of trace
+    profiles and sampling profilers。
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 10% 的性能提升并没有特别大的帮助。我将展示的大多数内容是 30%、60% 和 80% 的收益。因此，当我说要先对你的代码进行基准测试时，你需要使用分析工具。分析工具有两种类型：追踪分析器和采样分析器。
+- en: The first one is a tracing profiler so the way that works is there is a tracing
+    function。 which is a custom function that you can write or you can use one of
+    the built-in profiling。 modules or there's some on pipi as well。 That will run
+    the trace it will then execute the function and then it will run the trace。 The
+    pros of this is that it's pretty accurate in terms of measuring how long it took
+    to run。
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一种是追踪分析器，它的工作原理是有一个追踪函数。这是一个你可以自己编写的自定义函数，或者你可以使用一些内置的分析模块，或者在 pipi 上也有一些。它会运行追踪，然后执行该函数，最后再运行追踪。这种方式的优点是，在测量运行所需时间方面相当准确。
+- en: the function。 The biggest con is that this is quite a big overhead so it's pausing
+    while it runs the。 profile before it runs your code。 Sampling profile is a bit
+    different so your code runs and then something in another process。 will periodically
+    sample the Python excutable to basically see what is running and what's。 happening
+    at that time。 Some advantages to that are you can be a lot more specific in terms
+    of granularity and。
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 函数。最大的缺点是这会产生相当大的开销，因此在运行分析时，它会在运行你的代码之前暂停。采样分析则稍有不同，你的代码在运行时，另一个进程会定期采样 Python
+    可执行文件，以基本上查看在那时运行的内容和发生的事情。这种方式的优点是，你可以在粒度方面更为具体。
+- en: I'll show you some profilers in a second。 The biggest difference is that the
+    overhead is less。 So if we look I put together a list of my favourite profilers
+    and I've highlighted my。 recommended flavours at the top which is Austin and Scaling。
+    These are both samplers。 They have a very small overhead so when you're profiling
+    an application it should behave pretty。
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我马上会给你展示一些分析工具。最大的区别是它的开销较小。所以如果我们来看，我整理了一份我最喜欢的分析工具的列表，我在顶部突出了我推荐的类型，分别是 Austin
+    和 Scaling。这两者都是采样工具。它们的开销非常小，所以当你分析一个应用时，它应该表现得相当不错。
+- en: much as it would normally without a profiler whereas if you run C profile sometimes
+    your。 code runs two times slower than it would do normally because it's a tracing
+    profiler。 The built in one is C profile which is brilliant if you're testing alpha
+    versions like if you're。 testing 311 for example because it's built into the standard
+    library it always works。 Pi instrument。
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它的运行时间通常与没有分析器时几乎相同，而如果你运行 C profile，有时你的代码会比正常运行时慢两倍，因为它是一个追踪分析器。内置的工具是 C profile，如果你在测试
+    alpha 版本时，比如说测试 3.11，这个工具非常棒，因为它是内置于标准库的，始终可以使用。Pi instrument。
+- en: Pi and yappy are pure Python ones， instrument and Pi by are great。 The difference
+    I guess between why I've recommended these two at the top is because they can。
+    do it on a line level and if you're doing micro optimisations often you're going
+    to。 get a performance report that says most of the time it's spent in this function
+    and。
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Pi 和 yappy 是纯 Python 的工具，instrument 和 Pi by 非常出色。我推荐这两者的区别在于它们可以在行级别上进行分析，如果你在进行微优化时，通常会得到一个性能报告，显示大多数时间是在这个函数中消耗的。
+- en: you're like okay great but what do I do with that function？
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能会想，好吧，那我该如何处理这个函数？
+- en: I can't just throw it away I could split it up but with something like Scaling
+    what you。 can actually get is this awesome output。 Austin does this as well。 It's
+    basically a side by side copy of your code and it will highlight specific lines
+    that。 took up a lot of memory， a lot of CPU time and it also splits the time between
+    native。
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我不能就这么扔掉它，我可以把它拆分，但像 Scaling 这样的工具，你实际上可以得到非常棒的输出。Austin 也是这样。它基本上是你代码的并排副本，会突出显示那些占用大量内存和
+    CPU 时间的特定行，同时还会拆分原生版本之间的时间。
+- en: Python time and C extension time so you can get a lot of detail。 I like using
+    this because in the case of the NES emulator it's basically able to drill down。
+    to a set of 10 lines in the entire code base that were causing a lot of the CPU
+    time。 Once you've done this and you've identified some lines or some loops then
+    we're going。
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Python 时间和 C 扩展时间可以让你获得很多细节。我喜欢使用这个，因为在 NES 模拟器的案例中，它基本上能够深入到导致大量 CPU 时间的整个代码库中的
+    10 行代码。当你完成这一步并识别出一些行或循环时，我们就可以开始了。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_4.png)'
+  id: totrans-29
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_4.png)'
+- en: to talk about what you can do about that。 I've been working on this repository
+    that has the theories that I've got in this talk。 If you don't believe me about
+    any of these and you want to download them and run them。 yourself you can do so
+    it's a GitHub Tony Belloni anti-patterns and basically what I'll。 do is have two
+    functions A and B they're functionally equivalent so they do exactly the same
+    thing。
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我想谈谈你可以对此做些什么。我一直在这个存储库上工作，其中包含了我在这个演讲中提到的理论。如果你对这些内容不信服，想要下载并自己运行，你可以在 GitHub
+    上找到 Tony Belloni 的反模式，基本上我将会有两个函数 A 和 B，它们是功能等价的，因此它们做的事情完全相同。
+- en: but they've been implemented in slightly different ways。 The B function is the
+    one which I think is more efficient and then on the table you see。 the mean and
+    in brackets the percentage difference。 By applying this。 basically by undoing
+    this anti-pattern you get 65% performance improvement。
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是它们的实现方式略有不同。我认为 B 函数是更高效的，接下来你可以看到表格中的均值，以及括号中的百分比差异。通过应用这一点，基本上通过消除这种反模式，你可以获得
+    65% 的性能提升。
+- en: on tiny functions and I'll go through some of the most important ones。 I've
+    also been working on taking these learnings and trying to build them into a linter。
+    This is very much a work in progress。 It will raise a ton of force positives on
+    your code so don't put it in the way of CI/CD。 Give it a go and see what it comes
+    up with。 I also need more people to have a go at this with their own code bases
+    and tell me what。
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 针对小函数，我将介绍一些最重要的函数。我还一直在努力将这些学习融入到一个代码检查工具中。这项工作仍在进行中。它会在你的代码中引发大量误报，因此不要将它放在
+    CI/CD 的流程中。试试看，看看它会产生什么结果。我还需要更多的人用他们自己的代码库来试验，并告诉我他们的反馈。
+- en: kind of force positives it's bringing up but I'll show you some examples of
+    what it's。 doing in a minute。 It is a pilot in extension but you can also run
+    it as a standalone linter by just giving。 it the directory。 Okay so the first
+    concept we're going to cover is a big one。 If anyone's ever done compiler design
+    or anything like that you might be familiar with。
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它所引发的误报类型我稍后会展示一些示例。它在扩展中是一个试点，但你也可以通过给它目录来作为独立的代码检查工具运行。好的，我们要讨论的第一个概念是一个重要的概念。如果有人做过编译器设计或类似的事情，你可能会熟悉。
+- en: this term but most people are not。 Loop invariance means that there is an expression
+    or some instructions within a loop which are。 invariant。 Which means that the
+    result of that expression does not change with each iteration of the。 loop。 So
+    the example I've got here is a function before。 We've got a tuple x。 We've got
+    a variable i which is set to 6。 And in the expression lnx multiplied by i is always
+    the same because x never changes。
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个术语大多数人并不熟悉。循环不变性意味着在循环中有一个表达式或某些指令是**不变的**。这意味着该表达式的结果在每次循环迭代中都不会改变。我这里的例子是一个函数。我们有一个元组
+    x。我们有一个变量 i，设定为 6。在表达式 lnx 乘以 i 时，它始终是相同的，因为 x 从未改变。
+- en: and i never changes。 So what Perfluent is doing is basically identifying that
+    expression and saying this expression。 is invariant。 What some compilers would
+    do such as LLVM， GCC。 the Go compiler is they'd identify that statement。 automatically
+    when you compile a code and they'd actually move the expression outside， of a
+    loop。
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 而 i 也从未改变。因此，Perfluent 所做的基本上是识别这个表达式并说这个表达式是**不变的**。一些编译器，如 LLVM、GCC 和 Go 编译器，会在你编译代码时自动识别这个语句，并实际将表达式移出循环。
+- en: This is called loop invariant code motion or some people got a hoisting。 The
+    Python compiler doesn't do this so you need to do it manually if it's worth it。
+    And I'll touch on that in a second。 So in the after function this is what you
+    would do to refactor that which is to create。 a new variable called xi of something
+    slightly better named and then to use that inside the， loop。
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这被称为循环不变代码移动，或者有些人称之为提升。Python编译器不会这样做，所以如果值得的话，你需要手动处理。我稍后会提到这一点。因此，在“after”函数中，你将创建一个名为xi的新变量，稍微好命名，然后在循环中使用它。
+- en: That probably looks like a really trivial thing and it's 55% faster。 So we're
+    essentially doing the same thing but we're not running the lnx multiplied by。
+    i expression for every iteration of the loop。 It all but it breaks two rules。
+    First of all is more code。 Secondly it's less readable。
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这看起来可能是一件非常微不足道的事情，但它快了55%。所以我们基本上做了同样的事情，但我们并没有在每次循环迭代中运行lnx乘以i的表达式。这打破了两条规则。首先，代码更多；其次，它可读性降低。
+- en: So it was kind of more obvious before what lnx multiplied by i was when you're
+    reading。 that statement and let's say this range， this loop is massive and you're
+    like 50 lines down。 So it might not be that obvious。 However， if you run your
+    profiler and you discover there's a particularly hot loop in。 your code then you
+    can apply these kind of methods and you can see this kind of impact。
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在阅读时，lnx乘以i的意义以前可能更明显，假设这个范围，这个循环很大，你可能已经看到50行了。所以可能不那么明显。然而，如果你运行分析工具，发现代码中有一个特别热的循环，那么你可以应用这些方法，并看到这样的影响。
+- en: Perfluent will actually identify more than just tiny expressions like this。
+    It'll actually pull out entire branches and say this branch is actually invariant
+    as in。 it's exactly the same each time。 We've been running some benchmarks on
+    the types of expressions that it makes sense to。 hoist out of your loop and then
+    include things like dictionary lookups， method calls， function。
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码分析器实际上会识别的不仅仅是像这样的微小表达式。它会提取整个分支并指出这个分支实际上是不可变的，即每次都是完全相同的。我们一直在对哪些类型的表达式值得从你的循环中提取进行基准测试，然后包括字典查找、方法调用、函数等。
+- en: calls， how a bunch of different things like that which you would think is being
+    cheap things。 that you can do in Python。 If you're running a hot loop like this
+    it can make a pretty dramatic difference。 So that's number one。 Number two and
+    I'm going to introduce my new favourite font which is Comic Sans Mono。 So this
+    one we've got our functions A and B。 Hopefully this one's familiar to people。
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用，像这样的一些不同的东西，你可能会认为是廉价的东西。这些可以在Python中实现。如果你在运行这样的热点循环，效果会非常明显。所以这是第一点。第二点，我要介绍我新的最爱字体——Comic
+    Sans Mono。希望这个对大家来说是熟悉的。
+- en: If you're fairly new to Python and you're still getting into the intermediate
+    space then I'll。 introduce this one to you。 List comprehensions are faster than
+    for loops in this kind of pattern。 So where you're taking a list of something
+    and then you're creating another list and filtering。 the items by some sort of
+    expression it is faster to do that in a list comprehension。
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你对Python还比较陌生，正进入中级阶段，我将向你介绍这个。列表推导式在这种模式下比for循环快。所以当你获取一个列表并创建另一个列表，按某种表达式过滤项时，用列表推导式会更快。
+- en: It is also less code。 It's also more readable。 If you're familiar with list
+    comprehension you might not be familiar with the siblings。 such as dictionary
+    comprehensions and set comprehensions。 Perfluence of the linter that I've been
+    working on will now automatically detect code where。 you should have used dictionary
+    or a list comprehension。 And this is a quick win。
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也是更少的代码。它更易读。如果你熟悉列表推导式，你可能对兄弟姐妹不太熟悉，比如字典推导式和集合推导式。我一直在做的代码分析器现在会自动检测代码中应该使用字典或列表推导式的地方。这是一个快速的胜利。
+- en: So this is 23% performance gain for less code。
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样减少代码带来了23%的性能提升。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_6.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_6.png)'
+- en: So that's number two。 So let's set this up a bit。 The third one I see quite
+    a lot is that people are using the wrong types for things。 So there are lots of
+    data structure types in Python that are built in and depending on。 what you want
+    to use them for you should pick the appropriate type。 If you use a type that was
+    not designed for the purpose that you're trying to use it for。
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这是第二点。让我们稍微设置一下。第三点是我看到很多人使用错误的类型。因此，Python中有很多内置的数据结构类型，根据你想要使用它们的方式，你应该选择合适的类型。如果你使用了不适合你想要用途的类型。
+- en: it will very likely be inefficient。 So for example if you have a collection
+    of values which is constant and then you loop。 over them and you subscript that
+    and use a list that is actually more efficient to use， the tuple。 Tuple look up
+    the quicker。 Tuple creation is quicker than lists。 So I put this simple tree together
+    and I'm sure we could expand on this but really the。
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能会非常低效。因此，例如，如果你有一个常量值的集合，然后对它们进行循环，使用下标和列表实际上更高效，使用元组。元组查找更快。元组创建比列表更快。所以我把这个简单的树结构组合在一起，我相信我们可以在此基础上扩展，但实际上。
+- en: question why is mutability so do I need to change the information inside this
+    collection。 Does it have unique items and then you could choose between a set
+    a list， a byte array。 and then if it's immutable then what are the contents so
+    they byte string any and then。 if it's any we need unique items or not。 There's
+    also memory view under bytes but that's a really neat one。
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 问题是可变性，为什么可变性如此重要，我是否需要改变这个集合中的信息？它是否具有唯一的项，然后你可以在集合、列表和字节数组之间进行选择。如果它是不可变的，那么内容是什么？字节字符串是否存在？如果有，我们是否需要唯一的项？在字节下还有内存视图，但那是一个非常有趣的东西。
+- en: So yeah this is my simple structure but that was the simple types。 You've then
+    got things like classes， data classes， dictionaries or named tuples。 I'm aware
+    of this when I started these benchmarks but there's a massive difference in performance。
+    between all of these。 So when you're considering which of these to use。
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这是我简单的结构，但那只是简单类型。你还有类、数据类、字典或命名元组。当我开始这些基准测试时，我意识到了这一点，但这些之间在性能上存在巨大差异。因此，当你考虑使用其中哪个时。
+- en: first of all think about how you're， going to use it。 So how much mapping are
+    you doing between the source data and your representation in Python。 So if you're
+    reading from JSON or you're reading from JSON data from an API you're then。 converting
+    that into a list of classes with attributes so you're doing a mapping function。
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先考虑一下你将如何使用它。那么，你在源数据和你在Python中的表示之间进行了多少映射？因此，如果你从JSON中读取或从API读取JSON数据，你就将其转换为具有属性的类列表，因此你正在执行一个映射函数。
+- en: and then you're un-mapping all of that back out into JSON for your API endpoint。
+    That's super inefficient。 So if you look at a lot of the ODMs and ORMs in terms
+    of their efficiency gain they try。 and reduce mapping。 So how much mapping is
+    there between your source and target data？
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后你将所有这些重新映射为API端点的JSON。这非常低效。因此，如果你查看许多ODM和ORM，它们在效率提升方面的努力，试图减少映射。那么，源数据和目标数据之间有多少映射？
+- en: What operations are you mainly doing with these types？ So are you looping over
+    them？
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你主要对这些类型执行什么操作？你是在循环它们吗？
+- en: Are you mapping them？ Are you sorting them？ Are you searching them？
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你是在映射它们吗？你是在排序它们吗？你是在搜索它们吗？
+- en: And it's very likely there's an appropriate type for each of those。 So even
+    if you do love data classes sometimes it's better or more efficient to use something，
+    else。 Even if you love dictionaries sometimes it's better or more efficient to
+    use something， else。 It really depends on what you're trying to represent。 And
+    then lastly is the API important。
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 很可能每一种类型都有合适的类型。因此，即使你喜欢数据类，有时使用其他东西更好或更高效。即使你喜欢字典，有时使用其他东西更好或更高效。这真的取决于你想要表示的内容。最后，API是否重要。
+- en: So it's what you present back to the consumer of your function or your code
+    important。 So dictionary is brilliant but if your functions will just return a
+    dictionary and you don't。 document what keys it has it's not particularly helpful
+    to your users whereas classes obviously。
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以你向函数或代码的消费者展示的内容是否重要。因此，字典非常出色，但如果你的函数仅返回一个字典而你没有记录它有哪些键，这对用户并没有特别的帮助，而类显然是有帮助的。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_8.png)'
+  id: totrans-55
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_8.png)'
+- en: can be a lot more strongly typed。 So let's jump into an example。 So we've got
+    three implementations of the same thing。 We've got a data class。 we've got a name
+    tuple or tuple。 I still could have a decide which pronunciation it's supposed
+    to be。 And then also the lesser known one is you can create a class which inherits
+    from typing。name。
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以有更强的类型。所以让我们来看一个例子。我们有三个实现相同功能的类。我们有一个数据类，有一个名称元组或元组。我仍然不确定应该怎么发音。还有一个较少人知道的是，你可以创建一个继承自typing.name的类。
+- en: tuple which basically does the same thing as the middle one。 So those three
+    implementations all do the same thing。 Any， okay let's try and split the room。
+    Would you think data classes are faster or slower than name tuples？
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 元组基本上与中间的那个做相同的事情。这三个实现都做同样的事。好吧，让我们试着分开这个房间。你认为数据类比名称元组快还是慢？
+- en: Put up your hand if you think data classes are faster。 Okay there's a couple。
+    Yep。 And name tuples are faster taking your awake。 Okay good。 This is a class
+    that we can write which basically does the same thing。 I just explicitly defined
+    everything。 So this basically is the hardware doing data classes which is just
+    to write them by hand。
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你认为数据类更快，请举手。好的，有几个人。是的。名称元组更快，你醒了吗。好的，很好。这是我们可以编写的一个类，它基本上做相同的事情。我只是明确地定义了一切。所以这基本上是硬件实现的数据类，只是手动编写。
+- en: Would you think that the concrete class is faster than the name tuple？ Put up
+    your hand。 Okay that's interesting。 The concrete class is 51% faster than the
+    data class。 Probably no surprise。 A lot of the reason for that is actually the
+    overhead of the magic methods in data classes。 It's 28% faster than the name tuple。
+    So that might come as a surprise to 99% of you didn't put your hand up。
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你认为具体类比名称元组快吗？举手。好的，这很有趣。具体类比数据类快51%。这可能并不令人惊讶。这主要是因为数据类中魔法方法的开销。它比名称元组快28%。所以这可能会让99%没有举手的人感到惊讶。
+- en: It breaks two rules though。 It's more code and it's probably less readable as
+    well。
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不过这违反了两个规则。代码更多，可能可读性也较差。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_10.png)'
+  id: totrans-61
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_10.png)'
+- en: So this is an interesting one。 So I want to push this a bit further and say
+    okay hopefully this is readable but I'll read。 them out。 Python 3。9 tested isn't
+    3。10 doesn't make much difference。 Three nine is in green。 Pi Pi 3。9 is in grayish
+    black。 Inaries are slower than custom classes with slots。 That's weird thing I
+    discovered number one。 Secondly name tuple is around the same as typing。
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个有趣的点。我想进一步推动这个观点，希望这能让人理解，但我会读出来。Python 3.9测试的结果和3.10并没有太大区别。3.9以绿色显示，Pi
+    Pi 3.9以灰黑色显示。与带槽的自定义类相比，数量较少的实例要慢。这是我发现的第一件奇怪的事。其次，名称元组与typing大致相同。
+- en: name tuple which was not that surprising。 Custom classes and then custom classes
+    with slots。 There's something wrong there。 That's wrong。 Sorry。 Custom classes
+    should be further down and that's provided on 3。10。 Custom classes are much faster
+    than 3。10。 This is a 3。9 graph。 Okay。 My apologies。 So in 3。
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 名称元组并不令人惊讶。自定义类以及带有槽的自定义类。这里有些问题。那是错误的。抱歉。自定义类应该放在更下面的位置，这在3.10中提供。自定义类比3.10快得多。这是一个3.9的图表。好的，我道歉。那么在3。
+- en: 10 custom classes will be further down so they will be the fastest implementation。
+    Data classes are significantly slower。 I mentioned the magic methods as one of
+    the reasons。 However if you've got only a couple of instances of the data class
+    then don't bother rewriting。 it as a concrete class because 51% faster of next
+    to nothing is still next to nothing。
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 10个自定义类将在下面提到，因此它们将是最快的实现。数据类明显较慢。我提到过魔法方法是其中一个原因。然而，如果你只有几个数据类的实例，那就不必将其重写为具体类，因为51%的速度提升与几乎没有提升相比，仍然是微不足道的。
+- en: But if you're creating hundreds of instances then it's probably worth considering
+    your。
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不过，如果你创建数百个实例，那么考虑一下你的实现可能是值得的。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_12.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_12.png)'
+- en: structured types。 Okay。 So that's the next pattern。 So this one I see quite
+    a bit which is people not really understanding how it's supposed。 to work in Python。
+    So here we're defining a tuple of items and then in the loop we're saying okay
+    let's turn。 it into a list so we can loop over it。 But the tuple iterator is built
+    into tuples so that's completely unnecessary and also it。
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 结构化类型。好的。这是下一个模式。我经常看到这一点，人们并不真正理解它在Python中应该如何工作。在这里，我们定义了一个项目的元组，然后在循环中我们说，好吧，让我们把它转换成一个列表，这样我们就可以遍历它。但元组迭代器是内置于元组中的，所以这是完全不必要的。
+- en: would eagerly iterate it and then create another iterator and iterate it second
+    time。 So it basically does twice as much work to do the same thing。 Perfluent
+    has underlined it because it's saying what you're doing is wrong。 The next tiny
+    one is that if you have a unmutated collection so you've created a collection
+    of。
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想要快速迭代它时，再创建一个迭代器进行第二次迭代。因此，它基本上做了两倍的工作来完成同样的事情。Perfluent强调这是错误的做法。下一个小点是，如果你有一个未变更的集合，那么你创建了一个集合。
+- en: something and you're not changing it don't use the list to use a tuple unless
+    you're leaking。 that variable out to other functions。 20% faster to create and
+    index and it's a fairly small change。 So that's a tiny one。
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果某个东西没有改变，不要使用列表而是使用元组，除非你要将该变量泄漏给其他函数。创建和索引速度快20%，这是一个相对较小的改变。这是一个小例子。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_14.png)'
+  id: totrans-70
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_14.png)'
+- en: So we're going to get onto the big one now which is calling too many functions。
+    So if you're familiar with the acronym DRY don't repeat yourself。 This is the
+    concept that in your code you should not write the same code over and over。 again
+    and you probably learn this when you learn to program。
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们要讨论一个重要的问题，就是调用过多的函数。如果你熟悉缩写DRY（Don't Repeat Yourself），这个概念指的是在代码中不应该重复写相同的代码。你可能在学习编程时就学过这个。
+- en: In some languages that makes 100% sense。 In Python there's caveats to that。
+    So calling a function especially a pure Python function has an overhead in Python
+    and I'll。 talk about that in a second。 If you're calling a C function like a built-in
+    or something that's a C library there is。 still an overhead and it's still significant
+    but it's less。
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在某些语言中，这完全合理。在Python中则有一些注意事项。因此，调用函数，特别是纯Python函数，在Python中是有开销的，我马上会谈到这个。如果你调用一个C函数，比如内置函数或C库函数，仍然会有开销，但相对较少。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_16.png)'
+  id: totrans-73
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_16.png)'
+- en: Okay so let's give an example。 A and B and this is the smallest example I could
+    think of。 We've made a function called add which in reality you'd probably never
+    do but I wanted。 to just extract the difference as well as possible。 So A and
+    B we're going to loop 100。000 times between over N and then add X which is the，
+    constant of one to N。
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，让我们举个例子。A和B，这是我能想到的最简单的例子。我们定义了一个叫做add的函数，实际上你可能不会这样做，但我想尽可能提取差异。因此A和B我们将循环`100,000`次，然后将常数X（一）加到N上。
+- en: So B is 56% faster than A。 So the difference between the two is that we're not
+    calling a function。 So that basically isolates what's the overhead of calling
+    this function。 If you call the function twice it's 65%。 If you go further then
+    basically it goes up to a point where it hits the line。 So basically the overhead
+    is a function of the number of times the function is called。
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以B比A快56%。两者之间的区别在于我们没有调用一个函数。这基本上隔离了调用该函数的开销。如果你调用这个函数两次，开销为65%。如果进一步增加，基本上会到达一个上限。因此，开销是调用次数的函数。
+- en: or the cost of the function。 The reason I bring this up is because I see this
+    quite a lot in code where people create。 a small utility function and they call
+    that in a hot loop。 So if you have a hot loop and you've identified what they
+    are when you've been profiling your。 code start to think about how you can possibly
+    inline some of those instructions。
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者函数的成本。我提到这个是因为我在代码中经常看到有人创建一个小的实用函数，然后在热循环中调用它。如果你有一个热循环，并且在分析代码时已经识别出它们，开始考虑如何可能将一些指令内联。
+- en: It's horrible and it creates more code and it's very un-piphonic but if you
+    need to be。 brutal in some hot areas of your code then this is a sledgehammer
+    that you can use。 I've been experimenting with a utility library which I'd love
+    for people to have a go with。 and to give me some feedback on。 The concept is
+    basically that you could put a decorator on a function and whenever you。
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这很糟糕，会产生更多的代码，且非常不符合Python风格，但如果你需要在某些热代码区域采取强硬措施，那么这是一个可以使用的重锤。我一直在尝试一个工具库，期待大家能试用并给我反馈。其基本概念是，你可以在一个函数上加一个装饰器，每当你。
+- en: call that function the module would basically inline the instructions into the
+    cally so wherever。 it was called。 This works by doing a， basically it manipulates
+    the source code so you have to actually give。 the source file to the script and
+    it will give you the equivalent after the inlining。 I don't think there's any
+    plans to have inlining in CPython or in the language。
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用该函数时，模块基本上会将指令内联到调用点。因此，无论在哪里被调用。这是通过操作源代码实现的，因此你必须将源文件提供给脚本，它将在内联后给出等效的代码。我认为CPython或语言中没有计划进行内联。
+- en: I know that the team are actively working on reducing function call overhead。
+    This week we've been doing a lot of testing on 311 versus 3。10 so my point about
+    this。 is still relevant in 3。11。 Hopefully in 312 that will become less the case。
+    So that was point number four。 The bonus one I want to bring up which I only got
+    discovered this morning is the match statement。
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我知道团队正在积极减少函数调用开销。这周我们对311与3.10进行了大量测试，所以我关于这个的观点在3.11中仍然是相关的。希望在312中这种情况会减少。所以这是第四个要点。我想提到的一个额外要点是匹配语句，我今天早上刚发现。
+- en: So I watched the talk on the match statement this week which is brilliant and
+    we were running。 some benchmarks on 311 to compare the match statement with the
+    equivalent of Python code。 And for sequences it's 80% faster。 For mappings it
+    wasn't but then I nerd sniped Brent Butcher and he was up till 3am working。 on
+    the code base and he has fixed that and once it's merged it will be 80% faster
+    and。
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这周我观看了关于匹配语句的演讲，真是太棒了。我们在311上运行了一些基准测试，以比较匹配语句与相应的Python代码。对于序列，它快80%。对于映射并不是，但我让Brent
+    Butcher关注这件事，他熬夜到凌晨3点在代码基础上工作，他已经修复了这个问题，一旦合并，它将快80%。
+- en: if that can get merged into 311 before the beta date then there's the new rule
+    which。 is use match statement because they're significantly faster for both sequences
+    and mappings。
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果在beta日期之前可以合并到311中，那么就有新规则：使用匹配语句，因为它们在序列和映射中显著更快。
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_18.png)'
+  id: totrans-82
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_18.png)'
+- en: So let's wrap this up。 So we're looking for these four anti-patterns that are
+    raised in the talk。 These are not the only ones but it's really the biggest ones
+    I've seen， the ones that are。 the biggest impact。 Loop invariance as a concept
+    it's really important if you can understand that as a developer。 Doing a subscript
+    on a dictionary is doing a dictionary key lookup is a statement that。
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以让我们总结一下。我们正在寻找在演讲中提到的这四个反模式。这些并不是唯一的，但确实是我见过的最大的几个，对影响最大的。循环不变性作为一个概念，如果你作为开发者能够理解这一点，那是非常重要的。在字典上进行下标操作是一个字典键查找的语句。
+- en: is invariant in a lot of cases if the dictionary hasn't changed。 So look for
+    these in your code。 Utilize comprehensions when and where you can。 Very importantly
+    make sure you're selecting the right data type and also consider the。 overheads
+    of data types but also the APIs of the data types that you're using and avoid。
+    tiny functions in caveat in hot code。 Tiny functions are great in their create
+    clean code。
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在许多情况下，如果字典没有改变，则是保持不变的。所以在你的代码中寻找这些。在可能的地方利用推导式。非常重要的是，确保你选择了正确的数据类型，并考虑数据类型的开销以及你所使用的数据类型的API，并避免在热点代码中使用微小的函数。微小的函数在创建干净代码方面非常出色。
+- en: utility functions， however if you're， using in a loop which is getting slammed
+    millions of times then you want to micro optimize that。 then I'd recommend looking
+    at maybe inlining some of those。 The methods that I showed you is hoisting where
+    you basically just assign that expression。 to a variable or local variable and
+    then just refer to that variable in the loop。
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实用函数，但如果你在一个被重复调用数百万次的循环中使用它们，那么你想要进行微优化。我建议考虑将一些函数内联。 我展示给你的那种方法是提升，基本上是将表达式分配给一个变量或局部变量，然后在循环中引用该变量。
+- en: So before you do any of this make sure you set up some sampling， you've sampled
+    your code。 correctly and you understand how your application performed and you
+    know which of the areas of。 your code， which of the areas of your program which
+    are causing most of the execution time。 So don't just apply this principle blindly
+    to all of your code base。
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以在你做任何事情之前，确保你进行了一些采样，正确地采样了你的代码，了解你的应用程序的性能，并知道哪些代码区域，哪些程序区域导致了大部分执行时间。所以不要盲目将这个原则应用于你的所有代码基础。
+- en: Perfluent will give you input across everything。 It will tell you that you should
+    optimize your test functions and it will tell you all sorts。 of stuff but you
+    need to apply common sense to that as a developer and combine that with， profiling。
+    So say okay let's focus on this part of our code because we think we can make
+    this 50%， faster。 this just dysfunction but if that uses up 80% of our execution
+    time then potentially。
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Perfluent会在各个方面给你提供反馈。它会告诉你应该优化测试函数，并提供各种信息，但作为开发者，你需要运用常识，并将其与性能分析结合起来。比如说，好的，我们就专注于代码的这一部分，因为我们认为可以让它快50%。这只是一个功能，但如果它消耗了我们80%的执行时间，那么可能会有问题。
+- en: you've just quadrupled your execution performance。 So focus on the areas that
+    matter。 Track regressions if you can so if you can introduce a tool to measure
+    performance between。 commit that also makes a difference。 There's a PyTest extension
+    for doing benchmarking which is great and also talk to your team。 about some of
+    these ideas and some of these principles so if you can catch it in code。
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你刚刚将执行性能提高了四倍。所以请专注于重要的领域。如果可以的话，跟踪回归，这样如果你能引入一个工具来测量性能，也能带来不同的影响。有一个用于基准测试的PyTest扩展，非常棒，同时也和你的团队讨论一下这些想法和原则，这样如果能在代码中捕捉到它们就更好了。
+- en: review you can avoid performance regressions in the future。 And then lastly
+    to wrap it up。 there's my website。 It's my Twitter handle， I wrote a book on the
+    CPython compiler called CPython internals。 and so make sure you check that out。
+    I've also got loads of socks which is probably the most important thing so if
+    you want a。 pair of socks we've got some really nice socks。 They're not these
+    ones though。
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回顾一下，你可以避免将来的性能回归。最后总结一下，这里是我的网站。这是我的Twitter账号，我写了一本关于CPython编译器的书，叫做《CPython内部》。所以一定要查看一下。我还有很多袜子，这可能是最重要的事情，如果你想要一双袜子，我们有一些非常好的袜子。不过这些不是。
+- en: these are from Pike on APAC and they're awesome。 So I have loads of socks at
+    the front。 Thank you for my coming to my talk。 If you have any comments or any
+    feedback or anything and you want to try out Perfluent。 please catch me outside
+    after the talk and I'd be happy to chat。 Thanks everybody。 [Applause]。
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些来自Pike在亚太地区，它们很棒。所以我在前面有很多袜子。谢谢你来听我的演讲。如果你有任何意见、反馈或者想尝试Perfluent，请在演讲结束后找我，我很乐意交流。谢谢大家。[掌声]
+- en: '![](img/79a6e68138a6c5e208c83518cd529a8d_20.png)'
+  id: totrans-91
+  prefs: []
+  type: TYPE_IMG
+  zh: '![](img/79a6e68138a6c5e208c83518cd529a8d_20.png)'
