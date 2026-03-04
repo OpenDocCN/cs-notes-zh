@@ -1,0 +1,97 @@
+# C++并发与并行提案：第1章：C++26原子最小最大值操作
+
+![](img/d25725784016650d2ad32fb7be44b030_1.png)
+
+![](img/d25725784016650d2ad32fb7be44b030_3.png)
+
+![](img/d25725784016650d2ad32fb7be44b030_5.png)
+
+![](img/d25725784016650d2ad32fb7be44b030_7.png)
+
+在本节课中，我们将学习C++26标准中即将引入的原子最小值和最大值操作。这些操作是并发编程中的重要工具，能够帮助我们在多线程环境中安全、高效地更新共享变量，而无需使用显式锁。
+
+![](img/d25725784016650d2ad32fb7be44b030_9.png)
+
+## 概述
+
+C++20标准引入了原子操作，如 `fetch_add` 和 `compare_exchange`，但 `fetch_min` 和 `fetch_max` 操作直到C++26才被纳入标准库。这些操作在并行计算领域已有悠久历史，许多平台（如OpenCL和CUDA）早已支持。在多线程环境中，当多个线程同时尝试更新一个共享变量时，可能会发生竞态条件，导致数据损坏和程序行为不可预测。原子最小最大值操作通过确保对共享变量的更新是原子性的（即不可分割且不会被其他线程中断）来解决此问题。
+
+上一节我们介绍了原子操作的基本概念，本节中我们来看看具体的接口和用法。
+
+## 原子最小最大值操作的接口
+
+C++标准库通过 `std::atomic` 模板类及其成员函数 `fetch_max` 和 `fetch_min` 来提供原子最小最大值操作。这些函数会原子性地将共享变量更新为其当前值与给定值之间的最大值或最小值，其行为类似于已有的 `fetch_add` 操作。
+
+以下是 `fetch_max` 的函数原型示例：
+```cpp
+T fetch_max(T arg, std::memory_order order = std::memory_order_seq_cst) noexcept;
+```
+
+## 性能优势
+
+硬件对原子最小最大值操作的原生支持可以带来显著的性能提升。基准测试结果表明，与使用比较并交换循环的自定义实现相比，硬件指令在多核场景下性能更优，并且随着核心数量的增加，其性能扩展性良好。
+
+## 代码示例
+
+以下是一个演示如何在多线程环境中使用 `atomic_fetch_max` 的代码示例。该程序使用并行处理在0到999的范围内查找最大值。
+
+```cpp
+#include <atomic>
+#include <iostream>
+#include <thread>
+#include <vector>
+
+std::atomic<int> max_value(0); // 共享原子变量，用于存储最大值
+
+// 处理子范围并更新最大值的函数
+void find_max_in_range(int start, int end) {
+    for (int i = start; i < end; ++i) {
+        // 原子性地更新 max_value，如果 i 更大则替换
+        max_value.fetch_max(i, std::memory_order_relaxed);
+    }
+}
+
+int main() {
+    const int num_threads = 10;
+    const int range_size = 100;
+    std::vector<std::thread> threads;
+
+    // 创建10个线程，每个处理100个数字
+    for (int t = 0; t < num_threads; ++t) {
+        int start = t * range_size;
+        int end = start + range_size;
+        threads.emplace_back(find_max_in_range, start, end);
+    }
+
+    // 等待所有线程完成
+    for (auto& th : threads) {
+        th.join();
+    }
+
+    // 输出最终结果
+    std::cout << "Maximum value found: " << max_value.load() << std::endl; // 输出 999
+    return 0;
+}
+```
+
+### 代码解析
+
+以下是该示例的关键组成部分解析：
+
+1.  **共享原子变量**：`std::atomic<int> max_value(0)` 是一个原子整数，用于安全地在线程间共享和更新最大值。
+2.  **工作函数**：`find_max_in_range` 函数遍历给定的子范围，并使用 `fetch_max` 原子性地更新全局最大值。这里使用了 `memory_order_relaxed`，因为在这种求最大值的归约操作中，操作的精确顺序并不重要。
+3.  **线程创建**：主函数创建了10个线程，每个线程处理一个互不重叠的100个数字的子范围（例如，线程0处理0-99，线程1处理100-199，以此类推）。
+4.  **原子操作**：`max_value.fetch_max(i, std::memory_order_relaxed)` 是核心操作。它原子性地比较 `max_value` 的当前值和 `i`，并将 `max_value` 设置为两者中的较大值。
+5.  **线程同步**：通过 `join()` 等待所有工作线程完成，确保在所有范围都被处理后才打印最终结果。
+
+### 此方法的优点
+
+*   **并行性**：利用多核CPU加速处理过程。
+*   **无锁编程**：无需使用互斥锁等显式锁机制，减少了线程争用和死锁风险。
+*   **简化实现**：`atomic_fetch_max` 提供了一个简洁、安全的原语，简化了并发最大值计算的代码。
+
+## 总结
+
+![](img/d25725784016650d2ad32fb7be44b030_11.png)
+
+本节课中我们一起学习了C++26提案中的原子最小最大值操作。我们了解了它们对于编写高效、安全的多线程程序的重要性，并通过一个具体的代码示例，掌握了如何使用 `std::atomic::fetch_max` 来在多线程环境中进行无锁的归约计算。这些操作是构建高性能并发数据结构（如无锁队列、栈）的基础工具之一。
