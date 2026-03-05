@@ -1,3 +1,4 @@
++   [PyCon 2023 会议笔记](README.md)
 +   [001：Python 基础与环境搭建 🐍](pycon-2023-001.md)
 +   [002：使用Python监控政府公开信息 📊](pycon-2023-002.md)
 +   [003：使用 Pytest 进行单元测试 🧪](pycon-2023-003.md)
