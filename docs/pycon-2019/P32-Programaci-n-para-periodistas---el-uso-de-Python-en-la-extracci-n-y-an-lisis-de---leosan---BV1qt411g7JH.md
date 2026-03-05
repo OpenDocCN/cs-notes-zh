@@ -1,4 +1,4 @@
-# P32：记者的编程 - Python在数据提取和分析中的应用 - leosan - BV1qt411g7JH
+# P32：记者的编程 - Python 在数据提取和分析中的应用 - leosan - BV1qt411g7JH
 
 [听不清]。
 

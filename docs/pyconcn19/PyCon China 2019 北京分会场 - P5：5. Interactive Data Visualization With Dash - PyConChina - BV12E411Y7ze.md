@@ -4,7 +4,7 @@
 
 大家好。今天我担任用大市县找福士出主科媳傅。So。Today， I use。My application， dash application on you can use。
 
-Dash application from here。 and you can use from。Sly on the电。Maybe， maybe I sleeping on。It take time。
+Dash application from here。 and you can use from。Sly on the 电。Maybe， maybe I sleeping on。It take time。
 
  but。Opreation where you wake up。Yeah。Okay。ok。让我自我介晓，我是小张星。りゆ小川英之。我学还有一年。当。太有闲啦。おししもし引入。对不起。呢个知。
 
@@ -14,11 +14,11 @@ Dash application from here。 and you can use from。Sly on the电。Maybe， ma
 
 I talked about my career， I worked as director and analyst at Financial Institute for 18 years。
 
-5後 I started usingパython for data analysisです。Two years ago， I quit that job。 and recently。
+5 後 I started usingパython for data analysisです。Two years ago， I quit that job。 and recently。
 
  I founded my company named Chom in Chinese Chaangu。Im from Ky Japan。I want ask one question。我想问被告温迪。
 
-無後認知だ人類。啊，你呢住小吗？哦。Many people know京都 thankが欲。Recently when Chinese come to Japan。你啲。
+無後認知だ人類。啊，你呢住小吗？哦。Many people know 京都 thankが欲。Recently when Chinese come to Japan。你啲。
 
 People who come to Kyota， too。アイアンァンスパイソコミュニティ人教授。いつねあんなリパイソン。ハなりメヨやインチャニ。
 
@@ -62,7 +62,7 @@ And I won't share with you。Today， I will talk about one。
 
 At first， late fields of merit interacted with data visualization。But here I use two data。
 
-Numbバ tourist in Japanフミション hotel in京都。啊。This fast table shows number of foreign tourists in Japan。
+Numbバ tourist in Japanフミション hotel in 京都。啊。This fast table shows number of foreign tourists in Japan。
 
  by country， to1 by Europe。啊。China is number one。サンキ forビジティング Japanパン。
 
@@ -78,7 +78,7 @@ This is Chinese data。 we can see that the percentage is increasing month by mo
 
 Each percentage is close to 40% recently。Very huge number。I don't see this。佢。And I am Zing。U。
 
-The total number of普。In Japan， is increasing from 2014。And the number number tripleed in five years。
+The total number of 普。In Japan， is increasing from 2014。And the number number tripleed in five years。
 
 경인가 지금发 한던 봐。Many people was to run Chinese。Noラ補。They are not enough to。They are。
 
@@ -192,7 +192,7 @@ Dash has seven components ready to use。 Today， I will show you some of these
 
 私しデータ例を及りずインタラルティブテを。This can be used rack excerpt。
 
-I will show you how the graph changes as I enter number in the table。主啊。W use。Exhale。嗰边。对都。And定。
+I will show you how the graph changes as I enter number in the table。主啊。W use。Exhale。嗰边。对都。And 定。
 
 We can use。Dash data table like this。You can create applications that can be used by dark under file with dash call components。
 
@@ -236,9 +236,9 @@ And sharing interactive data visualization and collaborating with another people
 
 And good insights help to create better service and the future。I think D can help with this process。
 
-Let's start with people so us。谢谢。give people chance to ask questionOK我们还是两个问题。然后的话如果是大家能用英语提问是最好的。
+Let's start with people so us。谢谢。give people chance to ask questionOK 我们还是两个问题。然后的话如果是大家能用英语提问是最好的。
 
-如果不能用那个英语提问的话，然后就那个用中文提问。我们这边会有志者帮大家翻译成。然后呃hos first。有人有要提问的吗？呃，有什么问题？需要问提教一下我们的。吃的吗？可以用中文提问。可以用中文。
+如果不能用那个英语提问的话，然后就那个用中文提问。我们这边会有志者帮大家翻译成。然后呃 hos first。有人有要提问的吗？呃，有什么问题？需要问提教一下我们的。吃的吗？可以用中文提问。可以用中文。
 
 第个。either that graphic section。Graphics。Oh yeah， graphic yeah， and you mentioned three model and。
 

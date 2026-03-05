@@ -4,7 +4,7 @@
 
 ![](img/0881161b9e6d94eb66a30482d927aa2a_1.png)
 
-啊翻下吓。Good morning， it is a privilege to be with you here today。30个。So just to use keyboard。说一。Okay。
+啊翻下吓。Good morning， it is a privilege to be with you here today。30 个。So just to use keyboard。说一。Okay。
 
 お社？Okay。Today， I want to talk about。Ourselves as developers。About our colleague。
 
@@ -526,7 +526,7 @@ What's motivatedtiv yourself？You major bigger badge。AndMore money。More opp
 
  ultimately。What motivates us has to come from within。The thing that excites us。
 
- the thing that we can't。😔，あのじに。嗯。And突。So Zubre says， well， if you want to build a ship。
+ the thing that we can't。😔，あのじに。嗯。And 突。So Zubre says， well， if you want to build a ship。
 
 Don't drum off the men to gather the wood。😔，Divide the work and give orders。
 
@@ -540,7 +540,7 @@ Once that happen in their heart。To go to the ocean。They will figure out the 
 
 So thank you for the opportunity to share with you。然后的话就说是大家如果是能用英语提问的话，可以用英语提问。然后如果能用中文提问的话。
 
-然后我们这边有句子翻译好，OK好，稍等话。Thank you， sir。 this question you saids once now I'm survey last week。
+然后我们这边有句子翻译好，OK 好，稍等话。Thank you， sir。 this question you saids once now I'm survey last week。
 
  I said yes， yes， yes to my leader。And then the project is delayed， so my leader is very， very angry。
 
@@ -600,7 +600,7 @@ That when you have the experience。Even a little bit， then you can talk about
 
  as opposed to just having read a book， I told you I read the Python book twice because just reading a book doesn't help。
 
- you don't remember it。😔，再去。OK好，然后。嗯。Since you said that the time arrangement。
+ you don't remember it。😔，再去。OK 好，然后。嗯。Since you said that the time arrangement。
 
  you just mentioned that you always feel light and you always have a lot of excuse。 So I want to ask。
 
