@@ -1,0 +1,315 @@
+# GitHub机器人开发教程：P83：通过机器人表达感谢！ 🤖
+
+![](img/3c3588b77123e82a29264958f5086ce4_1.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_2.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_3.png)
+
+在本教程中，我们将学习如何构建一个GitHub机器人。这个机器人将能够自动感谢安装它的仓库维护者，并对新贡献者提交的拉取请求表达感谢。我们将使用Python 3.7、`gidgethub`库和`aiohttp`网络框架来完成这个项目。
+
+![](img/3c3588b77123e82a29264958f5086ce4_5.png)
+
+---
+
+![](img/3c3588b77123e82a29264958f5086ce4_7.png)
+
+## 课程概述 📋
+
+![](img/3c3588b77123e82a29264958f5086ce4_9.png)
+
+在本节课中，我们将要学习：
+1.  GitHub机器人的基本概念及其用途。
+2.  如何使用`gidgethub`库与GitHub API进行交互。
+3.  如何创建和配置一个GitHub应用。
+4.  如何部署一个Web服务到Heroku来处理GitHub的Webhook事件。
+5.  编写代码让机器人自动响应特定事件，如应用安装和拉取请求。
+
+---
+
+## 1：准备工作与环境搭建 🛠️
+
+在开始构建机器人之前，我们需要准备好开发环境。本节将介绍所需的工具和账户，并指导你完成初始设置。
+
+你需要准备以下内容：
+*   **Python 3.7**：确保你的环境中安装了正确版本的Python。
+*   **GitHub账户**：用于创建应用和测试。
+*   **Heroku账户**：用于免费部署我们的Web服务。
+*   **Heroku CLI**：一个有用的命令行工具，用于管理和调试Heroku应用。
+
+以下是具体的设置步骤：
+
+![](img/3c3588b77123e82a29264958f5086ce4_11.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_13.png)
+
+1.  **安装Python 3.7**：请根据你的操作系统，参考相关教程进行安装。在终端输入`python3.7 --version`来验证安装是否成功。
+2.  **创建GitHub个人访问令牌**：登录GitHub，进入`Settings` -> `Developer settings` -> `Personal access tokens`，点击`Generate new token`。为令牌命名（例如“tutorial”），并勾选`repo`权限范围，然后生成令牌。**请务必妥善保存此令牌字符串，因为它只会显示一次**。
+3.  **设置环境变量**：将生成的令牌设置为环境变量，以便在代码中安全使用。例如，在Mac/Linux的终端中，可以运行：
+    ```bash
+    export GH_TOKEN=你的令牌字符串
+    ```
+
+![](img/3c3588b77123e82a29264958f5086ce4_15.png)
+
+---
+
+![](img/3c3588b77123e82a29264958f5086ce4_17.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_19.png)
+
+## 2：初识GitHub API与gidgethub库 📚
+
+![](img/3c3588b77123e82a29264958f5086ce4_21.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_22.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_24.png)
+
+上一节我们准备好了基础环境，本节中我们来看看如何与GitHub进行程序化交互。我们将使用`gidgethub`库来简化API调用。
+
+![](img/3c3588b77123e82a29264958f5086ce4_26.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_28.png)
+
+**GitHub机器人**是利用GitHub的Webhooks和API实现自动化的应用程序。它们可以自动回复用户、添加标签、管理Issue和Pull Request等，从而帮助维护者节省时间。
+
+**gidgethub**是一个用于与GitHub API交互的Python异步库。它抽象了许多底层细节，例如自动构建请求头（如`Authorization`和`User-Agent`），让你能更专注于业务逻辑。
+
+让我们通过一个简单的命令行脚本来体验如何使用`gidgethub`。
+
+![](img/3c3588b77123e82a29264958f5086ce4_30.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_32.png)
+
+首先，安装必要的库并创建一个脚本文件：
+```bash
+pip install gidgethub aiohttp
+```
+
+然后，创建一个Python脚本（例如`demo.py`），使用你的个人访问令牌来创建一个Issue：
+```python
+import asyncio
+import os
+from gidgethub.aiohttp import GitHubAPI
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        gh = GitHubAPI(session, “你的GitHub用户名”, oauth_token=os.getenv(“GH_TOKEN”))
+        # 在指定仓库创建一个Issue
+        response = await gh.post(
+            “/repos/{owner}/{repo}/issues“,
+            data={“title”: “我们发现了一个问题”, “body”: “这是一个通过API创建的Issue。”}
+        )
+        print(f“Issue创建成功: {response[‘html_url’]}“)
+
+![](img/3c3588b77123e82a29264958f5086ce4_34.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_36.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_38.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_40.png)
+
+asyncio.run(main())
+```
+运行此脚本，它会在你指定的仓库中创建一个新的Issue。这演示了如何以编程方式与GitHub交互。
+
+---
+
+![](img/3c3588b77123e82a29264958f5086ce4_42.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_44.png)
+
+## 3：理解Webhook与GitHub应用 🔗
+
+在上一节，我们通过主动执行脚本与GitHub交互。但一个真正的“机器人”应该能自动响应事件。本节我们将学习**Webhook**和**GitHub应用**的概念。
+
+**Webhook**是GitHub在特定事件（如Issue创建、Pull Request打开等）发生时，向你的服务器发送的HTTP POST请求。你的服务器接收并处理这些请求，从而实现自动化。
+
+![](img/3c3588b77123e82a29264958f5086ce4_46.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_48.png)
+
+由于GitHub需要向一个公开的URL发送Webhook，我们不能在本地电脑上运行服务。因此，我们需要将服务部署到云端，例如**Heroku**。
+
+**GitHub应用**是一种特殊的集成方式。它可以被安装到多个仓库，并且通过更安全的机制进行身份认证。与应用交互时，我们使用**安装访问令牌**，而不是个人访问令牌。获取这个令牌的过程稍复杂，但`gidgethub`库提供了工具函数来帮助我们。
+
+![](img/3c3588b77123e82a29264958f5086ce4_50.png)
+
+---
+
+![](img/3c3588b77123e82a29264958f5086ce4_52.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_54.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_56.png)
+
+## 4：创建Web服务与GitHub应用 🌐
+
+![](img/3c3588b77123e82a29264958f5086ce4_58.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_60.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_62.png)
+
+上一节我们介绍了核心概念，本节中我们开始动手搭建。我们将创建一个基础的Web服务，并将其部署到Heroku，然后配置一个GitHub应用。
+
+![](img/3c3588b77123e82a29264958f5086ce4_64.png)
+
+以下是需要完成的步骤：
+
+1.  **获取基础代码**：为了加快进度，可以使用一个预先准备好的Web服务模板。你可以Fork并克隆这个仓库到本地。
+2.  **部署到Heroku**：
+    *   登录Heroku，创建一个新的应用。
+    *   将你的代码仓库连接到Heroku，并启用自动部署。
+    *   部署成功后，你会获得一个类似 `https://your-app-name.herokuapp.com` 的URL，这就是你的Web服务地址。
+3.  **创建GitHub应用**：
+    *   登录GitHub，进入 `Settings` -> `Developer settings` -> `GitHub Apps` -> `New GitHub App`。
+    *   填写应用名称。
+    *   **Webhook URL**：填写你的Heroku应用URL，并加上 `/webhook` 路径，例如 `https://your-app-name.herokuapp.com/webhook`。
+    *   **Webhook secret**：设置一个密钥（如随机生成的字符串），用于验证Webhook请求的来源。
+    *   配置权限：为本教程，我们需要 `Issues` 和 `Pull requests` 的 `Read & write` 权限。
+    *   订阅事件：勾选 `Issue` 和 `Pull request` 事件。
+    *   最后，生成一个**私钥**文件并下载保存。
+4.  **配置环境变量**：在Heroku应用的设置页面，添加以下配置变量（Config Vars）：
+    *   `GITHUB_APP_ID`: 你的GitHub应用ID。
+    *   `GITHUB_PRIVATE_KEY`: 你下载的私钥文件内容。
+    *   `GITHUB_WEBHOOK_SECRET`: 你之前设置的Webhook密钥。
+
+完成以上步骤后，你的基础设施就搭建好了。
+
+---
+
+## 5：编写机器人逻辑——感谢维护者 ❤️
+
+现在，我们的Web服务和GitHub应用都已就绪。本节我们将编写第一个机器人功能：当有人安装应用时，自动在对应仓库创建一个感谢Issue。
+
+我们将在Web服务的 `/webhook` 端点处理 `installation` 事件。以下是实现思路：
+
+![](img/3c3588b77123e82a29264958f5086ce4_66.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_68.png)
+
+1.  在代码中，为 `installation` 事件创建路由处理器。
+2.  当收到 `installation` 事件且动作为 `created` 时，获取负载中的 `installation_id` 和仓库列表。
+3.  使用 `gidgethub` 提供的工具，通过 `installation_id` 获取一个**安装访问令牌**。
+4.  使用这个令牌，在每个安装了此应用的仓库中创建一个感谢Issue。
+5.  （可选）为了保持仓库整洁，可以立即关闭这个感谢Issue。
+
+核心代码逻辑如下：
+```python
+from gidgethub import routing, sansio
+from gidgethub.aiohttp import GitHubAPI
+from gidgethub.apps import get_installation_access_token
+
+router = routing.Router()
+
+![](img/3c3588b77123e82a29264958f5086ce4_70.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_72.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_74.png)
+
+@router.register(“installation”, action=“created”)
+async def thank_maintainer(event, gh, *args, **kwargs):
+    “”“当应用被安装时，感谢维护者。”“”
+    installation_id = event.data[“installation”][“id”]
+    # 1. 获取安装访问令牌
+    access_token = await get_installation_access_token(
+        gh,
+        installation_id=installation_id,
+        app_id=os.getenv(“GITHUB_APP_ID”),
+        private_key=os.getenv(“GITHUB_PRIVATE_KEY”),
+    )
+    # 2. 为每个被安装的仓库创建Issue
+    for repo in event.data[“repositories”]:
+        repo_name = repo[“full_name”]
+        issue_url = f“/repos/{repo_name}/issues”
+        # 创建Issue
+        await gh.post(issue_url,
+                     data={“title”: “谢谢安装！”, “body”: “感谢您安装我的机器人！”},
+                     oauth_token=access_token)
+        # 可以在这里添加关闭该Issue的代码
+```
+将代码部署后，当你安装这个GitHub应用到你的仓库时，机器人就会自动运行并创建感谢Issue。
+
+![](img/3c3588b77123e82a29264958f5086ce4_76.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_78.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_80.png)
+
+---
+
+## 6：编写机器人逻辑——欢迎新贡献者 🎉
+
+上一节我们让机器人学会了感谢维护者，本节中我们来看看如何让它欢迎新贡献者。我们将处理 `pull_request` 事件。
+
+我们希望机器人在有人新开一个Pull Request时，自动在PR下留言欢迎。如果是第一次贡献，则给予特别鼓励。
+
+实现步骤如下：
+
+![](img/3c3588b77123e82a29264958f5086ce4_82.png)
+
+1.  订阅 `pull_request` 事件，并关注 `opened` 动作。
+2.  在事件负载中，检查 `author_association` 字段。如果其值为 `NONE`，通常意味着这是贡献者的第一次PR。
+3.  获取安装访问令牌（方式同上）。
+4.  使用令牌在对应的Pull Request下发布一条评论。
+
+![](img/3c3588b77123e82a29264958f5086ce4_84.png)
+
+核心代码逻辑如下：
+```python
+@router.register(“pull_request”, action=“opened”)
+async def welcome_new_contributor(event, gh, *args, **kwargs):
+    “”“当有新的Pull Request被打开时，欢迎贡献者。”“”
+    installation_id = event.data[“installation”][“id”]
+    pr_author = event.data[“pull_request”][“user”][“login”]
+    pr_number = event.data[“pull_request”][“number”]
+    repo_name = event.data[“repository”][“full_name”]
+    author_association = event.data[“pull_request”][“author_association”]
+
+    # 获取安装访问令牌
+    access_token = await get_installation_access_token(...) # 同上
+
+    comment_url = f“/repos/{repo_name}/issues/{pr_number}/comments”
+
+    if author_association == “NONE”:
+        message = f“@{pr_author}，感谢你的第一次贡献！我们非常欢迎。”
+    else:
+        message = f“@{pr_author}，感谢你的贡献！”
+
+    await gh.post(comment_url,
+                 data={“body”: message},
+                 oauth_token=access_token)
+```
+此外，你还可以扩展功能，例如自动为新PR添加“待审核”标签，或者当有人在Issue下评论时自动添加表情反应。这些都可以通过订阅相应事件并调用对应的GitHub API来实现。
+
+---
+
+![](img/3c3588b77123e82a29264958f5086ce4_86.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_88.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_90.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_92.png)
+
+## 总结 🎓
+
+![](img/3c3588b77123e82a29264958f5086ce4_94.png)
+
+![](img/3c3588b77123e82a29264958f5086ce4_96.png)
+
+在本教程中，我们一起学习了如何从零开始构建一个GitHub机器人。
+
+我们首先了解了GitHub机器人的概念和`gidgethub`库的优势。然后，我们通过命令行脚本熟悉了GitHub API的基本调用。接着，我们深入探讨了Webhook和GitHub应用的工作原理，并成功在Heroku上部署了Web服务、创建并配置了GitHub应用。
+
+最后，我们编写了核心的机器人逻辑：
+*   当应用被安装时，自动创建感谢Issue。
+*   当有新贡献者提交Pull Request时，自动留言欢迎。
+
+![](img/3c3588b77123e82a29264958f5086ce4_98.png)
+
+你现在已经掌握了构建一个自动化GitHub机器人的基本技能。你可以在此基础上，探索更多GitHub API和事件，打造出功能更强大的机器人，来优化你的工作流程或开源项目管理。

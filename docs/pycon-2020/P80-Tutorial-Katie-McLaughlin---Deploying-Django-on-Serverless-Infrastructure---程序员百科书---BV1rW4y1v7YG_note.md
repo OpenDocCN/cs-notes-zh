@@ -1,0 +1,232 @@
+# 无服务器基础设施部署Django：P80：教程概述
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_0.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_2.png)
+
+在本教程中，我们将学习如何在无服务器基础设施上部署一个Django应用程序。我们将使用Google Cloud Platform作为云服务提供商，通过手动和自动化两种方式，将一个名为“Unicodex”的示例Django应用部署到云端。教程将涵盖从本地环境准备、手动配置云资源，到使用Terraform实现基础设施即代码（IaC）自动化的完整流程。
+
+---
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_4.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_6.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_8.png)
+
+## 无服务器基础设施部署Django：1：本地环境准备与项目介绍
+
+上一节我们概述了教程内容，本节中我们来看看如何准备本地开发环境并了解我们的示例项目。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_10.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_12.png)
+
+首先，我们需要获取示例Django应用程序。这是一个名为“Unicodex”的应用，用于展示不同供应商和版本的表情符号（Emoji）及其Unicode码点信息。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_14.png)
+
+以下是获取和运行本地项目的步骤：
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_16.png)
+
+1.  **下载项目**：从提供的GitHub链接下载项目ZIP文件。
+2.  **解压文件**：将下载的ZIP文件解压到本地文件夹。
+3.  **使用Docker Compose启动服务**：项目包含一个`docker-compose.yml`文件，用于定义和运行PostgreSQL数据库和Django Web服务。
+    ```yaml
+    # docker-compose.yml 示例结构
+    version: '3'
+    services:
+      db:
+        image: postgres
+        environment:
+          POSTGRES_PASSWORD: localpassword
+      web:
+        build: .
+        command: python manage.py runserver 0.0.0.0:8000
+        volumes:
+          - .:/code
+        ports:
+          - "8000:8000"
+        depends_on:
+          - db
+    ```
+4.  **应用数据库迁移**：启动容器后，运行Django的迁移命令来创建数据库表结构。
+    ```bash
+    docker-compose exec web python manage.py migrate
+    ```
+5.  **加载初始数据**：运行命令加载示例数据（fixtures）。
+    ```bash
+    docker-compose exec web python manage.py loaddata sampledata
+    ```
+6.  **访问应用**：在浏览器中打开 `http://localhost:8000`，你将看到一个基础的Django应用界面。
+7.  **访问管理后台**：创建超级用户后，可以登录Django管理后台（`/admin`）查看和管理数据模型，并执行“生成设计”等管理操作来获取表情符号图片。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_18.png)
+
+至此，我们已经在本地成功运行了“Unicodex”应用。这个应用包含了数据库模型、管理操作、静态文件和媒体文件处理，是一个功能相对完整的Django项目，适合作为部署案例。
+
+---
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_20.png)
+
+## 无服务器基础设施部署Django：2：手动部署到Google Cloud Run
+
+上一节我们介绍了如何在本地运行项目，本节中我们来看看如何手动将其部署到Google Cloud Run无服务器环境。
+
+部署到生产环境需要解决几个问题：服务器托管、媒体文件存储、敏感信息（如数据库密码）管理。我们将使用以下Google Cloud服务：
+*   **Cloud Run**：用于托管和运行Django应用容器。
+*   **Cloud SQL**：提供托管的PostgreSQL数据库实例。
+*   **Cloud Storage**：用于存储用户上传的媒体文件。
+*   **Secret Manager**：用于安全地存储和管理数据库连接字符串、密码等机密信息。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_22.png)
+
+以下是手动部署的核心步骤：
+
+1.  **启用计费与API**：在Google Cloud控制台中为项目启用计费功能，并启用Cloud Run、Cloud SQL、Cloud Build、Secret Manager等所需服务的API。
+2.  **创建服务账户并分配权限**：创建专门的服务账户来运行应用，并为其分配最小必要权限（如Cloud Run管理员、Cloud SQL客户端）。
+3.  **创建Cloud SQL数据库实例**：使用`gcloud`命令创建一个PostgreSQL实例、数据库和用户，并生成强密码。
+    ```bash
+    gcloud sql instances create [INSTANCE_NAME] --database-version=POSTGRES_11 --region=[REGION]
+    gcloud sql databases create [DATABASE_NAME] --instance=[INSTANCE_NAME]
+    gcloud sql users create [USER_NAME] --instance=[INSTANCE_NAME] --password=[GENERATED_PASSWORD]
+    ```
+4.  **创建Cloud Storage存储桶**：创建一个存储桶用于存放媒体文件，并授予服务账户写入权限。
+    ```bash
+    gsutil mb -l [REGION] gs://[BUCKET_NAME]
+    ```
+5.  **在Secret Manager中存储机密**：将数据库连接字符串（`DATABASE_URL`）、存储桶名称等敏感信息存储为Secret。
+    ```bash
+    echo -n $DATABASE_URL | gcloud secrets create DATABASE_URL --data-file=-
+    ```
+6.  **构建Docker镜像**：使用Cloud Build服务，根据项目中的Dockerfile构建容器镜像。
+7.  **首次部署Cloud Run服务**：使用上一步构建的镜像部署到Cloud Run，但先不设置数据库连接等环境变量。
+8.  **配置环境变量并重新部署**：获取首次部署生成的服务URL，将其设置为`ALLOWED_HOSTS`。然后更新Cloud Run服务，注入从Secret Manager读取机密所需的环境变量（如`DATABASE_URL`、`GS_BUCKET_NAME`）。
+9.  **运行数据库迁移**：通过Cloud Build运行一个专门的构建步骤，该步骤配置了Cloud SQL代理，能够安全地连接到数据库并执行`python manage.py migrate`、`collectstatic`等命令。
+10. **访问应用**：部署完成后，通过Cloud Run提供的URL访问应用。登录管理后台（需从Secret Manager获取管理员密码）并执行“生成设计”操作，验证媒体文件能否正确存储到Cloud Storage并显示。
+
+通过以上步骤，我们成功手动将Django应用部署到了无服务器环境。这个过程涉及多个服务的配置和交互，确保了应用的安全性、可扩展性和12-Factor应用原则的遵循。
+
+---
+
+## 无服务器基础设施部署Django：3：使用Cloud Build触发器实现自动部署
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_24.png)
+
+上一节我们完成了复杂的手动部署，本节中我们来看看如何利用Cloud Build触发器，实现代码提交后的自动构建与部署。
+
+为了实现持续部署（CD），我们将把项目代码托管在GitHub上，并配置Cloud Build触发器。这样，每当向指定的分支（如`main`）推送代码时，就会自动触发构建、迁移和部署流程。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_26.png)
+
+以下是配置自动部署的步骤：
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_28.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_30.png)
+
+1.  **Fork项目仓库**：将演示用的“Unicodex”仓库Fork到自己的GitHub账户下。
+2.  **在Cloud Build中连接仓库**：在Google Cloud控制台的Cloud Build设置中，连接你的GitHub账户和Fork后的仓库。
+3.  **创建触发器**：创建一个新的触发器，配置其监听`main`分支的推送事件，并使用我们之前手动部署时创建的`cloudbuild.yaml`配置文件。
+    ```bash
+    # 使用gcloud命令创建触发器的示例
+    gcloud beta builds triggers create github \
+      --name="unicodex-deploy-trigger" \
+      --repo-name="[YOUR_REPO_NAME]" \
+      --repo-owner="[YOUR_GITHUB_USERNAME]" \
+      --branch-pattern="^main$" \
+      --build-config="cloudbuild.yaml"
+    ```
+4.  **测试自动部署**：在本地克隆你的仓库，对代码进行修改（例如，更改模板文件中的标题颜色），然后将修改提交并推送到GitHub的`main`分支。
+5.  **观察自动流程**：推送后，在Cloud Build控制台可以看到一个新的构建任务被自动触发。该任务会执行构建镜像、运行数据库迁移、收集静态文件、重新部署到Cloud Run等一系列操作。
+6.  **验证更新**：构建部署完成后，刷新浏览器中已部署的应用页面，确认代码更改已生效。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_32.png)
+
+通过设置Cloud Build触发器，我们将部署流程自动化。开发者只需关注代码开发，提交后即可自动完成上线，极大地提升了开发效率和部署的一致性。
+
+---
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_34.png)
+
+## 无服务器基础设施部署Django：4：使用Terraform自动化基础设施配置
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_36.png)
+
+上一节我们实现了代码部署的自动化，本节中我们来看看如何使用Terraform实现基础设施即代码（IaC），将云资源的创建和管理也自动化。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_38.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_40.png)
+
+手动创建服务账户、数据库、存储桶等资源虽然可行，但难以复制和版本控制。Terraform允许我们使用声明式代码（`.tf`文件）来定义所需的基础设施，并能一键创建或销毁。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_42.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_44.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_46.png)
+
+以下是使用Terraform自动化配置的步骤：
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_48.png)
+
+1.  **安装Terraform和Google Cloud SDK**：在本地机器上安装Terraform和`gcloud`命令行工具。
+2.  **创建新项目**：在Google Cloud上创建一个全新的项目，用于Terraform演示，避免影响之前的手动部署。
+3.  **为Terraform创建服务账户**：在新项目中创建一个服务账户，并授予其足够的权限（如项目所有者），以便Terraform能够代表我们创建资源。同时为该账户生成密钥文件。
+4.  **编写Terraform配置**：项目代码库中已包含Terraform配置文件（`main.tf`， `variables.tf`等），它们定义了Cloud SQL实例、数据库用户、存储桶、Secret Manager机密、Cloud Run服务等资源。
+    ```hcl
+    # main.tf 示例片段：创建随机密码和SQL实例
+    resource "random_password" "db_root_password" {
+      length = 64
+    }
+    resource "google_sql_database_instance" "postgres" {
+      name = var.instance_name
+      database_version = "POSTGRES_11"
+      region = var.region
+      settings {
+        tier = "db-f1-micro"
+      }
+    }
+    ```
+5.  **初始化与规划**：在Terraform配置目录下运行`terraform init`初始化，然后运行`terraform plan`查看将要创建的资源计划。
+6.  **应用配置**：运行`terraform apply`，Terraform将自动按照配置创建所有定义好的云资源。这个过程会重现我们之前手动执行的大部分步骤。
+7.  **构建镜像与运行迁移**：Terraform主要管理基础设施资源，不负责构建应用镜像和运行数据库迁移。因此，在`apply`完成后，我们仍需使用`gcloud`命令构建Docker镜像，并运行一次性的数据库迁移脚本。
+8.  **访问与验证**：Terraform输出Cloud Run服务的URL。访问该URL，验证全新的基础设施和应用已成功部署并运行。
+
+使用Terraform后，整个云环境可以通过版本控制的代码文件来定义和重现。这带来了环境一致性、可审计性以及快速搭建/销毁环境的能力，是管理现代云基础设施的最佳实践。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_50.png)
+
+---
+
+## 无服务器基础设施部署Django：5：教程总结与资源清理
+
+本节课中我们一起学习了在无服务器基础设施上部署Django应用的完整流程。
+
+我们首先在本地运行了“Unicodex”示例应用。然后，我们详细演练了如何手动在Google Cloud上配置Cloud SQL、Cloud Storage、Secret Manager等服务，并将应用部署到Cloud Run。接着，我们通过设置Cloud Build触发器，实现了代码提交即部署的持续交付流程。最后，我们引入了基础设施即代码的概念，使用Terraform自动化了所有云资源的创建和管理，使整个部署过程可重复、可版本化。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_52.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_54.png)
+
+**核心要点总结**：
+*   **无服务器架构**：利用Cloud Run等服务，无需管理服务器，按需伸缩。
+*   **安全实践**：使用服务账户最小权限原则、Secret Manager管理机密、环境变量配置。
+*   **自动化流水线**：结合Cloud Build和GitHub触发器，实现CI/CD。
+*   **基础设施即代码**：使用Terraform等工具，将基础设施定义为可版本控制的代码。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_56.png)
+
+**重要提示：资源清理**
+教程中创建的资源（尤其是Cloud SQL实例）可能会产生持续费用。完成学习后，请务必清理资源：
+1.  对于手动部署和Terraform创建的项目，最彻底的方式是直接**删除整个Google Cloud项目**。
+2.  在Google Cloud控制台，进入“管理资源”页面，选择要删除的项目，点击“删除”。
+3.  删除项目后，所有计费和资源都将停止，数据会在30天后永久清除。
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_58.png)
+
+![](img/e13fcfe4ab5558fcc98365bcc98d357d_59.png)
+
+感谢你学习本教程。通过掌握这些步骤，你已经能够将复杂的Django应用安全、高效地部署到现代化的无服务器云平台之上。
