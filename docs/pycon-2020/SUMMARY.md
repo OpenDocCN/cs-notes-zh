@@ -1,5 +1,4 @@
 +   [PyCon 2020 会议笔记](README.md)
-+   [P76：Tutorial Andrew Knight - Hands-On Web App Test Automation - 程序员百科书 - BV1rW4y1v7YG](P76-Tutorial-Andrew-Knight---Hands-On-Web-App-Test-Automation---程序员百科书---BV1rW4y1v7YG.md)
 +   [002：编程基础入门 🐍](pycon-2020-002.md)
 +   [003：Asyncio集成实践 🚀](pycon-2020-003.md)
 +   [004：调试实战与代码模拟 🐛](pycon-2020-004.md)
@@ -73,6 +72,7 @@
 +   [073：CLI的起源与Python实现](pycon-2020-073.md)
 +   [074：五年级科学博览会项目实战教程](pycon-2020-074.md)
 +   [075：使用 Python 与机器学习 🎭](pycon-2020-075.md)
++   [076：教程概述 🚀](pycon-2020-076.md)
 +   [077：教程 Eric J. Ma - 为数据科学家解密深度学习](pycon-2020-077.md)
 +   [078：装饰器简介，增强你的Python代码](pycon-2020-078.md)
 +   [079：教程](pycon-2020-079.md)
