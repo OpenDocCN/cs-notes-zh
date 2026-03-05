@@ -1,0 +1,194 @@
+# Dask教程：P8：一个Python分布式数据科学框架
+
+![](img/c756025e33a1d78115431bb7e1f1596e_1.png)
+
+![](img/c756025e33a1d78115431bb7e1f1596e_3.png)
+
+在本教程中，我们将学习Dask，一个用于Python并行和分布式计算的库。我们将了解它如何帮助扩展NumPy、Pandas等流行库，以及如何并行化更通用的Python代码。课程内容将从基础概念开始，逐步深入到任务调度和系统架构。
+
+![](img/c756025e33a1d78115431bb7e1f1596e_5.png)
+
+## 概述
+
+![](img/c756025e33a1d78115431bb7e1f1596e_7.png)
+
+Dask旨在解决Python科学计算栈（如NumPy、Pandas）在单核和内存限制下的瓶颈。它通过并行和分布式计算，使这些库能够处理超出单机内存的大型数据集。本教程将介绍Dask的核心概念、使用方法及其在生态系统中的位置。
+
+---
+
+## 章节 1： 并行化NumPy与Pandas 🧮
+
+上一节我们概述了Dask的目标。本节中，我们来看看Dask如何为NumPy和Pandas用户提供熟悉的并行接口。
+
+![](img/c756025e33a1d78115431bb7e1f1596e_9.png)
+
+Dask提供了两个高级集合：Dask数组和Dask DataFrame。
+*   **Dask数组** 由许多小的NumPy数组块组成，形成一个逻辑上的大型多维数组。
+*   **Dask DataFrame** 由许多Pandas DataFrame组成，形成一个逻辑上的大型表格。
+
+这些集合的API与NumPy和Pandas高度相似，但操作是并行执行的，可以在多核机器、磁盘或集群上运行。
+
+以下是Dask数组的一个简单示例：
+```python
+import dask.array as da
+# 创建一个由100个1000x1000的NumPy数组块组成的Dask数组
+x = da.random.random((10000, 1000), chunks=(1000, 1000))
+# 计算总和，操作是并行执行的
+result = x.sum()
+result.compute()
+```
+
+---
+
+## 章节 2： 并行化通用Python代码 ⚙️
+
+![](img/c756025e33a1d78115431bb7e1f1596e_11.png)
+
+仅仅并行化数组和DataFrame还不够。许多科学计算涉及更复杂、自定义的算法。Dask通过其延迟执行（`delayed`）功能来处理通用Python代码。
+
+`dask.delayed`装饰器可以将普通的Python函数转换为延迟执行的任务。Dask会构建一个任务图，并仅在需要结果时才并行执行。
+
+以下是如何使用`delayed`并行化自定义函数的示例：
+```python
+from dask import delayed
+import time
+
+![](img/c756025e33a1d78115431bb7e1f1596e_13.png)
+
+@delayed
+def slow_inc(x):
+    time.sleep(1)
+    return x + 1
+
+@delayed
+def slow_add(x, y):
+    time.sleep(1)
+    return x + y
+
+# 构建任务图，此时并未实际计算
+a = slow_inc(1)
+b = slow_inc(2)
+c = slow_add(a, b)
+
+![](img/c756025e33a1d78115431bb7e1f1596e_15.png)
+
+![](img/c756025e33a1d78115431bb7e1f1596e_17.png)
+
+# 触发并行计算
+result = c.compute()
+print(result)  # 输出 5
+```
+
+---
+
+![](img/c756025e33a1d78115431bb7e1f1596e_19.png)
+
+## 章节 3： 任务图与调度器 🗺️
+
+上一节我们看到了如何创建任务。本节中我们来看看Dask如何管理和执行这些任务。
+
+![](img/c756025e33a1d78115431bb7e1f1596e_21.png)
+
+Dask的核心是一个动态任务调度器。它主要做两件事：
+1.  **生成任务图**：将高级操作（如数组求和）分解为许多低级任务（如对每个数据块求和）。
+2.  **调度执行**：在可用的工作线程或集群节点上高效地并行执行这些任务。
+
+任务图是一个有向无环图（DAG），其中节点代表任务（函数），边代表数据依赖关系。调度器遍历此图，决定任务的执行顺序和位置。
+
+---
+
+## 章节 4： Dask与其他并行计算系统对比 ⚖️
+
+![](img/c756025e33a1d78115431bb7e1f1596e_23.png)
+
+在深入Dask调度器细节之前，了解Python生态中其他并行计算选项的优缺点有助于理解Dask的定位。
+
+以下是几种常见系统的简要对比：
+
+*   **`multiprocessing` / `concurrent.futures`**
+    *   **优点**：Python标准库，轻量，易于使用。
+    *   **缺点**：进程间通信开销大，难以处理复杂的任务依赖图。
+
+*   **大数据集合系统（如Spark）**
+    *   **优点**：提供丰富的API（map、reduce、join等），扩展性好，在企业中受信任。
+    *   **缺点**：通常基于JVM，对Python支持是二等公民；API固定，难以处理任意、动态的任务图。
+
+*   **工作流调度系统（如Airflow, Luigi）**
+    *   **优点**：能处理复杂的任务依赖图，通常是Python原生。
+    *   **缺点**：任务开销高（~100毫秒），不为低延迟计算优化，缺乏工作节点间高效的数据通信。
+
+Dask试图结合以上系统的优点：它像Airflow一样能处理任意任务图，又像Spark一样为计算性能优化，并且是纯Python、轻量级的。
+
+---
+
+## 章节 5： Dask调度器架构 🏗️
+
+![](img/c756025e33a1d78115431bb7e1f1596e_25.png)
+
+Dask主要有两种调度器：
+1.  **单机调度器**：轻量级，开销极低（约50微秒），仅依赖Python标准库。适用于单机多核环境。
+2.  **分布式调度器**：基于Tornado的TCP应用，支持在集群上运行。包含一个中心调度器进程和多个工作器进程，工作器之间可以点对点通信。
+
+分布式调度器的典型架构如下：
+```
+客户端 (Client) -> 调度器 (Scheduler) <-> 工作器 (Worker 1, Worker 2, ...)
+```
+客户端提交任务图给调度器，调度器将任务分发给空闲的工作器执行。
+
+---
+
+## 章节 6： 熟悉的API与协议 🤝
+
+![](img/c756025e33a1d78115431bb7e1f1596e_27.png)
+
+为了降低学习成本和促进采用，Dask尽可能地复用现有的、流行的Python API和协议。
+
+![](img/c756025e33a1d78115431bb7e1f1596e_29.png)
+
+Dask支持多种熟悉的接口：
+*   **NumPy/Pandas API**：如前所述，Dask数组和DataFrame模仿了原生接口。
+*   **`concurrent.futures`接口**：可以像使用线程池/进程池执行器一样使用Dask。
+*   **Async/Await**：支持原生的Python异步编程模式。
+*   **Joblib**：可以替换scikit-learn的默认并行后端，使其代码能在Dask集群上运行。
+
+以下是一个使用`concurrent.futures`接口的示例：
+```python
+from dask.distributed import Client
+client = Client() # 连接到本地集群
+
+# 使用类似concurrent.futures的submit方法
+future = client.submit(lambda x: x * 2, 10)
+result = future.result()
+print(result) # 输出 20
+```
+
+---
+
+![](img/c756025e33a1d78115431bb7e1f1596e_31.png)
+
+![](img/c756025e33a1d78115431bb7e1f1596e_33.png)
+
+## 章节 7： Python生态的优势与总结 🌟
+
+![](img/c756025e33a1d78115431bb7e1f1596e_35.png)
+
+构建Dask的过程相对顺利，这很大程度上得益于Python生态系统既拥有强大的数值计算栈（NumPy, SciPy），又拥有成熟的并发网络栈（Tornado, asyncio）。这种结合是罕见的，使得在Python中构建高性能的分布式计算框架成为可能。
+
+**数值计算栈**：通过C/Fortran扩展，能以接近硬件的速度执行计算，并且GIL（全局解释器锁）在此类操作中通常不是问题。
+**并发网络栈**：提供了高效的事件循环和异步编程支持，使得构建响应式、高并发的调度器成为可能。
+
+## 总结
+
+在本教程中，我们一起学习了：
+1.  Dask如何通过**Dask数组**和**Dask DataFrame**提供并行化的NumPy和Pandas体验。
+2.  如何使用 **`dask.delayed`** 来并行化任意、自定义的Python函数和算法。
+3.  Dask的核心是一个**动态任务调度器**，它构建并高效执行任务图。
+4.  Dask在生态系统中的定位，它填补了轻量级并行库与重型大数据框架之间的空白。
+5.  Dask的**分布式架构**以及它如何利用**现有Python API和协议**来降低使用门槛。
+6.  Python生态在数值计算和并发网络两方面的强大实力，是Dask等项目成功的基础。
+
+![](img/c756025e33a1d78115431bb7e1f1596e_37.png)
+
+![](img/c756025e33a1d78115431bb7e1f1596e_39.png)
+
+Dask是一个灵活、强大且易于上手的工具，无论是想在笔记本电脑上加速计算，还是需要在集群上处理TB级数据，它都能提供有效的解决方案。
