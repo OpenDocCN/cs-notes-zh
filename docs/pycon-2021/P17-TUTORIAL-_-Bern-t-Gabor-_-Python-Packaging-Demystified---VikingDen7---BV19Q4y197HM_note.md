@@ -1,0 +1,677 @@
+# Python 打包揭秘：P17：教程
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_1.png)
+
+在本教程中，我们将一起探索 Python 打包生态系统的核心构建模块。我们将了解代码如何从开发者的机器分发到用户的机器，并学习构建和分发 Python 库与应用程序的基本原理。课程内容将涵盖虚拟环境、导入系统、构建工具以及打包格式等核心概念。
+
+---
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_3.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_5.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_7.png)
+
+## 1：Python 打包概述
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_9.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_11.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_13.png)
+
+Python 代码易于编写，但将其分发到其他机器并运行则可能具有挑战性。本教程旨在帮助你理解 Python 打包生态系统的全貌，了解各个组件如何协同工作，从而在遇到问题时知道如何排查。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_15.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_17.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_19.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_21.png)
+
+打包的核心目标是分发代码。我们将以一个计算圆周率 π 的简单程序作为演示案例。计算 π 的一种简单方法是使用格雷戈里-莱布尼茨级数：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_23.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_25.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_27.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_29.png)
+
+**公式**：
+```
+π ≈ 4 * (1 - 1/3 + 1/5 - 1/7 + 1/9 - ...)
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_31.png)
+
+以下是一个简单的实现：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_33.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_35.png)
+
+**代码**：
+```python
+def approximate_pi(iterations: int) -> float:
+    pi_approx = 0.0
+    sign = 1
+    for i in range(1, iterations * 2, 2):
+        pi_approx += sign * (1 / i)
+        sign *= -1
+    return pi_approx * 4
+
+if __name__ == "__main__":
+    print(f"π 的近似值 (300 次迭代): {approximate_pi(300)}")
+```
+
+运行这段代码有两种方式：作为脚本直接执行，或作为库在 Python 解释器中导入使用。这两种方式对应着不同的打包需求：**应用程序模式**和**库模式**。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_37.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_39.png)
+
+---
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_41.png)
+
+## 2：理解 Python 解释器与虚拟环境
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_43.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_45.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_47.png)
+
+上一节我们介绍了两种代码使用模式。为了理解如何安装包，我们首先需要知道 Python 如何找到并导入代码。这离不开对 Python 解释器和虚拟环境的理解。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_49.png)
+
+Python 解释器有多种类型。最常见的是**系统解释器**，通常通过操作系统包管理器安装。然而，更推荐的做法是使用**虚拟环境**，它能为项目提供独立的依赖管理。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_51.png)
+
+创建虚拟环境主要有两种方式：
+*   **`venv` 模块**：Python 3.3+ 的标准库模块，无需额外安装。
+*   **`virtualenv` 包**：第三方工具，速度更快，且默认提供更新的 `pip` 和 `setuptools`。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_53.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_55.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_57.png)
+
+以下是两种方式的对比示例：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_59.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_61.png)
+
+**代码**：
+```bash
+# 使用 venv 创建环境（较慢，包版本较旧）
+python -m venv my_venv_venv
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_63.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_65.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_67.png)
+
+# 使用 virtualenv 创建环境（较快，包版本较新）
+virtualenv my_venv_virtualenv
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_69.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_71.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_73.png)
+
+虚拟环境的本质是一个独立的 Python 解释器，它拥有自己的 `site-packages` 目录来安装第三方包，同时可以选择性地共享系统解释器的标准库。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_74.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_76.png)
+
+---
+
+## 3：Python 导入系统揭秘
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_78.png)
+
+上一节我们了解了代码运行的“沙盒”——虚拟环境。本节中，我们来看看 Python 解释器是如何在这个沙盒中找到并加载我们的代码模块的，即 **导入系统** 的工作原理。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_80.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_82.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_84.png)
+
+当你执行 `import something` 时，Python 解释器并不知道 `something` 是否存在。它会按照一个名为 **`sys.meta_path`** 的查找器列表依次询问，直到某个查找器能够处理这个导入请求。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_86.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_88.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_90.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_92.png)
+
+我们可以查看这个列表：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_94.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_96.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_98.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_100.png)
+
+**代码**：
+```python
+import sys
+print(sys.meta_path)
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_102.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_103.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_105.png)
+
+这些查找器会从一系列路径中搜索模块，这些路径存储在 **`sys.path`** 列表中。`sys.path` 通常包括：
+1.  当前脚本所在目录（空字符串表示）。
+2.  环境变量 `PYTHONPATH` 指定的目录。
+3.  标准库路径。
+4.  第三方包安装路径（`site-packages`）。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_107.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_109.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_111.png)
+
+**代码**：
+```python
+import sys
+print(sys.path)
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_113.png)
+
+当你在虚拟环境中导入一个包时，解释器会优先查找该虚拟环境自己的 `site-packages` 目录。因此，**安装一个库**，本质上就是将正确的 Python 文件（及元数据）放入目标环境的 `site-packages` 目录中。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_115.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_117.png)
+
+---
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_119.png)
+
+## 4：打包格式：源码分发与 Wheel
+
+理解了代码如何被找到和加载后，我们来看看代码以何种形式进行分发。从开发者的源代码到用户的 `site-packages`，代码通常以两种格式进行传输：**源码分发** 和 **Wheel**。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_121.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_123.png)
+
+*   **源码分发**：通常是一个 `.tar.gz` 压缩包，包含了开发源代码树中的大部分文件（如业务逻辑、测试文件、许可证等），但不一定包含项目管理文件（如 CI 配置）。用户拿到后需要先“构建”才能安装。
+*   **Wheel**：通常是一个 `.whl` 文件，本质上是一个 Zip 归档。它包含了即将被直接安装到 `site-packages` 中的所有文件（编译后的 `.pyc` 文件、二进制扩展模块、元数据等），不包含测试或源码。用户可以直接安装，无需构建。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_125.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_127.png)
+
+**关键区别**：Python 打包生态系统总是以安装 Wheel 为目标。如果用户获得的是源码分发，安装工具（如 `pip`）会先从中构建出一个 Wheel，然后再安装这个 Wheel。因此，为你的库分发预构建的 Wheel 可以显著加快用户的安装速度，并避免用户环境缺少编译工具的问题。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_129.png)
+
+典型的打包与安装流程如下：
+1.  开发者：源代码 -> **构建** -> 生成源码分发和/或 Wheel -> **上传** -> 中央仓库（如 PyPI）。
+2.  用户：从中央仓库 **发现并下载** 包 -> 如果是 Wheel 则直接 **安装**；如果是源码分发则先 **构建** 成 Wheel 再安装。
+
+---
+
+## 5：构建工具：历史与现状
+
+上一节我们了解了包的最终形态。本节中我们来看看这些形态是如何从源代码构建出来的，即 **构建工具** 的演变。
+
+Python 打包构建方式经历了以下演进：
+1.  **`distutils`**：Python 早期标准库模块，使用 `setup.py`（Python 代码）进行配置，灵活性高但不易标准化。
+2.  **`setuptools`**：`distutils` 的增强版，成为事实标准，引入了 `setup.cfg`（配置文件）来补充声明式配置。
+3.  **`wheel`**：2014年引入的二进制打包格式，旨在加速安装并提高安全性。
+4.  **`flit` / `poetry`**：现代工具，倡导使用声明式配置（如 `pyproject.toml`），并试图提供从构建到发布的一体化体验。
+
+现代构建的核心规范是 **PEP 517** 和 **PEP 518**。它们将构建过程分为：
+*   **构建前端**：负责创建隔离的构建环境并安装构建依赖。例如 `pip`、`build`。
+*   **构建后端**：负责在构建环境中实际执行打包操作。例如 `setuptools`、`flit-core`、`hatchling`。
+
+前后端通过 `pyproject.toml` 文件进行协调。该文件必须包含 `[build-system]` 部分来声明构建依赖和使用的后端。
+
+**代码** (`pyproject.toml` 示例)：
+```toml
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+```
+
+使用标准前端 `build` 进行构建的命令很简单：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_131.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_133.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_135.png)
+
+**代码**：
+```bash
+python -m build
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_137.png)
+
+---
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_139.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_141.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_143.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_145.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_147.png)
+
+## 6：动手实践：使用 Flit 打包库
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_148.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_150.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_152.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_153.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_155.png)
+
+理论介绍完毕，现在让我们动手实践。我们将使用一个简单的现代构建工具 **Flit** 来打包我们计算 π 的库。
+
+首先，确保你有一个可用的 Python 环境，并使用 `pipx` 安装 `flit`（推荐方式，避免污染全局环境）：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_157.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_158.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_160.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_162.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_163.png)
+
+**代码**：
+```bash
+# 安装 pipx（如果尚未安装）
+python -m pip install --user pipx
+python -m pipx ensurepath
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_165.png)
+
+# 使用 pipx 安装 flit
+pipx install flit
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_167.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_169.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_170.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_172.png)
+
+接下来，在项目目录中初始化配置：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_174.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_176.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_178.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_180.png)
+
+**代码**：
+```bash
+flit init
+# 根据提示输入模块名、作者等信息
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_182.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_184.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_186.png)
+
+这会在 `pyproject.toml` 中生成配置。我们需要确保模块文件（如 `pi_approximate.py`）顶部包含 `__version__` 变量。然后即可构建包：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_188.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_190.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_192.png)
+
+**代码**：
+```bash
+flit build
+```
+此命令会在 `dist/` 目录下生成 `.whl`（Wheel）和 `.tar.gz`（源码分发）文件。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_194.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_196.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_198.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_200.png)
+
+最后，你可以在一个干净的虚拟环境中测试安装：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_202.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_204.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_206.png)
+
+**代码**：
+```bash
+# 创建虚拟环境
+python -m venv test_env
+source test_env/bin/activate  # Linux/macOS
+# 或 test_env\Scripts\activate  # Windows
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_208.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_210.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_212.png)
+
+# 安装刚构建的 Wheel
+pip install dist/your_package_name.whl
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_214.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_216.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_218.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_220.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_222.png)
+
+# 测试导入
+python -c “import pi_approximate; print(pi_approximate.approximate_pi(100))”
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_224.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_226.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_228.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_229.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_231.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_233.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_234.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_236.png)
+
+---
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_238.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_239.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_241.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_243.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_245.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_247.png)
+
+## 7：性能优化与二进制扩展
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_249.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_251.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_253.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_255.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_257.png)
+
+我们的库目前是纯 Python 的。有时为了追求极致性能，我们需要将部分代码编译成二进制扩展。本节我们来看看如何通过 **Cython** 将 Python 代码编译成 C 扩展。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_259.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_261.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_263.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_265.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_267.png)
+
+首先，我们需要切换到支持构建 C 扩展的后端，例如 `setuptools`。更新 `pyproject.toml` 中的构建后端，并创建 `setup.py` 和 `setup.cfg` 文件来配置项目。
+
+关键步骤是在 `setup.py` 中配置 Cython 扩展：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_269.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_271.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_273.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_275.png)
+
+**代码** (`setup.py` 示例)：
+```python
+from setuptools import setup
+from Cython.Build import cythonize
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_277.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_279.png)
+
+setup(
+    ext_modules = cythonize(“pi_approximate.py”)
+)
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_281.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_283.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_285.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_287.png)
+
+同时，在 `pyproject.toml` 中声明构建依赖：
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_289.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_291.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_293.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_295.png)
+
+**代码** (`pyproject.toml` 片段)：
+```toml
+[build-system]
+requires = [“setuptools>=42”, “wheel”, “Cython”]
+build-backend = “setuptools.build_meta”
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_297.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_299.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_301.png)
+
+现在，使用 `python -m build` 构建时，`setuptools` 会自动调用 Cython 将 `pi_approximate.py` 编译成 `.c` 文件，再编译成平台相关的二进制文件（如 `.pyd` 或 `.so`），并打包进 Wheel。
+
+**注意**：包含二进制扩展的 Wheel 是平台特定的（名称中包含类似 `cp39-win_amd64` 的标签）。你需要为每个目标平台（操作系统、CPU架构、Python版本）分别构建 Wheel，用户才能获得无需编译的安装体验。
+
+---
+
+## 8：打包 Python 应用程序
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_303.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_305.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_306.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_308.png)
+
+之前我们主要关注作为**库**的打包。本节我们来看看如何打包独立的 **应用程序**。应用程序对用户的要求更低，理想情况下用户只需运行一个文件即可。
+
+Python 本身支持 **Zip 应用**：将一个包含 `__main__.py` 文件的 Zip 归档交给 Python 解释器，它可以直接运行。
+
+**代码**：
+```bash
+# 创建一个包含应用代码和 __main__.py 的 zip 文件
+python -m zipapp my_app -m “my_app:main”
+
+# 运行这个 zip 应用
+python my_app.pyz
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_310.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_312.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_313.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_315.png)
+
+但 Zip 应用不处理依赖项。为此，社区提供了更强大的工具，如 **Shiv** 和 **PEX**。它们能将你的应用及其所有依赖打包成一个可执行的 Zip 文件。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_317.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_318.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_320.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_322.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_323.png)
+
+**代码** (使用 Shiv)：
+```bash
+# 安装 shiv
+pip install shiv
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_325.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_327.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_328.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_330.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_332.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_334.png)
+
+# 为你的包（及其依赖）创建 zipapp
+shiv -c pi_approximate -o pi_app.pyz your_package_name
+```
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_335.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_337.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_339.png)
+
+对于终极用户体验，可以使用 **PyInstaller** 或 **cx_Freeze** 等工具，它们能将 Python 解释器、你的代码以及所有依赖打包成一个独立的可执行文件（如 `.exe`），用户完全无需安装 Python。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_341.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_343.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_345.png)
+
+**代码** (使用 PyInstaller)：
+```bash
+# 安装 pyinstaller
+pip install pyinstaller
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_347.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_349.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_351.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_353.png)
+
+# 打包你的脚本
+pyinstaller --onefile pi_approximate.py
+```
+生成的独立可执行文件位于 `dist/` 目录下，可以直接分发给用户。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_355.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_357.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_359.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_360.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_361.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_363.png)
+
+**总结**：选择哪种方式取决于你的目标用户。对于懂技术的用户，Zip 应用或 Shiv/PEX 包是轻量级选择。对于完全不懂 Python 的最终用户，PyInstaller 生成的独立可执行文件是最佳选择。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_365.png)
+
+---
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_367.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_369.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_371.png)
+
+## 总结
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_373.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_375.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_377.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_378.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_380.png)
+
+在本教程中，我们一起深入探索了 Python 打包的奥秘。我们从 Python 代码的运行方式（库 vs 应用）和基础环境（虚拟环境）讲起，深入了解了 Python 导入系统的工作原理。接着，我们剖析了两种核心的打包格式（源码分发和 Wheel），并回顾了构建工具的历史与基于 PEP 517/518 的现代构建流程。通过动手实践，我们使用 Flit 打包了一个简单的库，并探讨了通过 Cython 编译二进制扩展来优化性能。最后，我们学习了如何为最终用户打包独立的应用程序，从简单的 Zip 应用到包含所有依赖的独立可执行文件。
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_382.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_384.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_386.png)
+
+![](img/759a25f61cc4dcebc6324f15f7d3b776_388.png)
+
+希望本教程能帮助你建立起对 Python 打包生态系统的清晰认知，让你在分发自己的 Python 项目时更加自信和得心应手。
