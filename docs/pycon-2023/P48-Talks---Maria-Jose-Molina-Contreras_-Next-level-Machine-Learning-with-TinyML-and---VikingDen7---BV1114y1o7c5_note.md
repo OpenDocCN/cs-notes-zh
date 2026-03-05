@@ -1,0 +1,174 @@
+# 机器学习与TinyML：P48：讲座 - 玛利亚·霍塞·莫利纳·孔特雷拉斯 👩‍🏫
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_1.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_3.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_5.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_7.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_9.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_11.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_13.png)
+
+在本节课中，我们将学习机器学习与TinyML的基本概念。课程将介绍机器学习的基础知识，并探讨如何将其应用于资源受限的微型设备，即TinyML。我们将从讲师介绍开始，逐步了解相关背景和核心内容。
+
+## 讲师介绍与课程背景
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_15.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_17.png)
+
+大家好，欢迎来到下一节课程。我将与大家讨论计算机科学及相关材料。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_19.png)
+
+我的名字是拉尼·皮斯。我在一家公司的数据科学部门工作，同时也与大学有合作。我专注于数据科学领域，并致力于支持相关的研究与发展。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_21.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_23.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_25.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_27.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_29.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_31.png)
+
+## 个人经历与项目历程
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_33.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_35.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_37.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_39.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_41.png)
+
+这是我过去几年一直在跟进的一个长期项目。从项目启动之初，我就参与其中。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_43.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_45.png)
+
+我在这里已经待了相当长的一段时间，持续进行内容创作和学习。这个部分并非我最初计划的主要内容，但我逐渐深入其中。
+
+我曾专注于提升项目的英语内容质量。在这个过程中，我意识到构建一个运转良好的系统至关重要。这项工作从一开始就充满挑战。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_47.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_49.png)
+
+## 核心概念：机器学习与TinyML
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_51.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_53.png)
+
+上一节我们介绍了讲师的背景和项目历程，本节中我们来看看课程的核心概念。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_55.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_57.png)
+
+机器学习是人工智能的一个分支，它使计算机系统能够从数据中学习并改进，而无需进行明确的编程。其核心思想是通过算法解析数据，从中学习，然后对真实世界中的事件做出决策或预测。
+
+一个简单的线性回归模型可以用以下公式表示：
+`y = wx + b`
+其中，`y`是预测值，`x`是输入特征，`w`是权重，`b`是偏差。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_59.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_61.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_63.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_65.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_67.png)
+
+TinyML是机器学习的一个新兴领域，旨在在微控制器等资源极其受限的嵌入式设备上部署和运行机器学习模型。这需要模型小型化、低功耗和高效推理。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_69.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_71.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_73.png)
+
+以下是TinyML的一个简单代码示例框架：
+```python
+# 导入必要的TinyML库（例如TensorFlow Lite Micro）
+import tflite_micro as tflm
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_75.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_77.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_79.png)
+
+# 加载预训练并优化后的微型模型
+model = tflm.LoadModel('model.tflite')
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_81.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_83.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_85.png)
+
+# 在设备上进行推理
+input_data = get_sensor_data()
+output = model.predict(input_data)
+```
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_87.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_89.png)
+
+## 课程内容与学习路径
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_91.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_93.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_95.png)
+
+基于以上核心概念，本课程将引导大家建立完整的知识体系。以下是本课程的主要学习模块：
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_97.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_99.png)
+
+*   **机器学习基础**：学习监督学习、非监督学习等基本算法。
+*   **模型优化与压缩**：了解如何将大型模型裁剪、量化为适合微型设备的格式。
+*   **嵌入式系统基础**：熟悉微控制器、传感器和低功耗编程。
+*   **TinyML框架与工具**：学习使用TensorFlow Lite for Microcontrollers等开发工具。
+*   **实战项目**：完成一个完整的端到端TinyML应用案例。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_101.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_103.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_105.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_107.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_109.png)
+
+## 总结与展望
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_111.png)
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_113.png)
+
+本节课中我们一起学习了机器学习与TinyML课程的概述。我们认识了讲师拉尼·皮斯及其项目背景，理解了机器学习的基本概念及其在微型设备上应用的挑战与机遇，即TinyML领域。
+
+![](img/8abb667ee6943fdedc5d04846aef29f7_115.png)
+
+通过本课程的学习，你将能够理解如何将智能算法部署到日常生活中的小型、低功耗设备上，开启物联网与边缘计算的新可能。接下来的课程将深入每个模块的具体细节。
