@@ -1,0 +1,306 @@
+# 程序员百科书：P23：与布莱恩·K·奥肯谈论 - 用参数化测试提升你的测试有效性
+
+![](img/62a4a398174f137d23e45a990ef2b4e5_0.png)
+
+![](img/62a4a398174f137d23e45a990ef2b4e5_0.png)
+
+在本节课中，我们将学习如何使用参数化测试来提升测试的有效性和效率。我们将探讨参数化的基本概念、三种不同的实现方式，以及一些高级技巧。通过本教程，你将能够编写更简洁、更易于维护的测试代码。
+
+## 概述
+
+自动化测试对于构建可靠的软件至关重要。它能增强你对代码的信心，让你更自豪地交付工作，并促进团队间的信任。如果测试能快速编写且易于维护，其价值会更高。本节课的核心就是介绍如何利用参数化测试来实现这一目标。
+
+我们将介绍三种参数化方法：使用固定的参数化函数、使用参数化装饰器，以及使用 `pytest_generate_tests` 钩子函数生成测试。此外，我们还将学习如何运行参数化的子集，并简要了解 `pytest.param` 和 `indirect` 这两个高级概念。
+
+## 澄清与准备
+
+在深入之前，需要澄清一个拼写细节。参数化的英文 “parameterize” 在英式英语和美式英语中有两种拼写（“parameterise” 和 “parameterize”）。在 pytest 框架中，使用的是英式拼写，即 **t 和 r 之间没有 e**。
+
+我们将编写测试来验证一个名为 `triangle_type` 的函数。该函数接收三个角度值，并返回三角形的类型：`right`（直角三角形）、`obtuse`（钝角三角形）、`acute`（锐角三角形）或 `invalid`（无效三角形）。为了演示，代码中故意包含了一个错误。
+
+为了便于演示，我们在 `pytest.ini` 配置文件中进行了一些设置：
+*   `addopts = -v`：显示详细的测试名称。
+*   `addopts = --tb=no`：关闭错误回溯信息，使输出更清晰。
+
+## 从冗余测试到参数化
+
+### 初始的冗余测试方法
+
+要测试 `triangle_type` 函数，我们至少需要四个测试用例来覆盖所有可能的输出。一种直接的方法是编写四个独立的测试函数。
+
+```python
+def test_right_triangle():
+    assert triangle_type(90, 45, 45) == ‘right‘
+
+def test_obtuse_triangle():
+    assert triangle_type(100, 40, 40) == ‘obtuse‘
+
+def test_acute_triangle():
+    assert triangle_type(60, 60, 60) == ‘acute‘
+
+def test_invalid_triangle():
+    assert triangle_type(0, 0, 180) == ‘invalid‘
+```
+
+这种方法虽然简单，但存在明显的冗余。随着测试逻辑变复杂，这种冗余会变得更加难以维护。更重要的是，如果其中一个测试失败，pytest 默认只会报告整个测试函数失败，而不会明确指出是哪个具体的用例出了问题，除非我们查看详细回溯。
+
+### 引入参数化测试
+
+参数化测试允许我们将多个测试用例合并到一个测试函数中，同时保持每个用例的独立性。pytest 会为每个参数组合生成一个独立的测试节点，这样当某个用例失败时，我们能清晰地看到是哪一个。
+
+上一节我们看到了冗余测试的缺点，本节中我们来看看如何使用 `@pytest.mark.parametrize` 装饰器来改进它。
+
+以下是参数化测试的基本语法：
+
+```python
+import pytest
+
+# 定义测试数据和期望结果
+test_cases = [
+    (90, 45, 45, ‘right‘),
+    (100, 40, 40, ‘obtuse‘),
+    (60, 60, 60, ‘acute‘),
+    (0, 0, 180, ‘invalid‘),
+]
+
+# 使用装饰器进行参数化
+@pytest.mark.parametrize(‘a, b, c, expected‘, test_cases)
+def test_triangle_type(a, b, c, expected):
+    assert triangle_type(a, b, c) == expected
+```
+
+运行这个测试，pytest 会输出四个独立的测试结果，每个都有清晰的名称（例如 `test_triangle_type[90-45-45-right]`）。这样，任何一个用例失败，我们都能立刻定位到它。
+
+我们可以进一步优化，将测试用例列表提取出来，使装饰器更简洁：
+
+```python
+triangle_test_cases = [
+    (90, 45, 45, ‘right‘),
+    (100, 40, 40, ‘obtuse‘),
+    (60, 60, 60, ‘acute‘),
+    (0, 0, 180, ‘invalid‘),
+]
+
+@pytest.mark.parametrize(‘a, b, c, expected‘, triangle_test_cases)
+def test_triangle_type_parametrized(a, b, c, expected):
+    assert triangle_type(a, b, c) == expected
+```
+
+## 动态生成测试参数
+
+参数化的强大之处在于，测试数据源可以非常灵活。它不一定是一个静态列表。
+
+上一节我们使用了固定的参数列表，本节中我们来看看如何动态生成这些参数。
+
+### 使用函数生成参数
+
+我们可以将一个函数传递给 `@pytest.mark.parametrize` 装饰器。这个函数在测试收集阶段被调用，并返回一个参数列表。
+
+```python
+def generate_triangle_cases():
+    # 可以在这里进行复杂的逻辑计算或数据筛选
+    cases = [
+        (90, 45, 45, ‘right‘),
+        (100, 40, 40, ‘obtuse‘),
+        (60, 60, 60, ‘acute‘),
+        (0, 0, 180, ‘invalid‘),
+    ]
+    # 例如，可以过滤掉某些用例
+    return [case for case in cases if case[3] != ‘invalid‘] # 不测试无效用例
+
+@pytest.mark.parametrize(‘a, b, c, expected‘, generate_triangle_cases())
+def test_triangle_type_from_func(a, b, c, expected):
+    assert triangle_type(a, b, c) == expected
+```
+
+### 使用生成器或读取文件
+
+参数生成函数也可以是一个生成器，这对于处理大型数据集（如从文件读取）非常有用，因为它可以惰性地产生数据。
+
+```python
+def triangle_cases_from_file():
+    # 假设有一个包含测试数据的文件
+    with open(‘test_data.csv‘, ‘r‘) as f:
+        for line in f:
+            a, b, c, expected = line.strip().split(‘,‘)
+            yield int(a), int(b), int(c), expected
+
+@pytest.mark.parametrize(‘a, b, c, expected‘, triangle_cases_from_file())
+def test_triangle_type_from_file(a, b, c, expected):
+    assert triangle_type(a, b, c) == expected
+```
+
+**注意**：虽然使用了生成器，但 pytest 会在测试收集阶段将其耗尽，将所有数据加载到内存中。对于非常大的文件，需要考虑其他策略。
+
+## 运行特定的参数化测试用例
+
+当参数化测试很多时，我们可能只想运行其中的一部分，例如只运行上次失败的，或只运行某个特定类型的测试。
+
+以下是运行参数化测试子集的几种方法：
+
+*   **运行上次失败的测试**：使用 `pytest --lf` 命令。
+*   **运行指定的测试用例**：使用 `pytest -k` 进行关键字过滤。例如，`pytest -k “60“` 会运行所有名称中包含 “60” 的测试。
+*   **运行完整的节点ID**：可以复制粘贴 pytest 输出的完整测试节点 ID 来运行单个用例。例如：`pytest test_file.py::test_triangle_type[60-60-60-acute]`。
+
+许多现代 IDE（如 PyCharm、VS Code）也提供了图形化界面来运行单个参数化测试用例，这非常方便。
+
+## 固件（Fixture）参数化
+
+除了测试函数，pytest 的固件（Fixture）也可以被参数化。这允许你为每个测试用例提供不同的固件数据。
+
+以下是固件参数化的基本语法：
+
+```python
+import pytest
+
+# 定义参数化固件
+@pytest.fixture(params=[(90, 45, 45), (100, 40, 40), (60, 60, 60)])
+def triangle_angles(request):
+    # request.param 包含了来自 params 列表的当前值
+    return request.param
+
+# 在测试中使用参数化固件
+def test_with_fixture_param(triangle_angles):
+    a, b, c = triangle_angles
+    # 这里可以调用 triangle_type，但需要额外处理期望值
+    result = triangle_type(a, b, c)
+    # ... 进行断言
+```
+
+然而，默认的固件参数化生成的测试名称不友好（如 `triangle_angles[0]`）。我们可以通过 `ids` 参数来改善：
+
+```python
+@pytest.fixture(params=[(90, 45, 45, ‘right‘),
+                        (100, 40, 40, ‘obtuse‘),
+                        (60, 60, 60, ‘acute‘)],
+                ids=lambda val: val[3]) # 使用期望结果作为ID
+def triangle_case(request):
+    return request.param
+
+def test_with_named_fixture_param(triangle_case):
+    a, b, c, expected = triangle_case
+    assert triangle_type(a, b, c) == expected
+```
+
+`ids` 可以是一个字符串列表，也可以是一个接收参数值并返回字符串的函数。好的测试 ID 应该足够简短，能唯一标识测试用例。
+
+## 使用 `pytest_generate_tests` 钩子
+
+对于更高级的动态测试生成需求，可以使用 `pytest_generate_tests` 钩子函数。pytest 会在测试收集时调用这个钩子。
+
+一个常见的用途是基于自定义命令行参数来动态生成或过滤测试。
+
+```python
+def pytest_addoption(parser):
+    # 添加一个自定义命令行选项
+    parser.addoption(“--test-mode“, action=“store“, default=“all“,
+                     help=“运行模式: all, smoke, quick“)
+
+def pytest_generate_tests(metafunc):
+    # 检查测试函数是否需要 ‘angle_data‘ 参数
+    if “angle_data“ in metafunc.fixturenames:
+        # 获取命令行选项
+        test_mode = metafunc.config.getoption(“test_mode“)
+        all_cases = [...]
+        if test_mode == “smoke“:
+            selected_cases = [case for case in all_cases if case[3] == ‘right‘]
+        elif test_mode == “quick“:
+            selected_cases = all_cases[:2]
+        else:
+            selected_cases = all_cases
+        # 对测试函数进行参数化
+        metafunc.parametrize(“angle_data“, selected_cases)
+```
+
+这样，你就可以通过 `pytest --test-mode=smoke` 来只运行冒烟测试用例。
+
+## 高级概念简介
+
+最后，我们简要介绍两个你可能不会立即用到，但值得了解的高级概念。
+
+### `pytest.param`
+
+`pytest.param` 用于在参数化中为单个测试用例添加额外的元数据，比如标记（marks）或自定义ID。
+
+```python
+import pytest
+
+@pytest.mark.parametrize(“a, b, c, expected“, [
+    pytest.param(90, 45, 45, ‘right‘, marks=pytest.mark.smoke),
+    pytest.param(100, 40, 40, ‘obtuse‘, id=“obtuse_case“),
+    (60, 60, 60, ‘acute‘),
+    pytest.param(0, 0, 180, ‘invalid‘, marks=[pytest.mark.slow, pytest.mark.xfail]),
+])
+def test_with_param(a, b, c, expected):
+    assert triangle_type(a, b, c) == expected
+```
+
+然后可以用 `pytest -m smoke` 来运行标记为 `smoke` 的测试。
+
+### `indirect` 参数
+
+`indirect` 参数允许你将参数化中提供的值，先传递给一个同名的固件进行处理，再将处理结果注入测试函数。这适用于参数需要预处理的情况。
+
+```python
+import pytest
+
+@pytest.fixture
+def processed_angle(request):
+    # 固件接收原始参数值
+    raw_value = request.param
+    # 进行一些处理，例如转换为整数
+    return int(raw_value)
+
+@pytest.mark.parametrize(“processed_angle“, [“90“, “100“, “60“], indirect=True)
+def test_with_indirect(processed_angle):
+    # processed_angle 在这里已经是整数了
+    print(f“Testing with angle: {processed_angle} (type: {type(processed_angle)})“)
+    # ... 进行测试
+```
+
+`indirect=True` 表示所有参数都间接处理，也可以指定一个参数名列表 `indirect=[“param1“]`。
+
+## 总结与优势
+
+本节课中我们一起学习了参数化测试的核心概念和多种实现方式。
+
+让我们回到最初的例子。通过参数化，我们可以轻松地将测试用例从4个扩展到11个甚至更多，而代码结构依然清晰易读：
+
+```python
+triangle_test_cases = [
+    # 直角三角形
+    (90, 45, 45, ‘right‘),
+    (90, 30, 60, ‘right‘),
+    # 钝角三角形
+    (100, 40, 40, ‘obtuse‘),
+    (120, 30, 30, ‘obtuse‘),
+    # 锐角三角形
+    (60, 60, 60, ‘acute‘),
+    (70, 55, 55, ‘acute‘),
+    (80, 50, 50, ‘acute‘),
+    # 无效三角形
+    (0, 0, 180, ‘invalid‘),
+    (90, 90, 0, ‘invalid‘),
+    (200, 10, -10, ‘invalid‘),
+    (10, 20, 30, ‘invalid‘), # 和不等于180
+]
+
+@pytest.mark.parametrize(‘a, b, c, expected‘, triangle_test_cases)
+def test_all_triangles(a, b, c, expected):
+    assert triangle_type(a, b, c) == expected
+```
+
+参数化测试的主要优势在于：
+1.  **减少冗余**：消除重复的测试代码。
+2.  **提高可维护性**：添加新测试用例只需在数据列表中添加一行。
+3.  **清晰的测试报告**：每个用例独立报告成功或失败。
+4.  **支持复杂数据源**：可以从函数、生成器、文件等动态生成测试数据。
+5.  **便于针对性运行**：可以轻松运行测试的子集。
+
+你可以混合使用这些技术（如多个 `@pytest.mark.parametrize` 装饰器会产生参数组合的笛卡尔积），但要注意避免生成过于庞大的测试用例集。
+
+如果你想深入学习 pytest，推荐阅读《Python Testing with pytest》一书。此外，播客 “Test & Code“ 和 “Python Bytes“ 也是很好的学习资源。
+
+![](img/62a4a398174f137d23e45a990ef2b4e5_2.png)
+
+![](img/62a4a398174f137d23e45a990ef2b4e5_2.png)
