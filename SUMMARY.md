@@ -70,6 +70,7 @@
 +   [PyCon 2020 会议笔记](docs/pycon-2020/README.md)
 +   [PyCon 2021 会议笔记](docs/pycon-2021/README.md)
 +   [PyCon 2022 会议笔记](docs/pycon-2022/README.md)
++   [PyConCN 2019 会议笔记](docs/pyconcn19/README.md)
 +   [Quantum Leaps 现代嵌入式系统编程笔记](docs/qleap-mdn-embsys-prog/README.md)
 +   [Rustfully Rust 编程笔记](docs/rsfl-rs-prog/README.md)
 +   [SAS 高级编程笔记](docs/sas-adv-prog/README.md)
