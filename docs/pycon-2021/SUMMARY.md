@@ -1,5 +1,4 @@
 +   [PyCon 2021 会议笔记](README.md)
-+   [P16：Talk_ Russell Keith-Magee - Snakes in a case_ 打包 Python 应用以进行分发 - VikingDen7 - BV19Q4y197HM](P16-Talk_-Russell-Keith-Magee---Snakes-in-a-case_-Packaging-Python-apps-for-distribu---VikingDen7---BV19Q4y197HM.md)
 +   [001：Python 数据类的运行时类型检查 🧑‍💻](pycon-2021-001.md)
 +   [002：重启 Pyjion，一个通用的 Python JIT 编译器](pycon-2021-002.md)
 +   [003：大规模Python性能优化实践](pycon-2021-003.md)
@@ -15,5 +14,6 @@
 +   [013：从NumPy到PyTorch，API兼容的故事 🧠](pycon-2021-013.md)
 +   [014：何时异常不是异常？使用警告 🚨](pycon-2021-014.md)
 +   [015：如何在方法中自动插入 `self`](pycon-2021-015.md)
++   [016：打包 Python 应用以进行分发](pycon-2021-016.md)
 +   [017：教程](pycon-2021-017.md)
 +   [018：装饰器入门](pycon-2021-018.md)
