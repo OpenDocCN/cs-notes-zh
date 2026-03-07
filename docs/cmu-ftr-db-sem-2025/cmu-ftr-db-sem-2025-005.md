@@ -1,4 +1,4 @@
-# 卡耐基梅隆未来数据系统研讨会系列：P5：我们不需要行：基于 Apache Arrow 的列式数据连接
+# 005：基于 Apache Arrow 的列式数据连接
 
 ![](img/3adb0ac9be729bbc80859e7cfa472c4f_0.png)
 

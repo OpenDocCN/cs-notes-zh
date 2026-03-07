@@ -1,4 +1,4 @@
-# 卡耐基梅隆未来数据系统研讨会系列：P6：SingleStore：现代云数据库的存储元数据 (Joyo Victor)
+# 006：现代云数据库的存储元数据 (Joyo Victor)
 
 ![](img/d1d3a427af30b31b1a2d3ecbca2102bc_0.png)
 

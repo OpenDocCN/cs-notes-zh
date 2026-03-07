@@ -1,4 +1,4 @@
-# 卡耐基梅隆大学未来数据系统研讨会系列：P11：从存储格式到开放治理：Apache Polaris 的演进之路
+# 011：Apache Polaris 的演进之路
 
 ![](img/c3ccaa90318db0ce96a307231ac5e20a_0.png)
 

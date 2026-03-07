@@ -1,4 +1,4 @@
-# Apache Iceberg 技术解析：P1：Apache Iceberg 查询规划的实际工作原理 - 技术概览
+# 001：Apache Iceberg 查询规划的实际工作原理 - 技术概览
 
 ![](img/659c32495e67d18c25a0a73fc678b54f_0.png)
 

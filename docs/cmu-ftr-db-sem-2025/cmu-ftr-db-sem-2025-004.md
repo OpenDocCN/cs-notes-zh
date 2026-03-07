@@ -1,4 +1,4 @@
-# 卡耐基梅隆大学未来数据系统研讨会系列：P4：Vortex：文件格式的LLVM (Will Manning)
+# 004：文件格式的LLVM (Will Manning)
 
 ![](img/7127562cbae335e449b5b64fde2a1899_1.png)
 
